@@ -1,0 +1,19 @@
+// Breakpoints
+$xs: 360px;
+$sm: 640px;
+$md: 768px;
+$lg: 1024px;
+$xl: 1280px;
+$xxl: 1536px;
+$xxxl: 1920px;
+
+// Container max-widths (correspondant aux breakpoints)
+$max-widths: (
+  sm: $xs,
+  md: $sm,
+  lg: $md,
+  xl: $lg,
+  xxl: $xl,
+  xxxl: $xxl,
+  xxxxl: $xxxl,
+);

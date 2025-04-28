@@ -1,0 +1,53 @@
+@use '@/assets/styles/variables/colors' as colors;
+@use '@/assets/styles/variables/breakpoints' as bp;
+
+// Mixin container avec un argument optionnel pour limiter la taille max
+@mixin container($max: null) {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+    padding-left: 1rem;
+    padding-right: 1rem;
+
+    // Si on spécifie une taille max, on l'utilise directement
+    @if $max !=null {
+        $max-width: map-get(bp.$max-widths, $max);
+
+        @if $max-width !=null {
+            max-width: $max-width;
+        }
+
+        @else {
+            @warn "⚠️ Breakpoint `#{$max}` introuvable dans container-max-widths.";
+        }
+    }
+
+    // Sinon, comportement responsive classique
+    @else {
+        @each $label, $value in bp.$max-widths {
+            @media (min-width: $value) {
+                max-width: $value;
+            }
+        }
+    }
+}
+
+.container {
+    @include container(); // responsive full range
+}
+
+html {
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+    background-color: colors.$secondary;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+
+    main {
+        z-index: 1;
+    }
+}

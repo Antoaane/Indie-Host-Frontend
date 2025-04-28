@@ -1,0 +1,6 @@
+@use '@/assets/styles/variables/colors' as colors;
+
+* {
+    font-family: 'outfit', sans-serif;
+    color: colors.$secondary;
+}
