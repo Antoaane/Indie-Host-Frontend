@@ -1,7 +1,57 @@
+@use '@/assets/styles/variables/colors' as colors;
+
 #hero-section {
+    height: 100vh;
+    padding-top: calc(70px + 1.5rem);
+
+    box-sizing: border-box;
+
     display: flex;
 
-    &>div {
-        flex: 1 0 0;
+    .container {
+        display: flex;
+
+        &>div {
+            max-width: 50vw;
+            max-height: 100%;
+            flex: 0 0 50%;
+        }
+
+        .text {}
+
+        .illustration {
+            height: 100%;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+
+            &>div {
+                height: 90%;
+                position: relative;
+
+                .hero-image {
+                    width: auto;
+                    height: 100%;
+                }
+
+                span {
+                    // illustration gradient
+                    width: 55%;
+                    height: 81.5%;
+
+                    position: absolute;
+                    z-index: 1;
+                    bottom: 5.5%;
+                    right: 0;
+
+                    background: radial-gradient(174.54% 210.83% at 0% 50.07%,
+                            rgba(17, 17, 23, 0.00) 22.88%,
+                            #111117 51.58%);
+                    border-radius: 1rem;
+                    ;
+                }
+            }
+        }
     }
 }
