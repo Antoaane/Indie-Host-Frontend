@@ -1,0 +1,7 @@
+#hero-section {
+    display: flex;
+
+    &>div {
+        flex: 1 0 0;
+    }
+}

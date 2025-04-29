@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "svg:convert": "python ./plugins/convert_svg.py",
+    "images:resize": "python ./plugins/resize_images.py",
     "watch": "sass --watch ./src/assets/styles/input.scss ./src/assets/styles/output.css",
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",
