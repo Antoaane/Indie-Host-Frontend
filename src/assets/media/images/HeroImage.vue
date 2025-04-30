@@ -1,3 +1,5 @@
+<!-- File: src/assets/media/images/HeroImage.vue -->
+
 <template>
 <svg width="1845" height="1135" viewBox="0 0 1845 1135" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g filter="url(#filter0_d_903_13893)">

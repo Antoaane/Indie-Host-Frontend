@@ -1,3 +1,5 @@
+// File: src/router/index.ts
+
 import { createRouter, createWebHistory } from 'vue-router'
 import LandingPage from '../views/Landing/_LandingPage.vue'
 

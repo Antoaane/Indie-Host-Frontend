@@ -1,3 +1,5 @@
+<!-- File: src/views/Landing/HeroSection.vue -->
+
 <script setup lang="ts">
 import HeroImage from '@/components/svgs/images/HeroImage.vue';
 import ShapesBgCroped from '@/components/svgs/images/ShapesBgCroped.vue';

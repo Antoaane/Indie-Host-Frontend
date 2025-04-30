@@ -1,3 +1,5 @@
+<!-- File: src/components/navs/Nav.vue -->
+
 <script setup lang="ts">
 // DEPS
 

@@ -1,3 +1,5 @@
+// File: src/main.ts
+
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import '@/assets/styles/main.scss'

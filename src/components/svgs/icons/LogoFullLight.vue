@@ -1,3 +1,5 @@
+<!-- File: src/components/svgs/icons/LogoFullLight.vue -->
+
 <template>
 <svg viewBox="0 0 177 50" fill="none" xmlns="http://www.w3.org/2000/svg">
 <ellipse cx="24.9999" cy="13.8129" rx="7.00979" ry="6.72368" fill="url(#paint0_linear_354_4226)"/>

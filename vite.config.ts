@@ -6,10 +6,12 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 import ViteRestart from 'vite-plugin-restart'
 import svgLoader from 'vite-svg-loader'
 import svgToVuePlugin from './plugins/vite-plugin-svg-to-vue';
+import fileCommentInjector from './plugins/vite-plugin-file-comment'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
+    fileCommentInjector(),
     svgToVuePlugin(),
     ViteRestart({
       restart: ['src/assets/media/**/*.svg'], // Restart vite si des SVG changent
@@ -18,12 +20,6 @@ export default defineConfig({
     vueDevTools(),
     svgLoader(),
   ],
-  server: {
-    watch: {
-      // Dossier qu'on VEUT surveiller => on l'enlève des ignorés
-      ignored: ['!**/src/assets/media**']
-    },
-  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))

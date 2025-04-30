@@ -1,3 +1,5 @@
+// File: src/components/svgs/factory.ts
+
 import { useThemeStore } from '@/stores/theme'
 
 function createThemeVariants(light: any, dark: any) {

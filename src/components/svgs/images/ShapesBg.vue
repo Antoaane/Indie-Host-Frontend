@@ -1,3 +1,5 @@
+<!-- File: src/components/svgs/images/ShapesBg.vue -->
+
 <template>
 <svg width="3363" height="1651" viewBox="0 0 3363 1651" fill="none" xmlns="http://www.w3.org/2000/svg">
 <g opacity="0.05">
