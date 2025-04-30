@@ -33,7 +33,14 @@ export default function injectFileComment(): Plugin {
             const lines = content.split('\n');
             const firstLine = lines[0];
 
-            if (firstLine === expectedComment) return;
+            if (firstLine === expectedComment) {
+                if (lines[1] === '') return; // tout est déjà bon → on sort
+                lines.splice(1, 0, '');       // commentaire présent mais ligne vide manquante
+                const newContent = lines.join('\n');
+                fs.writeFileSync(file, newContent, 'utf-8');
+                console.log(`[Comment] Added missing newline after: ${file}`);
+                return;
+            }
 
             let newContent: string;
 
@@ -41,12 +48,13 @@ export default function injectFileComment(): Plugin {
                 firstLine.startsWith('// File: ') ||
                 firstLine.startsWith('<!-- File: ')
             ) {
-                // remplacer le commentaire existant
+                // remplacer le commentaire existant et forcer une ligne vide après
                 lines[0] = expectedComment;
+                if (lines[1] !== '') lines.splice(1, 0, '');
                 newContent = lines.join('\n');
             } else {
-                // injecter le commentaire
-                newContent = expectedComment + '\n' + content;
+                // injecter le commentaire + saut de ligne vide
+                newContent = expectedComment + '\n\n' + content;
             }
 
             fs.writeFileSync(file, newContent, 'utf-8');
