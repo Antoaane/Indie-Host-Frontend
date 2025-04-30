@@ -1,0 +1,31 @@
+@use "@/assets/styles/variables/colors" as colors;
+
+@mixin base($color : colors.$secondary, $bold: false, $underline: false, $italic: false) {
+    font-family: 'outfit', sans-serif;
+    color: $color;
+    font-size: 1rem;
+    line-height: 1.5rem;
+    letter-spacing: 0.03em;
+
+    font-weight: if($bold, 700, 200);
+    text-decoration: if($underline, underline, none);
+    text-underline-offset: 0.2rem;
+    text-decoration-thickness: 0.05rem;
+    font-style: if($italic, italic, normal);
+}
+
+@mixin main-title($color : colors.$secondary) {
+    font-family: 'Fustat', sans-serif;
+    font-size: 3rem;
+    line-height: 3.5rem;
+    font-weight: 700;
+    color: $color;
+
+    span {
+        background: linear-gradient(87deg, #DA99FF 0%, #FABDCF 100%);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-size: 3.25rem;
+    }
+}

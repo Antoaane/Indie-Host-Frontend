@@ -1,4 +1,6 @@
 @use '@/assets/styles/variables/colors' as colors;
+@use '@/assets/styles/variables/texts' as texts;
+@use '@/assets/styles/components/buttons' as buttons;
 
 #hero-section {
     height: 100vh;
@@ -17,10 +19,43 @@
             flex: 0 0 50%;
         }
 
-        .text {}
+        .text {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+
+            &>div {
+                max-width: 40rem;
+
+                h1 {
+                    @include texts.main-title(colors.$accent);
+                    margin-bottom: 1rem;
+                }
+
+                p {
+                    @include texts.base(colors.$accent);
+
+                    &>u {
+                        @include texts.base(colors.$accent, false, true);
+                    }
+
+                    &>b {
+                        @include texts.base(colors.$accent, true);
+                    }
+                }
+            }
+
+            .cta {
+                width: max-content;
+                margin-top: 1rem;
+                @include buttons.primary(true, light);
+            }
+        }
 
         .illustration {
             height: 100%;
+            padding-left: 4rem;
 
             display: flex;
             flex-direction: column;

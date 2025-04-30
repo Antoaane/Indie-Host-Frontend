@@ -9,11 +9,11 @@ $xxxl: 1920px;
 
 // Container max-widths (correspondant aux breakpoints)
 $max-widths: (
-  sm: $xs,
-  md: $sm,
-  lg: $md,
-  xl: $lg,
-  xxl: $xl,
-  xxxl: $xxl,
-  xxxxl: $xxxl,
+  sm: calc($xs + 5px),
+  md: calc($sm + 5px),
+  lg: calc($md + 5px),
+  xl: calc($lg + 5px),
+  xxl: calc($xl + 5px),
+  xxxl: calc($xxl + 5px),
+  xxxxl: calc($xxxl + 5px),
 );
