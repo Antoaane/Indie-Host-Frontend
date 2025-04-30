@@ -2,7 +2,7 @@
 // DEPS
 
 // ASSETS
-import { icons } from '@/assets/media/icons'
+import { icons } from '@/components/svgs'
 
 </script>
 

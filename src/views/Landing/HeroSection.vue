@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import HeroImage from '@/assets/media/images/HeroImage.vue';
+import HeroImage from '@/components/svgs/images/HeroImage.vue';
 </script>
 
 <template>

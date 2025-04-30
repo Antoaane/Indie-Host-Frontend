@@ -8,6 +8,7 @@ import io
 
 MEDIA_ROOT = 'src/assets/media/'
 IMAGE_OUTPUT = os.path.join(MEDIA_ROOT, 'images')
+VUE_OUTPUT_ROOT = 'src/components/svgs/'
 
 def ensure_media_folder():
     if not os.path.exists(IMAGE_OUTPUT):
@@ -39,13 +40,19 @@ def to_pascal_case(name):
 def extract_and_convert(svg_path):
     ensure_media_folder()
 
+    # Chemin relatif depuis MEDIA_ROOT
+    relative_path = os.path.relpath(svg_path, MEDIA_ROOT)
+    svg_subdir = os.path.dirname(relative_path)
     base_name = os.path.splitext(os.path.basename(svg_path))[0]
     vue_name = to_pascal_case(base_name)
-    svg_folder = os.path.dirname(svg_path)
-    vue_file_path = os.path.join(svg_folder, vue_name + '.vue')
+
+    # Nouveau dossier de sortie des .vue
+    vue_output_dir = os.path.join(VUE_OUTPUT_ROOT, svg_subdir)
+    os.makedirs(vue_output_dir, exist_ok=True)
+    vue_file_path = os.path.join(vue_output_dir, vue_name + '.vue')
 
     if os.path.exists(vue_file_path):
-        print(f"🚫 Fichier Vue déjà existant, on skip : {vue_name}.vue")
+        print(f"🚫 Fichier Vue déjà existant, on skip : {vue_file_path}")
         return
 
     with open(svg_path, 'r', encoding='utf-8') as f:
@@ -65,19 +72,15 @@ def extract_and_convert(svg_path):
                 return 'transparency' in img.info
             return False
 
-        # Décode l'image pour analyser son contenu
         image = Image.open(io.BytesIO(base64.b64decode(b64_data)))
         transparent = has_transparency(image)
 
-        # Détermine l'extension finale
         ext = 'png' if transparent else 'jpg'
         filename = f"{img_id}.{ext}"
         filepath = os.path.join(IMAGE_OUTPUT, filename)
 
         existing_path = find_existing_image(b64_data)
 
-        # On récupère la taille de l'image décodée
-        image = Image.open(io.BytesIO(base64.b64decode(b64_data)))
         width, height = image.size
 
         if existing_path:
@@ -92,8 +95,7 @@ def extract_and_convert(svg_path):
             print(f"📦 Image {img_id} extraite → {filepath}")
             return f'id="{img_id}" xlink:href="@/assets/media/images/{filename}" width="{width}" height="{height}"'
 
-
-    # Regex qui chope les <image id="..." xlink:href="data:image/...">
+    # Traitement du SVG brut
     pattern = r'id="([^"]+)"\s+[^>]*xlink:href="data:image/(.*?);base64,([^"]+)"'
     svg_text = re.sub(pattern, replace_match, svg_text)
 
@@ -110,7 +112,6 @@ def extract_and_convert(svg_path):
         f.write(vue_content)
 
     print(f"✅ Fichier Vue généré : {vue_file_path}")
-
 
 if __name__ == '__main__':
     print("🚀 Recherche récursive des fichiers SVG dans src/assets/media...")

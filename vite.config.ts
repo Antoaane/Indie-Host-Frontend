@@ -18,6 +18,12 @@ export default defineConfig({
     vueDevTools(),
     svgLoader(),
   ],
+  server: {
+    watch: {
+      // Dossier qu'on VEUT surveiller => on l'enlève des ignorés
+      ignored: ['!**/src/assets/media**']
+    },
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
