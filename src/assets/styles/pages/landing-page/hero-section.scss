@@ -1,5 +1,4 @@
-@use '@/assets/styles/variables/colors' as colors;
-@use '@/assets/styles/variables/texts' as texts;
+@use "@/assets/styles/variables/globals" as *;
 @use '@/assets/styles/components/buttons' as buttons;
 
 #hero-section {
@@ -31,19 +30,19 @@
                 max-width: 40rem;
 
                 h1 {
-                    @include texts.main-title(colors.$accent);
+                    @include main-title($accent);
                     margin-bottom: 1rem;
                 }
 
                 p {
-                    @include texts.base(colors.$accent);
+                    @include base-text($accent);
 
                     &>u {
-                        @include texts.base(colors.$accent, false, true);
+                        @include base-text($accent, false, true);
                     }
 
                     &>b {
-                        @include texts.base(colors.$accent, true);
+                        @include base-text($accent, true);
                     }
                 }
             }
@@ -84,7 +83,7 @@
 
                     background: radial-gradient(174.54% 210.83% at 0% 50.07%,
                             rgba(17, 17, 23, 0.00) 22.88%,
-                            #111117 51.58%);
+                            $secondary 51.58%);
                     border-radius: 1rem;
                     ;
                 }
@@ -93,14 +92,16 @@
     }
 
     .shapes-bg {
+        min-width: 1280px;
         width: 100%;
         height: auto;
 
         position: absolute;
         top: 0;
-        left: 0;
+        left: 50%;
         z-index: -1;
 
+        transform: translateX(-50%);
         opacity: 0.075;
     }
 }

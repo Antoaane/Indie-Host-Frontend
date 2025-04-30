@@ -6,14 +6,29 @@ $lg: 1024px;
 $xl: 1280px;
 $xxl: 1536px;
 $xxxl: 1920px;
+$xxxxl: 2560px;
 
 // Container max-widths (correspondant aux breakpoints)
 $max-widths: (
-  sm: calc($xs + 5px),
-  md: calc($sm + 5px),
-  lg: calc($md + 5px),
-  xl: calc($lg + 5px),
-  xxl: calc($xl + 5px),
-  xxxl: calc($xxl + 5px),
-  xxxxl: calc($xxxl + 5px),
+  sm: calc($sm + 1px),
+  md: calc($md + 1px),
+  lg: calc($lg + 1px),
+  xl: calc($xl + 1px),
+  xxl: calc($xxl + 1px),
+  xxxl: calc($xxxl + 1px),
+  xxxxl: calc($xxxxl + 1px),
 );
+
+@mixin respond-to($breakpoint) {
+  $value: map-get($max-widths, $breakpoint);
+
+  @if $value {
+    @media screen and (min-width: calc($value)) {
+      @content;
+    }
+  }
+
+  @else {
+    @warn "⚠️ Breakpoint '#{$breakpoint}' not found in $breakpoints map.";
+  }
+}

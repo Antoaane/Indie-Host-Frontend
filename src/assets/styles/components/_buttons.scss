@@ -1,6 +1,6 @@
-@use '@/assets/styles/variables/colors' as colors;
+@use "@/assets/styles/variables/globals" as *;
 @use '@/assets/styles/variables/borders' as borders;
-@use '@/assets/styles/variables/animations' as anim;
+@use '@/assets/styles/variables/animations' as animations;
 
 @mixin primary($cta: false, $color: black) {
     list-style: none;
@@ -17,21 +17,21 @@
         border-radius: borders.$rounded-sm;
 
         @if $color ==white {
-            color: colors.$secondary;
-            background-color: colors.$accent;
-            outline: 3px solid rgba(colors.$secondary, 0.1);
+            color: $secondary;
+            background-color: $accent;
+            outline: 3px solid rgba($secondary, 0.1);
         }
 
         @else if $color ==light {
-            color: colors.$secondary;
-            background-color: colors.$accent;
-            outline: 3px solid rgba(colors.$accent, 0.5);
+            color: $secondary;
+            background-color: $accent;
+            outline: 3px solid rgba($accent, 0.5);
         }
 
         @else {
-            color: colors.$accent;
-            background-color: colors.$secondary;
-            outline: 3px solid rgba(colors.$accent, 0.5);
+            color: $accent;
+            background-color: $secondary;
+            outline: 3px solid rgba($accent, 0.5);
         }
 
         box-shadow: 0px 1px 3px 2px rgba(0, 0, 0, 0.1);
@@ -52,9 +52,9 @@
             border-radius: borders.$rounded-sm;
 
             background: linear-gradient(90deg,
-                    colors.$primary_gradiant_first 0%,
-                    colors.$primary_gradiant_second 50%,
-                    colors.$primary_gradiant_third 100%);
+                    $primary_gradiant_first 0%,
+                    $primary_gradiant_second 50%,
+                    $primary_gradiant_third 100%);
         }
 
         &::before {
@@ -70,23 +70,23 @@
             border-radius: borders.$rounded-sm;
 
             background: linear-gradient(90deg,
-                    colors.$secondary_gradiant_first 0%,
-                    colors.$secondary_gradiant_second 100%);
+                    $secondary_gradiant_first 0%,
+                    $secondary_gradiant_second 100%);
         }
     }
 
     &:hover {
         a {
             @if $color ==black {
-                color: colors.$secondary;
-                background-color: colors.$accent;
-                outline: 3px solid rgba(colors.$accent, 0.75);
+                color: $secondary;
+                background-color: $accent;
+                outline: 3px solid rgba($accent, 0.75);
             }
 
             @else {
-                color: colors.$accent;
-                background-color: colors.$secondary;
-                outline: 3px solid rgba(colors.$accent, 0.75);
+                color: $accent;
+                background-color: $secondary;
+                outline: 3px solid rgba($accent, 0.75);
             }
 
             @if not $cta {
@@ -116,7 +116,7 @@
 
         font-size: 1rem;
         text-decoration: none;
-        color: colors.$secondary;
+        color: $secondary;
 
         text-decoration: underline;
         text-underline-offset: 0.3rem;

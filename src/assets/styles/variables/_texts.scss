@@ -1,6 +1,6 @@
-@use "@/assets/styles/variables/colors" as colors;
+// styles/variables/_texts.scss
 
-@mixin base($color : colors.$secondary, $bold: false, $underline: false, $italic: false) {
+@mixin base-text($color : $secondary, $bold: false, $underline: false, $italic: false) {
     font-family: 'outfit', sans-serif;
     color: $color;
     font-size: 1rem;
@@ -14,7 +14,7 @@
     font-style: if($italic, italic, normal);
 }
 
-@mixin main-title($color : colors.$secondary) {
+@mixin main-title($color : $secondary) {
     font-family: 'Fustat', sans-serif;
     font-size: 3rem;
     line-height: 3.5rem;

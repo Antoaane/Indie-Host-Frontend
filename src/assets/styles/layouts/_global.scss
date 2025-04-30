@@ -1,5 +1,4 @@
-@use '@/assets/styles/variables/colors' as colors;
-@use '@/assets/styles/variables/breakpoints' as bp;
+@use "@/assets/styles/variables/globals" as *;
 
 // Mixin container avec un argument optionnel pour limiter la taille max
 @mixin container($max: null) {
@@ -11,7 +10,7 @@
 
     // Si on spécifie une taille max, on l'utilise directement
     @if $max !=null {
-        $max-width: map-get(bp.$max-widths, $max);
+        $max-width: map-get($max-widths, $max);
 
         @if $max-width !=null {
             max-width: $max-width;
@@ -24,7 +23,7 @@
 
     // Sinon, comportement responsive classique
     @else {
-        @each $label, $value in bp.$max-widths {
+        @each $label, $value in $max-widths {
             @media (min-width: $value) {
                 max-width: $value;
             }
@@ -39,7 +38,7 @@
 html {
     scroll-behavior: smooth;
     overflow-x: hidden;
-    background-color: colors.$secondary;
+    background-color: $secondary;
 }
 
 body {

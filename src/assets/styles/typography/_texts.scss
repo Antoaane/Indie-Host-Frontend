@@ -1,22 +1,6 @@
-@use '@/assets/styles/variables/colors' as colors;
+@use "@/assets/styles/variables/globals" as *;
 
 * {
     font-family: 'outfit', sans-serif;
-    color: colors.$secondary;
-}
-
-text[font-family="Fustat"] {
-    font-family: 'Fustat', sans-serif;
-
-    tspan {
-        font-family: 'Fustat', sans-serif;
-    }
-}
-
-text[font-family="Outfit"] {
-    font-family: 'Outfit', sans-serif;
-
-    tspan {
-        font-family: 'Outfit', sans-serif;
-    }
+    color: $secondary;
 }
