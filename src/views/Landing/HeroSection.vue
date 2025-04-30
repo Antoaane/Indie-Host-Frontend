@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import HeroImage from '@/components/svgs/images/HeroImage.vue';
+import ShapesBgCroped from '@/components/svgs/images/ShapesBgCroped.vue';
 </script>
 
 <template>
   <div id="hero-section">
+    <ShapesBgCroped class="shapes-bg" />
     <div class="container">
       <div class="text">
         <div>
