@@ -1,40 +1,26 @@
 // File: src/assets/styles/layouts/_global.scss
 
+@use "sass:map";
+@use "sass:list";
 @use "@/assets/styles/variables/globals" as *;
 
-// Mixin container avec un argument optionnel pour limiter la taille max
-@mixin container($max: null) {
+.container {
     width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 1rem;
-    padding-right: 1rem;
+    margin-inline: auto;
+    padding-inline: 0.5rem;
+    box-sizing: border-box;
 
-    // Si on spécifie une taille max, on l'utilise directement
-    @if $max !=null {
-        $max-width: map-get($max-widths, $max);
-
-        @if $max-width !=null {
-            max-width: $max-width;
-        }
-
-        @else {
-            @warn "⚠️ Breakpoint `#{$max}` introuvable dans container-max-widths.";
-        }
-    }
-
-    // Sinon, comportement responsive classique
-    @else {
-        @each $label, $value in $max-widths {
-            @media (min-width: $value) {
-                max-width: $value;
-            }
-        }
-    }
+    // d'abord toutes les déclarations, ensuite les mixins à @media
+    @include gutters();
+    @include container(); // toujours après les déclarations
 }
 
-.container {
-    @include container(); // responsive full range
+@each $size, $value in $max-widths {
+    .container__#{$size} {
+        @extend .container;
+
+        @include container($size);
+    }
 }
 
 html {

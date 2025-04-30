@@ -1,14 +1,27 @@
 // File: src/assets/styles/variables/_breakpoints.scss
 
+@use "sass:map";
+
 // Breakpoints
-$xs: 360px;
-$sm: 640px;
-$md: 768px;
-$lg: 1024px;
-$xl: 1280px;
-$xxl: 1536px;
-$xxxl: 1920px;
-$xxxxl: 2560px;
+$breakpoints: (
+  xs: 360px,
+  sm: 640px,
+  md: 768px,
+  lg: 1024px,
+  xl: 1280px,
+  xxl: 1536px,
+  xxxl: 1920px,
+  xxxxl: 2560px
+);
+
+$xs: map.get($breakpoints, xs);
+$sm: map.get($breakpoints, sm);
+$md: map.get($breakpoints, md);
+$lg: map.get($breakpoints, lg);
+$xl: map.get($breakpoints, xl);
+$xxl: map.get($breakpoints, xxl);
+$xxxl: map.get($breakpoints, xxxl);
+$xxxxl: map.get($breakpoints, xxxxl);
 
 // Container max-widths (correspondant aux breakpoints)
 $max-widths: (
@@ -21,8 +34,8 @@ $max-widths: (
   xxxxl: calc($xxxxl + 1px),
 );
 
-@mixin respond-to($breakpoint) {
-  $value: map-get($max-widths, $breakpoint);
+@mixin min-width($breakpoint) {
+  $value: map.get($max-widths, $breakpoint);
 
   @if $value {
     @media screen and (min-width: calc($value)) {
@@ -32,5 +45,65 @@ $max-widths: (
 
   @else {
     @warn "⚠️ Breakpoint '#{$breakpoint}' not found in $breakpoints map.";
+  }
+}
+
+@mixin gutters($type: padding, $direction: inline) {
+  $sides: if($direction ==inline, (left, right), (top, bottom));
+
+  @each $side in $sides {
+    #{$type}-#{$side}: 0.5rem;
+  }
+
+  @include min-width(sm) {
+    @each $side in $sides {
+      #{$type}-#{$side}: 0.75rem;
+      ;
+    }
+  }
+
+  @include min-width(md) {
+    @each $side in $sides {
+      #{$type}-#{$side}: 1rem;
+    }
+  }
+
+  @include min-width(lg) {
+    @each $side in $sides {
+      #{$type}-#{$side}: 1.25rem;
+    }
+  }
+
+  @include min-width(xxl) {
+    @each $side in $sides {
+      #{$type}-#{$side}: 1.5rem;
+    }
+  }
+}
+
+
+@mixin container($max: xl) {
+  $keys: map.keys($breakpoints);
+
+  @each $label in $keys {
+    $value: map.get($breakpoints, $label);
+    $max-value: map.get($max-widths, $max);
+
+    @media screen and (min-width: $value) {
+
+      @if $max !=null {
+        @if $value >$max-value {
+          max-width: $max-value;
+        }
+
+        @else {
+          max-width: $value;
+        }
+      }
+
+      @else {
+        max-width: $value;
+      }
+    }
   }
 }

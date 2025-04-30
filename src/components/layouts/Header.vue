@@ -10,8 +10,6 @@ import Nav from '@/components/navs/Nav.vue'
 
 <template>
     <header>
-        <div class="container">
-            <Nav />
-        </div>
+        <Nav />
     </header>
 </template>

@@ -1,11 +1,14 @@
 // File: src/assets/styles/layouts/_header.scss
 
+@use "@/assets/styles/variables/globals" as *;
+
 header {
     width: 100%;
-    padding: 1.5rem;
 
     box-sizing: border-box;
 
     position: fixed;
     z-index: 9999;
+
+    @include gutters(padding, top);
 }
