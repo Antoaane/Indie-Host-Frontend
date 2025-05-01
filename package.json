@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "cross-env DEVCHAT_DEV=true vite",
     "tag:files": "node ./plugins/inject-comments.js",
     "svg:convert": "python ./plugins/convert_svg.py",
     "images:resize": "python ./plugins/resize_images.py",
@@ -19,6 +19,7 @@
     "chokidar": "^4.0.3",
     "gsap": "^3.12.7",
     "pinia": "^3.0.1",
+    "vite-plugin-devchat": "file:../vite-plugin-devchat",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"
   },
@@ -27,6 +28,7 @@
     "@types/node": "^22.13.9",
     "@vitejs/plugin-vue": "^5.2.1",
     "@vue/tsconfig": "^0.7.0",
+    "cross-env": "^7.0.3",
     "npm-run-all2": "^7.0.2",
     "prettier": "^3.5.3",
     "sass-embedded": "^1.87.0",
