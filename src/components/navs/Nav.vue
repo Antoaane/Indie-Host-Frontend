@@ -12,7 +12,7 @@ import { icons } from '@/components/svgs'
     <div class="container__xl">
         <nav class="navbar">
             <div class="navbar__logo">
-                <component :is="icons.logoFull.adapt"/>
+                <component :is="icons.logoFull.adapt" />
             </div>
             <ul class="navbar__links">
                 <li>

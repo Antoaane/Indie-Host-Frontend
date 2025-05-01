@@ -32,3 +32,4 @@ coverage
 *.code-workspace
 
 *.tsbuildinfo
+tree.cjs

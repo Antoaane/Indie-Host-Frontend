@@ -48,37 +48,45 @@ $max-widths: (
   }
 }
 
-@mixin gutters($type: padding, $direction: inline) {
-  $sides: if($direction ==inline, (left, right), (top, bottom));
+@mixin gutters($type: padding, $sides: inline, $multiple: 1) {
+  box-sizing: border-box;
 
-  @each $side in $sides {
-    #{$type}-#{$side}: 0.5rem;
-  }
+  $side-map: (
+    inline: (-left, -right),
+    vertical: (-top, -bottom),
+    all: (-top, -right, -bottom, -left)
+  );
 
-  @include min-width(sm) {
-    @each $side in $sides {
-      #{$type}-#{$side}: 0.75rem;
-      ;
-    }
-  }
+$selected-sides: map.get($side-map, $sides);
 
-  @include min-width(md) {
-    @each $side in $sides {
-      #{$type}-#{$side}: 1rem;
-    }
-  }
+// mobile first
+@each $side in $selected-sides {
+  #{$type}#{$side}: calc(0.5rem * #{$multiple});
+}
 
-  @include min-width(lg) {
-    @each $side in $sides {
-      #{$type}-#{$side}: 1.25rem;
-    }
+@include min-width(sm) {
+  @each $side in $selected-sides {
+    #{$type}#{$side}: calc(0.75rem * #{$multiple});
   }
+}
 
-  @include min-width(xxl) {
-    @each $side in $sides {
-      #{$type}-#{$side}: 1.5rem;
-    }
+@include min-width(md) {
+  @each $side in $selected-sides {
+    #{$type}#{$side}: calc(1rem * #{$multiple});
   }
+}
+
+@include min-width(lg) {
+  @each $side in $selected-sides {
+    #{$type}#{$side}: calc(1.25rem * #{$multiple});
+  }
+}
+
+@include min-width(xxl) {
+  @each $side in $selected-sides {
+    #{$type}#{$side}: calc(1.5rem * #{$multiple});
+  }
+}
 }
 
 

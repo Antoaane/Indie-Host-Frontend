@@ -19,9 +19,9 @@ import ShapesBgCroped from '@/components/svgs/images/ShapesBgCroped.vue';
           <p>
             IndieHost <u>élimine les commissions</u>. Des réservations plus accessibles pour vos voyageurs, et jusqu’à <b>20 % de revenus en plus</b> pour vous grâce à un abonnement fixe. Créez une page à votre image et de proposez des tarifs plus justes sans vous séparer de vos outils habituels.
           </p>
-        </div>
-        <div class="cta">
-          <a href="#">Essayez en premier !</a>
+          <div class="cta">
+            <a href="#">Essayez en premier !</a>
+          </div>
         </div>
       </div>
       <div class="illustration">

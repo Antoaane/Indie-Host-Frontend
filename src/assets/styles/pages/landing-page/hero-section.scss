@@ -4,7 +4,6 @@
 @use '@/assets/styles/components/buttons' as buttons;
 
 #hero-section {
-    height: 100vh;
     padding-top: calc(70px + 1.5rem);
 
     box-sizing: border-box;
@@ -13,44 +12,68 @@
 
     position: relative;
 
+    @include min-width(lg) {
+        height: 100vh;
+    }
+
     .container {
         display: flex;
         flex-direction: column;
+
+        @include gutters(padding, inline, 2);
 
         @include min-width(lg) {
             flex-direction: row;
         }
 
         &>div {
-            max-width: 50vw;
-            max-height: 100%;
-            flex: 0 0 50%;
+            padding-top: 5rem;
+
+            @include min-width(lg) {
+                max-width: 50vw;
+                max-height: 100%;
+                height: 100%;
+
+                flex: 0 0 50%;
+            }
         }
 
         .text {
-            height: 100%;
             display: flex;
             flex-direction: column;
             justify-content: center;
 
             &>div {
-                max-width: 40rem;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+
+                @include min-width(lg) {
+                    max-width: 40rem;
+                    align-items: flex-start;
+                }
 
                 h1 {
+                    width: 100%;
+                    margin-bottom: 0.5rem;
+
+                    text-align: center;
                     @include main-title($accent);
 
                     @include min-width(lg) {
-                        text-align: center;
+                        text-align: left;
                     }
-
-                    margin-bottom: 1rem;
                 }
 
                 p {
+                    width: 100%;
+                    margin-bottom: 2rem;
+
+                    text-align: center;
                     @include base-text($accent);
 
                     @include min-width(lg) {
-                        text-align: center;
+                        text-align: left;
                     }
 
                     &>u {
@@ -61,22 +84,24 @@
                         @include base-text($accent, true);
                     }
                 }
-            }
 
-            .cta {
-                width: max-content;
-                margin-top: 1rem;
-                @include buttons.primary(true, light);
+                .cta {
+                    width: max-content;
+                    margin-top: 1rem;
+
+                    @include buttons.primary(true, light);
+                }
             }
         }
 
         .illustration {
-            height: 100%;
-            padding-left: 4rem;
-
             display: flex;
             flex-direction: column;
             justify-content: center;
+
+            @include min-width(lg) {
+                padding-left: 4rem;
+            }
 
             &>div {
                 max-height: 90%;
@@ -91,9 +116,11 @@
 
                 // illustration gradient
                 span {
-                    width: 51%;
+                    width: 35%;
                     height: 81.5%;
                     max-height: 960px;
+
+                    display: block;
 
                     position: absolute;
                     z-index: 1;
