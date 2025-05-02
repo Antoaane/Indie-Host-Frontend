@@ -1,5 +1,6 @@
 // File: plugins/inject-comments.js
 
+
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -11,51 +12,57 @@ const BASE_DIR = path.resolve(__dirname, '../src');
 const INCLUDED_EXTENSIONS = /\.(ts|js|vue|scss|css|html)$/;
 const EXCLUDED_DIRS = ['node_modules', '.git', 'dist', '.cache', 'build'];
 
+/* -------------------------------------------------------------------------- */
+/*                               utils / helpers                              */
+/* -------------------------------------------------------------------------- */
+function getComment(filePath) {
+    const rel = path.relative(process.cwd(), filePath).replace(/\\/g, '/');
+    return filePath.endsWith('.vue') || filePath.endsWith('.html')
+        ? `<!-- File: ${rel} -->`
+        : `// File: ${rel}`;
+}
+
 function walk(dir) {
-    const entries = fs.readdirSync(dir, { withFileTypes: true });
-
-    for (const entry of entries) {
-        const fullPath = path.join(dir, entry.name);
-
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, entry.name);
         if (entry.isDirectory()) {
-            if (EXCLUDED_DIRS.includes(entry.name)) continue;
-            walk(fullPath);
-        } else if (INCLUDED_EXTENSIONS.test(fullPath)) {
-            processFile(fullPath);
+            if (!EXCLUDED_DIRS.includes(entry.name)) walk(full);
+        } else if (INCLUDED_EXTENSIONS.test(full)) {
+            processFile(full);
         }
     }
 }
 
-function getComment(filePath) {
-    const relativePath = path.relative(process.cwd(), filePath).replace(/\\/g, '/');
-    return filePath.endsWith('.vue') || filePath.endsWith('.html')
-        ? `<!-- File: ${relativePath} -->`
-        : `// File: ${relativePath}`;
-}
-
+/* -------------------------------------------------------------------------- */
+/*                              core : processFile                            */
+/* -------------------------------------------------------------------------- */
 function processFile(filePath) {
-    const content = fs.readFileSync(filePath, 'utf-8');
-    const lines = content.split('\n');
-    const expectedComment = getComment(filePath);
-    const firstLine = lines[0];
+    const raw = fs.readFileSync(filePath, 'utf-8');
+    const lines = raw.split('\n');
 
-    if (firstLine === expectedComment && lines[1] === '') return;
-
-    let newContent = '';
-
-    if (
-        firstLine.startsWith('// File: ') ||
-        firstLine.startsWith('<!-- File: ')
-    ) {
-        lines[0] = expectedComment;
-        if (lines[1] !== '') lines.splice(1, 0, '');
-        newContent = lines.join('\n');
-    } else {
-        newContent = expectedComment + '\n\n' + content;
+    // 1. jette le premier commentaire File: éventuel
+    let idx = 0;
+    if (lines[idx]?.startsWith('// File: ') || lines[idx]?.startsWith('<!-- File: ')) {
+        idx++; // saute la ligne commentaire existante
     }
 
-    fs.writeFileSync(filePath, newContent, 'utf-8');
-    console.log(`[tag:files] ${filePath}`);
+    // 2. jette toutes les lignes vides directement après
+    while (idx < lines.length && lines[idx].trim() === '') idx++;
+
+    // 3. ce qu’il reste est le contenu "utile"
+    const body = lines.slice(idx).join('\n');
+
+    // 4. reconstruit ultra-simple : commentaire + une ligne vide + contenu
+    const result = `${getComment(filePath)}\n\n${body}`;
+
+    // 5. écrit si ça a changé
+    if (result !== raw) {
+        fs.writeFileSync(filePath, result, 'utf-8');
+        console.log(`[tag:files] ${filePath}`);
+    }
 }
 
+/* -------------------------------------------------------------------------- */
+/*                                  run walk                                  */
+/* -------------------------------------------------------------------------- */
 walk(BASE_DIR);

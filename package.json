@@ -19,7 +19,7 @@
     "chokidar": "^4.0.3",
     "gsap": "^3.12.7",
     "pinia": "^3.0.1",
-    "vite-plugin-devchat": "file:../vite-plugin-devchat",
+    "vite-plugin-devchat": "file:../Vite-Plugin-Devchat",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"
   },

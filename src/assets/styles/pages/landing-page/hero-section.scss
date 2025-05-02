@@ -5,11 +5,8 @@
 
 #hero-section {
     padding-top: calc(70px + 1.5rem);
-
     box-sizing: border-box;
-
     display: flex;
-
     position: relative;
 
     @include min-width(lg) {
@@ -33,6 +30,7 @@
                 max-width: 50vw;
                 max-height: 100%;
                 height: 100%;
+                padding-top: 0;
 
                 flex: 0 0 50%;
             }

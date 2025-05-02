@@ -20,6 +20,8 @@
         border-radius: borders.$rounded-lg;
         background-color: $accent;
 
+        @include soft-shadow();
+
         .navbar__logo {
             width: min-content;
             height: 100%;

@@ -1,0 +1,12 @@
+// File: src/assets/styles/pages/landing-page/_index.scss
+
+@forward 'hero-section.scss';
+@forward 'benefits-section.scss';
+
+#landing-page {
+    padding-bottom: 5rem;
+
+    display: flex;
+    flex-direction: column;
+    gap: 5rem;
+}

@@ -1,6 +1,9 @@
 // File: src/assets/styles/variables/_texts.scss
 
 
+
+@use "@/assets/styles/variables/colors" as *;
+
 @mixin base-text($color : $secondary, $bold: false, $underline: false, $italic: false) {
     font-family: 'outfit', sans-serif;
     color: $color;
@@ -22,11 +25,47 @@
     font-weight: 700;
     color: $color;
 
-    span {
+    .gradient-text {
         background: linear-gradient(87deg, #DA99FF 0%, #FABDCF 100%);
         background-clip: text;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         font-size: 3.25rem;
+    }
+}
+
+@mixin h2-title($color : $secondary) {
+    font-family: 'Fustat', sans-serif;
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+    font-weight: 700;
+    color: $color;
+
+    &:has(.gradient-text) {
+        line-height: 3rem;
+    }
+
+    .gradient-text {
+        background: linear-gradient(87deg, #DA99FF 0%, #FABDCF 100%);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-size: 3.25rem;
+    }
+}
+
+@mixin h3-title($color : $secondary) {
+    font-family: 'Fustat', sans-serif;
+    font-size: 1.5rem;
+    line-height: 2rem;
+    font-weight: 700;
+    color: $color;
+
+    .gradient-text {
+        background: linear-gradient(87deg, #DA99FF 0%, #FABDCF 100%);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-size: 2.75rem;
     }
 }
