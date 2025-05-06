@@ -54,6 +54,10 @@ $max-widths: (
   $side-map: (
     inline: (-left, -right),
     vertical: (-top, -bottom),
+    top: (-top),
+    right: (-right),
+    bottom: (-bottom),
+    left: (-left),
     all: (-top, -right, -bottom, -left)
   );
 
@@ -90,7 +94,8 @@ $selected-sides: map.get($side-map, $sides);
 }
 
 
-@mixin container($max: xl) {
+@mixin container($max: xxl) {
+  width: 100%;
   $keys: map.keys($breakpoints);
 
   @each $label in $keys {

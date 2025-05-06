@@ -7,8 +7,6 @@
 .container {
     width: 100%;
     margin-inline: auto;
-    padding-inline: 0.5rem;
-    box-sizing: border-box;
 
     // d'abord toutes les déclarations, ensuite les mixins à @media
     @include gutters();
@@ -38,4 +36,22 @@ body {
     main {
         z-index: 1;
     }
+}
+
+div,
+section,
+article,
+aside,
+header,
+footer,
+nav,
+ul,
+li,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    box-sizing: border-box;
 }

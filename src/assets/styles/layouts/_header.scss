@@ -3,12 +3,13 @@
 @use "@/assets/styles/variables/globals" as *;
 
 header {
-    width: 100%;
-
-    box-sizing: border-box;
+    @include container(xxl);
+    @include gutters(padding, all);
 
     position: fixed;
+    top: 0;
+    left: 50%;
     z-index: 9999;
 
-    @include gutters(padding, top);
+    transform: translateX(-50%);
 }
