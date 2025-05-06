@@ -1,24 +1,32 @@
 <!-- File: src/views/Landing/WhySection/CustomizationSection.vue -->
 
 <script setup lang="ts">
-import CustomizationImage from '@/components/svgs/images/CustomizationImage.vue';
+import CustomDomain from '@/components/svgs/images/CustomDomain.vue'
 </script>
 
 <template>
     <section id="customization-section">
         <div class="container">
-            <h1>
-                Personnalisez votre page
-                <span class="gradient-text">comme vous le souhaitez</span>
-            </h1>
-            <p>
-                Créez une page à votre image et de proposez des tarifs plus justes sans vous séparer de vos outils
-                habituels.
-            </p>
-        </div>
-
-        <div class="illustration">
-            <CustomizationImage class="customization-image" />
+            <div class="illustration">
+                <img class="customization-image" src="@/assets/media/images/customization-image.png"
+                    alt="Customization" />
+            </div>
+            <div class="content">
+                <div>
+                    <h2>
+                        Votre page, votre nom, votre image
+                        <span class="gradient-text">image</span>
+                    </h2>
+                    <CustomDomain class="custom-domain" />
+                    <p>
+                        IndieHost crée <b>une adresse rien qu’à vous</b>, avec un thème qui reflète l’esprit de votre
+                        lieu,
+                        votre ton, votre univers.
+                        <br><br>
+                        Pas besoin d’un site compliqué pour avoir une page qui vous ressemble.
+                    </p>
+                </div>
+            </div>
         </div>
     </section>
 </template>

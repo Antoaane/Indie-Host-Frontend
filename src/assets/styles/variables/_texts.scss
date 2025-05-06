@@ -2,6 +2,11 @@
 
 
 
+
+
+
+
+
 @use "@/assets/styles/variables/colors" as *;
 
 @mixin base-text($color : $secondary, $bold: false, $underline: false, $italic: false) {
@@ -16,9 +21,22 @@
     text-underline-offset: 0.2rem;
     text-decoration-thickness: 0.05rem;
     font-style: if($italic, italic, normal);
+
+    b,
+    i,
+    strong,
+    em,
+    u {
+        color: inherit;
+    }
+
+    b,
+    strong {
+        font-weight: 800;
+    }
 }
 
-@mixin main-title($color : $secondary) {
+@mixin main-title($color : $secondary, $bigger: true) {
     font-family: 'Fustat', sans-serif;
     font-size: 3rem;
     line-height: 3.5rem;
@@ -30,11 +48,14 @@
         background-clip: text;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        font-size: 3.25rem;
+
+        @if $bigger {
+            font-size: 3.25rem;
+        }
     }
 }
 
-@mixin h2-title($color : $secondary) {
+@mixin h2-title($color : $secondary, $bigger: true) {
     font-family: 'Fustat', sans-serif;
     font-size: 2.25rem;
     line-height: 2.5rem;
@@ -50,11 +71,14 @@
         background-clip: text;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        font-size: 3.25rem;
+
+        @if $bigger {
+            font-size: 3.25rem;
+        }
     }
 }
 
-@mixin h3-title($color : $secondary) {
+@mixin h3-title($color : $secondary, $bigger: true) {
     font-family: 'Fustat', sans-serif;
     font-size: 1.5rem;
     line-height: 2rem;
@@ -66,6 +90,9 @@
         background-clip: text;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        font-size: 2.75rem;
+
+        @if $bigger {
+            font-size: 2.75rem;
+        }
     }
 }

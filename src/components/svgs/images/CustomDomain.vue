@@ -1,0 +1,51 @@
+<template>
+<svg width="611" height="96" viewBox="0 0 611 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g filter="url(#filter0_di_666_47155)">
+<rect x="14.6624" y="13.5889" width="581.675" height="66.7109" rx="28.0888" fill="#FCFAFA" shape-rendering="crispEdges"/>
+<path d="M49.4081 55.0519L41.3009 46.9446L49.4081 38.8374" stroke="#111117" stroke-width="2.77962" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M57.5154 46.9443H41.3009" stroke="#111117" stroke-width="2.77962" stroke-linecap="round" stroke-linejoin="round"/>
+<g opacity="0.25">
+<path d="M89.9442 46.9443H106.159" stroke="#111117" stroke-width="2.77962" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M98.0509 38.8374L106.158 46.9446L98.0509 55.0519" stroke="#111117" stroke-width="2.77962" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<path d="M157.118 46.9446C157.118 44.1801 156.02 41.5288 154.065 39.574C152.11 37.6192 149.459 36.521 146.694 36.521C143.78 36.532 140.983 37.669 138.888 39.6944L136.271 42.3119" stroke="#111117" stroke-width="2.77962" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M136.271 36.521V42.3119H142.062" stroke="#111117" stroke-width="2.77962" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M136.271 46.9443C136.271 49.7088 137.369 52.3601 139.324 54.3149C141.279 56.2697 143.93 57.3679 146.694 57.3679C149.608 57.357 152.405 56.2199 154.5 54.1945L157.118 51.577" stroke="#111117" stroke-width="2.77962" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M151.327 51.5771H157.118V57.368" stroke="#111117" stroke-width="2.77962" stroke-linecap="round" stroke-linejoin="round"/>
+<rect x="181.44" y="27.4868" width="401" height="38.9147" rx="19.4574" fill="#ECE8E8"/>
+<rect x="184.914" y="30.9614" width="31.9657" height="31.9657" rx="15.9828" fill="#FCFAFA"/>
+<g clip-path="url(#clip0_666_47155)">
+<path d="M206.92 47.6973C206.92 51.4614 204.285 53.3434 201.153 54.435C200.989 54.4906 200.811 54.4879 200.649 54.4275C197.51 53.3434 194.875 51.4614 194.875 47.6973V42.4276C194.875 42.228 194.954 42.0365 195.095 41.8953C195.237 41.7541 195.428 41.6748 195.628 41.6748C197.133 41.6748 199.015 40.7714 200.325 39.6271C200.485 39.4909 200.688 39.416 200.897 39.416C201.107 39.416 201.31 39.4909 201.47 39.6271C202.787 40.7789 204.661 41.6748 206.167 41.6748C206.367 41.6748 206.558 41.7541 206.699 41.8953C206.841 42.0365 206.92 42.228 206.92 42.4276V47.6973Z" stroke="#111117" stroke-width="1.73726" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M198.638 46.9446L200.144 48.4502L203.155 45.439" stroke="#111117" stroke-width="1.73726" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="19.4574" letter-spacing="0em"><tspan x="286.21" y="52.7537">delphine-et-paul</tspan></text>
+<text fill="#111117" fill-opacity="0.3" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="19.4574" letter-spacing="0em"><tspan x="223.829" y="52.7537">https://</tspan><tspan x="432.178" y="52.7537">.indiehost.fr/</tspan></text>
+</g>
+<defs>
+<filter id="filter0_di_666_47155" x="0.617948" y="0.948901" width="609.764" height="94.7997" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset dy="1.40444"/>
+<feGaussianBlur stdDeviation="7.0222"/>
+<feComposite in2="hardAlpha" operator="out"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0.988235 0 0 0 0 0.980392 0 0 0 0 0.980392 0 0 0 0.3 0"/>
+<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_666_47155"/>
+<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_666_47155" result="shape"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset/>
+<feGaussianBlur stdDeviation="1.75555"/>
+<feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0.183062 0 0 0 0 0.227589 0 0 0 0 0.230769 0 0 0 0.5 0"/>
+<feBlend mode="normal" in2="shape" result="effect2_innerShadow_666_47155"/>
+</filter>
+<clipPath id="clip0_666_47155">
+<rect width="18.0675" height="18.0675" fill="white" transform="translate(191.863 37.9106)"/>
+</clipPath>
+</defs>
+</svg>
+
+</template>
+
+<script setup lang="ts">
+// Ce composant a été généré automatiquement
+</script>

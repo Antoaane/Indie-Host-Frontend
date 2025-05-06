@@ -9,15 +9,17 @@ import ShapesBgCroped from '@/components/svgs/images/ShapesBgCroped.vue';
   <div id="hero-section">
     <ShapesBgCroped class="shapes-bg" />
     <div class="container">
-      <div class="text">
+      <div class="content">
         <div>
           <h1>
-            Une plateforme de location avec 
-            <span class="gradient-text">0%</span> 
+            Une plateforme de location avec
+            <span class="gradient-text">0%</span>
             de commissions
           </h1>
           <p>
-            IndieHost <u>élimine les commissions</u>. Des réservations plus accessibles pour vos voyageurs, et jusqu’à <b>20 % de revenus en plus</b> pour vous grâce à un abonnement fixe. Créez une page à votre image et de proposez des tarifs plus justes sans vous séparer de vos outils habituels.
+            IndieHost <u>élimine les commissions</u>. Des réservations plus accessibles pour vos voyageurs, et jusqu’à
+            <b>20 % de revenus en plus</b> pour vous grâce à un abonnement fixe. Créez une page à votre image et de
+            proposez des tarifs plus justes sans vous séparer de vos outils habituels.
           </p>
           <div class="cta">
             <a href="#">Essayez en premier !</a>

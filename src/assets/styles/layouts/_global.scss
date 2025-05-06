@@ -4,23 +4,6 @@
 @use "sass:list";
 @use "@/assets/styles/variables/globals" as *;
 
-.container {
-    width: 100%;
-    margin-inline: auto;
-
-    // d'abord toutes les déclarations, ensuite les mixins à @media
-    @include gutters();
-    @include container(); // toujours après les déclarations
-}
-
-@each $size, $value in $max-widths {
-    .container__#{$size} {
-        @extend .container;
-
-        @include container($size);
-    }
-}
-
 html {
     scroll-behavior: smooth;
     overflow-x: hidden;
@@ -54,4 +37,33 @@ h4,
 h5,
 h6 {
     box-sizing: border-box;
+}
+
+.container {
+    width: 100%;
+    margin-inline: auto;
+
+    // d'abord toutes les déclarations, ensuite les mixins à @media
+    @include gutters();
+    @include container(); // toujours après les déclarations
+}
+
+@each $size, $value in $max-widths {
+    .container__#{$size} {
+        @extend .container;
+
+        @include container($size);
+    }
+}
+
+[id*="-section"] {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    box-sizing: border-box;
+
+    @include gutters(padding, vertical, 2);
 }

@@ -21,17 +21,18 @@
         }
 
         p {
-            @include base-text($accent);
             text-decoration: underline;
             text-underline-offset: 0.3rem;
+
+            @include base-text($accent);
 
             span {
                 display: inline-block;
                 position: relative;
 
-                @include base-text($accent);
                 text-decoration: underline;
                 text-underline-offset: 0.3rem;
+                @include base-text($accent);
 
                 input {
                     width: 100%;
@@ -84,8 +85,8 @@
                     margin: 0;
                     padding: 0;
 
+                    font-weight: 800 !important;
                     @include h2-title();
-                    font-weight: 800;
                 }
 
                 &>.gains,
@@ -129,12 +130,12 @@
                     background-color: $good;
 
                     &>p {
-                        @include h2-title();
-
                         background: linear-gradient(180deg, $accent 22.14%, rgba($accent, 0.00) 167.86%);
                         background-clip: text;
                         -webkit-background-clip: text;
                         -webkit-text-fill-color: transparent;
+
+                        @include h2-title();
                     }
                 }
             }
@@ -164,12 +165,12 @@
                             #00000000 100%) 1 round;
 
                     &>p {
-                        @include h3-title();
-
                         background: linear-gradient(180deg, $bad 22.14%, $accent 167.86%);
                         background-clip: text;
                         -webkit-background-clip: text;
                         -webkit-text-fill-color: transparent;
+
+                        @include h3-title();
                     }
                 }
             }

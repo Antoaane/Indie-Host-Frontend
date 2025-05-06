@@ -2,11 +2,9 @@
 
 @forward 'hero-section.scss';
 @forward 'benefits-section.scss';
+@forward 'customization-section.scss';
 
 #landing-page {
-    padding-bottom: 5rem;
-
     display: flex;
     flex-direction: column;
-    gap: 5rem;
 }
