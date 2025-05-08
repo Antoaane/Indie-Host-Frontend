@@ -3,7 +3,7 @@
 @use "sass:map";
 
 // Breakpoints
-$breakpoints: (
+$max-widths: (
   xs: 360px,
   sm: 640px,
   md: 768px,
@@ -14,17 +14,17 @@ $breakpoints: (
   xxxxl: 2560px
 );
 
-$xs: map.get($breakpoints, xs);
-$sm: map.get($breakpoints, sm);
-$md: map.get($breakpoints, md);
-$lg: map.get($breakpoints, lg);
-$xl: map.get($breakpoints, xl);
-$xxl: map.get($breakpoints, xxl);
-$xxxl: map.get($breakpoints, xxxl);
-$xxxxl: map.get($breakpoints, xxxxl);
+$xs: map.get($max-widths, xs);
+$sm: map.get($max-widths, sm);
+$md: map.get($max-widths, md);
+$lg: map.get($max-widths, lg);
+$xl: map.get($max-widths, xl);
+$xxl: map.get($max-widths, xxl);
+$xxxl: map.get($max-widths, xxxl);
+$xxxxl: map.get($max-widths, xxxxl);
 
 // Container max-widths (correspondant aux breakpoints)
-$max-widths: (
+$breakpoints: (
   sm: calc($sm + 1px),
   md: calc($md + 1px),
   lg: calc($lg + 1px),

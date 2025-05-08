@@ -232,11 +232,22 @@ onMounted(() => {
 <style scoped>
 .fade-enter-active,
 .fade-leave-active {
-    transition: opacity 0.25s ease;
+    transition: opacity 0.25s ease, top 0.25s ease !important;
 }
 
-.fade-enter-from,
+.fade-enter-from {
+    opacity: 0;
+    top: 30px;
+}
+
 .fade-leave-to {
     opacity: 0;
+    top: -30px;
+}
+
+.fade-enter-to,
+.fade-leave-from {
+    opacity: 1;
+    top: 0;
 }
 </style>

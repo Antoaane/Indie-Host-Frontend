@@ -1,6 +1,11 @@
 // File: src/assets/styles/pages/landing-page/habits-section.scss
 
 
+
+
+
+
+
 @use "@/assets/styles/variables/globals" as *;
 
 #habits-section {
@@ -36,7 +41,7 @@
                 margin-bottom: 0.5rem;
 
                 position: absolute;
-                top: 2rem;
+                top: 5vh;
                 left: 1rem;
 
                 text-align: center;
@@ -51,9 +56,11 @@
                 width: max-content;
                 margin-bottom: 2rem;
 
+                position: relative;
+
                 text-align: center;
 
-                transition: none !important;
+                transition: transorm 0s;
 
                 @include h3-title($accent);
 
