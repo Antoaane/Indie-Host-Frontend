@@ -8,11 +8,21 @@ import gsap from 'gsap'
 // ASSETS
 import DashboardDetailLogement from '@/components/svgs/images/DashboardDetailLogement.vue'
 import AnnonceReservation from '@/components/svgs/images/AnnonceReservation.vue'
+import Messagerie from '@/components/svgs/images/Messagerie.vue'
 
 // REFS
 const splideRef = ref<any>(null)
 const lightRef = ref<HTMLSpanElement | null>(null)
 const shadowRef = ref<HTMLSpanElement | null>(null)
+
+const activeIndex = ref(0)
+const slideTexts = [
+    '',
+    'Gérez vos réservations dans un espace intuitif',
+    'Vos voyageurs réservent simplement et en toute sécurité',
+    'Centralisez vos messages sans effort',
+    '',
+]
 
 const opts = {
     type: 'slide',
@@ -36,7 +46,7 @@ onMounted(() => {
         const shadow = shadowRef.value
         if (!splide || !light || !shadow) return
 
-        const interval = 5 // secondes
+        const interval = 3 // secondes
         let forward = true
 
         // Animation et slide chainés
@@ -51,15 +61,19 @@ onMounted(() => {
                     if (index >= last) {
                         forward = false
                         splide.go('<')
+                        activeIndex.value = Math.max(0, index - 1)
                     } else {
                         splide.go('>')
+                        activeIndex.value = Math.min(slideTexts.length - 1, index + 1)
                     }
                 } else {
                     if (index <= 0) {
                         forward = true
                         splide.go('>')
+                        activeIndex.value = Math.min(slideTexts.length - 1, index + 1)
                     } else {
                         splide.go('<')
+                        activeIndex.value = Math.max(0, index - 1)
                     }
                 }
             })
@@ -87,13 +101,20 @@ onMounted(() => {
                 duration: .4
             });
 
+            tl.pause();
+
             setTimeout(() => {
                 if (!shadow.matches(':hover')) return
-                tl.pause();
 
                 let activeSlide = document.querySelector('.splide__slide.is-visible.is-next');
                 let otherSlides = document.querySelectorAll('.splide__slide.is-visible:not(.is-next)');
+                let title = document.getElementById('slide_title');
 
+                gsap.to(title, {
+                    translateX: 0,
+                    duration: .3,
+                    ease: 'power2.out',
+                });
                 gsap.to(activeSlide, {
                     scale: 1.5,
                     borderColor: 'rgba(252, 250, 250, 1)',
@@ -115,14 +136,12 @@ onMounted(() => {
 
             let activeSlide = document.querySelector('.splide__slide.is-visible.is-next');
             let otherSlides = document.querySelectorAll('.splide__slide.is-visible:not(.is-next)');
+            let title = document.getElementById('slide_title');
 
-            gsap.to(shadow, {
-                '--shadow-pos-x': '0%',
-                '--shadow-size': '190% 100%',
-                '--shadow-start': '20%',
-                '--shadow-end': '55%',
-                duration: .8,
-                ease: 'power2.inOut',
+            gsap.to(title, {
+                translateX: '4rem',
+                duration: .3,
+                ease: 'power2.out',
             });
             gsap.to(activeSlide, {
                 scale: 1,
@@ -143,7 +162,17 @@ onMounted(() => {
                 duration: .4
             });
 
-            setTimeout(() => { tl.resume() }, 400);
+            setTimeout(() => {
+                gsap.to(shadow, {
+                    '--shadow-pos-x': '0%',
+                    '--shadow-size': '190% 100%',
+                    '--shadow-start': '20%',
+                    '--shadow-end': '55%',
+                    duration: .8,
+                    ease: 'power2.inOut',
+                });
+                tl.resume();
+            }, 400);
         })
     })
 })
@@ -155,35 +184,34 @@ onMounted(() => {
         <div class="container">
 
             <div class="content">
-                <div>
-                    <h2>
-                        Gardez les mêmes <span class="gradient-text">habitudes</span> dans un espace de gestion <span
-                            class="gradient-text">simple</span>
-                    </h2>
-                    <p>
-                        IndieHost crée <b>une adresse rien qu’à vous</b>, avec un thème qui reflète l’esprit de votre
-                        lieu,
-                        votre ton, votre univers.
-                        <br><br>
-                        Pas besoin d’un site compliqué pour avoir une page qui vous ressemble.
-                    </p>
-                </div>
+                <h2>
+                    Gardez les mêmes <span class="gradient-text">habitudes</span> dans un espace de gestion <span
+                        class="gradient-text">simple</span>
+                </h2>
+                <Transition name="fade" mode="out-in">
+                    <h3 id="slide_title" :key="activeIndex">
+                        {{ slideTexts[activeIndex + 1] }}
+                    </h3>
+                </Transition>
             </div>
 
             <div class="illustration">
                 <div class="carousel">
                     <Splide ref="splideRef" :options="opts" aria-label="Mes photos">
                         <SplideSlide>
-                            <DashboardDetailLogement class="slide-page-svg" />
-                        </SplideSlide>
-                        <SplideSlide>
-                            <AnnonceReservation class="slide-page-svg" />
+                            <Messagerie class="slide-page-svg" />
                         </SplideSlide>
                         <SplideSlide>
                             <DashboardDetailLogement class="slide-page-svg" />
                         </SplideSlide>
                         <SplideSlide>
                             <AnnonceReservation class="slide-page-svg" />
+                        </SplideSlide>
+                        <SplideSlide>
+                            <Messagerie class="slide-page-svg" />
+                        </SplideSlide>
+                        <SplideSlide>
+                            <DashboardDetailLogement class="slide-page-svg" />
                         </SplideSlide>
                     </Splide>
                     <span id="shadow" ref="shadowRef">
@@ -200,3 +228,15 @@ onMounted(() => {
         </div>
     </section>
 </template>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.25s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+}
+</style>

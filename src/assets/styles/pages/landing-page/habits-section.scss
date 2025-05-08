@@ -22,10 +22,22 @@
 
         .content {
             width: 50%;
+            height: 90vh;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: end;
+
+            position: relative;
 
             h2 {
                 width: 100%;
                 margin-bottom: 0.5rem;
+
+                position: absolute;
+                top: 2rem;
+                left: 1rem;
 
                 text-align: center;
                 @include h2-title($accent, false);
@@ -35,23 +47,19 @@
                 }
             }
 
-            p {
-                width: 100%;
+            h3 {
+                width: max-content;
                 margin-bottom: 2rem;
 
                 text-align: center;
-                @include base-text($accent);
+
+                transition: none !important;
+
+                @include h3-title($accent);
 
                 @include min-width(lg) {
-                    text-align: left;
-                }
-
-                &>u {
-                    @include base-text($accent, false, true);
-                }
-
-                &>b {
-                    @include base-text($accent, true);
+                    text-align: right;
+                    transform: translateX(4rem);
                 }
             }
         }
