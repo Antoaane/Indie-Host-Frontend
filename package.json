@@ -16,6 +16,7 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@splidejs/vue-splide": "^0.6.12",
     "chokidar": "^4.0.3",
     "gsap": "^3.12.7",
     "pinia": "^3.0.1",

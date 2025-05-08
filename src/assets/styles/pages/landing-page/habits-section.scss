@@ -1,0 +1,194 @@
+// File: src/assets/styles/pages/landing-page/habits-section.scss
+
+
+@use "@/assets/styles/variables/globals" as *;
+
+#habits-section {
+    @include gutters(padding, top, 2);
+
+    .container {
+        max-height: 100%;
+
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+
+        @include gutters(padding, inline, 2);
+
+        @include min-width(lg) {
+            flex-direction: row;
+            align-items: center;
+        }
+
+        .content {
+            width: 50%;
+
+            h2 {
+                width: 100%;
+                margin-bottom: 0.5rem;
+
+                text-align: center;
+                @include h2-title($accent, false);
+
+                @include min-width(lg) {
+                    text-align: left;
+                }
+            }
+
+            p {
+                width: 100%;
+                margin-bottom: 2rem;
+
+                text-align: center;
+                @include base-text($accent);
+
+                @include min-width(lg) {
+                    text-align: left;
+                }
+
+                &>u {
+                    @include base-text($accent, false, true);
+                }
+
+                &>b {
+                    @include base-text($accent, true);
+                }
+            }
+        }
+
+        .illustration {
+            width: 50%;
+
+            display: flex;
+            justify-content: center;
+
+            overflow: hidden;
+
+            .carousel {
+                width: max-content;
+                position: relative;
+
+                #shadow {
+                    width: 100%;
+                    height: 100%;
+
+                    position: absolute;
+                    inset: 0;
+
+                    display: block;
+
+                    --shadow-pos-x: 0%;
+                    --shadow-pos-y: 50%;
+                    --shadow-size: 190% 100%;
+                    --shadow-start: 20%;
+                    --shadow-end: 55%;
+
+                    background: radial-gradient(var(--shadow-size) at var(--shadow-pos-x) var(--shadow-pos-y),
+                            rgba(17, 17, 23, 0) var(--shadow-start),
+                            #111117 var(--shadow-end));
+                    transition: none !important;
+
+                    #light {
+                        width: 100%;
+                        height: 100%;
+
+                        position: relative;
+
+                        transition: none !important;
+
+                        &>[id^="line_"] {
+                            position: absolute;
+                            opacity: 50%;
+                        }
+
+                        #line_1 {
+                            width: 125%;
+                            height: 1px;
+
+                            top: calc(100% / 3 + (1rem / 3 * 2));
+
+                            background: linear-gradient(to right,
+                                    rgba(252, 250, 250, 0) 9.43895%,
+                                    rgba(252, 250, 250, 1) 48.5999%,
+                                    rgba(252, 250, 250, 1) 77.7474%,
+                                    rgba(252, 250, 250, 0) 100%);
+                        }
+
+                        #line_2 {
+                            width: 1px;
+                            height: 55%;
+
+                            top: 50%;
+                            right: 0;
+
+                            transform: translateY(-50%);
+
+                            background: linear-gradient(to bottom,
+                                    rgba(252, 250, 250, 0) 0%,
+                                    rgba(252, 250, 250, 1) 20.7365%,
+                                    rgba(252, 250, 250, 1) 79.0715%,
+                                    rgba(252, 250, 250, 0) 100%);
+                        }
+
+                        #line_3 {
+                            width: 125%;
+                            height: 1px;
+
+                            bottom: calc(100% / 3 + (1rem / 3 * 2)) !important;
+
+                            background: linear-gradient(to right,
+                                    rgba(252, 250, 250, 0) 9.43895%,
+                                    rgba(252, 250, 250, 1) 48.5999%,
+                                    rgba(252, 250, 250, 1) 77.7474%,
+                                    rgba(252, 250, 250, 0) 100%);
+                        }
+
+                        #halo {
+                            width: 100%;
+                            height: calc(100% / 3 - (1rem / 3 * 2) * 2);
+
+                            position: absolute;
+                            top: 50%;
+                            right: 0;
+
+                            transform: translateY(-50%);
+
+                            border-radius: 0.75rem;
+                            box-shadow: 10.527px 10.527px 36.845px 0px rgba($accent, 0.15);
+                        }
+                    }
+                }
+
+                .splide {
+
+                    .splide__track {
+                        overflow: visible;
+
+                        .splide__list {
+
+                            .splide__slide {
+                                display: flex;
+                                justify-content: center;
+                                align-items: center;
+
+                                border-radius: .75rem;
+                                border-color: rgba($accent, 0);
+                                border-style: solid;
+                                border-width: 1px;
+
+                                transition: none !important;
+
+                                svg {
+                                    width: auto !important;
+                                    height: 100% !important;
+
+                                    border-radius: .75rem;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
