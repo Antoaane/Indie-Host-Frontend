@@ -1,0 +1,115 @@
+// File: src/assets/styles/pages/landing-page/usage-section.scss
+
+
+
+
+
+
+
+@use "@/assets/styles/variables/globals" as *;
+@use "@/assets/styles/variables/effects" as effect;
+
+.usage-section {
+    @include gutters(padding, top, 2);
+
+    .container {
+        height: 100vh;
+
+        display: flex;
+        flex-direction: column;
+        gap: 2rem;
+
+        @include gutters(padding, inline, 2);
+
+        @include min-width(lg) {
+            flex-direction: row;
+            align-items: center;
+            justify-content: end;
+        }
+
+        .content {
+            flex: 0 0 45%;
+            height: 100%;
+            padding-left: 3rem;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: end;
+
+            position: relative;
+
+            border-left: 1px solid;
+            border-image: linear-gradient(to bottom,
+                    rgba($accent, 0.75) 0%,
+                    #00000000 100%) 1 round;
+
+            .step {
+                position: absolute;
+                top: 50%;
+                left: 0;
+
+                transform: translate(-50%, -50%);
+
+                font-family: 'Fustat', sans-serif;
+                font-size: 8rem;
+                font-weight: 900;
+
+                background: linear-gradient(87deg, #DA99FF 0%, #FABDCF 100%);
+                background-clip: text;
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+
+            h2 {
+                margin: 1rem 0;
+                @include h2-title($accent, false);
+
+                @include min-width(lg) {
+                    text-align: left;
+                }
+            }
+
+            p {
+                margin: 0;
+                @include base-text($accent, false);
+            }
+        }
+
+        .illustration {
+            flex: 0 0 45%;
+            width: 50vw;
+            height: 100%;
+
+            display: flex;
+            overflow: visible;
+
+            position: relative;
+
+            .image {
+                width: auto;
+                height: 60vh;
+
+                position: absolute;
+                top: 50%;
+                left: 0;
+
+                transform: translateY(-50%);
+
+                border-radius: 1.15rem;
+
+                @include halo-sm($accent, .3);
+            }
+
+            .halo-png {
+                width: auto;
+                height: 100vh;
+
+                position: absolute;
+                top: 50%;
+
+                transform: translate(-40%, -50%);
+            }
+        }
+    }
+}
