@@ -5,88 +5,74 @@ import { onMounted, ref, nextTick } from 'vue'
 import { Splide, SplideSlide } from '@splidejs/vue-splide'
 import gsap from 'gsap'
 
-// ASSETS
+/* ---------------- ASSETS ---------------- */
 import DashboardDetailLogement from '@/components/svgs/images/DashboardDetailLogement.vue'
 import AnnonceReservation from '@/components/svgs/images/AnnonceReservation.vue'
 import Messagerie from '@/components/svgs/images/Messagerie.vue'
 
-// REFS
+/* ---------------- REFS ---------------- */
+const carouselRef = ref<HTMLElement | null>(null)
 const splideRef = ref<any>(null)
 const lightRef = ref<HTMLSpanElement | null>(null)
 const shadowRef = ref<HTMLSpanElement | null>(null)
 
-const activeIndex = ref(0)
-const slideTexts = [
-    '',
-    'Gérez vos réservations dans un espace intuitif',
-    'Vos voyageurs réservent simplement et en toute sécurité',
-    'Centralisez vos messages sans effort',
-    '',
+/* ---------------- TITRES PAR SLIDE ---------------- */
+const slideTitles = [
+    'Centralisez vos messages sans effort',            // index 0 – Messagerie
+    'Gérez vos réservations dans un espace intuitif',  // index 1 – Dashboard
+    'Vos voyageurs réservent simplement et en sécurité', // index 2 – Annonce
+    'Centralisez vos messages sans effort',            // index 3 – Messagerie (copie)
+    'Gérez vos réservations dans un espace intuitif',  // index 4 – Dashboard (copie)
 ]
+const activeIndex = ref(0)
 
+/* ---------------- OPTIONS SPLIDE ---------------- */
 const opts = {
     type: 'slide',
     direction: 'ttb',
-    height: '90vh',
-
-    // focus: 'center',
+    height: '80vh',
     perPage: 3,
     perMove: 1,
     gap: '2rem',
-
     arrows: false,
     pagination: false,
-    drag: false,
+    drag: true,
 }
 
 onMounted(() => {
     nextTick(() => {
+        const carousel = carouselRef.value
         const splide = splideRef.value?.splide as any
         const light = lightRef.value
         const shadow = shadowRef.value
-        if (!splide || !light || !shadow) return
+        if (!splide || !light || !shadow || !carousel) return
 
-        const interval = 3 // secondes
+        /* --- synchronise le <h3> à chaque mouvement du carrousel --- */
+        splide.on('moved', (newIdx: number) => (activeIndex.value = newIdx))
+
+        /* --- Animation GSAP cyclique --- */
+        const interval = 3
         let forward = true
 
-        // Animation et slide chainés
         const tl = gsap.timeline({ repeat: -1, paused: false })
-
-        tl.to(light, { opacity: 0, duration: 1 }) // fade out
+        tl.to(light, { opacity: 0, duration: 1 })
             .add(() => {
-                const index = splide.index
+                const idx = splide.index
                 const last = splide.length - opts.perPage
 
                 if (forward) {
-                    if (index >= last) {
-                        forward = false
-                        splide.go('<')
-                        activeIndex.value = Math.max(0, index - 1)
-                    } else {
-                        splide.go('>')
-                        activeIndex.value = Math.min(slideTexts.length - 1, index + 1)
-                    }
+                    idx >= last ? (forward = false, splide.go('<'))
+                        : splide.go('>')
                 } else {
-                    if (index <= 0) {
-                        forward = true
-                        splide.go('>')
-                        activeIndex.value = Math.min(slideTexts.length - 1, index + 1)
-                    } else {
-                        splide.go('<')
-                        activeIndex.value = Math.max(0, index - 1)
-                    }
+                    idx <= 0 ? (forward = true, splide.go('>'))
+                        : splide.go('<')
                 }
             })
-            .to(light, {
-                delay: .5,
-                opacity: 1,
-                duration: (interval * 1) / 3,
-            })
-            .to(light, { opacity: 1, duration: (interval * 2) / 3 }) // fade out en fin de cycle
+            .to(light, { delay: .5, opacity: 1, duration: interval / 3 })
+            .to(light, { opacity: 1, duration: (interval * 2) / 3 })
 
-        // Événements de pause / reprise au survol
-        shadow.addEventListener('mouseenter', () => {
-
+        /* --- Hover interactions --- */
+        const onEnter = () => {
             gsap.to(shadow, {
                 '--shadow-pos-x': '50%',
                 '--shadow-size': '365% 130%',
@@ -94,73 +80,58 @@ onMounted(() => {
                 '--shadow-end': '40%',
                 duration: .8,
                 ease: 'power2.out',
-            });
-
-            gsap.to(light, {
-                opacity: 0,
-                duration: .4
-            });
-
-            tl.pause();
+            })
+            gsap.to(light, { opacity: 0, duration: .4 })
+            tl.pause()
 
             setTimeout(() => {
-                if (!shadow.matches(':hover')) return
-
-                let activeSlide = document.querySelector('.splide__slide.is-visible.is-next');
-                let otherSlides = document.querySelectorAll('.splide__slide.is-visible:not(.is-next)');
-                let title = document.getElementById('slide_title');
+                if (!carousel.matches(':hover')) return
+                const activeSlide = document.querySelector('.splide__slide.is-visible.is-next')
+                const otherSlides = document.querySelectorAll('.splide__slide.is-visible:not(.is-next)')
+                const title = document.getElementById('slide_title')
 
                 gsap.to(title, {
                     translateX: 0,
                     duration: .3,
-                    ease: 'power2.out',
-                });
+                    ease: 'power2.out'
+                })
                 gsap.to(activeSlide, {
                     scale: 1.5,
-                    borderColor: 'rgba(252, 250, 250, 1)',
+                    borderColor: '#FCFAFA',
                     zIndex: 10,
-                    duration: .3,
-                    ease: 'power2.out',
-                });
-                gsap.to(otherSlides, {
-                    scale: 1,
-                    zIndex: 1,
-                    opacity: .5,
-                    duration: .3,
-                    ease: 'power2.out',
+                    duration: .3
                 })
-            }, 400);
-        })
+                gsap.to(otherSlides, {
+                    opacity: .5,
+                    duration: .3
+                })
+            }, 400)
+        }
 
-        shadow.addEventListener('mouseleave', () => {
-
-            let activeSlide = document.querySelector('.splide__slide.is-visible.is-next');
-            let otherSlides = document.querySelectorAll('.splide__slide.is-visible:not(.is-next)');
-            let title = document.getElementById('slide_title');
+        const onLeave = () => {
+            const activeSlide = document.querySelector('.splide__slide.is-visible.is-next')
+            const otherSlides = document.querySelectorAll('.splide__slide.is-visible:not(.is-next)')
+            const title = document.getElementById('slide_title')
 
             gsap.to(title, {
                 translateX: '4rem',
                 duration: .3,
-                ease: 'power2.out',
-            });
+                ease: 'power2.out'
+            })
             gsap.to(activeSlide, {
                 scale: 1,
-                borderColor: 'rgba(252, 250, 250, 0)',
+                borderColor: 'transparent',
                 zIndex: 1,
-                duration: .3,
-                ease: 'power2.out',
+                duration: .3
             })
             gsap.to(otherSlides, {
-                scale: 1,
-                zIndex: 1,
                 opacity: 1,
-                duration: .3,
-                ease: 'power2.out',
+                duration: .3
             })
             gsap.to(light, {
                 opacity: 1,
                 duration: .4
-            });
+            })
 
             setTimeout(() => {
                 gsap.to(shadow, {
@@ -170,34 +141,39 @@ onMounted(() => {
                     '--shadow-end': '55%',
                     duration: .8,
                     ease: 'power2.inOut',
-                });
-                tl.resume();
-            }, 400);
-        })
+                })
+                tl.resume()
+            }, 400)
+        }
+
+        carousel.addEventListener('mouseenter', onEnter)
+        carousel.addEventListener('mouseleave', onLeave)
     })
 })
 </script>
-
 
 <template>
     <section id="habits-section">
         <div class="container">
 
+            <!-- TITRE + SOUS-TITRE -->
             <div class="content">
                 <h2>
-                    Gardez les mêmes <span class="gradient-text">habitudes</span> dans un espace de gestion <span
-                        class="gradient-text">simple</span>
+                    Gardez les mêmes <span class="gradient-text">habitudes</span> dans un espace de gestion
+                    <span class="gradient-text">simple</span>
                 </h2>
+
                 <Transition name="fade" mode="out-in">
-                    <h3 id="slide_title" :key="activeIndex">
-                        {{ slideTexts[activeIndex + 1] }}
+                    <h3 :key="activeIndex" id="slide_title">
+                        {{ slideTitles[activeIndex] }}
                     </h3>
                 </Transition>
             </div>
 
+            <!-- ILLUSTRATION / CAROUSEL -->
             <div class="illustration">
-                <div class="carousel">
-                    <Splide ref="splideRef" :options="opts" aria-label="Mes photos">
+                <div class="carousel" ref="carouselRef">
+                    <Splide ref="splideRef" :options="opts" aria-label="Carrousel vertical">
                         <SplideSlide>
                             <Messagerie class="slide-page-svg" />
                         </SplideSlide>
@@ -214,6 +190,8 @@ onMounted(() => {
                             <DashboardDetailLogement class="slide-page-svg" />
                         </SplideSlide>
                     </Splide>
+
+                    <!-- EFFETS DE LUMIÈRE -->
                     <span id="shadow" ref="shadowRef">
                         <div id="light" ref="lightRef">
                             <span id="halo"></span>
@@ -232,7 +210,7 @@ onMounted(() => {
 <style scoped>
 .fade-enter-active,
 .fade-leave-active {
-    transition: opacity 0.25s ease, top 0.25s ease !important;
+    transition: opacity 0.25s ease, top 0.25s ease;
 }
 
 .fade-enter-from {

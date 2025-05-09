@@ -1,5 +1,6 @@
 // File: src/assets/styles/pages/landing-page/habits-section.scss
 
+
 @use "@/assets/styles/variables/globals" as *;
 @use "@/assets/styles/variables/effects" as effect;
 
@@ -8,6 +9,7 @@
 
     .container {
         max-height: 100%;
+        padding-top: 5rem;
 
         display: flex;
         flex-direction: column;
@@ -86,6 +88,7 @@
                     inset: 0;
 
                     display: block;
+                    pointer-events: none;
 
                     --shadow-pos-x: 0%;
                     --shadow-pos-y: 50%;
