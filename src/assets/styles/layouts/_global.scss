@@ -5,7 +5,7 @@
 @use "@/assets/styles/variables/globals" as *;
 
 html {
-    scroll-behavior: smooth;
+    scroll-behavior: auto;
     overflow-x: hidden;
     background-color: $secondary;
 }
@@ -18,6 +18,10 @@ body {
 
     main {
         z-index: 1;
+        height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+        scroll-behavior: auto;
     }
 }
 

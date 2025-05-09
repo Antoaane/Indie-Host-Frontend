@@ -4,3 +4,7 @@
 @mixin soft-shadow($color: rgba(0, 0, 0, 0.1), $blur: 10px, $spread: 0px) {
     box-shadow: 0px 4px $blur $spread $color;
 }
+
+@mixin halo-md($color: $accent, $opacity: 0.15) {
+    box-shadow: 10px 10px 35px 0px rgba($color, $opacity);
+}

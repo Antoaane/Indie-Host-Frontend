@@ -6,7 +6,7 @@ import ShapesBgCroped from '@/components/svgs/images/ShapesBgCroped.vue';
 </script>
 
 <template>
-  <div id="hero-section">
+  <section id="hero-section">
     <ShapesBgCroped class="shapes-bg" />
     <div class="container">
       <div class="content">
@@ -33,5 +33,5 @@ import ShapesBgCroped from '@/components/svgs/images/ShapesBgCroped.vue';
         </div>
       </div>
     </div>
-  </div>
+  </section>
 </template>

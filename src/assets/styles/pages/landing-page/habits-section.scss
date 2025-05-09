@@ -1,12 +1,7 @@
 // File: src/assets/styles/pages/landing-page/habits-section.scss
 
-
-
-
-
-
-
 @use "@/assets/styles/variables/globals" as *;
+@use "@/assets/styles/variables/effects" as effect;
 
 #habits-section {
     @include gutters(padding, top, 2);
@@ -169,7 +164,7 @@
                             transform: translateY(-50%);
 
                             border-radius: 0.75rem;
-                            box-shadow: 10.527px 10.527px 36.845px 0px rgba($accent, 0.15);
+                            box-shadow: 10px 10px 35px 0px rgba($accent, 0.15);
                         }
                     }
                 }

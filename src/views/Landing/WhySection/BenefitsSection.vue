@@ -57,9 +57,11 @@ const commissions = computed(() => {
                             - {{ commissions }} €
                         </p>
                     </div>
-                    <p>
-                        {{ total }} €
-                    </p>
+                    <div class="ota-total">
+                        <p>
+                            {{ total }} €
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>

@@ -147,19 +147,25 @@
             &>div {
                 background-color: $secondary;
 
-                &>p {
+                .ota-total {
                     width: 80%;
+                    height: 100%;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
 
-                    text-align: center;
+                    p {
+                        text-align: center;
 
-                    background: linear-gradient(180deg, $accent 22.14%, rgba($accent, 0.00) 167.86%);
-                    background-clip: text;
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
+                        background: linear-gradient(180deg, $accent 22.14%, rgba($accent, 0.00) 167.86%);
+                        background-clip: text;
+                        -webkit-background-clip: text;
+                        -webkit-text-fill-color: transparent;
+                    }
                 }
 
                 &>.losses {
-                    border: 3px solid $bad;
+                    border: 1px solid $bad;
                     border-image: linear-gradient(to right,
                             rgba($accent, 0.75) 0%,
                             #00000000 100%) 1 round;
