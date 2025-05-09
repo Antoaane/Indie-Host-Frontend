@@ -1,15 +1,16 @@
 // File: src/assets/styles/pages/landing-page/habits-section.scss
 
 
+
 @use "@/assets/styles/variables/globals" as *;
 @use "@/assets/styles/variables/effects" as effect;
 
 #habits-section {
-    @include gutters(padding, top, 2);
+    @include gutters(padding, top, 3);
+    overflow: hidden;
 
     .container {
-        max-height: 100%;
-        padding-top: 5rem;
+        height: 80vh;
 
         display: flex;
         flex-direction: column;
@@ -50,12 +51,13 @@
             }
 
             h3 {
-                width: max-content;
+                width: 100%;
                 margin-bottom: 2rem;
 
                 position: relative;
 
                 text-align: center;
+                font-weight: 500 !important;
 
                 transition: transorm 0s;
 
@@ -63,7 +65,7 @@
 
                 @include min-width(lg) {
                     text-align: right;
-                    transform: translateX(4rem);
+                    transform: translateX(0rem);
                 }
             }
         }
@@ -73,8 +75,6 @@
 
             display: flex;
             justify-content: center;
-
-            overflow: hidden;
 
             .carousel {
                 width: max-content;
@@ -87,12 +87,15 @@
                     position: absolute;
                     inset: 0;
 
+                    transform: scaleX(1.25);
+                    transform-origin: center;
+
                     display: block;
                     pointer-events: none;
 
                     --shadow-pos-x: 0%;
                     --shadow-pos-y: 50%;
-                    --shadow-size: 190% 100%;
+                    --shadow-size: 175% 50%;
                     --shadow-start: 20%;
                     --shadow-end: 55%;
 
@@ -107,7 +110,8 @@
 
                         position: relative;
 
-                        transition: none !important;
+                        transform: scaleX(0.80);
+                        transform-origin: center;
 
                         &>[id^="line_"] {
                             position: absolute;
@@ -190,6 +194,7 @@
                                 border-width: 1px;
 
                                 transition: none !important;
+                                @include halo-sm;
 
                                 svg {
                                     width: auto !important;
