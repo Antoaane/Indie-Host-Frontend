@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "cross-env DEVCHAT_DEV=true vite",
-    "tag:files": "node ./plugins/inject-comments.js",
-    "svg:convert": "python ./plugins/convert_svg.py",
+    "tag:files": "node ./plugins/file-path-comment/inject-comments.js",
+    "svg:convert": "python ./plugins/svg-to-vue/convert_svg.py",
     "images:resize": "python ./plugins/resize_images.py",
     "watch": "sass --watch ./src/assets/styles/input.scss ./src/assets/styles/output.css",
     "build": "run-p type-check \"build-only {@}\" --",

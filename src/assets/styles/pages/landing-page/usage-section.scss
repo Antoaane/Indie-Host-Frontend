@@ -59,6 +59,7 @@ div:has(> .step-section) {
 
         h2 {
           margin: 1rem 0;
+          text-align: center;
           @include h2-title($accent, false);
 
           @include min-width(lg) {

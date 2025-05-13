@@ -5,8 +5,9 @@
 @forward 'customization-section.scss';
 @forward 'habits-section.scss';
 @forward 'usage-section.scss';
+@forward 'strengths-section.scss';
 
 #landing-page {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
 }

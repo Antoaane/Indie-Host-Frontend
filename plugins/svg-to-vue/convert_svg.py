@@ -140,7 +140,7 @@ def optimize_svg(svg_raw: str) -> str:
     try:
         subprocess.run([
             svgo_cmd, str(
-                tmp_path), '--config', 'plugins/svgo.config.js', '-o', str(tmp_path)
+                tmp_path), '--config', 'plugins/svg-to-vue/svgo.config.js', '-o', str(tmp_path)
         ], check=True, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         log('✅ SVGO terminé')
         return tmp_path.read_text('utf-8')

@@ -8,6 +8,7 @@ import HeroSection from '@/views/Landing/HeroSection.vue'
 import BenefitsSection from './WhySection/BenefitsSection.vue'
 import CustomizationSection from './WhySection/CustomizationSection.vue'
 import HabitsSection from './WhySection/HabitsSection.vue'
+import StrengthsSection from './StrengthsSection.vue'
 import UsageSection from './UsageSection.vue'
 
 let scroller: ReturnType<typeof initSectionScroller> | null = null
@@ -27,6 +28,7 @@ onBeforeUnmount(() => {
     <BenefitsSection />
     <HabitsSection />
     <CustomizationSection />
+    <StrengthsSection />
     <UsageSection />
   </main>
 </template>

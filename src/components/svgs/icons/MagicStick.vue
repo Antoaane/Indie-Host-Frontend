@@ -1,0 +1,78 @@
+<template>
+  <svg
+    :role="role"
+    :aria-hidden="role ? undefined : true"
+    :aria-labelledby="`titleId descId`"
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 70 71"
+  >
+    <path
+      stroke="#FCFAFA"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2.5"
+      d="M63.1166 11.505L59.3832 7.77167C59.0551 7.44009 58.6644 7.17687 58.2339 6.99723C57.8033 6.81759 57.3414 6.7251 56.8749 6.7251C56.4084 6.7251 55.9465 6.81759 55.516 6.99723C55.0854 7.17687 54.6947 7.44009 54.3666 7.77167L6.88324 55.255C6.55166 55.5832 6.28844 55.9738 6.1088 56.4044C5.92916 56.8349 5.83667 57.2968 5.83667 57.7633C5.83667 58.2299 5.92916 58.6917 6.1088 59.1223C6.28844 59.5528 6.55166 59.9435 6.88324 60.2717L10.6166 64.005C10.9427 64.3401 11.3327 64.6065 11.7635 64.7884C12.1944 64.9703 12.6573 65.064 13.1249 65.064C13.5926 65.064 14.0555 64.9703 14.4863 64.7884C14.9171 64.6065 15.3071 64.3401 15.6332 64.005L63.1166 16.5217C63.4517 16.1955 63.7181 15.8055 63.9 15.3747C64.0819 14.9439 64.1756 14.481 64.1756 14.0133C64.1756 13.5457 64.0819 13.0828 63.9 12.652C63.7181 12.2211 63.4517 11.8311 63.1166 11.505Z"
+    />
+    <path
+      stroke="#FCFAFA"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2.5"
+      d="M40.8333 21.3047L49.5833 30.0547"
+    />
+    <path
+      stroke="#FCFAFA"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2.5"
+      d="M14.5834 18.3892V30.0558"
+    />
+    <path
+      stroke="#FCFAFA"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2.5"
+      d="M55.4167 41.7227V53.3893"
+    />
+    <path
+      stroke="#FCFAFA"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2.5"
+      d="M29.1666 6.72217V12.5555"
+    />
+    <path
+      stroke="#FCFAFA"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2.5"
+      d="M20.4166 24.2227H8.74994"
+    />
+    <path
+      stroke="#FCFAFA"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2.5"
+      d="M61.2499 47.5547H49.5833"
+    />
+    <path
+      stroke="#FCFAFA"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      stroke-width="2.5"
+      d="M32.0834 9.63818H26.2501"
+    />
+    <title :id="`titleId`">{{ title }}</title>
+    <desc :id="`descId`">{{ desc }}</desc>
+  </svg>
+</template>
+
+<script setup lang="ts">
+defineProps<{
+  title: string
+  desc: string
+  role?: string
+}>()
+// généré automatiquement par convert_svg.py
+</script>
