@@ -1,124 +1,272 @@
+#!/usr/bin/env python3
+"""convert_svg.py
+------------------------------------------------------------
+Parcourt récursivement MEDIA_ROOT, extrait les images base64
+embarquées dans les SVG, génère un composant Vue pour chacun,
+optimise le SVG avec SVGO (si dispo) et formate le résultat
+avec Prettier.
+Chaque étape affiche désormais un message explicite afin de
+faciliter le débogage et le suivi du pipeline.
+"""
+
+from __future__ import annotations
+
+import base64
+import io
 import os
 import re
-import base64
-import sys
+import shutil
+import subprocess
+import tempfile
+from pathlib import Path
+from typing import Optional
+
 from PIL import Image
 import imagehash
-import io
 
-MEDIA_ROOT = 'src/assets/media/'
-IMAGE_OUTPUT = os.path.join(MEDIA_ROOT, 'images')
-VUE_OUTPUT_ROOT = 'src/components/svgs/'
+# ---------------------------------------------------------------------------
+# Config
+# ---------------------------------------------------------------------------
+MEDIA_ROOT = Path('src/assets/media')
+IMAGE_OUTPUT = MEDIA_ROOT / 'images'
+VUE_OUTPUT_ROOT = Path('src/components/svgs')
+MAX_NODE_MEMORY_MB = 4096
+PRETTIER_ARGS = ['--plugin-search-dir', '.', '--write']
 
-def ensure_media_folder():
-    if not os.path.exists(IMAGE_OUTPUT):
-        os.makedirs(IMAGE_OUTPUT)
+# ---------------------------------------------------------------------------
+# Small helpers
+# ---------------------------------------------------------------------------
 
-def find_existing_image(b64_data):
-    new_image = Image.open(io.BytesIO(base64.b64decode(b64_data)))
-    new_hash = imagehash.phash(new_image)
 
-    for existing_file in os.listdir(IMAGE_OUTPUT):
-        if existing_file.lower().endswith(('.png', '.jpg', '.jpeg')):
-            existing_path = os.path.join(IMAGE_OUTPUT, existing_file)
+def log(msg: str) -> None:
+    """Affiche un log simple et uniforme."""
+    print(msg)
+
+# ---------------------------------------------------------------------------
+# File-system helpers
+# ---------------------------------------------------------------------------
+
+
+def ensure_image_output() -> None:
+    if not IMAGE_OUTPUT.exists():
+        log(f'📂 Création du dossier images → {IMAGE_OUTPUT}')
+    IMAGE_OUTPUT.mkdir(parents=True, exist_ok=True)
+
+
+def to_pascal_case(name: str) -> str:
+    pascal = ''.join(word.capitalize()
+                     for word in re.split(r'[\s\-_]+', name) if word)
+    log(f'🔤 Conversion "{name}" → "{pascal}"')
+    return pascal
+
+# ---------------------------------------------------------------------------
+# Image deduplication helpers
+# ---------------------------------------------------------------------------
+
+
+def find_existing_image(b64_data: str) -> Optional[str]:
+    new_hash = imagehash.phash(Image.open(
+        io.BytesIO(base64.b64decode(b64_data))))
+    for existing_file in IMAGE_OUTPUT.iterdir():
+        if existing_file.suffix.lower() in {'.png', '.jpg', '.jpeg'}:
             try:
-                existing_image = Image.open(existing_path)
-                existing_hash = imagehash.phash(existing_image)
-
-                if abs(new_hash - existing_hash) <= 5:
-                    print(f"✅ Image similaire trouvée : {existing_file}")
-                    return f"@/assets/media/images/{existing_file}"
-            except:
+                if abs(new_hash - imagehash.phash(Image.open(existing_file))) <= 5:
+                    log(
+                        f'🔁 Duplication détectée → réutilisation {existing_file.name}')
+                    return f'@/assets/media/images/{existing_file.name}'
+            except Exception:
                 continue
-
     return None
 
-def to_pascal_case(name):
-    words = re.split(r'[\s\-_]+', name)
-    return ''.join(word.capitalize() for word in words if word)
 
-def extract_and_convert(svg_path):
-    ensure_media_folder()
+def has_transparency(img: Image.Image) -> bool:
+    if img.mode in {'RGBA', 'LA'}:
+        transparency = any(p < 255 for p in img.getchannel('A').getdata())
+    elif img.mode == 'P':
+        transparency = 'transparency' in img.info
+    else:
+        transparency = False
+    log(f'🖼️  Image {"avec" if transparency else "sans"} transparence')
+    return transparency
 
-    # Chemin relatif depuis MEDIA_ROOT
-    relative_path = os.path.relpath(svg_path, MEDIA_ROOT)
-    svg_subdir = os.path.dirname(relative_path)
-    base_name = os.path.splitext(os.path.basename(svg_path))[0]
-    vue_name = to_pascal_case(base_name)
+# ---------------------------------------------------------------------------
+# External binaries location
+# ---------------------------------------------------------------------------
 
-    # Nouveau dossier de sortie des .vue
-    vue_output_dir = os.path.join(VUE_OUTPUT_ROOT, svg_subdir)
-    os.makedirs(vue_output_dir, exist_ok=True)
-    vue_file_path = os.path.join(vue_output_dir, vue_name + '.vue')
 
-    if os.path.exists(vue_file_path):
-        print(f"🚫 Fichier Vue déjà existant, on skip : {vue_file_path}")
+def _locate_cmd(candidates: list[str]) -> Optional[str]:
+    for cmd in candidates:
+        path = shutil.which(cmd)
+        if path:
+            log(f'⚙️  Binaire trouvé dans PATH → {path}')
+            return path
+    local_bin = Path.cwd() / 'node_modules' / '.bin'
+    for cmd in candidates:
+        candidate = local_bin / cmd
+        if candidate.exists():
+            log(f'⚙️  Binaire trouvé dans node_modules → {candidate}')
+            return str(candidate)
+    log('🔍 Aucun binaire trouvé pour ' + ', '.join(candidates))
+    return None
+
+
+def _locate_svgo_cmd() -> Optional[str]:
+    return _locate_cmd(['svgo.cmd', 'svgo'] if os.name == 'nt' else ['svgo'])
+
+
+def _locate_prettier_cmd() -> Optional[str]:
+    return _locate_cmd(['prettier.cmd', 'prettier', 'npx.cmd', 'npx'] if os.name == 'nt' else ['prettier', 'npx'])
+
+# ---------------------------------------------------------------------------
+# SVGO optimisation
+# ---------------------------------------------------------------------------
+
+
+def optimize_svg(svg_raw: str) -> str:
+    svgo_cmd = _locate_svgo_cmd()
+    if not svgo_cmd:
+        log('⚠️  SVGO absent — optimisation ignorée')
+        return svg_raw
+
+    with tempfile.NamedTemporaryFile('w+', suffix='.svg', delete=False, encoding='utf-8') as tmp:
+        tmp.write(svg_raw)
+        tmp_path = Path(tmp.name)
+    log(f'🛠️  Optimisation SVGO → {tmp_path.name}')
+
+    env = os.environ.copy()
+    env['NODE_OPTIONS'] = env.get(
+        'NODE_OPTIONS', '') + f' --max-old-space-size={MAX_NODE_MEMORY_MB}'
+
+    try:
+        subprocess.run([
+            svgo_cmd, str(
+                tmp_path), '--config', 'plugins/svgo.config.js', '-o', str(tmp_path)
+        ], check=True, env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        log('✅ SVGO terminé')
+        return tmp_path.read_text('utf-8')
+    except subprocess.CalledProcessError as e:
+        log('❌ SVGO erreur : ' + e.stderr.decode(errors='ignore').strip())
+        return svg_raw
+    finally:
+        tmp_path.unlink(missing_ok=True)
+
+# ---------------------------------------------------------------------------
+# Prettier formatting
+# ---------------------------------------------------------------------------
+
+
+def format_with_prettier(filepath: Path) -> None:
+    prettier_cmd = _locate_prettier_cmd()
+    if not prettier_cmd:
+        log('⚠️  Prettier absent — skip format')
+        return
+    cmd = [prettier_cmd, *PRETTIER_ARGS, str(filepath)]
+    try:
+        subprocess.run(cmd, check=True, stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE)
+        log(f'✨ Prettier ok → {filepath}')
+    except subprocess.CalledProcessError as e:
+        log('❌ Prettier erreur : ' + e.stderr.decode(errors='ignore').strip())
+
+# ---------------------------------------------------------------------------
+# Core : SVG ➔ Vue
+# ---------------------------------------------------------------------------
+
+
+def extract_and_convert(svg_path: Path) -> None:
+    log(f'📑 Lecture {svg_path}')
+    ensure_image_output()
+
+    vue_name = to_pascal_case(svg_path.stem)
+    vue_output_dir = VUE_OUTPUT_ROOT / svg_path.relative_to(MEDIA_ROOT).parent
+    vue_output_dir.mkdir(parents=True, exist_ok=True)
+    vue_file_path = vue_output_dir / f'{vue_name}.vue'
+
+    if vue_file_path.exists():
+        log(f'🚫 Composant déjà présent : {vue_file_path.name} — skip')
         return
 
-    with open(svg_path, 'r', encoding='utf-8') as f:
-        svg_text = f.read()
+    svg_text = svg_path.read_text('utf-8')
 
-    def replace_match(match):
-        full = match.group(0)
-        img_id = match.group(1)
-        mime = match.group(2)
-        b64_data = match.group(3)
+    # cleaning existing a11y tags
+    log('🧹 Nettoyage balises <title>/<desc> & attrs a11y')
+    svg_text = re.sub(r'<title[^>]*>.*?</title>', '', svg_text, flags=re.S)
+    svg_text = re.sub(r'<desc[^>]*>.*?</desc>', '', svg_text, flags=re.S)
+    svg_text = re.sub(r'role="[^"]*"', '', svg_text)
+    svg_text = re.sub(r'aria-[a-z-]+="[^"]*"', '', svg_text)
 
-        def has_transparency(img):
-            if img.mode in ('RGBA', 'LA'):
-                alpha = img.getchannel('A')
-                return any(pixel < 255 for pixel in alpha.getdata())
-            elif img.mode == 'P':
-                return 'transparency' in img.info
-            return False
+    # replace base64 images
+    pattern = re.compile(
+        r'id="([^"]+)"\s+[^>]*xlink:href="data:image/(.*?);base64,([^"]+)"')
 
-        image = Image.open(io.BytesIO(base64.b64decode(b64_data)))
-        transparent = has_transparency(image)
-
-        ext = 'png' if transparent else 'jpg'
-        filename = f"{img_id}.{ext}"
-        filepath = os.path.join(IMAGE_OUTPUT, filename)
-
-        existing_path = find_existing_image(b64_data)
-
-        width, height = image.size
-
-        if existing_path:
-            print(f"↪️ Image réutilisée : {filename} avec forçage des dimensions")
-            return f'id="{img_id}" xlink:href="{existing_path}" width="{width}" height="{height}"'
+    def _repl(match: re.Match) -> str:
+        img_id, _mime, b64 = match.groups()
+        img = Image.open(io.BytesIO(base64.b64decode(b64)))
+        ext = 'png' if has_transparency(img) else 'jpg'
+        fname = f'{img_id}.{ext}'
+        width, height = img.size
+        existing = find_existing_image(b64)
+        if existing:
+            return f'id="{img_id}" xlink:href="{existing}" width="{width}" height="{height}"'
+        img_path = IMAGE_OUTPUT / fname
+        if ext == 'png':
+            img.save(img_path, 'PNG', optimize=True)
         else:
-            if transparent:
-                image.save(filepath, format='PNG', optimize=True)
-            else:
-                image.convert('RGB').save(filepath, format='JPEG', quality=85, optimize=True)
+            img.convert('RGB').save(img_path, 'JPEG',
+                                    quality=85, optimize=True)
+        log(f'📤 Export image {fname} ({width}×{height})')
+        return f'id="{img_id}" xlink:href="@/assets/media/images/{fname}" width="{width}" height="{height}"'
 
-            print(f"📦 Image {img_id} extraite → {filepath}")
-            return f'id="{img_id}" xlink:href="@/assets/media/images/{filename}" width="{width}" height="{height}"'
+    svg_text = pattern.sub(_repl, svg_text)
+    svg_text = optimize_svg(svg_text)
 
-    # Traitement du SVG brut
-    pattern = r'id="([^"]+)"\s+[^>]*xlink:href="data:image/(.*?);base64,([^"]+)"'
-    svg_text = re.sub(pattern, replace_match, svg_text)
+    # inject a11y props
+    log('➕ Injection props (title/desc/role)')
+    svg_text = re.sub(
+        r'<svg',
+        '<svg :role="role" :aria-hidden="role ? undefined : true" :aria-labelledby="`titleId descId`"',
+        svg_text,
+        count=1
+    )
+    svg_text = re.sub(
+        r'</svg>',
+        '  <title :id="`titleId`">{{ title }}</title>\n  <desc :id="`descId`">{{ desc }}</desc>\n</svg>',
+        svg_text,
+        count=1
+    )
 
-    vue_content = f'''<template>
-{svg_text}
-</template>
+    # build final Vue SFC content
+    vue_content = (
+        '<template>\n' + svg_text + '\n</template>\n\n'
+        '<script setup lang="ts">\n'
+        'defineProps<{\n'
+        '  title: string;\n'
+        '  desc: string;\n'
+        '  role?: string;\n'
+        '}>();\n'
+        '// généré automatiquement par convert_svg.py\n'
+        '</script>\n'
+    )
 
-<script setup lang="ts">
-// Ce composant a été généré automatiquement
-</script>
-'''
+    vue_file_path.write_text(vue_content, 'utf-8', newline='\n')
+    log(f'📝 Composant écrit → {vue_file_path}')
+    format_with_prettier(vue_file_path)
+    log(f'✅ Composant généré : {vue_file_path}')
 
-    with open(vue_file_path, 'w', encoding='utf-8', newline='\n') as f:
-        f.write(vue_content)
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
 
-    print(f"✅ Fichier Vue généré : {vue_file_path}")
+
+def main() -> None:
+    log(f'🚀 Scan des SVG dans {MEDIA_ROOT}')
+    for svg in MEDIA_ROOT.rglob('*.svg'):
+        try:
+            extract_and_convert(svg)
+        except Exception as exc:
+            log(f'❌ Erreur sur {svg}: {exc}')
+    log('🏁 Pipeline terminé')
+
 
 if __name__ == '__main__':
-    print("🚀 Recherche récursive des fichiers SVG dans src/assets/media...")
-    for root, dirs, files in os.walk(MEDIA_ROOT):
-        for file in files:
-            if file.endswith('.svg'):
-                full_path = os.path.join(root, file)
-                print(f"🔍 Traitement de {full_path}")
-                extract_and_convert(full_path)
-    print("🏁 Conversion terminée.")
+    main()

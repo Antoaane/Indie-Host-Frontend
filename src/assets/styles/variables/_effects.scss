@@ -1,16 +1,40 @@
-// File: src/assets/styles/variables/_effects.scss
+/* File: src/assets/styles/variables/_effects.scss */
 
 @use "@/assets/styles/variables/colors" as *;
 
 //soft shadow 
 @mixin soft-shadow($color: rgba(0, 0, 0, 0.1), $blur: 10px, $spread: 0px) {
-    box-shadow: 0px 4px $blur $spread $color;
+  box-shadow: 0px 4px $blur $spread $color;
 }
 
-@mixin halo-sm($color: $accent, $opacity: 0.15) {
-    box-shadow: 5px 5px 20px 0px rgba($color, $opacity);
-}
+@mixin halo($size: md, $filter: false, $color: $accent, $opacity: 0.15) {
+  @if $size ==sm {
+    @if $filter {
+      filter: drop-shadow(5px 5px 10px rgba($color, $opacity))
+    }
 
-@mixin halo-md($color: $accent, $opacity: 0.15) {
-    box-shadow: 5px 5px 35px 0px rgba($color, $opacity);
+    @else {
+      box-shadow: 5px 5px 15px 0px rgba($color, $opacity);
+    }
+  }
+
+  @if $size ==md {
+    @if $filter {
+      filter: drop-shadow(5px 5px 15px rgba($color, $opacity))
+    }
+
+    @else {
+      box-shadow: 5px 5px 20px 0px rgba($color, $opacity);
+    }
+  }
+
+  @if $size ==lg {
+    @if $filter {
+      filter: drop-shadow(5px 5px 25px rgba($color, $opacity))
+    }
+
+    @else {
+      box-shadow: 5px 5px 35px 0px rgba($color, $opacity);
+    }
+  }
 }

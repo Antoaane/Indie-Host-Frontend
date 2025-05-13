@@ -1,209 +1,210 @@
-// File: src/assets/styles/pages/landing-page/habits-section.scss
+/* File: src/assets/styles/pages/landing-page/habits-section.scss */
+
 @use "@/assets/styles/variables/globals" as *;
 @use "@/assets/styles/variables/effects" as effect;
 
 #habits-section {
-    @include gutters(padding, top, 3);
-    overflow: hidden;
+  @include gutters(padding, top, 3);
+  overflow: hidden;
 
-    .container {
-        height: 80vh;
+  .container {
+    height: 80vh;
 
-        display: flex;
-        flex-direction: column;
-        gap: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
 
-        @include gutters(padding, inline, 2);
+    @include gutters(padding, inline, 2);
+
+    @include min-width(lg) {
+      flex-direction: row;
+      align-items: center;
+    }
+
+    .content {
+      width: 50%;
+      height: 90vh;
+
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: end;
+
+      position: relative;
+
+      h2 {
+        width: 100%;
+        margin-bottom: 0.5rem;
+
+        position: absolute;
+        top: 5vh;
+        left: 1rem;
+
+        text-align: center;
+        @include h2-title($accent, false);
 
         @include min-width(lg) {
-            flex-direction: row;
-            align-items: center;
+          text-align: left;
         }
+      }
 
-        .content {
-            width: 50%;
-            height: 90vh;
+      h3 {
+        width: 100%;
+        margin-bottom: 2rem;
 
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: end;
+        position: relative;
+
+        text-align: center;
+        font-weight: 500 !important;
+
+        transition: transorm 0s;
+
+        @include h3-title($accent);
+
+        @include min-width(lg) {
+          text-align: right;
+          transform: translateX(0rem);
+        }
+      }
+    }
+
+    .illustration {
+      width: 50%;
+
+      display: flex;
+      justify-content: center;
+
+      .carousel {
+        width: max-content;
+        position: relative;
+
+        #shadow {
+          width: 100%;
+          height: 100%;
+
+          position: absolute;
+          inset: 0;
+
+          transform: scaleX(1.25);
+          transform-origin: center;
+
+          display: block;
+          pointer-events: none;
+
+          --shadow-pos-x: 0%;
+          --shadow-pos-y: 50%;
+          --shadow-size: 175% 50%;
+          --shadow-start: 20%;
+          --shadow-end: 55%;
+
+          background: radial-gradient(var(--shadow-size) at var(--shadow-pos-x) var(--shadow-pos-y),
+              rgba(17, 17, 23, 0) var(--shadow-start),
+              #111117 var(--shadow-end));
+          transition: none !important;
+
+          #light {
+            width: 100%;
+            height: 100%;
 
             position: relative;
 
-            h2 {
-                width: 100%;
-                margin-bottom: 0.5rem;
+            transform: scaleX(0.80);
+            transform-origin: center;
 
-                position: absolute;
-                top: 5vh;
-                left: 1rem;
-
-                text-align: center;
-                @include h2-title($accent, false);
-
-                @include min-width(lg) {
-                    text-align: left;
-                }
+            &>[id^="line_"] {
+              position: absolute;
+              opacity: 50%;
             }
 
-            h3 {
-                width: 100%;
-                margin-bottom: 2rem;
+            #line_1 {
+              width: 125%;
+              height: 1px;
 
-                position: relative;
+              top: calc(100% / 3 + (1rem / 3 * 2));
 
-                text-align: center;
-                font-weight: 500 !important;
-
-                transition: transorm 0s;
-
-                @include h3-title($accent);
-
-                @include min-width(lg) {
-                    text-align: right;
-                    transform: translateX(0rem);
-                }
+              background: linear-gradient(to right,
+                  rgba(252, 250, 250, 0) 9.43895%,
+                  rgba(252, 250, 250, 1) 48.5999%,
+                  rgba(252, 250, 250, 1) 77.7474%,
+                  rgba(252, 250, 250, 0) 100%);
             }
+
+            #line_2 {
+              width: 1px;
+              height: 55%;
+
+              top: 50%;
+              right: 0;
+
+              transform: translateY(-50%);
+
+              background: linear-gradient(to bottom,
+                  rgba(252, 250, 250, 0) 0%,
+                  rgba(252, 250, 250, 1) 20.7365%,
+                  rgba(252, 250, 250, 1) 79.0715%,
+                  rgba(252, 250, 250, 0) 100%);
+            }
+
+            #line_3 {
+              width: 125%;
+              height: 1px;
+
+              bottom: calc(100% / 3 + (1rem / 3 * 2)) !important;
+
+              background: linear-gradient(to right,
+                  rgba(252, 250, 250, 0) 9.43895%,
+                  rgba(252, 250, 250, 1) 48.5999%,
+                  rgba(252, 250, 250, 1) 77.7474%,
+                  rgba(252, 250, 250, 0) 100%);
+            }
+
+            #halo {
+              width: 100%;
+              height: calc(100% / 3 - (1rem / 3 * 2) * 2);
+
+              position: absolute;
+              top: 50%;
+              right: 0;
+
+              transform: translateY(-50%);
+
+              border-radius: 0.75rem;
+              box-shadow: 10px 10px 35px 0px rgba($accent, 0.15);
+            }
+          }
         }
 
-        .illustration {
-            width: 50%;
+        .splide {
 
-            display: flex;
-            justify-content: center;
+          .splide__track {
+            overflow: visible;
 
-            .carousel {
-                width: max-content;
-                position: relative;
+            .splide__list {
 
-                #shadow {
-                    width: 100%;
-                    height: 100%;
+              .splide__slide {
+                display: flex;
+                justify-content: center;
+                align-items: center;
 
-                    position: absolute;
-                    inset: 0;
+                border-radius: .75rem;
+                border-color: rgba($accent, 0);
+                border-style: solid;
+                border-width: 1px;
 
-                    transform: scaleX(1.25);
-                    transform-origin: center;
+                transition: none !important;
+                @include halo;
 
-                    display: block;
-                    pointer-events: none;
+                svg {
+                  width: auto !important;
+                  height: 100% !important;
 
-                    --shadow-pos-x: 0%;
-                    --shadow-pos-y: 50%;
-                    --shadow-size: 175% 50%;
-                    --shadow-start: 20%;
-                    --shadow-end: 55%;
-
-                    background: radial-gradient(var(--shadow-size) at var(--shadow-pos-x) var(--shadow-pos-y),
-                            rgba(17, 17, 23, 0) var(--shadow-start),
-                            #111117 var(--shadow-end));
-                    transition: none !important;
-
-                    #light {
-                        width: 100%;
-                        height: 100%;
-
-                        position: relative;
-
-                        transform: scaleX(0.80);
-                        transform-origin: center;
-
-                        &>[id^="line_"] {
-                            position: absolute;
-                            opacity: 50%;
-                        }
-
-                        #line_1 {
-                            width: 125%;
-                            height: 1px;
-
-                            top: calc(100% / 3 + (1rem / 3 * 2));
-
-                            background: linear-gradient(to right,
-                                    rgba(252, 250, 250, 0) 9.43895%,
-                                    rgba(252, 250, 250, 1) 48.5999%,
-                                    rgba(252, 250, 250, 1) 77.7474%,
-                                    rgba(252, 250, 250, 0) 100%);
-                        }
-
-                        #line_2 {
-                            width: 1px;
-                            height: 55%;
-
-                            top: 50%;
-                            right: 0;
-
-                            transform: translateY(-50%);
-
-                            background: linear-gradient(to bottom,
-                                    rgba(252, 250, 250, 0) 0%,
-                                    rgba(252, 250, 250, 1) 20.7365%,
-                                    rgba(252, 250, 250, 1) 79.0715%,
-                                    rgba(252, 250, 250, 0) 100%);
-                        }
-
-                        #line_3 {
-                            width: 125%;
-                            height: 1px;
-
-                            bottom: calc(100% / 3 + (1rem / 3 * 2)) !important;
-
-                            background: linear-gradient(to right,
-                                    rgba(252, 250, 250, 0) 9.43895%,
-                                    rgba(252, 250, 250, 1) 48.5999%,
-                                    rgba(252, 250, 250, 1) 77.7474%,
-                                    rgba(252, 250, 250, 0) 100%);
-                        }
-
-                        #halo {
-                            width: 100%;
-                            height: calc(100% / 3 - (1rem / 3 * 2) * 2);
-
-                            position: absolute;
-                            top: 50%;
-                            right: 0;
-
-                            transform: translateY(-50%);
-
-                            border-radius: 0.75rem;
-                            box-shadow: 10px 10px 35px 0px rgba($accent, 0.15);
-                        }
-                    }
+                  border-radius: .75rem;
                 }
-
-                .splide {
-
-                    .splide__track {
-                        overflow: visible;
-
-                        .splide__list {
-
-                            .splide__slide {
-                                display: flex;
-                                justify-content: center;
-                                align-items: center;
-
-                                border-radius: .75rem;
-                                border-color: rgba($accent, 0);
-                                border-style: solid;
-                                border-width: 1px;
-
-                                transition: none !important;
-                                @include halo-sm;
-
-                                svg {
-                                    width: auto !important;
-                                    height: 100% !important;
-
-                                    border-radius: .75rem;
-                                }
-                            }
-                        }
-                    }
-                }
+              }
             }
+          }
         }
+      }
     }
+  }
 }

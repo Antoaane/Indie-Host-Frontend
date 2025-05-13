@@ -1,194 +1,194 @@
-// File: src/assets/styles/pages/landing-page/benefits-section.scss
+/* File: src/assets/styles/pages/landing-page/benefits-section.scss */
 
 @use "@/assets/styles/variables/globals" as *;
 
 #benefits-section {
 
-    &>.container {
-        margin-bottom: 2.5rem;
+  &>.container {
+    margin-bottom: 2.5rem;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    h1 {
+      width: 100%;
+      max-width: 36rem;
+      margin-bottom: 0.5rem;
+
+      text-align: center;
+      @include h2-title($accent);
+    }
+
+    p {
+      text-decoration: underline;
+      text-underline-offset: 0.3rem;
+
+      @include base-text($accent);
+
+      span {
+        display: inline-block;
+        position: relative;
+
+        text-decoration: underline;
+        text-underline-offset: 0.3rem;
+        @include base-text($accent);
+
+        input {
+          width: 100%;
+          height: 100%;
+
+          position: absolute;
+          z-index: 9999;
+          top: 50%;
+          left: 50%;
+
+          transform: translate(-50%, -50%);
+
+          font-size: 1.25rem;
+          color: #00000000;
+
+          background-color: #00000000;
+          border: none;
+
+          // hide arrow
+          &::-webkit-inner-spin-button,
+          &::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+          }
+
+          &:focus {
+            color: $accent;
+          }
+        }
+      }
+    }
+  }
+
+  &>.illustration {
+    width: 100%;
+
+    &>.ih-price,
+    &>.ota-price {
+      width: 100%;
+      height: min-content;
+
+      display: flex;
+      align-items: center;
+
+      &>div {
+        width: 55.555%;
+        height: 4.5rem;
 
         display: flex;
-        flex-direction: column;
+        justify-content: center;
         align-items: center;
 
-        h1 {
-            width: 100%;
-            max-width: 36rem;
-            margin-bottom: 0.5rem;
-
-            text-align: center;
-            @include h2-title($accent);
-        }
+        position: relative;
 
         p {
-            text-decoration: underline;
-            text-underline-offset: 0.3rem;
+          margin: 0;
+          padding: 0;
 
-            @include base-text($accent);
-
-            span {
-                display: inline-block;
-                position: relative;
-
-                text-decoration: underline;
-                text-underline-offset: 0.3rem;
-                @include base-text($accent);
-
-                input {
-                    width: 100%;
-                    height: 100%;
-
-                    position: absolute;
-                    z-index: 9999;
-                    top: 50%;
-                    left: 50%;
-
-                    transform: translate(-50%, -50%);
-
-                    font-size: 1.25rem;
-                    color: #00000000;
-
-                    background-color: #00000000;
-                    border: none;
-
-                    // hide arrow
-                    &::-webkit-inner-spin-button,
-                    &::-webkit-outer-spin-button {
-                        -webkit-appearance: none;
-                        margin: 0;
-                    }
-
-                    &:focus {
-                        color: $accent;
-                    }
-                }
-            }
+          font-weight: 800 !important;
+          @include h2-title();
         }
+
+        &>.gains,
+        &>.losses {
+          width: 20%;
+          height: 100%;
+
+          display: flex;
+          justify-content: center;
+          align-items: center;
+
+          p {
+            margin: 0;
+            padding: 0;
+
+            font-weight: 800;
+          }
+        }
+      }
     }
 
-    &>.illustration {
-        width: 100%;
+    .ih-price {
+      justify-content: flex-start;
 
-        &>.ih-price,
-        &>.ota-price {
-            width: 100%;
-            height: min-content;
+      &>div {
+        background-color: $accent;
 
-            display: flex;
-            align-items: center;
-
-            &>div {
-                width: 55.555%;
-                height: 4.5rem;
-
-                display: flex;
-                justify-content: center;
-                align-items: center;
-
-                position: relative;
-
-                p {
-                    margin: 0;
-                    padding: 0;
-
-                    font-weight: 800 !important;
-                    @include h2-title();
-                }
-
-                &>.gains,
-                &>.losses {
-                    width: 20%;
-                    height: 100%;
-
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-
-                    p {
-                        margin: 0;
-                        padding: 0;
-
-                        font-weight: 800;
-                    }
-                }
-            }
+        &>p {
+          background: linear-gradient(180deg, $secondary 22.14%, rgba($secondary, 0.00) 167.86%);
+          background-clip: text;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
         }
 
-        .ih-price {
-            justify-content: flex-start;
+        &>.gains {
+          position: absolute;
+          z-index: 1;
+          right: 0;
+          top: 0;
 
-            &>div {
-                background-color: $accent;
+          background-color: $good;
 
-                &>p {
-                    background: linear-gradient(180deg, $secondary 22.14%, rgba($secondary, 0.00) 167.86%);
-                    background-clip: text;
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
-                }
+          &>p {
+            background: linear-gradient(180deg, $accent 22.14%, rgba($accent, 0.00) 167.86%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
 
-                &>.gains {
-                    position: absolute;
-                    z-index: 1;
-                    right: 0;
-                    top: 0;
-
-                    background-color: $good;
-
-                    &>p {
-                        background: linear-gradient(180deg, $accent 22.14%, rgba($accent, 0.00) 167.86%);
-                        background-clip: text;
-                        -webkit-background-clip: text;
-                        -webkit-text-fill-color: transparent;
-
-                        @include h2-title();
-                    }
-                }
-            }
+            @include h2-title();
+          }
         }
-
-        .ota-price {
-            justify-content: flex-end;
-
-            &>div {
-                background-color: $secondary;
-
-                .ota-total {
-                    width: 80%;
-                    height: 100%;
-
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-
-                    @include halo-md;
-
-                    p {
-                        text-align: center;
-
-                        background: linear-gradient(180deg, $accent 22.14%, rgba($accent, 0.00) 167.86%);
-                        background-clip: text;
-                        -webkit-background-clip: text;
-                        -webkit-text-fill-color: transparent;
-                    }
-                }
-
-                &>.losses {
-                    border: 1px solid $bad;
-                    border-image: linear-gradient(to right,
-                            rgba($accent, 0.75) 0%,
-                            #00000000 100%) 1 round;
-
-                    &>p {
-                        background: linear-gradient(180deg, $bad 22.14%, $accent 167.86%);
-                        background-clip: text;
-                        -webkit-background-clip: text;
-                        -webkit-text-fill-color: transparent;
-
-                        @include h3-title();
-                    }
-                }
-            }
-        }
+      }
     }
+
+    .ota-price {
+      justify-content: flex-end;
+
+      &>div {
+        background-color: $secondary;
+
+        .ota-total {
+          width: 80%;
+          height: 100%;
+
+          display: flex;
+          justify-content: center;
+          align-items: center;
+
+          @include halo(lg);
+
+          p {
+            text-align: center;
+
+            background: linear-gradient(180deg, $accent 22.14%, rgba($accent, 0.00) 167.86%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+          }
+        }
+
+        &>.losses {
+          border: 1px solid $bad;
+          border-image: linear-gradient(to right,
+              rgba($accent, 0.75) 0%,
+              #00000000 100%) 1 round;
+
+          &>p {
+            background: linear-gradient(180deg, $bad 22.14%, $accent 167.86%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+
+            @include h3-title();
+          }
+        }
+      }
+    }
+  }
 }

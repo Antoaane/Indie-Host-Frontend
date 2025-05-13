@@ -1,661 +1,3562 @@
 <template>
-<svg width="1058" height="732" viewBox="0 0 1058 732" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-<g filter="url(#filter0_i_1022_43065)">
-<rect x="17" y="1" width="1025.67" height="68.7203" rx="25.753" fill="#FCFAFA"/>
-<path d="M52.7917 43.7116L44.4403 35.3602L52.7917 27.0088" stroke="#111117" stroke-width="2.86335" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M61.1432 35.3604H44.4403" stroke="#111117" stroke-width="2.86335" stroke-linecap="round" stroke-linejoin="round"/>
-<g opacity="0.25">
-<path d="M94.5487 35.3604H111.252" stroke="#111117" stroke-width="2.86335" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M102.9 27.0088L111.252 35.3602L102.9 43.7116" stroke="#111117" stroke-width="2.86335" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-<path d="M163.746 35.3596C163.746 32.5118 162.615 29.7807 160.601 27.767C158.588 25.7533 155.857 24.6221 153.009 24.6221C150.007 24.6334 147.126 25.8047 144.968 27.8911L142.271 30.5874" stroke="#111117" stroke-width="2.86335" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M142.271 24.6221V30.5874H148.237" stroke="#111117" stroke-width="2.86335" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M142.271 35.3604C142.271 38.2081 143.403 40.9393 145.416 42.9529C147.43 44.9666 150.161 46.0979 153.009 46.0979C156.011 46.0866 158.892 44.9153 161.05 42.8289L163.746 40.1326" stroke="#111117" stroke-width="2.86335" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M157.781 40.1318H163.747V46.0971" stroke="#111117" stroke-width="2.86335" stroke-linecap="round" stroke-linejoin="round"/>
-<rect x="188.801" y="15.3164" width="839.548" height="40.0868" rx="20.0434" fill="#ECE8E8"/>
-<rect x="192.38" y="18.8955" width="32.9285" height="32.9285" rx="16.4642" fill="#FCFAFA"/>
-<g clip-path="url(#clip0_1022_43065)">
-<path d="M215.048 36.1352C215.048 40.0127 212.334 41.9514 209.107 43.0759C208.939 43.1331 208.755 43.1304 208.588 43.0681C205.354 41.9514 202.64 40.0127 202.64 36.1352V30.7068C202.64 30.5011 202.722 30.3039 202.867 30.1584C203.012 30.013 203.21 29.9313 203.415 29.9313C204.966 29.9313 206.905 29.0007 208.254 27.822C208.419 27.6816 208.628 27.6045 208.844 27.6045C209.06 27.6045 209.269 27.6816 209.433 27.822C210.79 29.0085 212.721 29.9313 214.272 29.9313C214.478 29.9313 214.675 30.013 214.821 30.1584C214.966 30.3039 215.048 30.5011 215.048 30.7068V36.1352Z" stroke="#111117" stroke-width="1.78959" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M206.517 35.3596L208.068 36.9106L211.17 33.8086" stroke="#111117" stroke-width="1.78959" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="20.0434" letter-spacing="0em"><tspan x="296.727" y="41.3441">delphine</tspan></text>
-<text fill="#111117" fill-opacity="0.3" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="20.0434" letter-spacing="0em"><tspan x="232.467" y="41.3441">https://</tspan><tspan x="372.438" y="41.3441">.indiehost.fr/</tspan></text>
-</g>
-<g filter="url(#filter1_d_1022_43065)">
-<rect x="17" y="85.5732" width="1024.97" height="629.929" rx="25.753" fill="#111117"/>
-<g clip-path="url(#clip1_1022_43065)">
-<g clip-path="url(#clip2_1022_43065)">
-<rect x="33.0151" y="101.589" width="215.204" height="143.469" rx="5.33838" fill="url(#pattern0_1022_43065)"/>
-<rect x="256.226" y="101.589" width="215.204" height="143.469" rx="5.33838" fill="url(#pattern1_1022_43065)"/>
-</g>
-<g clip-path="url(#clip3_1022_43065)">
-<rect x="-144.086" y="253.065" width="215.204" height="143.469" rx="5.33838" fill="url(#pattern2_1022_43065)"/>
-<rect x="79.1254" y="253.065" width="215.204" height="143.469" rx="5.33838" fill="url(#pattern3_1022_43065)"/>
-</g>
-<g clip-path="url(#clip4_1022_43065)">
-<rect x="33.0151" y="404.542" width="219.083" height="143.469" rx="5.33838" fill="url(#pattern4_1022_43065)"/>
-<rect x="260.106" y="404.542" width="215.204" height="143.469" rx="5.33838" fill="url(#pattern5_1022_43065)"/>
-</g>
-<g clip-path="url(#clip5_1022_43065)">
-<rect x="-144.086" y="556.019" width="215.204" height="143.469" rx="5.33838" fill="url(#pattern6_1022_43065)"/>
-<rect x="79.1254" y="556.019" width="215.204" height="143.469" rx="5.33838" fill="url(#pattern7_1022_43065)"/>
-</g>
-</g>
-<g clip-path="url(#clip6_1022_43065)">
-<rect x="305.006" y="101.589" width="448.958" height="597.899" rx="10.6768" fill="#FCFAFA"/>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Fustat" font-size="17.0828" font-weight="800" letter-spacing="0em"><tspan x="323.819" y="131.889">Maison flottante / Houseboat&#xa0;- Baurechinsolite</tspan></text>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Fustat" font-size="12.8121" font-weight="600" letter-spacing="0em"><tspan x="323.69" y="151.65">P&#xe9;niche - Baurech, France</tspan></text>
-<text opacity="0.5" fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="323.69" y="165.595">3 voyageurs  -  1 chambre  -  1 lit  -  1&#xa0;salle de bain</tspan></text>
-<g clip-path="url(#clip7_1022_43065)">
-<rect x="318.619" y="184.217" width="206.595" height="43.8159" rx="7.74066" stroke="#ECE8E8" stroke-width="0.533838"/>
-<path d="M336.769 195.16H339.172C339.596 195.16 340.004 195.329 340.304 195.629C340.604 195.93 340.773 196.337 340.773 196.762V207.972" stroke="#111117" stroke-width="1.3346" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M327.961 207.973H330.363" stroke="#111117" stroke-width="1.3346" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M336.769 207.973H343.976" stroke="#111117" stroke-width="1.3346" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M334.367 201.566V201.574" stroke="#111117" stroke-width="1.3346" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M336.769 195.611V208.549C336.769 208.671 336.741 208.791 336.688 208.9C336.635 209.009 336.557 209.105 336.461 209.18C336.365 209.255 336.254 209.307 336.135 209.332C336.016 209.357 335.893 209.355 335.775 209.326L330.363 207.973V196.412C330.363 196.055 330.483 195.708 330.702 195.426C330.922 195.145 331.23 194.945 331.576 194.858L334.779 194.058C335.015 193.999 335.262 193.994 335.5 194.045C335.738 194.095 335.961 194.199 336.153 194.349C336.345 194.498 336.5 194.69 336.607 194.908C336.713 195.127 336.769 195.368 336.769 195.611Z" stroke="#111117" stroke-width="1.3346" stroke-linecap="round" stroke-linejoin="round"/>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="353.585" y="200.618">Arriv&#xe9;e autonome</tspan></text>
-<text opacity="0.75" fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="6.40606" letter-spacing="0em"><tspan x="353.585" y="210.663">Vous pouvez entrer dans les lieux avec une bo&#xee;te &#xe0; cl&#xe9; </tspan><tspan x="353.585" y="218.663">s&#xe9;curis&#xe9;e.</tspan></text>
-<rect x="533.756" y="184.217" width="206.595" height="43.8159" rx="7.74066" stroke="#ECE8E8" stroke-width="0.533838"/>
-<path d="M558.312 197.963V196.762C558.312 196.337 558.144 195.93 557.843 195.629C557.543 195.329 557.136 195.16 556.711 195.16H545.5C545.075 195.16 544.668 195.329 544.368 195.629C544.067 195.93 543.899 196.337 543.899 196.762V207.972C543.899 208.397 544.067 208.804 544.368 209.105C544.668 209.405 545.075 209.574 545.5 209.574H548.303" stroke="#111117" stroke-width="1.3346" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M554.308 193.559V196.762" stroke="#111117" stroke-width="1.3346" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M547.902 193.559V196.762" stroke="#111117" stroke-width="1.3346" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M543.899 199.965H547.902" stroke="#111117" stroke-width="1.3346" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M555.509 205.971L554.308 205.01V203.168" stroke="#111117" stroke-width="1.3346" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M554.308 209.574C556.962 209.574 559.113 207.423 559.113 204.769C559.113 202.116 556.962 199.965 554.308 199.965C551.655 199.965 549.504 202.116 549.504 204.769C549.504 207.423 551.655 209.574 554.308 209.574Z" stroke="#111117" stroke-width="1.3346" stroke-linecap="round" stroke-linejoin="round"/>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="568.722" y="200.618">Annulation gratuite pendant 48 heures</tspan></text>
-<text opacity="0.75" fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="6.40606" letter-spacing="0em"><tspan x="568.722" y="210.663">Obtenez un remboursement int&#xe9;gral si vous changez </tspan><tspan x="568.722" y="218.663">d&#39;avis.</tspan></text>
-</g>
-<g filter="url(#filter2_d_1022_43065)">
-<rect x="318.352" y="244.314" width="422.266" height="37.3687" rx="5.33838" fill="#FCFAFA" shape-rendering="crispEdges"/>
-<rect x="323.69" y="249.653" width="26.6919" height="26.6919" rx="13.346" fill="url(#pattern8_1022_43065)"/>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="358.39" y="259.325">Delphine</tspan></text>
-<text opacity="0.5" fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="358.39" y="272.994">H&#xf4;te depuis 3&#xa0;ans</tspan></text>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="587.783" y="265.492">Voir le profile</tspan></text>
-<rect width="50" height="0.800758" transform="translate(587.783 268.366)" fill="#111117"/>
-<g filter="url(#filter3_d_1022_43065)">
-<rect x="649.528" y="254.19" width="82.0152" height="17.6167" rx="4.27071" fill="#111117" shape-rendering="crispEdges"/>
-<rect x="648.994" y="253.657" width="83.0828" height="18.6843" rx="4.80455" stroke="#FCFAFA" stroke-opacity="0.5" stroke-width="1.06768" shape-rendering="crispEdges"/>
-<text fill="#FCFAFA" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="657.535" y="265.52">Voir les annonces</tspan></text>
-</g>
-</g>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="323.69" y="301.021">Logement insolite &#xe0; 20km de Bordeaux, id&#xe9;al pour un s&#xe9;jour en couple, en famille ou entre amis.&#x2028;</tspan><tspan x="323.69" y="312.021">Cette maison flottante avec terrasse situ&#xe9;e sur le lac de Baurech, en plein coeur de la nature, vous s&#xe9;duira par </tspan><tspan x="323.69" y="323.021">sa vue, son calme et son confort.&#x2028;</tspan><tspan x="323.69" y="334.021">S&#xe9;jour unique, hors du temps garantit !&#x2028;</tspan><tspan x="323.69" y="345.021">...</tspan></text>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="323.69" y="361.36">Voir plus</tspan></text>
-<rect width="33" height="0.800758" transform="translate(323.69 364.233)" fill="#111117"/>
-<g clip-path="url(#clip8_1022_43065)">
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Fustat" font-size="17.0828" font-weight="600" letter-spacing="0em"><tspan x="326.359" y="398.002">Ce que ce logement comprend</tspan></text>
-<rect x="318.619" y="413.323" width="110.505" height="28.8273" rx="5.07147" fill="#FCFAFA"/>
-<rect x="318.619" y="413.323" width="110.505" height="28.8273" rx="5.07147" stroke="#ECE8E8" stroke-width="0.533838"/>
-<path d="M324.758 424.533C325.078 424.8 325.398 425.067 326.092 425.067C327.427 425.067 327.427 423.999 328.762 423.999C330.15 423.999 330.043 425.067 331.431 425.067C332.765 425.067 332.765 423.999 334.1 423.999C334.794 423.999 335.114 424.266 335.435 424.533" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M324.758 427.736C325.078 428.003 325.398 428.27 326.092 428.27C327.427 428.27 327.427 427.202 328.762 427.202C330.15 427.202 330.043 428.27 331.431 428.27C332.765 428.27 332.765 427.202 334.1 427.202C334.794 427.202 335.114 427.469 335.435 427.736" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M324.758 430.939C325.078 431.206 325.398 431.473 326.092 431.473C327.427 431.473 327.427 430.405 328.762 430.405C330.15 430.405 330.043 431.473 331.431 431.473C332.765 431.473 332.765 430.405 334.1 430.405C334.794 430.405 335.114 430.672 335.435 430.939" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="340.506" y="425.397">Acc&#xe8;s plage ou bord </tspan><tspan x="340.506" y="436.397">de mer</tspan></text>
-<rect x="318.619" y="448.022" width="110.505" height="28.8273" rx="5.07147" fill="#FCFAFA"/>
-<rect x="318.619" y="448.022" width="110.505" height="28.8273" rx="5.07147" stroke="#ECE8E8" stroke-width="0.533838"/>
-<path d="M330.096 466.706H330.101" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M324.758 460.737C326.226 459.424 328.127 458.698 330.096 458.698C332.066 458.698 333.966 459.424 335.435 460.737" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M326.359 462.894C327.357 461.916 328.699 461.368 330.096 461.368C331.494 461.368 332.835 461.916 333.833 462.894" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M328.228 464.8C328.727 464.311 329.398 464.037 330.096 464.037C330.795 464.037 331.466 464.311 331.965 464.8" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="340.506" y="465.596">Wifi</tspan></text>
-<rect x="318.619" y="482.722" width="110.505" height="28.8273" rx="5.07147" fill="#FCFAFA"/>
-<rect x="318.619" y="482.722" width="110.505" height="28.8273" rx="5.07147" stroke="#ECE8E8" stroke-width="0.533838"/>
-<path d="M334.901 495L333.833 496.068L333.032 494.093C332.957 493.891 332.822 493.716 332.645 493.592C332.469 493.468 332.258 493.401 332.043 493.399H328.174C327.957 493.394 327.743 493.455 327.562 493.575C327.38 493.695 327.239 493.868 327.159 494.07L326.359 496.068L325.292 495" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M327.427 498.203H327.432" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M332.765 498.203H332.771" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M333.833 496.068H326.359C325.77 496.068 325.292 496.546 325.292 497.136V499.271C325.292 499.861 325.77 500.339 326.359 500.339H333.833C334.423 500.339 334.901 499.861 334.901 499.271V497.136C334.901 496.546 334.423 496.068 333.833 496.068Z" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M326.359 500.339V501.407" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M333.833 500.339V501.407" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="340.506" y="494.796">Parking gratuit sur </tspan><tspan x="340.506" y="505.796">place</tspan></text>
-<rect x="318.619" y="517.421" width="110.505" height="28.8273" rx="5.07147" fill="#FCFAFA"/>
-<rect x="318.619" y="517.421" width="110.505" height="28.8273" rx="5.07147" stroke="#ECE8E8" stroke-width="0.533838"/>
-<path d="M324.758 531.835H330.096" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M328.495 527.564V536.106" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M325.292 530.233L326.893 531.835L325.292 533.436" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M330.096 528.632L328.495 530.233L326.893 528.632" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M326.893 535.038L328.495 533.437L329.296 534.237" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M334.367 527.564V533.19C334.774 533.425 335.092 533.788 335.272 534.223C335.452 534.657 335.483 535.138 335.362 535.592C335.24 536.046 334.972 536.448 334.599 536.734C334.226 537.02 333.769 537.175 333.299 537.175C332.829 537.175 332.372 537.02 331.999 536.734C331.626 536.448 331.358 536.046 331.237 535.592C331.115 535.138 331.146 534.657 331.326 534.223C331.506 533.788 331.824 533.425 332.231 533.19V527.564C332.231 527.281 332.344 527.009 332.544 526.809C332.744 526.609 333.016 526.496 333.299 526.496C333.582 526.496 333.854 526.609 334.054 526.809C334.254 527.009 334.367 527.281 334.367 527.564Z" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="340.506" y="534.995">Climatisation centrale</tspan></text>
-<rect x="434.995" y="413.323" width="110.505" height="28.8273" rx="5.07147" fill="#FCFAFA"/>
-<rect x="434.995" y="413.323" width="110.505" height="28.8273" rx="5.07147" stroke="#ECE8E8" stroke-width="0.533838"/>
-<path d="M450.21 422.932H442.736C442.146 422.932 441.668 423.41 441.668 423.999V431.473C441.668 432.063 442.146 432.541 442.736 432.541H450.21C450.8 432.541 451.278 432.063 451.278 431.473V423.999C451.278 423.41 450.8 422.932 450.21 422.932Z" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M444.872 427.203C445.461 427.203 445.939 426.725 445.939 426.135C445.939 425.545 445.461 425.067 444.872 425.067C444.282 425.067 443.804 425.545 443.804 426.135C443.804 426.725 444.282 427.203 444.872 427.203Z" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M451.278 429.337L449.63 427.69C449.43 427.489 449.158 427.377 448.875 427.377C448.592 427.377 448.321 427.489 448.12 427.69L443.27 432.54" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="456.883" y="430.897">Vue sur le lac</tspan></text>
-<rect x="434.995" y="448.022" width="110.505" height="28.8273" rx="5.07147" fill="#FCFAFA"/>
-<rect x="434.995" y="448.022" width="110.505" height="28.8273" rx="5.07147" stroke="#ECE8E8" stroke-width="0.533838"/>
-<g clip-path="url(#clip9_1022_43065)">
-<path d="M441.668 457.097V460.834C441.668 461.421 442.149 461.901 442.736 461.901H444.871C445.155 461.901 445.426 461.789 445.626 461.589C445.827 461.388 445.939 461.117 445.939 460.834V457.097" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M443.804 457.097V467.773" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M451.278 464.037V457.097C450.57 457.097 449.891 457.378 449.39 457.878C448.89 458.379 448.608 459.058 448.608 459.766V462.969C448.608 463.556 449.089 464.037 449.676 464.037H451.278ZM451.278 464.037V467.773" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="456.883" y="465.596">Cuisine</tspan></text>
-<rect x="434.995" y="482.722" width="110.505" height="28.8273" rx="5.07147" fill="#FCFAFA"/>
-<rect x="434.995" y="482.722" width="110.505" height="28.8273" rx="5.07147" stroke="#ECE8E8" stroke-width="0.533838"/>
-<path d="M450.744 499.271V494.466C450.744 494.183 450.631 493.911 450.431 493.711C450.231 493.511 449.959 493.398 449.676 493.398H443.27C442.987 493.398 442.715 493.511 442.515 493.711C442.315 493.911 442.202 494.183 442.202 494.466V499.271M450.744 499.271H442.202M450.744 499.271L451.427 500.632C451.468 500.714 451.488 500.804 451.484 500.896C451.48 500.987 451.452 501.076 451.404 501.154C451.356 501.231 451.288 501.295 451.208 501.34C451.128 501.384 451.038 501.407 450.947 501.406H441.999C441.908 501.407 441.818 501.384 441.738 501.34C441.658 501.295 441.59 501.231 441.542 501.154C441.494 501.076 441.466 500.987 441.462 500.896C441.458 500.804 441.478 500.714 441.519 500.632L442.202 499.271" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="456.883" y="494.796">Espace de travail </tspan><tspan x="456.883" y="505.796">d&#xe9;di&#xe9;</tspan></text>
-<rect x="434.995" y="517.421" width="110.505" height="28.8273" rx="5.07147" fill="#FCFAFA"/>
-<rect x="434.995" y="517.421" width="110.505" height="28.8273" rx="5.07147" stroke="#ECE8E8" stroke-width="0.533838"/>
-<g clip-path="url(#clip10_1022_43065)">
-<path d="M444.872 528.632L443.537 527.297C443.4 527.143 443.209 527.047 443.003 527.03C442.567 527.03 442.202 527.395 442.202 527.831V534.504C442.202 534.787 442.315 535.059 442.515 535.259C442.715 535.459 442.987 535.572 443.27 535.572H449.676C449.959 535.572 450.231 535.459 450.431 535.259C450.631 535.059 450.744 534.787 450.744 534.504V531.835" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M445.405 528.098L444.338 529.165" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M441.135 531.835H451.811" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M443.804 535.571V536.639" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M449.142 535.571V536.639" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="456.883" y="534.995">Baignoire moderne</tspan></text>
-<g filter="url(#filter4_d_1022_43065)">
-<rect x="319.419" y="552.921" width="225.28" height="17.6167" rx="4.27071" fill="#111117" shape-rendering="crispEdges"/>
-<rect x="318.886" y="552.387" width="226.347" height="18.6843" rx="4.80455" stroke="#FCFAFA" stroke-opacity="0.5" stroke-width="1.06768" shape-rendering="crispEdges"/>
-<text fill="#FCFAFA" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="384.059" y="564.25">Voir tous les &#xe9;quipements</tspan></text>
-</g>
-<rect x="556.444" y="413.056" width="184.174" height="158.55" rx="10.6768" fill="#ECE8E8"/>
-<rect x="561.782" y="418.395" width="173.497" height="45.7322" rx="5.33838" fill="#FCFAFA"/>
-<text fill="black" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="572.459" y="432.394">Chambre 1</tspan></text>
-<text fill="black" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="6.40606" letter-spacing="0em"><tspan x="572.459" y="457.159">1 lit double</tspan></text>
-<g clip-path="url(#clip11_1022_43065)">
-<path d="M712.858 438.681V434.41C712.858 434.127 712.971 433.856 713.171 433.655C713.371 433.455 713.643 433.343 713.926 433.343H722.467C722.75 433.343 723.022 433.455 723.222 433.655C723.422 433.856 723.535 434.127 723.535 434.41V438.681" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M713.926 433.343V431.207C713.926 430.924 714.039 430.653 714.239 430.452C714.439 430.252 714.711 430.14 714.994 430.14H721.4C721.683 430.14 721.954 430.252 722.155 430.452C722.355 430.653 722.467 430.924 722.467 431.207V433.343" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M718.197 430.14V433.343" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M712.858 437.612H723.535" stroke="#111117" stroke-width="1.06768" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-<rect x="561.782" y="469.465" width="173.497" height="45.7322" rx="5.33838" fill="#FCFAFA"/>
-<text fill="black" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="572.459" y="483.464">Salon</tspan></text>
-<text fill="black" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="6.40606" letter-spacing="0em"><tspan x="572.459" y="508.23">2 lit simples</tspan></text>
-<path d="M695.241 489.751V485.481C695.241 485.198 695.354 484.926 695.554 484.726C695.754 484.526 696.026 484.413 696.309 484.413H703.783C704.066 484.413 704.338 484.526 704.538 484.726C704.738 484.926 704.851 485.198 704.851 485.481V489.751" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M696.309 484.413V482.278C696.309 481.994 696.422 481.723 696.622 481.523C696.822 481.322 697.094 481.21 697.377 481.21H702.715C702.998 481.21 703.27 481.322 703.47 481.523C703.67 481.723 703.783 481.994 703.783 482.278V484.413" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M695.241 488.684H704.851" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M713.392 489.751V485.481C713.392 485.198 713.505 484.926 713.705 484.726C713.905 484.526 714.177 484.413 714.46 484.413H721.934C722.217 484.413 722.488 484.526 722.688 484.726C722.889 484.926 723.001 485.198 723.001 485.481V489.751" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M714.46 484.413V482.278C714.46 481.994 714.572 481.723 714.772 481.523C714.973 481.322 715.244 481.21 715.527 481.21H720.866C721.149 481.21 721.421 481.322 721.621 481.523C721.821 481.723 721.933 481.994 721.933 482.278V484.413" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M713.392 488.684H723.001" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-<g filter="url(#filter5_d_1022_43065)">
-<rect x="318.352" y="587.621" width="422.266" height="111.844" rx="5.33838" fill="url(#pattern9_1022_43065)" shape-rendering="crispEdges"/>
-<rect x="319.686" y="588.956" width="419.597" height="109.175" rx="4.00379" stroke="#FCFAFA" stroke-width="2.66919" shape-rendering="crispEdges"/>
-</g>
-</g>
-<g clip-path="url(#clip12_1022_43065)">
-<rect x="764.774" y="101.589" width="261.047" height="341.108" rx="10.6768" fill="url(#paint0_radial_1022_43065)"/>
-<rect x="764.774" y="101.589" width="261.047" height="341.108" rx="10.6768" fill="#FCFAFA"/>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Fustat" font-size="17.0828" font-weight="600" letter-spacing="0em"><tspan x="776.786" y="126.562">4.93</tspan></text>
-<path d="M819.861 114.863L821.51 118.205L825.199 118.744L822.53 121.344L823.16 125.017L819.861 123.282L816.561 125.017L817.191 121.344L814.522 118.744L818.211 118.205L819.861 114.863Z" fill="#111117" stroke="#111117" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Fustat" font-size="10.6768" font-weight="500" letter-spacing="0em"><tspan x="836.944" y="124.705">149&#xa0;commentaires</tspan></text>
-<g filter="url(#filter6_d_1022_43065)">
-<rect x="776.786" y="138.958" width="58.6394" height="19.0076" rx="5.33838" fill="#FCFAFA" shape-rendering="crispEdges"/>
-<path d="M793.213 150.354C792.98 149.613 791.069 146.002 790.489 144.913L790.483 144.902C790.222 144.367 789.665 144.021 789.064 144.021C788.462 144.021 787.906 144.367 787.65 144.893L787.639 144.913C787.059 146.002 785.148 149.613 784.915 150.354C784.852 150.554 784.793 150.773 784.793 151.016C784.793 152.057 785.65 152.904 786.704 152.904C787.75 152.904 788.415 152.471 789.064 151.752C789.713 152.471 790.378 152.904 791.424 152.904C792.478 152.904 793.335 152.057 793.335 151.016C793.335 150.773 793.276 150.554 793.213 150.354ZM789.064 150.83C788.689 150.353 788.165 149.546 788.165 148.906C788.165 148.416 788.568 148.018 789.064 148.018C789.56 148.018 789.963 148.416 789.963 148.906C789.963 149.544 789.439 150.352 789.064 150.83ZM791.424 152.237C790.685 152.237 790.183 151.992 789.553 151.292C789.936 150.815 790.637 149.818 790.637 148.906C790.637 148.049 789.931 147.352 789.064 147.352C788.197 147.352 787.491 148.049 787.491 148.906C787.491 149.818 788.192 150.815 788.575 151.292C787.945 151.992 787.443 152.237 786.704 152.237C786.022 152.237 785.468 151.689 785.468 151.016C785.468 150.871 785.504 150.725 785.559 150.552C785.731 150.005 787.108 147.34 788.236 145.223L788.253 145.191C788.402 144.885 788.72 144.687 789.064 144.687C789.408 144.687 789.726 144.885 789.876 145.194L789.892 145.223C791.019 147.34 792.397 150.005 792.569 150.552C792.624 150.725 792.66 150.871 792.66 151.016C792.66 151.689 792.106 152.237 791.424 152.237Z" fill="#FF5252"/>
-<text fill="#FF5252" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="801.342" y="151.622">4.57</tspan></text>
-<g clip-path="url(#clip13_1022_43065)">
-<path d="M824.215 146.09L825.039 147.761L826.884 148.03L825.549 149.33L825.864 151.167L824.215 150.299L822.565 151.167L822.88 149.33L821.545 148.03L823.39 147.761L824.215 146.09Z" fill="#FF5252" stroke="#FF5252" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-</g>
-<g filter="url(#filter7_d_1022_43065)">
-<rect x="840.763" y="138.958" width="59.6394" height="19.0076" rx="5.33838" fill="#FCFAFA" shape-rendering="crispEdges"/>
-<path d="M851.886 151.326H850.435V149.591C850.435 149.22 850.578 149.022 850.896 148.982H851.892C852.487 148.932 853.01 149.375 853.059 149.97C853.064 150.031 853.064 150.091 853.059 150.152C853.059 150.891 852.612 151.332 851.892 151.332L851.886 151.326ZM850.433 146.634V146.179C850.433 145.781 850.603 145.588 850.973 145.565H851.719C852.356 145.565 852.743 145.946 852.743 146.589C852.743 147.073 852.481 147.642 851.747 147.642H850.438L850.433 146.634ZM853.745 148.37L853.483 148.222L853.71 148.023C853.977 147.795 854.422 147.277 854.422 146.387C854.422 145.021 853.363 144.139 851.727 144.139H849.65C849.163 144.156 848.775 144.554 848.771 145.041V152.779H851.764C853.585 152.779 854.756 151.789 854.756 150.253C854.756 149.428 854.377 148.716 853.738 148.361" fill="#273C7E"/>
-<path d="M855.229 151.741C855.229 151.163 855.693 150.696 856.268 150.696C856.843 150.696 857.312 151.163 857.312 151.741C857.312 152.318 856.845 152.785 856.268 152.785C855.69 152.785 855.229 152.318 855.229 151.741Z" fill="#273C7E"/>
-<text fill="#273C7E" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="865.32" y="151.622">4.84</tspan></text>
-<g clip-path="url(#clip14_1022_43065)">
-<path d="M889.192 146.09L890.017 147.761L891.862 148.03L890.527 149.33L890.842 151.167L889.192 150.299L887.543 151.167L887.858 149.33L886.523 148.03L888.368 147.761L889.192 146.09Z" fill="#273C7E" stroke="#273C7E" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-</g>
-<g clip-path="url(#clip15_1022_43065)">
-<rect x="772.782" y="173.98" width="26.6919" height="26.6919" rx="13.346" fill="url(#pattern10_1022_43065)"/>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Fustat" font-size="10.6768" font-weight="500" letter-spacing="0em"><tspan x="804.812" y="185.088">Maximilien</tspan></text>
-<text opacity="0.5" fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="6.40606" letter-spacing="0em"><tspan x="804.812" y="197.17">6 nuits</tspan></text>
-<mask id="mask0_1022_43065" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="827" y="191" width="36" height="7">
-<g clip-path="url(#clip16_1022_43065)">
-<path d="M830.729 192.173L831.506 193.747L833.243 194.001L831.986 195.225L832.283 196.955L830.729 196.138L829.175 196.955L829.472 195.225L828.214 194.001L829.952 193.747L830.729 192.173Z" fill="#111117" stroke="#111117" stroke-width="0.565753" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-<g clip-path="url(#clip17_1022_43065)">
-<path d="M837.895 192.173L838.672 193.747L840.41 194.001L839.152 195.225L839.449 196.955L837.895 196.138L836.341 196.955L836.638 195.225L835.381 194.001L837.118 193.747L837.895 192.173Z" fill="#111117" stroke="#111117" stroke-width="0.565753" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-<g clip-path="url(#clip18_1022_43065)">
-<path d="M845.061 192.173L845.838 193.747L847.576 194.001L846.319 195.225L846.615 196.955L845.061 196.138L843.507 196.955L843.804 195.225L842.547 194.001L844.284 193.747L845.061 192.173Z" fill="#111117" stroke="#111117" stroke-width="0.565753" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-<g clip-path="url(#clip19_1022_43065)">
-<path d="M852.228 192.173L853.005 193.747L854.742 194.001L853.485 195.225L853.782 196.955L852.228 196.138L850.674 196.955L850.97 195.225L849.713 194.001L851.451 193.747L852.228 192.173Z" fill="#111117" stroke="#111117" stroke-width="0.565753" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-<g clip-path="url(#clip20_1022_43065)">
-<path d="M859.394 192.173L860.171 193.747L861.908 194.001L860.651 195.225L860.948 196.955L859.394 196.138L857.84 196.955L858.136 195.225L856.879 194.001L858.617 193.747L859.394 192.173Z" fill="#111117" stroke="#111117" stroke-width="0.565753" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-</mask>
-<g mask="url(#mask0_1022_43065)">
-<rect x="827.816" y="191.782" width="34.6995" height="6.0347" fill="url(#paint1_linear_1022_43065)"/>
-</g>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="778.12" y="216.006">S&#xe9;jour paisible sur le lac, logement propre et bien &#xe9;quip&#xe9;. </tspan><tspan x="778.12" y="227.006">Parfait pour une escapade relaxante en pleine nature.</tspan></text>
-<rect x="772.782" y="244.026" width="26.6919" height="26.6919" rx="13.346" fill="url(#pattern11_1022_43065)"/>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Fustat" font-size="10.6768" font-weight="500" letter-spacing="0em"><tspan x="804.812" y="255.134">Eug&#xe9;nie</tspan></text>
-<text opacity="0.5" fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="6.40606" letter-spacing="0em"><tspan x="804.812" y="267.216">6 nuits</tspan></text>
-<mask id="mask1_1022_43065" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="827" y="261" width="36" height="7">
-<g clip-path="url(#clip21_1022_43065)">
-<path d="M830.729 262.219L831.506 263.793L833.243 264.047L831.986 265.271L832.283 267.001L830.729 266.184L829.175 267.001L829.472 265.271L828.214 264.047L829.952 263.793L830.729 262.219Z" fill="#111117" stroke="#111117" stroke-width="0.565753" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-<g clip-path="url(#clip22_1022_43065)">
-<path d="M837.895 262.219L838.672 263.793L840.41 264.047L839.152 265.271L839.449 267.001L837.895 266.184L836.341 267.001L836.638 265.271L835.381 264.047L837.118 263.793L837.895 262.219Z" fill="#111117" stroke="#111117" stroke-width="0.565753" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-<g clip-path="url(#clip23_1022_43065)">
-<path d="M845.062 262.219L845.839 263.793L847.576 264.047L846.319 265.271L846.616 267.001L845.062 266.184L843.508 267.001L843.804 265.271L842.547 264.047L844.285 263.793L845.062 262.219Z" fill="#111117" stroke="#111117" stroke-width="0.565753" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-<g clip-path="url(#clip24_1022_43065)">
-<path d="M852.227 262.219L853.004 263.793L854.742 264.047L853.485 265.271L853.781 267.001L852.227 266.184L850.673 267.001L850.97 265.271L849.713 264.047L851.45 263.793L852.227 262.219Z" fill="#111117" stroke="#111117" stroke-width="0.565753" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-<g clip-path="url(#clip25_1022_43065)">
-<path d="M859.394 262.219L860.171 263.793L861.908 264.047L860.651 265.271L860.948 267.001L859.394 266.184L857.84 267.001L858.136 265.271L856.879 264.047L858.617 263.793L859.394 262.219Z" fill="#111117" stroke="#111117" stroke-width="0.565753" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-</mask>
-<g mask="url(#mask1_1022_43065)">
-<rect x="827.816" y="261.828" width="34.6995" height="6.0347" fill="url(#paint2_linear_1022_43065)"/>
-</g>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="778.12" y="286.052">Accueil chaleureux, maison flottante confortable et bien </tspan><tspan x="778.12" y="297.052">situ&#xe9;e. Id&#xe9;al pour d&#xe9;connecter du quotidien.</tspan></text>
-<rect x="772.782" y="314.071" width="26.6919" height="26.6919" rx="13.346" fill="url(#pattern12_1022_43065)"/>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Fustat" font-size="10.6768" font-weight="500" letter-spacing="0em"><tspan x="804.812" y="325.179">Matisse</tspan></text>
-<text opacity="0.5" fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="6.40606" letter-spacing="0em"><tspan x="804.812" y="337.261">6 nuits</tspan></text>
-<mask id="mask2_1022_43065" style="mask-type:alpha" maskUnits="userSpaceOnUse" x="827" y="331" width="36" height="7">
-<g clip-path="url(#clip26_1022_43065)">
-<path d="M830.729 332.264L831.506 333.838L833.243 334.092L831.986 335.316L832.283 337.046L830.729 336.229L829.175 337.046L829.472 335.316L828.214 334.092L829.952 333.838L830.729 332.264Z" fill="#111117" stroke="#111117" stroke-width="0.565753" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-<g clip-path="url(#clip27_1022_43065)">
-<path d="M837.895 332.264L838.672 333.838L840.41 334.092L839.152 335.316L839.449 337.046L837.895 336.229L836.341 337.046L836.638 335.316L835.381 334.092L837.118 333.838L837.895 332.264Z" fill="#111117" stroke="#111117" stroke-width="0.565753" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-<g clip-path="url(#clip28_1022_43065)">
-<path d="M845.061 332.264L845.838 333.838L847.576 334.092L846.319 335.316L846.615 337.046L845.061 336.229L843.507 337.046L843.804 335.316L842.547 334.092L844.284 333.838L845.061 332.264Z" fill="#111117" stroke="#111117" stroke-width="0.565753" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-<g clip-path="url(#clip29_1022_43065)">
-<path d="M852.228 332.264L853.005 333.838L854.742 334.092L853.485 335.316L853.782 337.046L852.228 336.229L850.674 337.046L850.97 335.316L849.713 334.092L851.451 333.838L852.228 332.264Z" fill="#111117" stroke="#111117" stroke-width="0.565753" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-</mask>
-<g mask="url(#mask2_1022_43065)">
-<rect x="827.816" y="331.873" width="34.6995" height="6.0347" fill="url(#paint3_linear_1022_43065)"/>
-</g>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="778.12" y="356.097">Chalet avec une vue incroyable, bien isol&#xe9; mais difficile d&#x2019;acc&#xe8;s </tspan><tspan x="778.12" y="367.097">(chemin tr&#xe8;s pentu pour y acc&#xe9;der avec verglas l&#x2019;hiver). </tspan><tspan x="778.12" y="378.097">N&#xe9;cessite une bonne condition physique.</tspan></text>
-<rect x="772.782" y="395.117" width="26.6919" height="26.6919" rx="13.346" fill="url(#pattern13_1022_43065)"/>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Fustat" font-size="10.6768" font-weight="500" letter-spacing="0em"><tspan x="804.812" y="406.225">C&#xe9;line</tspan></text>
-</g>
-<rect width="215.671" height="20.2859" transform="translate(772.782 386.645)" fill="url(#paint4_linear_1022_43065)"/>
-<g filter="url(#filter8_d_1022_43065)">
-<rect x="773.849" y="416.005" width="242.896" height="17.6167" rx="5.33838" fill="#FCFAFA" shape-rendering="crispEdges"/>
-<rect x="773.316" y="415.471" width="243.964" height="18.6843" rx="5.87222" stroke="#111117" stroke-opacity="0.1" stroke-width="1.06768" shape-rendering="crispEdges"/>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="837.298" y="427.334">Afficher tous les commentaires</tspan></text>
-</g>
-<rect x="764.641" y="453.374" width="261.314" height="246.114" rx="10.6768" fill="url(#paint5_radial_1022_43065)"/>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Fustat" font-size="19.2182" font-weight="bold" letter-spacing="0em"><tspan x="780.656" y="480.568">Vous r&#xe9;servez</tspan></text>
-<rect x="772.648" y="493.945" width="245.299" height="21.6768" rx="5.33838" fill="#FCFAFA"/>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="860.06" y="507.945"> du </tspan><tspan x="906.871" y="507.945"> au </tspan></text>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em" text-decoration="underline"><tspan x="835.478" y="507.945">4 nuits</tspan><tspan x="872.989" y="507.945">19/03/25</tspan><tspan x="919.8" y="507.945">23/03/25</tspan></text>
-<rect x="772.648" y="520.961" width="245.299" height="53.3838" rx="5.33838" fill="#FCFAFA"/>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="784.498" y="538.002">Du</tspan></text>
-<g filter="url(#filter9_d_1022_43065)">
-<rect x="804.411" y="526.032" width="92.4875" height="17.6167" rx="2.66919" fill="#FCFAFA" shape-rendering="crispEdges"/>
-<rect x="803.878" y="525.498" width="93.5552" height="18.6843" rx="3.20303" stroke="#111117" stroke-opacity="0.1" stroke-width="1.06768" shape-rendering="crispEdges"/>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" font-weight="bold" letter-spacing="0em"><tspan x="833.155" y="537.361">19/03/25</tspan></text>
-</g>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="903.643" y="538.001">au</tspan></text>
-<g filter="url(#filter10_d_1022_43065)">
-<rect x="920.388" y="526.032" width="92.4875" height="17.6167" rx="2.66919" fill="#FCFAFA" shape-rendering="crispEdges"/>
-<rect x="919.854" y="525.498" width="93.5552" height="18.6843" rx="3.20303" stroke="#111117" stroke-opacity="0.1" stroke-width="1.06768" shape-rendering="crispEdges"/>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" font-weight="bold" letter-spacing="0em"><tspan x="948.131" y="537.361">23/03/25</tspan></text>
-</g>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="780.998" y="563.625">pour</tspan></text>
-<g filter="url(#filter11_d_1022_43065)">
-<rect x="804.411" y="551.656" width="208.464" height="17.6167" rx="2.66919" fill="#FCFAFA" shape-rendering="crispEdges"/>
-<rect x="803.878" y="551.122" width="209.532" height="18.6843" rx="3.20303" stroke="#111117" stroke-opacity="0.1" stroke-width="1.06768" shape-rendering="crispEdges"/>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="825.143" y="563.625">1 voyageur, 1 b&#xe9;b&#xe9;, 2 animaux de compagnie</tspan></text>
-</g>
-<g filter="url(#filter12_f_1022_43065)">
-<rect x="773.716" y="582.352" width="243.163" height="17.6167" rx="5.33838" fill="url(#paint6_linear_1022_43065)" fill-opacity="0.4"/>
-</g>
-<g filter="url(#filter13_d_1022_43065)">
-<rect x="773.716" y="580.75" width="243.163" height="17.6167" rx="4.27071" fill="#111117" shape-rendering="crispEdges"/>
-<rect x="773.182" y="580.216" width="244.231" height="18.6843" rx="4.80455" stroke="#FCFAFA" stroke-opacity="0.5" stroke-width="1.06768" shape-rendering="crispEdges"/>
-<g clip-path="url(#clip30_1022_43065)">
-<path d="M874.783 585.777V587.29" stroke="#FCFAFA" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M877.808 585.777V587.29" stroke="#FCFAFA" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M878.943 586.532H873.649C873.231 586.532 872.893 586.871 872.893 587.288V592.582C872.893 593 873.231 593.339 873.649 593.339H878.943C879.36 593.339 879.699 593 879.699 592.582V587.288C879.699 586.871 879.36 586.532 878.943 586.532Z" stroke="#FCFAFA" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-<path d="M872.893 588.802H879.699" stroke="#FCFAFA" stroke-width="0.800758" stroke-linecap="round" stroke-linejoin="round"/>
-</g>
-<text fill="#FCFAFA" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="884.837" y="592.079">R&#xe9;server</tspan></text>
-</g>
-<rect x="772.648" y="610.111" width="245.299" height="54.3535" rx="5.33838" fill="#FCFAFA"/>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="780.656" y="624.111">4 nuits (174&#xa0;&#x20ac; par nuit) </tspan></text>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="986.939" y="624.111">696 &#x20ac;</tspan></text>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="780.656" y="640.448">Taxes</tspan></text>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="990.939" y="640.448">40 &#x20ac;</tspan></text>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="780.656" y="656.787">Frais de m&#xe9;nage</tspan></text>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" letter-spacing="0em"><tspan x="993.939" y="656.787">17 &#x20ac;</tspan></text>
-<rect x="772.648" y="669.804" width="245.299" height="21.6768" rx="5.33838" fill="#FCFAFA"/>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" font-weight="bold" letter-spacing="0em"><tspan x="780.656" y="683.803">Total</tspan></text>
-<text fill="#111117" xml:space="preserve" style="white-space: pre" font-family="Outfit" font-size="8.54142" font-weight="bold" letter-spacing="0em"><tspan x="987.939" y="683.803">753 &#x20ac;</tspan></text>
-</g>
-</g>
-<path d="M17 116.339C17 99.2716 30.836 85.4355 47.9036 85.4355H1041.97V715.869H47.9036C30.836 715.869 17 702.033 17 684.966V116.339Z" fill="url(#paint7_radial_1022_43065)"/>
-<path d="M17 29.9019C17 13.9209 29.9551 0.96582 45.9361 0.96582H1041.97V69.9839H45.9361C29.9552 69.9839 17 57.0288 17 41.0478V29.9019Z" fill="url(#paint8_radial_1022_43065)"/>
-<defs>
-<filter id="filter0_i_1022_43065" x="17" y="1" width="1025.67" height="68.7207" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-<feFlood flood-opacity="0" result="BackgroundImageFix"/>
-<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
-<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-<feOffset/>
-<feGaussianBlur stdDeviation="1.80843"/>
-<feComposite in2="hardAlpha" operator="arithmetic" k2="-1" k3="1"/>
-<feColorMatrix type="matrix" values="0 0 0 0 0.183062 0 0 0 0 0.227589 0 0 0 0 0.230769 0 0 0 0.5 0"/>
-<feBlend mode="normal" in2="shape" result="effect1_innerShadow_1022_43065"/>
-</filter>
-<filter id="filter1_d_1022_43065" x="0.984846" y="69.5581" width="1057" height="661.96" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-<feFlood flood-opacity="0" result="BackgroundImageFix"/>
-<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-<feOffset/>
-<feGaussianBlur stdDeviation="8.00758"/>
-<feComposite in2="hardAlpha" operator="out"/>
-<feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.5 0"/>
-<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1022_43065"/>
-<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1022_43065" result="shape"/>
-</filter>
-<pattern id="pattern0_1022_43065" patternContentUnits="objectBoundingBox" width="1" height="1">
-<use xlink:href="#image0_1022_43065" transform="scale(0.000833333 0.00125)"/>
-</pattern>
-<pattern id="pattern1_1022_43065" patternContentUnits="objectBoundingBox" width="1" height="1">
-<use xlink:href="#image1_1022_43065" transform="scale(0.000694444 0.00104167)"/>
-</pattern>
-<pattern id="pattern2_1022_43065" patternContentUnits="objectBoundingBox" width="1" height="1">
-<use xlink:href="#image2_1022_43065" transform="scale(0.000694444 0.00104167)"/>
-</pattern>
-<pattern id="pattern3_1022_43065" patternContentUnits="objectBoundingBox" width="1" height="1">
-<use xlink:href="#image3_1022_43065" transform="scale(0.000694444 0.00104167)"/>
-</pattern>
-<pattern id="pattern4_1022_43065" patternContentUnits="objectBoundingBox" width="1" height="1">
-<use xlink:href="#image4_1022_43065" transform="scale(0.000694445 0.00106045)"/>
-</pattern>
-<pattern id="pattern5_1022_43065" patternContentUnits="objectBoundingBox" width="1" height="1">
-<use xlink:href="#image5_1022_43065" transform="scale(0.000694444 0.00104167)"/>
-</pattern>
-<pattern id="pattern6_1022_43065" patternContentUnits="objectBoundingBox" width="1" height="1">
-<use xlink:href="#image6_1022_43065" transform="scale(0.000694444 0.00104167)"/>
-</pattern>
-<pattern id="pattern7_1022_43065" patternContentUnits="objectBoundingBox" width="1" height="1">
-<use xlink:href="#image7_1022_43065" transform="scale(0.000694444 0.00104167)"/>
-</pattern>
-<filter id="filter2_d_1022_43065" x="310.344" y="237.375" width="438.281" height="53.3843" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-<feFlood flood-opacity="0" result="BackgroundImageFix"/>
-<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-<feOffset dy="1.06768"/>
-<feGaussianBlur stdDeviation="4.00379"/>
-<feComposite in2="hardAlpha" operator="out"/>
-<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.1 0"/>
-<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1022_43065"/>
-<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1022_43065" result="shape"/>
-</filter>
-<pattern id="pattern8_1022_43065" patternContentUnits="objectBoundingBox" width="1" height="1">
-<use xlink:href="#image8_1022_43065" transform="translate(0 -0.25) scale(0.00416667)"/>
-</pattern>
-<filter id="filter3_d_1022_43065" x="646.858" y="252.055" width="87.3534" height="22.955" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-<feFlood flood-opacity="0" result="BackgroundImageFix"/>
-<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-<feOffset dy="0.533838"/>
-<feGaussianBlur stdDeviation="0.800758"/>
-<feComposite in2="hardAlpha" operator="out"/>
-<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.15 0"/>
-<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1022_43065"/>
-<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1022_43065" result="shape"/>
-</filter>
-<filter id="filter4_d_1022_43065" x="316.75" y="550.786" width="230.618" height="22.955" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-<feFlood flood-opacity="0" result="BackgroundImageFix"/>
-<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-<feOffset dy="0.533838"/>
-<feGaussianBlur stdDeviation="0.800758"/>
-<feComposite in2="hardAlpha" operator="out"/>
-<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.15 0"/>
-<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1022_43065"/>
-<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1022_43065" result="shape"/>
-</filter>
-<filter id="filter5_d_1022_43065" x="314.348" y="584.685" width="430.274" height="119.851" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-<feFlood flood-opacity="0" result="BackgroundImageFix"/>
-<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-<feOffset dy="1.06768"/>
-<feGaussianBlur stdDeviation="2.00189"/>
-<feComposite in2="hardAlpha" operator="out"/>
-<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.1 0"/>
-<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1022_43065"/>
-<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1022_43065" result="shape"/>
-</filter>
-<pattern id="pattern9_1022_43065" patternContentUnits="objectBoundingBox" width="1" height="1">
-<use xlink:href="#image9_1022_43065" transform="matrix(0.00115207 0 0 0.00434965 0 -1.19636)"/>
-</pattern>
-<filter id="filter6_d_1022_43065" x="772.782" y="136.022" width="66.647" height="27.0154" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-<feFlood flood-opacity="0" result="BackgroundImageFix"/>
-<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-<feOffset dy="1.06768"/>
-<feGaussianBlur stdDeviation="2.00189"/>
-<feComposite in2="hardAlpha" operator="out"/>
-<feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 0.321569 0 0 0 0 0.321569 0 0 0 0.3 0"/>
-<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1022_43065"/>
-<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1022_43065" result="shape"/>
-</filter>
-<filter id="filter7_d_1022_43065" x="836.76" y="136.022" width="67.647" height="27.0154" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-<feFlood flood-opacity="0" result="BackgroundImageFix"/>
-<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-<feOffset dy="1.06768"/>
-<feGaussianBlur stdDeviation="2.00189"/>
-<feComposite in2="hardAlpha" operator="out"/>
-<feColorMatrix type="matrix" values="0 0 0 0 0.152941 0 0 0 0 0.235294 0 0 0 0 0.494118 0 0 0 0.3 0"/>
-<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1022_43065"/>
-<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1022_43065" result="shape"/>
-</filter>
-<pattern id="pattern10_1022_43065" patternContentUnits="objectBoundingBox" width="1" height="1">
-<use xlink:href="#image10_1022_43065" transform="translate(0 -0.166667) scale(0.0015015)"/>
-</pattern>
-<pattern id="pattern11_1022_43065" patternContentUnits="objectBoundingBox" width="1" height="1">
-<use xlink:href="#image11_1022_43065" transform="scale(0.000976562)"/>
-</pattern>
-<pattern id="pattern12_1022_43065" patternContentUnits="objectBoundingBox" width="1" height="1">
-<use xlink:href="#image12_1022_43065" transform="translate(-0.0690002 -0.0245421) scale(0.00172438)"/>
-</pattern>
-<pattern id="pattern13_1022_43065" patternContentUnits="objectBoundingBox" width="1" height="1">
-<use xlink:href="#image13_1022_43065" transform="scale(0.000976562)"/>
-</pattern>
-<filter id="filter8_d_1022_43065" x="771.18" y="413.87" width="248.235" height="22.955" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-<feFlood flood-opacity="0" result="BackgroundImageFix"/>
-<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-<feOffset dy="0.533838"/>
-<feGaussianBlur stdDeviation="0.800758"/>
-<feComposite in2="hardAlpha" operator="out"/>
-<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.15 0"/>
-<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1022_43065"/>
-<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1022_43065" result="shape"/>
-</filter>
-<filter id="filter9_d_1022_43065" x="801.742" y="523.897" width="97.8258" height="22.955" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-<feFlood flood-opacity="0" result="BackgroundImageFix"/>
-<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-<feOffset dy="0.533838"/>
-<feGaussianBlur stdDeviation="0.800758"/>
-<feComposite in2="hardAlpha" operator="out"/>
-<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.15 0"/>
-<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1022_43065"/>
-<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1022_43065" result="shape"/>
-</filter>
-<filter id="filter10_d_1022_43065" x="917.719" y="523.897" width="97.8258" height="22.955" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-<feFlood flood-opacity="0" result="BackgroundImageFix"/>
-<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-<feOffset dy="0.533838"/>
-<feGaussianBlur stdDeviation="0.800758"/>
-<feComposite in2="hardAlpha" operator="out"/>
-<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.15 0"/>
-<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1022_43065"/>
-<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1022_43065" result="shape"/>
-</filter>
-<filter id="filter11_d_1022_43065" x="801.742" y="549.521" width="213.802" height="22.955" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-<feFlood flood-opacity="0" result="BackgroundImageFix"/>
-<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-<feOffset dy="0.533838"/>
-<feGaussianBlur stdDeviation="0.800758"/>
-<feComposite in2="hardAlpha" operator="out"/>
-<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.15 0"/>
-<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1022_43065"/>
-<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1022_43065" result="shape"/>
-</filter>
-<filter id="filter12_f_1022_43065" x="768.484" y="577.12" width="253.627" height="28.0794" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-<feFlood flood-opacity="0" result="BackgroundImageFix"/>
-<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
-<feGaussianBlur stdDeviation="2.61581" result="effect1_foregroundBlur_1022_43065"/>
-</filter>
-<filter id="filter13_d_1022_43065" x="771.047" y="578.615" width="248.502" height="22.955" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-<feFlood flood-opacity="0" result="BackgroundImageFix"/>
-<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
-<feOffset dy="0.533838"/>
-<feGaussianBlur stdDeviation="0.800758"/>
-<feComposite in2="hardAlpha" operator="out"/>
-<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.15 0"/>
-<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_1022_43065"/>
-<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_1022_43065" result="shape"/>
-</filter>
-<radialGradient id="paint0_radial_1022_43065" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(764.907 437.311) rotate(-50.4757) scale(508.552 565.975)">
-<stop offset="0.359369" stop-color="#FCFAFA"/>
-<stop offset="1" stop-color="#ECE8E8"/>
-</radialGradient>
-<linearGradient id="paint1_linear_1022_43065" x1="820.084" y1="198.998" x2="870.267" y2="195.76" gradientUnits="userSpaceOnUse">
-<stop stop-color="#A499FF"/>
-<stop offset="0.5" stop-color="#DF99FF"/>
-<stop offset="1" stop-color="#FFC4C5"/>
-</linearGradient>
-<linearGradient id="paint2_linear_1022_43065" x1="820.084" y1="269.043" x2="870.267" y2="265.805" gradientUnits="userSpaceOnUse">
-<stop stop-color="#A499FF"/>
-<stop offset="0.5" stop-color="#DF99FF"/>
-<stop offset="1" stop-color="#FFC4C5"/>
-</linearGradient>
-<linearGradient id="paint3_linear_1022_43065" x1="820.084" y1="339.088" x2="870.267" y2="335.85" gradientUnits="userSpaceOnUse">
-<stop stop-color="#A499FF"/>
-<stop offset="0.5" stop-color="#DF99FF"/>
-<stop offset="1" stop-color="#FFC4C5"/>
-</linearGradient>
-<linearGradient id="paint4_linear_1022_43065" x1="107.835" y1="20.2859" x2="107.835" y2="-1.02219e-06" gradientUnits="userSpaceOnUse">
-<stop stop-color="#FCFAFA"/>
-<stop offset="1" stop-color="#FCFAFA" stop-opacity="0"/>
-</linearGradient>
-<radialGradient id="paint5_radial_1022_43065" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(647.316 817.44) rotate(-43.876) scale(525.273 511.864)">
-<stop stop-color="#FCFAFA"/>
-<stop offset="1" stop-color="#ECE8E8"/>
-</radialGradient>
-<linearGradient id="paint6_linear_1022_43065" x1="773.716" y1="590.893" x2="1009.19" y2="633.432" gradientUnits="userSpaceOnUse">
-<stop stop-color="#1A00FF"/>
-<stop offset="0.5" stop-color="#AE00FF"/>
-<stop offset="1" stop-color="#FF6C6F"/>
-</linearGradient>
-<radialGradient id="paint7_radial_1022_43065" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(17 400.652) scale(1767.65 1250.1)">
-<stop offset="0.274038" stop-color="#111117" stop-opacity="0"/>
-<stop offset="0.536017" stop-color="#111117"/>
-</radialGradient>
-<radialGradient id="paint8_radial_1022_43065" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(17 35.9899) rotate(-0.0287921) scale(1024.97 967.727)">
-<stop offset="0.453183" stop-color="#111117" stop-opacity="0"/>
-<stop offset="0.919828" stop-color="#111117"/>
-</radialGradient>
-<clipPath id="clip0_1022_43065">
-<rect width="18.6117" height="18.6117" fill="white" transform="translate(199.538 26.0537)"/>
-</clipPath>
-<clipPath id="clip1_1022_43065">
-<rect x="33.0151" y="101.589" width="261.314" height="597.899" rx="10.6768" fill="white"/>
-</clipPath>
-<clipPath id="clip2_1022_43065">
-<rect x="33.0151" y="101.589" width="261.314" height="143.469" rx="5.33838" fill="white"/>
-</clipPath>
-<clipPath id="clip3_1022_43065">
-<rect x="33.0151" y="253.065" width="261.314" height="143.469" rx="5.33838" fill="white"/>
-</clipPath>
-<clipPath id="clip4_1022_43065">
-<rect x="33.0151" y="404.542" width="261.314" height="143.469" rx="5.33838" fill="white"/>
-</clipPath>
-<clipPath id="clip5_1022_43065">
-<rect x="33.0151" y="556.019" width="261.314" height="143.469" rx="5.33838" fill="white"/>
-</clipPath>
-<clipPath id="clip6_1022_43065">
-<rect x="305.006" y="101.589" width="448.958" height="597.899" rx="10.6768" fill="white"/>
-</clipPath>
-<clipPath id="clip7_1022_43065">
-<rect width="422.266" height="44.3498" fill="white" transform="translate(318.352 183.95)"/>
-</clipPath>
-<clipPath id="clip8_1022_43065">
-<rect width="422.266" height="190.558" fill="white" transform="translate(318.352 381.048)"/>
-</clipPath>
-<clipPath id="clip9_1022_43065">
-<rect width="12.8121" height="12.8121" fill="white" transform="translate(440.067 456.029)"/>
-</clipPath>
-<clipPath id="clip10_1022_43065">
-<rect width="12.8121" height="12.8121" fill="white" transform="translate(440.067 525.429)"/>
-</clipPath>
-<clipPath id="clip11_1022_43065">
-<rect width="12.8121" height="12.8121" fill="white" transform="translate(711.791 428.004)"/>
-</clipPath>
-<clipPath id="clip12_1022_43065">
-<rect x="764.641" y="101.589" width="261.314" height="597.899" rx="10.6768" fill="white"/>
-</clipPath>
-<clipPath id="clip13_1022_43065">
-<rect width="6.40606" height="6.40606" fill="white" transform="translate(821.011 145.556)"/>
-</clipPath>
-<clipPath id="clip14_1022_43065">
-<rect width="6.40606" height="6.40606" fill="white" transform="translate(885.989 145.556)"/>
-</clipPath>
-<clipPath id="clip15_1022_43065">
-<rect width="245.032" height="229.213" fill="white" transform="translate(772.782 173.98)"/>
-</clipPath>
-<clipPath id="clip16_1022_43065">
-<rect width="6.0347" height="6.0347" fill="white" transform="translate(827.711 191.67)"/>
-</clipPath>
-<clipPath id="clip17_1022_43065">
-<rect width="6.0347" height="6.0347" fill="white" transform="translate(834.878 191.67)"/>
-</clipPath>
-<clipPath id="clip18_1022_43065">
-<rect width="6.0347" height="6.0347" fill="white" transform="translate(842.044 191.67)"/>
-</clipPath>
-<clipPath id="clip19_1022_43065">
-<rect width="6.0347" height="6.0347" fill="white" transform="translate(849.21 191.67)"/>
-</clipPath>
-<clipPath id="clip20_1022_43065">
-<rect width="6.0347" height="6.0347" fill="white" transform="translate(856.376 191.67)"/>
-</clipPath>
-<clipPath id="clip21_1022_43065">
-<rect width="6.0347" height="6.0347" fill="white" transform="translate(827.711 261.715)"/>
-</clipPath>
-<clipPath id="clip22_1022_43065">
-<rect width="6.0347" height="6.0347" fill="white" transform="translate(834.878 261.715)"/>
-</clipPath>
-<clipPath id="clip23_1022_43065">
-<rect width="6.0347" height="6.0347" fill="white" transform="translate(842.044 261.715)"/>
-</clipPath>
-<clipPath id="clip24_1022_43065">
-<rect width="6.0347" height="6.0347" fill="white" transform="translate(849.21 261.715)"/>
-</clipPath>
-<clipPath id="clip25_1022_43065">
-<rect width="6.0347" height="6.0347" fill="white" transform="translate(856.376 261.715)"/>
-</clipPath>
-<clipPath id="clip26_1022_43065">
-<rect width="6.0347" height="6.0347" fill="white" transform="translate(827.711 331.761)"/>
-</clipPath>
-<clipPath id="clip27_1022_43065">
-<rect width="6.0347" height="6.0347" fill="white" transform="translate(834.878 331.761)"/>
-</clipPath>
-<clipPath id="clip28_1022_43065">
-<rect width="6.0347" height="6.0347" fill="white" transform="translate(842.044 331.761)"/>
-</clipPath>
-<clipPath id="clip29_1022_43065">
-<rect width="6.0347" height="6.0347" fill="white" transform="translate(849.21 331.761)"/>
-</clipPath>
-<clipPath id="clip30_1022_43065">
-<rect width="9.07525" height="9.07525" fill="white" transform="translate(871.758 585.021)"/>
-</clipPath>
-<image id="image0_1022_43065" xlink:href="@/assets/media/images/image0_867_26311.jpg" width="1200" height="800"/>
-<image id="image1_1022_43065" xlink:href="@/assets/media/images/image1_867_26311.jpg" width="1440" height="960"/>
-<image id="image2_1022_43065" xlink:href="@/assets/media/images/image10_744_31486.jpg" width="1440" height="960"/>
-<image id="image3_1022_43065" xlink:href="@/assets/media/images/image6_867_26311.jpg" width="1440" height="960"/>
-<image id="image4_1022_43065" xlink:href="@/assets/media/images/image8_867_26311.jpg" width="1440" height="943"/>
-<image id="image5_1022_43065" xlink:href="@/assets/media/images/image7_867_26311.jpg" width="1440" height="960"/>
-<image id="image6_1022_43065" xlink:href="@/assets/media/images/image2_867_26311.jpg" width="1440" height="960"/>
-<image id="image7_1022_43065" xlink:href="@/assets/media/images/image4_867_26311.jpg" width="1440" height="960"/>
-<image id="image8_1022_43065" xlink:href="@/assets/media/images/image13_867_26311.jpg" width="240" height="360"/>
-<image id="image9_1022_43065" xlink:href="@/assets/media/images/image12_744_31486.jpg" width="868" height="780"/>
-<image id="image10_1022_43065" xlink:href="@/assets/media/images/image3_999_23149.jpg" width="666" height="888"/>
-<image id="image11_1022_43065" xlink:href="@/assets/media/images/image4_999_23149.jpg" width="1024" height="1024"/>
-<image id="image12_1022_43065" xlink:href="@/assets/media/images/image7_999_23149.jpg" width="800" height="600"/>
-<image id="image13_1022_43065" xlink:href="@/assets/media/images/image5_999_23149.jpg" width="1024" height="1024"/>
-</defs>
-</svg>
-
+  <svg
+    :role="role"
+    :aria-hidden="role ? undefined : true"
+    :aria-labelledby="`titleId descId`"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    fill="none"
+    viewBox="0 0 1920 1339"
+  >
+    <g filter="url(#filter0_i_1035_54888)">
+      <rect
+        width="1919.7"
+        height="128.621"
+        y="0.386719"
+        fill="#FCFAFA"
+        rx="48.201"
+      />
+      <path
+        stroke="#111117"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="5.35923"
+        d="M66.9901 80.3266L51.359 64.6955L66.9901 49.0645"
+      />
+      <path
+        stroke="#111117"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="5.35923"
+        d="M82.6212 64.6963H51.359"
+      />
+      <g opacity="0.25">
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="5.35923"
+          d="M145.145 64.6963H176.408"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="5.35923"
+          d="M160.777 49.0645L176.408 64.6955L160.777 80.3266"
+        />
+      </g>
+      <path
+        stroke="#111117"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="5.35923"
+        d="M274.66 64.6977C274.66 59.3676 272.543 54.2558 268.774 50.4869C265.005 46.718 259.893 44.6006 254.563 44.6006C248.945 44.6217 243.552 46.814 239.513 50.719L234.466 55.7656"
+      />
+      <path
+        stroke="#111117"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="5.35923"
+        d="M234.466 44.6006V55.7656H245.631"
+      />
+      <path
+        stroke="#111117"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="5.35923"
+        d="M234.466 64.6963C234.466 70.0264 236.583 75.1381 240.352 78.9071C244.121 82.676 249.233 84.7934 254.563 84.7934C260.182 84.7723 265.574 82.58 269.614 78.6749L274.66 73.6283"
+      />
+      <path
+        stroke="#111117"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="5.35923"
+        d="M263.495 73.6289H274.66V84.794"
+      />
+      <rect
+        width="1571.35"
+        height="75.0292"
+        x="321.554"
+        y="27.1826"
+        fill="#ECE8E8"
+        rx="37.5146"
+      />
+      <rect
+        width="61.6311"
+        height="61.6311"
+        x="328.253"
+        y="33.8818"
+        fill="#FCFAFA"
+        rx="30.8155"
+      />
+      <path
+        stroke="#111117"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="3.34952"
+        d="M370.68 66.1483C370.68 73.4056 365.6 77.0343 359.562 79.1389C359.246 79.246 358.902 79.2409 358.589 79.1244C352.537 77.0343 347.457 73.4056 347.457 66.1483V55.9881C347.457 55.6032 347.609 55.234 347.882 54.9618C348.154 54.6896 348.523 54.5367 348.908 54.5367C351.811 54.5367 355.44 52.7949 357.965 50.5887C358.273 50.326 358.664 50.1816 359.068 50.1816C359.473 50.1816 359.864 50.326 360.171 50.5887C362.711 52.8094 366.325 54.5367 369.228 54.5367C369.613 54.5367 369.983 54.6896 370.255 54.9618C370.527 55.234 370.68 55.6032 370.68 55.9881V66.1483Z"
+      />
+      <path
+        stroke="#111117"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="3.34952"
+        d="M354.714 64.6978L357.617 67.6008L363.422 61.7949"
+      />
+      <text
+        xml:space="preserve"
+        fill="#111117"
+        font-family="Outfit"
+        font-size="37.5146"
+        letter-spacing="0em"
+        style="white-space: pre"
+      >
+        <tspan
+          x="523.556"
+          y="75.8982"
+        >
+          delphine
+        </tspan>
+      </text>
+      <text
+        xml:space="preserve"
+        fill="#111117"
+        fill-opacity="0.3"
+        font-family="Outfit"
+        font-size="37.5146"
+        letter-spacing="0em"
+        style="white-space: pre"
+      >
+        <tspan
+          x="403.282"
+          y="75.8982"
+        >
+          https://
+        </tspan>
+        <tspan
+          x="665.261"
+          y="75.8982"
+        >
+          .indiehost.fr/
+        </tspan>
+      </text>
+    </g>
+    <rect
+      width="1920"
+      height="130.01"
+      y="0.108398"
+      fill="url(#paint0_radial_1035_54888)"
+      rx="48.1978"
+    />
+    <rect
+      width="1918.4"
+      height="1179.02"
+      y="159.134"
+      fill="#111117"
+      rx="48.201"
+    />
+    <g clip-path="url(#clip0_1035_54888)">
+      <g clip-path="url(#clip1_1035_54888)">
+        <rect
+          width="402.789"
+          height="268.526"
+          x="29.975"
+          y="189.108"
+          fill="url(#pattern0_1035_54888)"
+          rx="9.99167"
+        />
+        <rect
+          width="402.789"
+          height="268.526"
+          x="447.752"
+          y="189.108"
+          fill="url(#pattern1_1035_54888)"
+          rx="9.99167"
+        />
+      </g>
+      <g clip-path="url(#clip2_1035_54888)">
+        <rect
+          width="402.789"
+          height="268.526"
+          x="-301.499"
+          y="472.622"
+          fill="url(#pattern2_1035_54888)"
+          rx="9.99167"
+        />
+        <rect
+          width="402.789"
+          height="268.526"
+          x="116.278"
+          y="472.622"
+          fill="url(#pattern3_1035_54888)"
+          rx="9.99167"
+        />
+      </g>
+      <g clip-path="url(#clip3_1035_54888)">
+        <rect
+          width="410.051"
+          height="268.526"
+          x="29.975"
+          y="756.136"
+          fill="url(#pattern4_1035_54888)"
+          rx="9.99167"
+        />
+        <rect
+          width="402.789"
+          height="268.526"
+          x="455.013"
+          y="756.136"
+          fill="url(#pattern5_1035_54888)"
+          rx="9.99167"
+        />
+      </g>
+      <g clip-path="url(#clip4_1035_54888)">
+        <rect
+          width="402.789"
+          height="268.526"
+          x="-301.499"
+          y="1039.65"
+          fill="url(#pattern6_1035_54888)"
+          rx="9.99167"
+        />
+        <rect
+          width="402.789"
+          height="268.526"
+          x="116.278"
+          y="1039.65"
+          fill="url(#pattern7_1035_54888)"
+          rx="9.99167"
+        />
+      </g>
+    </g>
+    <g clip-path="url(#clip5_1035_54888)">
+      <rect
+        width="840.3"
+        height="1119.07"
+        x="539.051"
+        y="189.108"
+        fill="#FCFAFA"
+        rx="19.9833"
+      />
+      <text
+        xml:space="preserve"
+        fill="#111117"
+        font-family="Fustat"
+        font-size="31.9734"
+        font-weight="800"
+        letter-spacing="0em"
+        style="white-space: pre"
+      >
+        <tspan
+          x="574.146"
+          y="245.86"
+        >
+          Maison flottante / Houseboat - Baurechinsolite
+        </tspan>
+      </text>
+      <text
+        xml:space="preserve"
+        fill="#111117"
+        font-family="Fustat"
+        font-size="23.98"
+        font-weight="600"
+        letter-spacing="0em"
+        style="white-space: pre"
+      >
+        <tspan
+          x="574.022"
+          y="283.042"
+        >
+          Péniche - Baurech, France
+        </tspan>
+      </text>
+      <text
+        xml:space="preserve"
+        fill="#111117"
+        font-family="Outfit"
+        font-size="15.9867"
+        letter-spacing="0em"
+        opacity="0.5"
+        style="white-space: pre"
+      >
+        <tspan
+          x="574.022"
+          y="309.003"
+        >
+          3 voyageurs - 1 chambre - 1 lit - 1 salle de bain
+        </tspan>
+      </text>
+      <g clip-path="url(#clip6_1035_54888)">
+        <rect
+          width="386.678"
+          height="81.4738"
+          x="564.53"
+          y="343.562"
+          stroke="#ECE8E8"
+          stroke-width="0.999167"
+          rx="14.4879"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2.49792"
+          d="M598.501 364.043H602.997C603.792 364.043 604.555 364.359 605.117 364.921C605.679 365.483 605.995 366.245 605.995 367.04V388.023"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2.49792"
+          d="M582.015 388.025H586.511"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2.49792"
+          d="M598.501 388.025H611.99"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2.49792"
+          d="M594.005 376.035V376.05"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2.49792"
+          d="M598.501 364.888V389.103C598.501 389.331 598.449 389.555 598.349 389.76C598.249 389.964 598.104 390.144 597.925 390.284C597.745 390.424 597.536 390.521 597.314 390.569C597.091 390.616 596.861 390.612 596.64 390.557L586.511 388.025V366.386C586.511 365.718 586.735 365.069 587.146 364.542C587.558 364.015 588.133 363.641 588.782 363.479L594.777 361.98C595.218 361.87 595.68 361.861 596.125 361.956C596.57 362.05 596.989 362.245 597.348 362.525C597.707 362.805 597.997 363.163 598.197 363.572C598.397 363.982 598.501 364.432 598.501 364.888Z"
+        />
+        <text
+          xml:space="preserve"
+          fill="#111117"
+          font-family="Outfit"
+          font-size="15.9867"
+          letter-spacing="0em"
+          style="white-space: pre"
+        >
+          <tspan
+            x="629.975"
+            y="373.965"
+          >
+            Arrivée autonome
+          </tspan>
+        </text>
+        <text
+          xml:space="preserve"
+          fill="#111117"
+          font-family="Outfit"
+          font-size="11.99"
+          letter-spacing="0em"
+          opacity="0.75"
+          style="white-space: pre"
+        >
+          <tspan
+            x="629.975"
+            y="392.484"
+          >
+            Vous pouvez entrer dans les lieux avec une boîte à clé
+          </tspan>
+          <tspan
+            x="629.975"
+            y="407.484"
+          >
+            sécurisée.
+          </tspan>
+        </text>
+        <rect
+          width="386.678"
+          height="81.4738"
+          x="967.194"
+          y="343.562"
+          stroke="#ECE8E8"
+          stroke-width="0.999167"
+          rx="14.4879"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2.49792"
+          d="M1013.16 369.289V367.04C1013.16 366.245 1012.84 365.483 1012.28 364.921C1011.72 364.359 1010.95 364.043 1010.16 364.043H989.176C988.381 364.043 987.618 364.359 987.056 364.921C986.494 365.483 986.178 366.245 986.178 367.04V388.023C986.178 388.818 986.494 389.58 987.056 390.143C987.618 390.705 988.381 391.02 989.176 391.02H994.421"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2.49792"
+          d="M1005.66 361.047V367.042"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2.49792"
+          d="M993.672 361.047V367.042"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2.49792"
+          d="M986.178 373.038H993.672"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2.49792"
+          d="M1007.91 384.279L1005.66 382.48V379.033"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2.49792"
+          d="M1005.66 391.023C1010.63 391.023 1014.65 386.997 1014.65 382.031C1014.65 377.064 1010.63 373.038 1005.66 373.038C1000.7 373.038 996.67 377.064 996.67 382.031C996.67 386.997 1000.7 391.023 1005.66 391.023Z"
+        />
+        <text
+          xml:space="preserve"
+          fill="#111117"
+          font-family="Outfit"
+          font-size="15.9867"
+          letter-spacing="0em"
+          style="white-space: pre"
+        >
+          <tspan
+            x="1032.64"
+            y="373.965"
+          >
+            Annulation gratuite pendant 48 heures
+          </tspan>
+        </text>
+        <text
+          xml:space="preserve"
+          fill="#111117"
+          font-family="Outfit"
+          font-size="11.99"
+          letter-spacing="0em"
+          opacity="0.75"
+          style="white-space: pre"
+        >
+          <tspan
+            x="1032.64"
+            y="392.484"
+          >
+            Obtenez un remboursement intégral si vous changez
+          </tspan>
+          <tspan
+            x="1032.64"
+            y="407.484"
+          >
+            d&apos;avis.
+          </tspan>
+        </text>
+      </g>
+      <g filter="url(#filter1_d_1035_54888)">
+        <rect
+          width="790.341"
+          height="69.9417"
+          x="564.03"
+          y="455.511"
+          fill="#FCFAFA"
+          rx="9.99167"
+          shape-rendering="crispEdges"
+        />
+        <rect
+          width="49.9584"
+          height="49.9584"
+          x="574.022"
+          y="465.503"
+          fill="url(#pattern8_1035_54888)"
+          rx="24.9792"
+        />
+        <text
+          xml:space="preserve"
+          fill="#111117"
+          font-family="Outfit"
+          font-size="15.9867"
+          letter-spacing="0em"
+          style="white-space: pre"
+        >
+          <tspan
+            x="638.968"
+            y="483.899"
+          >
+            Delphine
+          </tspan>
+        </text>
+        <text
+          xml:space="preserve"
+          fill="#111117"
+          font-family="Outfit"
+          font-size="15.9867"
+          letter-spacing="0em"
+          opacity="0.5"
+          style="white-space: pre"
+        >
+          <tspan
+            x="638.968"
+            y="508.896"
+          >
+            Hôte depuis 3 ans
+          </tspan>
+        </text>
+        <text
+          xml:space="preserve"
+          fill="#111117"
+          font-family="Outfit"
+          font-size="15.9867"
+          letter-spacing="0em"
+          style="white-space: pre"
+        >
+          <tspan
+            x="1069.43"
+            y="495.147"
+          >
+            Voir le profile
+          </tspan>
+        </text>
+        <rect
+          width="94"
+          height="1.49875"
+          fill="#111117"
+          transform="translate(1069.43 500.231)"
+        />
+        <g filter="url(#filter2_d_1035_54888)">
+          <rect
+            width="151.975"
+            height="32.9725"
+            x="1185.41"
+            y="473.995"
+            fill="#111117"
+            rx="7.99334"
+            shape-rendering="crispEdges"
+          />
+          <rect
+            width="153.973"
+            height="34.9708"
+            x="1184.41"
+            y="472.996"
+            stroke="#FCFAFA"
+            stroke-opacity="0.5"
+            stroke-width="1.99833"
+            rx="8.99251"
+            shape-rendering="crispEdges"
+          />
+          <text
+            xml:space="preserve"
+            fill="#FCFAFA"
+            font-family="Outfit"
+            font-size="15.9867"
+            letter-spacing="0em"
+            style="white-space: pre"
+          >
+            <tspan
+              x="1200.4"
+              y="494.906"
+            >
+              Voir les annonces
+            </tspan>
+          </text>
+        </g>
+      </g>
+      <text
+        xml:space="preserve"
+        fill="#111117"
+        font-family="Outfit"
+        font-size="15.9867"
+        letter-spacing="0em"
+        style="white-space: pre"
+      >
+        <tspan
+          x="574.022"
+          y="561.351"
+        >
+          Logement insolite à 20km de Bordeaux, idéal pour un séjour en couple, en famille ou entre amis. 
+        </tspan>
+        <tspan
+          x="574.022"
+          y="581.351"
+        >
+          Cette maison flottante avec terrasse située sur le lac de Baurech, en plein coeur de la nature, vous séduira par
+        </tspan>
+        <tspan
+          x="574.022"
+          y="601.351"
+        >
+          sa vue, son calme et son confort. 
+        </tspan>
+        <tspan
+          x="574.022"
+          y="621.351"
+        >
+          Séjour unique, hors du temps garantit ! 
+        </tspan>
+        <tspan
+          x="574.022"
+          y="641.351"
+        >
+          ...
+        </tspan>
+      </text>
+      <text
+        xml:space="preserve"
+        fill="#111117"
+        font-family="Outfit"
+        font-size="15.9867"
+        letter-spacing="0em"
+        style="white-space: pre"
+      >
+        <tspan
+          x="574.022"
+          y="671.342"
+        >
+          Voir plus
+        </tspan>
+      </text>
+      <rect
+        width="60"
+        height="1.49875"
+        fill="#111117"
+        transform="translate(574.022 676.426)"
+      />
+      <g clip-path="url(#clip7_1035_54888)">
+        <text
+          xml:space="preserve"
+          fill="#111117"
+          font-family="Fustat"
+          font-size="31.9734"
+          font-weight="600"
+          letter-spacing="0em"
+          style="white-space: pre"
+        >
+          <tspan
+            x="579.017"
+            y="739.673"
+          >
+            Ce que ce logement comprend
+          </tspan>
+        </text>
+        <rect
+          width="206.828"
+          height="53.955"
+          x="564.529"
+          y="768.387"
+          fill="#FCFAFA"
+          rx="9.49209"
+        />
+        <rect
+          width="206.828"
+          height="53.955"
+          x="564.529"
+          y="768.387"
+          stroke="#ECE8E8"
+          stroke-width="0.999167"
+          rx="9.49209"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M576.02 789.37C576.62 789.87 577.219 790.369 578.518 790.369C581.016 790.369 581.016 788.371 583.514 788.371C586.112 788.371 585.912 790.369 588.51 790.369C591.008 790.369 591.008 788.371 593.505 788.371C594.804 788.371 595.404 788.871 596.003 789.37"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M576.02 795.364C576.62 795.864 577.219 796.364 578.518 796.364C581.016 796.364 581.016 794.365 583.514 794.365C586.112 794.365 585.912 796.364 588.51 796.364C591.008 796.364 591.008 794.365 593.505 794.365C594.804 794.365 595.404 794.865 596.003 795.364"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M576.02 801.36C576.62 801.86 577.219 802.36 578.518 802.36C581.016 802.36 581.016 800.361 583.514 800.361C586.112 800.361 585.912 802.36 588.51 802.36C591.008 802.36 591.008 800.361 593.505 800.361C594.804 800.361 595.404 800.861 596.003 801.36"
+        />
+        <text
+          xml:space="preserve"
+          fill="#111117"
+          font-family="Outfit"
+          font-size="15.9867"
+          letter-spacing="0em"
+          style="white-space: pre"
+        >
+          <tspan
+            x="605.495"
+            y="791.28"
+          >
+            Accès plage ou bord
+          </tspan>
+          <tspan
+            x="605.495"
+            y="811.28"
+          >
+            de mer
+          </tspan>
+        </text>
+        <rect
+          width="206.828"
+          height="53.955"
+          x="564.53"
+          y="833.334"
+          fill="#FCFAFA"
+          rx="9.49209"
+        />
+        <rect
+          width="206.828"
+          height="53.955"
+          x="564.53"
+          y="833.334"
+          stroke="#ECE8E8"
+          stroke-width="0.999167"
+          rx="9.49209"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M586.012 868.304H586.022"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M576.02 857.132C578.768 854.674 582.325 853.315 586.012 853.315C589.698 853.315 593.256 854.674 596.003 857.132"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M579.018 861.169C580.885 859.338 583.396 858.312 586.012 858.312C588.627 858.312 591.138 859.338 593.006 861.169"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M582.514 864.735C583.448 863.819 584.704 863.307 586.012 863.307C587.319 863.307 588.575 863.819 589.509 864.735"
+        />
+        <text
+          xml:space="preserve"
+          fill="#111117"
+          font-family="Outfit"
+          font-size="15.9867"
+          letter-spacing="0em"
+          style="white-space: pre"
+        >
+          <tspan
+            x="605.495"
+            y="866.227"
+          >
+            Wifi
+          </tspan>
+        </text>
+        <rect
+          width="206.828"
+          height="53.955"
+          x="564.53"
+          y="898.279"
+          fill="#FCFAFA"
+          rx="9.49209"
+        />
+        <rect
+          width="206.828"
+          height="53.955"
+          x="564.53"
+          y="898.279"
+          stroke="#ECE8E8"
+          stroke-width="0.999167"
+          rx="9.49209"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M595.004 921.259L593.006 923.257L591.507 919.56C591.366 919.182 591.113 918.855 590.782 918.623C590.452 918.391 590.059 918.265 589.655 918.261H582.415C582.008 918.252 581.607 918.367 581.267 918.592C580.928 918.816 580.664 919.139 580.513 919.517L579.017 923.257L577.019 921.259"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M581.016 927.253H581.026"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M591.008 927.253H591.018"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M593.006 923.258H579.017C577.914 923.258 577.019 924.152 577.019 925.256V929.253C577.019 930.356 577.914 931.251 579.017 931.251H593.006C594.109 931.251 595.004 930.356 595.004 929.253V925.256C595.004 924.152 594.109 923.258 593.006 923.258Z"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M579.018 931.251V933.249"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M593.006 931.251V933.249"
+        />
+        <text
+          xml:space="preserve"
+          fill="#111117"
+          font-family="Outfit"
+          font-size="15.9867"
+          letter-spacing="0em"
+          style="white-space: pre"
+        >
+          <tspan
+            x="605.495"
+            y="921.172"
+          >
+            Parking gratuit sur
+          </tspan>
+          <tspan
+            x="605.495"
+            y="941.172"
+          >
+            place
+          </tspan>
+        </text>
+        <rect
+          width="206.828"
+          height="53.955"
+          x="564.53"
+          y="963.225"
+          fill="#FCFAFA"
+          rx="9.49209"
+        />
+        <rect
+          width="206.828"
+          height="53.955"
+          x="564.53"
+          y="963.225"
+          stroke="#ECE8E8"
+          stroke-width="0.999167"
+          rx="9.49209"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M576.02 990.202H586.012"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M583.014 982.213V998.2"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M577.019 987.206L580.017 990.204L577.019 993.201"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M586.012 984.209L583.014 987.206L580.017 984.209"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M580.017 996.199L583.014 993.201L584.513 994.7"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M594.005 982.209V992.74C594.767 993.18 595.363 993.859 595.699 994.672C596.036 995.485 596.095 996.386 595.867 997.236C595.64 998.086 595.138 998.837 594.44 999.372C593.742 999.908 592.887 1000.2 592.007 1000.2C591.127 1000.2 590.272 999.908 589.574 999.372C588.876 998.837 588.374 998.086 588.146 997.236C587.919 996.386 587.978 995.485 588.314 994.672C588.651 993.859 589.247 993.18 590.008 992.74V982.209C590.008 981.679 590.219 981.171 590.594 980.796C590.969 980.421 591.477 980.211 592.007 980.211C592.537 980.211 593.045 980.421 593.42 980.796C593.795 981.171 594.005 981.679 594.005 982.209Z"
+        />
+        <text
+          xml:space="preserve"
+          fill="#111117"
+          font-family="Outfit"
+          font-size="15.9867"
+          letter-spacing="0em"
+          style="white-space: pre"
+        >
+          <tspan
+            x="605.495"
+            y="996.118"
+          >
+            Climatisation centrale
+          </tspan>
+        </text>
+        <rect
+          width="206.828"
+          height="53.955"
+          x="782.348"
+          y="768.387"
+          fill="#FCFAFA"
+          rx="9.49209"
+        />
+        <rect
+          width="206.828"
+          height="53.955"
+          x="782.348"
+          y="768.387"
+          stroke="#ECE8E8"
+          stroke-width="0.999167"
+          rx="9.49209"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M810.824 786.373H796.836C795.732 786.373 794.838 787.268 794.838 788.371V802.36C794.838 803.463 795.732 804.358 796.836 804.358H810.824C811.928 804.358 812.823 803.463 812.823 802.36V788.371C812.823 787.268 811.928 786.373 810.824 786.373Z"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M800.833 794.367C801.936 794.367 802.831 793.472 802.831 792.368C802.831 791.265 801.936 790.37 800.833 790.37C799.729 790.37 798.834 791.265 798.834 792.368C798.834 793.472 799.729 794.367 800.833 794.367Z"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M812.823 798.362L809.739 795.278C809.364 794.904 808.856 794.693 808.326 794.693C807.796 794.693 807.288 794.904 806.914 795.278L797.835 804.357"
+        />
+        <text
+          xml:space="preserve"
+          fill="#111117"
+          font-family="Outfit"
+          font-size="15.9867"
+          letter-spacing="0em"
+          style="white-space: pre"
+        >
+          <tspan
+            x="823.314"
+            y="801.28"
+          >
+            Vue sur le lac
+          </tspan>
+        </text>
+        <rect
+          width="206.828"
+          height="53.955"
+          x="782.348"
+          y="833.334"
+          fill="#FCFAFA"
+          rx="9.49209"
+        />
+        <rect
+          width="206.828"
+          height="53.955"
+          x="782.348"
+          y="833.334"
+          stroke="#ECE8E8"
+          stroke-width="0.999167"
+          rx="9.49209"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M794.838 850.319V857.314C794.838 858.413 795.737 859.312 796.836 859.312H800.833C801.363 859.312 801.871 859.101 802.246 858.727C802.621 858.352 802.831 857.843 802.831 857.314V850.319"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M798.834 850.319V870.303"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M812.823 863.309V850.319C811.498 850.319 810.227 850.846 809.29 851.783C808.353 852.719 807.827 853.99 807.827 855.315V861.31C807.827 862.409 808.726 863.309 809.825 863.309H812.823ZM812.823 863.309V870.303"
+        />
+        <text
+          xml:space="preserve"
+          fill="#111117"
+          font-family="Outfit"
+          font-size="15.9867"
+          letter-spacing="0em"
+          style="white-space: pre"
+        >
+          <tspan
+            x="823.314"
+            y="866.227"
+          >
+            Cuisine
+          </tspan>
+        </text>
+        <rect
+          width="206.828"
+          height="53.955"
+          x="782.348"
+          y="898.279"
+          fill="#FCFAFA"
+          rx="9.49209"
+        />
+        <rect
+          width="206.828"
+          height="53.955"
+          x="782.348"
+          y="898.279"
+          stroke="#ECE8E8"
+          stroke-width="0.999167"
+          rx="9.49209"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M811.823 929.252V920.259C811.823 919.729 811.613 919.221 811.238 918.846C810.863 918.471 810.355 918.261 809.825 918.261H797.835C797.305 918.261 796.797 918.471 796.422 918.846C796.047 919.221 795.837 919.729 795.837 920.259V929.252M811.823 929.252H795.837M811.823 929.252L813.102 931.799C813.179 931.952 813.216 932.122 813.208 932.293C813.201 932.464 813.149 932.631 813.059 932.776C812.969 932.921 812.843 933.041 812.693 933.124C812.543 933.207 812.374 933.249 812.203 933.248H795.457C795.286 933.249 795.117 933.207 794.967 933.124C794.818 933.041 794.691 932.921 794.601 932.776C794.511 932.631 794.459 932.464 794.452 932.293C794.444 932.122 794.481 931.952 794.558 931.799L795.837 929.252"
+        />
+        <text
+          xml:space="preserve"
+          fill="#111117"
+          font-family="Outfit"
+          font-size="15.9867"
+          letter-spacing="0em"
+          style="white-space: pre"
+        >
+          <tspan
+            x="823.314"
+            y="921.172"
+          >
+            Espace de travail
+          </tspan>
+          <tspan
+            x="823.314"
+            y="941.172"
+          >
+            dédié
+          </tspan>
+        </text>
+        <rect
+          width="206.828"
+          height="53.955"
+          x="782.348"
+          y="963.225"
+          fill="#FCFAFA"
+          rx="9.49209"
+        />
+        <rect
+          width="206.828"
+          height="53.955"
+          x="782.348"
+          y="963.225"
+          stroke="#ECE8E8"
+          stroke-width="0.999167"
+          rx="9.49209"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M800.833 984.207L798.335 981.71C798.079 981.42 797.721 981.242 797.336 981.21C796.519 981.21 795.837 981.892 795.837 982.709V995.198C795.837 995.728 796.048 996.237 796.422 996.611C796.797 996.986 797.305 997.197 797.835 997.197H809.825C810.355 997.197 810.864 996.986 811.238 996.611C811.613 996.237 811.824 995.728 811.824 995.198V990.202"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M801.832 983.21L799.834 985.208"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M793.839 990.202H813.822"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M798.835 997.198V999.197"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M808.826 997.198V999.197"
+        />
+        <text
+          xml:space="preserve"
+          fill="#111117"
+          font-family="Outfit"
+          font-size="15.9867"
+          letter-spacing="0em"
+          style="white-space: pre"
+        >
+          <tspan
+            x="823.314"
+            y="996.118"
+          >
+            Baignoire moderne
+          </tspan>
+        </text>
+        <g filter="url(#filter3_d_1035_54888)">
+          <rect
+            width="421.649"
+            height="32.9725"
+            x="566.029"
+            y="1029.67"
+            fill="#111117"
+            rx="7.99334"
+            shape-rendering="crispEdges"
+          />
+          <rect
+            width="423.647"
+            height="34.9708"
+            x="565.029"
+            y="1028.67"
+            stroke="#FCFAFA"
+            stroke-opacity="0.5"
+            stroke-width="1.99833"
+            rx="8.99251"
+            shape-rendering="crispEdges"
+          />
+          <text
+            xml:space="preserve"
+            fill="#FCFAFA"
+            font-family="Outfit"
+            font-size="15.9867"
+            letter-spacing="0em"
+            style="white-space: pre"
+          >
+            <tspan
+              x="687.353"
+              y="1050.58"
+            >
+              Voir tous les équipements
+            </tspan>
+          </text>
+        </g>
+        <rect
+          width="344.713"
+          height="296.753"
+          x="1009.66"
+          y="767.888"
+          fill="#ECE8E8"
+          rx="19.9833"
+        />
+        <rect
+          width="324.729"
+          height="85.5953"
+          x="1019.65"
+          y="777.879"
+          fill="#FCFAFA"
+          rx="9.99167"
+        />
+        <text
+          xml:space="preserve"
+          fill="black"
+          font-family="Outfit"
+          font-size="15.9867"
+          letter-spacing="0em"
+          style="white-space: pre"
+        >
+          <tspan
+            x="1039.63"
+            y="803.785"
+          >
+            Chambre 1
+          </tspan>
+        </text>
+        <text
+          xml:space="preserve"
+          fill="black"
+          font-family="Outfit"
+          font-size="11.99"
+          letter-spacing="0em"
+          style="white-space: pre"
+        >
+          <tspan
+            x="1039.63"
+            y="850.419"
+          >
+            1 lit double
+          </tspan>
+        </text>
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M1302.41 815.846V807.853C1302.41 807.323 1302.62 806.815 1303 806.44C1303.37 806.065 1303.88 805.854 1304.41 805.854H1320.4C1320.93 805.854 1321.44 806.065 1321.81 806.44C1322.19 806.815 1322.4 807.323 1322.4 807.853V815.846"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M1304.41 805.854V801.858C1304.41 801.328 1304.62 800.819 1305 800.445C1305.37 800.07 1305.88 799.859 1306.41 799.859H1318.4C1318.93 799.859 1319.44 800.07 1319.81 800.445C1320.19 800.819 1320.4 801.328 1320.4 801.858V805.854"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M1312.41 799.859V805.854"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.99833"
+          d="M1302.41 813.847H1322.4"
+        />
+        <rect
+          width="324.729"
+          height="85.5953"
+          x="1019.65"
+          y="873.467"
+          fill="#FCFAFA"
+          rx="9.99167"
+        />
+        <text
+          xml:space="preserve"
+          fill="black"
+          font-family="Outfit"
+          font-size="15.9867"
+          letter-spacing="0em"
+          style="white-space: pre"
+        >
+          <tspan
+            x="1039.63"
+            y="899.373"
+          >
+            Salon
+          </tspan>
+        </text>
+        <text
+          xml:space="preserve"
+          fill="black"
+          font-family="Outfit"
+          font-size="11.99"
+          letter-spacing="0em"
+          style="white-space: pre"
+        >
+          <tspan
+            x="1039.63"
+            y="946.007"
+          >
+            2 lit simples
+          </tspan>
+        </text>
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M1269.44 911.434V903.441C1269.44 902.911 1269.65 902.402 1270.03 902.028C1270.4 901.653 1270.91 901.442 1271.44 901.442H1285.43C1285.96 901.442 1286.47 901.653 1286.84 902.028C1287.22 902.402 1287.43 902.911 1287.43 903.441V911.434"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M1271.44 901.442V897.446C1271.44 896.916 1271.65 896.407 1272.03 896.033C1272.4 895.658 1272.91 895.447 1273.44 895.447H1283.43C1283.96 895.447 1284.47 895.658 1284.84 896.033C1285.22 896.407 1285.43 896.916 1285.43 897.446V901.442"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M1269.44 909.435H1287.43"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M1303.41 911.434V903.441C1303.41 902.911 1303.62 902.402 1304 902.028C1304.37 901.653 1304.88 901.442 1305.41 901.442H1319.4C1319.93 901.442 1320.44 901.653 1320.81 902.028C1321.19 902.402 1321.4 902.911 1321.4 903.441V911.434"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M1305.41 901.442V897.446C1305.41 896.916 1305.62 896.407 1306 896.033C1306.37 895.658 1306.88 895.447 1307.41 895.447H1317.4C1317.93 895.447 1318.44 895.658 1318.82 896.033C1319.19 896.407 1319.4 896.916 1319.4 897.446V901.442"
+        />
+        <path
+          stroke="#111117"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="1.49875"
+          d="M1303.41 909.435H1321.4"
+        />
+      </g>
+      <g filter="url(#filter4_d_1035_54888)">
+        <rect
+          width="790.341"
+          height="213.598"
+          x="564.03"
+          y="1094.62"
+          fill="url(#pattern9_1035_54888)"
+          rx="9.99167"
+          shape-rendering="crispEdges"
+        />
+        <rect
+          width="785.345"
+          height="208.602"
+          x="566.528"
+          y="1097.11"
+          stroke="#FCFAFA"
+          stroke-width="4.99584"
+          rx="7.49375"
+          shape-rendering="crispEdges"
+        />
+      </g>
+    </g>
+    <g clip-path="url(#clip8_1035_54888)">
+      <rect
+        width="488.593"
+        height="641.382"
+        x="1399.58"
+        y="189.108"
+        fill="url(#paint1_radial_1035_54888)"
+        rx="19.9833"
+      />
+      <rect
+        width="488.593"
+        height="641.382"
+        x="1399.58"
+        y="189.108"
+        fill="#FCFAFA"
+        rx="19.9833"
+      />
+      <text
+        xml:space="preserve"
+        fill="#111117"
+        font-family="Fustat"
+        font-size="31.9734"
+        font-weight="600"
+        letter-spacing="0em"
+        style="white-space: pre"
+      >
+        <tspan
+          x="1422.06"
+          y="235.849"
+        >
+          4.93
+        </tspan>
+      </text>
+      <path
+        fill="#111117"
+        stroke="#111117"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="1.49875"
+        d="M1502.05 214.095L1505.14 220.35L1512.04 221.359L1507.05 226.225L1508.23 233.099L1502.05 229.852L1495.88 233.099L1497.06 226.225L1492.06 221.359L1498.96 220.35L1502.05 214.095Z"
+      />
+      <text
+        xml:space="preserve"
+        fill="#111117"
+        font-family="Fustat"
+        font-size="19.9833"
+        font-weight="500"
+        letter-spacing="0em"
+        style="white-space: pre"
+      >
+        <tspan
+          x="1534.02"
+          y="232.372"
+        >
+          149 commentaires
+        </tspan>
+      </text>
+      <g filter="url(#filter5_d_1035_54888)">
+        <rect
+          width="108.935"
+          height="34.9875"
+          x="1422.06"
+          y="259.05"
+          fill="#FCFAFA"
+          rx="9.99167"
+          shape-rendering="crispEdges"
+        />
+        <path
+          fill="#FF5252"
+          d="M1452.81 280.084C1452.38 278.698 1448.8 271.939 1447.71 269.901L1447.7 269.881C1447.21 268.878 1446.17 268.23 1445.05 268.23C1443.92 268.23 1442.88 268.878 1442.4 269.864L1442.38 269.901C1441.29 271.939 1437.72 278.698 1437.28 280.084C1437.16 280.459 1437.05 280.869 1437.05 281.324C1437.05 283.272 1438.66 284.857 1440.63 284.857C1442.59 284.857 1443.83 284.047 1445.05 282.702C1446.26 284.047 1447.51 284.857 1449.46 284.857C1451.43 284.857 1453.04 283.272 1453.04 281.324C1453.04 280.869 1452.93 280.459 1452.81 280.084ZM1445.05 280.975C1444.34 280.083 1443.36 278.572 1443.36 277.375C1443.36 276.458 1444.12 275.712 1445.05 275.712C1445.97 275.712 1446.73 276.458 1446.73 277.375C1446.73 278.569 1445.75 280.081 1445.05 280.975ZM1449.46 283.61C1448.08 283.61 1447.14 283.15 1445.96 281.84C1446.68 280.948 1447.99 279.081 1447.99 277.375C1447.99 275.77 1446.67 274.465 1445.05 274.465C1443.42 274.465 1442.1 275.77 1442.1 277.375C1442.1 279.081 1443.41 280.948 1444.13 281.84C1442.95 283.15 1442.01 283.61 1440.63 283.61C1439.35 283.61 1438.31 282.584 1438.31 281.324C1438.31 281.052 1438.38 280.78 1438.49 280.455C1438.81 279.432 1441.39 274.444 1443.5 270.482L1443.53 270.421C1443.81 269.848 1444.4 269.477 1445.05 269.477C1445.69 269.477 1446.28 269.848 1446.57 270.427L1446.6 270.482C1448.71 274.444 1451.28 279.432 1451.61 280.455C1451.71 280.78 1451.78 281.052 1451.78 281.324C1451.78 282.584 1450.74 283.61 1449.46 283.61Z"
+        />
+        <text
+          xml:space="preserve"
+          fill="#FF5252"
+          font-family="Outfit"
+          font-size="15.9867"
+          letter-spacing="0em"
+          style="white-space: pre"
+        >
+          <tspan
+            x="1468.03"
+            y="282.459"
+          >
+            4.57
+          </tspan>
+        </text>
+        <g clip-path="url(#clip9_1035_54888)">
+          <path
+            fill="#FF5252"
+            stroke="#FF5252"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.49875"
+            d="M1510.02 271.555L1511.56 274.682L1515.01 275.187L1512.52 277.62L1513.1 281.057L1510.02 279.433L1506.93 281.057L1507.52 277.62L1505.02 275.187L1508.47 274.682L1510.02 271.555Z"
+          />
+        </g>
+      </g>
+      <g filter="url(#filter6_d_1035_54888)">
+        <rect
+          width="109.936"
+          height="34.9875"
+          x="1540.99"
+          y="259.05"
+          fill="#FCFAFA"
+          rx="9.99167"
+          shape-rendering="crispEdges"
+        />
+        <path
+          fill="#273C7E"
+          d="M1561.81 281.903H1559.09V278.655C1559.09 277.962 1559.36 277.59 1559.96 277.516H1561.82C1562.93 277.423 1563.91 278.252 1564 279.365C1564.01 279.479 1564.01 279.592 1564 279.705C1564 281.089 1563.17 281.914 1561.82 281.914L1561.81 281.903ZM1559.09 273.122V272.271C1559.09 271.524 1559.41 271.164 1560.1 271.12H1561.5C1562.69 271.12 1563.41 271.834 1563.41 273.038C1563.41 273.942 1562.92 275.007 1561.55 275.007H1559.1L1559.09 273.122ZM1565.29 276.37L1564.8 276.093L1565.22 275.721C1565.72 275.295 1566.56 274.326 1566.56 272.659C1566.56 270.102 1564.57 268.451 1561.51 268.451H1557.63C1556.71 268.484 1555.99 269.228 1555.98 270.139V284.623H1561.58C1564.99 284.623 1567.18 282.77 1567.18 279.895C1567.18 278.351 1566.47 277.019 1565.28 276.354"
+        />
+        <path
+          fill="#273C7E"
+          d="M1568.07 282.682C1568.07 281.6 1568.94 280.727 1570.01 280.727C1571.09 280.727 1571.97 281.6 1571.97 282.682C1571.97 283.763 1571.09 284.637 1570.01 284.637C1568.93 284.637 1568.07 283.763 1568.07 282.682Z"
+        />
+        <text
+          xml:space="preserve"
+          fill="#273C7E"
+          font-family="Outfit"
+          font-size="15.9867"
+          letter-spacing="0em"
+          style="white-space: pre"
+        >
+          <tspan
+            x="1586.95"
+            y="282.459"
+          >
+            4.84
+          </tspan>
+        </text>
+        <g clip-path="url(#clip10_1035_54888)">
+          <path
+            fill="#273C7E"
+            stroke="#273C7E"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.49875"
+            d="M1629.94 271.555L1631.49 274.682L1634.94 275.187L1632.44 277.62L1633.03 281.057L1629.94 279.433L1626.86 281.057L1627.45 277.62L1624.95 275.187L1628.4 274.682L1629.94 271.555Z"
+          />
+        </g>
+      </g>
+      <g clip-path="url(#clip11_1035_54888)">
+        <rect
+          width="49.9584"
+          height="49.9584"
+          x="1414.57"
+          y="324.013"
+          fill="url(#pattern10_1035_54888)"
+          rx="24.9792"
+        />
+        <text
+          xml:space="preserve"
+          fill="#111117"
+          font-family="Fustat"
+          font-size="19.9833"
+          font-weight="500"
+          letter-spacing="0em"
+          style="white-space: pre"
+        >
+          <tspan
+            x="1474.52"
+            y="344.789"
+          >
+            Maximilien
+          </tspan>
+        </text>
+        <text
+          xml:space="preserve"
+          fill="#111117"
+          font-family="Outfit"
+          font-size="11.99"
+          letter-spacing="0em"
+          opacity="0.5"
+          style="white-space: pre"
+        >
+          <tspan
+            x="1474.52"
+            y="367.417"
+          >
+            6 nuits
+          </tspan>
+        </text>
+        <mask
+          id="mask0_1035_54888"
+          width="66"
+          height="12"
+          x="1516"
+          y="357"
+          maskUnits="userSpaceOnUse"
+          style="mask-type: alpha"
+        >
+          <g clip-path="url(#clip12_1035_54888)">
+            <path
+              fill="#111117"
+              stroke="#111117"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.0589"
+              d="M1522.47 358.063L1523.92 361.01L1527.17 361.485L1524.82 363.777L1525.38 367.015L1522.47 365.485L1519.56 367.015L1520.11 363.777L1517.76 361.485L1521.01 361.01L1522.47 358.063Z"
+            />
+          </g>
+          <g clip-path="url(#clip13_1035_54888)">
+            <path
+              fill="#111117"
+              stroke="#111117"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.0589"
+              d="M1535.88 358.063L1537.33 361.01L1540.59 361.485L1538.23 363.777L1538.79 367.015L1535.88 365.485L1532.97 367.015L1533.53 363.777L1531.17 361.485L1534.43 361.01L1535.88 358.063Z"
+            />
+          </g>
+          <g clip-path="url(#clip14_1035_54888)">
+            <path
+              fill="#111117"
+              stroke="#111117"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.0589"
+              d="M1549.29 358.063L1550.75 361.01L1554 361.485L1551.65 363.777L1552.2 367.015L1549.29 365.485L1546.38 367.015L1546.94 363.777L1544.59 361.485L1547.84 361.01L1549.29 358.063Z"
+            />
+          </g>
+          <g clip-path="url(#clip15_1035_54888)">
+            <path
+              fill="#111117"
+              stroke="#111117"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.0589"
+              d="M1562.71 358.063L1564.16 361.01L1567.41 361.485L1565.06 363.777L1565.61 367.015L1562.71 365.485L1559.8 367.015L1560.35 363.777L1558 361.485L1561.25 361.01L1562.71 358.063Z"
+            />
+          </g>
+          <g clip-path="url(#clip16_1035_54888)">
+            <path
+              fill="#111117"
+              stroke="#111117"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.0589"
+              d="M1576.12 358.063L1577.57 361.01L1580.82 361.485L1578.47 363.777L1579.03 367.015L1576.12 365.485L1573.21 367.015L1573.76 363.777L1571.41 361.485L1574.66 361.01L1576.12 358.063Z"
+            />
+          </g>
+        </mask>
+        <g mask="url(#mask0_1035_54888)">
+          <rect
+            width="64.9459"
+            height="11.2949"
+            x="1517.01"
+            y="357.333"
+            fill="url(#paint2_linear_1035_54888)"
+          />
+        </g>
+        <text
+          xml:space="preserve"
+          fill="#111117"
+          font-family="Outfit"
+          font-size="15.9867"
+          letter-spacing="0em"
+          style="white-space: pre"
+        >
+          <tspan
+            x="1424.56"
+            y="402.376"
+          >
+            Séjour paisible sur le lac, logement propre et bien équipé.
+          </tspan>
+          <tspan
+            x="1424.56"
+            y="422.376"
+          >
+            Parfait pour une escapade relaxante en pleine nature.
+          </tspan>
+        </text>
+        <rect
+          width="49.9584"
+          height="49.9584"
+          x="1414.57"
+          y="453.938"
+          fill="url(#pattern11_1035_54888)"
+          rx="24.9792"
+        />
+        <text
+          xml:space="preserve"
+          fill="#111117"
+          font-family="Fustat"
+          font-size="19.9833"
+          font-weight="500"
+          letter-spacing="0em"
+          style="white-space: pre"
+        >
+          <tspan
+            x="1474.52"
+            y="474.714"
+          >
+            Eugénie
+          </tspan>
+        </text>
+        <text
+          xml:space="preserve"
+          fill="#111117"
+          font-family="Outfit"
+          font-size="11.99"
+          letter-spacing="0em"
+          opacity="0.5"
+          style="white-space: pre"
+        >
+          <tspan
+            x="1474.52"
+            y="497.342"
+          >
+            6 nuits
+          </tspan>
+        </text>
+        <mask
+          id="mask1_1035_54888"
+          width="66"
+          height="12"
+          x="1516"
+          y="487"
+          maskUnits="userSpaceOnUse"
+          style="mask-type: alpha"
+        >
+          <g clip-path="url(#clip17_1035_54888)">
+            <path
+              fill="#111117"
+              stroke="#111117"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.0589"
+              d="M1522.47 487.988L1523.92 490.934L1527.17 491.41L1524.82 493.702L1525.38 496.94L1522.47 495.41L1519.56 496.94L1520.11 493.702L1517.76 491.41L1521.01 490.934L1522.47 487.988Z"
+            />
+          </g>
+          <g clip-path="url(#clip18_1035_54888)">
+            <path
+              fill="#111117"
+              stroke="#111117"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.0589"
+              d="M1535.88 487.988L1537.33 490.934L1540.59 491.41L1538.23 493.702L1538.79 496.94L1535.88 495.41L1532.97 496.94L1533.53 493.702L1531.17 491.41L1534.43 490.934L1535.88 487.988Z"
+            />
+          </g>
+          <g clip-path="url(#clip19_1035_54888)">
+            <path
+              fill="#111117"
+              stroke="#111117"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.0589"
+              d="M1549.29 487.988L1550.75 490.934L1554 491.41L1551.65 493.702L1552.2 496.94L1549.29 495.41L1546.38 496.94L1546.94 493.702L1544.59 491.41L1547.84 490.934L1549.29 487.988Z"
+            />
+          </g>
+          <g clip-path="url(#clip20_1035_54888)">
+            <path
+              fill="#111117"
+              stroke="#111117"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.0589"
+              d="M1562.71 487.988L1564.16 490.934L1567.41 491.41L1565.06 493.702L1565.61 496.94L1562.71 495.41L1559.8 496.94L1560.35 493.702L1558 491.41L1561.25 490.934L1562.71 487.988Z"
+            />
+          </g>
+          <g clip-path="url(#clip21_1035_54888)">
+            <path
+              fill="#111117"
+              stroke="#111117"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.0589"
+              d="M1576.12 487.988L1577.57 490.934L1580.82 491.41L1578.47 493.702L1579.03 496.94L1576.12 495.41L1573.21 496.94L1573.76 493.702L1571.41 491.41L1574.66 490.934L1576.12 487.988Z"
+            />
+          </g>
+        </mask>
+        <g mask="url(#mask1_1035_54888)">
+          <rect
+            width="64.9459"
+            height="11.2949"
+            x="1517.01"
+            y="487.258"
+            fill="url(#paint3_linear_1035_54888)"
+          />
+        </g>
+        <text
+          xml:space="preserve"
+          fill="#111117"
+          font-family="Outfit"
+          font-size="15.9867"
+          letter-spacing="0em"
+          style="white-space: pre"
+        >
+          <tspan
+            x="1424.56"
+            y="532.3"
+          >
+            Accueil chaleureux, maison flottante confortable et bien
+          </tspan>
+          <tspan
+            x="1424.56"
+            y="552.3"
+          >
+            située. Idéal pour déconnecter du quotidien.
+          </tspan>
+        </text>
+        <rect
+          width="49.9584"
+          height="49.9584"
+          x="1414.57"
+          y="583.863"
+          fill="url(#pattern12_1035_54888)"
+          rx="24.9792"
+        />
+        <text
+          xml:space="preserve"
+          fill="#111117"
+          font-family="Fustat"
+          font-size="19.9833"
+          font-weight="500"
+          letter-spacing="0em"
+          style="white-space: pre"
+        >
+          <tspan
+            x="1474.52"
+            y="604.64"
+          >
+            Matisse
+          </tspan>
+        </text>
+        <text
+          xml:space="preserve"
+          fill="#111117"
+          font-family="Outfit"
+          font-size="11.99"
+          letter-spacing="0em"
+          opacity="0.5"
+          style="white-space: pre"
+        >
+          <tspan
+            x="1474.52"
+            y="627.267"
+          >
+            6 nuits
+          </tspan>
+        </text>
+        <mask
+          id="mask2_1035_54888"
+          width="66"
+          height="13"
+          x="1516"
+          y="616"
+          maskUnits="userSpaceOnUse"
+          style="mask-type: alpha"
+        >
+          <path
+            fill="#111117"
+            stroke="#111117"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.0589"
+            d="M1522.47 617.915L1523.92 620.861L1527.17 621.336L1524.82 623.628L1525.38 626.866L1522.47 625.337L1519.56 626.866L1520.11 623.628L1517.76 621.336L1521.01 620.861L1522.47 617.915Z"
+          />
+          <g clip-path="url(#clip22_1035_54888)">
+            <path
+              fill="#111117"
+              stroke="#111117"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.0589"
+              d="M1535.88 617.915L1537.33 620.861L1540.59 621.336L1538.23 623.628L1538.79 626.866L1535.88 625.337L1532.97 626.866L1533.53 623.628L1531.17 621.336L1534.43 620.861L1535.88 617.915Z"
+            />
+          </g>
+          <g clip-path="url(#clip23_1035_54888)">
+            <path
+              fill="#111117"
+              stroke="#111117"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.0589"
+              d="M1549.29 617.915L1550.75 620.861L1554 621.336L1551.65 623.628L1552.2 626.866L1549.29 625.337L1546.38 626.866L1546.94 623.628L1544.59 621.336L1547.84 620.861L1549.29 617.915Z"
+            />
+          </g>
+          <g clip-path="url(#clip24_1035_54888)">
+            <path
+              fill="#111117"
+              stroke="#111117"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.0589"
+              d="M1562.71 617.915L1564.16 620.861L1567.41 621.336L1565.06 623.628L1565.61 626.866L1562.71 625.337L1559.8 626.866L1560.35 623.628L1558 621.336L1561.25 620.861L1562.71 617.915Z"
+            />
+          </g>
+        </mask>
+        <g mask="url(#mask2_1035_54888)">
+          <rect
+            width="64.9459"
+            height="11.2949"
+            x="1517.01"
+            y="617.184"
+            fill="url(#paint4_linear_1035_54888)"
+          />
+        </g>
+        <text
+          xml:space="preserve"
+          fill="#111117"
+          font-family="Outfit"
+          font-size="15.9867"
+          letter-spacing="0em"
+          style="white-space: pre"
+        >
+          <tspan
+            x="1424.56"
+            y="662.227"
+          >
+            Chalet avec une vue incroyable, bien isolé mais difficile d’accès
+          </tspan>
+          <tspan
+            x="1424.56"
+            y="682.227"
+          >
+            (chemin très pentu pour y accéder avec verglas l’hiver).
+          </tspan>
+          <tspan
+            x="1424.56"
+            y="702.227"
+          >
+            Nécessite une bonne condition physique.
+          </tspan>
+        </text>
+        <rect
+          width="49.9584"
+          height="49.9584"
+          x="1414.57"
+          y="733.788"
+          fill="url(#pattern13_1035_54888)"
+          rx="24.9792"
+        />
+        <text
+          xml:space="preserve"
+          fill="#111117"
+          font-family="Fustat"
+          font-size="19.9833"
+          font-weight="500"
+          letter-spacing="0em"
+          style="white-space: pre"
+        >
+          <tspan
+            x="1474.52"
+            y="754.565"
+          >
+            Céline
+          </tspan>
+        </text>
+      </g>
+      <rect
+        width="403.664"
+        height="37.9684"
+        fill="url(#paint5_linear_1035_54888)"
+        transform="translate(1414.57 725.578)"
+      />
+      <g filter="url(#filter7_d_1035_54888)">
+        <rect
+          width="454.621"
+          height="32.9725"
+          x="1416.57"
+          y="780.532"
+          fill="#FCFAFA"
+          rx="9.99167"
+          shape-rendering="crispEdges"
+        />
+        <rect
+          width="456.619"
+          height="34.9708"
+          x="1415.57"
+          y="779.533"
+          stroke="#111117"
+          stroke-opacity="0.1"
+          stroke-width="1.99833"
+          rx="10.9908"
+          shape-rendering="crispEdges"
+        />
+        <text
+          xml:space="preserve"
+          fill="#111117"
+          font-family="Outfit"
+          font-size="15.9867"
+          letter-spacing="0em"
+          style="white-space: pre"
+        >
+          <tspan
+            x="1535.38"
+            y="801.443"
+          >
+            Afficher tous les commentaires
+          </tspan>
+        </text>
+      </g>
+      <rect
+        width="489.092"
+        height="457.702"
+        x="1399.33"
+        y="850.474"
+        fill="url(#paint6_radial_1035_54888)"
+        rx="19.9833"
+      />
+      <text
+        xml:space="preserve"
+        fill="#111117"
+        font-family="Fustat"
+        font-size="35.97"
+        font-weight="bold"
+        letter-spacing="0em"
+        style="white-space: pre"
+      >
+        <tspan
+          x="1429.31"
+          y="901.371"
+        >
+          Vous réservez
+        </tspan>
+      </text>
+      <rect
+        width="459.117"
+        height="39.9833"
+        x="1414.32"
+        y="926.41"
+        fill="#FCFAFA"
+        rx="9.99167"
+      />
+      <text
+        xml:space="preserve"
+        fill="#111117"
+        font-family="Outfit"
+        font-size="15.9867"
+        letter-spacing="0em"
+        style="white-space: pre"
+      >
+        <tspan
+          x="1577.93"
+          y="952.316"
+        >
+          du
+        </tspan>
+        <tspan
+          x="1665.54"
+          y="952.316"
+        >
+          au
+        </tspan>
+      </text>
+      <text
+        xml:space="preserve"
+        fill="#111117"
+        font-family="Outfit"
+        font-size="15.9867"
+        letter-spacing="0em"
+        style="white-space: pre"
+        text-decoration="underline"
+      >
+        <tspan
+          x="1531.92"
+          y="952.316"
+        >
+          4 nuits
+        </tspan>
+        <tspan
+          x="1602.13"
+          y="952.316"
+        >
+          19/03/25
+        </tspan>
+        <tspan
+          x="1689.74"
+          y="952.316"
+        >
+          23/03/25
+        </tspan>
+      </text>
+      <rect
+        width="459.117"
+        height="99.9167"
+        x="1414.32"
+        y="976.385"
+        fill="#FCFAFA"
+        rx="9.99167"
+      />
+      <text
+        xml:space="preserve"
+        fill="#111117"
+        font-family="Outfit"
+        font-size="15.9867"
+        letter-spacing="0em"
+        style="white-space: pre"
+      >
+        <tspan
+          x="1436.29"
+          y="1008.28"
+        >
+          Du
+        </tspan>
+      </text>
+      <g filter="url(#filter8_d_1035_54888)">
+        <rect
+          width="173.106"
+          height="32.9725"
+          x="1473.77"
+          y="985.877"
+          fill="#FCFAFA"
+          rx="4.99584"
+          shape-rendering="crispEdges"
+        />
+        <rect
+          width="175.104"
+          height="34.9708"
+          x="1472.77"
+          y="984.878"
+          stroke="#111117"
+          stroke-opacity="0.1"
+          stroke-width="1.99833"
+          rx="5.995"
+          shape-rendering="crispEdges"
+        />
+        <text
+          xml:space="preserve"
+          fill="#111117"
+          font-family="Outfit"
+          font-size="15.9867"
+          font-weight="bold"
+          letter-spacing="0em"
+          style="white-space: pre"
+        >
+          <tspan
+            x="1527.32"
+            y="1006.79"
+          >
+            19/03/25
+          </tspan>
+        </text>
+      </g>
+      <text
+        xml:space="preserve"
+        fill="#111117"
+        font-family="Outfit"
+        font-size="15.9867"
+        letter-spacing="0em"
+        style="white-space: pre"
+      >
+        <tspan
+          x="1659.86"
+          y="1008.28"
+        >
+          au
+        </tspan>
+      </text>
+      <g filter="url(#filter9_d_1035_54888)">
+        <rect
+          width="173.106"
+          height="32.9725"
+          x="1690.84"
+          y="985.877"
+          fill="#FCFAFA"
+          rx="4.99584"
+          shape-rendering="crispEdges"
+        />
+        <rect
+          width="175.104"
+          height="34.9708"
+          x="1689.84"
+          y="984.878"
+          stroke="#111117"
+          stroke-opacity="0.1"
+          stroke-width="1.99833"
+          rx="5.995"
+          shape-rendering="crispEdges"
+        />
+        <text
+          xml:space="preserve"
+          fill="#111117"
+          font-family="Outfit"
+          font-size="15.9867"
+          font-weight="bold"
+          letter-spacing="0em"
+          style="white-space: pre"
+        >
+          <tspan
+            x="1743.39"
+            y="1006.79"
+          >
+            23/03/25
+          </tspan>
+        </text>
+      </g>
+      <text
+        xml:space="preserve"
+        fill="#111117"
+        font-family="Outfit"
+        font-size="15.9867"
+        letter-spacing="0em"
+        style="white-space: pre"
+      >
+        <tspan
+          x="1429.79"
+          y="1056.24"
+        >
+          pour
+        </tspan>
+      </text>
+      <g filter="url(#filter10_d_1035_54888)">
+        <rect
+          width="390.175"
+          height="32.9725"
+          x="1473.77"
+          y="1033.84"
+          fill="#FCFAFA"
+          rx="4.99584"
+          shape-rendering="crispEdges"
+        />
+        <rect
+          width="392.173"
+          height="34.9708"
+          x="1472.77"
+          y="1032.84"
+          stroke="#111117"
+          stroke-opacity="0.1"
+          stroke-width="1.99833"
+          rx="5.995"
+          shape-rendering="crispEdges"
+        />
+        <text
+          xml:space="preserve"
+          fill="#111117"
+          font-family="Outfit"
+          font-size="15.9867"
+          letter-spacing="0em"
+          style="white-space: pre"
+        >
+          <tspan
+            x="1513.36"
+            y="1056.24"
+          >
+            1 voyageur, 1 bébé, 2 animaux de compagnie
+          </tspan>
+        </text>
+      </g>
+      <g filter="url(#filter11_f_1035_54888)">
+        <rect
+          width="455.121"
+          height="32.9725"
+          x="1416.32"
+          y="1091.29"
+          fill="url(#paint7_linear_1035_54888)"
+          fill-opacity="0.4"
+          rx="9.99167"
+        />
+      </g>
+      <g filter="url(#filter12_d_1035_54888)">
+        <rect
+          width="455.121"
+          height="32.9725"
+          x="1416.32"
+          y="1088.29"
+          fill="#111117"
+          rx="7.99334"
+          shape-rendering="crispEdges"
+        />
+        <rect
+          width="457.119"
+          height="34.9708"
+          x="1415.32"
+          y="1087.29"
+          stroke="#FCFAFA"
+          stroke-opacity="0.5"
+          stroke-width="1.99833"
+          rx="8.99251"
+          shape-rendering="crispEdges"
+        />
+        <g clip-path="url(#clip25_1035_54888)">
+          <path
+            stroke="#FCFAFA"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.49875"
+            d="M1605.8 1097.7V1100.53"
+          />
+          <path
+            stroke="#FCFAFA"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.49875"
+            d="M1611.46 1097.7V1100.53"
+          />
+          <path
+            stroke="#FCFAFA"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.49875"
+            d="M1613.59 1099.11H1603.68C1602.9 1099.11 1602.26 1099.75 1602.26 1100.53V1110.44C1602.26 1111.22 1602.9 1111.85 1603.68 1111.85H1613.59C1614.37 1111.85 1615 1111.22 1615 1110.44V1100.53C1615 1099.75 1614.37 1099.11 1613.59 1099.11Z"
+          />
+          <path
+            stroke="#FCFAFA"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.49875"
+            d="M1602.26 1103.36H1615"
+          />
+        </g>
+        <text
+          xml:space="preserve"
+          fill="#FCFAFA"
+          font-family="Outfit"
+          font-size="15.9867"
+          letter-spacing="0em"
+          style="white-space: pre"
+        >
+          <tspan
+            x="1624.62"
+            y="1109.2"
+          >
+            Réserver
+          </tspan>
+        </text>
+      </g>
+      <rect
+        width="459.117"
+        height="99.9667"
+        x="1414.32"
+        y="1143.25"
+        fill="#FCFAFA"
+        rx="9.99167"
+      />
+      <text
+        xml:space="preserve"
+        fill="#111117"
+        font-family="Outfit"
+        font-size="15.9867"
+        letter-spacing="0em"
+        style="white-space: pre"
+      >
+        <tspan
+          x="1429.31"
+          y="1169.15"
+        >
+          4 nuits (174 € par nuit)
+        </tspan>
+      </text>
+      <text
+        xml:space="preserve"
+        fill="#111117"
+        font-family="Outfit"
+        font-size="15.9867"
+        letter-spacing="0em"
+        style="white-space: pre"
+      >
+        <tspan
+          x="1816.45"
+          y="1169.15"
+        >
+          696 €
+        </tspan>
+      </text>
+      <text
+        xml:space="preserve"
+        fill="#111117"
+        font-family="Outfit"
+        font-size="15.9867"
+        letter-spacing="0em"
+        style="white-space: pre"
+      >
+        <tspan
+          x="1429.31"
+          y="1199.14"
+        >
+          Taxes
+        </tspan>
+      </text>
+      <text
+        xml:space="preserve"
+        fill="#111117"
+        font-family="Outfit"
+        font-size="15.9867"
+        letter-spacing="0em"
+        style="white-space: pre"
+      >
+        <tspan
+          x="1823.45"
+          y="1199.14"
+        >
+          40 €
+        </tspan>
+      </text>
+      <text
+        xml:space="preserve"
+        fill="#111117"
+        font-family="Outfit"
+        font-size="15.9867"
+        letter-spacing="0em"
+        style="white-space: pre"
+      >
+        <tspan
+          x="1429.31"
+          y="1229.14"
+        >
+          Frais de ménage
+        </tspan>
+      </text>
+      <text
+        xml:space="preserve"
+        fill="#111117"
+        font-family="Outfit"
+        font-size="15.9867"
+        letter-spacing="0em"
+        style="white-space: pre"
+      >
+        <tspan
+          x="1829.45"
+          y="1229.14"
+        >
+          17 €
+        </tspan>
+      </text>
+      <rect
+        width="459.117"
+        height="39.9833"
+        x="1414.32"
+        y="1253.2"
+        fill="#FCFAFA"
+        rx="9.99167"
+      />
+      <text
+        xml:space="preserve"
+        fill="#111117"
+        font-family="Outfit"
+        font-size="15.9867"
+        font-weight="bold"
+        letter-spacing="0em"
+        style="white-space: pre"
+      >
+        <tspan
+          x="1429.31"
+          y="1279.11"
+        >
+          Total
+        </tspan>
+      </text>
+      <text
+        xml:space="preserve"
+        fill="#111117"
+        font-family="Outfit"
+        font-size="15.9867"
+        font-weight="bold"
+        letter-spacing="0em"
+        style="white-space: pre"
+      >
+        <tspan
+          x="1817.45"
+          y="1279.11"
+        >
+          753 €
+        </tspan>
+      </text>
+    </g>
+    <rect
+      width="1918.12"
+      height="1179.51"
+      y="158.381"
+      fill="url(#paint8_radial_1035_54888)"
+      rx="48.1978"
+    />
+    <defs>
+      <filter
+        id="filter0_i_1035_54888"
+        width="1919.7"
+        height="128.621"
+        x="0"
+        y="0.386719"
+        color-interpolation-filters="sRGB"
+        filterUnits="userSpaceOnUse"
+      >
+        <feFlood
+          flood-opacity="0"
+          result="BackgroundImageFix"
+        />
+        <feBlend
+          in="SourceGraphic"
+          in2="BackgroundImageFix"
+          mode="normal"
+          result="shape"
+        />
+        <feColorMatrix
+          in="SourceAlpha"
+          result="hardAlpha"
+          type="matrix"
+          values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+        />
+        <feOffset />
+        <feGaussianBlur stdDeviation="3.38477" />
+        <feComposite
+          in2="hardAlpha"
+          k2="-1"
+          k3="1"
+          operator="arithmetic"
+        />
+        <feColorMatrix
+          type="matrix"
+          values="0 0 0 0 0.183062 0 0 0 0 0.227589 0 0 0 0 0.230769 0 0 0 0.5 0"
+        />
+        <feBlend
+          in2="shape"
+          mode="normal"
+          result="effect1_innerShadow_1035_54888"
+        />
+      </filter>
+      <pattern
+        id="pattern0_1035_54888"
+        width="1"
+        height="1"
+        patternContentUnits="objectBoundingBox"
+      >
+        <use
+          xlink:href="#image0_1035_54888"
+          transform="scale(0.000833333 0.00125)"
+        />
+      </pattern>
+      <pattern
+        id="pattern1_1035_54888"
+        width="1"
+        height="1"
+        patternContentUnits="objectBoundingBox"
+      >
+        <use
+          xlink:href="#image1_1035_54888"
+          transform="scale(0.000694444 0.00104167)"
+        />
+      </pattern>
+      <pattern
+        id="pattern2_1035_54888"
+        width="1"
+        height="1"
+        patternContentUnits="objectBoundingBox"
+      >
+        <use
+          xlink:href="#image2_1035_54888"
+          transform="scale(0.000694444 0.00104167)"
+        />
+      </pattern>
+      <pattern
+        id="pattern3_1035_54888"
+        width="1"
+        height="1"
+        patternContentUnits="objectBoundingBox"
+      >
+        <use
+          xlink:href="#image3_1035_54888"
+          transform="scale(0.000694444 0.00104167)"
+        />
+      </pattern>
+      <pattern
+        id="pattern4_1035_54888"
+        width="1"
+        height="1"
+        patternContentUnits="objectBoundingBox"
+      >
+        <use
+          xlink:href="#image4_1035_54888"
+          transform="scale(0.000694444 0.00106045)"
+        />
+      </pattern>
+      <pattern
+        id="pattern5_1035_54888"
+        width="1"
+        height="1"
+        patternContentUnits="objectBoundingBox"
+      >
+        <use
+          xlink:href="#image5_1035_54888"
+          transform="scale(0.000694444 0.00104167)"
+        />
+      </pattern>
+      <pattern
+        id="pattern6_1035_54888"
+        width="1"
+        height="1"
+        patternContentUnits="objectBoundingBox"
+      >
+        <use
+          xlink:href="#image6_1035_54888"
+          transform="scale(0.000694444 0.00104167)"
+        />
+      </pattern>
+      <pattern
+        id="pattern7_1035_54888"
+        width="1"
+        height="1"
+        patternContentUnits="objectBoundingBox"
+      >
+        <use
+          xlink:href="#image7_1035_54888"
+          transform="scale(0.000694444 0.00104167)"
+        />
+      </pattern>
+      <filter
+        id="filter1_d_1035_54888"
+        width="820.316"
+        height="99.9164"
+        x="549.042"
+        y="442.522"
+        color-interpolation-filters="sRGB"
+        filterUnits="userSpaceOnUse"
+      >
+        <feFlood
+          flood-opacity="0"
+          result="BackgroundImageFix"
+        />
+        <feColorMatrix
+          in="SourceAlpha"
+          result="hardAlpha"
+          type="matrix"
+          values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+        />
+        <feOffset dy="1.99833" />
+        <feGaussianBlur stdDeviation="7.49375" />
+        <feComposite
+          in2="hardAlpha"
+          operator="out"
+        />
+        <feColorMatrix
+          type="matrix"
+          values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.1 0"
+        />
+        <feBlend
+          in2="BackgroundImageFix"
+          mode="normal"
+          result="effect1_dropShadow_1035_54888"
+        />
+        <feBlend
+          in="SourceGraphic"
+          in2="effect1_dropShadow_1035_54888"
+          mode="normal"
+          result="shape"
+        />
+      </filter>
+      <pattern
+        id="pattern8_1035_54888"
+        width="1"
+        height="1"
+        patternContentUnits="objectBoundingBox"
+      >
+        <use
+          xlink:href="#image8_1035_54888"
+          transform="translate(0 -0.25) scale(0.00416667)"
+        />
+      </pattern>
+      <filter
+        id="filter2_d_1035_54888"
+        width="161.967"
+        height="42.9638"
+        x="1180.41"
+        y="469.999"
+        color-interpolation-filters="sRGB"
+        filterUnits="userSpaceOnUse"
+      >
+        <feFlood
+          flood-opacity="0"
+          result="BackgroundImageFix"
+        />
+        <feColorMatrix
+          in="SourceAlpha"
+          result="hardAlpha"
+          type="matrix"
+          values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+        />
+        <feOffset dy="0.999167" />
+        <feGaussianBlur stdDeviation="1.49875" />
+        <feComposite
+          in2="hardAlpha"
+          operator="out"
+        />
+        <feColorMatrix
+          type="matrix"
+          values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.15 0"
+        />
+        <feBlend
+          in2="BackgroundImageFix"
+          mode="normal"
+          result="effect1_dropShadow_1035_54888"
+        />
+        <feBlend
+          in="SourceGraphic"
+          in2="effect1_dropShadow_1035_54888"
+          mode="normal"
+          result="shape"
+        />
+      </filter>
+      <filter
+        id="filter3_d_1035_54888"
+        width="431.64"
+        height="42.9638"
+        x="561.033"
+        y="1025.67"
+        color-interpolation-filters="sRGB"
+        filterUnits="userSpaceOnUse"
+      >
+        <feFlood
+          flood-opacity="0"
+          result="BackgroundImageFix"
+        />
+        <feColorMatrix
+          in="SourceAlpha"
+          result="hardAlpha"
+          type="matrix"
+          values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+        />
+        <feOffset dy="0.999167" />
+        <feGaussianBlur stdDeviation="1.49875" />
+        <feComposite
+          in2="hardAlpha"
+          operator="out"
+        />
+        <feColorMatrix
+          type="matrix"
+          values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.15 0"
+        />
+        <feBlend
+          in2="BackgroundImageFix"
+          mode="normal"
+          result="effect1_dropShadow_1035_54888"
+        />
+        <feBlend
+          in="SourceGraphic"
+          in2="effect1_dropShadow_1035_54888"
+          mode="normal"
+          result="shape"
+        />
+      </filter>
+      <filter
+        id="filter4_d_1035_54888"
+        width="805.329"
+        height="228.585"
+        x="556.536"
+        y="1089.12"
+        color-interpolation-filters="sRGB"
+        filterUnits="userSpaceOnUse"
+      >
+        <feFlood
+          flood-opacity="0"
+          result="BackgroundImageFix"
+        />
+        <feColorMatrix
+          in="SourceAlpha"
+          result="hardAlpha"
+          type="matrix"
+          values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+        />
+        <feOffset dy="1.99833" />
+        <feGaussianBlur stdDeviation="3.74688" />
+        <feComposite
+          in2="hardAlpha"
+          operator="out"
+        />
+        <feColorMatrix
+          type="matrix"
+          values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.1 0"
+        />
+        <feBlend
+          in2="BackgroundImageFix"
+          mode="normal"
+          result="effect1_dropShadow_1035_54888"
+        />
+        <feBlend
+          in="SourceGraphic"
+          in2="effect1_dropShadow_1035_54888"
+          mode="normal"
+          result="shape"
+        />
+      </filter>
+      <pattern
+        id="pattern9_1035_54888"
+        width="1"
+        height="1"
+        patternContentUnits="objectBoundingBox"
+      >
+        <use
+          xlink:href="#image9_1035_54888"
+          transform="matrix(0.00115207 0 0 0.00426283 0 -1.1625)"
+        />
+      </pattern>
+      <filter
+        id="filter5_d_1035_54888"
+        width="123.923"
+        height="49.9748"
+        x="1414.57"
+        y="253.554"
+        color-interpolation-filters="sRGB"
+        filterUnits="userSpaceOnUse"
+      >
+        <feFlood
+          flood-opacity="0"
+          result="BackgroundImageFix"
+        />
+        <feColorMatrix
+          in="SourceAlpha"
+          result="hardAlpha"
+          type="matrix"
+          values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+        />
+        <feOffset dy="1.99833" />
+        <feGaussianBlur stdDeviation="3.74688" />
+        <feComposite
+          in2="hardAlpha"
+          operator="out"
+        />
+        <feColorMatrix
+          type="matrix"
+          values="0 0 0 0 1 0 0 0 0 0.321569 0 0 0 0 0.321569 0 0 0 0.3 0"
+        />
+        <feBlend
+          in2="BackgroundImageFix"
+          mode="normal"
+          result="effect1_dropShadow_1035_54888"
+        />
+        <feBlend
+          in="SourceGraphic"
+          in2="effect1_dropShadow_1035_54888"
+          mode="normal"
+          result="shape"
+        />
+      </filter>
+      <filter
+        id="filter6_d_1035_54888"
+        width="124.923"
+        height="49.9748"
+        x="1533.5"
+        y="253.554"
+        color-interpolation-filters="sRGB"
+        filterUnits="userSpaceOnUse"
+      >
+        <feFlood
+          flood-opacity="0"
+          result="BackgroundImageFix"
+        />
+        <feColorMatrix
+          in="SourceAlpha"
+          result="hardAlpha"
+          type="matrix"
+          values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+        />
+        <feOffset dy="1.99833" />
+        <feGaussianBlur stdDeviation="3.74688" />
+        <feComposite
+          in2="hardAlpha"
+          operator="out"
+        />
+        <feColorMatrix
+          type="matrix"
+          values="0 0 0 0 0.152941 0 0 0 0 0.235294 0 0 0 0 0.494118 0 0 0 0.3 0"
+        />
+        <feBlend
+          in2="BackgroundImageFix"
+          mode="normal"
+          result="effect1_dropShadow_1035_54888"
+        />
+        <feBlend
+          in="SourceGraphic"
+          in2="effect1_dropShadow_1035_54888"
+          mode="normal"
+          result="shape"
+        />
+      </filter>
+      <pattern
+        id="pattern10_1035_54888"
+        width="1"
+        height="1"
+        patternContentUnits="objectBoundingBox"
+      >
+        <use
+          xlink:href="#image10_1035_54888"
+          transform="translate(0 -0.166667) scale(0.0015015)"
+        />
+      </pattern>
+      <pattern
+        id="pattern11_1035_54888"
+        width="1"
+        height="1"
+        patternContentUnits="objectBoundingBox"
+      >
+        <use
+          xlink:href="#image11_1035_54888"
+          transform="scale(0.000976562)"
+        />
+      </pattern>
+      <pattern
+        id="pattern12_1035_54888"
+        width="1"
+        height="1"
+        patternContentUnits="objectBoundingBox"
+      >
+        <use
+          xlink:href="#image12_1035_54888"
+          transform="translate(-0.0690002 -0.0245421) scale(0.00172438)"
+        />
+      </pattern>
+      <pattern
+        id="pattern13_1035_54888"
+        width="1"
+        height="1"
+        patternContentUnits="objectBoundingBox"
+      >
+        <use
+          xlink:href="#image13_1035_54888"
+          transform="scale(0.000976562)"
+        />
+      </pattern>
+      <filter
+        id="filter7_d_1035_54888"
+        width="464.613"
+        height="42.9638"
+        x="1411.57"
+        y="776.536"
+        color-interpolation-filters="sRGB"
+        filterUnits="userSpaceOnUse"
+      >
+        <feFlood
+          flood-opacity="0"
+          result="BackgroundImageFix"
+        />
+        <feColorMatrix
+          in="SourceAlpha"
+          result="hardAlpha"
+          type="matrix"
+          values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+        />
+        <feOffset dy="0.999167" />
+        <feGaussianBlur stdDeviation="1.49875" />
+        <feComposite
+          in2="hardAlpha"
+          operator="out"
+        />
+        <feColorMatrix
+          type="matrix"
+          values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.15 0"
+        />
+        <feBlend
+          in2="BackgroundImageFix"
+          mode="normal"
+          result="effect1_dropShadow_1035_54888"
+        />
+        <feBlend
+          in="SourceGraphic"
+          in2="effect1_dropShadow_1035_54888"
+          mode="normal"
+          result="shape"
+        />
+      </filter>
+      <filter
+        id="filter8_d_1035_54888"
+        width="183.097"
+        height="42.9638"
+        x="1468.78"
+        y="981.881"
+        color-interpolation-filters="sRGB"
+        filterUnits="userSpaceOnUse"
+      >
+        <feFlood
+          flood-opacity="0"
+          result="BackgroundImageFix"
+        />
+        <feColorMatrix
+          in="SourceAlpha"
+          result="hardAlpha"
+          type="matrix"
+          values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+        />
+        <feOffset dy="0.999167" />
+        <feGaussianBlur stdDeviation="1.49875" />
+        <feComposite
+          in2="hardAlpha"
+          operator="out"
+        />
+        <feColorMatrix
+          type="matrix"
+          values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.15 0"
+        />
+        <feBlend
+          in2="BackgroundImageFix"
+          mode="normal"
+          result="effect1_dropShadow_1035_54888"
+        />
+        <feBlend
+          in="SourceGraphic"
+          in2="effect1_dropShadow_1035_54888"
+          mode="normal"
+          result="shape"
+        />
+      </filter>
+      <filter
+        id="filter9_d_1035_54888"
+        width="183.097"
+        height="42.9638"
+        x="1685.85"
+        y="981.881"
+        color-interpolation-filters="sRGB"
+        filterUnits="userSpaceOnUse"
+      >
+        <feFlood
+          flood-opacity="0"
+          result="BackgroundImageFix"
+        />
+        <feColorMatrix
+          in="SourceAlpha"
+          result="hardAlpha"
+          type="matrix"
+          values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+        />
+        <feOffset dy="0.999167" />
+        <feGaussianBlur stdDeviation="1.49875" />
+        <feComposite
+          in2="hardAlpha"
+          operator="out"
+        />
+        <feColorMatrix
+          type="matrix"
+          values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.15 0"
+        />
+        <feBlend
+          in2="BackgroundImageFix"
+          mode="normal"
+          result="effect1_dropShadow_1035_54888"
+        />
+        <feBlend
+          in="SourceGraphic"
+          in2="effect1_dropShadow_1035_54888"
+          mode="normal"
+          result="shape"
+        />
+      </filter>
+      <filter
+        id="filter10_d_1035_54888"
+        width="400.166"
+        height="42.9638"
+        x="1468.78"
+        y="1029.84"
+        color-interpolation-filters="sRGB"
+        filterUnits="userSpaceOnUse"
+      >
+        <feFlood
+          flood-opacity="0"
+          result="BackgroundImageFix"
+        />
+        <feColorMatrix
+          in="SourceAlpha"
+          result="hardAlpha"
+          type="matrix"
+          values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+        />
+        <feOffset dy="0.999167" />
+        <feGaussianBlur stdDeviation="1.49875" />
+        <feComposite
+          in2="hardAlpha"
+          operator="out"
+        />
+        <feColorMatrix
+          type="matrix"
+          values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.15 0"
+        />
+        <feBlend
+          in2="BackgroundImageFix"
+          mode="normal"
+          result="effect1_dropShadow_1035_54888"
+        />
+        <feBlend
+          in="SourceGraphic"
+          in2="effect1_dropShadow_1035_54888"
+          mode="normal"
+          result="shape"
+        />
+      </filter>
+      <filter
+        id="filter11_f_1035_54888"
+        width="474.704"
+        height="52.5563"
+        x="1406.53"
+        y="1081.5"
+        color-interpolation-filters="sRGB"
+        filterUnits="userSpaceOnUse"
+      >
+        <feFlood
+          flood-opacity="0"
+          result="BackgroundImageFix"
+        />
+        <feBlend
+          in="SourceGraphic"
+          in2="BackgroundImageFix"
+          mode="normal"
+          result="shape"
+        />
+        <feGaussianBlur
+          result="effect1_foregroundBlur_1035_54888"
+          stdDeviation="4.89592"
+        />
+      </filter>
+      <filter
+        id="filter12_d_1035_54888"
+        width="465.112"
+        height="42.9638"
+        x="1411.32"
+        y="1084.3"
+        color-interpolation-filters="sRGB"
+        filterUnits="userSpaceOnUse"
+      >
+        <feFlood
+          flood-opacity="0"
+          result="BackgroundImageFix"
+        />
+        <feColorMatrix
+          in="SourceAlpha"
+          result="hardAlpha"
+          type="matrix"
+          values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+        />
+        <feOffset dy="0.999167" />
+        <feGaussianBlur stdDeviation="1.49875" />
+        <feComposite
+          in2="hardAlpha"
+          operator="out"
+        />
+        <feColorMatrix
+          type="matrix"
+          values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.15 0"
+        />
+        <feBlend
+          in2="BackgroundImageFix"
+          mode="normal"
+          result="effect1_dropShadow_1035_54888"
+        />
+        <feBlend
+          in="SourceGraphic"
+          in2="effect1_dropShadow_1035_54888"
+          mode="normal"
+          result="shape"
+        />
+      </filter>
+      <radialGradient
+        id="paint0_radial_1035_54888"
+        cx="0"
+        cy="0"
+        r="1"
+        gradientTransform="translate(-8.81209e-06 66.0835) rotate(-0.0289531) scale(1920 1822.91)"
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop
+          offset="0.36877"
+          stop-color="#111117"
+          stop-opacity="0"
+        />
+        <stop
+          offset="1"
+          stop-color="#111117"
+        />
+      </radialGradient>
+      <radialGradient
+        id="paint1_radial_1035_54888"
+        cx="0"
+        cy="0"
+        r="1"
+        gradientTransform="translate(1399.83 820.363) rotate(-50.605) scale(954.451 1061.28)"
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop
+          offset="0.359369"
+          stop-color="#FCFAFA"
+        />
+        <stop
+          offset="1"
+          stop-color="#ECE8E8"
+        />
+      </radialGradient>
+      <linearGradient
+        id="paint2_linear_1035_54888"
+        x1="1502.54"
+        x2="1596.47"
+        y1="370.838"
+        y2="364.777"
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop stop-color="#A499FF" />
+        <stop
+          offset="0.5"
+          stop-color="#DF99FF"
+        />
+        <stop
+          offset="1"
+          stop-color="#FFC4C5"
+        />
+      </linearGradient>
+      <linearGradient
+        id="paint3_linear_1035_54888"
+        x1="1502.54"
+        x2="1596.47"
+        y1="500.763"
+        y2="494.702"
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop stop-color="#A499FF" />
+        <stop
+          offset="0.5"
+          stop-color="#DF99FF"
+        />
+        <stop
+          offset="1"
+          stop-color="#FFC4C5"
+        />
+      </linearGradient>
+      <linearGradient
+        id="paint4_linear_1035_54888"
+        x1="1502.54"
+        x2="1596.47"
+        y1="630.688"
+        y2="624.628"
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop stop-color="#A499FF" />
+        <stop
+          offset="0.5"
+          stop-color="#DF99FF"
+        />
+        <stop
+          offset="1"
+          stop-color="#FFC4C5"
+        />
+      </linearGradient>
+      <linearGradient
+        id="paint5_linear_1035_54888"
+        x1="201.832"
+        x2="201.832"
+        y1="37.9684"
+        y2="-1.9132e-06"
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop stop-color="#FCFAFA" />
+        <stop
+          offset="1"
+          stop-color="#FCFAFA"
+          stop-opacity="0"
+        />
+      </linearGradient>
+      <radialGradient
+        id="paint6_radial_1035_54888"
+        cx="0"
+        cy="0"
+        r="1"
+        gradientTransform="translate(1179.74 1527.53) rotate(-43.6926) scale(980.124 954.845)"
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop stop-color="#FCFAFA" />
+        <stop
+          offset="1"
+          stop-color="#ECE8E8"
+        />
+      </radialGradient>
+      <linearGradient
+        id="paint7_linear_1035_54888"
+        x1="1416.32"
+        x2="1857.06"
+        y1="1107.28"
+        y2="1186.89"
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop stop-color="#1A00FF" />
+        <stop
+          offset="0.5"
+          stop-color="#AE00FF"
+        />
+        <stop
+          offset="1"
+          stop-color="#FF6C6F"
+        />
+      </linearGradient>
+      <radialGradient
+        id="paint8_radial_1035_54888"
+        cx="0"
+        cy="0"
+        r="1"
+        gradientTransform="translate(-7.85481e-07 748.135) scale(3140.96 2220.79)"
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop
+          offset="0.274038"
+          stop-color="#111117"
+          stop-opacity="0"
+        />
+        <stop
+          offset="0.581731"
+          stop-color="#111117"
+        />
+      </radialGradient>
+      <clipPath id="clip0_1035_54888">
+        <rect
+          width="489.092"
+          height="1119.07"
+          x="29.975"
+          y="189.108"
+          fill="white"
+          rx="19.9833"
+        />
+      </clipPath>
+      <clipPath id="clip1_1035_54888">
+        <rect
+          width="489.092"
+          height="268.526"
+          x="29.975"
+          y="189.108"
+          fill="white"
+          rx="9.99167"
+        />
+      </clipPath>
+      <clipPath id="clip2_1035_54888">
+        <rect
+          width="489.092"
+          height="268.526"
+          x="29.975"
+          y="472.622"
+          fill="white"
+          rx="9.99167"
+        />
+      </clipPath>
+      <clipPath id="clip3_1035_54888">
+        <rect
+          width="489.092"
+          height="268.526"
+          x="29.975"
+          y="756.136"
+          fill="white"
+          rx="9.99167"
+        />
+      </clipPath>
+      <clipPath id="clip4_1035_54888">
+        <rect
+          width="489.092"
+          height="268.526"
+          x="29.975"
+          y="1039.65"
+          fill="white"
+          rx="9.99167"
+        />
+      </clipPath>
+      <clipPath id="clip5_1035_54888">
+        <rect
+          width="840.3"
+          height="1119.07"
+          x="539.051"
+          y="189.108"
+          fill="white"
+          rx="19.9833"
+        />
+      </clipPath>
+      <clipPath id="clip6_1035_54888">
+        <rect
+          width="790.341"
+          height="82.4729"
+          fill="white"
+          transform="translate(564.03 343.062)"
+        />
+      </clipPath>
+      <clipPath id="clip7_1035_54888">
+        <rect
+          width="790.341"
+          height="356.74"
+          fill="white"
+          transform="translate(564.03 707.9)"
+        />
+      </clipPath>
+      <clipPath id="clip8_1035_54888">
+        <rect
+          width="489.092"
+          height="1119.07"
+          x="1399.33"
+          y="189.108"
+          fill="white"
+          rx="19.9833"
+        />
+      </clipPath>
+      <clipPath id="clip9_1035_54888">
+        <rect
+          width="11.99"
+          height="11.99"
+          fill="white"
+          transform="translate(1504.02 270.554)"
+        />
+      </clipPath>
+      <clipPath id="clip10_1035_54888">
+        <rect
+          width="11.99"
+          height="11.99"
+          fill="white"
+          transform="translate(1623.95 270.554)"
+        />
+      </clipPath>
+      <clipPath id="clip11_1035_54888">
+        <rect
+          width="458.618"
+          height="432.539"
+          fill="white"
+          transform="translate(1414.57 324.013)"
+        />
+      </clipPath>
+      <clipPath id="clip12_1035_54888">
+        <rect
+          width="11.2949"
+          height="11.2949"
+          fill="white"
+          transform="translate(1516.82 357.121)"
+        />
+      </clipPath>
+      <clipPath id="clip13_1035_54888">
+        <rect
+          width="11.2949"
+          height="11.2949"
+          fill="white"
+          transform="translate(1530.23 357.121)"
+        />
+      </clipPath>
+      <clipPath id="clip14_1035_54888">
+        <rect
+          width="11.2949"
+          height="11.2949"
+          fill="white"
+          transform="translate(1543.64 357.121)"
+        />
+      </clipPath>
+      <clipPath id="clip15_1035_54888">
+        <rect
+          width="11.2949"
+          height="11.2949"
+          fill="white"
+          transform="translate(1557.06 357.121)"
+        />
+      </clipPath>
+      <clipPath id="clip16_1035_54888">
+        <rect
+          width="11.2949"
+          height="11.2949"
+          fill="white"
+          transform="translate(1570.47 357.121)"
+        />
+      </clipPath>
+      <clipPath id="clip17_1035_54888">
+        <rect
+          width="11.2949"
+          height="11.2949"
+          fill="white"
+          transform="translate(1516.82 487.046)"
+        />
+      </clipPath>
+      <clipPath id="clip18_1035_54888">
+        <rect
+          width="11.2949"
+          height="11.2949"
+          fill="white"
+          transform="translate(1530.23 487.046)"
+        />
+      </clipPath>
+      <clipPath id="clip19_1035_54888">
+        <rect
+          width="11.2949"
+          height="11.2949"
+          fill="white"
+          transform="translate(1543.64 487.046)"
+        />
+      </clipPath>
+      <clipPath id="clip20_1035_54888">
+        <rect
+          width="11.2949"
+          height="11.2949"
+          fill="white"
+          transform="translate(1557.06 487.046)"
+        />
+      </clipPath>
+      <clipPath id="clip21_1035_54888">
+        <rect
+          width="11.2949"
+          height="11.2949"
+          fill="white"
+          transform="translate(1570.47 487.046)"
+        />
+      </clipPath>
+      <clipPath id="clip22_1035_54888">
+        <rect
+          width="11.2949"
+          height="11.2949"
+          fill="white"
+          transform="translate(1530.23 616.973)"
+        />
+      </clipPath>
+      <clipPath id="clip23_1035_54888">
+        <rect
+          width="11.2949"
+          height="11.2949"
+          fill="white"
+          transform="translate(1543.64 616.973)"
+        />
+      </clipPath>
+      <clipPath id="clip24_1035_54888">
+        <rect
+          width="11.2949"
+          height="11.2949"
+          fill="white"
+          transform="translate(1557.06 616.973)"
+        />
+      </clipPath>
+      <clipPath id="clip25_1035_54888">
+        <rect
+          width="16.9858"
+          height="16.9858"
+          fill="white"
+          transform="translate(1600.14 1096.29)"
+        />
+      </clipPath>
+      <image
+        xlink:href="@/assets/media/images/image0_867_26311.jpg"
+        id="image0_1035_54888"
+        width="1200"
+        height="800"
+      />
+      <image
+        xlink:href="@/assets/media/images/image1_867_26311.jpg"
+        id="image1_1035_54888"
+        width="1440"
+        height="960"
+      />
+      <image
+        xlink:href="@/assets/media/images/image10_744_31486.jpg"
+        id="image2_1035_54888"
+        width="1440"
+        height="960"
+      />
+      <image
+        xlink:href="@/assets/media/images/image6_867_26311.jpg"
+        id="image3_1035_54888"
+        width="1440"
+        height="960"
+      />
+      <image
+        xlink:href="@/assets/media/images/image8_867_26311.jpg"
+        id="image4_1035_54888"
+        width="1440"
+        height="943"
+      />
+      <image
+        xlink:href="@/assets/media/images/image7_867_26311.jpg"
+        id="image5_1035_54888"
+        width="1440"
+        height="960"
+      />
+      <image
+        xlink:href="@/assets/media/images/image2_867_26311.jpg"
+        id="image6_1035_54888"
+        width="1440"
+        height="960"
+      />
+      <image
+        xlink:href="@/assets/media/images/image4_867_26311.jpg"
+        id="image7_1035_54888"
+        width="1440"
+        height="960"
+      />
+      <image
+        xlink:href="@/assets/media/images/image13_867_26311.jpg"
+        id="image8_1035_54888"
+        width="240"
+        height="360"
+      />
+      <image
+        xlink:href="@/assets/media/images/image12_744_31486.jpg"
+        id="image9_1035_54888"
+        width="868"
+        height="780"
+      />
+      <image
+        xlink:href="@/assets/media/images/image3_999_23149.jpg"
+        id="image10_1035_54888"
+        width="666"
+        height="888"
+      />
+      <image
+        xlink:href="@/assets/media/images/image4_999_23149.jpg"
+        id="image11_1035_54888"
+        width="1024"
+        height="1024"
+      />
+      <image
+        xlink:href="@/assets/media/images/image7_999_23149.jpg"
+        id="image12_1035_54888"
+        width="800"
+        height="600"
+      />
+      <image
+        xlink:href="@/assets/media/images/image5_999_23149.jpg"
+        id="image13_1035_54888"
+        width="1024"
+        height="1024"
+      />
+    </defs>
+    <title :id="`titleId`">{{ title }}</title>
+    <desc :id="`descId`">{{ desc }}</desc>
+  </svg>
 </template>
 
 <script setup lang="ts">
-// Ce composant a été généré automatiquement
+defineProps<{
+  title: string
+  desc: string
+  role?: string
+}>()
+// généré automatiquement par convert_svg.py
 </script>
