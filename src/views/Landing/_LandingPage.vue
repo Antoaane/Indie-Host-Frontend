@@ -14,11 +14,15 @@ import UsageSection from './UsageSection.vue'
 let scroller: ReturnType<typeof initSectionScroller> | null = null
 
 onMounted(() => {
-  scroller = initSectionScroller() // déclenche le snap-scroll
+  if (window.innerWidth > 1024) {
+    scroller = initSectionScroller()
+  }
 })
 
 onBeforeUnmount(() => {
-  scroller?.stop() // propre si App.vue est jamais démonté
+  if (window.innerWidth > 1024) {
+    scroller?.stop() // propre si App.vue est jamais démonté
+  }
 })
 </script>
 

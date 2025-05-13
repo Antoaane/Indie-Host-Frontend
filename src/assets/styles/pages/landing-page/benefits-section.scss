@@ -11,7 +11,7 @@
     flex-direction: column;
     align-items: center;
 
-    h1 {
+    h2 {
       width: 100%;
       max-width: 36rem;
       margin-bottom: 0.5rem;
@@ -21,7 +21,7 @@
     }
 
     p {
-      text-decoration: underline;
+      text-decoration: underline !important;
       text-underline-offset: 0.3rem;
 
       @include base-text($accent);
@@ -30,7 +30,7 @@
         display: inline-block;
         position: relative;
 
-        text-decoration: underline;
+        text-decoration: underline !important;
         text-underline-offset: 0.3rem;
         @include base-text($accent);
 
@@ -78,7 +78,7 @@
       align-items: center;
 
       &>div {
-        width: 55.555%;
+        width: 100%;
         height: 4.5rem;
 
         display: flex;
@@ -86,6 +86,10 @@
         align-items: center;
 
         position: relative;
+
+        @include min-width(sm) {
+          width: 55.555%;
+        }
 
         p {
           margin: 0;
@@ -148,10 +152,17 @@
     }
 
     .ota-price {
-      justify-content: flex-end;
+      @include min-width(sm) {
+        justify-content: flex-end;
+      }
 
       &>div {
+        flex-direction: row-reverse;
         background-color: $secondary;
+
+        @include min-width(sm) {
+          flex-direction: row;
+        }
 
         .ota-total {
           width: 80%;
@@ -175,9 +186,16 @@
 
         &>.losses {
           border: 1px solid $bad;
-          border-image: linear-gradient(to right,
+
+          border-image: linear-gradient(to left,
               rgba($accent, 0.75) 0%,
-              #00000000 100%) 1 round;
+              #00000000 100%) 1;
+
+          @include min-width(sm) {
+            border-image: linear-gradient(to right,
+                rgba($accent, 0.75) 0%,
+                #00000000 100%) 1;
+          }
 
           &>p {
             background: linear-gradient(180deg, $bad 22.14%, $accent 167.86%);

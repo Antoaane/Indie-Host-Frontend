@@ -1,28 +1,28 @@
-// File: src/assets/styles/layouts/_global.scss
+/* File: src/assets/styles/layouts/_global.scss */
 
 @use "sass:map";
 @use "sass:list";
 @use "@/assets/styles/variables/globals" as *;
 
 html {
-    scroll-behavior: auto;
-    overflow-x: hidden;
-    background-color: $secondary;
+  scroll-behavior: auto;
+  overflow-x: hidden;
+  background-color: $secondary;
 }
 
 body {
-    margin: 0;
-    padding: 0;
-    overflow-x: hidden;
-    scrollbar-width: none;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  scrollbar-width: none;
 
-    main {
-        z-index: 1;
-        height: 100vh;
-        overflow-y: auto;
-        overflow-x: hidden;
-        scroll-behavior: auto;
-    }
+  main {
+    z-index: 1;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-behavior: auto;
+  }
 }
 
 div,
@@ -40,34 +40,37 @@ h3,
 h4,
 h5,
 h6 {
-    box-sizing: border-box;
+  box-sizing: border-box;
 }
 
 .container {
-    width: 100%;
-    margin-inline: auto;
+  width: 100%;
+  margin-inline: auto;
 
-    // d'abord toutes les déclarations, ensuite les mixins à @media
-    @include gutters();
-    @include container(); // toujours après les déclarations
+  // d'abord toutes les déclarations, ensuite les mixins à @media
+  @include gutters();
+  @include container(); // toujours après les déclarations
 }
 
 @each $size, $value in $max-widths {
-    .container__#{$size} {
-        @extend .container;
+  .container__#{$size} {
+    @extend .container;
 
-        @include container($size);
-    }
+    @include container($size);
+  }
 }
 
 [id*="-section"] {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+
+  box-sizing: border-box;
+
+  @include min-width(lg) {
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+  }
 
-    box-sizing: border-box;
-
-    @include gutters(padding, vertical, 2);
+  @include gutters(padding, vertical, 2);
 }

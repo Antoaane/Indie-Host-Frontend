@@ -1,4 +1,4 @@
-// File: src/assets/styles/components/_navs.scss
+/* File: src/assets/styles/components/_navs.scss */
 
 @use "@/assets/styles/variables/globals" as *;
 @use '@/assets/styles/variables/borders' as borders;
@@ -6,41 +6,82 @@
 @use '@/assets/styles/components/buttons' as buttons;
 
 .navbar {
-    width: 100%;
-    height: 70px;
-    padding: 0 1.5rem;
+  width: 100%;
+  height: 70px;
+  padding: 0 1.5rem;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  border-radius: borders.$rounded-lg;
+  background-color: $accent;
+
+  @include soft-shadow();
+
+  .navbar__logo {
+    width: min-content;
+    height: 100%;
 
     display: flex;
-    justify-content: space-between;
     align-items: center;
 
-    border-radius: borders.$rounded-lg;
-    background-color: $accent;
-
-    @include soft-shadow();
-
-    .navbar__logo {
-        width: min-content;
-        height: 100%;
-
-        display: flex;
-        align-items: center;
-
-        &>svg {
-            height: 3.125rem;
-        }
+    &>svg {
+      height: 3.125rem;
     }
+  }
 
-    .navbar__links {
-        display: flex;
-        gap: 1.5rem;
+  .navbar__links {
+    display: flex;
+    gap: 1.5rem;
 
-        li {
-            @include buttons.secondary;
+    li {
+      @include buttons.secondary;
 
-            &:first-child {
-                @include buttons.primary(true);
-            }
-        }
+      &:first-child {
+        @include buttons.primary(true);
+      }
     }
+  }
+
+  .navbar__mobile-toggle {
+    width: 2rem;
+    height: auto;
+    cursor: pointer;
+  }
+
+  .navbar__mobile-menu {
+    right: 0;
+    width: 100%;
+
+    position: absolute;
+    top: 70px;
+
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+
+    @include container;
+    @include gutters(padding, inline);
+    @include gutters(padding, top, 2);
+
+    .navbar__mobile-links {
+      margin: 0;
+      padding: 1rem 0;
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+
+      background-color: $accent;
+      border-radius: borders.$rounded-lg;
+
+      li {
+        @include buttons.secondary;
+
+        &:first-child {
+          @include buttons.primary(true);
+        }
+      }
+    }
+  }
 }

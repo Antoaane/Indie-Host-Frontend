@@ -4,12 +4,12 @@
 @use "@/assets/styles/variables/effects" as effect;
 
 #habits-section {
-  @include gutters(padding, top, 3);
-  overflow: hidden;
+  @include min-width(lg) {
+    @include gutters(padding, top, 3);
+    overflow: hidden;
+  }
 
   .container {
-    height: 80vh;
-
     display: flex;
     flex-direction: column;
     gap: 2rem;
@@ -17,6 +17,7 @@
     @include gutters(padding, inline, 2);
 
     @include min-width(lg) {
+      height: 80vh;
       flex-direction: row;
       align-items: center;
     }
