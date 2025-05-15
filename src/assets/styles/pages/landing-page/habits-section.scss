@@ -23,9 +23,6 @@
     }
 
     .content {
-      width: 50%;
-      height: 90vh;
-
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -33,19 +30,23 @@
 
       position: relative;
 
+      @include min-width(lg) {
+        width: 50%;
+        height: 90vh;
+      }
+
       h2 {
         width: 100%;
         margin-bottom: 0.5rem;
-
-        position: absolute;
-        top: 5vh;
-        left: 1rem;
 
         text-align: center;
         @include h2-title($accent, false);
 
         @include min-width(lg) {
           text-align: left;
+          position: absolute;
+          top: 5vh;
+          left: 1rem;
         }
       }
 
@@ -70,46 +71,57 @@
     }
 
     .illustration {
-      width: 50%;
-
       display: flex;
       justify-content: center;
 
+      @include min-width(lg) {
+        width: 50%;
+      }
+
       .carousel {
-        width: max-content;
         position: relative;
 
         #shadow {
-          width: 100%;
-          height: 100%;
+          width: 125%;
+          height: 115%;
+
+          display: none !important;
 
           position: absolute;
-          inset: 0;
+          left: 50%;
+          top: 50%;
 
-          transform: scaleX(1.25);
+          transform: translate(-50%, -50%);
           transform-origin: center;
 
-          display: block;
+          display: none !important;
+          justify-content: center;
+          align-items: center;
+
           pointer-events: none;
 
           --shadow-pos-x: 0%;
           --shadow-pos-y: 50%;
-          --shadow-size: 175% 50%;
+          --shadow-size: 175% 70%;
           --shadow-start: 20%;
-          --shadow-end: 55%;
+          --shadow-end: 50%;
 
           background: radial-gradient(var(--shadow-size) at var(--shadow-pos-x) var(--shadow-pos-y),
               rgba(17, 17, 23, 0) var(--shadow-start),
               #111117 var(--shadow-end));
+          // background: rgba(255, 0, 0, 0.284);
           transition: none !important;
 
+          @include min-width(lg) {
+            display: flex !important;
+          }
+
           #light {
-            width: 100%;
-            height: 100%;
+            width: calc(100% / 12.5 * 10);
+            height: calc(100% / 11.5 * 10);
 
             position: relative;
 
-            transform: scaleX(0.80);
             transform-origin: center;
 
             &>[id^="line_"] {
@@ -117,11 +129,25 @@
               opacity: 50%;
             }
 
+            #halo {
+              width: 100%;
+              height: calc((100% / 3) - (1rem / 3 * 2) * 2);
+
+              position: absolute;
+              top: 50%;
+              right: 0;
+
+              transform: translateY(-50%);
+
+              border-radius: 0.75rem;
+              box-shadow: 10px 10px 35px 0px rgba($accent, 0.15);
+            }
+
             #line_1 {
               width: 125%;
               height: 1px;
 
-              top: calc(100% / 3 + (1rem / 3 * 2));
+              top: calc((100% / 3) + (2rem / 3));
 
               background: linear-gradient(to right,
                   rgba(252, 250, 250, 0) 9.43895%,
@@ -150,7 +176,7 @@
               width: 125%;
               height: 1px;
 
-              bottom: calc(100% / 3 + (1rem / 3 * 2)) !important;
+              bottom: calc((100% / 3) + (2rem / 3)) !important;
 
               background: linear-gradient(to right,
                   rgba(252, 250, 250, 0) 9.43895%,
@@ -158,31 +184,24 @@
                   rgba(252, 250, 250, 1) 77.7474%,
                   rgba(252, 250, 250, 0) 100%);
             }
-
-            #halo {
-              width: 100%;
-              height: calc(100% / 3 - (1rem / 3 * 2) * 2);
-
-              position: absolute;
-              top: 50%;
-              right: 0;
-
-              transform: translateY(-50%);
-
-              border-radius: 0.75rem;
-              box-shadow: 10px 10px 35px 0px rgba($accent, 0.15);
-            }
           }
         }
 
         .splide {
 
           .splide__track {
+            width: 150vw;
+
+            position: relative;
+            left: 50%;
             overflow: visible;
+
+            transform: translateX(-50%);
 
             .splide__list {
 
               .splide__slide {
+
                 display: flex;
                 justify-content: center;
                 align-items: center;
@@ -196,10 +215,15 @@
                 @include halo;
 
                 svg {
-                  width: auto !important;
-                  height: 100% !important;
+                  width: 100%;
+                  height: auto;
 
                   border-radius: .75rem;
+
+                  @include min-width(lg) {
+                    width: auto !important;
+                    height: 100% !important;
+                  }
                 }
               }
             }

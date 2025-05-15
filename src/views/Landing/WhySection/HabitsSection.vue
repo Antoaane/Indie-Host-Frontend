@@ -37,6 +37,16 @@ const opts = {
   arrows: false,
   pagination: false,
   drag: true,
+  breakpoints: {
+    1280: {
+      height: '90vh',
+    },
+    1024: {
+      direction: 'ltr',
+      height: 'auto',
+      gap: '4rem',
+    },
+  },
 }
 
 onMounted(() => {
@@ -51,27 +61,31 @@ onMounted(() => {
 
     const biggerSlide = () => {
       setTimeout(() => {
-        if (!carousel.matches(':hover')) return
+        if (!carousel.matches(':hover') && window.innerWidth < 1024) return
         const activeSlide = document.querySelector('.splide__slide.is-next')
         const otherSlides = document.querySelectorAll('.splide__slide:not(.is-next)')
         const title = document.getElementById('slide_title')
 
-        gsap.to(title, {
-          translateX: '-2rem',
-          duration: 0.3,
-          ease: 'power2.out',
-        })
+        if (window.innerWidth > 1024) {
+          gsap.to(title, {
+            translateX: '-2rem',
+            duration: 0.3,
+            ease: 'power2.out',
+          })
+        }
         gsap.to(activeSlide, {
-          scale: 1.25,
+          scale: window.innerWidth > 1024 ? 1.25 : 1.15,
           borderColor: '#FCFAFA',
           zIndex: 10,
           duration: 0.3,
         })
-        gsap.to(otherSlides, {
-          opacity: 0.5,
-          duration: 0.3,
-        })
-      }, 400)
+        if (window.innerWidth > 1024) {
+          gsap.to(otherSlides, {
+            opacity: 0.5,
+            duration: 0.3,
+          })
+        }
+      }, 200)
     }
 
     const resetSlideSize = () => {
@@ -79,11 +93,13 @@ onMounted(() => {
       const otherSlides = document.querySelectorAll('.splide__slide:not(.is-next)')
       const title = document.getElementById('slide_title')
 
-      gsap.to(title, {
-        translateX: '0rem',
-        duration: 0.3,
-        ease: 'power2.out',
-      })
+      if (window.innerWidth > 1024) {
+        gsap.to(title, {
+          translateX: '0rem',
+          duration: 0.3,
+          ease: 'power2.out',
+        })
+      }
       gsap.to(activeSlide, {
         scale: 1,
         opacity: 1,
@@ -117,10 +133,17 @@ onMounted(() => {
         document.documentElement.style.setProperty('--title-offset', forward ? '1' : '-1')
 
         splide.on('moved', (newIdx: number) => {
-          resetSlideSize()
-          console.log('moved')
+          if (window.innerWidth > 1024) {
+            resetSlideSize()
+          } else {
+            biggerSlide()
+          }
+
           activeIndex.value = newIdx
-          biggerSlide()
+
+          if (window.innerWidth > 1024) {
+            biggerSlide()
+          }
         })
       })
       .to(light, {
@@ -140,7 +163,7 @@ onMounted(() => {
         '--shadow-size': '365% 75%',
         '--shadow-start': '35%',
         '--shadow-end': '50%',
-        duration: 0.8,
+        duration: 0.4,
         ease: 'power2.out',
       })
       gsap.to(light, { opacity: 0, duration: 0.4 })
@@ -159,9 +182,9 @@ onMounted(() => {
       setTimeout(() => {
         gsap.to(shadow, {
           '--shadow-pos-x': '0%',
-          '--shadow-size': '175% 50%',
+          '--shadow-size': '175% 70%',
           '--shadow-start': '20%',
-          '--shadow-end': '55%',
+          '--shadow-end': '50%',
           duration: 0.8,
           ease: 'power2.inOut',
         })
