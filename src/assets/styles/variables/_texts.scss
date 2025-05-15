@@ -45,6 +45,8 @@
   font-size: 1.75rem;
   line-height: 2rem;
 
+  @include gutters(padding, inline);
+
   @include min-width(md) {
     font-size: 2rem;
     line-height: 2.5rem;
@@ -94,6 +96,8 @@
 
   font-size: 1.5rem;
   line-height: 1.25rem;
+
+  @include gutters(padding, inline);
 
   @include min-width(md) {
     font-size: 1.75rem;

@@ -109,9 +109,8 @@
         position: relative;
 
         @include min-width(lg) {
-          width: auto;
-          max-height: 90%;
-          padding: 0;
+          width: 100%;
+          padding: 5% 0 0 0;
         }
 
         .hero-image {
@@ -126,43 +125,59 @@
 
         // illustration gradient
         span {
-          width: 35%;
-          height: 90.5%;
+          width: 15%;
+          height: 80.75%;
 
           display: block;
 
           position: absolute;
           z-index: 1;
-          bottom: -4.9%;
-          right: 0;
+          bottom: 6.25%;
+          left: 85%;
 
           background: radial-gradient(174.54% 210.83% at 0% 50.07%,
               rgba(17, 17, 23, 0.00) 22.88%,
               $secondary 51.58%);
+          // background: rgba(255, 0, 0, 0.5);
           border-radius: 1rem;
 
-          @include min-width(xs) {
-            width: 20%;
-          }
-
           @include min-width(sm) {
-            width: 35%;
+            width: 40%;
+            left: 60%;
           }
 
           @include min-width(md) {
-            width: 47%;
+            width: 50%;
+            left: 50%;
           }
 
           @include min-width(lg) {
-            width: 35%;
+            width: 10%;
+            height: 79%;
+
+            bottom: 5.5%;
+            left: auto;
+            right: 0;
           }
 
           @include min-width(xl) {
-            width: 47%;
+            width: 29%;
+            height: 78%;
           }
 
           @include min-width(xxl) {
-            width: 55%;
+            width: 41%;
+            height: 78%;
+          }
+
+          @include min-width(xxxl) {
+            width: 50%;
+            height: 77%;
+          }
+
+          @include min-width(xxxxl) {
+            width: 50%;
+            height: 76%;
           }
         }
       }
