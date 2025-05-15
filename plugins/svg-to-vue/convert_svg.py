@@ -186,72 +186,105 @@ def extract_and_convert(svg_path: Path) -> None:
         log(f'🚫 Composant déjà présent : {vue_file_path.name} — skip')
         return
 
+    # ------------------------------------------------------------------ #
+    # 1. Lecture + nettoyage a11y
+    # ------------------------------------------------------------------ #
     svg_text = svg_path.read_text('utf-8')
-
-    # cleaning existing a11y tags
-    log('🧹 Nettoyage balises <title>/<desc> & attrs a11y')
+    log('🧹 Suppression <title>/<desc> et attrs a11y existants')
     svg_text = re.sub(r'<title[^>]*>.*?</title>', '', svg_text, flags=re.S)
     svg_text = re.sub(r'<desc[^>]*>.*?</desc>', '', svg_text, flags=re.S)
     svg_text = re.sub(r'role="[^"]*"', '', svg_text)
     svg_text = re.sub(r'aria-[a-z-]+="[^"]*"', '', svg_text)
 
-    # replace base64 images
+    # ------------------------------------------------------------------ #
+    # 2. Gestion des <image ... base64>
+    # ------------------------------------------------------------------ #
     pattern = re.compile(
         r'id="([^"]+)"\s+[^>]*xlink:href="data:image/(.*?);base64,([^"]+)"')
 
-    def _repl(match: re.Match) -> str:
-        img_id, _mime, b64 = match.groups()
+    def _repl(m: re.Match) -> str:
+        img_id, _mime, b64 = m.groups()
         img = Image.open(io.BytesIO(base64.b64decode(b64)))
         ext = 'png' if has_transparency(img) else 'jpg'
         fname = f'{img_id}.{ext}'
         width, height = img.size
-        existing = find_existing_image(b64)
-        if existing:
-            return f'id="{img_id}" xlink:href="{existing}" width="{width}" height="{height}"'
+
+        if existing := find_existing_image(b64):
+            return (f'id="{img_id}" xlink:href="{existing}" '
+                    f'width="{width}" height="{height}"')
+
         img_path = IMAGE_OUTPUT / fname
         if ext == 'png':
             img.save(img_path, 'PNG', optimize=True)
         else:
-            img.convert('RGB').save(img_path, 'JPEG',
-                                    quality=85, optimize=True)
+            img.convert('RGB').save(img_path, 'JPEG', quality=85, optimize=True)
+
         log(f'📤 Export image {fname} ({width}×{height})')
-        return f'id="{img_id}" xlink:href="@/assets/media/images/{fname}" width="{width}" height="{height}"'
+        return (f'id="{img_id}" '
+                f'xlink:href="@/assets/media/images/{fname}" '
+                f'width="{width}" height="{height}"')
 
     svg_text = pattern.sub(_repl, svg_text)
     svg_text = optimize_svg(svg_text)
 
-    # inject a11y props
-    log('➕ Injection props (title/desc/role)')
+    # ------------------------------------------------------------------ #
+    # 3. Injection des bindings a11y typés
+    # ------------------------------------------------------------------ #
+    log('➕ Injection bindings attrRole / ariaHidden / ariaLabelledBy')
     svg_text = re.sub(
         r'<svg',
-        '<svg :role="role" :aria-hidden="role ? undefined : true" :aria-labelledby="`titleId descId`"',
+        '<svg '
+        ':role="attrRole" '
+        ':aria-hidden="ariaHidden" '
+        ':aria-labelledby="ariaLabelledBy"',
         svg_text,
         count=1
     )
     svg_text = re.sub(
         r'</svg>',
-        '  <title :id="`titleId`">{{ title }}</title>\n  <desc :id="`descId`">{{ desc }}</desc>\n</svg>',
+        ('  <title v-if="!ariaHidden" :id="\'titleId\'">{{ title }}</title>\n'
+         '  <desc  v-if="!ariaHidden" :id="\'descId\'">{{ desc }}</desc>\n'
+         '</svg>'),
         svg_text,
         count=1
     )
 
-    # build final Vue SFC content
+    # ------------------------------------------------------------------ #
+    # 4. Construction du composant Vue SFC
+    # ------------------------------------------------------------------ #
     vue_content = (
         '<template>\n' + svg_text + '\n</template>\n\n'
         '<script setup lang="ts">\n'
-        'defineProps<{\n'
-        '  title: string;\n'
-        '  desc: string;\n'
-        '  role?: string;\n'
-        '}>();\n'
+        'import { computed, onMounted, withDefaults } from "vue";\n\n'
+        'const props = withDefaults(\n'
+        '  defineProps<{\n'
+        '    title?: string;\n'
+        '    desc?: string;\n'
+        '    role?: boolean | string;\n'
+        '  }>(),\n'
+        '  { role: true }\n'
+        ');\n\n'
+        '// computed 100 % typés pour éviter les erreurs TS\n'
+        'const attrRole       = computed(() => props.role === true ? undefined : String(props.role));\n'
+        'const ariaHidden     = computed(() => props.role === true);\n'
+        'const ariaLabelledBy = computed(() => props.role === true ? undefined : "titleId descId");\n\n'
+        'onMounted(() => {\n'
+        '  if (props.role !== true && (!props.title || !props.desc)) {\n'
+        '    console.warn("[' + vue_name + '.vue] title et desc sont requis quand role ≠ true");\n'
+        '  }\n'
+        '});\n'
         '// généré automatiquement par convert_svg.py\n'
         '</script>\n'
     )
 
+    # ------------------------------------------------------------------ #
+    # 5. Écriture + formatage
+    # ------------------------------------------------------------------ #
     vue_file_path.write_text(vue_content, 'utf-8', newline='\n')
     log(f'📝 Composant écrit → {vue_file_path}')
     format_with_prettier(vue_file_path)
     log(f'✅ Composant généré : {vue_file_path}')
+
 
 # ---------------------------------------------------------------------------
 # Main
