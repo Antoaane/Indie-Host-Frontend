@@ -46,6 +46,10 @@ const opts = {
       height: 'auto',
       gap: '4rem',
     },
+    640: {
+      height: 'auto',
+      gap: '2rem',
+    },
   },
 }
 
@@ -61,7 +65,10 @@ onMounted(() => {
 
     const biggerSlide = () => {
       setTimeout(() => {
-        if (!carousel.matches(':hover') && window.innerWidth < 1024) return
+        if (!carousel.matches(':hover') && window.innerWidth > 1024) {
+          return
+        }
+
         const activeSlide = document.querySelector('.splide__slide.is-next')
         const otherSlides = document.querySelectorAll('.splide__slide:not(.is-next)')
         const title = document.getElementById('slide_title')
@@ -89,34 +96,39 @@ onMounted(() => {
     }
 
     const resetSlideSize = () => {
-      const activeSlide = document.querySelector('.splide__slide.is-next')
-      const otherSlides = document.querySelectorAll('.splide__slide:not(.is-next)')
-      const title = document.getElementById('slide_title')
+      setTimeout(() => {
+        const activeSlide = document.querySelector('.splide__slide.is-next')
+        const otherSlides = document.querySelectorAll('.splide__slide:not(.is-next)')
+        const title = document.getElementById('slide_title')
 
-      if (window.innerWidth > 1024) {
-        gsap.to(title, {
-          translateX: '0rem',
+        if (window.innerWidth > 1024) {
+          gsap.to(title, {
+            translateX: '0rem',
+            duration: 0.3,
+            ease: 'power2.out',
+          })
+        }
+        if (window.innerWidth > 1024) {
+          gsap.to(activeSlide, {
+            scale: 1,
+            opacity: 1,
+            zIndex: 1,
+            borderColor: 'transparent',
+            duration: 0.3,
+          })
+        }
+        gsap.to(otherSlides, {
+          scale: 1,
+          opacity: 1,
+          zIndex: 1,
+          borderColor: 'transparent',
           duration: 0.3,
-          ease: 'power2.out',
         })
-      }
-      gsap.to(activeSlide, {
-        scale: 1,
-        opacity: 1,
-        zIndex: 1,
-        borderColor: 'transparent',
-        duration: 0.3,
-      })
-      gsap.to(otherSlides, {
-        scale: 1,
-        opacity: 1,
-        zIndex: 1,
-        borderColor: 'transparent',
-        duration: 0.3,
-      })
+      }, 200)
     }
+
     /* --- Animation GSAP cyclique --- */
-    const interval = 3
+    const interval = 5
     let forward = true
 
     const tl = gsap.timeline({ repeat: -1, paused: false })
@@ -133,17 +145,11 @@ onMounted(() => {
         document.documentElement.style.setProperty('--title-offset', forward ? '1' : '-1')
 
         splide.on('moved', (newIdx: number) => {
-          if (window.innerWidth > 1024) {
-            resetSlideSize()
-          } else {
-            biggerSlide()
-          }
+          resetSlideSize()
 
           activeIndex.value = newIdx
 
-          if (window.innerWidth > 1024) {
-            biggerSlide()
-          }
+          biggerSlide()
         })
       })
       .to(light, {
@@ -193,7 +199,10 @@ onMounted(() => {
     }
 
     carousel.addEventListener('mouseenter', onEnter)
+    carousel.addEventListener('touchstart', onEnter)
     carousel.addEventListener('mouseleave', onLeave)
+    carousel.addEventListener('touchend', onLeave)
+    carousel.addEventListener('touchcancel', onLeave)
   })
 })
 </script>

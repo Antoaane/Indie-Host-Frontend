@@ -190,13 +190,23 @@
         .splide {
 
           .splide__track {
-            width: 150vw;
+            width: 250vw;
 
             position: relative;
             left: 50%;
             overflow: visible;
 
             transform: translateX(-50%);
+
+            @include min-width(sm) {
+              width: 150vw;
+            }
+
+            @include min-width(lg) {
+              width: auto;
+              position: static;
+              transform: none;
+            }
 
             .splide__list {
 
