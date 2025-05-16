@@ -23,7 +23,7 @@
     }
 
     &>div {
-      padding-top: 5rem;
+      padding-top: 3rem;
 
       @include min-width(lg) {
         max-width: 50vw;
@@ -52,7 +52,6 @@
 
         h1 {
           width: 100%;
-          margin-bottom: 0.5rem;
           padding-inline: 0 !important;
 
           text-align: center;

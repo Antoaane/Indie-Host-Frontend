@@ -3,7 +3,6 @@
 @use "@/assets/styles/variables/globals" as *;
 
 #customization-section {
-  // @include gutters(padding, top, 2);
 
   .container {
     display: flex;
@@ -14,7 +13,6 @@
     @include gutters(padding, inline, 2);
 
     @include min-width(lg) {
-      // padding-top: 5rem;
       flex-direction: row;
     }
 
@@ -78,7 +76,9 @@
         }
 
         p {
-          padding-inline: 2rem;
+          padding-top: 1rem;
+
+          @include gutters(padding, inline);
           @include base-text($accent);
 
           @include min-width(lg) {

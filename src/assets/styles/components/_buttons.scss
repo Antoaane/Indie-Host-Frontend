@@ -17,13 +17,18 @@
 
   * {
     cursor: pointer !important;
+    @include transition;
   }
 
   &>* {
     width: 100%;
-    display: inline-block;
     padding: 0.4rem 1rem 0.5rem 1rem;
     box-sizing: border-box;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
 
     font-size: 1rem;
     text-decoration: none;
@@ -36,21 +41,34 @@
       color: $secondary;
       background-color: $accent;
       outline: 3px solid rgba($secondary, 0.1);
+
+      &>* {
+        color: $secondary;
+        stroke: $secondary;
+      }
     }
 
     @else if $color ==light {
       color: $secondary;
       background-color: $accent;
       outline: 3px solid rgba($accent, 0.5);
+
+      &>* {
+        color: $secondary;
+        stroke: $secondary;
+      }
     }
 
     @else {
       color: $accent;
       background-color: $secondary;
       outline: 3px solid rgba($accent, 0.5);
-    }
 
-    @include transition;
+      &>* {
+        color: $accent;
+        stroke: $accent;
+      }
+    }
   }
 
   // Gradient shadow (::after)
@@ -100,35 +118,40 @@
   }
 
   &:hover {
+
     &>* {
       @if $color ==black {
-        color: $secondary;
         background-color: $accent;
         outline: 3px solid rgba($accent, 0.75);
+
+        &>* {
+          color: $secondary;
+          stroke: $secondary;
+        }
       }
 
       @else {
-        color: $accent;
         background-color: $secondary;
         outline: 3px solid rgba($accent, 0.75);
+
+        &>* {
+          color: $accent;
+          stroke: $accent;
+        }
       }
 
       @if not $cta {
         box-shadow: 0px 2px 4px 3px rgba(0, 0, 0, 0.2);
       }
-
-      @include transition;
     }
 
     @if $cta {
       &::after {
         opacity: 0;
-        @include transition;
       }
 
       &::before {
         opacity: 1;
-        @include transition;
       }
     }
   }
@@ -165,6 +188,46 @@
       text-decoration-color: rgba(0, 0, 0, 0);
 
       @include transition;
+    }
+  }
+}
+
+@mixin checkbox($color: white) {
+  appearance: none;
+
+  width: 1.25rem;
+  height: 1.25rem;
+  aspect-ratio: 1/1;
+
+  position: relative;
+
+  border-radius: calc(borders.$rounded-xs);
+
+  @if $color ==white {
+    background-color: $accent;
+    border: 2px solid $secondary;
+    outline: 2px solid $accent;
+  }
+
+  @else if $color ==black {
+    background-color: $secondary;
+    border: 2px solid $accent;
+    outline: 2px solid $secondary;
+  }
+
+  @include transition;
+
+  &:checked {
+    @if $color ==white {
+      background-color: $secondary;
+      border-color: $accent;
+      outline-color: $secondary;
+    }
+
+    @else if $color ==black {
+      background-color: $accent;
+      border-color: $secondary;
+      outline-color: $accent;
     }
   }
 }

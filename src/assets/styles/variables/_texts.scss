@@ -4,6 +4,8 @@
 @use "@/assets/styles/variables/breakpoints" as *;
 
 @mixin base-text($color : $secondary, $bold: false, $underline: false, $italic: false) {
+  margin: 0;
+
   font-family: 'outfit', sans-serif;
   color: $color;
 
@@ -38,6 +40,9 @@
 }
 
 @mixin main-title($color : $secondary, $bigger: true) {
+  margin-top: 0;
+  margin-bottom: 1rem;
+
   font-family: 'Fustat', sans-serif;
   font-weight: 700;
   color: $color;
@@ -90,6 +95,9 @@
 }
 
 @mixin h2-title($color : $secondary, $bigger: true) {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+
   font-family: 'Fustat', sans-serif;
   font-weight: 700;
   color: $color;
@@ -105,6 +113,9 @@
   }
 
   @include min-width(lg) {
+    margin-top: 0;
+    margin-bottom: 0.5rem;
+
     font-size: 2.25rem;
     line-height: 2.5rem;
   }
@@ -142,6 +153,9 @@
 }
 
 @mixin h3-title($color : $secondary, $bigger: true) {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+
   font-family: 'Fustat', sans-serif;
   font-weight: 700;
   color: $color;
@@ -188,6 +202,38 @@
         font-size: 2.75rem;
       }
     }
+  }
+
+  b,
+  i,
+  strong,
+  em,
+  u {
+    color: inherit;
+  }
+
+  b,
+  strong {
+    font-weight: 800;
+  }
+}
+
+@mixin h4-title($color : $secondary, $bigger: true) {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+
+  font-family: 'Fustat', sans-serif;
+  font-weight: 500;
+  color: $color;
+
+  font-size: 1.115rem;
+
+  @include min-width(md) {
+    font-size: 1.15rem;
+  }
+
+  @include min-width(lg) {
+    font-size: 1.25rem;
   }
 
   b,

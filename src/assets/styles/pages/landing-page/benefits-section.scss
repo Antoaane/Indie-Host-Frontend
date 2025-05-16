@@ -92,8 +92,8 @@
         }
 
         p {
-          margin: 0;
-          padding: 0;
+          margin: 0 !important;
+          padding: 0 !important;
 
           font-weight: 800 !important;
           @include h2-title();
@@ -109,8 +109,8 @@
           align-items: center;
 
           p {
-            margin: 0;
-            padding: 0;
+            margin: 0 !important;
+            padding: 0 !important;
 
             font-weight: 800;
           }
