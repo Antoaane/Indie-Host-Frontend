@@ -4,10 +4,6 @@
 import { isStringLiteral } from 'typescript'
 import type { Component } from 'vue'
 
-/**
- * Composant réutilisable pour afficher une étape de la section "Comment ça marche ?".
- * Tout le contenu est injecté via des props, afin d'éviter la duplication de vues.
- */
 const props = defineProps<{
   /** Numéro (ou titre court) de l'étape à afficher. */
   step: number | string
@@ -17,6 +13,10 @@ const props = defineProps<{
   description: string
   /** Composant Vue servant d'illustration (un SVG le plus souvent). */
   illustration: Component | string
+  /** Titre de l'illustration. */
+  illustrationTitle: string
+  /** Description de l'illustration. */
+  illustrationAlt: string
 }>()
 </script>
 
@@ -28,12 +28,14 @@ const props = defineProps<{
         <span class="step">
           {{ props.step }}
         </span>
-        <h2>
-          {{ props.title }}
-        </h2>
-        <p>
-          {{ props.description }}
-        </p>
+        <div>
+          <h2>
+            {{ props.title }}
+          </h2>
+          <p>
+            {{ props.description }}
+          </p>
+        </div>
       </div>
 
       <!-- ILLUSTRATION -->
@@ -49,12 +51,15 @@ const props = defineProps<{
           v-if="typeof props.illustration === 'string'"
           class="image"
           :src="props.illustration"
-          :alt="props.title"
+          :alt="props.illustrationTitle"
         />
         <component
           v-else
           :is="props.illustration"
           class="image"
+          :title="props.illustrationTitle"
+          :desc="props.illustrationAlt"
+          role="img"
         />
       </div>
     </div>

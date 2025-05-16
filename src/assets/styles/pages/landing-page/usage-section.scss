@@ -7,8 +7,6 @@ div:has(> .step-section) {
   .step-section {
 
     .container {
-      height: 100vh;
-
       display: flex;
       flex-direction: column;
       gap: 2rem;
@@ -16,36 +14,41 @@ div:has(> .step-section) {
       @include gutters(padding, inline, 2);
 
       @include min-width(lg) {
+        height: 100vh;
+        padding-left: 5rem;
+
         flex-direction: row;
         align-items: center;
         justify-content: end;
       }
 
       .content {
-        flex: 0 0 45%;
-        height: 100%;
-        padding-inline: 4rem;
-
         display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: end;
+        // align-items: center;
 
         position: relative;
 
         border-left: 1px solid;
-        border-image: linear-gradient(to bottom,
-            rgba($accent, 1) 20%,
-            rgba($accent, 0) 40%,
-            rgba($accent, 0) 60%,
-            rgba($accent, 1) 80%) 1 round;
+
+        @include min-width(lg) {
+          flex: 1 0;
+          height: 100%;
+
+          flex-direction: column;
+          justify-content: center;
+          align-items: end;
+
+          border-image: linear-gradient(to bottom,
+              rgba($accent, 1) 20%,
+              rgba($accent, 0) 40%,
+              rgba($accent, 0) 60%,
+              rgba($accent, 1) 80%) 1 round;
+        }
+
 
         .step {
-          position: absolute;
-          top: 50%;
-          left: 0;
-
-          transform: translate(-50%, -50%);
+          position: relative;
+          // bottom: 1rem;
 
           font-family: 'Fustat', sans-serif;
           font-size: 8rem;
@@ -55,86 +58,141 @@ div:has(> .step-section) {
           background-clip: text;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
-        }
 
-        h2 {
-          margin: 1rem 0;
-          text-align: center;
-          @include h2-title($accent, false);
+          @include min-width(xs) {
+            font-size: 6rem;
+          }
+
+          @include min-width(sm) {
+            font-size: 7rem;
+          }
+
+          @include min-width(md) {
+            font-size: 8rem;
+          }
 
           @include min-width(lg) {
-            text-align: left;
+            margin: 0;
+            position: absolute;
+            top: 50%;
+            left: 0;
+            transform: translate(-50%, -50%);
           }
         }
 
-        p {
-          margin: 0;
-          @include base-text($accent, false);
+        &>div {
+          padding-inline: 2rem;
+
+          @include min-width(lg) {
+            padding-inline: 4rem;
+          }
+
+          h2 {
+            margin: 1rem 0;
+            padding: 0 !important;
+            @include h2-title($accent, false);
+          }
+
+          p {
+            margin: 0;
+            @include base-text($accent, false);
+          }
         }
       }
 
       .illustration {
-        flex: 0 0 45%;
-        width: 50vw;
-        height: 100%;
+        width: 100vw;
 
         display: flex;
         overflow: visible;
 
         position: relative;
 
+        @include min-width(lg) {
+          flex: 1 0;
+          width: 50vw;
+          height: 100%;
+        }
+
         .image {
-          width: auto;
-          height: 70vh;
+          width: 100%;
+          height: auto;
 
-          position: absolute;
-          top: 50%;
-          left: 0;
-
-          transform: translateY(-50%);
+          position: relative;
 
           border-radius: 1.15rem;
+
+          @include min-width(lg) {
+            width: auto;
+            height: 70vh;
+
+            position: absolute;
+            top: 50%;
+            left: 0;
+
+            transform: translateY(-50%);
+          }
+
+          &:has(:not(.no-halo)) {}
         }
 
         .halo-png {
-          width: auto;
-          height: 100vh;
+          width: 80vw;
+          height: auto;
 
           position: absolute;
           top: 50%;
 
           transform: translate(-40%, -50%);
+
+          pointer-events: none;
+
+          @include min-width(lg) {
+            width: auto;
+            height: 100vh;
+          }
         }
       }
     }
 
-    &:not(.no-halo) {
-      .image {
-        @include halo(md, true, $accent, .3);
+    @include min-width(lg) {
+      &:not(.no-halo) {
+        .image {
+          @include halo(md, true, $accent, .3);
+        }
       }
-    }
 
-    &:nth-of-type(1) {
+      &:first-of-type {
+        padding-top: 0;
+        padding-bottom: 0;
 
-      .content {
-        border-image: linear-gradient(to bottom,
-            rgba($accent, 0) 10%,
-            rgba($accent, 1) 25%,
-            rgba($accent, 0) 40%,
-            rgba($accent, 0) 60%,
-            rgba($accent, 1) 80%) 1 round;
+        .content {
+          border-image: linear-gradient(to bottom,
+              rgba($accent, 0) 10%,
+              rgba($accent, 1) 25%,
+              rgba($accent, 0) 40%,
+              rgba($accent, 0) 60%,
+              rgba($accent, 1) 80%) 1 round;
+        }
       }
-    }
 
-    &:last-of-type {
+      // not last and not first
+      &:not(:first-of-type):not(:last-of-type) {
+        padding-top: 0;
+        padding-bottom: 0;
+      }
 
-      .content {
-        border-image: linear-gradient(to bottom,
-            rgba($accent, 1) 20%,
-            rgba($accent, 0) 40%,
-            rgba($accent, 0) 60%,
-            rgba($accent, 1) 75%,
-            rgba($accent, 0) 90%) 1 round;
+      &:last-of-type {
+        padding-top: 0;
+
+        .content {
+          border-image: linear-gradient(to bottom,
+              rgba($accent, 1) 20%,
+              rgba($accent, 0) 40%,
+              rgba($accent, 0) 60%,
+              rgba($accent, 1) 75%,
+              rgba($accent, 0) 90%) 1 round;
+        }
       }
     }
   }

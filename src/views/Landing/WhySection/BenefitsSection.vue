@@ -1,6 +1,7 @@
 <!-- File: src/views/Landing/WhySection/BenefitsSection.vue -->
 
 <script setup lang="ts">
+// DEPS
 import { computed, ref } from 'vue'
 
 const nights = ref(6)

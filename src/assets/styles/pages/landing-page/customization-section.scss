@@ -3,12 +3,9 @@
 @use "@/assets/styles/variables/globals" as *;
 
 #customization-section {
-  @include gutters(padding, top, 2);
+  // @include gutters(padding, top, 2);
 
   .container {
-    // max-height: 100%;
-    padding-top: 5rem;
-
     display: flex;
     flex-direction: column-reverse;
     align-items: center;
@@ -17,6 +14,7 @@
     @include gutters(padding, inline, 2);
 
     @include min-width(lg) {
+      // padding-top: 5rem;
       flex-direction: row;
     }
 

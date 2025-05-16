@@ -60,17 +60,19 @@ h6 {
   }
 }
 
-[id*="-section"] {
+[id*="-section"],
+[class*="-section"] {
+  height: max-content;
+
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
 
-  box-sizing: border-box;
+  @include gutters(padding, vertical, 2);
 
   @include min-width(lg) {
     min-height: 100vh;
+    margin-bottom: 0;
   }
-
-  @include gutters(padding, vertical, 2);
 }

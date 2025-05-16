@@ -1,6 +1,9 @@
 <!-- File: src/views/Landing/StrengthsSection.vue -->
 
 <script setup lang="ts">
+// DEPS
+
+// ASSETS
 import Compass from '@/components/svgs/icons/Compass.vue'
 import Handshake from '@/components/svgs/icons/Handshake.vue'
 import MagicStick from '@/components/svgs/icons/MagicStick.vue'

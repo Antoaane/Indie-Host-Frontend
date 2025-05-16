@@ -1,4 +1,4 @@
-// File: src/assets/styles/pages/landing-page/_index.scss
+/* File: src/assets/styles/pages/landing-page/_index.scss */
 
 @forward 'hero-section.scss';
 @forward 'benefits-section.scss';
@@ -6,6 +6,7 @@
 @forward 'habits-section.scss';
 @forward 'usage-section.scss';
 @forward 'strengths-section.scss';
+@forward 'email-section.scss';
 
 #landing-page {
   display: flex;

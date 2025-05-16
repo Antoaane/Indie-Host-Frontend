@@ -1,6 +1,9 @@
 <!-- File: src/views/Landing/WhySection/CustomizationSection.vue -->
 
 <script setup lang="ts">
+// DEPS
+
+// ASSETS
 import CustomDomain from '@/components/svgs/images/CustomDomain.vue'
 </script>
 

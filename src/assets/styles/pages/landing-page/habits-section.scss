@@ -5,7 +5,7 @@
 
 #habits-section {
   @include min-width(lg) {
-    @include gutters(padding, top, 3);
+    // @include gutters(padding, top, 3);
     overflow: hidden;
   }
 

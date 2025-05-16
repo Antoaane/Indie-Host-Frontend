@@ -1,11 +1,12 @@
 <!-- File: src/views/Landing/WhySection/HabitsSection.vue -->
 
 <script setup lang="ts">
+// DEPS
 import { onMounted, ref, nextTick } from 'vue'
 import { Splide, SplideSlide } from '@splidejs/vue-splide'
 import gsap from 'gsap'
 
-/* ---------------- ASSETS ---------------- */
+// ASSETS
 import DashboardDetailLogement from '@/components/svgs/images/DashboardDetailLogement.vue'
 import AnnonceReservation from '@/components/svgs/images/AnnonceReservation.vue'
 import Messagerie from '@/components/svgs/images/Messagerie.vue'
@@ -63,6 +64,7 @@ onMounted(() => {
     const shadow = shadowRef.value
     if (!splide || !light || !shadow || !carousel) return
 
+    /* --- Gestion de la taille des slides --- */
     const biggerSlide = () => {
       setTimeout(() => {
         if (!carousel.matches(':hover') && window.innerWidth > 1024) {
@@ -198,6 +200,7 @@ onMounted(() => {
       }, 400)
     }
 
+    /* --- Événements --- */
     carousel.addEventListener('mouseenter', onEnter)
     carousel.addEventListener('touchstart', onEnter)
     carousel.addEventListener('mouseleave', onLeave)
