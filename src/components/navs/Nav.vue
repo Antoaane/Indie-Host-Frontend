@@ -15,7 +15,7 @@ const toggleMobileMenu = () => {
 }
 
 const checkScreen = () => {
-  isMobile.value = window.innerWidth < 1024
+  isMobile.value = window.innerWidth < 1025
 }
 
 onMounted(() => {

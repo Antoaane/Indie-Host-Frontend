@@ -25,6 +25,7 @@ $xxxxl: map.get($max-widths, xxxxl);
 
 // Container max-widths (correspondant aux breakpoints)
 $breakpoints: (
+  xs: calc($xs + 1px),
   sm: calc($sm + 1px),
   md: calc($md + 1px),
   lg: calc($lg + 1px),
@@ -34,8 +35,8 @@ $breakpoints: (
   xxxxl: calc($xxxxl + 1px),
 );
 
-@mixin min-width($breakpoint) {
-  $value: map.get($max-widths, $breakpoint);
+@mixin min-width($bp) {
+  $value: map.get($breakpoints, $bp);
 
   @if $value {
     @media screen and (min-width: calc($value)) {
@@ -97,10 +98,10 @@ $selected-sides: map.get($side-map, $sides);
     width: 100%;
   }
 
-  $keys: map.keys($breakpoints);
+  $keys: map.keys($max-widths);
 
   @each $label in $keys {
-    $value: map.get($breakpoints, $label);
+    $value: map.get($max-widths, $label);
     $max-value: map.get($max-widths, $max);
 
     @include min-width($label) {

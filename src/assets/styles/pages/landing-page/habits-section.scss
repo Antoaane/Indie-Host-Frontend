@@ -2,6 +2,7 @@
 
 @use "@/assets/styles/variables/globals" as *;
 @use "@/assets/styles/variables/effects" as effect;
+@use '@/assets/styles/variables/borders' as borders;
 
 #habits-section {
   @include min-width(lg) {
@@ -211,7 +212,6 @@
             .splide__list {
 
               .splide__slide {
-
                 display: flex;
                 justify-content: center;
                 align-items: center;
@@ -235,11 +235,47 @@
                     height: 100% !important;
                   }
                 }
+
+                &.is-next {
+                  transition: transform-origin 0.3s ease-in-out;
+                }
               }
             }
           }
         }
       }
+    }
+  }
+
+  .slide-display {
+    width: 100vw;
+    height: 100vh;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    z-index: -999;
+
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    background-color: rgba($secondary, .85);
+
+    &:has(svg) {
+      z-index: 9999;
+    }
+
+    svg {
+      max-width: 75vw;
+      max-height: 80vh;
+
+      border-radius: borders.$rounded-xl;
+      border: 1px solid rgba($accent, 1);
+
+      @include halo(lg);
     }
   }
 }

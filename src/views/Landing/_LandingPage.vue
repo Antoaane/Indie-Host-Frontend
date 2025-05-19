@@ -21,7 +21,7 @@ const lenis = useLenis()
 
 const threshold = 40
 const visibleOffset = 1
-const isDesktop = () => window.innerWidth > 1024
+const isDesktop = () => window.innerWidth > 1025
 
 onMounted(() => {
   if (!isDesktop()) return
