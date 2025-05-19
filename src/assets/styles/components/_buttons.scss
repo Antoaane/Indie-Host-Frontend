@@ -121,6 +121,9 @@
 
     &>* {
       @if $color ==black {
+        color: $secondary;
+        stroke: $secondary;
+
         background-color: $accent;
         outline: 3px solid rgba($accent, 0.75);
 
@@ -131,6 +134,9 @@
       }
 
       @else {
+        color: $accent;
+        stroke: $accent;
+
         background-color: $secondary;
         outline: 3px solid rgba($accent, 0.75);
 
