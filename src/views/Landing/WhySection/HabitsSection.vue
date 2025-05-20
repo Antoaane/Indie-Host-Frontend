@@ -20,7 +20,8 @@ const lightRef = ref<HTMLSpanElement | null>(null)
 const shadowRef = ref<HTMLSpanElement | null>(null)
 
 const activeSlide = ref<HTMLElement | null>(null)
-const otherSlides = ref<HTMLElement[]>(null)
+const otherSlides = ref<NodeListOf<HTMLElement> | null>(null)
+
 const isOpen = ref<boolean>(false)
 
 /* ---------------- TITRES PAR SLIDE ---------------- */
@@ -63,7 +64,7 @@ const opts = {
 onMounted(() => {
   activeSlide.value = document.querySelector('.splide__slide.is-next')
   otherSlides.value = document.querySelectorAll('.splide__slide:not(.is-next)')
-  titleSlide.value = document.getElementById('slide_title')
+  titleSlideRef.value = document.getElementById('slide_title')
 
   document.documentElement.style.setProperty('--title-offset', '1')
 
@@ -105,7 +106,7 @@ onMounted(() => {
     }
 
     const hugerSlide = () => {
-      slideDisplayRef.value.innerHTML = activeSlide.value.innerHTML
+      slideDisplayRef.value!.innerHTML = activeSlide.value!.innerHTML
       gsap.to(slideDisplayRef.value, {
         opacity: 1,
         duration: 0.3,
@@ -143,7 +144,7 @@ onMounted(() => {
         duration: 0.3,
       })
       setTimeout(() => {
-        slideDisplayRef.value.innerHTML = ''
+        slideDisplayRef.value!.innerHTML = ''
       }, 300)
       if (window.innerWidth > 1024) {
         gsap.to(titleSlide, {
@@ -191,7 +192,7 @@ onMounted(() => {
         splide.on('moved', (newIdx: number) => {
           activeSlide.value = document.querySelector('.splide__slide.is-next')
           otherSlides.value = document.querySelectorAll('.splide__slide:not(.is-next)')
-          titleSlide.value = document.getElementById('slide_title')
+          titleSlideRef.value = document.getElementById('slide_title')
 
           resetSlideSize()
 
@@ -261,7 +262,7 @@ onMounted(() => {
       }
     })
 
-    slideDisplayRef.value.addEventListener('click', () => {
+    slideDisplayRef.value!.addEventListener('click', () => {
       isOpen.value = false
       resetSlideSize()
     })
