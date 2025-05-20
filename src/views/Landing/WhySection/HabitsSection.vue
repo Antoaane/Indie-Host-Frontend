@@ -14,13 +14,13 @@ import Messagerie from '@/components/svgs/images/Messagerie.vue'
 /* ---------------- REFS ---------------- */
 const carouselRef = ref<HTMLElement | null>(null)
 const splideRef = ref<any>(null)
+const titleSlideRef = ref<HTMLElement | null>(null)
 const slideDisplayRef = ref<HTMLElement | null>(null)
 const lightRef = ref<HTMLSpanElement | null>(null)
 const shadowRef = ref<HTMLSpanElement | null>(null)
 
 const activeSlide = ref<HTMLElement | null>(null)
 const otherSlides = ref<HTMLElement[]>(null)
-const titleSlide = ref<HTMLElement | null>(null)
 const isOpen = ref<boolean>(false)
 
 /* ---------------- TITRES PAR SLIDE ---------------- */
@@ -72,6 +72,7 @@ onMounted(() => {
     console.log(activeSlide.value)
     const carousel = carouselRef.value
     const splide = splideRef.value?.splide as any
+    const titleSlide = titleSlideRef.value
     const light = lightRef.value
     const shadow = shadowRef.value
     if (!splide || !light || !shadow || !carousel) return
@@ -83,7 +84,7 @@ onMounted(() => {
       }
 
       if (window.innerWidth > 1024) {
-        gsap.to(titleSlide.value, {
+        gsap.to(titleSlide, {
           translateX: '-2rem',
           duration: 0.3,
           ease: 'power2.out',
@@ -145,7 +146,7 @@ onMounted(() => {
         slideDisplayRef.value.innerHTML = ''
       }, 300)
       if (window.innerWidth > 1024) {
-        gsap.to(titleSlide.value, {
+        gsap.to(titleSlide, {
           opacity: 1,
           translateX: '0rem',
           duration: 0.3,
@@ -284,6 +285,7 @@ onMounted(() => {
         >
           <h3
             :key="activeIndex"
+            ref="titleSlideRef"
             id="slide_title"
             v-html="slideTitles[activeIndex]"
           ></h3>

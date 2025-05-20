@@ -70,20 +70,11 @@ h6 {
   justify-content: center;
   align-items: center;
 
-  @include gutters(padding, vertical, 2);
-
-  @include min-width(xs) {
-    @include gutters(padding, vertical, 3);
-  }
-
-  @include min-width(md) {
-    @include gutters(padding, vertical, 4);
-  }
+  padding-top: var(--gutter-spacing);
+  @include gutters(padding, bottom, 2);
 
   @include min-width(lg) {
     min-height: 100vh;
     margin-bottom: 0;
-
-    @include gutters(padding, vertical, 2);
   }
 }
