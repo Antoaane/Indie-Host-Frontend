@@ -70,7 +70,7 @@ h6 {
   justify-content: center;
   align-items: center;
 
-  padding-top: var(--gutter-spacing);
+  padding-top: calc(var(--gutter-spacing) + 70px);
   @include gutters(padding, bottom, 2);
 
   @include min-width(lg) {
