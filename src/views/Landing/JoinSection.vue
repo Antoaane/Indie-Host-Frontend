@@ -23,7 +23,7 @@ import { Send, SendIcon } from 'lucide-vue-next'
         <div class="content">
           <p> <strong>IndieHost</strong> est une solution imaginée <strong>avec des hôtes, pour des hôtes</strong>. Fait avec ❤️ entre la montagne, la mer et le Wi-Fi instable. </p>
 
-          <p> Nous détestons le spam autant que vous, <strong>nous vous enverrons juste un e-mail</strong> pour vous tenir informé·e. <em>(et peut-être essayer le projet gratuitement !)</em> </p>
+          <p> Nous détestons le spam autant que vous, <strong>nous vous enverrons juste un e-mail</strong> pour vous tenir informé·e.</p>
 
           <div class="form-container">
             <h3><strong>Restez informé·e</strong></h3>

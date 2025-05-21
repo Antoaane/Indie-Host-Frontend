@@ -29,7 +29,7 @@
       .french-flag {
         height: 2rem;
         width: auto;
-        margin: 0 0.5rem 0.2rem 0;
+        margin: 0 0.5rem 0.5rem 0;
 
         border-radius: $rounded-xs;
       }
@@ -45,6 +45,7 @@
         }
 
         &>span {
+          padding: 0 !important;
           @include h2-title($accent, false);
         }
       }
@@ -142,7 +143,7 @@
                   @include base-text($secondary);
 
                   input[type="checkbox"] {
-                    @include buttons.checkbox(black);
+                    @include buttons.checkbox(white);
                   }
                 }
               }

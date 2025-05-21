@@ -1,3 +1,5 @@
+<!-- File: src/components/svgs/images/AutoImport.vue -->
+
 <template>
   <svg
     :role="attrRole"

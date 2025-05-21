@@ -33,7 +33,7 @@
 
       @include min-width(lg) {
         width: 50%;
-        height: 90vh;
+        height: 100%;
       }
 
       h2 {
@@ -46,8 +46,8 @@
         @include min-width(lg) {
           text-align: left;
           position: absolute;
-          top: 5vh;
-          left: 1rem;
+          top: 1rem;
+          left: 0;
         }
       }
 

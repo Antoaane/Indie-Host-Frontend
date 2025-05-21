@@ -39,6 +39,42 @@
   }
 }
 
+@mixin little-text($color : $secondary, $bold: false, $underline: false, $italic: false) {
+  margin: 0;
+
+  font-family: 'outfit', sans-serif;
+  color: $color;
+
+  font-weight: if($bold, 700, 200);
+  text-decoration: if($underline, underline, none);
+  text-underline-offset: 0.2rem;
+  text-decoration-thickness: 0.05rem;
+  font-style: if($italic, italic, normal);
+
+  font-size: 0.875rem;
+  line-height: 1.125rem;
+  letter-spacing: 0.02rem;
+
+  @include min-width(md) {
+    font-size: 1rem;
+    line-height: 1.25rem;
+    letter-spacing: 0.03rem;
+  }
+
+  b,
+  i,
+  strong,
+  em,
+  u {
+    color: inherit;
+  }
+
+  b,
+  strong {
+    font-weight: 800;
+  }
+}
+
 @mixin main-title($color : $secondary, $bigger: true) {
   margin-top: 0;
   margin-bottom: 1rem;

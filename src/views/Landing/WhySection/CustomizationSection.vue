@@ -20,7 +20,7 @@ import CustomDomain from '@/components/svgs/images/CustomDomain.vue'
       <div class="content">
         <div>
           <h2>
-            Votre page, votre nom, votre image
+            Votre page, votre nom, votre
             <span class="gradient-text">image</span>
           </h2>
           <CustomDomain

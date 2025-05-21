@@ -26,14 +26,17 @@ onMounted(() => {
 
 <template>
   <nav class="navbar">
-    <div class="navbar__logo">
+    <a
+      href="/#hero-section"
+      class="navbar__logo"
+    >
       <component
         :is="icons.logoFull.adapt"
         title="IndieHost"
         desc="Logo de IndieHost, plateforme de gestion de locations saisonnières"
         role="img"
       />
-    </div>
+    </a>
 
     <!-- Desktop Menu -->
     <ul

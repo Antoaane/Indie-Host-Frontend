@@ -7,12 +7,13 @@ import { VueLenis, useLenis } from 'lenis/vue'
 
 // ASSETS
 import HeroSection from '@/views/Landing/HeroSection.vue'
-import BenefitsSection from './WhySection/BenefitsSection.vue'
-import CustomizationSection from './WhySection/CustomizationSection.vue'
-import HabitsSection from './WhySection/HabitsSection.vue'
-import StrengthsSection from './StrengthsSection.vue'
-import UsageSection from './UsageSection.vue'
-import EmailSection from './JoinSection.vue'
+import BenefitsSection from '@/views/Landing/WhySection/BenefitsSection.vue'
+import CustomizationSection from '@/views/Landing/WhySection/CustomizationSection.vue'
+import HabitsSection from '@/views/Landing/WhySection/HabitsSection.vue'
+import StrengthsSection from '@/views/Landing/StrengthsSection.vue'
+import UsageSection from '@/views/Landing/UsageSection.vue'
+import JoinSection from '@/views/Landing/JoinSection.vue'
+import FaqSection from '@/views/Landing/FaqSection.vue'
 
 // State
 const sections = ref<HTMLElement[]>([])
@@ -92,7 +93,8 @@ function detectCurrentSection() {
       <CustomizationSection />
       <StrengthsSection />
       <UsageSection />
-      <EmailSection />
+      <JoinSection />
+      <FaqSection />
     </main>
   </VueLenis>
 </template>

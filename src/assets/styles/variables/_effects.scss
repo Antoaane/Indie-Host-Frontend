@@ -2,19 +2,29 @@
 
 @use "@/assets/styles/variables/colors" as *;
 
-//soft shadow 
+//soft shadow
 @mixin soft-shadow($color: rgba(0, 0, 0, 0.1), $blur: 10px, $spread: 0px) {
   box-shadow: 0px 4px $blur $spread $color;
 }
 
 @mixin halo($size: md, $filter: false, $color: $accent, $opacity: 0.15) {
-  @if $size ==sm {
+  @if $size ==xs {
     @if $filter {
-      filter: drop-shadow(5px 5px 10px rgba($color, $opacity))
+      filter: drop-shadow(0px 0px 5px rgba($color, $opacity))
     }
 
     @else {
-      box-shadow: 5px 5px 15px 0px rgba($color, $opacity);
+      box-shadow: 0px 0px 10px 0px rgba($color, $opacity);
+    }
+  }
+
+  @if $size ==sm {
+    @if $filter {
+      filter: drop-shadow(0px 0px 10px rgba($color, $opacity))
+    }
+
+    @else {
+      box-shadow: 0px 0px 15px 0px rgba($color, $opacity);
     }
   }
 
