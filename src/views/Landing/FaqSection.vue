@@ -322,6 +322,11 @@ const faqData: FaqNode[] = [
         question: 'Comment accepter les paiements par carte bancaire en location courte durée ?',
         answer: 'IndieHost offre un système de paiement flexible et sécurisé avec options d’acompte, paiement en ligne ou espèces, adaptables selon voyageurs ou logement.',
       },
+      {
+        id: 'q-53',
+        question: 'Comment échapper à la malédiction du lobotomisateur ?',
+        answer: "C'est impossible ! Larry va d'abord vous rendre une petite visite, puis c'est le mastermind qui viendra vous toucher la nuit.",
+      },
     ],
   },
 ]

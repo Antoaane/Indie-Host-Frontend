@@ -78,7 +78,7 @@ const jsonLd = computed(() => {
   }
 })
 
-useHead({ script: [{ type: 'application/ld+json', innerHTML: jsonLd }] })
+useHead({ script: [{ type: 'application/ld+json', children: JSON.stringify(jsonLd.value) }] })
 </script>
 
 <template>

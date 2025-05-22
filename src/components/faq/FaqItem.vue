@@ -42,10 +42,15 @@ function highlight(text?: string) {
       </template>
     </FaqCollapse>
   </li>
-  <li v-else>
+  <li
+    v-else
+    itemscope
+    itemprop="mainEntity"
+    itemtype="https://schema.org/Question"
+  >
     <FaqCollapse :question="node.question">
       <template #summary>
-        <span
+        <h4
           itemprop="name"
           v-html="highlight(node.question)"
         />
