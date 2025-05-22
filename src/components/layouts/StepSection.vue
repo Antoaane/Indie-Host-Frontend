@@ -3,6 +3,7 @@
 <script setup lang="ts">
 import { isStringLiteral } from 'typescript'
 import type { Component } from 'vue'
+import { computed } from 'vue'
 
 const props = defineProps<{
   /** Numéro (ou titre court) de l'étape à afficher. */

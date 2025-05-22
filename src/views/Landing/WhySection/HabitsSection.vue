@@ -112,26 +112,6 @@ onMounted(() => {
         duration: 0.3,
       })
 
-      // gsap.to(shadow, {
-      //   '--shadow-pos-x': '50%',
-      //   '--shadow-size': '365% 90%',
-      //   '--shadow-start': '35%',
-      //   '--shadow-end': '50%',
-      //   duration: 0.3,
-      //   ease: 'power2.out',
-      // })
-      // gsap.to(titleSlide.value, {
-      //   opacity: 0,
-      //   duration: 0.3,
-      //   ease: 'power2.out',
-      // })
-      // gsap.to(activeSlide.value, {
-      //   transformOrigin: '100% 50%',
-      //   scale: 2.25,
-      //   borderColor: '#FCFAFA',
-      //   zIndex: 10,
-      //   duration: 0.3,
-      // })
       gsap.to(otherSlides.value, {
         opacity: 0.5,
         duration: 0.3,
@@ -305,38 +285,63 @@ onMounted(() => {
             aria-label="Carrousel vertical"
           >
             <SplideSlide>
-              <Messagerie
+              <!-- <Messagerie
                 class="slide-page-svg"
                 title="Page messagerie"
                 desc="Pages permettant à l'hôte de discuter avec les voyageurs."
+              /> -->
+              <img
+                class="slide-page-svg"
+                src="@/assets/media/images/messagerie.png"
+                alt="Page messagerie"
               />
             </SplideSlide>
             <SplideSlide>
-              <DashboardDetailLogement
+              <!-- <DashboardDetailLogement
                 class="slide-page-svg"
                 title="Page de gestion des réservations"
                 desc="Page permettant de gérer et de visualiser différentes données sur les reservations (paiements, dates, statistiques, arrivée, etc)."
+              /> -->
+              <img
+                class="slide-page-svg"
+                src="@/assets/media/images/dashboard-detail-logement.png"
+                alt="Page de gestion des réservations"
               />
             </SplideSlide>
             <SplideSlide>
-              <AnnonceReservation
+              <!-- <AnnonceReservation
                 class="slide-page-svg"
                 title="Page de paiement"
                 desc="Étape de paiement sur l'annonce mise en ligne par l'hôte. Le client peut payer de manière simple sécurisée par divers moyens (CB, Sepa, espèce avec acompte, etc)."
+              /> -->
+              <img
+                class="slide-page-svg"
+                src="@/assets/media/images/annonce-reservation.png"
+                alt="Page de paiement"
               />
             </SplideSlide>
             <SplideSlide>
-              <Messagerie
+              <!-- <Messagerie
                 class="slide-page-svg"
                 title="Page messagerie"
                 desc="Page de gestion des messages de l'hôte"
+              /> -->
+              <img
+                class="slide-page-svg"
+                src="@/assets/media/images/messagerie.png"
+                alt="Page messagerie"
               />
             </SplideSlide>
             <SplideSlide>
-              <DashboardDetailLogement
+              <!-- <DashboardDetailLogement
                 class="slide-page-svg"
                 title="Page de gestion des réservations"
                 desc="Page permettant de gérer et de visualiser différentes données sur les reservations (paiements, dates, statistiques, arrivée, etc)."
+              /> -->
+              <img
+                class="slide-page-svg"
+                src="@/assets/media/images/dashboard-detail-logement.png"
+                alt="Page de gestion des réservations"
               />
             </SplideSlide>
           </Splide>

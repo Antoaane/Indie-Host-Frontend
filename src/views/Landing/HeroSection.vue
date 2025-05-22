@@ -31,10 +31,15 @@ import ShapesBgCroped from '@/components/svgs/images/ShapesBgCroped.vue'
       </div>
       <div class="illustration">
         <div>
-          <HeroImage
+          <!-- <HeroImage
             class="hero-image"
             title="Plateforme IndieHost"
             desc="Illustration d'une annonce IndieHost en version mobile pour réserver un logement en ligne, ainsi que la page de gestion de l'hôte en version bureau"
+          /> -->
+          <img
+            src="@/assets/media/images/hero-image.png"
+            alt="Illustration d'une annonce IndieHost en version mobile pour réserver un logement en ligne, ainsi que la page de gestion de l'hôte en version bureau"
+            class="hero-image"
           />
           <span></span>
         </div>

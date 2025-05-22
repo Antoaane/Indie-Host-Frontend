@@ -84,7 +84,7 @@
 
         #shadow {
           width: 125%;
-          height: 115%;
+          height: 120%;
 
           display: none !important;
 
@@ -224,7 +224,7 @@
                 transition: none !important;
                 @include halo;
 
-                svg {
+                .slide-page-svg {
                   width: 100%;
                   height: auto;
 
@@ -264,11 +264,13 @@
     opacity: 0;
     background-color: rgba($secondary, .85);
 
-    &:has(svg) {
+    &:has(svg),
+    &:has(img) {
       z-index: 9999;
     }
 
-    svg {
+    svg,
+    img {
       max-width: 75vw;
       max-height: 80vh;
 
