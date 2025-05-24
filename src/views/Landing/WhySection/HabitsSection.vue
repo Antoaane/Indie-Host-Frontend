@@ -1,350 +1,322 @@
 <!-- File: src/views/Landing/WhySection/HabitsSection.vue -->
 
 <script setup lang="ts">
-// DEPS
-import { onMounted, ref, nextTick } from 'vue'
-import { Splide, SplideSlide } from '@splidejs/vue-splide'
+/* ────────────────────────────
+   Imports
+──────────────────────────────*/
+import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { Swiper, SwiperSlide } from 'swiper/vue'
+import { Navigation, Pagination, Autoplay } from 'swiper/modules'
 import gsap from 'gsap'
+import 'swiper/css'
+import 'swiper/css/navigation'
+import 'swiper/css/pagination'
 
-// ASSETS
-import DashboardDetailLogement from '@/components/svgs/images/DashboardDetailLogement.vue'
-import AnnonceReservation from '@/components/svgs/images/AnnonceReservation.vue'
-import Messagerie from '@/components/svgs/images/Messagerie.vue'
+/* ────────────────────────────
+   Refs & état
+──────────────────────────────*/
+const swiperElRef = ref<any>(null) // composant <Swiper>
+const swiperInstance = ref<any | null>(null) // vraie instance Swiper
 
-/* ---------------- REFS ---------------- */
 const carouselRef = ref<HTMLElement | null>(null)
-const splideRef = ref<any>(null)
 const titleSlideRef = ref<HTMLElement | null>(null)
 const slideDisplayRef = ref<HTMLElement | null>(null)
 const lightRef = ref<HTMLSpanElement | null>(null)
 const shadowRef = ref<HTMLSpanElement | null>(null)
 
-const activeSlide = ref<HTMLElement | null>(null)
-const otherSlides = ref<NodeListOf<HTMLElement> | null>(null)
+const isOpen = ref(false)
+const activeIndexInTitles = ref(0)
 
-const isOpen = ref<boolean>(false)
+/* ────────────────────────────
+   Contenu & options
+──────────────────────────────*/
 
-/* ---------------- TITRES PAR SLIDE ---------------- */
+const slideTitle1 = `Gérez vos réservations dans un <strong>espace intuitif</strong>`
+const slideTitle2 = `Vos voyageurs réservent <strong>simplement</strong> et en <strong>toute sécurité</strong>`
+const slideTitle3 = `Centralisez vos messages <strong>sans effort</strong>`
+
 const slideTitles = [
-  `Gérez vos réservations dans un <strong>espace intuitif</strong>`, // index 0 – Messagerie
-  `Vos voyageurs réservent <strong>simplement</strong> et en <strong>toute sécurité</strong>`, // index 1 – Dashboard
-  `Centralisez vos messages <strong>sans effort</strong>`, // index 2 – Annonce
-  `Gérez vos réservations dans un <strong>espace intuitif</strong>`, // index 3 – Messagerie (copie)
-  `Vos voyageurs réservent <strong>simplement</strong> et en <strong>toute sécurité</strong>`, // index 4 – Dashboard (copie)
+  slideTitle1,
+  slideTitle2,
+  slideTitle3,
+  slideTitle1,
+  slideTitle2,
+  slideTitle3,
 ]
-const activeIndex = ref(0)
 
-/* ---------------- OPTIONS SPLIDE ---------------- */
-const opts = {
-  type: 'slide',
-  direction: 'ttb',
-  height: '110vh',
-  perPage: 3,
-  perMove: 1,
-  gap: '2rem',
-  arrows: false,
-  pagination: false,
-  drag: true,
-  breakpoints: {
-    1280: {
-      height: '90vh',
-    },
-    1024: {
-      direction: 'ltr',
-      height: 'auto',
-      gap: '4rem',
-    },
-    640: {
-      height: 'auto',
-      gap: '2rem',
-    },
+const baseSwiperParams = () => ({
+  modules: [
+    Autoplay,
+  ],
+  direction: window.innerWidth > 1024 ? 'vertical' : 'horizontal',
+  slidesPerView: 3,
+  // slidesPerView: window.innerWidth > 1024 ? 3 : 1,
+  spaceBetween: window.innerWidth > 1024 ? 32 : 16,
+  autoplay: {
+    delay: 2000,
+    disableOnInteraction: true,
+    // reverseDirection: true,
   },
+  loop: true,
+  centeredSlides: true,
+  pagination: false,
+  navigation: false,
+})
+
+const swiperParams = ref(baseSwiperParams())
+
+/* ────────────────────────────
+   Helpers GSAP
+──────────────────────────────*/
+let tl: gsap.core.Timeline | null = null
+
+const animateSlides = () => {
+  const s = swiperInstance.value
+  if (carouselRef.value) {
+    const onHover = carouselRef.value.matches(':hover')
+    if (!s || !onHover) return
+  }
+
+  const { slides, activeIndex, realIndex } = s
+  const activeSlideEl = slides[activeIndex] // ← clone ou original, peu importe pour l’anim
+
+  // reset
+  slides.forEach((sl: HTMLElement) => gsap.to(sl, { scale: 1, opacity: 1, borderColor: 'transparent', zIndex: 1, duration: 0.3 }))
+
+  // zoom slide active
+  gsap.to(activeSlideEl, {
+    scale: window.innerWidth > 1024 ? 1.25 : 1.15,
+    borderColor: '#FCFAFA',
+    zIndex: 10,
+    duration: 0.3,
+  })
+
+  // atténuer les autres (desktop)
+  if (window.innerWidth > 1024) {
+    slides.forEach((sl: HTMLElement, i: number) => i !== activeIndex && gsap.to(sl, { opacity: 0.5, duration: 0.3 }))
+  }
+
+  // mettre à jour le titre si besoin
+  activeIndexInTitles.value = realIndex // voir §5
 }
 
-onMounted(() => {
-  activeSlide.value = document.querySelector('.splide__slide.is-next')
-  otherSlides.value = document.querySelectorAll('.splide__slide:not(.is-next)')
-  titleSlideRef.value = document.getElementById('slide_title')
+const hugerSlide = () => {
+  const swiper = swiperInstance.value
+  if (!swiper || !slideDisplayRef.value) return
+  slideDisplayRef.value.innerHTML = swiper.slides[swiper.activeIndex].innerHTML
+  gsap.to(slideDisplayRef.value, { opacity: 1, duration: 0.3 })
+}
 
-  document.documentElement.style.setProperty('--title-offset', '1')
+const resetSlideSize = () => {
+  const swiper = swiperInstance.value
+  if (!swiper || !slideDisplayRef.value) return
+  gsap.to(slideDisplayRef.value, { opacity: 0, duration: 0.3 })
+  setTimeout(() => (slideDisplayRef.value!.innerHTML = ''), 300)
+  swiper.slides.forEach((slide: HTMLElement) => gsap.to(slide, { scale: 1, opacity: 1, borderColor: 'transparent', zIndex: 1, duration: 0.3 }))
+}
 
-  nextTick(() => {
-    console.log(carouselRef.value)
-    console.log(activeSlide.value)
-    const carousel = carouselRef.value
-    const splide = splideRef.value?.splide as any
-    const titleSlide = titleSlideRef.value
-    const light = lightRef.value
-    const shadow = shadowRef.value
-    if (!splide || !light || !shadow || !carousel) return
+/* ────────────────────────────
+   Events DOM (hover / click)
+──────────────────────────────*/
+const onEnter = () => {
+  if (!shadowRef.value || !lightRef.value) return
+  gsap.to(shadowRef.value, {
+    '--shadow-pos-x': '50%',
+    '--shadow-size': '365% 75%',
+    '--shadow-start': '35%',
+    '--shadow-end': '50%',
+    duration: 0.3,
+    ease: 'power2.out',
+  })
+  gsap.to(lightRef.value, { opacity: 0, duration: 0.3 })
+  tl?.pause()
+  animateSlides()
+}
 
-    /* --- Gestion de la taille des slides --- */
-    const biggerSlide = () => {
-      if (!carousel.matches(':hover') && window.innerWidth > 1024) {
-        return
-      }
+const onLeave = () => {
+  if (isOpen.value) return
+  if (!shadowRef.value || !lightRef.value) return
+  resetSlideSize()
+  gsap.to(shadowRef.value, {
+    '--shadow-pos-x': '0%',
+    '--shadow-size': '175% 70%',
+    '--shadow-start': '20%',
+    '--shadow-end': '50%',
+    delay: 0.3,
+    duration: 0.3,
+    ease: 'power2.inOut',
+  })
+  gsap.to(lightRef.value, { opacity: 1, duration: 0.3 })
+  tl?.resume()
+}
 
-      if (window.innerWidth > 1024) {
-        gsap.to(titleSlide, {
-          translateX: '-2rem',
-          duration: 0.3,
-          ease: 'power2.out',
-        })
-      }
-      gsap.to(activeSlide.value, {
-        scale: window.innerWidth > 1024 ? 1.25 : 1.15,
-        borderColor: '#FCFAFA',
-        zIndex: 10,
-        duration: 0.3,
-      })
-      if (window.innerWidth > 1024) {
-        gsap.to(otherSlides.value, {
-          opacity: 0.5,
-          duration: 0.3,
-        })
-      }
-    }
+/* ────────────────────────────
+   Swiper init callback
+──────────────────────────────*/
+const onSwiperInit = (swiper: any) => {
+  swiperInstance.value = swiper
 
-    const hugerSlide = () => {
-      slideDisplayRef.value!.innerHTML = activeSlide.value!.innerHTML
-      gsap.to(slideDisplayRef.value, {
-        opacity: 1,
-        duration: 0.3,
-      })
+  swiper.slideToLoop(1, 0)
 
-      gsap.to(otherSlides.value, {
-        opacity: 0.5,
-        duration: 0.3,
-      })
-    }
+  animateSlides() // premier rendu
 
-    const resetSlideSize = () => {
-      gsap.to(slideDisplayRef.value, {
+  // timeline GSAP (une seule fois)
+  if (!tl) {
+    tl = gsap
+      .timeline({ repeat: -1 })
+      .to(lightRef.value, {
         opacity: 0,
         duration: 0.3,
       })
-      setTimeout(() => {
-        slideDisplayRef.value!.innerHTML = ''
-      }, 300)
-      if (window.innerWidth > 1024) {
-        gsap.to(titleSlide, {
-          opacity: 1,
-          translateX: '0rem',
-          duration: 0.3,
-          ease: 'power2.out',
-        })
-      }
-      if (window.innerWidth > 1024) {
-        gsap.to(activeSlide.value, {
-          scale: 1,
-          opacity: 1,
-          zIndex: 1,
-          borderColor: 'transparent',
-          duration: 0.3,
-        })
-      }
-      gsap.to(otherSlides.value, {
-        scale: 1,
-        opacity: 1,
-        zIndex: 1,
-        borderColor: 'transparent',
-        duration: 0.3,
-      })
-    }
-
-    /* --- Animation GSAP cyclique --- */
-    const interval = 5
-    let forward = true
-
-    const tl = gsap.timeline({ repeat: -1, paused: false })
-    tl.to(light, { opacity: 0, duration: 0.3 })
-      .add(() => {
-        const idx = splide.index
-        const last = splide.length - opts.perPage
-
-        if (forward) {
-          idx >= last ? ((forward = false), splide.go('<')) : splide.go('>')
-        } else {
-          idx <= 0 ? ((forward = true), splide.go('>')) : splide.go('<')
-        }
-        document.documentElement.style.setProperty('--title-offset', forward ? '1' : '-1')
-
-        splide.on('moved', (newIdx: number) => {
-          activeSlide.value = document.querySelector('.splide__slide.is-next')
-          otherSlides.value = document.querySelectorAll('.splide__slide:not(.is-next)')
-          titleSlideRef.value = document.getElementById('slide_title')
-
-          resetSlideSize()
-
-          activeIndex.value = newIdx
-
-          biggerSlide()
-        })
-      })
-      .to(light, {
+      .add(() => swiperInstance.value?.slideNext()) // ↦ toujours en avant
+      .to(lightRef.value, {
         delay: 0.5,
         opacity: 1,
-        duration: interval / 3,
+        duration: 5 / 3,
       })
-      .to(light, {
+      .to(lightRef.value, {
         opacity: 1,
-        duration: (interval * 2) / 3,
+        duration: (5 * 2) / 3,
       })
+  }
+}
 
-    /* --- Hover interactions --- */
-    const onEnter = () => {
-      gsap.to(shadow, {
-        '--shadow-pos-x': '50%',
-        '--shadow-size': '365% 75%',
-        '--shadow-start': '35%',
-        '--shadow-end': '50%',
-        duration: 0.3,
-        ease: 'power2.out',
-      })
-      gsap.to(light, { opacity: 0, duration: 0.3 })
-      tl.pause()
+/* ────────────────────────────
+   Resize listener
+──────────────────────────────*/
+const onResize = () => {
+  const s = swiperInstance.value
+  if (!s) return
+  Object.assign(s.params, baseSwiperParams())
+  swiperParams.value = baseSwiperParams() // reactive pour les props
+  s.update()
+}
 
-      biggerSlide()
-    }
+/* ────────────────────────────
+   Lifecycle
+──────────────────────────────*/
+onMounted(() => {
+  // Hover & touch
+  const c = carouselRef.value
+  c?.addEventListener('mouseenter', onEnter)
+  c?.addEventListener('touchstart', onEnter)
+  c?.addEventListener('mouseleave', onLeave)
+  c?.addEventListener('touchend', onLeave)
+  c?.addEventListener('touchcancel', onLeave)
 
-    const onLeave = () => {
-      if (isOpen.value) {
-        return
-      }
-      resetSlideSize()
-
-      gsap.to(shadow, {
-        '--shadow-pos-x': '0%',
-        '--shadow-size': '175% 70%',
-        '--shadow-start': '20%',
-        '--shadow-end': '50%',
-        delay: 0.3,
-        duration: 0.3,
-        ease: 'power2.inOut',
-      })
-
-      tl.resume()
-    }
-
-    /* --- Événements --- */
-    carousel.addEventListener('mouseenter', onEnter)
-    carousel.addEventListener('touchstart', onEnter)
-    carousel.addEventListener('mouseleave', onLeave)
-    carousel.addEventListener('touchend', onLeave)
-    carousel.addEventListener('touchcancel', onLeave)
-
-    carousel.addEventListener('click', () => {
-      isOpen.value = true
-      if (isOpen.value) {
-        hugerSlide()
-      } else {
-        resetSlideSize()
-      }
-    })
-
-    slideDisplayRef.value!.addEventListener('click', () => {
-      isOpen.value = false
-      resetSlideSize()
-    })
+  // Click
+  c?.addEventListener('click', () => {
+    isOpen.value ? resetSlideSize() : hugerSlide()
+    isOpen.value = !isOpen.value
   })
+  slideDisplayRef.value?.addEventListener('click', () => {
+    isOpen.value = false
+    resetSlideSize()
+  })
+
+  window.addEventListener('resize', onResize)
 })
+
+onUnmounted(() => {
+  window.removeEventListener('resize', onResize)
+  tl?.kill()
+})
+
+/* ────────────────────────────
+   Watchers
+──────────────────────────────*/
+watch(activeIndexInTitles, () => {
+  animateSlides() // seul besoin visuel
+})
+
+const onSlideChange = (s: any) => {
+  activeIndexInTitles.value = s.realIndex // realIndex = vrai index (0..n-1)
+}
 </script>
 
 <template>
   <section id="habits-section">
     <div class="container">
-      <!-- TITRE + SOUS-TITRE -->
+      <!-- TITRE -->
       <div class="content">
         <h2>
           Gardez les mêmes <span class="gradient-text">habitudes</span> dans un espace de gestion
           <span class="gradient-text">simple</span>
         </h2>
 
-        <Transition
+        <!-- <Transition
           name="fade"
           mode="out-in"
-        >
+        > -->
+        <div class="slides-titles">
           <h3
-            :key="activeIndex"
+            v-for="(txt, idx) in [slideTitle1, slideTitle2, slideTitle3]"
+            :key="idx"
             ref="titleSlideRef"
-            id="slide_title"
-            v-html="slideTitles[activeIndex]"
-          ></h3>
-        </Transition>
+            v-html="txt"
+            :class="['title', { active: idx === activeIndexInTitles % 3 }]"
+            aria-live="polite"
+          />
+        </div>
+        <!-- </Transition> -->
       </div>
 
-      <!-- ILLUSTRATION / CAROUSEL -->
+      <!-- CAROUSEL -->
       <div class="illustration">
         <div
           class="carousel"
           ref="carouselRef"
         >
-          <Splide
-            ref="splideRef"
-            :options="opts"
-            aria-label="Carrousel vertical"
+          <Swiper
+            ref="swiperElRef"
+            v-bind="swiperParams"
+            @swiper="onSwiperInit"
+            @slideChange="onSlideChange"
+            class="my-swiper"
           >
-            <SplideSlide>
-              <!-- <Messagerie
-                class="slide-page-svg"
-                title="Page messagerie"
-                desc="Pages permettant à l'hôte de discuter avec les voyageurs."
-              /> -->
-              <img
-                class="slide-page-svg"
-                src="@/assets/media/images/messagerie.png"
-                alt="Page messagerie"
-              />
-            </SplideSlide>
-            <SplideSlide>
-              <!-- <DashboardDetailLogement
-                class="slide-page-svg"
-                title="Page de gestion des réservations"
-                desc="Page permettant de gérer et de visualiser différentes données sur les reservations (paiements, dates, statistiques, arrivée, etc)."
-              /> -->
+            <SwiperSlide>
               <img
                 class="slide-page-svg"
                 src="@/assets/media/images/dashboard-detail-logement.png"
-                alt="Page de gestion des réservations"
+                alt="Page réservations"
               />
-            </SplideSlide>
-            <SplideSlide>
-              <!-- <AnnonceReservation
-                class="slide-page-svg"
-                title="Page de paiement"
-                desc="Étape de paiement sur l'annonce mise en ligne par l'hôte. Le client peut payer de manière simple sécurisée par divers moyens (CB, Sepa, espèce avec acompte, etc)."
-              /> -->
+            </SwiperSlide>
+            <SwiperSlide>
               <img
                 class="slide-page-svg"
                 src="@/assets/media/images/annonce-reservation.png"
-                alt="Page de paiement"
+                alt="Page paiement"
               />
-            </SplideSlide>
-            <SplideSlide>
-              <!-- <Messagerie
-                class="slide-page-svg"
-                title="Page messagerie"
-                desc="Page de gestion des messages de l'hôte"
-              /> -->
+            </SwiperSlide>
+            <SwiperSlide>
               <img
                 class="slide-page-svg"
                 src="@/assets/media/images/messagerie.png"
                 alt="Page messagerie"
               />
-            </SplideSlide>
-            <SplideSlide>
-              <!-- <DashboardDetailLogement
-                class="slide-page-svg"
-                title="Page de gestion des réservations"
-                desc="Page permettant de gérer et de visualiser différentes données sur les reservations (paiements, dates, statistiques, arrivée, etc)."
-              /> -->
+            </SwiperSlide>
+            <SwiperSlide>
               <img
                 class="slide-page-svg"
                 src="@/assets/media/images/dashboard-detail-logement.png"
-                alt="Page de gestion des réservations"
+                alt="Page réservations"
               />
-            </SplideSlide>
-          </Splide>
+            </SwiperSlide>
+            <SwiperSlide>
+              <img
+                class="slide-page-svg"
+                src="@/assets/media/images/annonce-reservation.png"
+                alt="Page paiement"
+              />
+            </SwiperSlide>
+            <SwiperSlide>
+              <img
+                class="slide-page-svg"
+                src="@/assets/media/images/messagerie.png"
+                alt="Page messagerie"
+              />
+            </SwiperSlide>
+          </Swiper>
 
           <!-- EFFETS DE LUMIÈRE -->
           <span
@@ -364,11 +336,12 @@ onMounted(() => {
         </div>
       </div>
     </div>
+
+    <!-- Slide en grand -->
     <div
       ref="slideDisplayRef"
       class="slide-display"
-    >
-    </div>
+    ></div>
   </section>
 </template>
 
@@ -379,17 +352,14 @@ onMounted(() => {
     opacity 0.15s ease,
     top 0.15s ease !important;
 }
-
 .fade-enter-from {
   opacity: 0;
   top: calc(var(--title-offset) * 30px);
 }
-
 .fade-leave-to {
   opacity: 0;
   top: calc((var(--title-offset) * 30px) * -1);
 }
-
 .fade-enter-to,
 .fade-leave-from {
   opacity: 1;

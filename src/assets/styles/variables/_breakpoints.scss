@@ -132,20 +132,22 @@ $selected-sides: map.get($side-map, $sides);
     $value: map.get($max-widths, $label);
     $max-value: map.get($max-widths, $max);
 
-    @include min-width($label) {
+    @if $label !=xs {
+      @include min-width($label) {
 
-      @if $max !=null {
-        @if $value >$max-value {
-          max-width: $max-value;
+        @if $max !=null {
+          @if $value >$max-value {
+            max-width: $max-value;
+          }
+
+          @else {
+            max-width: $value;
+          }
         }
 
         @else {
           max-width: $value;
         }
-      }
-
-      @else {
-        max-width: $value;
       }
     }
   }

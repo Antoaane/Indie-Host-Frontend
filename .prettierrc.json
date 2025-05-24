@@ -1,14 +1,17 @@
 {
-   "$schema": "https://json.schemastore.org/prettierrc",
-   "semi": false,
-   "singleQuote": true,
-   "printWidth": 999,
-   "singleAttributePerLine": true,
-   "vueMaxAttributesPerLine": {
-      "singleline": 1,
-      "multiline": 1
-   },
-   "htmlWhitespaceSensitivity": "strict",
-   "tabWidth": 2,
-   "useTabs": false
+  "$schema": "https://json.schemastore.org/prettierrc",
+  "semi": false,
+  "singleQuote": true,
+  "printWidth": 999,
+  "singleAttributePerLine": true,
+  "vueMaxAttributesPerLine": {
+    "singleline": 1,
+    "multiline": 1
+  },
+  "htmlWhitespaceSensitivity": "strict",
+  "tabWidth": 2,
+  "useTabs": false,
+  "plugins": ["prettier-plugin-multiline-arrays"],
+  "multilineArraysWrapThreshold": 0,
+  "multilineArraysLinePattern": "1"
 }

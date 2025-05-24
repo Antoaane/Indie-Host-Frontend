@@ -5,6 +5,11 @@ import { createPinia } from 'pinia'
 import '@/assets/styles/main.scss'
 import VueSplide from '@splidejs/vue-splide'
 import '@splidejs/vue-splide/css'
+
+import 'swiper/css'
+import 'swiper/css/pagination'
+import 'swiper/css/navigation'
+
 import LenisVue from 'lenis/vue'
 import { createHead } from '@unhead/vue/client'
 
