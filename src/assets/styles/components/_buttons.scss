@@ -1,16 +1,58 @@
 /* File: src/assets/styles/components/_buttons.scss */
 
+@use "sass:map";
 @use "@/assets/styles/variables/globals" as *;
 @use '@/assets/styles/variables/borders' as borders;
 @use '@/assets/styles/variables/animations' as *;
 
-@mixin primary($cta: false, $color: black) {
+// Map des thèmes couleurs bouton (valeurs personnalisables)
+$button-themes: (
+  white: (text-color: $secondary,
+    bg-color: $accent,
+    outline-opacity: 0.1,
+    outline-color: $secondary,
+    icon-color: $secondary,
+
+    hover-icon-color: $accent,
+    hover-text-color: $accent,
+    hover-bg-color: $secondary,
+    hover-outline-opacity: 0.75,
+    hover-outline-color: $accent,
+  ),
+  light: (text-color: $secondary,
+    bg-color: $accent,
+    outline-opacity: 0.5,
+    outline-color: $accent,
+    icon-color: $secondary,
+
+    hover-icon-color: $accent,
+    hover-text-color: $accent,
+    hover-bg-color: $secondary,
+    hover-outline-opacity: 0.75,
+    hover-outline-color: $accent,
+  ),
+  black: (text-color: $accent,
+    bg-color: $secondary,
+    outline-opacity: 0.5,
+    outline-color: $accent,
+    icon-color: $accent,
+
+    hover-icon-color: $secondary,
+    hover-text-color: $secondary,
+    hover-bg-color: $accent,
+    hover-outline-opacity: 0.75,
+    hover-outline-color: $accent,
+  ),
+);
+
+// Mixin bouton primaire dynamique
+@mixin primary($cta: false, $theme: black) {
+  $colors: map.get($button-themes, $theme);
+
   width: max-content;
   display: block;
-
   position: relative;
   z-index: 1;
-
   list-style: none;
 
   @include transition;
@@ -37,41 +79,16 @@
     border-radius: borders.$rounded-sm;
     box-shadow: 0px 1px 3px 2px rgba(0, 0, 0, 0.1);
 
-    @if $color ==white {
-      color: $secondary;
-      background-color: $accent;
-      outline: 3px solid rgba($secondary, 0.1);
+    color: map.get($colors, text-color);
+    background-color: map.get($colors, bg-color);
+    outline: 3px solid rgb(map.get($colors, outline-color), map.get($colors, outline-opacity));
 
-      &>* {
-        color: $secondary;
-        stroke: $secondary;
-      }
-    }
-
-    @else if $color ==light {
-      color: $secondary;
-      background-color: $accent;
-      outline: 3px solid rgba($accent, 0.5);
-
-      &>* {
-        color: $secondary;
-        stroke: $secondary;
-      }
-    }
-
-    @else {
-      color: $accent;
-      background-color: $secondary;
-      outline: 3px solid rgba($accent, 0.5);
-
-      &>* {
-        color: $accent;
-        stroke: $accent;
-      }
+    &>* {
+      color: map.get($colors, icon-color);
+      stroke: map.get($colors, icon-color);
     }
   }
 
-  // Gradient shadow (::after)
   @if $cta {
     &::after {
       content: '';
@@ -118,33 +135,35 @@
   }
 
   &:hover {
-
     &>* {
-      @if $color ==black {
-        color: $secondary;
-        stroke: $secondary;
 
-        background-color: $accent;
-        outline: 3px solid rgba($accent, 0.75);
+      // Gestion hover spécifique selon thème
+      // @if $theme ==black {
+      color: map.get($button-themes, $theme, hover-text-color);
+      stroke: map.get($button-themes, $theme, hover-outline-color);
+      background-color: map.get($button-themes, $theme, hover-bg-color);
+      outline: 3px solid rgba(map.get($button-themes, $theme, hover-outline-color),
+          map.get($button-themes, $theme, hover-outline-opacity));
 
-        &>* {
-          color: $secondary;
-          stroke: $secondary;
-        }
+      &>* {
+        color: map.get($button-themes, $theme, hover-icon-color);
+        stroke: map.get($button-themes, $theme, hover-icon-color);
       }
 
-      @else {
-        color: $accent;
-        stroke: $accent;
+      // }
 
-        background-color: $secondary;
-        outline: 3px solid rgba($accent, 0.75);
+      // @else {
+      //   color: map.get($button-themes, black, text-color);
+      //   stroke: map.get($button-themes, black, text-color);
+      //   background-color: map.get($button-themes, black, bg-color);
+      //   outline: 3px solid rgb(map.get($button-themes, black, hover-outline-color),
+      //       map.get($button-themes, black, hover-outline-opacity));
 
-        &>* {
-          color: $accent;
-          stroke: $accent;
-        }
-      }
+      //   &>* {
+      //     color: map.get($button-themes, black, icon-color);
+      //     stroke: map.get($button-themes, black, icon-color);
+      //   }
+      // }
 
       @if not $cta {
         box-shadow: 0px 2px 4px 3px rgba(0, 0, 0, 0.2);
@@ -163,7 +182,10 @@
   }
 }
 
-@mixin secondary {
+// Bouton secondaire inchangé (peut aussi être refactoré avec map)
+@mixin secondary($theme: white) {
+  $colors: map.get($button-themes, $theme);
+
   list-style: none;
   display: block;
 
@@ -178,12 +200,11 @@
     padding: 0.4rem 1rem 0.5rem 1rem;
 
     font-size: 1rem;
-    text-decoration: none;
-    color: $secondary;
-
     text-decoration: underline;
     text-underline-offset: 0.3rem;
     text-decoration-thickness: 0.075rem;
+
+    color: map.get($colors, text-color);
 
     @include transition;
   }
@@ -225,7 +246,9 @@
   }
 }
 
-@mixin checkbox($color: white) {
+@mixin checkbox($theme: white) {
+  $colors: map.get($button-themes, $theme);
+
   cursor: pointer;
   appearance: none;
 
@@ -237,31 +260,40 @@
 
   border-radius: calc(borders.$rounded-xs);
 
-  @if $color ==white {
-    background-color: $accent;
-    border: 2px solid $secondary;
-    outline: 2px solid $accent;
-  }
+  background-color: map.get($colors, bg-color);
+  border: 2px solid map.get($colors, text-color);
+  outline: 2px solid map.get($colors, bg-color);
 
-  @else if $color ==black {
-    background-color: $secondary;
-    border: 2px solid $accent;
-    outline: 2px solid $secondary;
-  }
+  // @if $color ==white {
+  //   background-color: $accent;
+  //   border: 2px solid $secondary;
+  //   outline: 2px solid $accent;
+  // }
+
+  // @else if $color ==black {
+  //   background-color: $secondary;
+  //   border: 2px solid $accent;
+  //   outline: 2px solid $secondary;
+  // }
 
   @include transition;
 
   &:checked {
-    @if $color ==white {
-      background-color: $secondary;
-      border-color: $accent;
-      outline-color: $secondary;
-    }
 
-    @else if $color ==black {
-      background-color: $accent;
-      border-color: $secondary;
-      outline-color: $accent;
-    }
+    background-color: map.get($colors, text-color);
+    border-color: map.get($colors, bg-color);
+    outline-color: map.get($colors, text-color);
+
+    // @if $color ==white {
+    //   background-color: $secondary;
+    //   border-color: $accent;
+    //   outline-color: $secondary;
+    // }
+
+    // @else if $color ==black {
+    //   background-color: $accent;
+    //   border-color: $secondary;
+    //   outline-color: $accent;
+    // }
   }
 }
