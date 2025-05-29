@@ -24,64 +24,64 @@ const threshold = 40
 const visibleOffset = 1
 const isDesktop = () => window.innerWidth > 1025
 
-onMounted(() => {
-  if (!isDesktop()) return
+// onMounted(() => {
+//   if (!isDesktop()) return
 
-  sections.value = Array.from(document.querySelectorAll('section')).filter((el) => !el.classList.contains('no-snap')) as HTMLElement[]
+//   sections.value = Array.from(document.querySelectorAll('section')).filter((el) => !el.classList.contains('no-snap')) as HTMLElement[]
 
-  // Scroll detection
-  window.addEventListener('wheel', handleWheel, { passive: false })
-  window.addEventListener('scroll', detectCurrentSection, { passive: true })
-})
+//   // Scroll detection
+//   window.addEventListener('wheel', handleWheel, { passive: false })
+//   window.addEventListener('scroll', detectCurrentSection, { passive: true })
+// })
 
-onBeforeUnmount(() => {
-  window.removeEventListener('wheel', handleWheel)
-  window.removeEventListener('scroll', detectCurrentSection)
-})
+// onBeforeUnmount(() => {
+//   window.removeEventListener('wheel', handleWheel)
+//   window.removeEventListener('scroll', detectCurrentSection)
+// })
 
-function handleWheel(e: WheelEvent) {
-  if (!isDesktop() || Math.abs(e.deltaY) < threshold) return
+// function handleWheel(e: WheelEvent) {
+//   if (!isDesktop() || Math.abs(e.deltaY) < threshold) return
 
-  const direction = e.deltaY > 0 ? 1 : -1
-  const next = current.value + direction
-  const nextSection = sections.value[next]
-  if (!nextSection) return
+//   const direction = e.deltaY > 0 ? 1 : -1
+//   const next = current.value + direction
+//   const nextSection = sections.value[next]
+//   if (!nextSection) return
 
-  const rect = nextSection.getBoundingClientRect()
-  const isVisible = direction > 0 ? rect.top < window.innerHeight - visibleOffset : rect.bottom > visibleOffset
+//   const rect = nextSection.getBoundingClientRect()
+//   const isVisible = direction > 0 ? rect.top < window.innerHeight - visibleOffset : rect.bottom > visibleOffset
 
-  if (!isVisible) return
+//   if (!isVisible) return
 
-  e.preventDefault()
-  current.value = next
+//   e.preventDefault()
+//   current.value = next
 
-  lenis.value?.scrollTo(nextSection, {
-    duration: 0.75,
-    easing: (t) => t * (2 - t),
-    lock: true,
-  })
-}
+//   lenis.value?.scrollTo(nextSection, {
+//     duration: 0.75,
+//     easing: (t) => t * (2 - t),
+//     lock: true,
+//   })
+// }
 
-// 🔄 Sync current section from natural scroll
-function detectCurrentSection() {
-  if (!isDesktop()) return
+// // 🔄 Sync current section from natural scroll
+// function detectCurrentSection() {
+//   if (!isDesktop()) return
 
-  const scrollY = window.scrollY
-  let closestIndex = 0
-  let smallestDistance = Infinity
+//   const scrollY = window.scrollY
+//   let closestIndex = 0
+//   let smallestDistance = Infinity
 
-  sections.value.forEach((section, index) => {
-    const offsetTop = section.offsetTop
-    const distance = Math.abs(offsetTop - scrollY)
+//   sections.value.forEach((section, index) => {
+//     const offsetTop = section.offsetTop
+//     const distance = Math.abs(offsetTop - scrollY)
 
-    if (distance < smallestDistance) {
-      smallestDistance = distance
-      closestIndex = index
-    }
-  })
+//     if (distance < smallestDistance) {
+//       smallestDistance = distance
+//       closestIndex = index
+//     }
+//   })
 
-  current.value = closestIndex
-}
+//   current.value = closestIndex
+// }
 </script>
 
 <template>
