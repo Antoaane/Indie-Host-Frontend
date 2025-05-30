@@ -31,17 +31,20 @@ const activeIndexInTitles = ref(0)
    Contenu & options
 ──────────────────────────────*/
 
-const slideTitle1 = `Gérez vos réservations dans un <strong>espace intuitif</strong>`
-const slideTitle2 = `Vos voyageurs réservent <strong>simplement</strong> et en <strong>toute sécurité</strong>`
-const slideTitle3 = `Centralisez vos messages <strong>sans effort</strong>`
+const slideTitle1 = `Visualisez et téléchargez vos factures et vos performances <strong>en temps réel</strong>`
+const slideTitle2 = `Gérez vos réservations dans un <strong>espace intuitif</strong>`
+const slideTitle3 = `Vos voyageurs réservent <strong>simplement</strong> et en <strong>toute sécurité</strong>`
+const slideTitle4 = `Centralisez vos messages <strong>sans effort</strong>`
 
 const slideTitles = [
   slideTitle1,
   slideTitle2,
   slideTitle3,
-  slideTitle1,
-  slideTitle2,
-  slideTitle3,
+  slideTitle4,
+  // slideTitle1,
+  // slideTitle2,
+  // slideTitle3,
+  // slideTitle4,
 ]
 
 const baseSwiperParams = () => ({
@@ -121,10 +124,10 @@ const resetSlideSize = () => {
 const onEnter = () => {
   if (!shadowRef.value || !lightRef.value) return
   gsap.to(shadowRef.value, {
-    '--shadow-pos-x': '50%',
-    '--shadow-size': '365% 75%',
-    '--shadow-start': '35%',
     '--shadow-end': '50%',
+    '--shadow-start': '30%',
+    '--shadow-size': '300% 50%',
+    '--shadow-pos-x': '50%',
     duration: 0.3,
     ease: 'power2.out',
   })
@@ -139,10 +142,9 @@ const onLeave = () => {
   resetSlideSize()
   gsap.to(shadowRef.value, {
     '--shadow-pos-x': '0%',
-    '--shadow-size': '175% 70%',
+    '--shadow-size': '190% 50%',
     '--shadow-start': '20%',
     '--shadow-end': '50%',
-    delay: 0.3,
     duration: 0.3,
     ease: 'power2.inOut',
   })
@@ -239,26 +241,18 @@ const onSlideChange = (s: any) => {
     <div class="container">
       <!-- TITRE -->
       <div class="content">
-        <h2>
-          Gardez les mêmes <span class="gradient-text">habitudes</span> dans un espace de gestion
-          <span class="gradient-text">simple</span>
-        </h2>
+        <h2> Gardez les mêmes <span class="gradient-text">habitudes</span> </h2>
 
-        <!-- <Transition
-          name="fade"
-          mode="out-in"
-        > -->
         <div class="slides-titles">
           <h3
-            v-for="(txt, idx) in [slideTitle1, slideTitle2, slideTitle3]"
+            v-for="(txt, idx) in slideTitles"
             :key="idx"
             ref="titleSlideRef"
             v-html="txt"
-            :class="['title', { active: idx === activeIndexInTitles % 3 }]"
+            :class="['title', { active: idx === activeIndexInTitles % slideTitles.length }]"
             aria-live="polite"
           />
         </div>
-        <!-- </Transition> -->
       </div>
 
       <!-- CAROUSEL -->
@@ -277,6 +271,13 @@ const onSlideChange = (s: any) => {
             <SwiperSlide>
               <img
                 class="slide-page-svg"
+                src="@/assets/media/images/dashboard-vue-ensemble.png"
+                alt="Page réservations"
+              />
+            </SwiperSlide>
+            <SwiperSlide>
+              <img
+                class="slide-page-svg"
                 src="@/assets/media/images/dashboard-detail-logement.png"
                 alt="Page réservations"
               />
@@ -295,6 +296,13 @@ const onSlideChange = (s: any) => {
                 alt="Page messagerie"
               />
             </SwiperSlide>
+            <!-- <SwiperSlide>
+              <img
+                class="slide-page-svg"
+                src="@/assets/media/images/dashboard-vue-ensemble.png"
+                alt="Page réservations"
+              />
+            </SwiperSlide>
             <SwiperSlide>
               <img
                 class="slide-page-svg"
@@ -315,7 +323,7 @@ const onSlideChange = (s: any) => {
                 src="@/assets/media/images/messagerie.png"
                 alt="Page messagerie"
               />
-            </SwiperSlide>
+            </SwiperSlide> -->
           </Swiper>
 
           <!-- EFFETS DE LUMIÈRE -->
@@ -344,25 +352,3 @@ const onSlideChange = (s: any) => {
     ></div>
   </section>
 </template>
-
-<style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition:
-    opacity 0.15s ease,
-    top 0.15s ease !important;
-}
-.fade-enter-from {
-  opacity: 0;
-  top: calc(var(--title-offset) * 30px);
-}
-.fade-leave-to {
-  opacity: 0;
-  top: calc((var(--title-offset) * 30px) * -1);
-}
-.fade-enter-to,
-.fade-leave-from {
-  opacity: 1;
-  top: 0;
-}
-</style>

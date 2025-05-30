@@ -1,4 +1,4 @@
-/* File: src/assets/styles/pages/landing-page/benefits-section.scss */
+/* File: src/views/Landing/BenefitsSection/style.scss */
 
 @use "@/assets/styles/variables/globals" as *;
 
@@ -76,11 +76,8 @@
     --longer-side: calc(100% * 80 / 180);
     --shorter-side: calc(100% * 20 / 180);
 
-    $longer-side: calc(100% * 80 / 180);
-    $shorter-side: calc(100% * 20 / 180);
-
     width: 100%;
-    height: 35.5rem;
+    height: calc(40vh + 4.5rem);
 
     display: flex;
     justify-content: space-between;
@@ -113,8 +110,10 @@
         align-items: center;
 
         .logo-full {
-          min-width: 25rem;
-          height: 25%;
+          min-width: 25vw;
+          max-width: 25vw;
+          aspect-ratio: 17/5;
+
           transform: translateX(-7.5%);
         }
       }

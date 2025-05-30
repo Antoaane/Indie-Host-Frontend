@@ -1,4 +1,4 @@
-<!-- File: src/views/Landing/WhySection/BenefitsSection.vue -->
+<!-- File: src/views/Landing/BenefitsSection/index.vue -->
 
 <script setup lang="ts">
 // DEPS
@@ -33,7 +33,6 @@ const commissions = computed(() => {
 gsap.registerPlugin(ScrollTrigger)
 gsap.registerPlugin(CSSRulePlugin)
 let tl_indieHost: gsap.core.Timeline | null = null
-let tl_gains: gsap.core.Timeline | null = null
 
 // Animation & Size variables
 const longerSide = (100 * 80) / 180 // in percent
@@ -78,7 +77,6 @@ onMounted(() => {
       'start',
     )
     .to(
-      // block's after
       '.line',
       {
         transform: 'translateX(-50%) scaleX(1)',
@@ -89,7 +87,6 @@ onMounted(() => {
       'start',
     )
     .to(
-      // block's after
       '#plusvalue',
       {
         transform: 'translateX(0%)',
@@ -101,14 +98,14 @@ onMounted(() => {
       'start',
     )
 
-  // ScrollTrigger : lance l’anim’ à l’entrée dans le viewport
   ScrollTrigger.create({
     trigger: '#benefits-section',
-    start: 'top 10%', //
-    once: true,
-    onEnter: () => {
-      tl_indieHost?.play()
-    },
+    start: 'top top',
+    end: '+=150%',
+    pin: true,
+    scrub: 0.5,
+    animation: tl_indieHost,
+    anticipatePin: 1,
   })
 })
 
@@ -212,3 +209,7 @@ onUnmounted(() => {
     </div>
   </section>
 </template>
+
+<style lang="scss" scoped>
+@use '@/views/Landing/BenefitsSection/style.scss';
+</style>

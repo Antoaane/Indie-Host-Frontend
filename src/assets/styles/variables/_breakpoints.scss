@@ -121,7 +121,7 @@ $selected-sides: map.get($side-map, $sides);
 }
 
 
-@mixin container($max: xxl) {
+@mixin container($max: xxl, $additional-width: 0rem) {
   & {
     width: 100%;
   }
@@ -137,16 +137,16 @@ $selected-sides: map.get($side-map, $sides);
 
         @if $max !=null {
           @if $value >$max-value {
-            max-width: $max-value;
+            max-width: calc($max-value + $additional-width);
           }
 
           @else {
-            max-width: $value;
+            max-width: calc($value + $additional-width);
           }
         }
 
         @else {
-          max-width: $value;
+          max-width: calc($value + $additional-width);
         }
       }
     }
