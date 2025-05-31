@@ -2,8 +2,8 @@
 
 <script setup lang="ts">
 // Import composants
-import SlidesTitles from './components/SlidesTitles.vue'
-import Carousel from './components/Carousel.vue'
+import SlidesTitles from '@/views/Landing/HabitsSection/components/SlidesTitles.vue'
+import Carousel from '@/views/Landing/HabitsSection/components/Carousel.vue'
 </script>
 
 <template>
@@ -12,9 +12,14 @@ import Carousel from './components/Carousel.vue'
       <SlidesTitles />
       <Carousel />
     </div>
+    <!-- Slide en grand -->
+    <div
+      id="slideDisplayRef"
+      class="slide-display"
+    ></div>
   </section>
 </template>
 
-<style lang="scss" scoped>
-@use './style.scss';
-</style>
+<!-- <style lang="scss" scoped>
+@use '@/views/Landing/HabitsSection/style.scss';
+</style> -->

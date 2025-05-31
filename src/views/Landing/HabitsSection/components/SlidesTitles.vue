@@ -1,13 +1,13 @@
 <!-- File: src/views/Landing/HabitsSection/components/SlidesTitles.vue -->
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref } from 'vue'
 
-// Communiquer l’index actif via provide/inject ou props/events, selon besoin
+// Si besoin de communiquer l'index actif, tu peux utiliser un prop ou provide/inject
 const activeIndex = ref(0)
 
-// Titres à afficher
-const slideTitles = [
+// Titres à afficher (constantes)
+const slideTitles: string[] = [
   `Visualisez et téléchargez vos factures et vos performances <strong>en temps réel</strong>`,
   `Gérez vos réservations dans un <strong>espace intuitif</strong>`,
   `Vos voyageurs réservent <strong>simplement</strong> et en <strong>toute sécurité</strong>`,
