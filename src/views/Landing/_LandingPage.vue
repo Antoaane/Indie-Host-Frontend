@@ -11,7 +11,7 @@ import CustomizationSection from '@/views/Landing/CustomizationSection.vue'
 // import HabitsSection from '@/views/Landing/HabitsSection.vue'
 import HabitsSection from '@/views/Landing/HabitsSection/index.vue'
 import StrengthsSection from '@/views/Landing/StrengthsSection.vue'
-import UsageSection from '@/views/Landing/UsageSection.vue'
+import UsageSection from '@/views/Landing/UsageSection/index.vue'
 import JoinSection from '@/views/Landing/JoinSection.vue'
 import FaqSection from '@/views/Landing/FaqSection.vue'
 </script>

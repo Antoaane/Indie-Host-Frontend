@@ -37,6 +37,7 @@ const { nights, price, total, commissions } = useBookingCalc()
 @use '@/assets/styles/variables/globals' as *;
 
 #benefits-section {
+  height: 100vh !important;
   padding-top: calc(var(--gutter-spacing) + 70px);
 
   display: flex;

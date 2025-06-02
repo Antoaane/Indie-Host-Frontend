@@ -6,13 +6,21 @@
   --longer-side: calc(100% * 80 / 180);
   --shorter-side: calc(100% * 20 / 180);
 
-  width: 100%;
+  width: 200vw;
   // height: calc(40vh + 4.5rem);
   height: 100%;
 
   display: flex;
   justify-content: space-between;
   position: relative;
+  left: 50%;
+  transform: translateX(calc(-100%/4));
+
+  @include min-width(lg) {
+    width: 100%;
+    left: auto;
+    transform: none;
+  }
 
   #indiehost {
     width: 0%;

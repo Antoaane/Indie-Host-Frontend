@@ -1,8 +1,8 @@
-<!-- File: src/views/Landing/UsageSection.vue -->
+<!-- File: src/views/Landing/UsageSection/index.vue -->
 
 <script setup lang="ts">
 // DEPS
-import StepSection from '@/components/layouts/StepSection.vue'
+import StepSection from '@/views/Landing/UsageSection/components/StepSection.vue'
 
 // ASSETS
 import autoImportImg from '@/assets/media/images/auto-import.png'
@@ -53,6 +53,7 @@ import annonceReservationImg from '@/assets/media/images/annonce-reservation-2.p
       :illustration="brochureImg"
       illustrationTitle="Image de la brochure"
       illustrationAlt="Borchure comportant le guide d'arrivée et le QR code menant vers votre messagerie"
+      illustrationClass="brochure"
       class="no-halo"
     />
   </div>

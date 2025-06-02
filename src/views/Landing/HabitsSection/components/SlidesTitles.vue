@@ -83,10 +83,13 @@ onMounted(() => {
   gap: 1.5rem;
 
   position: relative;
+  z-index: -1;
 
   @include min-width(lg) {
     width: 50%;
     height: 100%;
+
+    z-index: 1;
   }
 
   h2 {
