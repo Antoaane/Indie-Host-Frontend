@@ -31,7 +31,7 @@ div:has(> .step-section) {
         border-left: 1px solid;
 
         @include min-width(lg) {
-          flex: 1 0;
+          flex: 0.55 0;
           height: 100%;
 
           flex-direction: column;
@@ -60,11 +60,11 @@ div:has(> .step-section) {
           -webkit-text-fill-color: transparent;
 
           @include min-width(xs) {
-            font-size: 6rem;
+            font-size: 4rem;
           }
 
           @include min-width(sm) {
-            font-size: 7rem;
+            font-size: 5rem;
           }
 
           @include min-width(md) {
@@ -81,7 +81,11 @@ div:has(> .step-section) {
         }
 
         &>div {
-          padding-inline: 2rem;
+          padding-left: 1rem;
+
+          @include min-width(sm) {
+            padding-inline: 2rem;
+          }
 
           @include min-width(lg) {
             padding-inline: 4rem;
@@ -90,12 +94,12 @@ div:has(> .step-section) {
           h2 {
             margin: 1rem 0;
             padding: 0 !important;
-            @include h2-title($accent, false);
+            @include h3-title($accent, false);
           }
 
           p {
             margin: 0;
-            @include base-text($accent, false);
+            @include little-text($accent, false);
           }
         }
       }
@@ -109,7 +113,7 @@ div:has(> .step-section) {
         position: relative;
 
         @include min-width(lg) {
-          flex: 1 0;
+          flex: .45 0;
           width: 50vw;
           height: 100%;
         }
@@ -132,8 +136,6 @@ div:has(> .step-section) {
 
             transform: translateY(-50%);
           }
-
-          &:has(:not(.no-halo)) {}
         }
 
         .halo-png {

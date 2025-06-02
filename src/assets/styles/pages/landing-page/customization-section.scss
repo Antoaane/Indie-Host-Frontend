@@ -6,9 +6,9 @@
 
   .container {
     display: flex;
-    flex-direction: column-reverse;
+    flex-direction: column;
     align-items: center;
-    gap: 2rem;
+    gap: 1rem;
 
     @include gutters(padding, inline, 2);
 
@@ -48,7 +48,7 @@
       justify-content: center;
 
       @include min-width(lg) {
-        justify-content: start;
+        justify-content: flex-end;
       }
 
       &>div {

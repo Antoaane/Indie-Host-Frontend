@@ -7,7 +7,8 @@
   --shorter-side: calc(100% * 20 / 180);
 
   width: 100%;
-  height: calc(40vh + 4.5rem);
+  // height: calc(40vh + 4.5rem);
+  height: 100%;
 
   display: flex;
   justify-content: space-between;
@@ -140,6 +141,7 @@
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
 
+          font-size: 1.75cqw !important;
           font-weight: 800;
           @include h3-title();
         }
@@ -184,16 +186,16 @@
         font-family: 'Fustat', sans-serif;
         font-weight: 700;
         color: $accent;
-        font-size: 2.25rem;
+        font-size: 4cqw;
         text-align: center;
 
-        @include min-width(md) {
-          font-size: 2.5rem;
-        }
+        // @include min-width(md) {
+        //   font-size: 2.5rem;
+        // }
 
-        @include min-width(lg) {
-          font-size: 3.5rem;
-        }
+        // @include min-width(lg) {
+        //   font-size: 3.5rem;
+        // }
       }
     }
 
@@ -235,43 +237,53 @@
       background: radial-gradient(100% 133.33% at 0% 50%, rgba(var(--gains-color), 0.4) 0%, rgba(var(--gains-color), 0) 100%);
 
       .block {
-        position: relative;
+        width: 100%;
+        container-type: inline-size;
 
         p {
           margin: 0 0 -0.5rem 0 !important;
           padding: 0 !important;
+
           text-align: center;
+          font-size: 12cqw !important;
+
           @include h4-title($accent);
 
           .focus {
             margin: 0 !important;
             padding: 0 !important;
 
+            font-size: 22cqw !important;
+
             @include h2-title($accent);
           }
 
           .unfocus {
-            opacity: 0.5;
+            opacity: 1;
+            position: relative;
+
+            font-size: 12cqw !important;
+
             @include h4-title($accent);
+
+            .line {
+              content: '';
+              width: 105%;
+              height: 3px;
+              background-color: $accent;
+
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -35%) scaleX(0);
+              transform-origin: left;
+            }
           }
         }
 
         #plusvalue {
           transform: translateX(-100%);
           opacity: 0;
-        }
-
-        .line {
-          content: '';
-          width: 105%;
-          height: 3px;
-          background-color: $accent;
-
-          position: absolute;
-          top: 54px;
-          left: 50%;
-          transform: translateX(-50%) scaleX(0);
-          transform-origin: left;
         }
       }
     }
@@ -293,6 +305,7 @@
         margin: 0 !important;
         padding: 0 !important;
 
+        font-size: 2.75cqw !important;
         font-weight: 700 !important;
         font-family: 'outfit', sans-serif !important;
 

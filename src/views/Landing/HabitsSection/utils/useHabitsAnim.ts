@@ -1,8 +1,13 @@
 // File: src/views/Landing/HabitsSection/utils/useHabitsAnim.ts
 
+// DEPS
 import type { Ref } from 'vue'
 import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { activeSlideIndex } from '@/views/Landing/HabitsSection/stores/slider'
 import gsap from 'gsap'
+
+// UTILS
+import { vp } from '@/utils/viewport'
 
 interface UseHabitsAnimParams {
   swiperInstance: Ref<any | null>
@@ -19,27 +24,24 @@ export function useHabitsAnim({
 }: UseHabitsAnimParams) {
   let tl: gsap.core.Timeline | null = null
   const isOpen = { value: false } // état interne (peut être exposé via paramètre si besoin)
-  const activeIndexInTitles = ref(0)
   const slideDisplayRef = ref<HTMLElement | null>(null)
 
   const animateSlides = () => {
     const s = swiperInstance.value
 
     if (!s) {
-      console.log('❌ [animateSlides] swiperInstance.value NOT found')
+      // console.log('❌ [animateSlides] swiperInstance.value NOT found')
       return
     } else {
-      console.log('✅ [animateSlides] swiperInstance.value found', s)
+      // console.log('✅ [animateSlides] swiperInstance.value found', s)
     }
 
-    // if (!carouselRef.value?.matches(':hover')) {
-    //   console.log('❌ [animateSlides] carouselRef NOT hovered or undefined', carouselRef.value)
-    //   if (window.innerWidth > 1024) return
-    // } else {
-    //   console.log('✅ [animateSlides] carouselRef hovered')
-    // }
-
-    if (!s || !carouselRef.value?.matches(':hover')) return
+    if (!carouselRef.value?.matches(':hover')) {
+      // console.log('❌ [animateSlides] carouselRef NOT hovered or undefined', carouselRef.value)
+      if (vp.lg.value) return
+    } else {
+      // console.log('✅ [animateSlides] carouselRef hovered')
+    }
 
     s.slides.forEach((slide: HTMLElement) => {
       gsap.to(slide, {
@@ -54,37 +56,37 @@ export function useHabitsAnim({
     const activeSlide: HTMLElement = s.slides[s.activeIndex]
 
     gsap.to(activeSlide, {
-      scale: window.innerWidth > 1024 ? 1.25 : 1.15,
+      scale: vp.lg.value ? 1.25 : 1,
       borderColor: '#FCFAFA',
       zIndex: 10,
       duration: 0.3,
     })
 
-    if (window.innerWidth > 1024) {
+    if (vp.lg.value) {
       s.slides.forEach((slide: HTMLElement, i: number) => {
         if (i !== s.activeIndex) gsap.to(slide, { opacity: 0.5, duration: 0.3 })
       })
     }
 
-    activeIndexInTitles.value = s.realIndex ?? s.activeIndex
-    console.log('➡️✅ [animateSlides] activeIndexInTitles updated:', activeIndexInTitles.value)
+    activeSlideIndex.value = s.realIndex ?? s.activeIndex
+    // console.log('➡️✅ [animateSlides] activeSlideIndex updated:', activeSlideIndex.value)
   }
 
   const hugerSlide = () => {
     const swiper = swiperInstance.value
 
     if (!swiper) {
-      console.log('❌ [hugerSlide] swiperInstance.value NOT found')
+      // console.log('❌ [hugerSlide] swiperInstance.value NOT found')
       return
     } else {
-      console.log('✅ [hugerSlide] swiperInstance.value found')
+      // console.log('✅ [hugerSlide] swiperInstance.value found')
     }
 
     if (!slideDisplayRef?.value) {
-      console.log('❌ [hugerSlide] slideDisplayRef NOT found')
+      // console.log('❌ [hugerSlide] slideDisplayRef NOT found')
       return
     } else {
-      console.log('✅ [hugerSlide] slideDisplayRef found')
+      // console.log('✅ [hugerSlide] slideDisplayRef found')
     }
 
     if (!swiper || !slideDisplayRef?.value) return
@@ -97,17 +99,17 @@ export function useHabitsAnim({
     slideDisplayRef.value = document.getElementById('slideDisplayRef')
 
     if (!swiper) {
-      console.log('❌ [resetSlideSize] swiperInstance.value NOT found')
+      // console.log('❌ [resetSlideSize] swiperInstance.value NOT found')
       return
     } else {
-      console.log('✅ [resetSlideSize] swiperInstance.value found')
+      // console.log('✅ [resetSlideSize] swiperInstance.value found')
     }
 
     if (!slideDisplayRef?.value) {
-      console.log('❌ [resetSlideSize] slideDisplayRef NOT found')
+      // console.log('❌ [resetSlideSize] slideDisplayRef NOT found')
       return
     } else {
-      console.log('✅ [resetSlideSize] slideDisplayRef found')
+      // console.log('✅ [resetSlideSize] slideDisplayRef found')
     }
 
     if (!swiper || !slideDisplayRef?.value) return
@@ -115,7 +117,7 @@ export function useHabitsAnim({
 
     setTimeout(() => {
       if (slideDisplayRef.value) slideDisplayRef.value.innerHTML = ''
-      console.log('✅ [resetSlideSize] slideDisplayRef.innerHTML cleared')
+      // console.log('✅ [resetSlideSize] slideDisplayRef.innerHTML cleared')
     }, 300)
 
     swiper.slides.forEach((slide: HTMLElement) =>
@@ -132,20 +134,29 @@ export function useHabitsAnim({
   const onEnter = () => {
 
     if (!shadowRef?.value) {
-      console.log('❌ [onEnter] shadowRef NOT found')
+      // console.log('❌ [onEnter] shadowRef NOT found')
       return
     } else {
-      console.log('✅ [onEnter] shadowRef found')
+      // console.log('✅ [onEnter] shadowRef found')
     }
 
     if (!lightRef?.value) {
-      console.log('❌ [onEnter] lightRef NOT found')
+      // console.log('❌ [onEnter] lightRef NOT found')
       return
     } else {
-      console.log('✅ [onEnter] lightRef found')
+      // console.log('✅ [onEnter] lightRef found')
     }
 
-    if (!shadowRef?.value || !lightRef?.value) return
+    const slideTitles = document.querySelector('.slides-titles')
+
+    if (!shadowRef?.value || !lightRef?.value || !slideTitles) return
+
+    gsap.to(slideTitles, {
+      // width: window.innerWidth < 1024 ? '100%' : window.innerWidth < 1280 ? '80%' : window.innerWidth < 1536 ? '95%' : '100%',
+      width: vp.xxl.value ? '100%' : vp.xl.value ? '90%' : vp.lg.value ? '80%' : '100%',
+      duration: 0.3,
+      ease: 'power2.out',
+    })
     gsap.to(shadowRef.value, {
       '--shadow-end': '50%',
       '--shadow-start': '30%',
@@ -154,7 +165,11 @@ export function useHabitsAnim({
       duration: 0.3,
       ease: 'power2.out',
     })
-    gsap.to(lightRef.value, { opacity: 0, duration: 0.3 })
+    gsap.to(lightRef.value, {
+      opacity: 0,
+      duration: 0.3
+    })
+
     tl?.pause()
     animateSlides()
   }
@@ -162,40 +177,53 @@ export function useHabitsAnim({
   const onLeave = () => {
 
     if (isOpen.value) {
-      console.log('✅ [onLeave] isOpen, skipping')
+      // console.log('✅ [onLeave] isOpen, skipping')
       return
     }
     if (!shadowRef?.value) {
-      console.log('❌ [onLeave] shadowRef NOT found')
+      // console.log('❌ [onLeave] shadowRef NOT found')
       return
     } else {
-      console.log('✅ [onLeave] shadowRef found')
+      // console.log('✅ [onLeave] shadowRef found')
     }
     if (!lightRef?.value) {
-      console.log('❌ [onLeave] lightRef NOT found')
+      // console.log('❌ [onLeave] lightRef NOT found')
       return
     } else {
-      console.log('✅ [onLeave] lightRef found')
+      // console.log('✅ [onLeave] lightRef found')
     }
 
+    const slideTitles = document.querySelector('.slides-titles')
+
     if (isOpen.value) return
-    if (!shadowRef?.value || !lightRef?.value) return
+    if (!shadowRef?.value || !lightRef?.value || !slideTitles) return
+
     resetSlideSize()
+
+    gsap.to(slideTitles, {
+      width: '100%',
+      duration: 0.3,
+      ease: 'power2.out',
+    })
     gsap.to(shadowRef.value, {
-      '--shadow-pos-x': '0%',
+      '--shadow-pos-x': '100%',
       '--shadow-size': '190% 50%',
       '--shadow-start': '20%',
       '--shadow-end': '50%',
       duration: 0.3,
       ease: 'power2.inOut',
     })
-    gsap.to(lightRef.value, { opacity: 1, duration: 0.3 })
+    gsap.to(lightRef.value, {
+      opacity: 1,
+      duration: 0.3
+    })
+
     tl?.resume()
   }
 
   function onSwiperInit(swiper: any) {
 
-    console.log('➡️✅ [onSwiperInit] called with swiper:', swiper)
+    // console.log('➡️✅ [onSwiperInit] called with swiper:', swiper)
 
     swiperInstance.value = swiper
 
@@ -204,7 +232,7 @@ export function useHabitsAnim({
 
     if (!tl && lightRef?.value) {
 
-      console.log('➡️ [onSwiperInit] creating GSAP timeline')
+      // console.log('➡️ [onSwiperInit] creating GSAP timeline')
 
       tl = gsap
         .timeline({ repeat: -1 })
@@ -214,7 +242,7 @@ export function useHabitsAnim({
         })
         .add(() => {
 
-          console.log('➡️ [GSAP timeline] slideNext called')
+          // console.log('➡️ [GSAP timeline] slideNext called')
 
           swiperInstance.value?.slideNext()
         })
@@ -228,49 +256,51 @@ export function useHabitsAnim({
           duration: (5 * 2) / 3,
         })
     } else {
-      console.log('❌ [onSwiperInit] timeline already exists or lightRef missing')
+      // console.log('❌ [onSwiperInit] timeline already exists or lightRef missing')
     }
   }
 
   function onSlideChange(s: any) {
 
-    console.log('➡️✅ [onSlideChange] new realIndex:', s.realIndex)
+    // console.log('➡️✅ [onSlideChange] new realIndex:', s.realIndex)
 
-    activeIndexInTitles.value = s.realIndex // realIndex = vrai index (0..n-1)
+    activeSlideIndex.value = s.realIndex // realIndex = vrai index (0..n-1)
   }
 
   const onResize = () => {
     const s = swiperInstance.value
     if (!s) {
-      console.log('❌ [onResize] swiperInstance.value NOT found')
+      // console.log('❌ [onResize] swiperInstance.value NOT found')
       return
     }
-    console.log('✅ [onResize] swiperInstance.value found, updating')
+    // console.log('✅ [onResize] swiperInstance.value found, updating')
     // ici tu peux recalculer ou réaffecter tes params Swiper si besoin
     s.update()
   }
 
   onMounted(() => {
     slideDisplayRef.value = document.getElementById('slideDisplayRef')
-    console.log('➡️ [useHabitsAnim] onMounted called')
+    // console.log('➡️ [useHabitsAnim] onMounted called')
 
     const c = carouselRef.value
     if (!c) {
-      console.log('❌ [onMounted] carouselRef NOT found')
+      // console.log('❌ [onMounted] carouselRef NOT found')
       return
     } else {
-      console.log('✅ [onMounted] carouselRef found')
+      // console.log('✅ [onMounted] carouselRef found')
     }
 
-    c?.addEventListener('mouseenter', onEnter)
-    c?.addEventListener('touchstart', onEnter)
-    c?.addEventListener('mouseleave', onLeave)
-    c?.addEventListener('touchend', onLeave)
-    c?.addEventListener('touchcancel', onLeave)
+    if (vp.lg.value) {
+      c?.addEventListener('mouseenter', onEnter)
+      c?.addEventListener('touchstart', onEnter)
+      c?.addEventListener('mouseleave', onLeave)
+      c?.addEventListener('touchend', onLeave)
+      c?.addEventListener('touchcancel', onLeave)
+    }
 
     c?.addEventListener('click', () => {
 
-      console.log('➡️ [carousel] click event')
+      // console.log('➡️ [carousel] click event')
 
       if (isOpen.value) resetSlideSize()
       else hugerSlide()
@@ -287,7 +317,7 @@ export function useHabitsAnim({
 
   onUnmounted(() => {
 
-    console.log('➡️ [useHabitsAnim] onUnmounted called')
+    // console.log('➡️ [useHabitsAnim] onUnmounted called')
 
     window.removeEventListener('resize', onResize)
     tl?.kill()
@@ -295,7 +325,7 @@ export function useHabitsAnim({
     const c = carouselRef.value
 
     if (!c) {
-      console.log('❌ [onUnmounted] carouselRef NOT found')
+      // console.log('❌ [onUnmounted] carouselRef NOT found')
       return
     }
 
@@ -318,7 +348,7 @@ export function useHabitsAnim({
   })
 
   watch(() => swiperInstance.value?.realIndex, () => {
-    console.log('➡️✅ [watch] realIndex changed:', swiperInstance.value?.realIndex)
+    // console.log('➡️✅ [watch] realIndex changed:', swiperInstance.value?.realIndex)
     animateSlides()
   })
 

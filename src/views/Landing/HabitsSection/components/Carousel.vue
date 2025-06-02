@@ -1,18 +1,27 @@
 <!-- File: src/views/Landing/HabitsSection/components/Carousel.vue -->
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+// DEPS
+import { ref, computed, onMounted } from 'vue'
+import type { Swiper as SwiperClass } from 'swiper'
 import { Swiper, SwiperSlide } from 'swiper/vue'
-import { Autoplay } from 'swiper/modules'
+import { Autoplay, type SwiperOptions } from 'swiper/modules'
 import 'swiper/css'
 import 'swiper/css/autoplay'
 
-import { useHabitsAnim } from '../utils/useHabitsAnim'
+// UTILS
+import { vp } from '@/utils/viewport'
+import { useHabitsAnim } from '@/views/Landing/HabitsSection/utils/useHabitsAnim'
+import { illustrationSize, descriptionSize } from '@/views/Landing/HabitsSection/stores/slider'
 
-const swiperInstance = ref<InstanceType<typeof Swiper> | null>(null)
+// ASSETS
+
+const swiperInstance = ref<SwiperClass | null>(null)
+const swiperWrapper = ref<InstanceType<typeof Swiper> | null>(null)
 const carouselRef = ref<HTMLElement | null>(null)
 const lightRef = ref<HTMLElement | null>(null)
 const shadowRef = ref<HTMLElement | null>(null)
+const illustrationRef = ref<HTMLElement | null>(null)
 
 const { onSwiperInit, onSlideChange } = useHabitsAnim({
   swiperInstance,
@@ -22,16 +31,15 @@ const { onSwiperInit, onSlideChange } = useHabitsAnim({
 })
 
 // Params Swiper en reactive/computed
-const swiperParams = computed(() => ({
+const swiperParams = computed<SwiperOptions>(() => ({
   modules: [
     Autoplay,
   ],
-  direction: window.innerWidth > 1024 ? 'vertical' : 'horizontal',
+  direction: vp.lg.value ? 'vertical' : 'horizontal',
   slidesPerView: 3,
-  // slidesPerView: window.innerWidth > 1024 ? 3 : 1,
-  spaceBetween: window.innerWidth > 1024 ? 32 : 16,
+  spaceBetween: vp.lg.value ? 32 : 16,
   autoplay: {
-    delay: 2000,
+    delay: 3000,
     disableOnInteraction: true,
   },
   loop: true,
@@ -39,18 +47,33 @@ const swiperParams = computed(() => ({
   pagination: false,
   navigation: false,
 }))
+
+const initIllustrationSize = () => {
+  setTimeout(() => {
+    illustrationSize.value = illustrationRef.value?.clientHeight || 0
+    console.log('illustrationSize', illustrationSize.value)
+  }, 100)
+}
 </script>
 
 <template>
-  <div class="illustration">
+  <div
+    class="illustration"
+    ref="illustrationRef"
+    :style="`transform: translateY(-${vp.lg.value ? 0 : descriptionSize + 16}px)`"
+  >
     <div
       class="carousel"
       ref="carouselRef"
     >
       <Swiper
-        ref="swiperInstance"
+        ref="swiperWrapper"
         v-bind="swiperParams"
-        @swiper="onSwiperInit"
+        @swiper="
+          (e) => {
+            onSwiperInit(e), initIllustrationSize()
+          }
+        "
         @slideChange="onSlideChange"
       >
         <SwiperSlide>
@@ -102,19 +125,12 @@ const swiperParams = computed(() => ({
   </div>
 </template>
 
-<!-- <style scoped lang="scss">
+<style scoped lang="scss">
 @use '@/assets/styles/variables/globals' as *;
-@use '@/assets/styles/variables/effects' as effect;
-@use '@/assets/styles/variables/borders' as borders;
-@use '@/assets/styles/variables/animations' as animations;
 
 .illustration {
   display: flex;
   justify-content: center;
-
-  @include min-width(lg) {
-    width: 50%;
-  }
 
   .carousel {
     position: relative;
@@ -141,9 +157,9 @@ const swiperParams = computed(() => ({
 
       --shadow-pos-x: 0%;
       --shadow-pos-y: 50%;
-      --shadow-size: 190% 50%;
-      --shadow-start: 20%;
       --shadow-end: 50%;
+      --shadow-start: 30%;
+      --shadow-size: 300% 50%;
 
       background: radial-gradient(var(--shadow-size) at var(--shadow-pos-x) var(--shadow-pos-y), rgba(17, 17, 23, 0) var(--shadow-start), #111117 var(--shadow-end));
       // background: rgba(255, 0, 0, 0.811);
@@ -151,6 +167,12 @@ const swiperParams = computed(() => ({
 
       @include min-width(lg) {
         display: flex !important;
+
+        --shadow-pos-x: 100%;
+        --shadow-pos-y: 50%;
+        --shadow-size: 190% 50%;
+        --shadow-start: 20%;
+        --shadow-end: 50%;
       }
 
       #light {
@@ -172,7 +194,7 @@ const swiperParams = computed(() => ({
 
           position: absolute;
           top: 50%;
-          right: 0;
+          left: 0;
 
           transform: translateY(-50%);
 
@@ -185,8 +207,9 @@ const swiperParams = computed(() => ({
           height: 1px;
 
           top: calc((100% / 3) + (2rem / 3));
+          right: 0;
 
-          background: linear-gradient(to right, rgba(252, 250, 250, 0) 9.43895%, rgba(252, 250, 250, 1) 48.5999%, rgba(252, 250, 250, 1) 77.7474%, rgba(252, 250, 250, 0) 100%);
+          background: linear-gradient(to left, rgba(252, 250, 250, 0) 9.43895%, rgba(252, 250, 250, 1) 48.5999%, rgba(252, 250, 250, 1) 77.7474%, rgba(252, 250, 250, 0) 100%);
         }
 
         #line_2 {
@@ -194,7 +217,7 @@ const swiperParams = computed(() => ({
           height: 55%;
 
           top: 50%;
-          right: 0;
+          left: 0;
 
           transform: translateY(-50%);
 
@@ -206,8 +229,9 @@ const swiperParams = computed(() => ({
           height: 1px;
 
           bottom: calc((100% / 3) + (2rem / 3)) !important;
+          right: 0;
 
-          background: linear-gradient(to right, rgba(252, 250, 250, 0) 9.43895%, rgba(252, 250, 250, 1) 48.5999%, rgba(252, 250, 250, 1) 77.7474%, rgba(252, 250, 250, 0) 100%);
+          background: linear-gradient(to left, rgba(252, 250, 250, 0) 9.43895%, rgba(252, 250, 250, 1) 48.5999%, rgba(252, 250, 250, 1) 77.7474%, rgba(252, 250, 250, 0) 100%);
         }
       }
     }
@@ -269,4 +293,4 @@ const swiperParams = computed(() => ({
     }
   }
 }
-</style> -->
+</style>

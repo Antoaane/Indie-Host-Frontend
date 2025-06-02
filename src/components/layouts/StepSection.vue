@@ -30,12 +30,8 @@ const props = defineProps<{
           {{ props.step }}
         </span>
         <div>
-          <h2>
-            {{ props.title }}
-          </h2>
-          <p>
-            {{ props.description }}
-          </p>
+          <h2 v-html="props.title" />
+          <p v-html="props.description" />
         </div>
       </div>
 

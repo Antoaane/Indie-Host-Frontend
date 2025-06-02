@@ -50,9 +50,19 @@ export function useBenefitsAnim() {
         'start',
       )
       .to(
+        '.unfocus',
+        {
+          opacity: 0.5,
+          ease: 'power2.out',
+          delay: baseDuration * 3 * 0.64,
+          duration: baseDuration * 1,
+        },
+        'start',
+      )
+      .to(
         '.line',
         {
-          transform: 'translateX(-50%) scaleX(1)',
+          transform: 'translate(-50%, -35%) scaleX(1)',
           ease: 'power2.out',
           delay: baseDuration * 3 * 0.64,
           duration: baseDuration * 1,

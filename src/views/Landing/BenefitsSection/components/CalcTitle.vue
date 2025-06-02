@@ -45,11 +45,11 @@ defineProps<{
 
 .second-title {
   width: 100%;
-  max-width: 36rem;
+  max-width: 30rem;
   margin-bottom: 0.5rem;
 
   text-align: center;
-  @include h2-title($accent);
+  @include h3-title($accent);
 }
 
 p {

@@ -33,6 +33,26 @@ const { nights, price, total, commissions } = useBookingCalc()
   </section>
 </template>
 
-<style lang="scss" scoped>
-@use '@/views/Landing/BenefitsSection/style.scss';
+<style lang="scss">
+@use '@/assets/styles/variables/globals' as *;
+
+#benefits-section {
+  padding-top: calc(var(--gutter-spacing) + 70px);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3rem;
+
+  & > .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .first-tite {
+      padding-top: 1rem;
+      @include h2-title($accent);
+    }
+  }
+}
 </style>

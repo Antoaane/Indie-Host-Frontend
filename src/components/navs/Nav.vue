@@ -4,24 +4,17 @@
 // DEPS
 import { ref, onMounted } from 'vue'
 
+// UTILS
+import { vp } from '@/utils/viewport'
+
 // ASSETS
 import { icons } from '@/components/svgs'
 
 const isMobileMenuOpen = ref(false)
-const isMobile = ref(false)
 
 const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value
 }
-
-const checkScreen = () => {
-  isMobile.value = window.innerWidth < 1025
-}
-
-onMounted(() => {
-  checkScreen()
-  window.addEventListener('resize', checkScreen)
-})
 </script>
 
 <template>
@@ -41,7 +34,7 @@ onMounted(() => {
     <!-- Desktop Menu -->
     <ul
       class="navbar__links"
-      v-if="!isMobile"
+      v-if="vp.lg.value"
     >
       <li>
         <RouterLink to="#home">Tenez moi au courant !</RouterLink>
@@ -61,7 +54,7 @@ onMounted(() => {
     <component
       class="navbar__mobile-toggle"
       :is="icons.burgerMenu.adapt"
-      v-if="isMobile"
+      v-if="!vp.lg.value"
       @click="toggleMobileMenu"
     />
 
@@ -69,7 +62,7 @@ onMounted(() => {
     <transition name="fade-slide">
       <div
         class="navbar__mobile-menu"
-        v-if="isMobile && isMobileMenuOpen"
+        v-if="!vp.lg.value && isMobileMenuOpen"
       >
         <ul class="navbar__mobile-links">
           <li>

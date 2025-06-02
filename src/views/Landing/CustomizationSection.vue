@@ -1,4 +1,4 @@
-<!-- File: src/views/Landing/WhySection/CustomizationSection.vue -->
+<!-- File: src/views/Landing/CustomizationSection.vue -->
 
 <script setup lang="ts">
 // DEPS
@@ -10,13 +10,6 @@ import CustomDomain from '@/components/svgs/images/CustomDomain.vue'
 <template>
   <section id="customization-section">
     <div class="container">
-      <div class="illustration">
-        <img
-          class="customization-image"
-          src="@/assets/media/images/customization-image.png"
-          alt="Customization"
-        />
-      </div>
       <div class="content">
         <div>
           <h2>
@@ -33,6 +26,13 @@ import CustomDomain from '@/components/svgs/images/CustomDomain.vue'
             Pas besoin d’un site compliqué pour avoir une page qui vous ressemble.
           </p>
         </div>
+      </div>
+      <div class="illustration">
+        <img
+          class="customization-image"
+          src="@/assets/media/images/customization-image.png"
+          alt="Customization"
+        />
       </div>
     </div>
   </section>
