@@ -39,7 +39,7 @@ import Carousel from '@/views/Landing/HabitsSection/components/Carousel/Carousel
     .container {
       display: flex;
       flex-direction: column-reverse;
-      gap: 1rem;
+      gap: 2rem;
 
       @include min-width(lg) {
         height: 80vh;

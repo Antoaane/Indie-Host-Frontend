@@ -15,76 +15,82 @@ export function useBenefitsAnim() {
   let tl_mobile: gsap.core.Timeline | null = null
 
   // Animation & Size variables
-  const longerSide = (100 * 80) / 180 // in percent
-  const shorterSide = (100 * 20) / 180 // in percent
+  // const longerSide = (100 * 80) / 180 // in percent
+  // const shorterSide = (100 * 20) / 180 // in percent
+  const longerSide = vp.lg.value ? (100 * 80) / 180 : (100 * 70) / 170
+  const shorterSide = vp.lg.value ? (100 * 20) / 180 : (100 * 30) / 170
   const baseDuration = 0.75
 
   onMounted(() => {
     tl_desktop = gsap.timeline({ paused: true })
 
-    tl_desktop
-      .addLabel('start')
-      .to(
-        '#indiehost',
-        {
-          width: `${longerSide + shorterSide}%`,
-          ease: 'power2.inOut',
-          duration: baseDuration * 3,
-        },
-        'start',
-      )
-      .to(
-        '.gains',
-        {
-          '--gains-color': '0, 255, 166',
-          ease: 'power2.out',
-          delay: baseDuration * 3 * 0.64,
-          duration: baseDuration * 1,
-        },
-        'start',
-      )
-      .to(
-        '.gains>.losses',
-        {
-          width: '100%',
-          opacity: '1',
-          ease: 'power2.out',
-          delay: baseDuration * 3 * 0.64,
-          duration: baseDuration * 1,
-        },
-        'start',
-      )
-      .to(
-        '.unfocus',
-        {
-          opacity: 0.5,
-          ease: 'power2.out',
-          delay: baseDuration * 3 * 0.64,
-          duration: baseDuration * 1,
-        },
-        'start',
-      )
-      .to(
-        '.line',
-        {
-          transform: 'translate(-50%, -35%) scaleX(1)',
-          ease: 'power2.out',
-          delay: baseDuration * 3 * 0.64,
-          duration: baseDuration * 1,
-        },
-        'start',
-      )
-      .to(
-        '#plusvalue',
-        {
-          transform: 'translateX(0%)',
-          opacity: '1',
-          ease: 'power2.out',
-          delay: baseDuration * 3 * 0.64,
-          duration: baseDuration * 1,
-        },
-        'start',
-      )
+    console.log('vp.lg.value', vp.lg.value)
+
+    if (vp.lg.value) {
+      tl_desktop
+        .addLabel('start')
+        .to(
+          '#indiehost',
+          {
+            width: `${longerSide + shorterSide}%`,
+            ease: 'power2.inOut',
+            duration: baseDuration * 3,
+          },
+          'start',
+        )
+        .to(
+          '.gains',
+          {
+            '--gains-color': '0, 255, 166',
+            ease: 'power2.out',
+            delay: baseDuration * 3 * 0.64,
+            duration: baseDuration * 1,
+          },
+          'start',
+        )
+        .to(
+          '.gains>.losses',
+          {
+            width: '100%',
+            opacity: '1',
+            ease: 'power2.out',
+            delay: baseDuration * 3 * 0.64,
+            duration: baseDuration * 1,
+          },
+          'start',
+        )
+        .to(
+          '.unfocus',
+          {
+            opacity: 0.5,
+            ease: 'power2.out',
+            delay: baseDuration * 3 * 0.64,
+            duration: baseDuration * 1,
+          },
+          'start',
+        )
+        .to(
+          '.line',
+          {
+            transform: 'translate(-50%, -35%) scaleX(1)',
+            ease: 'power2.out',
+            delay: baseDuration * 3 * 0.64,
+            duration: baseDuration * 1,
+          },
+          'start',
+        )
+        .to(
+          '#plusvalue',
+          {
+            transform: 'translateX(0%)',
+            opacity: '1',
+            ease: 'power2.out',
+            delay: baseDuration * 3 * 0.64,
+            duration: baseDuration * 1,
+          },
+          'start',
+        )
+    }
 
     tl_mobile = gsap.timeline({ paused: true })
 
@@ -108,7 +114,7 @@ export function useBenefitsAnim() {
           '--r-start': 'rgba(0, 255, 166, 0.6)',
           '--r-end': 'rgba(0, 255, 166, 0)',
           ease: 'power2.out',
-          delay: baseDuration * 3.25 * 0.64,
+          delay: baseDuration * 3.5 * 0.64,
           duration: baseDuration * 1,
         },
         'start',
@@ -118,26 +124,6 @@ export function useBenefitsAnim() {
         {
           height: '100%',
           opacity: '1',
-          ease: 'power2.out',
-          delay: baseDuration * 3 * 0.64,
-          duration: baseDuration * 1,
-        },
-        'start',
-      )
-      .to(
-        '.unfocus',
-        {
-          opacity: 0.5,
-          ease: 'power2.out',
-          delay: baseDuration * 3 * 0.64,
-          duration: baseDuration * 1,
-        },
-        'start',
-      )
-      .to(
-        '.line',
-        {
-          transform: 'translate(-50%, -35%) scaleX(1)',
           ease: 'power2.out',
           delay: baseDuration * 3 * 0.64,
           duration: baseDuration * 1,

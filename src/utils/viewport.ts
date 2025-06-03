@@ -6,7 +6,7 @@ const bp = useBreakpoints({
   xs: 360,
   sm: 640,
   md: 768,
-  lg: 1024,
+  lg: 1023,
   xl: 1280,
   xxl: 1536,
   xxxl: 1920,

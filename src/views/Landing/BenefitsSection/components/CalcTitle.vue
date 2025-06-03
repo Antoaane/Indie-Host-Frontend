@@ -44,8 +44,6 @@ defineProps<{
 @use '@/assets/styles/variables/globals' as *;
 
 .container:has(.second-title) {
-  margin-bottom: 1.5rem;
-
   .second-title {
     width: 100%;
     max-width: 30rem;

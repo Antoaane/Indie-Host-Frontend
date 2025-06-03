@@ -63,6 +63,8 @@ const { nights, price, total, commissions } = useBookingCalc()
     width: 100%;
     height: 100%;
 
+    gap: 1.5rem;
+
     display: flex;
     flex-direction: column-reverse;
     align-items: center;
