@@ -1,4 +1,4 @@
-<!-- File: src/views/Landing/BenefitsSection/index.vue -->
+<!-- File: src/views/Landing/BenefitsSection/BenefitsSection.vue -->
 
 <script setup lang="ts">
 // UTILS
@@ -16,20 +16,22 @@ const { nights, price, total, commissions } = useBookingCalc()
 <template>
   <section id="benefits-section">
     <div class="container">
-      <h2 class="first-tite"> <span class="gradient-text">Tout</span> est pour <span class="gradient-text">vous</span> </h2>
+      <h2 class="first-title"> <span class="gradient-text">Tout</span> est pour <span class="gradient-text">vous</span> </h2>
     </div>
 
-    <AnimationPanel
-      :total="total"
-      :commissions="commissions"
-    />
+    <div class="interaction-container">
+      <AnimationPanel
+        :total="total"
+        :commissions="commissions"
+      />
 
-    <CalcTitle
-      :total="total"
-      :commissions="commissions"
-      v-model:nights="nights"
-      v-model:price="price"
-    />
+      <CalcTitle
+        :total="total"
+        :commissions="commissions"
+        v-model:nights="nights"
+        v-model:price="price"
+      />
+    </div>
   </section>
 </template>
 
@@ -43,16 +45,30 @@ const { nights, price, total, commissions } = useBookingCalc()
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3rem;
+  gap: 1rem;
 
-  & > .container {
+  .container {
     display: flex;
     flex-direction: column;
     align-items: center;
 
-    .first-tite {
+    .first-title {
       padding-top: 1rem;
+      margin: 0 !important;
       @include h2-title($accent);
+    }
+  }
+
+  .interaction-container {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+
+    @include min-width(lg) {
+      flex-direction: column;
     }
   }
 }

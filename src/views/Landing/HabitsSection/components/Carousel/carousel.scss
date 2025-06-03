@@ -2,174 +2,177 @@
 
 @use '@/assets/styles/variables/globals' as *;
 
-.illustration {
-  display: flex;
-  justify-content: center;
+#habits-section {
 
-  .carousel {
-    position: relative;
+  .illustration {
+    display: flex;
+    justify-content: center;
 
-    #shadow {
-      width: 125%;
-      height: 120%;
+    .carousel {
+      position: relative;
 
-      display: none !important;
+      #shadow {
+        width: 125%;
+        height: 120%;
 
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      z-index: 9;
+        display: none !important;
 
-      transform: translate(-50%, -50%);
-      transform-origin: center;
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        z-index: 9;
 
-      display: none !important;
-      justify-content: center;
-      align-items: center;
-
-      pointer-events: none;
-
-      --shadow-pos-x: 0%;
-      --shadow-pos-y: 50%;
-      --shadow-end: 50%;
-      --shadow-start: 30%;
-      --shadow-size: 300% 50%;
-
-      background: radial-gradient(var(--shadow-size) at var(--shadow-pos-x) var(--shadow-pos-y), rgba(17, 17, 23, 0) var(--shadow-start), #111117 var(--shadow-end));
-      // background: rgba(255, 0, 0, 0.811);
-      transition: none !important;
-
-      @include min-width(lg) {
-        display: flex !important;
-
-        --shadow-pos-x: 100%;
-        --shadow-pos-y: 50%;
-        --shadow-size: 190% 50%;
-        --shadow-start: 20%;
-        --shadow-end: 50%;
-      }
-
-      #light {
-        width: calc(100% / 12.5 * 10);
-        height: calc(100% / 12 * 10);
-
-        position: relative;
-
+        transform: translate(-50%, -50%);
         transform-origin: center;
 
-        &>[id^='line_'] {
-          position: absolute;
-          opacity: 50%;
+        display: none !important;
+        justify-content: center;
+        align-items: center;
+
+        pointer-events: none;
+
+        --shadow-pos-x: 0%;
+        --shadow-pos-y: 50%;
+        --shadow-end: 50%;
+        --shadow-start: 30%;
+        --shadow-size: 300% 50%;
+
+        background: radial-gradient(var(--shadow-size) at var(--shadow-pos-x) var(--shadow-pos-y), rgba(17, 17, 23, 0) var(--shadow-start), #111117 var(--shadow-end));
+        // background: rgba(255, 0, 0, 0.811);
+        transition: none !important;
+
+        @include min-width(lg) {
+          display: flex !important;
+
+          --shadow-pos-x: 100%;
+          --shadow-pos-y: 50%;
+          --shadow-size: 190% 50%;
+          --shadow-start: 20%;
+          --shadow-end: 50%;
         }
 
-        #halo {
-          width: 100%;
-          height: calc((100% / 3) - (1rem / 3 * 2) * 2);
+        #light {
+          width: calc(100% / 12.5 * 10);
+          height: calc(100% / 12 * 10);
 
-          position: absolute;
-          top: 50%;
-          left: 0;
+          position: relative;
 
-          transform: translateY(-50%);
+          transform-origin: center;
 
-          border-radius: 0.75rem;
-          box-shadow: 10px 10px 35px 0px rgba($accent, 0.15);
-        }
-
-        #line_1 {
-          width: 125%;
-          height: 1px;
-
-          top: calc((100% / 3) + (2rem / 3));
-          right: 0;
-
-          background: linear-gradient(to left, rgba(252, 250, 250, 0) 9.43895%, rgba(252, 250, 250, 1) 48.5999%, rgba(252, 250, 250, 1) 77.7474%, rgba(252, 250, 250, 0) 100%);
-        }
-
-        #line_2 {
-          width: 1px;
-          height: 55%;
-
-          top: 50%;
-          left: 0;
-
-          transform: translateY(-50%);
-
-          background: linear-gradient(to bottom, rgba(252, 250, 250, 0) 0%, rgba(252, 250, 250, 1) 20.7365%, rgba(252, 250, 250, 1) 79.0715%, rgba(252, 250, 250, 0) 100%);
-        }
-
-        #line_3 {
-          width: 125%;
-          height: 1px;
-
-          bottom: calc((100% / 3) + (2rem / 3)) !important;
-          right: 0;
-
-          background: linear-gradient(to left, rgba(252, 250, 250, 0) 9.43895%, rgba(252, 250, 250, 1) 48.5999%, rgba(252, 250, 250, 1) 77.7474%, rgba(252, 250, 250, 0) 100%);
-        }
-      }
-    }
-
-    .swiper {
-      height: auto;
-      width: 250vw;
-
-      position: relative;
-      left: 50%;
-      overflow: visible;
-
-      transform: translateX(-50%);
-
-      @include min-width(sm) {
-        width: 150vw;
-      }
-
-      @include min-width(lg) {
-        width: auto;
-        // height: 90vh;
-        height: 105vh;
-
-        position: static;
-        transform: none;
-        overflow: visible;
-      }
-
-      @include min-width(xl) {
-        height: 130vh;
-      }
-
-      // @include min-width(xxl) {
-      //   height: 130vh;
-      // }
-
-      .swiper-wrapper {
-        .swiper-slide {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-
-          border-radius: 0.75rem;
-          border-color: rgba($accent, 0);
-          border-style: solid;
-          border-width: 1px;
-
-          transition: none !important;
-          @include halo;
-
-          .slide-page-svg {
-            width: 100%;
-            height: auto;
-
-            border-radius: 0.75rem;
-
-            @include min-width(lg) {
-              width: auto !important;
-              height: 100% !important;
-            }
+          &>[id^='line_'] {
+            position: absolute;
+            opacity: 50%;
           }
 
-          &.aswiper-slide-ctive {
-            transition: transform-origin 0.3s ease-in-out;
+          #halo {
+            width: 100%;
+            height: calc((100% / 3) - (1rem / 3 * 2) * 2);
+
+            position: absolute;
+            top: 50%;
+            left: 0;
+
+            transform: translateY(-50%);
+
+            border-radius: 0.75rem;
+            box-shadow: 10px 10px 35px 0px rgba($accent, 0.15);
+          }
+
+          #line_1 {
+            width: 125%;
+            height: 1px;
+
+            top: calc((100% / 3) + (2rem / 3));
+            right: 0;
+
+            background: linear-gradient(to left, rgba(252, 250, 250, 0) 9.43895%, rgba(252, 250, 250, 1) 48.5999%, rgba(252, 250, 250, 1) 77.7474%, rgba(252, 250, 250, 0) 100%);
+          }
+
+          #line_2 {
+            width: 1px;
+            height: 55%;
+
+            top: 50%;
+            left: 0;
+
+            transform: translateY(-50%);
+
+            background: linear-gradient(to bottom, rgba(252, 250, 250, 0) 0%, rgba(252, 250, 250, 1) 20.7365%, rgba(252, 250, 250, 1) 79.0715%, rgba(252, 250, 250, 0) 100%);
+          }
+
+          #line_3 {
+            width: 125%;
+            height: 1px;
+
+            bottom: calc((100% / 3) + (2rem / 3)) !important;
+            right: 0;
+
+            background: linear-gradient(to left, rgba(252, 250, 250, 0) 9.43895%, rgba(252, 250, 250, 1) 48.5999%, rgba(252, 250, 250, 1) 77.7474%, rgba(252, 250, 250, 0) 100%);
+          }
+        }
+      }
+
+      .swiper {
+        height: auto;
+        width: 250vw;
+
+        position: relative;
+        left: 50%;
+        overflow: visible;
+
+        transform: translateX(-50%);
+
+        @include min-width(sm) {
+          width: 150vw;
+        }
+
+        @include min-width(lg) {
+          width: auto;
+          // height: 90vh;
+          height: 105vh;
+
+          position: static;
+          transform: none;
+          overflow: visible;
+        }
+
+        @include min-width(xl) {
+          height: 130vh;
+        }
+
+        // @include min-width(xxl) {
+        //   height: 130vh;
+        // }
+
+        .swiper-wrapper {
+          .swiper-slide {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            border-radius: 0.75rem;
+            border-color: rgba($accent, 0);
+            border-style: solid;
+            border-width: 1px;
+
+            transition: none !important;
+            @include halo;
+
+            .slide-page-svg {
+              width: 100%;
+              height: auto;
+
+              border-radius: 0.75rem;
+
+              @include min-width(lg) {
+                width: auto !important;
+                height: 100% !important;
+              }
+            }
+
+            &.aswiper-slide-ctive {
+              transition: transform-origin 0.3s ease-in-out;
+            }
           }
         }
       }

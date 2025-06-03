@@ -40,58 +40,63 @@ defineProps<{
   </div>
 </template>
 
-<style lang="scss" scoped>
+<style lang="scss">
 @use '@/assets/styles/variables/globals' as *;
 
-.second-title {
-  width: 100%;
-  max-width: 30rem;
-  margin-bottom: 0.5rem;
+.container:has(.second-title) {
+  margin-bottom: 1.5rem;
 
-  text-align: center;
-  @include h3-title($accent);
-}
+  .second-title {
+    width: 100%;
+    max-width: 30rem;
+    margin-bottom: 0.5rem;
 
-p {
-  text-decoration: underline !important;
-  text-underline-offset: 0.3rem;
+    text-align: center;
+    @include h3-title($accent);
+    @include gutters(padding, inline, 1);
+  }
 
-  @include base-text($accent);
-
-  span {
-    display: inline-block;
-    position: relative;
-
+  p {
     text-decoration: underline !important;
     text-underline-offset: 0.3rem;
+
     @include base-text($accent);
 
-    input {
-      width: 115%;
-      height: 100%;
+    span {
+      display: inline-block;
+      position: relative;
 
-      position: absolute;
-      z-index: 9999;
-      top: 50%;
-      left: 50%;
+      text-decoration: underline !important;
+      text-underline-offset: 0.3rem;
+      @include base-text($accent);
 
-      transform: translate(-50%, -50%);
+      input {
+        width: 115%;
+        height: 100%;
 
-      font-size: 1.125rem;
-      color: #00000000;
+        position: absolute;
+        z-index: 9999;
+        top: 50%;
+        left: 50%;
 
-      background-color: #00000000;
-      border: none;
+        transform: translate(-50%, -50%);
 
-      // hide arrow
-      &::-webkit-inner-spin-button,
-      &::-webkit-outer-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-      }
+        font-size: 1.125rem;
+        color: #00000000;
 
-      &:focus {
-        color: $accent;
+        background-color: #00000000;
+        border: none;
+
+        // hide arrow
+        &::-webkit-inner-spin-button,
+        &::-webkit-outer-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+
+        &:focus {
+          color: $accent;
+        }
       }
     }
   }

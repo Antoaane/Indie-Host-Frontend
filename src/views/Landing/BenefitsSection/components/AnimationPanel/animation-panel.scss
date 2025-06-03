@@ -1,26 +1,19 @@
-/* File: src/views/Landing/BenefitsSection/components/AnimationPanel/style.scss */
+/* File: src/views/Landing/BenefitsSection/components/AnimationPanel/animation-panel.scss */
 
 @use '@/assets/styles/variables/globals' as *;
 
-.animation {
+[class^='animation-'] {
   --longer-side: calc(100% * 80 / 180);
   --shorter-side: calc(100% * 20 / 180);
+}
 
-  width: 200vw;
-  // height: calc(40vh + 4.5rem);
+.animation-desktop {
+  width: 100%;
   height: 100%;
 
   display: flex;
   justify-content: space-between;
   position: relative;
-  left: 50%;
-  transform: translateX(calc(-100%/4));
-
-  @include min-width(lg) {
-    width: 100%;
-    left: auto;
-    transform: none;
-  }
 
   #indiehost {
     width: 0%;
@@ -307,6 +300,336 @@
 
       opacity: 0;
       background: linear-gradient(90deg, rgba($good, 0.5) 0%, rgba($accent, 0) 110%);
+
+      &>p {
+        min-width: max-content;
+        margin: 0 !important;
+        padding: 0 !important;
+
+        font-size: 2.75cqw !important;
+        font-weight: 700 !important;
+        font-family: 'outfit', sans-serif !important;
+
+        background: linear-gradient(180deg, $accent 22.14%, rgba($accent, 0) 167.86%);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+
+        @include halo(xs, true, $secondary, 0.25);
+        @include h2-title();
+      }
+    }
+  }
+}
+
+.animation-mobile {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  position: relative;
+
+  #indiehost {
+    width: 100%;
+    height: 0%;
+    overflow: hidden;
+
+    position: relative;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    background: radial-gradient(207.01% 184.44% at -13.36% -21.09%, $primary_gradiant_first 0%, $primary_gradiant_second 43.31%, $primary_gradiant_third 100%);
+
+    .ih-title-container {
+      width: 100%;
+      height: 100%;
+      flex: 1;
+      overflow: hidden;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      .logo-full {
+        min-width: 65vw;
+        max-width: 65vw;
+        aspect-ratio: 17/5;
+      }
+    }
+
+    .ih-total {
+      width: 20%;
+      height: 100%;
+      overflow: hidden;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      background-color: $accent;
+
+      &>p {
+        min-width: max-content;
+        margin: 0 !important;
+        padding: 0 !important;
+
+        font-weight: 700 !important;
+        font-family: 'outfit', sans-serif !important;
+        // background: linear-gradient(180deg, $secondary 17.65%, rgba($secondary, 0.75) 72.06%);
+        background: linear-gradient(87deg, $primary_gradiant_second 0%, $primary_gradiant_third 100%);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+
+        @include h2-title();
+      }
+    }
+
+    .shapes-bg {
+      width: 173%;
+      height: auto;
+
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      z-index: 0;
+
+      opacity: 0.2;
+      transform: translate(-45%, -50%);
+
+      filter: drop-shadow(0px 0px 15px rgba($secondary, 0.5));
+    }
+  }
+
+  #ota {
+    width: 100%;
+    height: var(--longer-side);
+    min-height: var(--longer-side);
+    max-height: calc(var(--longer-side) + var(--shorter-side));
+    overflow: hidden;
+
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: 1;
+
+    position: relative;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    @include halo;
+
+    .ota-total {
+      width: 20%;
+      height: 100%;
+
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+
+      background-color: rgba($secondary, 0.5);
+
+      @include halo;
+
+      .losses {
+        width: 100%;
+        height: 20%;
+        overflow: hidden;
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        background: radial-gradient(160% 100% at 50% 0%, rgba($bad, 0.36) 0%, rgba($bad, 0) 100%);
+
+        &>p {
+          min-width: max-content;
+          margin: 0 !important;
+          padding: 0 !important;
+
+          background: linear-gradient(180deg, $bad 22.14%, $accent 167.86%);
+          background-clip: text;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+
+          font-size: 3.5cqw !important;
+          font-weight: 800;
+          @include h3-title();
+        }
+      }
+
+      .total {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        &>p {
+          min-width: max-content;
+          margin: 0 !important;
+          padding: 0 !important;
+
+          font-weight: 700 !important;
+          font-family: 'outfit', sans-serif !important;
+          background: linear-gradient(180deg, $accent 17.65%, rgba($accent, 0.75) 72.06%);
+          background-clip: text;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+
+          @include h2-title();
+        }
+      }
+    }
+
+    .ota-title-container {
+      width: 100%;
+      flex: 1;
+      overflow: hidden;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      .ota-title {
+        font-family: 'Fustat', sans-serif;
+        font-weight: 700;
+        color: $accent;
+        font-size: 8cqw;
+        text-align: center;
+
+        // @include min-width(md) {
+        //   font-size: 2.5rem;
+        // }
+
+        // @include min-width(lg) {
+        //   font-size: 3.5rem;
+        // }
+      }
+    }
+
+    .ota-bg {
+      width: auto;
+      height: 126%;
+
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      z-index: -1;
+
+      transform: translate(-50%, -50%);
+    }
+  }
+
+  .gains {
+    width: 100vw;
+    height: var(--shorter-side);
+
+    position: absolute;
+    left: 0;
+    bottom: calc(50% - (var(--shorter-side) / 2));
+    z-index: 2;
+
+    display: flex;
+
+    --gains-color: 255, 82, 82;
+
+    .advantages {
+      width: 80%;
+      height: 100%;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      --r-size: 133.33% 100%;
+      --r-pos-x: 50%;
+      --r-pos-y: 0%;
+      --r-start: rgba(255, 82, 82, 0.4);
+      --r-end: rgba(255, 82, 82, 0);
+
+      /* Gradient construit depuis ces variables */
+      background: radial-gradient(var(--r-size) at var(--r-pos-x) var(--r-pos-y),
+          var(--r-start) 0%,
+          var(--r-end) 100%);
+
+      .block {
+        width: 100%;
+        height: 100%;
+        container-type: inline-size;
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        p {
+          margin: 0 !important;
+          padding: 0 !important;
+
+          text-align: center;
+          font-size: 5cqw !important;
+
+          @include h4-title($accent);
+
+          .focus {
+            margin: 0 !important;
+            padding: 0 !important;
+
+            font-size: 7cqw !important;
+
+            @include h2-title($accent);
+          }
+
+          // .unfocus {
+          //   opacity: 1;
+          //   position: relative;
+
+          //   font-size: 6cqw !important;
+
+          //   @include h4-title($accent);
+
+          //   .line {
+          //     content: '';
+          //     width: 105%;
+          //     height: 3px;
+          //     background-color: $accent;
+
+          //     position: absolute;
+          //     top: 50%;
+          //     left: 50%;
+          //     transform: translate(-50%, -35%) scaleX(0);
+          //     transform-origin: left;
+          //   }
+          // }
+        }
+
+        #plusvalue {
+          transform: translateX(-100%);
+          opacity: 0;
+          @include h4-title($accent);
+        }
+      }
+    }
+
+    .losses {
+      width: 20%;
+      height: 100%;
+      overflow: hidden;
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      opacity: 0;
+      background: linear-gradient(180deg, rgba($good, 0.5) 0%, rgba($accent, 0) 110%);
 
       &>p {
         min-width: max-content;

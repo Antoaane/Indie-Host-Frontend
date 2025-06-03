@@ -1,4 +1,4 @@
-/* File: src/views/Landing/CustomizationSection/style.scss */
+/* File: src/views/Landing/CustomizationSection/customization-section.scss */
 
 @use "@/assets/styles/variables/globals" as *;
 
@@ -34,7 +34,7 @@
 
       .customization-image {
         width: 100%;
-        max-height: 90vh;
+        max-height: 80vh;
         object-fit: contain;
       }
     }

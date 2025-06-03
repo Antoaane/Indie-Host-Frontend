@@ -6,7 +6,7 @@ import { VueLenis } from 'lenis/vue'
 
 // ASSETS
 import HeroSection from '@/views/Landing/HeroSection.vue'
-import BenefitsSection from '@/views/Landing/BenefitsSection/index.vue'
+import BenefitsSection from '@/views/Landing/BenefitsSection/BenefitsSection.vue'
 import CustomizationSection from '@/views/Landing/CustomizationSection/CustomizationSection.vue'
 // import HabitsSection from '@/views/Landing/HabitsSection.vue'
 import HabitsSection from '@/views/Landing/HabitsSection/HabitsSection.vue'

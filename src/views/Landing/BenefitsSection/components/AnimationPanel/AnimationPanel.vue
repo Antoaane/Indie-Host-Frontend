@@ -4,6 +4,9 @@
 // DEPS
 import { useBenefitsAnim } from '@/views/Landing/BenefitsSection/utils/useBenefitsAnim'
 
+// UTILS
+import { vp } from '@/utils/viewport'
+
 // ASSETS
 import ShapesBg from '@/components/svgs/images/ShapesBg.vue'
 import OtaBg from '@/components/svgs/images/OtaBg.vue'
@@ -18,7 +21,7 @@ useBenefitsAnim() // init GSAP
 </script>
 
 <template>
-  <div class="animation">
+  <div :class="`animation-${vp.lg.value ? 'desktop' : 'mobile'}`">
     <div id="indiehost">
       <ShapesBg
         class="shapes-bg"
@@ -62,7 +65,10 @@ useBenefitsAnim() // init GSAP
     </div>
     <div class="gains">
       <div class="advantages">
-        <div class="block">
+        <div
+          class="block"
+          v-if="vp.lg.value"
+        >
           <p>
             <span class="focus">20 %</span><br />
             <span class="unfocus">de commissions<span class="line"></span></span><br />
@@ -71,7 +77,15 @@ useBenefitsAnim() // init GSAP
             pour <span class="focus">vous</span><br />
             et vos locataires <br />
           </p>
-          <!-- after -->
+        </div>
+        <div
+          class="block"
+          v-else
+        >
+          <p>
+            <span class="focus">20 % </span>
+            <span id="plusvalue">pour <span class="focus">vous</span> et vos locataires</span>
+          </p>
         </div>
       </div>
       <div class="losses">

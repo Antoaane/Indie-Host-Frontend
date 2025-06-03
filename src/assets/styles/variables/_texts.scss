@@ -111,7 +111,7 @@
   }
 
   .gradient-text {
-    background: linear-gradient(87deg, #DA99FF 0%, #FABDCF 100%);
+    background: linear-gradient(87deg, $primary_gradiant_second 0%, $primary_gradiant_third 100%);
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -169,7 +169,7 @@
   }
 
   .gradient-text {
-    background: linear-gradient(87deg, #DA99FF 0%, #FABDCF 100%);
+    background: linear-gradient(87deg, $primary_gradiant_second 0%, $primary_gradiant_third 100%);
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -222,7 +222,7 @@
   }
 
   .gradient-text {
-    background: linear-gradient(87deg, #DA99FF 0%, #FABDCF 100%);
+    background: linear-gradient(87deg, $primary_gradiant_second 0%, $primary_gradiant_third 100%);
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
