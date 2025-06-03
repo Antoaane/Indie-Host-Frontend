@@ -82,5 +82,5 @@ useBenefitsAnim() // init GSAP
 </template>
 
 <style lang="scss" scoped>
-@use '@/views/Landing/BenefitsSection/components/AnimationPanel/style.scss';
+@use '@/views/Landing/BenefitsSection/components/AnimationPanel/animation-panel.scss';
 </style>

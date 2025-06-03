@@ -7,6 +7,7 @@ import { onMounted, ref } from 'vue'
 
 // UTILS
 import { vp } from '@/utils/viewport'
+import { set } from '@vueuse/core'
 
 interface SlideTitle {
   title: string
@@ -35,16 +36,20 @@ const slideTitles: SlideTitle[] = [
 ]
 
 const descriptionRef = ref<HTMLElement | null>(null)
+const modSize = ref<number>(0)
 
 onMounted(() => {
   descriptionSize.value = descriptionRef.value?.clientHeight || 0
+  modSize.value = illustrationSize.value * 0.12 * 0.5
 })
 </script>
 
 <template>
-  <div class="content">
+  <div
+    class="content"
+    :style="`padding-right: ${modSize}px;`"
+  >
     <h2> Gardez les mêmes <span class="gradient-text">habitudes</span> </h2>
-
     <div class="slides-titles">
       <div>
         <h3
@@ -95,6 +100,7 @@ onMounted(() => {
   h2 {
     width: 100%;
     margin-bottom: 0 !important;
+    padding: 0 !important;
 
     text-align: center;
     @include h2-title($accent, false);

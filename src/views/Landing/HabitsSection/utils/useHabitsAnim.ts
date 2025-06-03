@@ -151,9 +151,15 @@ export function useHabitsAnim({
 
     if (!shadowRef?.value || !lightRef?.value || !slideTitles) return
 
+    const swiperWidth = document.querySelector('.swiper-wrapper')?.clientWidth
+    const modSize = swiperWidth ? swiperWidth * 0.12 : 40 * 0.15
+    // const mod = vp.xxxl.value ? '90%' : vp.xxl.value ? '100%' : vp.xl.value ? '90%' : vp.lg.value ? '80%' : '100%'
+    const mod = vp.lg.value ? `${modSize}${swiperWidth ? 'px' : 'vw'}` : '0'
+    console.log('mod', mod.toString())
+
     gsap.to(slideTitles, {
-      // width: window.innerWidth < 1024 ? '100%' : window.innerWidth < 1280 ? '80%' : window.innerWidth < 1536 ? '95%' : '100%',
-      width: vp.xxl.value ? '100%' : vp.xl.value ? '90%' : vp.lg.value ? '80%' : '100%',
+      translateX: mod,
+      // width: '60%',
       duration: 0.3,
       ease: 'power2.out',
     })
@@ -201,7 +207,7 @@ export function useHabitsAnim({
     resetSlideSize()
 
     gsap.to(slideTitles, {
-      width: '100%',
+      translateX: '0px',
       duration: 0.3,
       ease: 'power2.out',
     })
