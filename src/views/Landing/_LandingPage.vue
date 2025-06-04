@@ -13,7 +13,7 @@ import HabitsSection from '@/views/Landing/HabitsSection/HabitsSection.vue'
 import StrengthsSection from '@/views/Landing/StrengthsSection.vue'
 import UsageSection from '@/views/Landing/UsageSection/UsageSection.vue'
 import JoinSection from '@/views/Landing/JoinSection.vue'
-import FaqSection from '@/views/Landing/FaqSection.vue'
+import FaqSection from '@/views/Landing/FaqSection/FaqSection.vue'
 </script>
 
 <template>
