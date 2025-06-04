@@ -40,12 +40,19 @@ const { nights, price, total, commissions } = useBookingCalc()
 
 #benefits-section {
   height: 100vh !important;
-  padding-top: calc(var(--gutter-spacing) + 70px);
+  padding-top: calc(var(--gutter-spacing) + 55px);
 
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1rem;
+
+  @include gutters(padding, bottom, 6);
+
+  @include min-width(lg) {
+    padding-top: calc(var(--gutter-spacing) + 70px);
+    @include gutters(padding, bottom, 3);
+  }
 
   .container {
     display: flex;

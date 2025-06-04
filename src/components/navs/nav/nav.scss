@@ -1,4 +1,4 @@
-/* File: src/assets/styles/components/_navs.scss */
+/* File: src/components/navs/nav/nav.scss */
 
 @use "@/assets/styles/variables/globals" as *;
 @use '@/assets/styles/variables/borders' as borders;
@@ -6,18 +6,27 @@
 @use '@/assets/styles/components/buttons' as buttons;
 
 .navbar {
-  width: 100%;
-  height: 70px;
-  padding: 0 1.5rem;
+  width: 55px;
+  height: 55px;
 
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
 
-  border-radius: borders.$rounded-lg;
+  border-radius: borders.$rounded-md;
   background-color: $accent;
 
   @include soft-shadow();
+
+  @include min-width(lg) {
+    width: 100%;
+    height: 70px;
+    padding: 0 1.5rem;
+
+    justify-content: space-between;
+
+    border-radius: borders.$rounded-lg;
+  }
 
   .navbar__logo {
     width: min-content;
@@ -61,7 +70,11 @@
 
     @include container;
     @include gutters(padding, inline);
-    @include gutters(padding, top, 2);
+    @include gutters(padding, top, 0.5);
+
+    @include min-width(lg) {
+      @include gutters(padding, top, 2);
+    }
 
     .navbar__mobile-links {
       margin: 0;
@@ -73,7 +86,11 @@
       gap: 1rem;
 
       background-color: $accent;
-      border-radius: borders.$rounded-lg;
+      border-radius: borders.$rounded-md;
+
+      @include min-width(lg) {
+        border-radius: borders.$rounded-lg;
+      }
 
       li {
         @include buttons.secondary;

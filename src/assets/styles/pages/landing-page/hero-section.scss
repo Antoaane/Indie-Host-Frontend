@@ -4,11 +4,12 @@
 @use '@/assets/styles/components/buttons' as buttons;
 
 #hero-section {
-  padding-top: calc(70px + 1.5rem);
+  padding-top: calc(55px + 1.5rem);
   display: flex;
   position: relative;
 
   @include min-width(lg) {
+    padding-top: calc(70px + 1.5rem);
     height: 100vh;
   }
 
@@ -23,7 +24,11 @@
     }
 
     &>div {
-      padding-top: 3rem;
+      padding-top: 2rem;
+
+      &:first-child {
+        padding-top: 0.5rem;
+      }
 
       @include min-width(lg) {
         max-width: 50vw;

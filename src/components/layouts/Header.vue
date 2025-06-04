@@ -2,14 +2,13 @@
 
 <script setup lang="ts">
 // DEPS
-import Nav from '@/components/navs/Nav.vue'
+import Nav from '@/components/navs/nav/Nav.vue'
 
 // ASSETS
-
 </script>
 
 <template>
-    <header>
-        <Nav />
-    </header>
+  <header>
+    <Nav />
+  </header>
 </template>

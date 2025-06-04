@@ -1,4 +1,4 @@
-<!-- File: src/components/navs/Nav.vue -->
+<!-- File: src/components/navs/nav/Nav.vue -->
 
 <script setup lang="ts">
 // DEPS
@@ -20,6 +20,7 @@ const toggleMobileMenu = () => {
 <template>
   <nav class="navbar">
     <a
+      v-if="vp.lg.value"
       href="/#hero-section"
       class="navbar__logo"
     >
@@ -99,7 +100,9 @@ const toggleMobileMenu = () => {
   </nav>
 </template>
 
-<style scoped>
+<style lang="scss">
+@use '@/components/navs/nav/nav.scss';
+
 .fade-slide-enter-active,
 .fade-slide-leave-active {
   transition:

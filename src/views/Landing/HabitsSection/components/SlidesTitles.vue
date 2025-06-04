@@ -62,7 +62,7 @@ onMounted(() => {
       </div>
       <div
         ref="descriptionRef"
-        :style="`transform: translateY(${vp.lg.value ? 0 : illustrationSize + 16}px)`"
+        :style="`transform: translateY(${vp.lg.value ? 0 : illustrationSize + 48}px)`"
       >
         <p
           v-for="(txt, idx) in slideTitles"

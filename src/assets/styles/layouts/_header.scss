@@ -1,15 +1,20 @@
-// File: src/assets/styles/layouts/_header.scss
+/* File: src/assets/styles/layouts/_header.scss */
 
 @use "@/assets/styles/variables/globals" as *;
 
 header {
-    position: fixed;
-    top: 0;
-    left: 50%;
-    z-index: 9999;
+  position: fixed;
+  top: 0;
+  left: 50%;
+  z-index: 9999;
 
-    transform: translateX(-50%);
+  display: flex;
+  justify-content: flex-end;
 
-    @include container(xxl);
-    @include gutters(padding, all);
+  transform: translateX(-50%);
+
+  @include container(xxl);
+  @include gutters(padding, all);
+
+  @include min-width(lg) {}
 }

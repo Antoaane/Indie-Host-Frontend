@@ -28,7 +28,11 @@ import Carousel from '@/views/Landing/HabitsSection/components/Carousel/Carousel
 @use '@/assets/styles/variables/borders' as borders;
 
 #habits-section {
-  padding-top: calc(150vh + (var(--gutter-spacing) + 70px));
+  padding-top: calc(150vh + (var(--gutter-spacing)));
+
+  @include min-width(lg) {
+    padding-top: calc(150vh + (var(--gutter-spacing) + 70px));
+  }
 
   .overflow {
     width: 100%;
@@ -39,7 +43,7 @@ import Carousel from '@/views/Landing/HabitsSection/components/Carousel/Carousel
     .container {
       display: flex;
       flex-direction: column-reverse;
-      gap: 2rem;
+      gap: 1.5rem;
 
       @include min-width(lg) {
         height: 80vh;
