@@ -57,43 +57,43 @@ import Carousel from '@/views/Landing/HabitsSection/components/Carousel/Carousel
       @include container(xxl, 5rem);
       @include gutters(padding, inline, 2);
     }
+  }
 
-    .slide-display {
-      width: 100vw;
-      height: 100vh;
+  .slide-display {
+    width: 100vw;
+    height: 100vh;
 
-      display: flex;
-      justify-content: center;
-      align-items: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      z-index: -999;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    z-index: -999;
 
-      transform: translate(-50%, -50%);
-      opacity: 0;
-      background-color: rgba($secondary, 0.85);
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    background-color: rgba($secondary, 0.85);
 
-      &:has(svg),
-      &:has(img) {
-        z-index: 9999;
+    &:has(svg),
+    &:has(img) {
+      z-index: 9999;
+    }
+
+    img {
+      max-width: 95vw;
+      max-height: 95vh;
+
+      border-radius: borders.$rounded-xl;
+      border: 1px solid rgba($accent, 1);
+
+      @include min-width(lg) {
+        max-width: 85vw;
+        max-height: 90vh;
       }
 
-      img {
-        max-width: 95vw;
-        max-height: 95vh;
-
-        border-radius: borders.$rounded-xl;
-        border: 1px solid rgba($accent, 1);
-
-        @include min-width(lg) {
-          max-width: 85vw;
-          max-height: 90vh;
-        }
-
-        @include halo(lg);
-      }
+      @include halo(lg);
     }
   }
 }
