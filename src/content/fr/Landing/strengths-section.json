@@ -1,0 +1,37 @@
+{
+  "id": "strengths-section",
+  "items": {
+    "title-1": {
+      "tag": "h2",
+      "content": "Nos piliers : <strong>Transparence</strong>, <strong>respect</strong>, <strong>confiance</strong>"
+    },
+    "subtitle-1": {
+      "tag": "p",
+      "content": "IndieHost s’engage sur trois valeurs clés pour protéger vos revenus, vos données et votre sérénité."
+    },
+    "card-1-title": {
+      "tag": "h3",
+      "content": "Pas assez de réservations ? IndieHost ne vous prélève pas."
+    },
+    "card-1-text": {
+      "tag": "p",
+      "content": "Avec IndieHost, vous ne payez jamais plus que ce que vous auriez versé en commission ailleurs, et rien n’est dû si votre activité ralentit. Votre abonnement n’est déclenché que lorsqu’il représente moins de 20 % de vos revenus générés sur la plateforme.<br /><br />Si vos réservations sont trop faibles, aucun prélèvement : votre rentabilité reste prioritaire, sans surprise ni engagement caché. Vous gardez ainsi une liberté totale, pour avancer sereinement, même en période creuse."
+    },
+    "card-2-title": {
+      "tag": "h3",
+      "content": "La vraie sérénité, c’est savoir où vont vos données."
+    },
+    "card-2-text": {
+      "tag": "p",
+      "content": "Vos données sont hébergées en France et protégées selon les règles strictes du RGPD européen. Votre vie privée n’est jamais monnayée : notre seul modèle économique, c’est l’abonnement, tout simplement. La confidentialité n’est pas une promesse, c’est la base."
+    },
+    "card-3-title": {
+      "tag": "h3",
+      "content": "Pas assez de réservations ? IndieHost ne vous prélève pas."
+    },
+    "card-3-text": {
+      "tag": "p",
+      "content": "Nos équipes veillent activement à l’authenticité de chaque utilisateur, qu’il soit hôte ou voyageur. Tous les logements sont vérifiés pour vous permettre d’accueillir ou de voyager en toute sérénité.<br /><br />En cas de comportement problématique (dégradation, non-respect des règles ou des horaires), un hôte peut signaler un voyageur : chaque signalement (“blam”) est étudié et validé sur preuve avant d’être attribué, puis rendu visible aux autres hôtes lors des futures demandes de réservation."
+    }
+  }
+}

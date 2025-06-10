@@ -3,7 +3,7 @@
   "items": {
     "title-1": {
       "tag": "h2",
-      "content": "<strong>Tout</strong> est pour <strong>vous</strong>"
+      "content": "Gardez les mêmes <strong>habitudes</strong>"
     },
     "slider": {
       "tag": "component",
