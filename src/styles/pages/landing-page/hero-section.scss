@@ -1,0 +1,205 @@
+/* File: public/assets/styles/pages/landing-page/hero-section.scss */
+
+@use "@/styles/variables/globals" as *;
+@use '@/styles/components/buttons' as buttons;
+
+#hero-section {
+  padding-top: calc(55px + 1.5rem);
+  display: flex;
+  position: relative;
+
+  @include min-width(lg) {
+    padding-top: calc(70px + 1.5rem);
+    height: 100vh;
+  }
+
+  .container {
+    display: flex;
+    flex-direction: column;
+
+    @include gutters(padding, inline, 2);
+
+    @include min-width(lg) {
+      flex-direction: row;
+    }
+
+    &>div {
+      padding-top: 2rem;
+
+      &:first-child {
+        padding-top: 0.5rem;
+      }
+
+      @include min-width(lg) {
+        max-width: 50vw;
+        max-height: 100%;
+        height: 100%;
+        padding-top: 0;
+
+        flex: 0 0 50%;
+      }
+    }
+
+    .content {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+
+      &>div {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+
+        @include min-width(lg) {
+          max-width: 40rem;
+          align-items: flex-start;
+        }
+
+        h1 {
+          width: 100%;
+          padding-inline: 0 !important;
+
+          text-align: center;
+          @include main-title($accent);
+
+          @include min-width(lg) {
+            text-align: left;
+          }
+        }
+
+        p {
+          width: 100%;
+          margin-bottom: 2rem;
+
+          text-align: center;
+          @include base-text($accent);
+
+          @include min-width(lg) {
+            text-align: left;
+          }
+
+          &>u {
+            @include base-text($accent, false, true);
+          }
+
+          &>b {
+            @include base-text($accent, true);
+          }
+        }
+
+        .cta {
+          width: max-content;
+          margin-top: 2rem;
+
+          @include buttons.primary(true, light);
+        }
+      }
+    }
+
+    .illustration {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+
+      @include min-width(lg) {
+        padding-left: 4rem;
+        align-items: start;
+      }
+
+      &>div {
+        width: 100vw;
+        padding-left: 10%;
+        height: max-content;
+        position: relative;
+
+        @include min-width(lg) {
+          width: 100%;
+          padding: 5% 0 0 0;
+        }
+
+        .hero-image {
+          width: auto;
+          height: 60vh;
+
+          @include min-width(lg) {
+            height: 80vh;
+            max-height: 960px;
+          }
+        }
+
+        // illustration gradient
+        span {
+          width: 15%;
+          height: 80.75%;
+
+          display: block;
+
+          position: absolute;
+          z-index: 1;
+          bottom: 6.25%;
+          left: 85%;
+
+          background: radial-gradient(174.54% 210.83% at 0% 50.07%,
+              rgba(17, 17, 23, 0.00) 22.88%,
+              $secondary 51.58%);
+          // background: rgba(255, 0, 0, 0.5);
+          border-radius: 1rem;
+
+          @include min-width(sm) {
+            width: 40%;
+            left: 60%;
+          }
+
+          @include min-width(md) {
+            width: 50%;
+            left: 50%;
+          }
+
+          @include min-width(lg) {
+            width: 10%;
+            height: 79%;
+
+            bottom: 5.5%;
+            left: auto;
+            right: 0;
+          }
+
+          @include min-width(xl) {
+            width: 29%;
+            height: 78%;
+          }
+
+          @include min-width(xxl) {
+            width: 41%;
+            height: 78%;
+          }
+
+          @include min-width(xxxl) {
+            width: 50%;
+            height: 77%;
+          }
+
+          @include min-width(xxxxl) {
+            width: 50%;
+            height: 76%;
+          }
+        }
+      }
+    }
+  }
+
+  .shapes-bg {
+    min-width: 1280px;
+    width: 100%;
+    height: auto;
+
+    position: absolute;
+    top: 0;
+    left: 50%;
+    z-index: -1;
+
+    transform: translateX(-50%);
+    opacity: 0.075;
+  }
+}

@@ -2,7 +2,7 @@
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import '@/assets/styles/main.scss'
+import './main.scss'
 import VueSplide from '@splidejs/vue-splide'
 import '@splidejs/vue-splide/css'
 

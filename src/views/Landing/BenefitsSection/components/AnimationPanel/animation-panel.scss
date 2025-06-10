@@ -1,6 +1,6 @@
 /* File: src/views/Landing/BenefitsSection/components/AnimationPanel/animation-panel.scss */
 
-@use '@/assets/styles/variables/globals' as *;
+@use '@/styles/variables/globals' as *;
 
 [class^='animation-'] {
   --longer-side: calc(100% * 70 / 170);

@@ -5,7 +5,7 @@
 import { ref, computed, onMounted } from 'vue'
 import type { Swiper as SwiperClass } from 'swiper'
 import { Swiper, SwiperSlide } from 'swiper/vue'
-import { Autoplay, type SwiperOptions } from 'swiper/modules'
+import { Autoplay } from 'swiper/modules'
 import 'swiper/css'
 import 'swiper/css/autoplay'
 
@@ -31,7 +31,7 @@ const { onSwiperInit, onSlideChange } = useHabitsAnim({
 })
 
 // Params Swiper en reactive/computed
-const swiperParams = computed<SwiperOptions>(() => ({
+const swiperParams = computed(() => ({
   modules: [
     Autoplay,
   ],
@@ -79,28 +79,28 @@ const initIllustrationSize = () => {
         <SwiperSlide>
           <img
             class="slide-page-svg"
-            src="@/assets/media/images/dashboard-vue-ensemble.png"
+            src="/assets/media/images/dashboard-vue-ensemble.png"
             alt="Page réservations"
           />
         </SwiperSlide>
         <SwiperSlide>
           <img
             class="slide-page-svg"
-            src="@/assets/media/images/dashboard-detail-logement.png"
+            src="/assets/media/images/dashboard-detail-logement.png"
             alt="Page réservations"
           />
         </SwiperSlide>
         <SwiperSlide>
           <img
             class="slide-page-svg"
-            src="@/assets/media/images/annonce-reservation.png"
+            src="/assets/media/images/annonce-reservation.png"
             alt="Page paiement"
           />
         </SwiperSlide>
         <SwiperSlide>
           <img
             class="slide-page-svg"
-            src="@/assets/media/images/messagerie.png"
+            src="/assets/media/images/messagerie.png"
             alt="Page messagerie"
           />
         </SwiperSlide>

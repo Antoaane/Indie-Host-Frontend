@@ -1,9 +1,9 @@
 /* File: src/components/navs/nav/nav.scss */
 
-@use "@/assets/styles/variables/globals" as *;
-@use '@/assets/styles/variables/borders' as borders;
-@use '@/assets/styles/variables/animations' as animations;
-@use '@/assets/styles/components/buttons' as buttons;
+@use "@/styles/variables/globals" as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
+@use '@/styles/components/buttons' as buttons;
 
 .navbar {
   width: 55px;

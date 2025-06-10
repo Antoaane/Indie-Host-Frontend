@@ -1,0 +1,13 @@
+{
+  "id": "customization-section",
+  "items": {
+    "title-1": {
+      "tag": "h2",
+      "content": "Votre page, votre nom, votre <strong>image</strong>"
+    },
+    "text-1": {
+      "tag": "p",
+      "content": "IndieHost crée <b>une adresse rien qu’à vous</b>, avec un thème qui reflète l’esprit de votre lieu, votre ton, votre univers. <br /><br />Pas besoin d’un site compliqué pour avoir une page qui vous ressemble."
+    }
+  }
+}

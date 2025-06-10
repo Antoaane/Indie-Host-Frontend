@@ -1,36 +1,33 @@
-<!-- File: src/views/Landing/CustomizationSection/index.vue -->
+<!-- File: src/views/Landing/CustomizationSection/CustomizationSection.vue -->
 
 <script setup lang="ts">
-// DEPS
-
 // ASSETS
 import CustomDomain from '@/components/svgs/images/CustomDomain.vue'
+// CONTENT
+import type { ItemSection } from '@/content/types'
+import rawContent from '@/content/fr/Landing/customization-section.json'
+
+const section = rawContent as ItemSection
 </script>
 
 <template>
-  <section id="customization-section">
+  <section :id="section.id">
     <div class="container">
       <div class="content">
         <div>
-          <h2>
-            Votre page, votre nom, votre
-            <span class="gradient-text">image</span>
-          </h2>
+          <h2 v-html="section.items['title-1'].content" />
           <CustomDomain
             class="custom-domain"
             title="Domaine personnalisé"
             desc="Personnalisez votre domaine avec votre nom de marque"
           />
-          <p>
-            IndieHost crée <b>une adresse rien qu’à vous</b>, avec un thème qui reflète l’esprit de votre lieu, votre ton, votre univers. <br /><br />
-            Pas besoin d’un site compliqué pour avoir une page qui vous ressemble.
-          </p>
+          <p v-html="section.items['text-1'].content" />
         </div>
       </div>
       <div class="illustration">
         <img
           class="customization-image"
-          src="@/assets/media/images/customization-image.png"
+          src="/assets/media/images/customization-image.png"
           alt="Customization"
         />
       </div>

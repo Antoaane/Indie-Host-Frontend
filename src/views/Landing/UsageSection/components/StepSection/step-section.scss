@@ -1,7 +1,7 @@
 /* File: src/views/Landing/UsageSection/components/StepSection/step-section.scss */
 
-@use '@/assets/styles/variables/globals' as *;
-@use '@/assets/styles/variables/effects' as effect;
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/effects' as effect;
 
 div:has(> .step-section) {
   .step-section {

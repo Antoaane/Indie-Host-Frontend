@@ -4,7 +4,7 @@
 // DEPS
 
 // ASSETS
-import DevsPhoto from '@/assets/media/images/image1_867_26311.jpg'
+import DevsPhoto from '/assets/media/images/image1_867_26311.jpg'
 import FrenchFlag from '@/components/svgs/icons/FrenchFlag.vue'
 import { Send, SendIcon } from 'lucide-vue-next'
 </script>
@@ -14,7 +14,7 @@ import { Send, SendIcon } from 'lucide-vue-next'
     <div class="container__xl">
       <div class="title">
         <h2>
-          <FrenchFlag class="french-flag" /><span>Pas mal non ? <span class="gradient-text">C’est français !</span></span></h2
+          <FrenchFlag class="french-flag" /><span>Pas mal non ? <strong>C’est français !</strong></span></h2
         >
         <p>IndieHost est un projet indépendant. Nos investisseurs, <strong>c’est vous</strong>.</p>
       </div>

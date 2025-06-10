@@ -48,7 +48,7 @@ const props = defineProps<{
         <!-- Halo décoratif constant (change le src si besoin) -->
         <img
           class="halo-png"
-          src="@/assets/media/images/halo1.png"
+          src="/assets/media/images/halo1.png"
           alt="Décoration contextuelle"
         />
         <!-- Illustration passée en paramètre avec nom de classe {nom du fichier} -->

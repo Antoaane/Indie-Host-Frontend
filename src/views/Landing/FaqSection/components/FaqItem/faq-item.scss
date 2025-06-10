@@ -1,0 +1,45 @@
+/* File: src/views/Landing/FaqSection/components/FaqItem/faq-item.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/animations' as animations;
+
+// Styles de base pour les titres et paragraphes
+h3 {
+  margin: 0 !important;
+  @include h3-title($accent);
+}
+
+h4 {
+  margin: 0 !important;
+  @include h4-title($accent);
+}
+
+mark {
+  padding: 0 0.15rem;
+  background-color: rgba($accent, 0.2);
+  border-radius: 0.15rem;
+}
+
+ul {
+  margin: 0;
+  padding-left: 1rem;
+  list-style: none;
+}
+
+.faq-content {
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      margin-bottom: 0.5rem;
+
+      p {
+        margin: 0;
+        color: $accent;
+        @include little-text($accent);
+      }
+    }
+  }
+}

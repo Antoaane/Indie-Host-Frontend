@@ -73,7 +73,7 @@ def find_existing_image(b64_data: str) -> Optional[str]:
                 if abs(new_hash - imagehash.phash(Image.open(existing_file))) <= 5:
                     log(
                         f'🔁 Duplication détectée → réutilisation {existing_file.name}')
-                    return f'@/assets/media/images/{existing_file.name}'
+                    return f'/public/assets/media/images/{existing_file.name}'
             except Exception:
                 continue
     return None
@@ -221,7 +221,7 @@ def extract_and_convert(svg_path: Path) -> None:
 
         log(f'📤 Export image {fname} ({width}×{height})')
         return (f'id="{img_id}" '
-                f'xlink:href="@/assets/media/images/{fname}" '
+                f'xlink:href="/public/assets/media/images/{fname}" '
                 f'width="{width}" height="{height}"')
 
     svg_text = pattern.sub(_repl, svg_text)

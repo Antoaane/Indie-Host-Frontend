@@ -2042,31 +2042,31 @@
         />
       </clipPath>
       <image
-        xlink:href="@/assets/media/images/image0_1014_36213.jpg"
+        xlink:href="/assets/media/images/image0_1014_36213.jpg"
         id="image0_1014_36213"
         width="4096"
         height="2723"
       />
       <image
-        xlink:href="@/assets/media/images/image4_999_23149.jpg"
+        xlink:href="/assets/media/images/image4_999_23149.jpg"
         id="image1_1014_36213"
         width="1024"
         height="1024"
       />
       <image
-        xlink:href="@/assets/media/images/image8_999_23149.jpg"
+        xlink:href="/assets/media/images/image8_999_23149.jpg"
         id="image2_1014_36213"
         width="3840"
         height="2160"
       />
       <image
-        xlink:href="@/assets/media/images/image3_1014_36213.jpg"
+        xlink:href="/assets/media/images/image3_1014_36213.jpg"
         id="image3_1014_36213"
         width="225"
         height="225"
       />
       <image
-        xlink:href="@/assets/media/images/image4_1014_36213.png"
+        xlink:href="/assets/media/images/image4_1014_36213.png"
         id="image4_1014_36213"
         width="512"
         height="512"

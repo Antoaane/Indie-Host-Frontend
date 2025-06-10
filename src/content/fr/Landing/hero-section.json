@@ -1,0 +1,28 @@
+{
+  "id": "hero-section",
+  "items": {
+    "title-1": {
+      "tag": "h1",
+      "content": "Une plateforme de location avec <strong>0%</strong> de commissions"
+    },
+    "text-1": {
+      "tag": "p",
+      "content": "IndieHost <u>élimine les commissions</u>. Des réservations plus accessibles pour vos voyageurs, et jusqu’à <b>20 % de revenus en plus</b> pour vous grâce à un abonnement fixe. Créez une page à votre image et de proposez des tarifs plus justes sans vous séparer de vos outils habituels."
+    },
+    "cta-1": {
+      "tag": "a",
+      "content": "Essayez en premier !",
+      "meta": {
+        "href": "/",
+        "target": "_self"
+      }
+    },
+    "image-1": {
+      "tag": "img",
+      "content": "/assets/media/images/hero-image.png",
+      "meta": {
+        "alt": "Illustration d'une annonce IndieHost en version mobile pour réserver un logement en ligne, ainsi que la page de gestion de l'hôte en version bureau"
+      }
+    }
+  }
+}

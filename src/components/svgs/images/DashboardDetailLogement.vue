@@ -4195,55 +4195,55 @@
         />
       </clipPath>
       <image
-        xlink:href="@/assets/media/images/image12_867_26311.jpg"
+        xlink:href="/assets/media/images/image12_867_26311.jpg"
         id="image0_999_23149"
         width="1200"
         height="800"
       />
       <image
-        xlink:href="@/assets/media/images/image3_867_26311.jpg"
+        xlink:href="/assets/media/images/image3_867_26311.jpg"
         id="image1_999_23149"
         width="1200"
         height="800"
       />
       <image
-        xlink:href="@/assets/media/images/image2_999_23149.jpg"
+        xlink:href="/assets/media/images/image2_999_23149.jpg"
         id="image2_999_23149"
         width="4096"
         height="2731"
       />
       <image
-        xlink:href="@/assets/media/images/image3_999_23149.jpg"
+        xlink:href="/assets/media/images/image3_999_23149.jpg"
         id="image3_999_23149"
         width="666"
         height="888"
       />
       <image
-        xlink:href="@/assets/media/images/image4_999_23149.jpg"
+        xlink:href="/assets/media/images/image4_999_23149.jpg"
         id="image4_999_23149"
         width="1024"
         height="1024"
       />
       <image
-        xlink:href="@/assets/media/images/image5_999_23149.jpg"
+        xlink:href="/assets/media/images/image5_999_23149.jpg"
         id="image5_999_23149"
         width="1024"
         height="1024"
       />
       <image
-        xlink:href="@/assets/media/images/image6_999_23149.jpg"
+        xlink:href="/assets/media/images/image6_999_23149.jpg"
         id="image6_999_23149"
         width="1024"
         height="1024"
       />
       <image
-        xlink:href="@/assets/media/images/image7_999_23149.jpg"
+        xlink:href="/assets/media/images/image7_999_23149.jpg"
         id="image7_999_23149"
         width="800"
         height="600"
       />
       <image
-        xlink:href="@/assets/media/images/image8_999_23149.jpg"
+        xlink:href="/assets/media/images/image8_999_23149.jpg"
         id="image8_999_23149"
         width="3840"
         height="2160"

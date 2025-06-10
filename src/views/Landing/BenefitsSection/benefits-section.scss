@@ -1,0 +1,47 @@
+/* File: src/views/Landing/BenefitsSection/benefits-section.scss */
+
+@use '@/styles/variables/globals' as *;
+
+#benefits-section {
+  height: 100vh !important;
+  padding-top: calc(var(--gutter-spacing) + 55px);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+
+  @include gutters(padding, bottom, 6);
+
+  @include min-width(lg) {
+    padding-top: calc(var(--gutter-spacing) + 70px);
+    @include gutters(padding, bottom, 3);
+  }
+
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .first-title {
+      padding-top: 1rem;
+      margin: 0 !important;
+      @include h2-title($accent);
+    }
+  }
+
+  .interaction-container {
+    width: 100%;
+    height: 100%;
+
+    gap: 1.5rem;
+
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+
+    @include min-width(lg) {
+      flex-direction: column;
+    }
+  }
+}

@@ -1,0 +1,29 @@
+/* File: public/assets/styles/components/_inputs.scss */
+
+@use "@/styles/variables/globals" as *;
+@use "@/styles/variables/borders" as borders;
+@use '@/styles/variables/animations' as *;
+@use "@/styles/components/buttons" as buttons;
+
+@mixin text($color : $tertiary, $radius : borders.$rounded-sm) {
+  padding: 0.5rem 0.75rem;
+
+  border: none;
+  border-radius: $radius;
+  background-color: $color;
+
+  color: $secondary;
+
+  box-shadow: 0 0 0 0 rgba($accent, 0);
+  @include transition;
+
+  &:focus {
+    // reset
+    outline: none;
+    border: none;
+    box-shadow: none;
+    background-color: $color;
+
+    @include halo(sm, false, $accent, 0.5);
+  }
+}

@@ -1,9 +1,16 @@
 // File: src/views/Landing/FaqSection/utils/useFaq.ts
 
+// DEPS
 import { ref, computed, watch } from 'vue'
-import type { FaqNode } from '@/views/Landing/FaqSection/utils/faqData.ts'
-import { faqData } from '@/views/Landing/FaqSection/utils/faqData.ts'
 import { useHead } from '@unhead/vue'
+
+// CONTENT
+import type { ItemSection } from '@/content/types'
+import type { FaqNode } from '@/views/Landing/FaqSection/types/faqType'
+import rawContent from '@/content/fr/Landing/faq-section.json'
+
+const jsonContent = (rawContent as unknown) as ItemSection
+const faqData = jsonContent.items['faq'].meta?.data
 
 export function useFaq() {
   // → L’arbre complet de la FAQ

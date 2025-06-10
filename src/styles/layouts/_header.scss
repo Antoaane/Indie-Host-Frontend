@@ -1,0 +1,20 @@
+/* File: public/assets/styles/layouts/_header.scss */
+
+@use "@/styles/variables/globals" as *;
+
+header {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  z-index: 9999;
+
+  display: flex;
+  justify-content: flex-end;
+
+  transform: translateX(-50%);
+
+  @include container(xxl);
+  @include gutters(padding, all);
+
+  @include min-width(lg) {}
+}

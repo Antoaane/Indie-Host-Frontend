@@ -1,0 +1,24 @@
+/* File: public/assets/styles/typography/_texts.scss */
+
+@use "@/styles/variables/globals" as *;
+
+* {
+  font-family: 'outfit', sans-serif;
+  color: $secondary;
+}
+
+text[font-family="Fustat"] {
+  font-family: 'Fustat', sans-serif;
+
+  tspan {
+    font-family: 'Fustat', sans-serif;
+  }
+}
+
+text[font-family="Outfit"] {
+  font-family: 'Outfit', sans-serif;
+
+  tspan {
+    font-family: 'Outfit', sans-serif;
+  }
+}

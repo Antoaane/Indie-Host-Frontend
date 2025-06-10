@@ -13,7 +13,7 @@ import MagicStick from '@/components/svgs/icons/MagicStick.vue'
   <section id="strengths-section">
     <div class="container">
       <div class="title">
-        <h2> Une meilleure façon <span class="gradient-text">d’accueillir</span></h2>
+        <h2> Une meilleure façon <strong>d’accueillir</strong></h2>
         <p>
           Nous croyons que louer son logement ne devrait pas rimer avec commissions excessives, outils compliqués ou dépendance totale aux plateformes. Nous proposons une <strong>simple, directe et personnelle</strong> qui redonne le contrôle à celles et ceux qui font vivre l’hospitalité. <br /><br />
           Pas besoin d’être expert. Pas besoin de tout quitter. <strong>Juste l’envie de reprendre la main</strong>.

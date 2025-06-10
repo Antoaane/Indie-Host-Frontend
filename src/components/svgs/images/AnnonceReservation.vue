@@ -2109,13 +2109,13 @@
         />
       </clipPath>
       <image
-        xlink:href="@/assets/media/images/image3_867_26311.jpg"
+        xlink:href="/assets/media/images/image3_867_26311.jpg"
         id="image0_997_20653"
         width="1200"
         height="800"
       />
       <image
-        xlink:href="@/assets/media/images/image1_997_20653.jpg"
+        xlink:href="/assets/media/images/image1_997_20653.jpg"
         id="image1_997_20653"
         width="306"
         height="23"

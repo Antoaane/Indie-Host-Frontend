@@ -1,0 +1,60 @@
+/* File: src/views/Landing/BenefitsSection/components/CalcTitle/calc-title.scss */
+
+@use '@/styles/variables/globals' as *;
+
+.container:has(.second-title) {
+  .second-title {
+    width: 100%;
+    max-width: 30rem;
+    margin-bottom: 0.5rem;
+
+    text-align: center;
+    @include h3-title($accent);
+    @include gutters(padding, inline, 1);
+  }
+
+  p {
+    text-decoration: underline !important;
+    text-underline-offset: 0.3rem;
+
+    @include base-text($accent);
+
+    span {
+      display: inline-block;
+      position: relative;
+
+      text-decoration: underline !important;
+      text-underline-offset: 0.3rem;
+      @include base-text($accent);
+
+      input {
+        width: 115%;
+        height: 100%;
+
+        position: absolute;
+        z-index: 9999;
+        top: 50%;
+        left: 50%;
+
+        transform: translate(-50%, -50%);
+
+        font-size: 1.125rem;
+        color: #00000000;
+
+        background-color: #00000000;
+        border: none;
+
+        // hide arrow
+        &::-webkit-inner-spin-button,
+        &::-webkit-outer-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+
+        &:focus {
+          color: $accent;
+        }
+      }
+    }
+  }
+}
