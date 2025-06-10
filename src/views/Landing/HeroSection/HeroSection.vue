@@ -43,3 +43,7 @@ const section = rawContent as ItemSection
     </div>
   </section>
 </template>
+
+<style lang="scss">
+@use '@/views/Landing/HeroSection/hero-section.scss';
+</style>

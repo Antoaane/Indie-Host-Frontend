@@ -1,4 +1,4 @@
-<!-- File: src/views/Landing/JoinSection.vue -->
+<!-- File: src/views/Landing/JoinSection/JoinSection.vue -->
 
 <script setup lang="ts">
 // DEPS
@@ -106,3 +106,7 @@ import { Send, SendIcon } from 'lucide-vue-next'
     </div>
   </section>
 </template>
+
+<style lang="scss">
+@use '@/views/Landing/JoinSection/join-section.scss';
+</style>

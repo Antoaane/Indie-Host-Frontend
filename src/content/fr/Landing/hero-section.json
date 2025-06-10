@@ -7,13 +7,13 @@
     },
     "text-1": {
       "tag": "p",
-      "content": "IndieHost <u>élimine les commissions</u>. Des réservations plus accessibles pour vos voyageurs, et jusqu’à <b>20 % de revenus en plus</b> pour vous grâce à un abonnement fixe. Créez une page à votre image et de proposez des tarifs plus justes sans vous séparer de vos outils habituels."
+      "content": "IndieHost <u>élimine les commissions</u>. Des réservations plus accessibles pour vos voyageurs, et jusqu’à <b>20 % de revenus en plus</b> pour vous grâce à un abonnement fixe. Créez une page à votre image et proposez des tarifs plus justes sans vous séparer de vos outils habituels."
     },
     "cta-1": {
       "tag": "a",
       "content": "Essayez en premier !",
       "meta": {
-        "href": "/",
+        "href": "#join-section",
         "target": "_self"
       }
     },

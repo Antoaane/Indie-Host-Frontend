@@ -75,7 +75,7 @@
   }
 }
 
-@mixin main-title($color : $secondary, $bigger: true) {
+@mixin main-title($color : $secondary, $bigger: true, $colorful: true) {
   margin-top: 0;
   margin-bottom: 1rem;
 
@@ -111,11 +111,13 @@
   }
 
   strong {
-    background: linear-gradient(87deg, $primary_gradiant_second 0%, $primary_gradiant_third 100%);
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-weight: inherit !important;
+    @if $colorful {
+      background: linear-gradient(87deg, $primary_gradiant_second 0%, $primary_gradiant_third 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: inherit !important;
+    }
 
     @if $bigger {
       font-size: 2.25rem;
@@ -131,7 +133,7 @@
   }
 }
 
-@mixin h2-title($color : $secondary, $bigger: true) {
+@mixin h2-title($color : $secondary, $bigger: true, $colorful: true) {
   margin-top: 0;
   margin-bottom: 0.75rem;
 
@@ -170,11 +172,13 @@
   }
 
   strong {
-    background: linear-gradient(87deg, $primary_gradiant_second 0%, $primary_gradiant_third 100%);
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-weight: inherit !important;
+    @if $colorful {
+      background: linear-gradient(87deg, $primary_gradiant_second 0%, $primary_gradiant_third 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: inherit !important;
+    }
 
     @if $bigger {
       font-size: 2.25rem;
@@ -190,7 +194,7 @@
   }
 }
 
-@mixin h3-title($color : $secondary, $bigger: true) {
+@mixin h3-title($color : $secondary, $bigger: true, $colorful: true) {
   margin-top: 0;
   margin-bottom: 0.5rem;
 
@@ -224,11 +228,13 @@
   }
 
   strong {
-    background: linear-gradient(87deg, $primary_gradiant_second 0%, $primary_gradiant_third 100%);
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-weight: inherit !important;
+    @if $colorful {
+      background: linear-gradient(87deg, $primary_gradiant_second 0%, $primary_gradiant_third 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: inherit !important;
+    }
 
     @if $bigger {
       font-size: 1.75rem;
@@ -256,7 +262,7 @@
   }
 }
 
-@mixin h4-title($color : $secondary, $bigger: true) {
+@mixin h4-title($color : $secondary, $bigger: true, $colorful: true) {
   margin-top: 0;
   margin-bottom: 0.5rem;
 

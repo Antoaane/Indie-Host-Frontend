@@ -1,4 +1,4 @@
-<!-- File: src/views/Landing/StrengthsSection.vue -->
+<!-- File: src/views/Landing/StrengthsSection/StrengthsSection.vue -->
 
 <script setup lang="ts">
 // DEPS
@@ -51,3 +51,7 @@ import MagicStick from '@/components/svgs/icons/MagicStick.vue'
     </div>
   </section>
 </template>
+
+<style lang="scss">
+@use '@/views/Landing/StrengthsSection/strengths-section.scss';
+</style>

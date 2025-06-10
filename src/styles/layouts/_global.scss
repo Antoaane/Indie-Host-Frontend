@@ -1,11 +1,12 @@
-/* File: public/assets/styles/layouts/_global.scss */
+/* File: src/styles/layouts/_global.scss */
 
 @use "sass:map";
 @use "sass:list";
 @use "@/styles/variables/globals" as *;
 
 html {
-  scroll-behavior: auto;
+  // scroll-behavior: auto;
+  scroll-behavior: smooth;
   overflow-x: hidden;
   background-color: $secondary;
 }

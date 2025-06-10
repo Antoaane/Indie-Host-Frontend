@@ -27,7 +27,7 @@ import imagehash
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-MEDIA_ROOT = Path('src/assets/media')
+MEDIA_ROOT = Path('public/assets/media')
 IMAGE_OUTPUT = MEDIA_ROOT / 'images'
 VUE_OUTPUT_ROOT = Path('src/components/svgs')
 MAX_NODE_MEMORY_MB = 4096

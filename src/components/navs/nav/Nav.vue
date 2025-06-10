@@ -38,16 +38,13 @@ const toggleMobileMenu = () => {
       v-if="vp.lg.value"
     >
       <li>
-        <RouterLink to="#home">Tenez moi au courant !</RouterLink>
+        <a href="#join-section"> Tenez moi au courant ! </a>
       </li>
       <li>
-        <RouterLink to="#about">Comment ça marche ?</RouterLink>
+        <a href="#habits-section"> Fonctionnalités </a>
       </li>
       <li>
-        <RouterLink to="#services">Pour qui ?</RouterLink>
-      </li>
-      <li>
-        <RouterLink to="#contact">Contact</RouterLink>
+        <a href="#usage-section"> Comment ça marche ? </a>
       </li>
     </ul>
 
@@ -67,32 +64,28 @@ const toggleMobileMenu = () => {
       >
         <ul class="navbar__mobile-links">
           <li>
-            <RouterLink
-              to="#home"
+            <a
+              href="#join-section"
               @click="toggleMobileMenu"
-              >Tenez moi au courant !</RouterLink
             >
+              Tenez moi au courant !
+            </a>
           </li>
           <li>
-            <RouterLink
-              to="#about"
+            <a
+              href="#habits-section"
               @click="toggleMobileMenu"
-              >Comment ça marche ?</RouterLink
             >
+              Fonctionnalités
+            </a>
           </li>
           <li>
-            <RouterLink
-              to="#services"
+            <a
+              href="#usage-section"
               @click="toggleMobileMenu"
-              >Pour qui ?</RouterLink
             >
-          </li>
-          <li>
-            <RouterLink
-              to="#contact"
-              @click="toggleMobileMenu"
-              >Contact</RouterLink
-            >
+              Comment ça marche ?
+            </a>
           </li>
         </ul>
       </div>

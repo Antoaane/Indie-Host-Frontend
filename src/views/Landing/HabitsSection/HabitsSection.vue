@@ -7,20 +7,22 @@ import Carousel from '@/views/Landing/HabitsSection/components/Carousel/Carousel
 </script>
 
 <template>
-  <section id="habits-section">
-    <div class="overflow">
-      <div class="container">
-        <Carousel />
-        <SlidesTitles />
+  <div class="habits-section-container">
+    <section id="habits-section">
+      <div class="overflow">
+        <div class="container">
+          <Carousel />
+          <SlidesTitles />
+        </div>
       </div>
-    </div>
-    <!-- Slide en grand -->
-    <div
-      id="slideDisplayRef"
-      class="slide-display"
-    >
-    </div>
-  </section>
+      <!-- Slide en grand -->
+      <div
+        id="slideDisplayRef"
+        class="slide-display"
+      >
+      </div>
+    </section>
+  </div>
 </template>
 
 <style lang="scss">

@@ -4,7 +4,7 @@ import subprocess
 from PIL import Image
 import platform
 
-IMAGE_FOLDER = 'src/assets/media/images/'
+IMAGE_FOLDER = 'public/assets/media/images/'
 OLD_FOLDER = os.path.join(IMAGE_FOLDER, 'old')
 
 # Détection du bon binaire pngquant selon l'OS

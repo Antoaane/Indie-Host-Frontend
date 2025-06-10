@@ -12,7 +12,7 @@ import annonceReservationImg from '/assets/media/images/annonce-reservation-2.pn
 </script>
 
 <template>
-  <div>
+  <div id="usage-section">
     <StepSection
       :step="1"
       title="Vous importez votre annonce depuis Airbnb ou Booking.com"
