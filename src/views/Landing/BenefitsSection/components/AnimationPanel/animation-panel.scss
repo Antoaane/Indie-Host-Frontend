@@ -101,7 +101,7 @@
     flex-shrink: 1;
     flex-basis: 1;
     min-width: var(--longer-side);
-    max-width: calc(var(--longer-side) + var(--shorter-side));
+    max-width: calc(var(--longer-side) + var(--shorter-side) + 20rem);
     height: 100%;
     overflow: hidden;
 
@@ -188,6 +188,14 @@
       justify-content: center;
       align-items: center;
 
+      --rgd-size: 25% 133.33%;
+      --rgd-pos-x: 0%;
+      --rgd-pos-y: 50%;
+      --rgd-start: rgba(255, 82, 82, 0.4);
+      --rgd-end: rgba(255, 82, 82, 0);
+
+      background: radial-gradient(var(--rgd-size) at var(--rgd-pos-x) var(--rgd-pos-y), var(--rgd-start) 0%, var(--rgd-end) 100%);
+
       .ota-title {
         font-family: 'Fustat', sans-serif;
         font-weight: 700;
@@ -230,8 +238,6 @@
     display: flex;
     flex-direction: column;
 
-    --gains-color: 255, 82, 82;
-
     .advantages {
       width: 100%;
       height: calc(100% - 4.5rem);
@@ -240,7 +246,13 @@
       justify-content: center;
       align-items: center;
 
-      background: radial-gradient(100% 133.33% at 0% 50%, rgba(var(--gains-color), 0.4) 0%, rgba(var(--gains-color), 0) 100%);
+      --rgd-size: 100% 133.33%;
+      --rgd-pos-x: 100%;
+      --rgd-pos-y: 50%;
+      --rgd-start: rgba(0, 255, 166, 0);
+      --rgd-end: rgba(0, 255, 166, 0);
+
+      background: radial-gradient(var(--rgd-size) at var(--rgd-pos-x) var(--rgd-pos-y), var(--rgd-start) 0%, var(--rgd-end) 100%);
 
       .block {
         width: 100%;
@@ -304,7 +316,7 @@
       align-items: center;
 
       opacity: 0;
-      background: linear-gradient(90deg, rgba($good, 0.5) 0%, rgba($accent, 0) 110%);
+      background: linear-gradient(90deg, rgba($accent, 0) 0%, rgba($good, 0.5) 110%);
 
       &>p {
         min-width: max-content;
@@ -572,16 +584,16 @@
       justify-content: center;
       align-items: center;
 
-      --r-size: 133.33% 100%;
-      --r-pos-x: 50%;
-      --r-pos-y: 0%;
-      --r-start: rgba(255, 82, 82, 0.4);
-      --r-end: rgba(255, 82, 82, 0);
+      --rgm-size: 133.33% 100%;
+      --rgm-pos-x: 50%;
+      --rgm-pos-y: 0%;
+      --rgm-start: rgba(255, 82, 82, 0.4);
+      --rgm-end: rgba(255, 82, 82, 0);
 
       /* Gradient construit depuis ces variables */
-      background: radial-gradient(var(--r-size) at var(--r-pos-x) var(--r-pos-y),
-          var(--r-start) 0%,
-          var(--r-end) 100%);
+      background: radial-gradient(var(--rgm-size) at var(--rgm-pos-x) var(--rgm-pos-y),
+          var(--rgm-start) 0%,
+          var(--rgm-end) 100%);
 
       @include min-width(md) {
         width: 85%;
