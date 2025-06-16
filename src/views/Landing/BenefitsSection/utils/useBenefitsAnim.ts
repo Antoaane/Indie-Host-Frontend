@@ -15,8 +15,6 @@ export function useBenefitsAnim() {
   let tl_mobile: gsap.core.Timeline | null = null
 
   // Animation & Size variables
-  // const longerSide = (100 * 80) / 180 // in percent
-  // const shorterSide = (100 * 20) / 180 // in percent
   const longerSide = vp.lg.value ? (100 * 80) / 180 : (100 * 70) / 170
   const shorterSide = vp.lg.value ? (100 * 20) / 180 : (100 * 30) / 170
   const baseDuration = 0.75
@@ -39,11 +37,15 @@ export function useBenefitsAnim() {
           'start',
         )
         .to(
-          '.gains',
+          '.animation-desktop .gains .advantages',
           {
-            '--gains-color': '0, 255, 166',
+            '--rgd-size': '100% 133.33%',
+            '--rgd-pos-x': '100%',
+            '--rgd-pos-y': '50%',
+            '--rgd-start': 'rgba(0, 255, 166, 0.6)',
+            '--rgd-end': 'rgba(0, 255, 166, 0)',
             ease: 'power2.out',
-            delay: baseDuration * 3 * 0.64,
+            delay: baseDuration * 3 * 0.85,
             duration: baseDuration * 1,
           },
           'start',
@@ -90,6 +92,39 @@ export function useBenefitsAnim() {
           },
           'start',
         )
+        .to(
+          '.animation-desktop .gains',
+          {
+            transform: 'translateX(45vw)',
+            opacity: 0,
+            ease: 'power2.out',
+            delay: baseDuration * 4,
+            duration: baseDuration * 2.5,
+          },
+          'start',
+        )
+        .to(
+          '#ota',
+          {
+            flexGrow: 0,
+            flexBasis: 0,
+            minWidth: '0%',
+            ease: 'power2.out',
+            delay: baseDuration * 4,
+            duration: baseDuration * 2.5,
+          },
+          'start',
+        )
+        .to(
+          '#indiehost',
+          {
+            width: '100%',
+            ease: 'power2.out',
+            delay: baseDuration * 4,
+            duration: baseDuration * 2.5,
+          },
+          'start',
+        )
     }
 
     tl_mobile = gsap.timeline({ paused: true })
@@ -106,13 +141,13 @@ export function useBenefitsAnim() {
         'start',
       )
       .to(
-        '.advantages',
+        '.animation-mobile .gains .advantages',
         {
-          '--r-size': '133.33% 160%',             // grossir le cercle
-          '--r-pos-x': '50%',                  // déplacer le centre
-          '--r-pos-y': '0%',
-          '--r-start': 'rgba(0, 255, 166, 0.6)',
-          '--r-end': 'rgba(0, 255, 166, 0)',
+          '--rgm-size': '133.33% 160%',             // grossir le cercle
+          '--rgm-pos-x': '50%',                  // déplacer le centre
+          '--rgm-pos-y': '0%',                  // déplacer le centre
+          '--rgm-start': 'rgba(0, 255, 166, 0.6)',
+          '--rgm-end': 'rgba(0, 255, 166, 0)',
           ease: 'power2.out',
           delay: baseDuration * 3.5 * 0.64,
           duration: baseDuration * 1,
@@ -145,7 +180,7 @@ export function useBenefitsAnim() {
     ScrollTrigger.create({
       trigger: '#benefits-section',
       start: 'top top',
-      end: '+=150%',
+      end: '+=200%',
       scrub: 0.5,
       pin: true,
       animation: vp.lg.value ? tl_desktop : tl_mobile,
