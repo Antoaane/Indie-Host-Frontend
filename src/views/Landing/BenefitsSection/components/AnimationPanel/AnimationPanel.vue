@@ -2,7 +2,8 @@
 
 <script setup lang="ts">
 // DEPS
-import { useBenefitsAnim } from '@/views/Landing/BenefitsSection/utils/useBenefitsAnim'
+import { useBenefitsAnim, commissionsAnim, totalOta, displayTotalOta } from '@/views/Landing/BenefitsSection/utils/useBenefitsAnim'
+import { onMounted, watch } from 'vue'
 
 // UTILS
 import { vp } from '@/utils/viewport'
@@ -11,11 +12,18 @@ import { vp } from '@/utils/viewport'
 import ShapesBg from '@/components/svgs/images/ShapesBg.vue'
 import OtaBg from '@/components/svgs/images/OtaBg.vue'
 import { icons } from '@/components/svgs'
+import { ref } from 'vue'
 
-defineProps<{
+const props = defineProps<{
   total: number
   commissions: number
 }>()
+
+onMounted(() => {
+  // console.log(props.total)
+  commissionsAnim.value = props.commissions
+  totalOta.value = props.total
+})
 
 useBenefitsAnim() // init GSAP
 </script>
@@ -40,7 +48,9 @@ useBenefitsAnim() // init GSAP
       </div>
 
       <div class="ih-total">
-        <p> {{ total }} € </p>
+        <p class="total"> {{ total }} € </p>
+        <!-- <p class="conclusion"><span>100%</span> de vos revenus vous reviennent </p> -->
+        <p class="conclusion">100% de vos revenus vous reviennent </p>
       </div>
     </div>
     <div id="ota">
@@ -55,11 +65,19 @@ useBenefitsAnim() // init GSAP
       </div>
 
       <div class="ota-total">
-        <div class="losses">
-          <p> - {{ commissions }} € </p>
-        </div>
+        <!-- <div class="losses">
+          <p> - {{ props.commissions }} € </p>
+        </div> -->
         <div class="total">
-          <p> {{ total - commissions }} € </p>
+          <p>
+            <span
+              class="total-ota"
+              v-html="`${displayTotalOta} €`"
+            />
+            <span class="total-losses">
+              <span>- {{ props.commissions }} €</span>
+            </span>
+          </p>
         </div>
       </div>
     </div>
@@ -89,7 +107,7 @@ useBenefitsAnim() // init GSAP
         </div>
       </div>
       <div class="losses">
-        <p> - 0 € </p>
+        <!-- <p> - 0 € </p> -->
       </div>
     </div>
   </div>

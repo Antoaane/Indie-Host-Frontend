@@ -4,10 +4,10 @@
 @use '@/styles/variables/borders' as borders;
 
 .habits-section-container {
-  padding-top: calc(200vh + (var(--gutter-spacing)));
+  padding-top: calc(300vh + (var(--gutter-spacing)));
 
   @include min-width(lg) {
-    padding-top: calc(200vh + (var(--gutter-spacing) + 70px));
+    padding-top: calc(300vh + (var(--gutter-spacing) + 70px));
   }
 
   #habits-section {
