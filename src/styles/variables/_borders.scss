@@ -1,4 +1,4 @@
-// File: src/assets/styles/variables/_borders.scss
+/* File: src/styles/variables/_borders.scss */
 
 // Borders
 $rounded-xs: 0.25rem;
@@ -8,3 +8,19 @@ $rounded-lg: 1.25rem;
 $rounded-xl: 1.5rem;
 $rounded-xxl: 2rem;
 $rounded: 9999px;
+
+/* ─────────────  squircle.scss  ───────────── */
+// super-ellipse n≈4 générée pour un carré 100×100 puis mise en %
+// (Source : squircley.app, radius = 0.24)
+@function squircle-path($r: .24) {
+  // string retourné **sans interpolation** pour garder les quotes
+  @return "M50 0 C79.2 0 100 20.8 100 50 C100 79.2 79.2 100 50 100 C20.8 100 0 79.2 0 50 C0 20.8 20.8 0 50 0Z";
+}
+
+@mixin squircle($smooth: .24) {
+  // quotes obligatoires autour du path
+  $p: squircle-path($smooth);
+
+  clip-path: path("#{$p}"); // spec
+  -webkit-clip-path: path("#{$p}"); // vieux Safari
+}
