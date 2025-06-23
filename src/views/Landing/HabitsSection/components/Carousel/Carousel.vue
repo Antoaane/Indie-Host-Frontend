@@ -8,13 +8,15 @@ import { Swiper, SwiperSlide } from 'swiper/vue'
 import { Autoplay } from 'swiper/modules'
 import 'swiper/css'
 import 'swiper/css/autoplay'
-
 // UTILS
 import { vp } from '@/utils/viewport'
 import { useHabitsAnim } from '@/views/Landing/HabitsSection/utils/useHabitsAnim'
 import { illustrationSize, descriptionSize } from '@/views/Landing/HabitsSection/stores/slider'
+// CONTENT
+import type { ItemSection } from '@/content/types'
+import rawContent from '@/content/fr/Landing/habits-section.json'
 
-// ASSETS
+const section = rawContent as ItemSection
 
 const swiperInstance = ref<SwiperClass | null>(null)
 const swiperWrapper = ref<InstanceType<typeof Swiper> | null>(null)
@@ -76,14 +78,17 @@ const initIllustrationSize = () => {
         "
         @slideChange="onSlideChange"
       >
-        <SwiperSlide>
+        <SwiperSlide
+          v-for="(data, idx) in section.items['slider'].meta?.data"
+          :key="idx"
+        >
           <img
             class="slide-page-svg"
-            src="/assets/media/images/dashboard-vue-ensemble.png"
-            alt="Page réservations"
+            :src="data.image"
+            :alt="data.alt"
           />
         </SwiperSlide>
-        <SwiperSlide>
+        <!-- <SwiperSlide>
           <img
             class="slide-page-svg"
             src="/assets/media/images/dashboard-detail-logement.png"
@@ -103,7 +108,7 @@ const initIllustrationSize = () => {
             src="/assets/media/images/messagerie.png"
             alt="Page messagerie"
           />
-        </SwiperSlide>
+        </SwiperSlide> -->
       </Swiper>
 
       <!-- EFFETS DE LUMIÈRE -->

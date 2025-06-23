@@ -1,4 +1,4 @@
-# private 
+# private
 *.env
 
 # Logs
@@ -19,6 +19,7 @@ coverage
 
 /cypress/videos/
 /cypress/screenshots/
+/public/assets/media/images/old
 
 # Editor directories and files
 .vscode/*

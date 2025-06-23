@@ -7,6 +7,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import CSSRulePlugin from 'gsap/CSSRulePlugin'
 // UTILS
 import { vp } from '@/utils/viewport'
+import { set } from '@vueuse/core'
 
 gsap.registerPlugin(ScrollTrigger, CSSRulePlugin)
 
@@ -18,9 +19,8 @@ const BASE_PC = 2
 const BASE_MOB = 0.6
 
 export const totalOta = ref(0)
-export const displayTotalOta = ref(totalOta.value)
 export const commissionsAnim = ref(0)
-
+export const displayTotalOta = ref(0)
 
 // Calcule les dimensions selon le breakpoint actuel. On RE‑évaluera plus bas via
 // matchMedia, donc aucune fuite d’état.
@@ -60,12 +60,6 @@ function buildDesktopTimeline() {
   /* REVEAL                                                                  */
   /* ------------------------------------------------------------------------ */
 
-  const startVal = totalOta.value;
-  const endVal = totalOta.value - commissionsAnim.value;
-
-  // objet factice qu’on va tweener
-  const obj = { val: startVal };
-
   tl.addLabel('reveal', `enter+=${BASE_PC * 0.7}`)
     .to('.animation-desktop .gains .advantages', {
       '--rgd-start': 'rgba(0, 255, 166, 0.6)',
@@ -89,49 +83,32 @@ function buildDesktopTimeline() {
       duration: BASE_PC / 3
     }, 'reveal')
 
-    .to(obj, {
-      val: endVal,               // pure JS number → Animated !
-      duration: BASE_PC / 2,
-      ease: 'power1.out',
-      // pour arrondir automatiquement, tu peux activer RoundPropsPlugin
-      // ou juste faire manuellement Math.round dans onUpdate.
-      onUpdate() {
-        displayTotalOta.value = Math.round(obj.val);
-      }
-    }, 'reveal')
-
-    .to('.total-losses', {
-      // trigger a function
-      // onComplete: () => {
-      //   displayTotalOta.value = totalOta.value - commissionsAnim.value
-      // },
-      // onReverseComplete: () => {
-      //   displayTotalOta.value = totalOta.value
-      // },
+    .to('.total-gains', {
       width: '7.5rem',
-      duration: BASE_PC / 2
-    }, 'reveal')
-
-    .to(
-      '.total-losses', {
       opacity: 1,
       duration: BASE_PC / 2
-    }, 'reveal')
-
-    .to('.ih-total > .total', {
-      '--title-bg-direction': '87deg',
-      '--title-bg-color-1': 'rgb(223, 153, 255)',
-      '--title-bg-color-2': 'rgb(255, 196, 197)',
-      '--title-bg-clr1-pos': '0%',
-      '--title-bg-clr2-pos': '100%',
-      duration: BASE_PC / 2,
     }, 'reveal')
 
   /* ------------------------------------------------------------------------ */
   /* REVEAL END                                                             */
   /* ------------------------------------------------------------------------ */
 
+  const startVal = totalOta.value - commissionsAnim.value;
+  const endVal = totalOta.value;
+
+  // objet factice qu’on va tweener
+  const obj = { val: startVal };
+
   tl.addLabel('reveal-end', `reveal+=${BASE_PC * 0.15}`)
+    .to(obj, {
+      val: endVal,               // pure JS number → Animated !
+      duration: BASE_PC / 2,
+      ease: 'power2.out',
+      onUpdate() {
+        displayTotalOta.value = Math.round(obj.val);
+      }
+    }, 'reveal-end')
+
     .to('.advantages .block p', {
       transform: 'translateY(0)',
       duration: BASE_PC / 3,
@@ -148,6 +125,7 @@ function buildDesktopTimeline() {
   /* ------------------------------------------------------------------------ */
 
   tl.addLabel('exit', `reveal+=${BASE_PC * 0.5}`)
+
     .to('.animation-desktop .gains', {
       x: '41vw',
       opacity: 0,
@@ -164,6 +142,21 @@ function buildDesktopTimeline() {
     .to('#indiehost', {
       width: '100%',
       duration: BASE_PC
+    }, 'exit')
+
+    .to('.total-gains', {
+      width: 0,
+      opacity: 0,
+      duration: BASE_PC / 1.333
+    }, 'exit')
+
+    .to('.ih-total > .total > .result', {
+      '--title-bg-direction': '87deg',
+      '--title-bg-color-1': 'rgb(223, 153, 255)',
+      '--title-bg-color-2': 'rgb(255, 196, 197)',
+      '--title-bg-clr1-pos': '0%',
+      '--title-bg-clr2-pos': '100%',
+      duration: BASE_PC / 1.333
     }, 'exit')
 
   /* ------------------------------------------------------------------------ */
@@ -241,25 +234,6 @@ export function useBenefitsAnim() {
   let ctx: gsap.Context | null = null
 
   onMounted(() => {
-
-    displayTotalOta.value = totalOta.value
-
-    // watch(totalOta, (newVal, oldVal) => {
-    //   // on prépare un objet intermédiaire
-    //   const obj = { val: oldVal }
-
-    //   gsap.to(obj, {
-    //     val: newVal, // tween de oldVal → newVal
-    //     duration: 0.8, // à ajuster
-    //     ease: 'power1.out',
-    //     onUpdate() {
-    //       // à chaque tick, on arrondit et on update la ref affichée
-    //       displayTotalOta.value = Math.round(obj.val)
-    //     },
-    //   })
-    // })
-
-
     ctx = gsap.context(() => {
       const mm = gsap.matchMedia()
 

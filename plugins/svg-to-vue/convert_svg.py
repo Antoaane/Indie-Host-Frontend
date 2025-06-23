@@ -294,6 +294,8 @@ def extract_and_convert(svg_path: Path) -> None:
 def main() -> None:
     log(f'🚀 Scan des SVG dans {MEDIA_ROOT}')
     for svg in MEDIA_ROOT.rglob('*.svg'):
+        if 'images/old' in svg.as_posix():
+            continue
         try:
             extract_and_convert(svg)
         except Exception as exc:

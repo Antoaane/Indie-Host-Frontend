@@ -1,3 +1,5 @@
+<!-- File: src/components/svgs/icons/MagicStick.vue -->
+
 <template>
   <svg
     :role="attrRole"

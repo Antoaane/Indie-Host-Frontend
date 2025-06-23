@@ -1,3 +1,5 @@
+<!-- File: src/components/svgs/icons/Compass.vue -->
+
 <template>
   <svg
     :role="attrRole"

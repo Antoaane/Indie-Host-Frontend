@@ -23,6 +23,8 @@ onMounted(() => {
   // console.log(props.total)
   commissionsAnim.value = props.commissions
   totalOta.value = props.total
+  console.log('props.total :', props.total, 'props.commissions :', props.commissions)
+  displayTotalOta.value = props.total - props.commissions
 })
 
 useBenefitsAnim() // init GSAP
@@ -48,8 +50,15 @@ useBenefitsAnim() // init GSAP
       </div>
 
       <div class="ih-total">
-        <p class="total"> {{ total }} € </p>
-        <!-- <p class="conclusion"><span>100%</span> de vos revenus vous reviennent </p> -->
+        <p class="total">
+          <span
+            class="result"
+            v-html="`${displayTotalOta} €`"
+          />
+          <span class="total-gains">
+            <span>&nbsp;+ {{ props.commissions }} €</span>
+          </span>
+        </p>
         <p class="conclusion">100% de vos revenus vous reviennent </p>
       </div>
     </div>
@@ -65,19 +74,8 @@ useBenefitsAnim() // init GSAP
       </div>
 
       <div class="ota-total">
-        <!-- <div class="losses">
-          <p> - {{ props.commissions }} € </p>
-        </div> -->
         <div class="total">
-          <p>
-            <span
-              class="total-ota"
-              v-html="`${displayTotalOta} €`"
-            />
-            <span class="total-losses">
-              <span>- {{ props.commissions }} €</span>
-            </span>
-          </p>
+          <p class="total-ota"> {{ total - props.commissions }} € </p>
         </div>
       </div>
     </div>
@@ -105,9 +103,6 @@ useBenefitsAnim() // init GSAP
             <span id="plusvalue">pour <span class="focus">vous</span> et vos locataires</span>
           </p>
         </div>
-      </div>
-      <div class="losses">
-        <!-- <p> - 0 € </p> -->
       </div>
     </div>
   </div>

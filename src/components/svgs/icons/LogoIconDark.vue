@@ -1,3 +1,5 @@
+<!-- File: src/components/svgs/icons/LogoIconDark.vue -->
+
 <template>
   <svg
     :role="attrRole"

@@ -1,3 +1,5 @@
+<!-- File: src/components/svgs/images/OtaBg.vue -->
+
 <template>
   <svg
     :role="attrRole"

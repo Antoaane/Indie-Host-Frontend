@@ -1,3 +1,5 @@
+<!-- File: src/components/svgs/images/HeroImage.vue -->
+
 <template>
   <svg
     :role="attrRole"

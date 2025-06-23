@@ -1,3 +1,5 @@
+<!-- File: src/components/svgs/images/DashboardDetailLogement.vue -->
+
 <template>
   <svg
     :role="attrRole"

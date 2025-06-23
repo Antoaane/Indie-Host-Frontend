@@ -1,4 +1,4 @@
-// File: src/views/Landing/HabitsSection/stores/activeSlide.ts
+// File: src/views/Landing/HabitsSection/stores/slider.ts
 
 import { ref } from 'vue'
 

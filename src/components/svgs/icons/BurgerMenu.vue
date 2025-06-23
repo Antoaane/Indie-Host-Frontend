@@ -1,3 +1,5 @@
+<!-- File: src/components/svgs/icons/BurgerMenu.vue -->
+
 <template>
   <svg
     :role="attrRole"

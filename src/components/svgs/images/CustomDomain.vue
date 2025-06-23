@@ -1,3 +1,5 @@
+<!-- File: src/components/svgs/images/CustomDomain.vue -->
+
 <template>
   <svg
     :role="attrRole"
