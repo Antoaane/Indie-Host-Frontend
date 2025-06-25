@@ -3,6 +3,8 @@
 <script setup lang="ts">
 // DEPS
 import { ref, computed, onMounted } from 'vue'
+import type { SwiperOptions } from 'swiper/types'
+import type { SwiperModule } from 'swiper/types'
 import type { Swiper as SwiperClass } from 'swiper'
 import { Swiper, SwiperSlide } from 'swiper/vue'
 import { Autoplay } from 'swiper/modules'
@@ -33,22 +35,26 @@ const { onSwiperInit, onSlideChange } = useHabitsAnim({
 })
 
 // Params Swiper en reactive/computed
-const swiperParams = computed(() => ({
-  modules: [
-    Autoplay,
-  ],
-  direction: vp.lg.value ? 'vertical' : 'horizontal',
-  slidesPerView: 3,
-  spaceBetween: vp.lg.value ? 32 : 16,
-  autoplay: {
-    delay: 3000,
-    disableOnInteraction: true,
-  },
-  loop: true,
-  centeredSlides: true,
-  pagination: false,
-  navigation: false,
-}))
+const swiperParams = computed(
+  () =>
+    ({
+      modules: [
+        Autoplay as SwiperModule,
+      ], // cast sinon unknown[]
+
+      direction: (vp.lg.value ? 'vertical' : 'horizontal') as 'vertical' | 'horizontal',
+
+      slidesPerView: 3,
+      spaceBetween: vp.lg.value ? 32 : 16,
+
+      autoplay: { delay: 3000, disableOnInteraction: true },
+
+      loop: true,
+      centeredSlides: true,
+      pagination: false,
+      navigation: false,
+    }) satisfies SwiperOptions,
+)
 
 const initIllustrationSize = () => {
   setTimeout(() => {
@@ -88,27 +94,6 @@ const initIllustrationSize = () => {
             :alt="data.alt"
           />
         </SwiperSlide>
-        <!-- <SwiperSlide>
-          <img
-            class="slide-page-svg"
-            src="/assets/media/images/dashboard-detail-logement.png"
-            alt="Page réservations"
-          />
-        </SwiperSlide>
-        <SwiperSlide>
-          <img
-            class="slide-page-svg"
-            src="/assets/media/images/annonce-reservation.png"
-            alt="Page paiement"
-          />
-        </SwiperSlide>
-        <SwiperSlide>
-          <img
-            class="slide-page-svg"
-            src="/assets/media/images/messagerie.png"
-            alt="Page messagerie"
-          />
-        </SwiperSlide> -->
       </Swiper>
 
       <!-- EFFETS DE LUMIÈRE -->
