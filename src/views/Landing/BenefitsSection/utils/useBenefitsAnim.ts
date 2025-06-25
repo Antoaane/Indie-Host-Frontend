@@ -15,8 +15,7 @@ gsap.registerPlugin(ScrollTrigger, CSSRulePlugin)
 // CONSTANTS
 // ────────────────────────────────────────────────────────────────────────────────
 const EASE = 'power2.inOut'
-const BASE_PC = 2
-const BASE_MOB = 0.6
+const BASE_DURATION = 2
 
 export const totalOta = ref(0)
 export const commissionsAnim = ref(0)
@@ -42,28 +41,31 @@ function buildDesktopTimeline() {
   /* ------------------------------------------------------------------------ */
 
   tl.addLabel('enter')
-    .to('#indiehost', { width: `${longer + shorter}%`, duration: BASE_PC }, 'enter')
+    .to('#indiehost', {
+      width: `${longer + shorter}%`,
+      duration: BASE_DURATION
+    }, 'enter')
 
-  tl.addLabel('pre-reveal', `enter+=${BASE_PC * (1 / 2)}`)
+  tl.addLabel('pre-reveal', `enter+=${BASE_DURATION * 0.5}`)
     .to('.unfocus', {
       opacity: 0.5,
-      duration: BASE_PC / 3
+      duration: BASE_DURATION / 3
     }, 'pre-reveal')
 
     .to(
       '.line', {
       transform: 'translate(-50%, -35%) scaleX(1)',
-      duration: BASE_PC / 3
+      duration: BASE_DURATION / 3
     }, 'pre-reveal')
 
   /* ------------------------------------------------------------------------ */
   /* REVEAL                                                                  */
   /* ------------------------------------------------------------------------ */
 
-  tl.addLabel('reveal', `enter+=${BASE_PC * 0.7}`)
+  tl.addLabel('reveal', `enter+=${BASE_DURATION * 0.7}`)
     .to('.animation-desktop .gains .advantages', {
       '--rgd-start': 'rgba(0, 255, 166, 0.6)',
-      duration: BASE_PC / 3,
+      duration: BASE_DURATION / 3,
     }, 'reveal')
 
     .to('.gains', {
@@ -75,13 +77,13 @@ function buildDesktopTimeline() {
       },
       opacity: 1,
       ease: 'power2.out',
-      duration: BASE_PC / 3
+      duration: BASE_DURATION / 3
     }, 'reveal')
 
     .to('.total-gains', {
       width: '7.5rem',
       opacity: 1,
-      duration: BASE_PC / 2
+      duration: BASE_DURATION / 2
     }, 'reveal')
 
   /* ------------------------------------------------------------------------ */
@@ -92,11 +94,11 @@ function buildDesktopTimeline() {
 
   const obj = { val: displayTotalOta.value }
 
-  tl.addLabel('reveal-end', `reveal+=${BASE_PC * 0.15}`)
+  tl.addLabel('reveal-end', `reveal+=${BASE_DURATION * 0.15}`)
   const revealTween = tl.to(obj, {
     // target dynamique : GSAP évaluera la fonction à chaque invalidation/replay
     val: () => totalOta.value,
-    duration: BASE_PC / 2,
+    duration: BASE_DURATION / 2,
     ease: 'power2.out',
     onUpdate() {
       displayTotalOta.value = Math.round(obj.val)   // ici obj.val est déjà un number
@@ -105,43 +107,43 @@ function buildDesktopTimeline() {
 
     .to('.advantages .block p', {
       transform: 'translateY(0)',
-      duration: BASE_PC / 3,
+      duration: BASE_DURATION / 3,
     }, 'reveal-end')
 
     .to('#plusvalue', {
       transform: 'translateX(0%)',
       opacity: 1,
-      duration: BASE_PC / 3
+      duration: BASE_DURATION / 3
     }, 'reveal-end')
 
   /* ------------------------------------------------------------------------ */
   /* EXIT                                                                    */
   /* ------------------------------------------------------------------------ */
 
-  tl.addLabel('exit', `reveal+=${BASE_PC * 0.5}`)
+  tl.addLabel('exit', `reveal+=${BASE_DURATION * 0.5}`)
 
     .to('.animation-desktop .gains', {
       x: '41vw',
       opacity: 0,
-      duration: BASE_PC
+      duration: BASE_DURATION
     }, 'exit')
 
     .to('#ota', {
       flexGrow: 0,
       flexBasis: 0,
       minWidth: 0,
-      duration: BASE_PC
+      duration: BASE_DURATION
     }, 'exit')
 
     .to('#indiehost', {
       width: '100%',
-      duration: BASE_PC
+      duration: BASE_DURATION
     }, 'exit')
 
     .to('.total-gains', {
       width: 0,
       opacity: 0,
-      duration: BASE_PC / 1.333
+      duration: BASE_DURATION / 1.333
     }, 'exit')
 
     .to('.ih-total > .total > .result', {
@@ -150,23 +152,23 @@ function buildDesktopTimeline() {
       '--title-bg-color-2': 'rgb(255, 196, 197)',
       '--title-bg-clr1-pos': '0%',
       '--title-bg-clr2-pos': '100%',
-      duration: BASE_PC / 1.333
+      duration: BASE_DURATION / 1.333
     }, 'exit')
 
   /* ------------------------------------------------------------------------ */
   /* POST-EXIT                                                               */
   /* ------------------------------------------------------------------------ */
 
-  tl.addLabel('post-exit', `exit+=${BASE_PC * 0.75}`)
+  tl.addLabel('post-exit', `exit+=${BASE_DURATION * 0.75}`)
     .to('.ih-total > .total', {
       height: '0%',
       opacity: 0,
-      duration: BASE_PC / 4,
+      duration: BASE_DURATION / 4,
     }, 'post-exit')
     .to('.ih-total > .conclusion', {
       height: '100%',
       opacity: 1,
-      duration: BASE_PC / 4,
+      duration: BASE_DURATION / 4,
     }, 'post-exit')
 
   watch([totalOta, commissionsAnim], () => {
@@ -194,46 +196,49 @@ function buildMobileTimeline() {
   tl.addLabel('enter')
     .to('#indiehost', {
       height: `${longer + shorter}%`,
-      duration: BASE_MOB * 3,               // même ratio que desktop mais vertical
+      duration: BASE_DURATION,               // même ratio que desktop mais vertical
     }, 'enter')
 
   /* ---------------------------------------------------------------------- */
   /* PRE-REVEAL : petite mise en bouche                                      */
   /* ---------------------------------------------------------------------- */
-  tl.addLabel('pre-reveal', `enter+=${BASE_MOB * 1.5}`)
-    .to('.unfocus', { opacity: 0.5, duration: BASE_MOB }, 'pre-reveal')
+  tl.addLabel('pre-reveal', `enter+=${BASE_DURATION * 0.5}`)
+    .to('.unfocus', {
+      opacity: 0.5,
+      duration: BASE_DURATION / 3
+    }, 'pre-reveal')
     .to('.line', {
       transform: 'translate(-50%, -35%) scaleX(1)',
-      duration: BASE_MOB
+      duration: BASE_DURATION / 3
     }, 'pre-reveal')
 
   /* ---------------------------------------------------------------------- */
   /* REVEAL                                                                 */
   /* ---------------------------------------------------------------------- */
-  tl.addLabel('reveal', `enter+=${BASE_MOB * 1.8}`)
+  tl.addLabel('reveal', `enter+=${BASE_DURATION * 0.6}`)
     .to('.animation-mobile .gains .advantages', {
-      '--rgm-size': '133.33% 160%',
       '--rgm-start': 'rgba(0, 255, 166, 0.6)',
-      duration: BASE_MOB,
+      duration: BASE_DURATION,
     }, 'reveal')
     .to('.gains', {
-      top: () => {
-        const ctr = document.querySelector<HTMLElement>('#benefits-section')!
-        const w = ctr.clientWidth
-        const shortPx = w * (shorter / 100)
-        return w * 0.5 - shortPx / 2
-      },
+      bottom: `${longer}%`,
       opacity: 1,
-      ease: 'power2.out',
-      duration: BASE_PC / 3
+      ease: 'power1.out',
+      duration: BASE_DURATION / 3
     }, 'reveal')
-    .to('.gains>.losses', {
-      height: '100%', opacity: 1,
-      duration: BASE_MOB
+    .to('#badvalue', {
+      maxHeight: '0',
+      opacity: 0,
+      duration: BASE_DURATION / 3
+    }, 'reveal')
+    .to('#plusvalue', {
+      maxHeight: '2rem',
+      opacity: 1,
+      duration: BASE_DURATION / 3
     }, 'reveal')
     .to('.total-gains', {
-      width: '7.5rem', opacity: 1,
-      duration: BASE_MOB * 1.2
+      height: '1.5rem', opacity: 1,
+      duration: BASE_DURATION * 1.2
     }, 'reveal')
 
   /* ---------------------------------------------------------------------- */
@@ -241,39 +246,42 @@ function buildMobileTimeline() {
   /* ---------------------------------------------------------------------- */
   const obj = { val: displayTotalOta.value }
 
-  tl.addLabel('reveal-end', `reveal+=${BASE_MOB * 0.2}`)
+  tl.addLabel('reveal-end', `reveal+=${BASE_DURATION * 0.2}`)
   const revealTween = tl.to(obj, {
     val: () => totalOta.value,
-    duration: BASE_MOB * 1.2,
-    onUpdate() { displayTotalOta.value = Math.round(obj.val) },
+    duration: BASE_DURATION * 1.2,
+    onUpdate() {
+      displayTotalOta.value = Math.round(obj.val)
+    },
   }, 'reveal-end')
     .to('.advantages .block p', {
       transform: 'translateY(0)',
-      duration: BASE_MOB,
-    }, 'reveal-end')
-    .to('#plusvalue', {
-      transform: 'translateX(0%)',   // ↔ cohérent avec le CSS mobile
-      opacity: 1,
-      duration: BASE_MOB,
+      duration: BASE_DURATION,
     }, 'reveal-end')
 
   /* ---------------------------------------------------------------------- */
   /* EXIT : on laisse place à la conclusion                                 */
   /* ---------------------------------------------------------------------- */
-  tl.addLabel('exit', `reveal+=${BASE_MOB * 2}`)
+  tl.addLabel('exit', `reveal+=${BASE_DURATION * 2}`)
     .to('.animation-mobile .gains', {
-      y: '30vh',
+      y: '-26vh',
       opacity: 0,
-      duration: BASE_MOB * 1.5,
+      duration: BASE_DURATION * 1.5,
     }, 'exit')
     .to('#ota', {
-      flexGrow: 0, flexBasis: 0, minHeight: 0,
-      duration: BASE_MOB * 1.5
+      flexGrow: 0,
+      flexBasis: 0,
+      minHeight: 0,
+      duration: BASE_DURATION * 1.5
     }, 'exit')
-    .to('#indiehost', { height: '100%', duration: BASE_MOB * 1.5 }, 'exit')
+    .to('#indiehost', {
+      height: '100%',
+      duration: BASE_DURATION * 1.5
+    }, 'exit')
     .to('.total-gains', {
-      width: 0, opacity: 0,
-      duration: BASE_MOB
+      height: 0,
+      opacity: 0,
+      duration: BASE_DURATION
     }, 'exit')
     .to('.ih-total > .total > .result', {
       '--title-bg-direction': '87deg',
@@ -281,21 +289,21 @@ function buildMobileTimeline() {
       '--title-bg-color-2': 'rgb(255, 196, 197)',
       '--title-bg-clr1-pos': '0%',
       '--title-bg-clr2-pos': '100%',
-      duration: BASE_MOB,
+      duration: BASE_DURATION,
     }, 'exit')
 
   /* ---------------------------------------------------------------------- */
   /* POST-EXIT : switch “total” → “conclusion”                              */
   /* ---------------------------------------------------------------------- */
-  tl.addLabel('post-exit', `exit+=${BASE_MOB}`)
-    .to('.ih-total > .total', {
-      height: '0%', opacity: 0,
-      duration: BASE_MOB / 2
-    }, 'post-exit')
-    .to('.ih-total > .conclusion', {
-      height: '100%', opacity: 1,
-      duration: BASE_MOB / 2
-    }, 'post-exit')
+  // tl.addLabel('post-exit', `exit+=${BASE_DURATION}`)
+  // .to('.ih-total > .total', {
+  //   height: '0%', opacity: 0,
+  //   duration: BASE_DURATION / 2
+  // }, 'post-exit')
+  // .to('.ih-total > .conclusion', {
+  //   height: '100%', opacity: 1,
+  //   duration: BASE_DURATION / 2
+  // }, 'post-exit')
 
   /* ---------------------------------------------------------------------- */
   /* WATCHERS : valeurs dynamiques                                          */

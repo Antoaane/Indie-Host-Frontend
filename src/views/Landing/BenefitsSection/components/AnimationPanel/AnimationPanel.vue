@@ -70,7 +70,12 @@ useBenefitsAnim() // init GSAP
             <span>&nbsp;+ {{ commissionsAnim }} €</span>
           </span>
         </p>
-        <p class="conclusion">100% de vos revenus vous reviennent </p>
+        <p
+          class="conclusion"
+          v-if="vp.lg.value"
+        >
+          100% de vos revenus vous reviennent
+        </p>
       </div>
     </div>
     <div id="ota">
@@ -110,8 +115,11 @@ useBenefitsAnim() // init GSAP
           v-else
         >
           <p>
-            <span class="focus">20 % </span>
-            <span id="plusvalue">pour <span class="focus">vous</span> et vos locataires</span>
+            <span class="focus">20 %</span>
+            <span class="value">
+              <span id="badvalue">&nbsp;de commissions</span>
+              <span id="plusvalue">&nbsp;pour <span class="focus">vous</span> et vos locataires</span>
+            </span>
           </p>
         </div>
       </div>
