@@ -25,7 +25,7 @@ onMounted(() => {
 <template>
   <div
     class="content"
-    :style="`padding-right: ${modSize}px;`"
+    :style="vp.lg.value ? `padding-right: ${modSize}px !important;` : ``"
   >
     <h2 v-html="section.items['title-1'].content" />
     <div class="slides-titles">
@@ -40,7 +40,7 @@ onMounted(() => {
       </div>
       <div
         ref="descriptionRef"
-        :style="`transform: translateY(${vp.lg.value ? 0 : illustrationSize + 48}px)`"
+        :style="`transform: translateY(${vp.lg.value ? 0 : illustrationSize + 16}px)`"
       >
         <p
           v-for="(txt, idx) in section.items['slider'].meta?.data"

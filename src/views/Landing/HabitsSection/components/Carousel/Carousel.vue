@@ -67,7 +67,7 @@ const initIllustrationSize = () => {
   <div
     class="illustration"
     ref="illustrationRef"
-    :style="`transform: translateY(-${vp.lg.value ? 0 : descriptionSize + 16}px)`"
+    :style="`transform: translateY(-${vp.lg.value ? 0 : descriptionSize + 24}px)`"
   >
     <div
       class="carousel"

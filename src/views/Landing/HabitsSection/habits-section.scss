@@ -5,12 +5,14 @@
 
 .habits-section-container {
   padding-top: calc(300vh + (var(--gutter-spacing)));
+  padding-bottom: 0 !important;
 
   @include min-width(lg) {
     padding-top: calc(300vh + (var(--gutter-spacing) + 70px));
   }
 
   #habits-section {
+    padding: 0 !important;
 
     .overflow {
       width: 100%;
@@ -21,6 +23,7 @@
       .container {
         display: flex;
         flex-direction: column-reverse;
+        align-items: center;
         gap: 1.5rem;
 
         @include min-width(lg) {
