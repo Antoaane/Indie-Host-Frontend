@@ -5,12 +5,7 @@
 [class^='animation-'] {
   --longer-side: calc(100% * 70 / 170);
   --shorter-side: calc(100% * 30 / 170);
-
-  @include min-width(lg) {
-    --longer-side: calc(100% * 70 / 170);
-    --shorter-side: calc(100% * 30 / 170);
-    --x-shorter-side: calc(100% * 20 / 180);
-  }
+  --x-shorter-side: calc(100% * 20 / 180);
 }
 
 .animation-desktop {
@@ -497,7 +492,7 @@
   width: 100%;
   height: 100%;
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
   justify-content: space-between;
 
   position: relative;
@@ -538,34 +533,88 @@
     }
 
     .ih-total {
-      width: 20%;
-      height: 100%;
-      overflow: hidden;
-
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
 
-      background-color: $accent;
-
-      @include min-width(md) {
-        width: 15%;
-      }
-
-      &>p {
-        min-width: max-content;
+      .total {
+        display: inline-flex;
+        align-items: center;
         margin: 0 !important;
         padding: 0 !important;
+        height: 100%;
+        overflow: hidden;
 
-        font-weight: 700 !important;
-        font-family: 'outfit', sans-serif !important;
-        // background: linear-gradient(180deg, $secondary 17.65%, rgba($secondary, 0.75) 72.06%);
-        background: linear-gradient(87deg, $primary_gradiant_second 0%, $primary_gradiant_third 100%);
+        >.result {
+          /* mêmes variables CSS que desktop → l’anim GSAP marche d’office */
+          --title-bg-direction: 180deg;
+          --title-bg-color-1: #{rgba($secondary, 1)};
+          --title-bg-color-2: #{rgba($secondary, .75)};
+          --title-bg-clr1-pos: 17.65%;
+          --title-bg-clr2-pos: 72.06%;
+
+          background: linear-gradient(var(--title-bg-direction),
+              var(--title-bg-color-1) var(--title-bg-clr1-pos),
+              var(--title-bg-color-2) var(--title-bg-clr2-pos));
+          background-clip: text;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+
+          font-weight: 700 !important;
+          font-family: 'outfit', sans-serif !important;
+          @include h2-title();
+        }
+
+        .total-gains {
+          max-width: max-content;
+          width: 0;
+          /* 0 → 7.5 rem via la timeline */
+          margin: 0 !important;
+          padding: 0 !important;
+
+          display: inline-flex;
+          justify-content: center;
+          align-items: center;
+          opacity: 0;
+          /* 0 → 1 via la timeline */
+
+          background: linear-gradient(87deg,
+              $primary_gradiant_second 0%,
+              $primary_gradiant_third 100%);
+          background-clip: text;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+
+          @include h3-title();
+
+          >span {
+            white-space: nowrap;
+          }
+        }
+      }
+
+      .conclusion {
+        max-height: max-content;
+        height: 0%;
+        /* cachée au départ → 100 % en post-exit          */
+        overflow: hidden;
+        opacity: 0;
+
+        /* même gradient que .result pour la cohérence */
+        --title-bg-direction: 180deg;
+        --title-bg-color-1: #{rgba($secondary, 1)};
+        --title-bg-color-2: #{rgba($secondary, .75)};
+        --title-bg-clr1-pos: 17.65%;
+        --title-bg-clr2-pos: 72.06%;
+        background: linear-gradient(var(--title-bg-direction),
+            var(--title-bg-color-1) var(--title-bg-clr1-pos),
+            var(--title-bg-color-2) var(--title-bg-clr2-pos));
         background-clip: text;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
 
-        @include h2-title();
+        @include h4-title();
       }
     }
 
@@ -719,11 +768,11 @@
 
   .gains {
     width: 100vw;
-    height: var(--shorter-side);
+    height: var(--x-shorter-side);
 
     position: absolute;
     left: 0;
-    bottom: calc(50% - (var(--shorter-side) / 2));
+    bottom: calc(50% - (var(--x-shorter-side) / 4));
     z-index: 2;
 
     display: flex;
@@ -771,6 +820,14 @@
 
           @include h4-title($accent);
 
+          @include min-width(md) {
+            font-size: 3.5cqw !important;
+
+            .focus {
+              font-size: 5cqw !important;
+            }
+          }
+
           .focus {
             margin: 0 !important;
             padding: 0 !important;
@@ -780,33 +837,26 @@
             @include h2-title($accent);
           }
 
-          // .unfocus {
-          //   opacity: 1;
-          //   position: relative;
+          .unfocus {
+            /* pleine opacité → 0.5 pendant le pre-reveal  */
+            opacity: 1;
+            position: relative;
 
-          //   font-size: 6cqw !important;
+            font-size: 5cqw !important;
+            @include h4-title($accent);
 
-          //   @include h4-title($accent);
+            .line {
+              content: '';
+              width: 105%;
+              height: 3px;
+              background-color: $accent;
 
-          //   .line {
-          //     content: '';
-          //     width: 105%;
-          //     height: 3px;
-          //     background-color: $accent;
-
-          //     position: absolute;
-          //     top: 50%;
-          //     left: 50%;
-          //     transform: translate(-50%, -35%) scaleX(0);
-          //     transform-origin: left;
-          //   }
-          // }
-
-          @include min-width(md) {
-            font-size: 3.5cqw !important;
-
-            .focus {
-              font-size: 5cqw !important;
+              position: absolute;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -35%) scaleX(0);
+              /* 0 → 1 dans la TL */
+              transform-origin: left;
             }
           }
         }

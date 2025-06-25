@@ -22,8 +22,6 @@ useStrengthsAnim()
         <p v-html="section.items['subtitle-1'].content" />
       </div>
 
-      <!-- <div class="box"></div> -->
-
       <div class="strengths">
         <div id="strength_1">
           <span>

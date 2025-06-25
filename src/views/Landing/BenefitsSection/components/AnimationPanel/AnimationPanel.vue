@@ -20,11 +20,22 @@ const props = defineProps<{
 }>()
 
 onMounted(() => {
-  // console.log(props.total)
   commissionsAnim.value = props.commissions
   totalOta.value = props.total
-  console.log('props.total :', props.total, 'props.commissions :', props.commissions)
-  displayTotalOta.value = props.total - props.commissions
+  displayTotalOta.value = totalOta.value - commissionsAnim.value
+
+  watch(
+    () => props.commissions,
+    (v) => (commissionsAnim.value = v),
+  )
+  watch(
+    () => props.total,
+    (v) => (totalOta.value = v),
+  )
+  watch(
+    () => totalOta.value - commissionsAnim.value,
+    (v) => (displayTotalOta.value = v),
+  )
 })
 
 useBenefitsAnim() // init GSAP
@@ -56,7 +67,7 @@ useBenefitsAnim() // init GSAP
             v-html="`${displayTotalOta} €`"
           />
           <span class="total-gains">
-            <span>&nbsp;+ {{ props.commissions }} €</span>
+            <span>&nbsp;+ {{ commissionsAnim }} €</span>
           </span>
         </p>
         <p class="conclusion">100% de vos revenus vous reviennent </p>

@@ -1,7 +1,7 @@
 // File: src/views/Landing/BenefitsSection/utils/useBenefitsAnim.ts
 
 // DEPS
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import CSSRulePlugin from 'gsap/CSSRulePlugin'
@@ -66,11 +66,6 @@ function buildDesktopTimeline() {
       duration: BASE_PC / 3,
     }, 'reveal')
 
-    .to('.gains .losses', {
-      opacity: 1,
-      duration: BASE_PC / 3,
-    }, 'reveal')
-
     .to('.gains', {
       right: () => {
         const ctr = document.querySelector<HTMLElement>('#benefits-section')!
@@ -93,21 +88,20 @@ function buildDesktopTimeline() {
   /* REVEAL END                                                             */
   /* ------------------------------------------------------------------------ */
 
-  const startVal = totalOta.value - commissionsAnim.value;
-  const endVal = totalOta.value;
+  // const endVal = totalOta.value;
 
-  // objet factice qu’on va tweener
-  const obj = { val: startVal };
+  const obj = { val: displayTotalOta.value }
 
   tl.addLabel('reveal-end', `reveal+=${BASE_PC * 0.15}`)
-    .to(obj, {
-      val: endVal,               // pure JS number → Animated !
-      duration: BASE_PC / 2,
-      ease: 'power2.out',
-      onUpdate() {
-        displayTotalOta.value = Math.round(obj.val);
-      }
-    }, 'reveal-end')
+  const revealTween = tl.to(obj, {
+    // target dynamique : GSAP évaluera la fonction à chaque invalidation/replay
+    val: () => totalOta.value,
+    duration: BASE_PC / 2,
+    ease: 'power2.out',
+    onUpdate() {
+      displayTotalOta.value = Math.round(obj.val)   // ici obj.val est déjà un number
+    }
+  }, 'reveal-end')
 
     .to('.advantages .block p', {
       transform: 'translateY(0)',
@@ -175,54 +169,145 @@ function buildDesktopTimeline() {
       duration: BASE_PC / 4,
     }, 'post-exit')
 
+  watch([totalOta, commissionsAnim], () => {
+    obj.val = totalOta.value - commissionsAnim.value
+    revealTween.vars.val = totalOta.value
+
+    const p = tl.progress()      // on mémorise la position actuelle
+    tl.invalidate()              // on nettoie les caches du timeline
+    tl.progress(p)               // …mais on garde le même progrès
+
+    ScrollTrigger.refresh()      // ← LA ligne qui manquait
+  })
+
   return tl
 }
+
 
 function buildMobileTimeline() {
   const { longer, shorter } = getSides(false)
   const tl = gsap.timeline({ paused: true, defaults: { ease: EASE } })
 
-  /* ------------------------------------------------------------------------ */
-  /* ENTRÉE                                                                   */
-  /* ------------------------------------------------------------------------ */
+  /* ---------------------------------------------------------------------- */
+  /* ENTRÉE                                                                 */
+  /* ---------------------------------------------------------------------- */
   tl.addLabel('enter')
     .to('#indiehost', {
       height: `${longer + shorter}%`,
-      duration: BASE_MOB * 3
+      duration: BASE_MOB * 3,               // même ratio que desktop mais vertical
     }, 'enter')
 
-  /* ------------------------------------------------------------------------ */
-  /* RING + LOSSES                                                            */
-  /* ------------------------------------------------------------------------ */
-  tl.addLabel('reveal', 'enter+=1.92')    // 3 * 0.64
+  /* ---------------------------------------------------------------------- */
+  /* PRE-REVEAL : petite mise en bouche                                      */
+  /* ---------------------------------------------------------------------- */
+  tl.addLabel('pre-reveal', `enter+=${BASE_MOB * 1.5}`)
+    .to('.unfocus', { opacity: 0.5, duration: BASE_MOB }, 'pre-reveal')
+    .to('.line', {
+      transform: 'translate(-50%, -35%) scaleX(1)',
+      duration: BASE_MOB
+    }, 'pre-reveal')
 
-  const revealTweens: [gsap.DOMTarget, gsap.TweenVars][] = [
-    ['.animation-mobile .gains .advantages',
-      {
-        '--rgm-size': '133.33% 160%',
-        '--rgm-pos-x': '50%',
-        '--rgm-pos-y': '0%',
-        '--rgm-start': 'rgba(0, 255, 166, 0.6)',
-        '--rgm-end': 'rgba(0, 255, 166, 0)',
-        duration: BASE_MOB,
-      }
-    ],
-    ['.gains>.losses',
-      {
-        height: '100%',
-        opacity: 1,
-        duration: BASE_MOB
-      }
-    ],
-    ['#plusvalue',
-      {
-        transform: 'translateY(0%)',
-        opacity: 1,
-        duration: BASE_MOB
-      }
-    ],
-  ]
-  revealTweens.forEach(([target, vars]) => tl.to(target, vars, 'reveal'))
+  /* ---------------------------------------------------------------------- */
+  /* REVEAL                                                                 */
+  /* ---------------------------------------------------------------------- */
+  tl.addLabel('reveal', `enter+=${BASE_MOB * 1.8}`)
+    .to('.animation-mobile .gains .advantages', {
+      '--rgm-size': '133.33% 160%',
+      '--rgm-start': 'rgba(0, 255, 166, 0.6)',
+      duration: BASE_MOB,
+    }, 'reveal')
+    .to('.gains', {
+      top: () => {
+        const ctr = document.querySelector<HTMLElement>('#benefits-section')!
+        const w = ctr.clientWidth
+        const shortPx = w * (shorter / 100)
+        return w * 0.5 - shortPx / 2
+      },
+      opacity: 1,
+      ease: 'power2.out',
+      duration: BASE_PC / 3
+    }, 'reveal')
+    .to('.gains>.losses', {
+      height: '100%', opacity: 1,
+      duration: BASE_MOB
+    }, 'reveal')
+    .to('.total-gains', {
+      width: '7.5rem', opacity: 1,
+      duration: BASE_MOB * 1.2
+    }, 'reveal')
+
+  /* ---------------------------------------------------------------------- */
+  /* REVEAL-END : incrément du chiffre live                                 */
+  /* ---------------------------------------------------------------------- */
+  const obj = { val: displayTotalOta.value }
+
+  tl.addLabel('reveal-end', `reveal+=${BASE_MOB * 0.2}`)
+  const revealTween = tl.to(obj, {
+    val: () => totalOta.value,
+    duration: BASE_MOB * 1.2,
+    onUpdate() { displayTotalOta.value = Math.round(obj.val) },
+  }, 'reveal-end')
+    .to('.advantages .block p', {
+      transform: 'translateY(0)',
+      duration: BASE_MOB,
+    }, 'reveal-end')
+    .to('#plusvalue', {
+      transform: 'translateX(0%)',   // ↔ cohérent avec le CSS mobile
+      opacity: 1,
+      duration: BASE_MOB,
+    }, 'reveal-end')
+
+  /* ---------------------------------------------------------------------- */
+  /* EXIT : on laisse place à la conclusion                                 */
+  /* ---------------------------------------------------------------------- */
+  tl.addLabel('exit', `reveal+=${BASE_MOB * 2}`)
+    .to('.animation-mobile .gains', {
+      y: '30vh',
+      opacity: 0,
+      duration: BASE_MOB * 1.5,
+    }, 'exit')
+    .to('#ota', {
+      flexGrow: 0, flexBasis: 0, minHeight: 0,
+      duration: BASE_MOB * 1.5
+    }, 'exit')
+    .to('#indiehost', { height: '100%', duration: BASE_MOB * 1.5 }, 'exit')
+    .to('.total-gains', {
+      width: 0, opacity: 0,
+      duration: BASE_MOB
+    }, 'exit')
+    .to('.ih-total > .total > .result', {
+      '--title-bg-direction': '87deg',
+      '--title-bg-color-1': 'rgb(223, 153, 255)',
+      '--title-bg-color-2': 'rgb(255, 196, 197)',
+      '--title-bg-clr1-pos': '0%',
+      '--title-bg-clr2-pos': '100%',
+      duration: BASE_MOB,
+    }, 'exit')
+
+  /* ---------------------------------------------------------------------- */
+  /* POST-EXIT : switch “total” → “conclusion”                              */
+  /* ---------------------------------------------------------------------- */
+  tl.addLabel('post-exit', `exit+=${BASE_MOB}`)
+    .to('.ih-total > .total', {
+      height: '0%', opacity: 0,
+      duration: BASE_MOB / 2
+    }, 'post-exit')
+    .to('.ih-total > .conclusion', {
+      height: '100%', opacity: 1,
+      duration: BASE_MOB / 2
+    }, 'post-exit')
+
+  /* ---------------------------------------------------------------------- */
+  /* WATCHERS : valeurs dynamiques                                          */
+  /* ---------------------------------------------------------------------- */
+  watch([totalOta, commissionsAnim], () => {
+    obj.val = totalOta.value - commissionsAnim.value
+    revealTween.vars.val = totalOta.value
+
+    const p = tl.progress()
+    tl.invalidate().progress(p)
+    ScrollTrigger.refresh()
+  })
 
   return tl
 }
@@ -268,5 +353,6 @@ function attachScrollTrigger(tl: gsap.core.Timeline) {
     pin: true,
     anticipatePin: 1,
     animation: tl,
+    invalidateOnRefresh: true,
   })
 }

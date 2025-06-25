@@ -2,7 +2,6 @@
 
 <script setup lang="ts">
 // DEPS
-
 // ASSETS
 
 const nights = defineModel<number>('nights')
