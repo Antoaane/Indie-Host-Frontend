@@ -58,3 +58,10 @@ import annonceReservationImg from '/assets/media/images/annonce-reservation-2.pn
     />
   </div>
 </template>
+
+<style lang="scss">
+#usage-section {
+  max-width: 100vw;
+  padding: 0 !important;
+}
+</style>

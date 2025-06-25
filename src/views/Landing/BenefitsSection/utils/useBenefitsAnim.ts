@@ -200,19 +200,6 @@ function buildMobileTimeline() {
     }, 'enter')
 
   /* ---------------------------------------------------------------------- */
-  /* PRE-REVEAL : petite mise en bouche                                      */
-  /* ---------------------------------------------------------------------- */
-  tl.addLabel('pre-reveal', `enter+=${BASE_DURATION * 0.5}`)
-    .to('.unfocus', {
-      opacity: 0.5,
-      duration: BASE_DURATION / 3
-    }, 'pre-reveal')
-    .to('.line', {
-      transform: 'translate(-50%, -35%) scaleX(1)',
-      duration: BASE_DURATION / 3
-    }, 'pre-reveal')
-
-  /* ---------------------------------------------------------------------- */
   /* REVEAL                                                                 */
   /* ---------------------------------------------------------------------- */
   tl.addLabel('reveal', `enter+=${BASE_DURATION * 0.6}`)
@@ -262,7 +249,7 @@ function buildMobileTimeline() {
   /* ---------------------------------------------------------------------- */
   /* EXIT : on laisse place à la conclusion                                 */
   /* ---------------------------------------------------------------------- */
-  tl.addLabel('exit', `reveal+=${BASE_DURATION * 2}`)
+  tl.addLabel('exit', `reveal+=${BASE_DURATION * 1.5}`)
     .to('.animation-mobile .gains', {
       y: '-26vh',
       opacity: 0,
@@ -295,15 +282,6 @@ function buildMobileTimeline() {
   /* ---------------------------------------------------------------------- */
   /* POST-EXIT : switch “total” → “conclusion”                              */
   /* ---------------------------------------------------------------------- */
-  // tl.addLabel('post-exit', `exit+=${BASE_DURATION}`)
-  // .to('.ih-total > .total', {
-  //   height: '0%', opacity: 0,
-  //   duration: BASE_DURATION / 2
-  // }, 'post-exit')
-  // .to('.ih-total > .conclusion', {
-  //   height: '100%', opacity: 1,
-  //   duration: BASE_DURATION / 2
-  // }, 'post-exit')
 
   /* ---------------------------------------------------------------------- */
   /* WATCHERS : valeurs dynamiques                                          */

@@ -1,17 +1,27 @@
 <!-- File: src/views/Landing/StrengthsSection/StrengthsSection.vue -->
 
 <script setup lang="ts">
+// DEPS
+import { onMounted } from 'vue'
+// UTILS
+import { vp } from '@/utils/viewport'
+import { useStrengthsAnim } from '@/views/Landing/StrengthsSection/utils/useStrengthsAnim'
+import { useDropDown } from '@/views/Landing/StrengthsSection/utils/useDropDown'
 // ASSETS
 import { Wallet, ShieldCheck, Users } from 'lucide-vue-next'
 // CONTENT
 import type { ItemSection } from '@/content/types'
 import rawContent from '@/content/fr/Landing/strengths-section.json'
-// DEPS
-import { useStrengthsAnim } from '@/views/Landing/StrengthsSection/utils/useStrengthsAnim'
 
 const section = rawContent as ItemSection
 
 useStrengthsAnim()
+
+onMounted(() => {
+  if (!vp.lg.value) {
+    useDropDown()
+  }
+})
 </script>
 
 <template>
@@ -23,7 +33,10 @@ useStrengthsAnim()
       </div>
 
       <div class="strengths">
-        <div id="strength_1">
+        <div
+          class="strength"
+          id="strength_1"
+        >
           <span>
             <span>
               <span></span>
@@ -43,7 +56,10 @@ useStrengthsAnim()
             <p v-html="section.items['card-1-text'].content" />
           </div>
         </div>
-        <div id="strength_2">
+        <div
+          class="strength"
+          id="strength_2"
+        >
           <span>
             <span>
               <span></span>
@@ -63,7 +79,10 @@ useStrengthsAnim()
             <p v-html="section.items['card-2-text'].content" />
           </div>
         </div>
-        <div id="strength_3">
+        <div
+          class="strength"
+          id="strength_3"
+        >
           <span>
             <span>
               <span></span>
