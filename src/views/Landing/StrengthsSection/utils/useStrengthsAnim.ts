@@ -18,10 +18,10 @@ export function useStrengthsAnim() {
       .addLabel('start')
 
     // --- phase "start" : on dévoile les div puis les span, en cascade
-    strengths.forEach((sel, i) => {
+    strengths.forEach((el, i) => {
       const offset = `start+=${i * stagger}`
-      tl.to(`${sel} > div`, { background: bgStart, ease: 'power2.inOut', duration }, offset)
-        .to(`${sel} > span`, { opacity: 1, ease: 'power2.inOut', duration }, offset)
+      tl.to(`${el} > div`, { background: bgStart, ease: 'power2.inOut', duration }, offset)
+        .to(`${el} > span`, { opacity: 1, ease: 'power2.inOut', duration }, offset)
     })
 
     // calcul automatique de quand démarrer la phase "end"
@@ -29,10 +29,10 @@ export function useStrengthsAnim() {
     tl.addLabel('end', `start+=${totalStartDur - (totalStartDur / 2)}`)
 
     // --- phase "end" : on remet tout en place, même cadence
-    strengths.forEach((sel, i) => {
+    strengths.forEach((el, i) => {
       const offset = `end+=${i * stagger}`
-      tl.to(`${sel} > div`, { background: bgEnd, ease: 'power2.inOut', duration }, offset)
-        .to(`${sel} > span`, { opacity: 0, ease: 'power2.inOut', duration }, offset)
+      tl.to(`${el} > div`, { background: bgEnd, ease: 'power2.inOut', duration }, offset)
+        .to(`${el} > span`, { opacity: 0, ease: 'power2.inOut', duration }, offset)
     })
 
     // scroll trigger

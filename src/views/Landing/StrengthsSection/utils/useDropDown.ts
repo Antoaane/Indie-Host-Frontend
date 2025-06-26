@@ -21,35 +21,72 @@ export function useDropDown() {
       const tlBackward = gsap.timeline({ paused: true, defaults: { ease: 'power2.inOut' } })
 
       tlForward.addLabel('playForward')
-        .to(`${el} > div p`, {
+        .to(`${el} > div > p`, {
           maxHeight: '150vh',
-          duration: 0.5,
+          duration: 1,
+          ease: 'power2.inOut',
+        }, 'playForward')
+        .to(`${el} > div span`, {
+          opacity: '1',
+          delay: 0.5,
+          duration: 0.25,
           ease: 'power2.inOut',
         }, 'playForward')
         .to(`${el} > div span`, {
           height: '1px',
-          duration: 0.5,
+          duration: 0.25,
           ease: 'power2.inOut',
         }, 'playForward')
         .to(`${el} > div`, {
           gap: '1.5rem',
+          duration: 1,
+          ease: 'power2.inOut',
+        }, 'playForward')
+        .to(`${el} > div > .trigger > .chevron-down`, {
+          rotate: '180deg',
+          duration: 0.5,
+          ease: 'power2.inOut',
+        }, 'playForward')
+        .to(`${el} > div > .trigger > p`, {
+          maxHeight: '0',
+          paddingTop: '0',
+          marginBottom: '0',
           duration: 0.5,
           ease: 'power2.inOut',
         }, 'playForward')
 
       tlBackward.addLabel('playBackward')
-        .to(`${el} > div p`, {
+        .to(`${el} > div > p`, {
           maxHeight: '0',
-          duration: 0.5,
+          duration: 0.75,
           ease: 'power2.inOut',
         }, 'playBackward')
         .to(`${el} > div span`, {
+          opacity: '0',
+          duration: 0.15,
+          ease: 'power2.inOut',
+        }, 'playForward')
+        .to(`${el} > div span`, {
           height: '0px',
-          duration: 0.5,
+          duration: 0.15,
           ease: 'power2.inOut',
         }, 'playBackward')
         .to(`${el} > div`, {
           gap: '0rem',
+          delay: 0.25,
+          duration: 0.75,
+          ease: 'power2.inOut',
+        }, 'playBackward')
+        .to(`${el} > div > .trigger > .chevron-down`, {
+          rotate: '0deg',
+          duration: 0.5,
+          ease: 'power2.inOut',
+        }, 'playBackward')
+        .to(`${el} > div > .trigger > p`, {
+          maxHeight: '1.5rem',
+          paddingTop: '0.25rem',
+          marginBottom: '0.25rem',
+          delay: 0.5,
           duration: 0.5,
           ease: 'power2.inOut',
         }, 'playBackward')

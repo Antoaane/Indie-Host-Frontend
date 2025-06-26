@@ -158,6 +158,8 @@
           span {
             width: 75%;
             height: 0px;
+
+            opacity: 0;
             background: linear-gradient(90deg, rgba($accent, 0.00) 0%, $accent 50%, rgba($accent, 0.00) 100%);
 
             @include min-width(lg) {
@@ -165,14 +167,42 @@
             }
           }
 
-          p {
+          &>p {
             max-height: 0;
             height: 100%;
             overflow: hidden;
-            @include base-text($accent, false);
+
+            @include base-text($accent);
 
             @include min-width(lg) {
               max-height: none;
+            }
+          }
+
+          .trigger {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+
+            transform: translateY(15%);
+
+            p {
+              max-height: 1.5rem;
+              padding-top: 0.5rem;
+              margin-bottom: 0.25rem !important;
+
+              background: linear-gradient(87deg, $primary_gradiant_second 0%, $primary_gradiant_third 100%);
+              background-clip: text;
+              -webkit-background-clip: text;
+              -webkit-text-fill-color: transparent;
+              font-weight: inherit !important;
+
+              @include base-text($accent);
+            }
+
+            .chevron-down {
+              stroke: $accent;
+              transform: rotate(0deg);
             }
           }
         }

@@ -1,5 +1,20 @@
 /* File: src/styles/layouts/_footer.scss */
 
+@use "@/styles/variables/globals" as *;
+@use "@/styles/variables/borders" as borders;
+
 footer {
-    
+  display: flex;
+  justify-content: center;
+
+  background-color: $accent;
+
+  @include gutters(padding, inline, 2);
+
+  p {
+    margin: 0.5rem 0 !important;
+
+    font-weight: 500 !important;
+    @include little-text($secondary);
+  }
 }

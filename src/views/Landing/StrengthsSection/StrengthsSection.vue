@@ -8,7 +8,7 @@ import { vp } from '@/utils/viewport'
 import { useStrengthsAnim } from '@/views/Landing/StrengthsSection/utils/useStrengthsAnim'
 import { useDropDown } from '@/views/Landing/StrengthsSection/utils/useDropDown'
 // ASSETS
-import { Wallet, ShieldCheck, Users } from 'lucide-vue-next'
+import { Wallet, ShieldCheck, Users, ChevronDown } from 'lucide-vue-next'
 // CONTENT
 import type { ItemSection } from '@/content/types'
 import rawContent from '@/content/fr/Landing/strengths-section.json'
@@ -54,6 +54,16 @@ onMounted(() => {
             </div>
             <span></span>
             <p v-html="section.items['card-1-text'].content" />
+            <div
+              v-if="!vp.lg.value"
+              class="trigger"
+            >
+              <p> Voir plus </p>
+              <ChevronDown
+                :size="16"
+                class="chevron-down"
+              />
+            </div>
           </div>
         </div>
         <div
@@ -77,6 +87,16 @@ onMounted(() => {
             </div>
             <span></span>
             <p v-html="section.items['card-2-text'].content" />
+            <div
+              v-if="!vp.lg.value"
+              class="trigger"
+            >
+              <p> Voir plus </p>
+              <ChevronDown
+                :size="16"
+                class="chevron-down"
+              />
+            </div>
           </div>
         </div>
         <div
@@ -100,6 +120,16 @@ onMounted(() => {
             </div>
             <span></span>
             <p v-html="section.items['card-3-text'].content" />
+            <div
+              v-if="!vp.lg.value"
+              class="trigger"
+            >
+              <p> Voir plus </p>
+              <ChevronDown
+                :size="16"
+                class="chevron-down"
+              />
+            </div>
           </div>
         </div>
       </div>
