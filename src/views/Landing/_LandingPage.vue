@@ -22,18 +22,18 @@ gsap.registerPlugin(ScrollTrigger, ScrollSmoother)
 
 let smoother: ReturnType<typeof ScrollSmoother.create>
 
-// onMounted(() => {
-//   smoother = ScrollSmoother.create({
-//     wrapper: 'body',
-//     content: '#landing-page',
-//     smooth: 1.2,
-//     effects: true,
-//   })
-// })
+onMounted(() => {
+  smoother = ScrollSmoother.create({
+    // wrapper: 'body',
+    // content: '#landing-page',
+    smooth: 1.2,
+    effects: true,
+  })
+})
 
-// onBeforeUnmount(() => {
-//   smoother.kill()
-// })
+onBeforeUnmount(() => {
+  smoother.kill()
+})
 </script>
 
 <template>

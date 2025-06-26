@@ -6,6 +6,8 @@ import SlidesTitles from '@/views/Landing/HabitsSection/components/SlidesTitles/
 import Carousel from '@/views/Landing/HabitsSection/components/Carousel/Carousel.vue'
 // UTILS
 import { vp } from '@/utils/viewport'
+// ASSETS
+import { X } from 'lucide-vue-next'
 </script>
 
 <template>
@@ -21,8 +23,7 @@ import { vp } from '@/utils/viewport'
       <div
         id="slideDisplayRef"
         class="slide-display"
-      >
-      </div>
+      />
     </section>
   </div>
 </template>
