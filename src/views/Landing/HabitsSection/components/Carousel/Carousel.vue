@@ -47,7 +47,10 @@ const swiperParams = computed(
       slidesPerView: 3,
       spaceBetween: vp.lg.value ? 32 : 16,
 
-      autoplay: { delay: 3000, disableOnInteraction: true },
+      autoplay: {
+        delay: 3000,
+        disableOnInteraction: true,
+      },
 
       loop: true,
       centeredSlides: true,
@@ -64,15 +67,19 @@ const initIllustrationSize = () => {
 </script>
 
 <template>
-  <div
+  <!-- <div
     class="illustration"
     ref="illustrationRef"
     :style="`transform: translateY(-${vp.lg.value ? 0 : descriptionSize + 24}px)`"
+  > -->
+  <div
+    class="illustration"
+    ref="illustrationRef"
   >
     <div
       class="carousel"
       ref="carouselRef"
-      :style="`margin-left: ${(illustrationSize * 0.125) / 2}px`"
+      :style="vp.lg.value ? `margin-left: ${(illustrationSize * 0.125) / 2}px` : ''"
     >
       <Swiper
         ref="swiperWrapper"

@@ -1,9 +1,11 @@
 <!-- File: src/views/Landing/HabitsSection/HabitsSection.vue -->
 
 <script setup lang="ts">
-// Import composants
+// COMPONENTS
 import SlidesTitles from '@/views/Landing/HabitsSection/components/SlidesTitles/SlidesTitles.vue'
 import Carousel from '@/views/Landing/HabitsSection/components/Carousel/Carousel.vue'
+// UTILS
+import { vp } from '@/utils/viewport'
 </script>
 
 <template>
@@ -11,7 +13,7 @@ import Carousel from '@/views/Landing/HabitsSection/components/Carousel/Carousel
     <section id="habits-section">
       <div class="overflow">
         <div class="container">
-          <Carousel />
+          <Carousel v-if="vp.lg.value" />
           <SlidesTitles />
         </div>
       </div>

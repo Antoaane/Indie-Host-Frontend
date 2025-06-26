@@ -16,11 +16,11 @@ const section = rawContent as ItemSection
       <div class="content">
         <div>
           <h2 v-html="section.items['title-1'].content" />
-          <CustomDomain
+          <!-- <CustomDomain
             class="custom-domain"
             title="Domaine personnalisé"
             desc="Personnalisez votre domaine avec votre nom de marque"
-          />
+          /> -->
           <p v-html="section.items['text-1'].content" />
         </div>
       </div>

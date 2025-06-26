@@ -4,6 +4,7 @@
 // DEPS
 import { activeSlideIndex, illustrationSize, descriptionSize } from '@/views/Landing/HabitsSection/stores/slider'
 import { onMounted, ref } from 'vue'
+import Carousel from '@/views/Landing/HabitsSection/components/Carousel/Carousel.vue'
 // UTILS
 import { vp } from '@/utils/viewport'
 import { set } from '@vueuse/core'
@@ -17,8 +18,11 @@ const descriptionRef = ref<HTMLElement | null>(null)
 const modSize = ref<number>(0)
 
 onMounted(() => {
-  descriptionSize.value = descriptionRef.value?.clientHeight || 0
-  modSize.value = illustrationSize.value * 0.12 * 0.5
+  setTimeout(() => {
+    descriptionRef.value?.classList.add('active')
+    descriptionSize.value = descriptionRef.value?.clientHeight || 0
+    modSize.value = illustrationSize.value * 0.12 * 0.5
+  }, 150)
 })
 </script>
 
@@ -38,10 +42,12 @@ onMounted(() => {
           aria-live="polite"
         />
       </div>
-      <div
+      <!-- <div
         ref="descriptionRef"
         :style="`transform: translateY(${vp.lg.value ? 0 : illustrationSize + 16}px)`"
-      >
+      > -->
+      <Carousel v-if="!vp.lg.value" />
+      <div ref="descriptionRef">
         <p
           v-for="(txt, idx) in section.items['slider'].meta?.data"
           :key="idx"

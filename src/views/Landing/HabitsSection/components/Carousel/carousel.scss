@@ -10,6 +10,7 @@
 
     .carousel {
       position: relative;
+      z-index: 10;
 
       #shadow {
         width: 125%;
