@@ -4,7 +4,8 @@
 
 // Breakpoints
 $max-widths: (
-  xs: 360px,
+  xxs: 360px,
+  xs: 450px,
   sm: 640px,
   md: 768px,
   lg: 1022px,
@@ -14,6 +15,7 @@ $max-widths: (
   xxxxl: 2560px
 );
 
+$xxs: map.get($max-widths, xxs);
 $xs: map.get($max-widths, xs);
 $sm: map.get($max-widths, sm);
 $md: map.get($max-widths, md);
@@ -25,6 +27,7 @@ $xxxxl: map.get($max-widths, xxxxl);
 
 // Container max-widths (correspondant aux breakpoints)
 $breakpoints: (
+  xxs: calc($xxs + 1px),
   xs: calc($xs + 1px),
   sm: calc($sm + 1px),
   md: calc($md + 1px),
@@ -132,7 +135,7 @@ $selected-sides: map.get($side-map, $sides);
     $value: map.get($max-widths, $label);
     $max-value: map.get($max-widths, $max);
 
-    @if $label !=xs {
+    @if ($label !=xs) && ($label !=xxs) {
       @include min-width($label) {
 
         @if $max !=null {

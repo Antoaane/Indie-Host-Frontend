@@ -114,11 +114,12 @@ useBenefitsAnim() // init GSAP
           class="block"
           v-else
         >
+          <span class="space" />
           <p>
             <span class="focus">20 %</span>
             <span class="value">
-              <span id="badvalue">&nbsp;de commissions</span>
-              <span id="plusvalue">&nbsp;pour <span class="focus">vous</span> et vos locataires</span>
+              <span id="badvalue">&nbsp;&nbsp;de commissions</span>
+              <span id="plusvalue">&nbsp;&nbsp;pour <span class="focus">vous</span> et vos locataires</span>
             </span>
           </p>
         </div>

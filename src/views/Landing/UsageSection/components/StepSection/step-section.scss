@@ -34,7 +34,7 @@ div:has(> .step-section) {
 
         @include gutters(padding, inline, 2);
 
-        @include min-width(xs) {
+        @include min-width(xxs) {
           padding: 0 !important;
         }
 
@@ -210,7 +210,7 @@ div:has(> .step-section) {
       @include little-text($accent, false);
       @include gutters(padding, inline, 2);
 
-      @include min-width(xs) {
+      @include min-width(xxs) {
         padding: 0 !important;
       }
     }

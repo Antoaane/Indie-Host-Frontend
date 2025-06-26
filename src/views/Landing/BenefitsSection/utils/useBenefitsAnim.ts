@@ -215,11 +215,12 @@ function buildMobileTimeline() {
     }, 'reveal')
     .to('#badvalue', {
       maxHeight: '0',
+      marginBottom: '0',
       opacity: 0,
       duration: BASE_DURATION / 3
     }, 'reveal')
     .to('#plusvalue', {
-      maxHeight: '2rem',
+      maxHeight: '4rem',
       opacity: 1,
       duration: BASE_DURATION / 3
     }, 'reveal')

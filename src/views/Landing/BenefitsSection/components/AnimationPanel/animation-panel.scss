@@ -417,6 +417,7 @@
     position: relative;
 
     display: flex;
+    flex-direction: row-reverse;
     justify-content: space-between;
     align-items: center;
 
@@ -437,6 +438,16 @@
         max-width: 65vw;
         aspect-ratio: 17/5;
 
+        @include min-width(xs) {
+          min-width: 55vw;
+          max-width: 55vw;
+        }
+
+        @include min-width(sm) {
+          min-width: 35vw;
+          max-width: 35vw;
+        }
+
         @include min-width(md) {
           min-width: 40vw;
           max-width: 40vw;
@@ -455,6 +466,18 @@
 
       background-color: $accent;
 
+      @include min-width(xs) {
+        width: 20%;
+      }
+
+      @include min-width(sm) {
+        width: 17.5%;
+      }
+
+      @include min-width(md) {
+        width: 15%;
+      }
+
       .total {
         margin: 0 !important;
         padding: 0 !important;
@@ -466,6 +489,7 @@
 
         >.result {
           margin: 0 !important;
+          padding: 0 !important;
 
           /* mêmes variables CSS que desktop → l’anim GSAP marche d’office */
           --title-bg-direction: 180deg;
@@ -568,6 +592,7 @@
     position: relative;
 
     display: flex;
+    flex-direction: row-reverse;
     justify-content: space-between;
     align-items: center;
 
@@ -593,6 +618,14 @@
       background-color: rgba($secondary, 0.5);
 
       @include halo;
+
+      @include min-width(xs) {
+        width: 20%;
+      }
+
+      @include min-width(sm) {
+        width: 17.5%;
+      }
 
       @include min-width(md) {
         width: 15%;
@@ -675,8 +708,16 @@
         font-size: 8cqw;
         text-align: center;
 
+        @include min-width(xs) {
+          font-size: 6cqw;
+        }
+
+        @include min-width(sm) {
+          font-size: 4.25cqw;
+        }
+
         @include min-width(md) {
-          font-size: 5cqw;
+          font-size: 4cqw;
         }
       }
     }
@@ -695,7 +736,7 @@
   }
 
   .gains {
-    width: 100vw;
+    width: 100%;
     height: var(--shorter-side);
 
     position: absolute;
@@ -705,8 +746,6 @@
 
     display: flex;
 
-    // transform: translateY(100%);
-
     --gains-color: 255, 82, 82;
 
     .advantages {
@@ -714,7 +753,9 @@
       height: 100%;
 
       display: flex;
+      justify-content: end;
       align-items: center;
+      box-sizing: border-box;
 
       --rgm-size: 133.33% 100%;
       --rgm-pos-x: 50%;
@@ -727,13 +768,9 @@
           var(--rgm-start) 0%,
           var(--rgm-end) 100%);
 
-      @include min-width(md) {
-        width: 85%;
-      }
-
       .block {
         margin-top: -1rem;
-        width: 75%;
+        width: 100%;
         height: 100%;
         container-type: inline-size;
 
@@ -741,36 +778,37 @@
         justify-content: center;
         align-items: center;
 
+        .space {
+          width: 25%;
+          display: block;
+
+          flex-shrink: 0;
+          flex-grow: 1;
+
+          @include min-width(xs) {
+            width: 20%;
+          }
+
+          @include min-width(sm) {
+            width: 17.5%;
+          }
+
+          @include min-width(md) {
+            width: 15%;
+          }
+        }
+
         p {
           width: 100%;
-          margin: 0 !important;
-          padding: 0 !important;
+          margin: 0;
+          flex-shrink: 1;
+          flex-grow: 0;
 
           display: flex;
           justify-content: center;
           align-items: flex-end;
 
           text-align: center;
-          font-size: 5cqw !important;
-
-          @include h4-title($accent);
-
-          @include min-width(md) {
-            font-size: 4cqw !important;
-
-            .focus {
-              font-size: 5.5cqw !important;
-            }
-          }
-
-          .focus {
-            margin: 0 !important;
-            padding: 0 !important;
-
-            font-size: 8cqw !important;
-
-            @include h2-title($accent);
-          }
 
           .value {
             width: max-content;
@@ -779,81 +817,54 @@
 
             #badvalue {
               width: max-content;
-              max-height: 2rem;
+              max-height: 4rem;
               height: 100%;
-              padding: 0 !important;
-              margin: 0 0 3px 0 !important;
+              // margin-bottom: -3px;
+              margin: 0 0 5px 0;
 
               overflow: hidden;
               opacity: 1;
-
-              font-size: 5.5cqw !important;
-              @include h4-title($accent);
-
-              @include min-width(md) {
-                font-size: 4cqw !important;
-              }
             }
 
             #plusvalue {
               width: max-content;
               max-height: 0;
               height: 100%;
-              padding: 0 !important;
-              margin: 0 !important;
+              // margin: 0 0 8px 0;
 
               overflow: hidden;
               opacity: 0;
+            }
+          }
 
-              font-size: 5.5cqw !important;
-              @include h4-title($accent);
+          .focus {
+            margin: 0;
 
-              @include min-width(md) {
-                font-size: 4cqw !important;
-              }
+            @include base-title(6cqw, 700, $accent);
+
+            @include min-width(sm) {
+              @include base-title(4.5cqw, 700, $accent);
+            }
+
+            @include min-width(md) {
+              @include base-title(3.5cqw, 700, $accent);
+            }
+          }
+
+          .value,
+          .value>span {
+            @include base-title(4cqw, 500, $accent);
+
+            @include min-width(sm) {
+              @include base-title(3.25cqw, 500, $accent);
+            }
+
+            @include min-width(md) {
+              @include base-title(2.5cqw, 500, $accent);
             }
           }
         }
       }
     }
-
-    // .losses {
-    //   width: 20%;
-    //   height: 100%;
-    //   overflow: hidden;
-
-    //   display: flex;
-    //   justify-content: center;
-    //   align-items: center;
-
-    //   opacity: 0;
-    //   background: linear-gradient(180deg, rgba($good, 0.5) 0%, rgba($accent, 0) 110%);
-
-    //   @include min-width(md) {
-    //     width: 15%;
-    //   }
-
-    //   &>p {
-    //     min-width: max-content;
-    //     margin: 0 !important;
-    //     padding: 0 !important;
-
-    //     font-size: 5.5cqw !important;
-    //     font-weight: 700 !important;
-    //     font-family: 'outfit', sans-serif !important;
-
-    //     background: linear-gradient(180deg, $accent 22.14%, rgba($accent, 0) 167.86%);
-    //     background-clip: text;
-    //     -webkit-background-clip: text;
-    //     -webkit-text-fill-color: transparent;
-
-    //     @include halo(xs, true, $secondary, 0.25);
-    //     @include h2-title();
-
-    //     @include min-width(md) {
-    //       font-size: 4.5cqw !important;
-    //     }
-    //   }
-    // }
   }
 }
