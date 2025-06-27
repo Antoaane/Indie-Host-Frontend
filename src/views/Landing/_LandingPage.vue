@@ -7,19 +7,17 @@ import { VueLenis } from 'lenis/vue'
 import { ScrollSmoother } from 'gsap/ScrollSmoother'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import gsap from 'gsap'
-
 // UTILS
 import { vp } from '@/utils/viewport'
-
-// ASSETS
-import HeroSection from '@/views/Landing/HeroSection/HeroSection.vue'
-import BenefitsSection from '@/views/Landing/BenefitsSection/BenefitsSection.vue'
-import CustomizationSection from '@/views/Landing/CustomizationSection/CustomizationSection.vue'
-import HabitsSection from '@/views/Landing/HabitsSection/HabitsSection.vue'
-import StrengthsSection from '@/views/Landing/StrengthsSection/StrengthsSection.vue'
-import UsageSection from '@/views/Landing/UsageSection/UsageSection.vue'
-import JoinSection from '@/views/Landing/JoinSection/JoinSection.vue'
-import FaqSection from '@/views/Landing/FaqSection/FaqSection.vue'
+// COMPONENTS
+import HeroSection from '@/views/Landing/components/HeroSection/HeroSection.vue'
+import BenefitsSection from '@/views/Landing/components/BenefitsSection/BenefitsSection.vue'
+import CustomizationSection from '@/views/Landing/components/CustomizationSection/CustomizationSection.vue'
+import HabitsSection from '@/views/Landing/components/HabitsSection/HabitsSection.vue'
+import StrengthsSection from '@/views/Landing/components/StrengthsSection/StrengthsSection.vue'
+import UsageSection from '@/views/Landing/components/UsageSection/UsageSection.vue'
+import JoinSection from '@/views/Landing/components/JoinSection/JoinSection.vue'
+import FaqSection from '@/views/Landing/components/FaqSection/FaqSection.vue'
 
 if (vp.lg.value) {
   gsap.registerPlugin(ScrollTrigger, ScrollSmoother)
