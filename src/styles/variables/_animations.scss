@@ -3,12 +3,3 @@
 @mixin transition($duration: 300ms, $timing-function: cubic-bezier(0.6, 0, 0.3, 1)) {
   transition: all $duration $timing-function;
 }
-
-* {
-  // @include transition;
-
-  // &::before,
-  // &::after {
-  //     @include transition;
-  // }
-}
