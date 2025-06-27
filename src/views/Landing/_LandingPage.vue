@@ -8,6 +8,9 @@ import { ScrollSmoother } from 'gsap/ScrollSmoother'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import gsap from 'gsap'
 
+// UTILS
+import { vp } from '@/utils/viewport'
+
 // ASSETS
 import HeroSection from '@/views/Landing/HeroSection/HeroSection.vue'
 import BenefitsSection from '@/views/Landing/BenefitsSection/BenefitsSection.vue'
@@ -18,21 +21,27 @@ import UsageSection from '@/views/Landing/UsageSection/UsageSection.vue'
 import JoinSection from '@/views/Landing/JoinSection/JoinSection.vue'
 import FaqSection from '@/views/Landing/FaqSection/FaqSection.vue'
 
-gsap.registerPlugin(ScrollTrigger, ScrollSmoother)
+if (vp.lg.value) {
+  gsap.registerPlugin(ScrollTrigger, ScrollSmoother)
+}
 
 let smoother: ReturnType<typeof ScrollSmoother.create>
 
 onMounted(() => {
-  smoother = ScrollSmoother.create({
-    // wrapper: 'body',
-    // content: '#landing-page',
-    smooth: 1.2,
-    effects: true,
-  })
+  if (vp.lg.value) {
+    smoother = ScrollSmoother.create({
+      // wrapper: 'body',
+      // content: '#landing-page',
+      smooth: 1.2,
+      effects: true,
+    })
+  }
 })
 
 onBeforeUnmount(() => {
-  smoother.kill()
+  if (vp.lg.value) {
+    smoother.kill()
+  }
 })
 </script>
 
