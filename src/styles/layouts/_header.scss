@@ -3,6 +3,8 @@
 @use "@/styles/variables/globals" as *;
 
 header {
+  width: 100%;
+
   position: fixed;
   top: 0;
   left: 50%;
@@ -13,8 +15,9 @@ header {
 
   transform: translateX(-50%);
 
-  @include container(xxl);
   @include gutters(padding, all);
 
-  @include min-width(lg) {}
+  @include min-width(lg) {
+    justify-content: center;
+  }
 }

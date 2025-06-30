@@ -1,0 +1,104 @@
+/* File: src/components/navs/NavListing/nav-listing.scss */
+
+@use "@/styles/variables/globals" as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
+@use '@/styles/components/buttons' as buttons;
+
+.navbar-listing {
+  width: 55px;
+  height: 55px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  border-radius: borders.$rounded-md;
+  background-color: $accent;
+
+  @include soft-shadow();
+
+  @include min-width(lg) {
+    width: 100%;
+    height: 70px;
+    padding: 0 1.5rem;
+
+    justify-content: space-between;
+
+    border-radius: borders.$rounded-lg;
+  }
+
+  .navbar__logo {
+    width: min-content;
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+
+    &>svg {
+      height: 3.125rem;
+    }
+  }
+
+  .navbar__links {
+    display: flex;
+    gap: 1.5rem;
+
+    li {
+      @include buttons.secondary;
+
+      &:first-child {
+        @include buttons.primary(true);
+      }
+    }
+  }
+
+  .navbar__mobile-toggle {
+    width: 2rem;
+    height: auto;
+    cursor: pointer;
+  }
+
+  .navbar__mobile-menu {
+    right: 0;
+    width: 100%;
+
+    position: absolute;
+    top: 70px;
+
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+
+    @include container;
+    @include gutters(padding, inline);
+    @include gutters(padding, top, 0.5);
+
+    @include min-width(lg) {
+      @include gutters(padding, top, 2);
+    }
+
+    .navbar__mobile-links {
+      margin: 0;
+      padding: 1rem 0;
+
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+
+      background-color: $accent;
+      border-radius: borders.$rounded-md;
+
+      @include min-width(lg) {
+        border-radius: borders.$rounded-lg;
+      }
+
+      li {
+        @include buttons.secondary;
+
+        &:first-child {
+          @include buttons.primary(true);
+        }
+      }
+    }
+  }
+}

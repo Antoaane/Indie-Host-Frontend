@@ -4,7 +4,7 @@
 // DEPS
 
 // ASSETS
-import DevsPhoto from '/assets/media/images/image1_867_26311.jpg'
+import DevsPhoto from '/assets/media/images/listing-test/image1.jpg'
 import FrenchFlag from '@/components/svgs/icons/FrenchFlag.vue'
 import { Send, SendIcon } from 'lucide-vue-next'
 </script>

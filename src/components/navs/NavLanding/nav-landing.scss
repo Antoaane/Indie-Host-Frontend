@@ -1,11 +1,11 @@
-/* File: src/components/navs/nav/nav.scss */
+/* File: src/components/navs/NavLanding/nav-landing.scss */
 
 @use "@/styles/variables/globals" as *;
 @use '@/styles/variables/borders' as borders;
 @use '@/styles/variables/animations' as animations;
 @use '@/styles/components/buttons' as buttons;
 
-.navbar {
+.navbar-landing {
   width: 55px;
   height: 55px;
 
@@ -19,13 +19,14 @@
   @include soft-shadow();
 
   @include min-width(lg) {
-    width: 100%;
     height: 70px;
     padding: 0 1.5rem;
 
     justify-content: space-between;
 
     border-radius: borders.$rounded-lg;
+
+    @include container(xxl, -3rem);
   }
 
   .navbar__logo {
@@ -68,7 +69,7 @@
 
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 
-    @include container;
+    // @include container;
     @include gutters(padding, inline);
     @include gutters(padding, top, 0.5);
 
