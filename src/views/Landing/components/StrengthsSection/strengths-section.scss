@@ -1,4 +1,4 @@
-/* File: src/views/Landing/StrengthsSection/strengths-section.scss */
+/* File: src/views/Landing/components/StrengthsSection/strengths-section.scss */
 
 @use "@/styles/variables/globals" as *;
 @use "@/styles/variables/borders" as borders;
@@ -13,7 +13,7 @@
 
     gap: 2.5rem;
 
-    @include gutters(padding, inline, 1);
+    @include gutters(padding, inline, 1.25);
 
     @include min-width(lg) {
       gap: 5rem;

@@ -1,4 +1,4 @@
-/* File: src/views/Landing/JoinSection/join-section.scss */
+/* File: src/views/Landing/components/JoinSection/join-section.scss */
 
 @use "@/styles/variables/globals" as *;
 @use "@/styles/variables/borders" as borders;
@@ -6,7 +6,7 @@
 @use "@/styles/components/buttons" as buttons;
 
 #join-section {
-  @include gutters(padding, top, 2);
+  // @include gutters(padding, top, 2);
 
   box-sizing: content-box;
 

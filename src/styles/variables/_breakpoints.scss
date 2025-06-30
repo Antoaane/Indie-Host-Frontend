@@ -39,8 +39,8 @@ $breakpoints: (
 );
 
 @function get-gutter($multiple: 1) {
-  @return (base: calc(0.75rem * #{$multiple}),
-    md: calc(1rem * #{$multiple}),
+  @return (base: calc(1rem * #{$multiple}),
+    md: calc(1.125rem * #{$multiple}),
     lg: calc(1.25rem * #{$multiple}),
     xxl: calc(1.5rem * #{$multiple}));
 }

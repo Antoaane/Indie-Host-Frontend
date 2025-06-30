@@ -1,14 +1,13 @@
-/* File: src/views/Landing/HabitsSection/habits-section.scss */
+/* File: src/views/Landing/components/HabitsSection/habits-section.scss */
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
 
 .habits-section-container {
-  padding-top: calc(300vh + (var(--gutter-spacing)));
-  padding-bottom: 0 !important;
 
   @include min-width(lg) {
-    padding-top: calc(300vh + (var(--gutter-spacing) + 70px));
+    padding-top: calc(300vh + (var(--gutter-spacing) + 70px)) !important;
+    padding-bottom: 0 !important;
   }
 
   #habits-section {

@@ -1,4 +1,4 @@
-// File: src/views/Landing/BenefitsSection/utils/useBenefitsAnim.ts
+// File: src/views/Landing/components/BenefitsSection/utils/useBenefitsAnim.ts
 
 // DEPS
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
@@ -15,7 +15,7 @@ gsap.registerPlugin(ScrollTrigger, CSSRulePlugin)
 // CONSTANTS
 // ────────────────────────────────────────────────────────────────────────────────
 const EASE = 'power2.inOut'
-const BASE_DURATION = 2
+const BASE_DURATION = vp.lg.value ? 2 : 1.5
 
 export const totalOta = ref(0)
 export const commissionsAnim = ref(0)
@@ -196,7 +196,7 @@ function buildMobileTimeline() {
   tl.addLabel('enter')
     .to('#indiehost', {
       height: `${longer + shorter}%`,
-      duration: BASE_DURATION,               // même ratio que desktop mais vertical
+      duration: BASE_DURATION,
     }, 'enter')
 
   /* ---------------------------------------------------------------------- */
@@ -207,30 +207,35 @@ function buildMobileTimeline() {
       '--rgm-start': 'rgba(0, 255, 166, 0.6)',
       duration: BASE_DURATION,
     }, 'reveal')
+
     .to('.gains', {
       bottom: `${longer}%`,
       opacity: 1,
       ease: 'power1.out',
       duration: BASE_DURATION / 3
     }, 'reveal')
+
     .to('#badvalue', {
-      maxHeight: '0',
-      marginBottom: '0',
+      maxHeight: 0,
+      marginBottom: 0,
       opacity: 0,
       duration: BASE_DURATION / 3
     }, 'reveal')
+
     .to('#plusvalue', {
       maxHeight: '4rem',
       opacity: 1,
       duration: BASE_DURATION / 3
     }, 'reveal')
+
     .to('.total-gains', {
-      height: '1.5rem', opacity: 1,
+      height: '1.5rem',
+      opacity: 1,
       duration: BASE_DURATION * 1.2
     }, 'reveal')
 
   /* ---------------------------------------------------------------------- */
-  /* REVEAL-END : incrément du chiffre live                                 */
+  /* REVEAL‑END : incrément du chiffre live                                 */
   /* ---------------------------------------------------------------------- */
   const obj = { val: displayTotalOta.value }
 
@@ -238,14 +243,9 @@ function buildMobileTimeline() {
   const revealTween = tl.to(obj, {
     val: () => totalOta.value,
     duration: BASE_DURATION * 1.2,
-    onUpdate() {
-      displayTotalOta.value = Math.round(obj.val)
-    },
+    onUpdate() { displayTotalOta.value = Math.round(obj.val) },
   }, 'reveal-end')
-    .to('.advantages .block p', {
-      transform: 'translateY(0)',
-      duration: BASE_DURATION,
-    }, 'reveal-end')
+    .to('.advantages .block p', { transform: 'translateY(0)', duration: BASE_DURATION }, 'reveal-end')
 
   /* ---------------------------------------------------------------------- */
   /* EXIT : on laisse place à la conclusion                                 */
@@ -254,7 +254,7 @@ function buildMobileTimeline() {
     .to('.animation-mobile .gains', {
       y: '-26vh',
       opacity: 0,
-      duration: BASE_DURATION * 1.5,
+      duration: BASE_DURATION * 1.5
     }, 'exit')
     .to('#ota', {
       flexGrow: 0,
@@ -281,8 +281,21 @@ function buildMobileTimeline() {
     }, 'exit')
 
   /* ---------------------------------------------------------------------- */
-  /* POST-EXIT : switch “total” → “conclusion”                              */
+  /* LOOP (Fade‑out → rewind → Fade‑in)                                     */
   /* ---------------------------------------------------------------------- */
+  tl.eventCallback('onComplete', () => {
+    const panel = document.querySelector('.animation-mobile') as HTMLElement
+    if (!panel) return
+
+    gsap.to(panel, {
+      autoAlpha: 0,
+      duration: 0.3,
+      onComplete: () => {
+        tl.restart(false, false)   // remet à 0 et rejoue
+        gsap.to(panel, { autoAlpha: 1, duration: 0.3 })
+      }
+    })
+  })
 
   /* ---------------------------------------------------------------------- */
   /* WATCHERS : valeurs dynamiques                                          */
@@ -298,6 +311,7 @@ function buildMobileTimeline() {
 
   return tl
 }
+
 
 // ────────────────────────────────────────────────────────────────────────────────
 // HOOK (sélection de la version via matchMedia)
@@ -334,11 +348,11 @@ export function useBenefitsAnim() {
 function attachScrollTrigger(tl: gsap.core.Timeline) {
   ScrollTrigger.create({
     trigger: '#benefits-section',
-    start: 'top top',
-    end: '+=300%',
-    scrub: 0.5,
-    pin: true,
-    anticipatePin: 1,
+    start: vp.lg.value ? 'top top' : 'top 15%',
+    end: vp.lg.value ? '+=300%' : '',
+    scrub: vp.lg.value ? 0.5 : false,
+    pin: vp.lg.value ? true : false,
+    anticipatePin: vp.lg.value ? 1 : 0,
     animation: tl,
     invalidateOnRefresh: true,
   })

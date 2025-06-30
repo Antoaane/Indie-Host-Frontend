@@ -1,4 +1,4 @@
-/* File: src/views/Landing/UsageSection/components/StepSection/step-section.scss */
+/* File: src/views/Landing/components/UsageSection/components/StepSection/step-section.scss */
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/effects' as effect;
@@ -6,6 +6,9 @@
 div:has(> .step-section) {
   .step-section {
     width: 100%;
+    padding-top: 0 !important;
+
+    @include gutters(padding, bottom, 4);
 
     .container {
       display: flex;
