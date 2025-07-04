@@ -5,6 +5,7 @@ import type { Ref } from 'vue'
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { activeSlideIndex } from '@/views/Landing/components/HabitsSection/stores/slider'
 import gsap from 'gsap'
+import { Swiper } from 'swiper/vue'
 
 // UTILS
 import { vp } from '@/utils/viewport'
@@ -166,7 +167,7 @@ export function useHabitsAnim({
     gsap.to(shadowRef.value, {
       '--shadow-end': '50%',
       '--shadow-start': '30%',
-      '--shadow-size': '300% 50%',
+      '--shadow-size': '300% 60%',
       '--shadow-pos-x': '50%',
       duration: 0.3,
       ease: 'power2.out',
@@ -287,6 +288,9 @@ export function useHabitsAnim({
   onMounted(() => {
     slideDisplayRef.value = document.getElementById('slideDisplayRef')
     // console.log('➡️ [useHabitsAnim] onMounted called')
+
+    carouselRef.value = document.querySelector('.swiper-wrapper');
+    // console.log('➡️ [useHabitsAnim] onMounted :', carouselRef.value)
 
     const c = carouselRef.value
     if (!c) {

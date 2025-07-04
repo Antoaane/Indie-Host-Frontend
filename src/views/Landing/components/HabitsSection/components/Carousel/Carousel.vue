@@ -7,9 +7,11 @@ import type { SwiperOptions } from 'swiper/types'
 import type { SwiperModule } from 'swiper/types'
 import type { Swiper as SwiperClass } from 'swiper'
 import { Swiper, SwiperSlide } from 'swiper/vue'
-import { Autoplay } from 'swiper/modules'
+import { Autoplay, Pagination } from 'swiper/modules'
+
 import 'swiper/css'
 import 'swiper/css/autoplay'
+import 'swiper/css/pagination'
 // UTILS
 import { vp } from '@/utils/viewport'
 import { useHabitsAnim } from '@/views/Landing/components/HabitsSection/utils/useHabitsAnim'
@@ -40,7 +42,8 @@ const swiperParams = computed(
     ({
       modules: [
         Autoplay as SwiperModule,
-      ], // cast sinon unknown[]
+        Pagination as SwiperModule,
+      ],
 
       direction: (vp.lg.value ? 'vertical' : 'horizontal') as 'vertical' | 'horizontal',
 
@@ -52,9 +55,12 @@ const swiperParams = computed(
         disableOnInteraction: true,
       },
 
+      pagination: {
+        clickable: true,
+      },
+
       loop: true,
       centeredSlides: true,
-      pagination: false,
       navigation: false,
     }) satisfies SwiperOptions,
 )
