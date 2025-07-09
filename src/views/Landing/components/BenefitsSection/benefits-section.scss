@@ -1,4 +1,4 @@
-/* File: src/views/Landing/BenefitsSection/benefits-section.scss */
+/* File: src/views/Landing/components/BenefitsSection/benefits-section.scss */
 
 @use '@/styles/variables/globals' as *;
 
@@ -11,7 +11,7 @@
   align-items: center;
   gap: 1rem;
 
-  @include gutters(padding, bottom, 6);
+  @include gutters(padding, bottom, 3);
 
   @include min-width(lg) {
     padding-top: calc(var(--gutter-spacing) + 70px);

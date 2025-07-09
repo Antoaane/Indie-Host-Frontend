@@ -63,14 +63,14 @@
 
       &>div:not(.illustration) {
         width: 100%;
-        margin-top: 1.5rem;
+        // margin-top: 1.5rem;
 
         display: grid;
         grid-template: 1fr / 1fr;
         justify-items: center;
 
         @include min-width(lg) {
-          padding-top: 10%;
+          // padding-top: 10%;
           justify-items: end;
         }
 

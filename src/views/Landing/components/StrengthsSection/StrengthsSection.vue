@@ -9,6 +9,7 @@ import { useStrengthsAnim } from '@/views/Landing/components/StrengthsSection/ut
 import { useDropDown } from '@/views/Landing/components/StrengthsSection/utils/useDropDown'
 // ASSETS
 import { Wallet, ShieldCheck, Users, ChevronDown } from 'lucide-vue-next'
+import ShapesCircle from '@/components/svgs/images/ShapesCircle.vue'
 // CONTENT
 import type { ItemSection } from '@/content/types'
 import rawContent from '@/content/fr/Landing/strengths-section.json'
@@ -26,6 +27,11 @@ onMounted(() => {
 
 <template>
   <section id="strengths-section">
+    <ShapesCircle
+      class="shapes-bg-circle"
+      title="Décoration du fond"
+      desc="Formes géométriques décoratives"
+    />
     <div class="container">
       <div class="title">
         <h2 v-html="section.items['title-1'].content" />

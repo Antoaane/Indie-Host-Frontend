@@ -154,7 +154,7 @@
   }
 }
 
-@mixin h2-title($color : $secondary, $bigger: true, $colorful: true) {
+@mixin h2-title($color : $secondary, $bigger: true, $colorful: true, $gutters: true) {
   margin-top: 0;
   margin-bottom: 0.75rem;
 
@@ -165,7 +165,9 @@
   font-size: 1.5rem;
   line-height: 2rem;
 
-  @include gutters(padding, inline);
+  @if $gutters {
+    @include gutters(padding, inline);
+  }
 
   @include min-width(md) {
     font-size: 1.75rem;

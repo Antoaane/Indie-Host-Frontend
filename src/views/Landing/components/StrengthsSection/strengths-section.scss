@@ -4,7 +4,27 @@
 @use "@/styles/variables/borders" as borders;
 
 #strengths-section {
-  @include gutters(padding, top, 2);
+  position: relative;
+
+  @include gutters(padding, top, 4);
+
+  @include min-width(lg) {
+    @include gutters(padding, top, 6.5);
+  }
+
+  .shapes-bg-circle {
+    width: 150%;
+    height: auto;
+
+    position: absolute;
+    top: 0;
+    left: 50%;
+    z-index: -1;
+
+    transform-origin: top center;
+    transform: translateX(-50%) scaleY(0.6);
+    opacity: 0.075;
+  }
 
   .container {
     display: flex;

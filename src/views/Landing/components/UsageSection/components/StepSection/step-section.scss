@@ -35,8 +35,6 @@ div:has(> .step-section) {
 
         border-left: 1px solid;
 
-        @include gutters(padding, inline, 2);
-
         @include min-width(xxs) {
           padding: 0 !important;
         }
@@ -50,6 +48,8 @@ div:has(> .step-section) {
           align-items: end;
 
           border-image: linear-gradient(to bottom, rgba($accent, 1) 20%, rgba($accent, 0) 40%, rgba($accent, 0) 60%, rgba($accent, 1) 80%) 1 round;
+
+          @include gutters(padding, inline, 2);
         }
 
         .step {
@@ -211,10 +211,9 @@ div:has(> .step-section) {
       margin: 0;
       padding-top: 1rem;
       @include little-text($accent, false);
-      @include gutters(padding, inline, 2);
 
-      @include min-width(xxs) {
-        padding: 0 !important;
+      @include min-width(lg) {
+        @include gutters(padding, inline, 2);
       }
     }
   }
