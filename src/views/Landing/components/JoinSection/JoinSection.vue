@@ -98,6 +98,7 @@ import { Send, SendIcon } from 'lucide-vue-next'
         <div class="illustration">
           <img
             :src="DevsPhoto"
+            loading="lazy"
             alt="Photo des développeurs IndieHost"
             class="image"
           />

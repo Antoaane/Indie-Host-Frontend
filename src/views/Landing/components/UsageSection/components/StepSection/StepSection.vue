@@ -48,6 +48,7 @@ const props = defineProps<{
         <!-- Halo décoratif constant (change le src si besoin) -->
         <img
           class="halo-png"
+          loading="lazy"
           src="/assets/media/images/halo1.png"
           alt="Décoration contextuelle"
         />
@@ -55,6 +56,7 @@ const props = defineProps<{
         <img
           v-if="typeof props.illustration === 'string'"
           :class="[{ image: true }, props.illustrationClass]"
+          loading="lazy"
           :src="props.illustration"
           :alt="props.illustrationTitle"
         />

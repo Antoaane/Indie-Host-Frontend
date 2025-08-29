@@ -103,6 +103,7 @@ const initIllustrationSize = () => {
         >
           <img
             class="slide-page-svg"
+            loading="lazy"
             :src="data.image"
             :alt="data.alt"
           />
