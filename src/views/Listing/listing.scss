@@ -1,0 +1,14 @@
+/* File: src/views/Listing/listing.scss */
+
+@use '@/styles/variables/globals' as *;
+
+#listing-page {
+  padding-top: $nav-height;
+  height: calc(100vh - $nav-height);
+
+  @include gutters(margin, bottom);
+
+  .sub-container {
+    height: calc(100vh - $nav-height);
+  }
+}

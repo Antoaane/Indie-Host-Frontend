@@ -4,6 +4,7 @@
 // COMPONENTS
 import FaqItem from '@/views/Landing/components/FaqSection/components/FaqItem/FaqItem.vue'
 import { useFaq } from '@/views/Landing/components/FaqSection/utils/useFaq'
+import Footer from '@/components/layouts/Footer.vue'
 // CONTENT
 import type { ItemSection, ContentBlock } from '@/content/types'
 import rawContent from '@/content/fr/Landing/faq-section.json'
@@ -60,6 +61,7 @@ const { filteredData, suggestions, search, selectSuggestion } = useFaq()
       </ul>
     </div>
   </section>
+  <Footer />
 </template>
 
 <style lang="scss">
