@@ -5,10 +5,11 @@
     <!-- Exemple d’usage -->
     <Mosaic
       :items="items"
+      :intervalMs="5000"
       :minSlots="2"
       :maxSlots="4"
-      :minTileW="22"
-      :minTileH="14"
+      :minTileW="45"
+      :minTileH="20"
     />
   </section>
 </template>

@@ -42,7 +42,7 @@ const maxSlots = computed(() => Math.max(minSlots.value, props.maxSlots ?? 4))
 const minTileW = computed(() => clamp(props.minTileW ?? 18, 4, 100))
 const minTileH = computed(() => clamp(props.minTileH ?? 14, 4, 100))
 
-const GAP_PX = 5
+const GAP_PX = 7.5
 const container = ref<HTMLElement | null>(null)
 
 const slots = reactive<Slot[]>([])

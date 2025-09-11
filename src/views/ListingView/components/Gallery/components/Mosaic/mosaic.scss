@@ -14,10 +14,10 @@
   min-height: 1px;
   position: absolute;
   will-change: left, top, width, height, transform, opacity;
-  transition: left 700ms cubic-bezier(.2, .7, .1, 1),
-    top 700ms cubic-bezier(.2, .7, .1, 1),
-    width 700ms cubic-bezier(.2, .7, .1, 1),
-    height 700ms cubic-bezier(.2, .7, .1, 1);
+  transition: left 2000ms cubic-bezier(.2, .7, .1, 1),
+    top 2000ms cubic-bezier(.2, .7, .1, 1),
+    width 2000ms cubic-bezier(.2, .7, .1, 1),
+    height 2000ms cubic-bezier(.2, .7, .1, 1);
 }
 
 
@@ -27,6 +27,7 @@
   display: block;
   object-fit: cover;
   transform: translateZ(0);
+  border-radius: 5px;
 }
 
 
