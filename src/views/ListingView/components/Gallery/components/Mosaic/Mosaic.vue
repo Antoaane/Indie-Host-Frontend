@@ -4,10 +4,10 @@
 import { ref, reactive, onMounted, onBeforeUnmount, watch, computed } from 'vue'
 import Tile from '@/views/ListingView/components/Gallery/components/Tile.vue'
 // Utils
-import { clamp, rand, randInt, pick } from '@/views/ListingView/components/Gallery/utils/math'
+import { clamp, randInt, rand, boundedRandAround } from '@/views/ListingView/components/Gallery/utils/math'
 import type { Rect, Slot, Item, Ori } from '@/views/ListingView/components/Gallery/utils/types'
 import { generateLayout } from '@/views/ListingView/components/Gallery/utils/layout'
-import { classifyAspect, preloadOrientations, rectToOri } from '@/views/ListingView/components/Gallery/utils/orientation'
+import { preloadOrientations, rectToOri } from '@/views/ListingView/components/Gallery/utils/orientation'
 import { tileStyle } from '@/views/ListingView/components/Gallery/utils/style'
 import { fancyboxShow } from '@/views/ListingView/components/Gallery/utils/fancybox'
 
@@ -20,52 +20,104 @@ const props = defineProps<{
   minTileH?: number
 }>()
 
-// Images par défaut (fixes)
+// Images par défaut (fixes) — avec index pour l’ordre d’apparition
 const DEFAULT_IMAGES: Item[] = [
-  { image: '/assets/media/images/listing-test/image0.jpg', alt: '0' },
-  { image: '/assets/media/images/listing-test/image1.jpg', alt: '1' },
-  { image: '/assets/media/images/listing-test/image2.jpg', alt: '2' },
-  { image: '/assets/media/images/listing-test/image3.jpg', alt: '3' },
-  { image: '/assets/media/images/listing-test/image4.jpg', alt: '4' },
-  { image: '/assets/media/images/listing-test/image5.jpg', alt: '5' },
-  { image: '/assets/media/images/listing-test/image6.jpg', alt: '6' },
-  { image: '/assets/media/images/listing-test/image7.jpg', alt: '7' },
-  { image: '/assets/media/images/listing-test/image8.jpg', alt: '8' },
-  { image: '/assets/media/images/listing-test/image9.jpg', alt: '9' },
-  { image: '/assets/media/images/listing-test/image10.jpg', alt: '10' },
+  { image: '/assets/media/images/listing-test/image0.jpg', alt: '0', index: 0 },
+  { image: '/assets/media/images/listing-test/image1.jpg', alt: '1', index: 1 },
+  { image: '/assets/media/images/listing-test/image2.jpg', alt: '2', index: 2 },
+  { image: '/assets/media/images/listing-test/image3.jpg', alt: '3', index: 3 },
+  { image: '/assets/media/images/listing-test/image4.jpg', alt: '4', index: 4 },
+  { image: '/assets/media/images/listing-test/image5.jpg', alt: '5', index: 5 },
+  { image: '/assets/media/images/listing-test/image6.jpg', alt: '6', index: 6 },
+  { image: '/assets/media/images/listing-test/image7.jpg', alt: '7', index: 7 },
+  { image: '/assets/media/images/listing-test/image8.jpg', alt: '8', index: 8 },
+  { image: '/assets/media/images/listing-test/image9.jpg', alt: '9', index: 9 },
+  { image: '/assets/media/images/listing-test/image10.jpg', alt: '10', index: 10 },
 ]
 
 const resolvedItems = computed<Item[]>(() => (props.items?.length ? props.items : DEFAULT_IMAGES))
+
+// Tri par index si présent (ordre d’apparition)
+const orderedItems = computed<Item[]>(() => {
+  const arr = [
+    ...resolvedItems.value,
+  ]
+  if (arr.some((i) => typeof i.index === 'number')) {
+    arr.sort((a, b) => (a.index ?? 0) - (b.index ?? 0))
+  }
+  return arr
+})
+
 const intervalMs = computed(() => props.intervalMs ?? 2000)
 const minSlots = computed(() => Math.max(2, props.minSlots ?? 2))
 const maxSlots = computed(() => Math.max(minSlots.value, props.maxSlots ?? 4))
 const minTileW = computed(() => clamp(props.minTileW ?? 18, 4, 100))
 const minTileH = computed(() => clamp(props.minTileH ?? 14, 4, 100))
 
+// gap visuel (px)
 const GAP_PX = 7.5
 const container = ref<HTMLElement | null>(null)
 
+// ———————————————————————————————————————————————
+// object-position : état PAR IMAGE (indépendant)
+// ———————————————————————————————————————————————
+const lastX: number[] = [] // pourcentages 0..100
+const lastY: number[] = []
+
+// Un slot **par image** — elles restent toutes montées en permanence
 const slots = reactive<Slot[]>([])
 let nextId = 0
 let timer: number | null = null
-let imageCursor = 0
-let cursorH = 0,
-  cursorV = 0,
-  cursorS = 0
 
+// curseur d’apparition (respecte `index`)
+let appearanceCursor = 0
+
+// pour l’orientation native
 const imgOri = ref<Ori[]>([])
 
-function newObjPos() {
-  return pick([
-    'center',
-    'top',
-    'bottom',
-    'left',
-    'right',
-    '25% 50%',
-    '50% 75%',
-    '75% 30%',
-  ])
+/* --------------------------
+   Helpers object-position
+---------------------------*/
+
+function initObjPosFor(idx: number) {
+  // première apparition : valeur aléatoire NON extrême (et indépendante des autres)
+  lastX[idx] = Math.round(rand(20, 80))
+  lastY[idx] = Math.round(rand(40, 60))
+  return `${lastX[idx]}% ${lastY[idx]}%`
+}
+
+/**
+ * Favorise mouvement horizontal, borné, et variation limitée :
+ * - X ∈ [20, 80], ΔX ≤ 18%, ΔX ≥ 6% (au 1er tick on évite de rester collé à la même valeur)
+ * - Y ∈ [40, 60], ΔY ≤ 8%,  ΔY ≥ 2%
+ */
+function newObjPosFor(idx: number, first = false) {
+  const prevX = lastX[idx] ?? 50
+  const prevY = lastY[idx] ?? 50
+
+  const x = Math.round(boundedRandAround(prevX, 20, 80, 18, first ? 6 : 3))
+  const y = Math.round(boundedRandAround(prevY, 40, 60, 8, first ? 2 : 1))
+
+  lastX[idx] = x
+  lastY[idx] = y
+  return `${x}% ${y}%`
+}
+
+/* --------------------------
+    Main logic
+---------------------------*/
+
+/** Kick initial : déclenche une première transition d’object-position au 1er rendu */
+function kickInitialObjPos() {
+  // double rAF pour garantir que le premier style est peint, puis on modifie
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      for (let i = 0; i < slots.length; i++) {
+        // on force une vraie variation (minDelta > 0)
+        slots[i].objPos = newObjPosFor(i, true)
+      }
+    })
+  })
 }
 
 function refreshOrientations() {
@@ -74,73 +126,69 @@ function refreshOrientations() {
   })
 }
 
-function buildBuckets() {
-  const H: number[] = [],
-    V: number[] = [],
-    S: number[] = []
-  for (let i = 0; i < resolvedItems.value.length; i++) {
-    const o = imgOri.value[i] || 'H'
-    if (o === 'H') H.push(i)
-    else if (o === 'V') V.push(i)
-    else S.push(i)
-  }
-  return { H, V, S }
-}
-
 function nextLayout() {
   const visibleCount = randInt(minSlots.value, maxSlots.value)
   const layout = generateLayout(visibleCount, minTileW.value, minTileH.value)
 
-  const buckets = buildBuckets()
-  const images: number[] = []
-
-  const pop = (list: number[], cursorRef: 'H' | 'V' | 'S'): number | null => {
-    if (!list.length) return null
-    let cursor = cursorRef === 'H' ? cursorH : cursorRef === 'V' ? cursorV : cursorS
-    const idx = list[cursor % list.length]
-    if (cursorRef === 'H') cursorH++
-    else if (cursorRef === 'V') cursorV++
-    else cursorS++
-    return idx
+  // images visibles pour ce cycle, **dans l’ordre** (index)
+  const visibles: Item[] = []
+  for (let i = 0; i < visibleCount; i++) {
+    const it = orderedItems.value[(appearanceCursor + i) % orderedItems.value.length]
+    visibles.push(it)
   }
+  appearanceCursor = (appearanceCursor + 1) % orderedItems.value.length
 
-  for (const r of layout) {
-    const need = rectToOri(r)
-    let chosen: number | null = null
-    if (need === 'H') {
-      chosen = pop(buckets.H, 'H') ?? pop(buckets.S, 'S')
-    } else if (need === 'V') {
-      chosen = pop(buckets.V, 'V') ?? pop(buckets.S, 'S')
-    } else {
-      chosen = pop(buckets.S, 'S')
-      if (chosen == null) {
-        if (buckets.H.length >= buckets.V.length) chosen = pop(buckets.H, 'H')
-        else chosen = pop(buckets.V, 'V')
-      }
-    }
-    if (chosen == null) {
-      chosen = imageCursor++ % resolvedItems.value.length
-    }
-    images.push(chosen)
-  }
+  // map -> index réels (dans resolvedItems)
+  const realIndexOf = (it: Item) => resolvedItems.value.findIndex((x) => x.image === it.image)
+  const visibleIdxs = visibles.map(realIndexOf).filter((i) => i >= 0)
 
-  imageCursor = imageCursor % resolvedItems.value.length
-  applyLayout(layout, images)
+  assignLayoutToAll(layout, visibleIdxs)
 }
 
-function applyLayout(rects: Rect[], imageIndexes: number[]) {
-  for (let i = 0; i < rects.length; i++) {
-    const r = rects[i]
-    if (slots[i]) {
-      slots[i].rect = r
-      slots[i].imageIndex = imageIndexes[i]
-      slots[i].objPos = newObjPos()
-    } else {
-      slots.push({ id: nextId++, rect: r, imageIndex: imageIndexes[i], objPos: newObjPos() })
+function assignLayoutToAll(rects: Rect[], visibleReal: number[]) {
+  // (re)init des slots : un par image
+  const needInit = slots.length !== resolvedItems.value.length
+  if (needInit) {
+    slots.splice(0, slots.length)
+    lastX.length = 0
+    lastY.length = 0
+
+    for (let i = 0; i < resolvedItems.value.length; i++) {
+      const firstPos = initObjPosFor(i) // position initiale (peinte à F0)
+      slots.push({
+        id: nextId++,
+        rect: { x: 50, y: 50, w: 0.0001, h: 0.0001 },
+        imageIndex: i,
+        objPos: firstPos,
+      })
     }
   }
-  while (slots.length > rects.length) slots.pop()
+
+  const rectsForCycle = rects.slice(0, visibleReal.length)
+  for (let i = 0; i < slots.length; i++) {
+    const pos = visibleReal.indexOf(i)
+    if (pos >= 0) {
+      // visible → prend un vrai rect
+      slots[i].rect = rectsForCycle[pos]
+    } else {
+      // invisible → se réduit au centre
+      slots[i].rect = { x: 50, y: 50, w: 0.0001, h: 0.0001 }
+    }
+    // variations continues (minDelta faible après le kick)
+    if (!needInit) {
+      slots[i].objPos = newObjPosFor(i, false)
+    }
+  }
+
+  // si on vient d'initialiser, on déclenche le 1er mouvement immédiatement
+  if (needInit) {
+    kickInitialObjPos()
+  }
 }
+
+/* --------------------------
+    Lifecycle
+---------------------------*/
 
 function start() {
   nextLayout()
@@ -164,7 +212,6 @@ onMounted(() => {
   start()
   window.addEventListener('visibilitychange', handleVisibility)
 })
-
 onBeforeUnmount(() => {
   stop()
   window.removeEventListener('visibilitychange', handleVisibility)
@@ -183,8 +230,14 @@ watch(
   },
 )
 
-function openLightbox(startIndex: number) {
-  const items = resolvedItems.value.map((it) => ({ src: it.image, type: 'image', alt: it.alt }))
+function openLightbox(startIndexReal: number) {
+  // Lightbox dans l’ordre `index`
+  const items = orderedItems.value.map((it) => ({ src: it.image, type: 'image', alt: it.alt }))
+  const clicked = resolvedItems.value[startIndexReal]
+  const startIndex = Math.max(
+    0,
+    orderedItems.value.findIndex((i) => i.image === clicked.image),
+  )
   fancyboxShow(items, startIndex)
 }
 </script>

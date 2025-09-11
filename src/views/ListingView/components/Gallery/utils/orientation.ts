@@ -2,21 +2,22 @@
 
 import type { Rect, Ori, Item } from '@/views/ListingView/components/Gallery/utils/types'
 
-
 export function classifyAspect(ar: number): Ori {
   if (ar > 1.15) return 'H'
   if (ar < 0.87) return 'V'
   return 'S'
 }
 
-
 export function rectToOri(r: Rect): Ori {
   return classifyAspect(r.w / r.h)
 }
 
-
-// Précharge les orientations natives des images (remplit et met à jour un tableau)
-export function preloadOrientations(items: Item[], onUpdate: (idx: number, ori: Ori) => void, initial: Ori = 'H'): Ori[] {
+// Précharge l’orientation native des images
+export function preloadOrientations(
+  items: Item[],
+  onUpdate: (idx: number, ori: Ori) => void,
+  initial: Ori = 'H',
+): Ori[] {
   const arr: Ori[] = new Array(items.length).fill(initial)
   items.forEach((it, idx) => {
     const im = new Image()

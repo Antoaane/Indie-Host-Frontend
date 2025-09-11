@@ -7,7 +7,6 @@ const props = defineProps<{
   alt?: string
   objPos?: string
 }>()
-
 defineEmits<{ (e: 'click'): void }>()
 </script>
 

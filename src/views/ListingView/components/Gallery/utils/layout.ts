@@ -10,14 +10,14 @@ function splitRect(rect: Rect, orientation: 'h' | 'v', ratio: number): [Rect, Re
     const w2 = rect.w - w1
     return [
       { x: rect.x, y: rect.y, w: w1, h: rect.h },
-      { x: rect.x + w1, y: rect.y, w: w2, h: rect.h }
+      { x: rect.x + w1, y: rect.y, w: w2, h: rect.h },
     ]
   } else {
     const h1 = rect.h * ratio
     const h2 = rect.h - h1
     return [
       { x: rect.x, y: rect.y, w: rect.w, h: h1 },
-      { x: rect.x, y: rect.y + h1, w: rect.w, h: h2 }
+      { x: rect.x, y: rect.y + h1, w: rect.w, h: h2 },
     ]
   }
 }
@@ -72,4 +72,3 @@ export function generateLayout(targetCount: number, minTileW: number, minTileH: 
   }
   return rects
 }
-
