@@ -1,0 +1,9 @@
+{
+  "id": "donation-page",
+  "items": {
+    "title-1": {
+      "tag": "h1",
+      "content": "Soutenir IndieHost"
+    }
+  }
+}

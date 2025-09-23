@@ -1,0 +1,81 @@
+/* File: src/views/Crowdfunding/components/DonationFormPanel/DonationFormPanel.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/components/buttons' as buttons;
+
+.donation-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  @include gutters(padding, all, 3);
+  border-radius: borders.$rounded-xl;
+  border: 1px solid rgba($secondary, 0.08);
+  background-color: $accent;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
+  color: $secondary;
+
+  @include min-width(md) {
+    position: sticky;
+    top: calc($nav-height + 1rem);
+  }
+}
+
+.donation-form__title {
+  @include h3-title($secondary, false, false);
+}
+
+.donation-form__intro {
+  @include base-text(rgba($secondary, 0.75));
+}
+
+.donation-form__steps {
+  margin: 0;
+  @include gutters(padding, left);
+  display: grid;
+  gap: 0.75rem;
+
+  li {
+    @include base-text(rgba($secondary, 0.75));
+  }
+}
+
+.donation-form__actions {
+  width: 100%;
+  @include buttons.primary(true, black);
+
+  button {
+    width: 100%;
+    font-weight: 600;
+    padding: 0.75rem 1rem;
+  }
+
+  button:disabled {
+    cursor: not-allowed !important;
+    opacity: 0.6;
+  }
+}
+
+.donation-form__security {
+  margin: 0;
+  text-align: center;
+  @include little-text(rgba($secondary, 0.65));
+
+  @include min-width(md) {
+    text-align: left;
+  }
+}
+
+.donation-form__env-warn {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: borders.$rounded-sm;
+  border: 1px dashed rgba($secondary, 0.35);
+  background-color: rgba($secondary, 0.05);
+  @include little-text($secondary, true);
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    color: $secondary;
+  }
+}

@@ -22,8 +22,7 @@ coverage
 /public/assets/media/images/old
 
 # Editor directories and files
-.vscode/*
-!.vscode/extensions.json
+*mcp.json
 .idea
 *.suo
 *.ntvs*

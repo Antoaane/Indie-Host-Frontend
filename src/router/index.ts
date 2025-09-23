@@ -17,6 +17,11 @@ const router = createRouter({
       name: 'listing',
       component: Listing,
     },
+    {
+      path: '/donation',
+      name: 'Donation',
+      component: () => import('@/views/Crowdfunding/_DonationPage.vue'),
+    },
   ],
 })
 
