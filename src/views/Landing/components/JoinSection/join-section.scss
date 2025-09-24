@@ -34,24 +34,27 @@
         border-radius: borders.$rounded-xs;
       }
 
-      h2 {
-        margin: 0;
-        display: inline-flex;
+      &>div {
+        display: flex;
         align-items: center;
 
         @include min-width(lg) {
           gap: 0.5rem;
-          margin-bottom: 1.5rem;
+          // margin-bottom: 1.5rem;
         }
 
-        &>span {
+        h2 {
+          margin: 0;
+          display: inline-flex;
+          align-items: center;
+
           padding: 0 !important;
           @include h2-title($accent, false);
         }
       }
 
       p {
-        margin-bottom: 1.5rem !important;
+        // margin-bottom: 1.5rem !important;
         @include h4-title($accent, false);
       }
     }
@@ -76,79 +79,13 @@
 
         p {
           @include base-text($accent, false);
-        }
 
-        .form-container {
-          margin-top: 1.5rem;
-
-          h3 {
-            @include h3-title($accent, true);
-            margin-bottom: 1rem;
-          }
-
-          form {
-            display: flex;
-            flex-direction: column;
-            gap: 1.25rem;
-            width: 100%;
-
-            input[type="email"] {
-              width: 100%;
-              padding: 0.75rem 1rem;
-
-              font-size: 1rem;
-              font-family: 'outfit', sans-serif;
-
-              border-radius: borders.$rounded-md;
-              border: none;
-              background-color: $accent;
-            }
-
-            fieldset {
-              padding: 0;
-              margin: 0;
-
-              display: flex;
-              flex-direction: column;
-              gap: 0.5rem;
-
-              border: none;
-
-              legend {
-                font-weight: 700;
-                @include base-text($accent);
-                margin-bottom: 0.5rem;
-              }
-
-              .checkboxes-container {
-                display: flex;
-                flex-wrap: wrap;
-                gap: 1rem;
-
-                label {
-                  @include buttons.checkbox-label(white);
-                }
-              }
-            }
-
-            .checkbox {
-              display: flex;
-              align-items: center;
-              gap: 0.5rem;
-              font-size: 1rem;
-              @include base-text($accent);
-
-              input[type="checkbox"] {
-                @include buttons.checkbox(black);
-              }
-            }
-
-            .submit-btn {
-              width: 100% !important;
-              @include buttons.primary(true, black)
-            }
+          a {
+            @include buttons.link(white, true);
+            font-weight: 600;
           }
         }
+
       }
 
       .illustration {

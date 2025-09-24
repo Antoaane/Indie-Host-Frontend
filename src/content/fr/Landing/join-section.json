@@ -1,0 +1,88 @@
+{
+  "id": "join-section",
+  "items": {
+    "icon-flag": {
+      "tag": "component",
+      "meta": {
+        "variant": "IconFrenchFlag",
+        "props": ""
+      }
+    },
+    "title-1": {
+      "tag": "h2",
+      "content": "Pas mal non ?&nbsp;<strong>C’est français !</strong>"
+    },
+    "text-1": {
+      "tag": "p",
+      "content": "IndieHost est un projet indépendant. Nos investisseurs, <strong>c’est vous</strong>."
+    },
+    "text-2": {
+      "tag": "p",
+      "content": "<strong>IndieHost</strong> est une solution imaginée <strong>avec des hôtes, pour des hôtes</strong>. Fait avec ❤️ entre la montagne, la mer et le Wi-Fi instable."
+    },
+    "text-3": {
+      "tag": "p",
+      "content": "Nous détestons le spam autant que vous&nbsp;: <strong>nous vous enverrons juste un e-mail</strong> pour vous tenir informé·e — et, si vous le souhaitez, vous pouvez aussi faire un <a href=\"/donation\">don pour soutenir le projet</a>."
+    },
+    "form-1": {
+      "tag": "component",
+      "meta": {
+        "variant": "NewsletterForm",
+        "props": "",
+        "data": {
+          "title": "<strong>Restez informé·e</strong>",
+          "fields": [
+            {
+              "type": "email",
+              "name": "email",
+              "placeholder": "Votre adresse e-mail",
+              "required": true
+            }
+          ],
+          "groups": [
+            {
+              "type": "checkbox-group",
+              "name": "platforms",
+              "legend": "Je loue déjà sur…",
+              "options": [
+                { "label": "Airbnb", "value": "airbnb" },
+                { "label": "Booking", "value": "booking" },
+                { "label": "Autre", "value": "autre" },
+                { "label": "Je débute", "value": "debutant" }
+              ]
+            }
+          ],
+          "consents": [
+            {
+              "type": "checkbox",
+              "name": "early_access",
+              "label": "Je veux être tenu·e informé·e du lancement et tester en avant-première",
+              "required": true
+            }
+          ],
+          "submit": {
+            "label": "Envoyer",
+            "icon": "SendIcon"
+          }
+        }
+      }
+    },
+    "cta-1": {
+      "tag": "a",
+      "content": "Essayez en premier&nbsp;!",
+      "meta": {
+        "href": "#join-section",
+        "target": "_self",
+        "rel": "nofollow",
+        "ariaLabel": "Aller au formulaire pour s’inscrire"
+      }
+    },
+    "image-1": {
+      "tag": "img",
+      "content": "/assets/media/images/listing-test/image3.jpg",
+      "meta": {
+        "alt": "Aperçu IndieHost : réservation mobile et tableau de bord hôte sur ordinateur"
+      }
+    }
+  }
+}

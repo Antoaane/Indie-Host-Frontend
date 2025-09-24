@@ -2,104 +2,116 @@
 
 <script setup lang="ts">
 // DEPS
+import { computed } from 'vue'
 
-// ASSETS
-import DevsPhoto from '/assets/media/images/listing-test/image1.jpg'
+// CONTENT
+import type { ItemSection } from '@/content/types'
+import rawContent from '@/content/fr/Landing/join-section.json'
+
+// COMPONENTS
 import FrenchFlag from '@/components/svgs/icons/FrenchFlag.vue'
-import { Send, SendIcon } from 'lucide-vue-next'
+import form from '@/views/Landing/components/JoinSection/components/FormComp/FormComp.vue'
+
+// Map des variantes "component" du JSON → composants Vue
+const componentMap: Record<string, any> = {
+  IconFrenchFlag: FrenchFlag,
+  NewsletterForm: form,
+}
+
+const section = rawContent as ItemSection
+
+// Helpers pour accéder aux items
+const items = section.items
+
+const flagVariant = computed(() => items['icon-flag']?.meta?.variant ?? '')
+const FlagComp = computed(() => componentMap[flagVariant.value])
+
+const formMeta = computed(() => items['form-1']?.meta ?? {})
+const FormComp = computed(() => componentMap[formMeta.value?.variant ?? ''])
+
+const imageSrc = computed(() => items['image-1']?.content ?? '')
+const imageAlt = computed(() => items['image-1']?.meta?.alt ?? '')
+
+const cta = computed(() => ({
+  href: items['cta-1']?.meta?.href ?? '#',
+  target: items['cta-1']?.meta?.target ?? '_self',
+  rel: items['cta-1']?.meta?.rel ?? undefined,
+  ariaLabel: items['cta-1']?.meta?.ariaLabel ?? undefined,
+  content: items['cta-1']?.content ?? '',
+}))
+
+// Props/slots pour le composant "component" (formulaire)
+const formProps = computed(() => {
+  // `props` est une string dans le JSON pour être homogène ; on parse s'il y a quelque chose d'utile
+  const rawProps = formMeta.value?.props
+  let parsedProps: Record<string, any> = {}
+  if (rawProps && typeof rawProps === 'string' && rawProps.trim()) {
+    try {
+      parsedProps = JSON.parse(rawProps)
+    } catch {
+      // on ignore silencieusement si non-JSON (ex: chaîne vide)
+    }
+  }
+  return { ...(parsedProps || {}), data: formMeta.value?.data }
+})
 </script>
 
 <template>
-  <section id="join-section">
+  <section :id="section.id">
     <div class="container__xl">
+      <!-- HEADER -->
       <div class="title">
-        <h2>
-          <FrenchFlag class="french-flag" /><span>Pas mal non ? <strong>C’est français !</strong></span></h2
-        >
-        <p>IndieHost est un projet indépendant. Nos investisseurs, <strong>c’est vous</strong>.</p>
+        <!-- Drapeau (optionnel) -->
+        <div>
+          <component
+            v-if="FlagComp"
+            :is="FlagComp"
+            class="french-flag"
+            aria-hidden="true"
+          />
+          <h2 v-html="items['title-1']?.content" />
+        </div>
+        <p v-html="items['text-1']?.content" />
       </div>
 
+      <!-- MAIN -->
       <div class="main">
         <div class="content">
-          <p> <strong>IndieHost</strong> est une solution imaginée <strong>avec des hôtes, pour des hôtes</strong>. Fait avec ❤️ entre la montagne, la mer et le Wi-Fi instable. </p>
+          <p v-html="items['text-2']?.content" />
+          <p v-html="items['text-3']?.content" />
 
-          <p> Nous détestons le spam autant que vous, <strong>nous vous enverrons juste un e-mail</strong> pour vous tenir informé·e.</p>
-
-          <div class="form-container">
-            <h3><strong>Restez informé·e</strong></h3>
-
-            <form>
-              <input
-                type="email"
-                placeholder="Votre adresse e-mail"
-                class="email-input"
-                required
-              />
-
-              <fieldset>
-                <legend>Je loue déjà sur...</legend>
-                <div class="checkboxes-container">
-                  <label
-                    ><input
-                      type="checkbox"
-                      name="platforms"
-                      value="airbnb"
-                    />
-                    Airbnb</label
-                  >
-                  <label
-                    ><input
-                      type="checkbox"
-                      name="platforms"
-                      value="booking"
-                    />
-                    Booking</label
-                  >
-                  <label
-                    ><input
-                      type="checkbox"
-                      name="platforms"
-                      value="autre"
-                    />
-                    Autre</label
-                  >
-                  <label
-                    ><input
-                      type="checkbox"
-                      name="platforms"
-                      value="debutant"
-                    />
-                    Je débute</label
-                  >
-                </div>
-              </fieldset>
-
-              <label class="checkbox">
-                <input
-                  type="checkbox"
-                  required
-                />
-                Je veux être tenu·e informé·e du lancement et tester en avant-première
-              </label>
-
-              <div class="submit-btn">
-                <button type="submit">
-                  <span> Envoyer </span>
-                  <SendIcon
-                    class="send-icon"
-                    :size="16"
-                  />
-                </button>
-              </div>
-            </form>
+          <div
+            class="form-container"
+            v-if="FormComp"
+          >
+            <!-- Le titre du formulaire est déjà dans meta.data.title -->
+            <component
+              :is="FormComp"
+              v-bind="formProps"
+            />
           </div>
+
+          <!-- CTA secondaire (optionnel) -->
+          <p v-if="items['cta-1']">
+            <a
+              class="cta"
+              :href="cta.href"
+              :target="cta.target"
+              :rel="cta.rel"
+              :aria-label="cta.ariaLabel"
+              v-html="cta.content"
+            />
+          </p>
         </div>
 
-        <div class="illustration">
+        <div
+          class="illustration"
+          v-if="items['image-1']"
+        >
           <img
-            :src="DevsPhoto"
+            :src="imageSrc"
+            :alt="imageAlt"
             loading="lazy"
-            alt="Photo des développeurs IndieHost"
             class="image"
           />
         </div>

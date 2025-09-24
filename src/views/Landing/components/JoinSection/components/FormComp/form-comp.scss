@@ -1,0 +1,80 @@
+/* File: src/views/Landing/components/JoinSection/components/FormComp/form-comp.scss */
+
+@use "@/styles/variables/globals" as *;
+@use "@/styles/variables/borders" as borders;
+@use "@/styles/components/buttons" as buttons;
+
+.form-container {
+  margin-top: 1.5rem;
+
+  h3 {
+    @include h3-title($accent, true);
+    margin-bottom: 1rem;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    width: 100%;
+
+    input[type="email"] {
+      width: 100%;
+      padding: 0.75rem 1rem;
+
+      font-size: 1rem;
+      font-family: 'outfit', sans-serif;
+
+      border-radius: borders.$rounded-md;
+      border: none;
+      background-color: $accent;
+    }
+
+    fieldset {
+      padding: 0;
+      margin: 0;
+
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+
+      border: none;
+
+      legend {
+        font-weight: 700;
+        @include base-text($accent);
+        margin-bottom: 0.5rem;
+      }
+
+      .checkboxes-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+
+        label {
+          @include buttons.checkbox-label(white);
+        }
+      }
+    }
+
+    .checkbox {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1rem;
+
+      input[type="checkbox"] {
+        @include buttons.checkbox(black);
+      }
+
+      span {
+        @include base-text($accent);
+      }
+    }
+
+    .submit-btn {
+      width: 100% !important;
+      @include buttons.primary(true, black)
+    }
+  }
+}

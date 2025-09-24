@@ -219,6 +219,33 @@ $button-themes: (
   }
 }
 
+@mixin link($theme: white, $underline: true) {
+  $colors: map.get($button-themes, $theme);
+
+  color: map.get($colors, hover-text-color);
+  text-decoration: none;
+  cursor: pointer !important;
+
+  @if $underline {
+    text-decoration: underline;
+    text-underline-offset: 0.3rem;
+    text-decoration-thickness: 0.075rem;
+    text-decoration-color: rgba(map.get($colors, hover-text-color), 0.5);
+  }
+
+  @include transition;
+
+  &:hover {
+
+    @if $underline {
+      text-underline-offset: 0.5rem;
+      text-decoration-color: rgba(map.get($colors, hover-text-color), 1);
+    }
+
+    @include transition;
+  }
+}
+
 @mixin checkbox-label($color: white) {
   width: auto;
   padding: 0.5rem 0.75rem 0.5rem 0.5rem;

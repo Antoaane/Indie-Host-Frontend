@@ -4,15 +4,22 @@
     "success": {
       "tag": "status",
       "meta": {
-        "title": "Contribution confirmee",
-        "body": "Merci infiniment ! Nous vous enverrons une mise a jour des que votre contribution sera utilisee."
+        "title": "Contribution confirmée",
+        "body": "Merci pour votre soutien. Vous recevrez prochainement une mise à jour sur les avancées financées."
       }
     },
     "cancel": {
       "tag": "status",
       "meta": {
-        "title": "Paiement annule",
-        "body": "La transaction a ete interrompue. Vous pouvez reessayer des que vous etes prete."
+        "title": "Paiement annulé",
+        "body": "La transaction a été interrompue. Vous pouvez réessayer quand vous le souhaitez."
+      }
+    },
+    "error": {
+      "tag": "status",
+      "meta": {
+        "title": "Un problème est survenu",
+        "body": "Le paiement n’a pas pu aboutir. Vérifiez vos informations ou réessayez plus tard."
       }
     }
   }

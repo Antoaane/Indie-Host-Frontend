@@ -1,17 +1,11 @@
 {
   "id": "donation-hero",
   "items": {
-    "eyebrow": {
-      "tag": "span",
-      "content": "Campagne communautaire"
-    },
-    "title-1": {
-      "tag": "h2",
-      "content": "Accelerons IndieHost ensemble"
-    },
+    "eyebrow": { "tag": "span", "content": "Campagne communautaire" },
+    "title-1": { "tag": "h2", "content": "Accélérons IndieHost, ensemble" },
     "lead-1": {
       "tag": "p",
-      "content": "IndieHost aide les hotes a reprendre la main sur leurs reservations. Vos contributions financent le developpement du produit, la conformite locale et l'accompagnement humain des hotes qui nous font confiance."
+      "content": "IndieHost aide les hôtes à reprendre la main sur leurs réservations. Vos contributions financent le développement produit, la conformité locale et un support humain pour les hôtes qui nous font confiance."
     },
     "blocks": {
       "tag": "component",
@@ -20,30 +14,30 @@
         "blocks": [
           {
             "type": "section",
-            "title": "Notre vision",
+            "title": "Ce que nous construisons",
             "paragraphs": [
-              "Depuis nos premieres locations pilotes, nous construisons une alternative realiste aux plateformes ultra-dependantes. Chaque euro investi alimente le developpement du back-office, l'onboarding des hotes particuliers et la mise en conformite des paiements."
+              "Une page de réservation personnalisée sans commission, des paiements directs via Stripe, une messagerie simple et un guide d’accueil qui relie l’hôte à ses voyageurs. Objectif : moins d’intermédiaires, plus de contrôle, une expérience claire."
             ]
           },
           {
             "type": "list",
-            "title": "Ce que votre soutien debloque",
+            "title": "À quoi sert votre contribution",
             "items": [
-              "Des imports d'annonces plus fiables et plus rapides pour reduire la mise en route.",
-              "Une messagerie directe qui garde le lien entre hotes et voyageurs.",
-              "Des outils de relance automatises pour fideliser les voyageurs sans commission cachee."
+              "Fiabiliser l’import d’annonces (Airbnb, Booking) et la synchronisation des calendriers.",
+              "Renforcer la messagerie intégrée et les parcours QR code sur place.",
+              "Outiller la conformité locale (quotas, numéros d’enregistrement, facturation) et le suivi financier."
             ]
           },
           {
             "type": "quote",
-            "content": "\"IndieHost nous redonne le controle sur nos prix et notre relation avec les voyageurs.\"",
-            "cite": "Agnes, hote a Annecy"
+            "content": "« IndieHost me laisse fixer mes règles sans perdre le lien avec mes voyageurs. »",
+            "cite": "Marie, hôte occasionnelle"
           },
           {
             "type": "section",
+            "title": "Transparence",
             "paragraphs": [
-              "Votre contribution nourrit un produit independant, pense pour les hotes particuliers comme pour les conciergeries qui veulent proposer une experience differente.",
-              "Une transparence totale : vous pouvez interrompre votre soutien a tout moment."
+              "Changelog public et récap d’allocation des contributions. Pas d’up-sell caché, pas de commissions. Vous pouvez arrêter votre soutien à tout moment."
             ]
           }
         ]

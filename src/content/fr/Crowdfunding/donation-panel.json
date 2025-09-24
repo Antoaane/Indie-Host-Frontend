@@ -1,13 +1,10 @@
 {
   "id": "donation-panel",
   "items": {
-    "title-1": {
-      "tag": "h2",
-      "content": "Contribuer maintenant"
-    },
+    "title-1": { "tag": "h2", "content": "Contribuer maintenant" },
     "intro-1": {
       "tag": "p",
-      "content": "Selectionnez votre montant directement sur Stripe apres validation du bouton ci-dessous."
+      "content": "Choisissez librement le montant sur la page Stripe sécurisée. Aucune création de compte sur IndieHost n’est nécessaire. (Note : les contributions ne sont pas déductibles des impôts.)"
     },
     "steps": {
       "tag": "list",
@@ -15,22 +12,16 @@
         "ordered": true,
         "items": [
           "Cliquez sur <strong>Soutenir IndieHost</strong>.",
-          "Saisissez le montant de votre choix directement sur la page de paiement Stripe.",
-          "Recevez un mail de confirmation et nos prochaines avancees produit."
+          "Saisissez le montant de votre choix directement sur Stripe.",
+          "Recevez un e-mail de confirmation et nos prochaines mises à jour."
         ]
       }
     },
-    "cta-1": {
-      "tag": "button",
-      "content": "Soutenir IndieHost"
-    },
-    "note-security": {
-      "tag": "p",
-      "content": "Paiement securise par Stripe"
-    },
+    "cta-1": { "tag": "button", "content": "Soutenir IndieHost" },
+    "note-security": { "tag": "p", "content": "Paiement sécurisé par Stripe" },
     "warning-missing-link": {
       "tag": "p",
-      "content": "Lien de contribution manquant. Definissez <code>VITE_DONATION_LINK</code> dans votre environnement."
+      "content": "Lien de contribution manquant. Définissez <code>VITE_DONATION_LINK</code> dans votre environnement."
     }
   }
 }
