@@ -1,14 +1,12 @@
-<!-- File: src/views/Landing/_LandingPage.vue -->
+<!-- File: src/views/ListingView/ListingView.vue -->
 
 <script setup lang="ts">
-// DEPS
 import { onMounted, onBeforeUnmount } from 'vue'
 import { ScrollSmoother } from 'gsap/ScrollSmoother'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import gsap from 'gsap'
-// UTILS
 import { vp } from '@/utils/viewport'
-// COMPONENTS
+import Gallery from '@/views/ListingView/components/Gallery/Gallery.vue'
 
 if (vp.lg.value) {
   gsap.registerPlugin(ScrollTrigger, ScrollSmoother)
@@ -19,8 +17,6 @@ let smoother: ReturnType<typeof ScrollSmoother.create>
 onMounted(() => {
   if (vp.lg.value) {
     smoother = ScrollSmoother.create({
-      // wrapper: 'body',
-      // content: '#landing-page',
       smooth: 1.2,
       effects: true,
     })
@@ -28,19 +24,37 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  if (vp.lg.value) {
-    smoother.kill()
-  }
+  if (vp.lg.value) smoother.kill()
 })
 </script>
 
 <template>
-  <main id="listing-page">
-    <!-- <gallery-component /> -->
-    <!-- <listing-core-component /> -->
-    <div>
-      <!-- <comments-component /> -->
-      <!-- <checkout-min-component /> -->
+  <div class="listing-view">
+    <div class="gallery-container">
+      <Gallery />
     </div>
-  </main>
+
+    <div>
+      <!-- autres blocs -->
+    </div>
+  </div>
 </template>
+
+<style lang="scss">
+@use '@/styles/variables/globals' as *;
+
+.listing-view {
+  height: 100%; /* <— important pour propager le 100% */
+  min-height: 0; /* <— évite l’overflow en flex context */
+  display: flex;
+  flex-direction: column;
+}
+
+.gallery-container {
+  height: 100%;
+  min-height: 0; /* <— idem */
+  padding-bottom: var(--gutter-spacing);
+
+  @include gutters(padding, inline);
+}
+</style>

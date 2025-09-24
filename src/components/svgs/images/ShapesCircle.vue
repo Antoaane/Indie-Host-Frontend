@@ -37,7 +37,7 @@
       >
         <feTurbulence
           type="fractalNoise"
-          baseFrequency="0.45"
+          baseFrequency="0.75"
           numOctaves="2"
           result="noise"
         />

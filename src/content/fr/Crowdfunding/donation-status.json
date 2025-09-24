@@ -1,0 +1,19 @@
+{
+  "id": "donation-status",
+  "items": {
+    "success": {
+      "tag": "status",
+      "meta": {
+        "title": "Contribution confirmee",
+        "body": "Merci infiniment ! Nous vous enverrons une mise a jour des que votre contribution sera utilisee."
+      }
+    },
+    "cancel": {
+      "tag": "status",
+      "meta": {
+        "title": "Paiement annule",
+        "body": "La transaction a ete interrompue. Vous pouvez reessayer des que vous etes prete."
+      }
+    }
+  }
+}

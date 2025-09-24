@@ -1,0 +1,47 @@
+/* File: src/views/Crowdfunding/_donation-page.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+
+.donation-page {
+  padding-top: $nav-height;
+  min-height: calc(100vh - $nav-height);
+  background-color: $secondary;
+  color: $accent;
+
+  @include gutters(padding, bottom, 2);
+}
+
+.donation-page__title {
+  text-align: center;
+
+  @include gutters(padding, vertical, 2);
+  @include main-title($accent, true, false);
+}
+
+.donation-page__section {
+  @include gutters(padding, bottom, 4);
+}
+
+.donation-page__content {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+  @include gutters(padding, all, 3);
+  border-radius: borders.$rounded-xxl;
+  background-color: $accent;
+  color: $secondary;
+  box-shadow: 0 32px 60px rgba(0, 0, 0, 0.25);
+}
+
+.donation-page__grid {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(2.5rem, 6vw, 4rem);
+
+  @include min-width(lg) {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
+    align-items: start;
+  }
+}

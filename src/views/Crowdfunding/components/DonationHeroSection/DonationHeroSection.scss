@@ -1,0 +1,80 @@
+/* File: src/views/Crowdfunding/components/DonationHeroSection/DonationHeroSection.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+
+.donation-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  color: $secondary;
+}
+
+.donation-hero__intro {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.donation-hero__title {
+  @include h2-title($secondary, true, false, false);
+}
+
+.donation-hero__lead {
+  max-width: 52ch;
+  @include base-text(rgba($secondary, 0.82));
+}
+
+.donation-hero__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: borders.$rounded;
+  background: rgba($secondary, 0.08);
+  @include little-text(rgba($secondary, 0.75), true);
+  text-transform: uppercase;
+}
+
+.donation-hero__body {
+  display: grid;
+  gap: 1.5rem;
+  max-width: 70ch;
+
+  h3 {
+    @include h3-title($secondary, true, false);
+  }
+
+  p {
+    @include base-text(rgba($secondary, 0.78));
+  }
+
+  ul {
+    margin: 0;
+    padding-left: 1.2rem;
+    display: grid;
+    gap: 0.5rem;
+
+    li {
+      @include base-text(rgba($secondary, 0.78));
+    }
+  }
+
+  blockquote {
+    margin: 0;
+    padding: 1.25rem 1.5rem;
+    border-left: 3px solid rgba($secondary, 0.25);
+    background: rgba($secondary, 0.05);
+    border-radius: borders.$rounded-md;
+
+    p {
+      @include base-text(rgba($secondary, 0.78), false, false, true);
+    }
+
+    cite {
+      display: block;
+      margin-top: 0.75rem;
+      font-style: normal;
+      @include little-text(rgba($secondary, 0.6));
+    }
+  }
+}

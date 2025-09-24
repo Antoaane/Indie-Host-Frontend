@@ -1,0 +1,53 @@
+{
+  "id": "donation-hero",
+  "items": {
+    "eyebrow": {
+      "tag": "span",
+      "content": "Campagne communautaire"
+    },
+    "title-1": {
+      "tag": "h2",
+      "content": "Accelerons IndieHost ensemble"
+    },
+    "lead-1": {
+      "tag": "p",
+      "content": "IndieHost aide les hotes a reprendre la main sur leurs reservations. Vos contributions financent le developpement du produit, la conformite locale et l'accompagnement humain des hotes qui nous font confiance."
+    },
+    "blocks": {
+      "tag": "component",
+      "meta": {
+        "variant": "rich-blocks",
+        "blocks": [
+          {
+            "type": "section",
+            "title": "Notre vision",
+            "paragraphs": [
+              "Depuis nos premieres locations pilotes, nous construisons une alternative realiste aux plateformes ultra-dependantes. Chaque euro investi alimente le developpement du back-office, l'onboarding des hotes particuliers et la mise en conformite des paiements."
+            ]
+          },
+          {
+            "type": "list",
+            "title": "Ce que votre soutien debloque",
+            "items": [
+              "Des imports d'annonces plus fiables et plus rapides pour reduire la mise en route.",
+              "Une messagerie directe qui garde le lien entre hotes et voyageurs.",
+              "Des outils de relance automatises pour fideliser les voyageurs sans commission cachee."
+            ]
+          },
+          {
+            "type": "quote",
+            "content": "\"IndieHost nous redonne le controle sur nos prix et notre relation avec les voyageurs.\"",
+            "cite": "Agnes, hote a Annecy"
+          },
+          {
+            "type": "section",
+            "paragraphs": [
+              "Votre contribution nourrit un produit independant, pense pour les hotes particuliers comme pour les conciergeries qui veulent proposer une experience differente.",
+              "Une transparence totale : vous pouvez interrompre votre soutien a tout moment."
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

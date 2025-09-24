@@ -1,0 +1,36 @@
+{
+  "id": "donation-panel",
+  "items": {
+    "title-1": {
+      "tag": "h2",
+      "content": "Contribuer maintenant"
+    },
+    "intro-1": {
+      "tag": "p",
+      "content": "Selectionnez votre montant directement sur Stripe apres validation du bouton ci-dessous."
+    },
+    "steps": {
+      "tag": "list",
+      "meta": {
+        "ordered": true,
+        "items": [
+          "Cliquez sur <strong>Soutenir IndieHost</strong>.",
+          "Saisissez le montant de votre choix directement sur la page de paiement Stripe.",
+          "Recevez un mail de confirmation et nos prochaines avancees produit."
+        ]
+      }
+    },
+    "cta-1": {
+      "tag": "button",
+      "content": "Soutenir IndieHost"
+    },
+    "note-security": {
+      "tag": "p",
+      "content": "Paiement securise par Stripe"
+    },
+    "warning-missing-link": {
+      "tag": "p",
+      "content": "Lien de contribution manquant. Definissez <code>VITE_DONATION_LINK</code> dans votre environnement."
+    }
+  }
+}

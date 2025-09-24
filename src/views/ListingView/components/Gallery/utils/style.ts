@@ -1,0 +1,42 @@
+// File: src/views/ListingView/components/Gallery/utils/style.ts
+
+import type { Rect } from '@/views/ListingView/components/Gallery/utils/types'
+
+/**
+ * Calcule le style d'une tuile :
+ * - remplit exactement l'espace (left/top/width/height) avec gap interne
+ * - ajoute une animation douce de disparition via scale + opacity selon la taille
+ * - désactive les events quand quasi invisible
+ */
+export function tileStyle(rect: Rect, gapPx = 5): Record<string, string> {
+  const { x, y, w, h } = rect
+  const EPS = 0.001
+
+  const isLeftEdge = x <= EPS
+  const isTopEdge = y <= EPS
+  const isRightEdge = (x + w) >= 100 - EPS
+  const isBottomEdge = (y + h) >= 100 - EPS
+
+  const insetL = isLeftEdge ? 0 : gapPx / 2
+  const insetR = isRightEdge ? 0 : gapPx / 2
+  const insetT = isTopEdge ? 0 : gapPx / 2
+  const insetB = isBottomEdge ? 0 : gapPx / 2
+
+  const left = `calc(${x}% + ${insetL}px)`
+  const top = `calc(${y}% + ${insetT}px)`
+  const width = `calc(${w}% - ${(insetL + insetR)}px)`
+  const height = `calc(${h}% - ${(insetT + insetB)}px)`
+
+  // Échelle/opacité selon la plus petite dimension :
+  //  - minSide >= 20% -> scale=1, opacity=1
+  //  - minSide -> 0   -> scale -> 0, opacity -> 0
+  const minSide = Math.max(0, Math.min(w, h))
+  const scale = Math.max(0, Math.min(1, minSide / 20)) // 20% du conteneur = 1.0
+  const opacity = scale
+
+  const transform = `translateZ(0) scale(${scale})`
+  const pointerEvents = scale < 0.1 ? 'none' : 'auto'
+  const zIndex = String(10 + Math.round(scale * 90)) // les visibles passent au-dessus
+
+  return { left, top, width, height, transform, opacity: String(opacity), pointerEvents, zIndex }
+}
