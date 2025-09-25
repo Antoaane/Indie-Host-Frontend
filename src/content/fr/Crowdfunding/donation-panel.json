@@ -1,27 +1,44 @@
-{
+﻿{
   "id": "donation-panel",
   "items": {
-    "title-1": { "tag": "h2", "content": "Contribuer maintenant" },
+    "title-1": {
+      "tag": "h2",
+      "content": "Contribuer dès maintenant",
+      "meta": { "role": "title", "order": 10 }
+    },
     "intro-1": {
       "tag": "p",
-      "content": "Choisissez librement le montant sur la page Stripe sécurisée. Aucune création de compte sur IndieHost n’est nécessaire. (Note : les contributions ne sont pas déductibles des impôts.)"
+      "content": "Les dons servent directement à faire avancer IndieHost : couvrir l’infrastructure technique, développer de nouvelles fonctionnalités et tester la plateforme avec les premiers utilisateurs.",
+      "meta": { "role": "intro", "order": 20 }
+    },
+    "intro-2": {
+      "tag": "p",
+      "content": "Votre contribution nous aide à rester indépendants et à proposer une alternative transparente aux plateformes de réservation classiques.",
+      "meta": { "role": "intro", "order": 30 }
     },
     "steps": {
       "tag": "list",
       "meta": {
+        "role": "steps",
         "ordered": true,
-        "items": [
-          "Cliquez sur <strong>Soutenir IndieHost</strong>.",
-          "Saisissez le montant de votre choix directement sur Stripe.",
-          "Recevez un e-mail de confirmation et nos prochaines mises à jour."
-        ]
+        "title": "",
+        "items": []
       }
     },
-    "cta-1": { "tag": "button", "content": "Soutenir IndieHost" },
-    "note-security": { "tag": "p", "content": "Paiement sécurisé par Stripe" },
+    "cta-primary": {
+      "tag": "button",
+      "content": "Soutenir IndieHost",
+      "meta": { "role": "cta", "variant": "primary" }
+    },
+    "note-security": {
+      "tag": "p",
+      "content": "Paiement sécurisé par Stripe Connect. Données traitées selon le RGPD : pas de revente, pas de publicité.",
+      "meta": { "role": "note", "tone": "muted" }
+    },
     "warning-missing-link": {
       "tag": "p",
-      "content": "Lien de contribution manquant. Définissez <code>VITE_DONATION_LINK</code> dans votre environnement."
+      "content": "Lien de contribution manquant. Définissez <code>VITE_DONATION_LINK</code> dans votre environnement.",
+      "meta": { "role": "warning", "condition": "missing-link" }
     }
   }
 }

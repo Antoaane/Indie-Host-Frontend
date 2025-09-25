@@ -1,25 +1,36 @@
-{
+﻿{
   "id": "donation-status",
   "items": {
     "success": {
       "tag": "status",
       "meta": {
+        "severity": "positive",
         "title": "Contribution confirmée",
-        "body": "Merci pour votre soutien. Vous recevrez prochainement une mise à jour sur les avancées financées."
+        "body": "Merci pour votre soutien. Nous vous enverrons un point d’avancement avec ce que votre contribution a concrètement financé."
       }
     },
     "cancel": {
       "tag": "status",
       "meta": {
+        "severity": "info",
         "title": "Paiement annulé",
-        "body": "La transaction a été interrompue. Vous pouvez réessayer quand vous le souhaitez."
+        "body": "La transaction a été interrompue. Vous pouvez réessayer plus tard, sans aucune incidence."
       }
     },
     "error": {
       "tag": "status",
       "meta": {
+        "severity": "negative",
         "title": "Un problème est survenu",
-        "body": "Le paiement n’a pas pu aboutir. Vérifiez vos informations ou réessayez plus tard."
+        "body": "Le paiement n’a pas abouti. Vérifiez vos informations ou réessayez un peu plus tard."
+      }
+    },
+    "pending": {
+      "tag": "status",
+      "meta": {
+        "severity": "neutral",
+        "title": "Paiement en cours de validation",
+        "body": "Quelques secondes peuvent être nécessaires. Si rien ne change, vous serez notifié·e par e-mail."
       }
     }
   }

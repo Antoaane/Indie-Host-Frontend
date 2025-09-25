@@ -1,9 +1,20 @@
-{
+﻿{
   "id": "donation-page",
   "items": {
     "title-1": {
       "tag": "h1",
-      "content": "Soutenir IndieHost"
+      "content": "Soutenir le développement d’IndieHost",
+      "meta": { "role": "title", "order": 10 }
+    },
+    "subtitle-1": {
+      "tag": "p",
+      "content": "IndieHost est encore en construction. Chaque contribution nous aide à avancer plus vite : hébergement, outils techniques, temps de développement et tests avec les premiers hôtes.",
+      "meta": { "role": "subtitle", "order": 20 }
+    },
+    "subtitle-2": {
+      "tag": "p",
+      "content": "Votre soutien, même modeste, nous permet de transformer une idée en une plateforme concrète, pensée pour rester simple, utile et indépendante.",
+      "meta": { "role": "subtitle", "order": 30 }
     }
   }
 }

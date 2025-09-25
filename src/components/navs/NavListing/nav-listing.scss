@@ -14,18 +14,24 @@
   align-items: center;
 
   border-radius: borders.$rounded-md;
-  background-color: $accent;
+  border: 1px solid rgba($accent, 0.25);
+  background-color: rgba($accent, 0.15);
 
-  @include soft-shadow();
+  @include halo();
 
   @include min-width(lg) {
-    width: 100%;
     height: 70px;
     padding: 0 1.5rem;
 
     justify-content: space-between;
 
     border-radius: borders.$rounded-lg;
+    border: 1px solid rgba($accent, 0);
+    background-color: $accent;
+
+    @include soft-shadow();
+
+    @include container(xxl, -3rem);
   }
 
   .navbar__logo {
@@ -57,6 +63,10 @@
     width: 2rem;
     height: auto;
     cursor: pointer;
+
+    rect {
+      fill: $accent;
+    }
   }
 
   .navbar__mobile-menu {
@@ -68,7 +78,6 @@
 
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 
-    @include container;
     @include gutters(padding, inline);
     @include gutters(padding, top, 0.5);
 

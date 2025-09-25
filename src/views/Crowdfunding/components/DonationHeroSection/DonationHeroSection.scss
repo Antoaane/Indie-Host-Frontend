@@ -15,6 +15,11 @@
   gap: 0.75rem;
 }
 
+.donation-hero__intro-block {
+  margin: 0;
+  @include base-text(rgba($secondary, 0.78));
+}
+
 .donation-hero__title {
   @include h2-title($secondary, true, false, false);
 }
@@ -77,4 +82,14 @@
       @include little-text(rgba($secondary, 0.6));
     }
   }
+}
+
+.donation-hero__rich-blocks {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.donation-hero__body-block {
+  margin: 0;
+  @include base-text(rgba($secondary, 0.78));
 }

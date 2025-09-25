@@ -2,17 +2,22 @@
 
 <script setup lang="ts">
 // DEPS
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
+import { useRoute } from 'vue-router'
 // COMPONENTS
-import NavLanding from '@/components/navs/NavLanding/NavLanding.vue'
 import NavListing from '@/components/navs/NavListing/NavListing.vue'
+import NavLanding from '@/components/navs/NavLanding/NavLanding.vue'
 // import NavDashboard from '@/components/navs/nav/NavDashboard.vue'
 
-const isLanding = ref<boolean>(true)
+// const isLanding = ref<boolean>(true)
 
-onMounted(() => {
-  isLanding.value = window.location.pathname === '/'
-})
+const route = useRoute()
+
+const isLanding = computed(() => route.path === '/')
+// onMounted(() => {
+//   isLanding.value = window.location.pathname === '/'
+//   console.log('isLanding', isLanding.value)
+// })
 </script>
 
 <template>

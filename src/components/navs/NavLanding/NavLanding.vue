@@ -18,7 +18,7 @@ const toggleMobileMenu = () => {
 </script>
 
 <template>
-  <nav class="navbar-landing">
+  <nav class="navbar-listing">
     <a
       v-if="vp.lg.value"
       href="/#hero-section"
@@ -38,20 +38,14 @@ const toggleMobileMenu = () => {
       v-if="vp.lg.value"
     >
       <li>
-        <a href="#join-section"> Messagerie </a>
+        <a href="#join-section"> Tenez moi au courant ! </a>
       </li>
       <li>
-        <a href="#habits-section"> Réservations </a>
+        <a href="#habits-section"> Fonctionnalités </a>
       </li>
       <li>
-        <a href="#usage-section"> Devenir hôte </a>
+        <a href="#usage-section"> Comment ça marche ? </a>
       </li>
-      <!-- <li>
-        Profile Icon
-      </li>
-      <li>
-        Setting Icon
-      </li> -->
     </ul>
 
     <!-- Mobile Menu Button -->
@@ -74,7 +68,7 @@ const toggleMobileMenu = () => {
               href="#join-section"
               @click="toggleMobileMenu"
             >
-              Messagerie
+              Tenez moi au courant !
             </a>
           </li>
           <li>
@@ -82,7 +76,7 @@ const toggleMobileMenu = () => {
               href="#habits-section"
               @click="toggleMobileMenu"
             >
-              Réservations
+              Fonctionnalités
             </a>
           </li>
           <li>
@@ -90,7 +84,7 @@ const toggleMobileMenu = () => {
               href="#usage-section"
               @click="toggleMobileMenu"
             >
-              Devenir hôte
+              Comment ça marche ?
             </a>
           </li>
         </ul>

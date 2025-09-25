@@ -1,0 +1,56 @@
+﻿{
+  "id": "donation-article",
+  "items": {
+    "eyebrow": {
+      "tag": "span",
+      "content": "Pourquoi soutenir IndieHost ?",
+      "meta": { "segment": "intro", "order": 10, "role": "eyebrow" }
+    },
+    "title-1": {
+      "tag": "h2",
+      "content": "Un projet indépendant en construction",
+      "meta": { "segment": "intro", "order": 20, "role": "title" }
+    },
+    "lead-1": {
+      "tag": "p",
+      "content": "Nous développons IndieHost pas à pas, pour permettre aux hôtes de garder le contrôle de leurs réservations et de créer un lien direct avec leurs voyageurs. Votre aide rend ce développement possible.",
+      "meta": { "segment": "intro", "order": 30, "role": "lead" }
+    },
+    "intro-2": {
+      "tag": "p",
+      "content": "Chaque contribution accélère la mise en ligne de la plateforme et nous rapproche d’un outil simple, utile et durable.",
+      "meta": { "segment": "intro", "order": 40 }
+    },
+    "blocks": {
+      "tag": "component",
+      "meta": {
+        "segment": "body",
+        "variant": "rich-blocks",
+        "sectionTag": "h3",
+        "blocks": [
+          {
+            "type": "section",
+            "title": "À quoi sert votre soutien",
+            "paragraphs": [
+              "Les dons financent l’essentiel : serveurs, sécurité des paiements, sauvegardes, et le temps de développement nécessaire pour stabiliser et enrichir la plateforme."
+            ]
+          },
+          {
+            "type": "section",
+            "title": "Une démarche collective",
+            "paragraphs": [
+              "IndieHost avance grâce aux retours et au soutien de sa communauté. Chaque contribution, financière ou simplement par le bouche-à-oreille, participe à rendre le projet concret."
+            ]
+          },
+          {
+            "type": "section",
+            "title": "Notre engagement",
+            "paragraphs": [
+              "Construire une solution qui reste indépendante, claire et respectueuse. Pas de commissions cachées, pas de complexité inutile, mais une plateforme qui redonne du contrôle aux hôtes."
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

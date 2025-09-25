@@ -1,27 +1,61 @@
 <!-- File: src/views/Crowdfunding/components/DonationStatusBanner/DonationStatusBanner.vue -->
+
 <script setup lang="ts">
 import { computed } from 'vue'
 
 const props = defineProps<{
-  status: 'success' | 'cancel'
+  status: string
   title: string
   body: string
+  severity?: 'positive' | 'negative' | 'info' | 'neutral' | string
 }>()
 
-const modifierClass = computed(() => {
-  return props.status === 'success' ? 'donation-status--success' : 'donation-status--cancel'
+const severityClass = computed(() => {
+  const severity = props.severity ?? ''
+
+  if (severity === 'positive' || severity === 'success') {
+    return 'donation-status--positive'
+  }
+
+  if (severity === 'negative' || severity === 'error' || severity === 'danger') {
+    return 'donation-status--negative'
+  }
+
+  if (severity === 'info' || severity === 'warning') {
+    return 'donation-status--info'
+  }
+
+  if (severity === 'neutral') {
+    return 'donation-status--neutral'
+  }
+
+  return undefined
+})
+
+const statusClass = computed(() => {
+  if (!props.status) {
+    return undefined
+  }
+
+  return `donation-status--${props.status}`
 })
 </script>
 
 <template>
   <div
     class="donation-status"
-    :class="modifierClass"
+    :class="[severityClass, statusClass]"
     role="status"
     aria-live="polite"
   >
-    <p class="donation-status__title">{{ title }}</p>
-    <p class="donation-status__body">{{ body }}</p>
+    <p
+      class="donation-status__title"
+      v-html="title"
+    />
+    <p
+      class="donation-status__body"
+      v-html="body"
+    />
   </div>
 </template>
 

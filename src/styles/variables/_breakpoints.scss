@@ -63,22 +63,50 @@ $gutter: get-gutter();
 
 :root {
   --gutter-spacing: #{map.get($gutter, base)};
+  --container-size: #{map.get($max-widths, xxs)};
+}
+
+@include min-width(xxs) {
+  :root {
+    --container-size: #{map.get($max-widths, xxs)};
+  }
+}
+
+@include min-width(xs) {
+  :root {
+    --container-size: #{map.get($max-widths, xxs)};
+  }
+}
+
+@include min-width(sm) {
+  :root {
+    --container-size: #{map.get($max-widths, sm)};
+  }
 }
 
 @include min-width(md) {
   :root {
+    --container-size: #{map.get($max-widths, md)};
     --gutter-spacing: #{map.get($gutter, md)};
   }
 }
 
 @include min-width(lg) {
   :root {
+    --container-size: #{map.get($max-widths, lg)};
     --gutter-spacing: #{map.get($gutter, lg)};
+  }
+}
+
+@include min-width(xl) {
+  :root {
+    --container-size: #{map.get($max-widths, xl)};
   }
 }
 
 @include min-width(xxl) {
   :root {
+    --container-size: #{map.get($max-widths, xxl)};
     --gutter-spacing: #{map.get($gutter, xxl)};
   }
 }

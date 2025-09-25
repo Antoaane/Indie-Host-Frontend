@@ -14,9 +14,10 @@
   align-items: center;
 
   border-radius: borders.$rounded-md;
-  background-color: $accent;
+  border: 1px solid rgba($accent, 0.25);
+  background-color: rgba($accent, 0.15);
 
-  @include soft-shadow();
+  @include halo();
 
   @include min-width(lg) {
     height: 70px;
@@ -25,6 +26,10 @@
     justify-content: space-between;
 
     border-radius: borders.$rounded-lg;
+    border: 1px solid rgba($accent, 0);
+    background-color: $accent;
+
+    @include soft-shadow();
 
     @include container(xxl, -3rem);
   }
@@ -58,6 +63,10 @@
     width: 2rem;
     height: auto;
     cursor: pointer;
+
+    rect {
+      fill: $accent;
+    }
   }
 
   .navbar__mobile-menu {
@@ -74,6 +83,7 @@
     @include gutters(padding, top, 0.5);
 
     @include min-width(lg) {
+      @include container;
       @include gutters(padding, top, 2);
     }
 

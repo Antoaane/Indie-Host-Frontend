@@ -8,7 +8,7 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  @include gutters(padding, all, 3);
+  @include gutters(padding, all, 2);
   border-radius: borders.$rounded-xl;
   border: 1px solid rgba($secondary, 0.08);
   background-color: $accent;
@@ -29,6 +29,17 @@
   @include base-text(rgba($secondary, 0.75));
 }
 
+.donation-form__steps-wrapper {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.donation-form__steps-title {
+  margin: 0;
+  font-weight: 600;
+  @include base-text(rgba($secondary, 0.78));
+}
+
 .donation-form__steps {
   margin: 0;
   @include gutters(padding, left);
@@ -43,11 +54,25 @@
 .donation-form__actions {
   width: 100%;
   @include buttons.primary(true, black);
+  display: grid;
+  gap: 0.75rem;
 
-  button {
+  >* {
     width: 100%;
     font-weight: 600;
     padding: 0.75rem 1rem;
+    justify-content: center;
+    text-align: center;
+  }
+
+  >a {
+    text-decoration: none;
+  }
+
+  .donation-form__action-secondary {
+    background: rgba($secondary, 0.08);
+    color: $secondary;
+    outline: 2px solid rgba($secondary, 0.2);
   }
 
   button:disabled {
