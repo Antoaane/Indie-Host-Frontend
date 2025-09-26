@@ -15,7 +15,8 @@
 
   border-radius: borders.$rounded-md;
   border: 1px solid rgba($accent, 0.25);
-  background-color: rgba($accent, 0.15);
+  background-color: rgba(lighten($quaternary, 5%), 0.75);
+  // background-color: lighten($quaternary, 10%);
 
   @include halo();
 

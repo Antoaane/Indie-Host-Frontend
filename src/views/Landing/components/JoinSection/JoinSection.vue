@@ -92,7 +92,7 @@ const formProps = computed(() => {
           </div>
 
           <!-- CTA secondaire (optionnel) -->
-          <p v-if="items['cta-1']">
+          <!-- <p v-if="items['cta-1']">
             <a
               class="cta"
               :href="cta.href"
@@ -101,7 +101,7 @@ const formProps = computed(() => {
               :aria-label="cta.ariaLabel"
               v-html="cta.content"
             />
-          </p>
+          </p> -->
         </div>
 
         <div

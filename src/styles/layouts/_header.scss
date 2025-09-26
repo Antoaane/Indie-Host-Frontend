@@ -6,7 +6,7 @@ header {
   width: 100%;
 
   position: fixed;
-  top: 0;
+  top: 0.5rem;
   left: 50%;
   z-index: 9999;
 
@@ -16,6 +16,10 @@ header {
   transform: translateX(-50%);
 
   @include gutters(padding, all);
+
+  @include min-width(md) {
+    top: 0;
+  }
 
   @include min-width(lg) {
     justify-content: center;

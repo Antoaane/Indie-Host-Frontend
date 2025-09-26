@@ -2,7 +2,8 @@
 
 <script setup lang="ts">
 // DEPS
-import { ref, onMounted } from 'vue'
+import { ref, computed } from 'vue'
+import { useRoute } from 'vue-router'
 
 // UTILS
 import { vp } from '@/utils/viewport'
@@ -15,10 +16,14 @@ const isMobileMenuOpen = ref(false)
 const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value
 }
+
+const route = useRoute()
+
+const isDonation = computed(() => route.path === '/donation')
 </script>
 
 <template>
-  <nav class="navbar-listing">
+  <nav class="navbar-landing">
     <a
       v-if="vp.lg.value"
       href="/#hero-section"
@@ -37,15 +42,22 @@ const toggleMobileMenu = () => {
       class="navbar__links"
       v-if="vp.lg.value"
     >
-      <li>
-        <a href="#join-section"> Tenez moi au courant ! </a>
-      </li>
-      <li>
-        <a href="#habits-section"> Fonctionnalités </a>
-      </li>
-      <li>
-        <a href="#usage-section"> Comment ça marche ? </a>
-      </li>
+      <template v-if="!isDonation">
+        <li>
+          <a href="#join-section"> Tenez moi au courant ! </a>
+        </li>
+        <li>
+          <a href="#habits-section"> Fonctionnalités </a>
+        </li>
+        <li>
+          <a href="#usage-section"> Comment ça marche ? </a>
+        </li>
+      </template>
+      <template v-else>
+        <li>
+          <a href="/"> Retour à l'accueil </a>
+        </li>
+      </template>
     </ul>
 
     <!-- Mobile Menu Button -->

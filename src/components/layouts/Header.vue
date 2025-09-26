@@ -13,7 +13,7 @@ import NavLanding from '@/components/navs/NavLanding/NavLanding.vue'
 
 const route = useRoute()
 
-const isLanding = computed(() => route.path === '/')
+const isLanding = computed(() => route.path === '/' || route.path === '/donation')
 // onMounted(() => {
 //   isLanding.value = window.location.pathname === '/'
 //   console.log('isLanding', isLanding.value)

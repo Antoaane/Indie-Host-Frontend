@@ -4,15 +4,29 @@
 <html lang="">
   <head>
     <meta charset="UTF-8" />
+    <!-- Google Tag Manager -->
+    <script>
+      ;(function (w, d, s, l, i) {
+        w[l] = w[l] || []
+        w[l].push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' })
+        var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s),
+          dl = l != 'dataLayer' ? '&l=' + l : ''
+        j.async = true
+        j.src = 'https://www.googletagmanager.com/gtm.js?id=' + i + dl
+        f.parentNode.insertBefore(j, f)
+      })(window, document, 'script', 'dataLayer', 'GTM-W7W68HMP')
+    </script>
+    <!-- End Google Tag Manager -->
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0"
     />
 
-    <meta
+    <!-- <meta
       name="robots"
       content="noindex, nofollow"
-    />
+    /> -->
 
     <title>IndieHost | Plateforme de Location Saisonnière à 0% Commission</title>
     <meta
@@ -130,6 +144,17 @@
   <body>
     <div id="app"></div>
 
+    <!-- Google Tag Manager (noscript) -->
+    <noscript>
+      <iframe
+        src="https://www.googletagmanager.com/ns.html?id=GTM-W7W68HMP"
+        height="0"
+        width="0"
+        style="display: none !important; visibility: hidden"
+      ></iframe>
+    </noscript>
+    <!-- End Google Tag Manager (noscript) -->
+
     <script
       type="module"
       src="/src/main.ts"
@@ -139,5 +164,27 @@
       async
       defer
     ></script>
+    <!-- <script>
+      window.axeptioSettings = {
+        clientId: '68d5951962d46367029df668',
+        cookiesVersion: 'indiehost-fr-EU',
+        googleConsentMode: {
+          default: {
+            analytics_storage: 'granted',
+            ad_storage: 'denied',
+            ad_user_data: 'denied',
+            ad_personalization: 'denied',
+            wait_for_update: 500,
+          },
+        },
+      }
+      ;(function (d, s) {
+        var t = d.getElementsByTagName(s)[0],
+          e = d.createElement(s)
+        e.async = true
+        e.src = '//static.axept.io/sdk.js'
+        t.parentNode.insertBefore(e, t)
+      })(document, 'script')
+    </script> -->
   </body>
 </html>

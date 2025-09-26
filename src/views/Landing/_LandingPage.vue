@@ -25,22 +25,22 @@ if (vp.lg.value) {
 
 let smoother: ReturnType<typeof ScrollSmoother.create>
 
-onMounted(() => {
-  if (vp.lg.value) {
-    smoother = ScrollSmoother.create({
-      // wrapper: 'body',
-      // content: '#landing-page',
-      smooth: 1.2,
-      effects: true,
-    })
-  }
-})
+// onMounted(() => {
+//   if (vp.lg.value) {
+//     smoother = ScrollSmoother.create({
+//       // wrapper: 'body',
+//       // content: '#landing-page',
+//       smooth: 1.2,
+//       effects: true,
+//     })
+//   }
+// })
 
-onBeforeUnmount(() => {
-  if (vp.lg.value) {
-    smoother.kill()
-  }
-})
+// onBeforeUnmount(() => {
+//   if (vp.lg.value) {
+//     smoother.kill()
+//   }
+// })
 </script>
 
 <template>
