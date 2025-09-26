@@ -93,3 +93,9 @@
   margin: 0;
   @include base-text(rgba($secondary, 0.78));
 }
+
+video {
+  width: 100%;
+  height: auto;
+  border-radius: borders.$rounded-lg;
+}

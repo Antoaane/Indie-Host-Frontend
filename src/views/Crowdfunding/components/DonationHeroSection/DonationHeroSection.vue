@@ -23,7 +23,15 @@ const props = defineProps<{ section: ItemSection }>()
 
 const entries = computed<SectionEntry[]>(() => {
   const record = props.section.items ?? {}
-  return Object.entries(record).map(([key, block], index) => ({ key, block, index }))
+  return Object.entries(record).map(
+    (
+      [
+        key,
+        block,
+      ],
+      index,
+    ) => ({ key, block, index }),
+  )
 })
 
 const normalizeOrder = (block: ContentBlock) => {
@@ -32,7 +40,9 @@ const normalizeOrder = (block: ContentBlock) => {
 }
 
 const sortEntries = (list: SectionEntry[]) => {
-  return [...list].sort((a, b) => {
+  return [
+    ...list,
+  ].sort((a, b) => {
     const orderDiff = normalizeOrder(a.block) - normalizeOrder(b.block)
 
     if (orderDiff !== 0) {
@@ -53,13 +63,9 @@ const getSegment = (block: ContentBlock) => {
   return block.tag === 'component' ? 'body' : 'intro'
 }
 
-const introBlocks = computed(() =>
-  sortEntries(entries.value.filter(entry => getSegment(entry.block) === 'intro'))
-)
+const introBlocks = computed(() => sortEntries(entries.value.filter((entry) => getSegment(entry.block) === 'intro')))
 
-const bodyBlocks = computed(() =>
-  sortEntries(entries.value.filter(entry => getSegment(entry.block) === 'body'))
-)
+const bodyBlocks = computed(() => sortEntries(entries.value.filter((entry) => getSegment(entry.block) === 'body')))
 
 const classForIntro = (block: ContentBlock) => {
   const role = block.meta?.role
@@ -176,6 +182,26 @@ const extractRichBlocks = (block: ContentBlock): HeroRichBlock[] => {
               v-html="richBlock.content"
             />
           </template>
+
+          <video
+            controls
+            autoplay
+            playsinline
+            muted
+            loop
+          >
+            <!-- webm -->
+            <source
+              src="/public/assets/media/videos/indiehost-demo.webm"
+              type="video/webm"
+            />
+            <!-- mp4 -->
+            <source
+              src="/public/assets/media/videos/indiehost-demo.mp4"
+              type="video/mp4"
+            />
+            Your browser does not support the video tag.
+          </video>
         </div>
 
         <component

@@ -2,22 +2,21 @@
 
 <script setup lang="ts">
 // DEPS
-import { onMounted, onBeforeUnmount } from 'vue'
-import { VueLenis } from 'lenis/vue'
+import { defineAsyncComponent } from 'vue'
 import { ScrollSmoother } from 'gsap/ScrollSmoother'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import gsap from 'gsap'
 // UTILS
 import { vp } from '@/utils/viewport'
 // COMPONENTS
-import HeroSection from '@/views/Landing/components/HeroSection/HeroSection.vue'
-import BenefitsSection from '@/views/Landing/components/BenefitsSection/BenefitsSection.vue'
-import CustomizationSection from '@/views/Landing/components/CustomizationSection/CustomizationSection.vue'
-import HabitsSection from '@/views/Landing/components/HabitsSection/HabitsSection.vue'
-import StrengthsSection from '@/views/Landing/components/StrengthsSection/StrengthsSection.vue'
-import UsageSection from '@/views/Landing/components/UsageSection/UsageSection.vue'
-import JoinSection from '@/views/Landing/components/JoinSection/JoinSection.vue'
-import FaqSection from '@/views/Landing/components/FaqSection/FaqSection.vue'
+const HeroSection = defineAsyncComponent(() => import('./components/HeroSection/HeroSection.vue'))
+const BenefitsSection = defineAsyncComponent(() => import('./components/BenefitsSection/BenefitsSection.vue'))
+const CustomizationSection = defineAsyncComponent(() => import('./components/CustomizationSection/CustomizationSection.vue'))
+const HabitsSection = defineAsyncComponent(() => import('./components/HabitsSection/HabitsSection.vue'))
+const StrengthsSection = defineAsyncComponent(() => import('./components/StrengthsSection/StrengthsSection.vue'))
+const UsageSection = defineAsyncComponent(() => import('./components/UsageSection/UsageSection.vue'))
+const JoinSection = defineAsyncComponent(() => import('./components/JoinSection/JoinSection.vue'))
+const FaqSection = defineAsyncComponent(() => import('./components/FaqSection/FaqSection.vue'))
 
 if (vp.lg.value) {
   gsap.registerPlugin(ScrollTrigger, ScrollSmoother)

@@ -1,4 +1,4 @@
-/* File: src/views/Landing/HeroSection/hero-section.scss */
+/* File: src/views/Landing/components/HeroSection/hero-section.scss */
 
 @use "@/styles/variables/globals" as *;
 @use '@/styles/components/buttons' as buttons;
@@ -130,7 +130,7 @@
 
         // illustration gradient
         span {
-          width: 15%;
+          width: 27.5%;
           height: 80.75%;
 
           display: block;
@@ -138,7 +138,7 @@
           position: absolute;
           z-index: 1;
           bottom: 6.25%;
-          left: 85%;
+          left: 72.5%;
 
           background: radial-gradient(174.54% 210.83% at 0% 50.07%,
               rgba(17, 17, 23, 0.00) 22.88%,
