@@ -1,0 +1,46 @@
+/* File: src/views/Landing/components/FeaturesSection/features-section.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+
+#features-section {
+  @include min-width(lg) {
+    padding-top: calc(300vh + (var(--gutter-spacing))) !important;
+    padding-bottom: 0 !important;
+  }
+
+
+  &>:nth-child(even) {
+    // .feature.container
+
+    &>div {
+
+      direction: ltr;
+
+      .right,
+      .end-right,
+      .end-left {
+        display: none;
+      }
+    }
+  }
+
+  &>:nth-child(odd) {
+    // .feature.container
+
+    &>div {
+      direction: rtl;
+
+      p,
+      h2 {
+        text-align: left !important;
+      }
+
+      .left,
+      .end-right,
+      .end-left {
+        display: none;
+      }
+    }
+  }
+}

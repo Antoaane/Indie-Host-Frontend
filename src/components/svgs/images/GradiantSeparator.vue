@@ -7,8 +7,8 @@
     fill="none"
     viewBox="0 0 2208 908"
   >
-    <g clip-path="url(#clip0_1349_29685)">
-      <g filter="url(#filter0_f_1349_29685)">
+    <g :clip-path="url(ids.clip0_1349_29685)">
+      <g :filter="url(ids.filter0_f_1349_29685)">
         <ellipse
           cx="159.223"
           cy="181.056"
@@ -37,18 +37,18 @@
       <rect
         width="2207"
         height="908"
-        fill="url(#paint0_linear_1349_29685)"
+        :fill="url(ids.paint0_linear_1349_29685)"
         fill-opacity="0.3"
       />
       <rect
         width="2207"
         height="908"
-        fill="url(#paint1_radial_1349_29685)"
+        :fill="url(ids.paint1_radial_1349_29685)"
       />
     </g>
     <defs>
       <filter
-        id="filter0_f_1349_29685"
+        :id="ids.filter0_f_1349_29685"
         width="3642.75"
         height="2209.47"
         x="-840.498"
@@ -72,7 +72,7 @@
         />
       </filter>
       <linearGradient
-        id="paint0_linear_1349_29685"
+        :id="ids.paint0_linear_1349_29685"
         x1="1104.14"
         x2="1104"
         y1="0.0106902"
@@ -87,7 +87,7 @@
         />
       </linearGradient>
       <radialGradient
-        id="paint1_radial_1349_29685"
+        :id="ids.paint1_radial_1349_29685"
         cx="0"
         cy="0"
         r="1"
@@ -101,7 +101,7 @@
           stop-opacity="0"
         />
       </radialGradient>
-      <clipPath id="clip0_1349_29685">
+      <clipPath :id="ids.clip0_1349_29685">
         <rect
           width="2208"
           height="908"
@@ -140,6 +140,16 @@ const props = withDefaults(
 const attrRole = computed(() => (props.role === true ? undefined : String(props.role)))
 const ariaHidden = computed(() => props.role === true)
 const ariaLabelledBy = computed(() => (props.role === true ? undefined : 'titleId descId'))
+
+// -- IDs dynamiques pour scoper les defs et leurs références --
+const uid = Math.random().toString(36).slice(2)
+const ids = {
+  filter0_f_1349_29685: `filter0_f_1349_29685_${uid}`,
+  paint0_linear_1349_29685: `paint0_linear_1349_29685_${uid}`,
+  paint1_radial_1349_29685: `paint1_radial_1349_29685_${uid}`,
+  clip0_1349_29685: `clip0_1349_29685_${uid}`,
+} as Record<string, string>
+const url = (v: string) => `url(#${v})`
 
 onMounted(() => {
   if (props.role !== true && (!props.title || !props.desc)) {

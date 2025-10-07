@@ -7,6 +7,10 @@ optimise le SVG avec SVGO (si dispo) et formate le résultat
 avec Prettier.
 Chaque étape affiche désormais un message explicite afin de
 faciliter le débogage et le suivi du pipeline.
+
+Ajouts:
+- Scoping dynamique des IDs SVG (mask/gradient/filter/clip-path, etc.)
+- Réécriture des références url(#id), href="#id", xlink:href="#id" en bindings Vue.
 """
 
 from __future__ import annotations
@@ -19,7 +23,7 @@ import shutil
 import subprocess
 import tempfile
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict
 
 from PIL import Image
 import imagehash
@@ -37,7 +41,6 @@ PRETTIER_ARGS = ['--plugin-search-dir', '.', '--write']
 # Small helpers
 # ---------------------------------------------------------------------------
 
-
 def log(msg: str) -> None:
     """Affiche un log simple et uniforme."""
     print(msg)
@@ -46,12 +49,10 @@ def log(msg: str) -> None:
 # File-system helpers
 # ---------------------------------------------------------------------------
 
-
 def ensure_image_output() -> None:
     if not IMAGE_OUTPUT.exists():
         log(f'📂 Création du dossier images → {IMAGE_OUTPUT}')
     IMAGE_OUTPUT.mkdir(parents=True, exist_ok=True)
-
 
 def to_pascal_case(name: str) -> str:
     pascal = ''.join(word.capitalize()
@@ -62,7 +63,6 @@ def to_pascal_case(name: str) -> str:
 # ---------------------------------------------------------------------------
 # Image deduplication helpers
 # ---------------------------------------------------------------------------
-
 
 def find_existing_image(b64_data: str) -> Optional[str]:
     new_hash = imagehash.phash(Image.open(
@@ -78,7 +78,6 @@ def find_existing_image(b64_data: str) -> Optional[str]:
                 continue
     return None
 
-
 def has_transparency(img: Image.Image) -> bool:
     if img.mode in {'RGBA', 'LA'}:
         transparency = any(p < 255 for p in img.getchannel('A').getdata())
@@ -92,7 +91,6 @@ def has_transparency(img: Image.Image) -> bool:
 # ---------------------------------------------------------------------------
 # External binaries location
 # ---------------------------------------------------------------------------
-
 
 def _locate_cmd(candidates: list[str]) -> Optional[str]:
     for cmd in candidates:
@@ -109,10 +107,8 @@ def _locate_cmd(candidates: list[str]) -> Optional[str]:
     log('🔍 Aucun binaire trouvé pour ' + ', '.join(candidates))
     return None
 
-
 def _locate_svgo_cmd() -> Optional[str]:
     return _locate_cmd(['svgo.cmd', 'svgo'] if os.name == 'nt' else ['svgo'])
-
 
 def _locate_prettier_cmd() -> Optional[str]:
     return _locate_cmd(['prettier.cmd', 'prettier', 'npx.cmd', 'npx'] if os.name == 'nt' else ['prettier', 'npx'])
@@ -120,7 +116,6 @@ def _locate_prettier_cmd() -> Optional[str]:
 # ---------------------------------------------------------------------------
 # SVGO optimisation
 # ---------------------------------------------------------------------------
-
 
 def optimize_svg(svg_raw: str) -> str:
     svgo_cmd = _locate_svgo_cmd()
@@ -154,7 +149,6 @@ def optimize_svg(svg_raw: str) -> str:
 # Prettier formatting
 # ---------------------------------------------------------------------------
 
-
 def format_with_prettier(filepath: Path) -> None:
     prettier_cmd = _locate_prettier_cmd()
     if not prettier_cmd:
@@ -169,9 +163,105 @@ def format_with_prettier(filepath: Path) -> None:
         log('❌ Prettier erreur : ' + e.stderr.decode(errors='ignore').strip())
 
 # ---------------------------------------------------------------------------
-# Core : SVG ➔ Vue
+# ID scoping helpers
 # ---------------------------------------------------------------------------
 
+_ID_ATTRS_WITH_URL = [
+    # attributs courants acceptant url(#id)
+    'fill', 'stroke', 'filter', 'mask', 'clip-path',
+    'marker-start', 'marker-mid', 'marker-end',
+    'stroke-dasharray', 'stroke-dashoffset', 'flood-image', 'lighting-color',
+]
+
+_REF_ATTRS_HASH = ['href', 'xlink:href']  # href="#id", xlink:href="#id"
+
+def _sanitize_to_key(id_value: str) -> str:
+    """Crée un nom de clé JS sûr pour ids.<key> à partir d'un id SVG arbitraire."""
+    key = re.sub(r'[^a-zA-Z0-9_]', '_', id_value)
+    if re.match(r'^[0-9]', key):
+        key = 'i_' + key
+    return key
+
+def _collect_ids(svg_text: str) -> Dict[str, str]:
+    """Retourne {original_id: safe_key}."""
+    ids = {}
+    for m in re.finditer(r'\bid="([^"]+)"', svg_text):
+        orig = m.group(1)
+        ids[orig] = _sanitize_to_key(orig)
+    return ids
+
+def _rewrite_ids_and_refs(svg_text: str, id_map: Dict[str, str]) -> str:
+    """Réécrit:
+       - id="foo" → :id="ids.foo"
+       - attr="url(#foo)" → :attr="url(ids.foo)"
+       - href="#foo" / xlink:href="#foo" → :href="'#' + ids.foo"
+    """
+
+    # 1) id="orig" → :id="ids.key"
+    for orig, key in id_map.items():
+        svg_text = re.sub(
+            rf'\bid="{re.escape(orig)}"',
+            f':id="ids.{key}"',
+            svg_text
+        )
+
+    # 2) attr="url(#orig)" → :attr="url(ids.key)"
+    # capture le nom d’attribut pour le réécrire en binding
+    for orig, key in id_map.items():
+        # attributs listés
+        for attr in _ID_ATTRS_WITH_URL:
+            svg_text = re.sub(
+                rf'(\s){attr}="url\(#\s*{re.escape(orig)}\s*\)"',
+                rf'\1:{attr}="url(ids.{key})"',
+                svg_text
+            )
+        # fallback générique: n'importe quel attr="url(#orig)"
+        svg_text = re.sub(
+            rf'(\s)([a-zA-Z_:.-]+)="url\(#\s*{re.escape(orig)}\s*\)"',
+            rf'\1:\2="url(ids.{key})"',
+            svg_text
+        )
+
+    # 3) href="#orig" / xlink:href="#orig" → binding
+    for orig, key in id_map.items():
+        for attr in _REF_ATTRS_HASH:
+            svg_text = re.sub(
+                rf'(\s){attr}="#\s*{re.escape(orig)}\s*"',
+                rf'\1:{attr}="\'#\' + ids.{key}"',
+                svg_text
+            )
+
+    # NB: on ne réécrit pas les références dans style="...url(#id)..."
+    # car cela nécessiterait de transformer tout le style en binding :style="..."
+    # (rare dans les SVG exportés, volontairement laissé de côté).
+    return svg_text
+
+def _emit_ids_object_code(id_map: Dict[str, str]) -> str:
+    """Émet le code JS pour:
+        const uid = Math.random().toString(36).slice(2)
+        const ids = { key: `original_${uid}`, ... }
+        const url = (v: string) => `url(#${v})`
+    """
+    if not id_map:
+        return (
+            'const uid = Math.random().toString(36).slice(2);\n'
+            'const ids = {} as Record<string, string>;\n'
+            'const url = (v: string) => `url(#${v})`;\n'
+        )
+    lines = []
+    for orig, key in id_map.items():
+        # exemple:   foo_bar: `foo-bar_${uid}`,
+        lines.append(f'  {key}: `{orig}_${{uid}}`')
+    entries = ',\n'.join(lines)
+    return (
+        'const uid = Math.random().toString(36).slice(2);\n'
+        f'const ids = {{\n{entries}\n}} as Record<string, string>;\n'
+        'const url = (v: string) => `url(#${v})`;\n'
+    )
+
+# ---------------------------------------------------------------------------
+# Core : SVG ➔ Vue
+# ---------------------------------------------------------------------------
 
 def extract_and_convert(svg_path: Path) -> None:
     log(f'📑 Lecture {svg_path}')
@@ -193,8 +283,8 @@ def extract_and_convert(svg_path: Path) -> None:
     log('🧹 Suppression <title>/<desc> et attrs a11y existants')
     svg_text = re.sub(r'<title[^>]*>.*?</title>', '', svg_text, flags=re.S)
     svg_text = re.sub(r'<desc[^>]*>.*?</desc>', '', svg_text, flags=re.S)
-    svg_text = re.sub(r'role="[^"]*"', '', svg_text)
-    svg_text = re.sub(r'aria-[a-z-]+="[^"]*"', '', svg_text)
+    svg_text = re.sub(r'\srole="[^"]*"', '', svg_text)
+    svg_text = re.sub(r'\saria-[a-z-]+="[^"]*"', '', svg_text)
 
     # ------------------------------------------------------------------ #
     # 2. Gestion des <image ... base64>
@@ -228,7 +318,14 @@ def extract_and_convert(svg_path: Path) -> None:
     svg_text = optimize_svg(svg_text)
 
     # ------------------------------------------------------------------ #
-    # 3. Injection des bindings a11y typés
+    # 3. Scoping dynamique des IDs + réécriture des références
+    # ------------------------------------------------------------------ #
+    log('🔗 Détection des ids et réécriture en bindings Vue')
+    id_map = _collect_ids(svg_text)
+    svg_text = _rewrite_ids_and_refs(svg_text, id_map)
+
+    # ------------------------------------------------------------------ #
+    # 4. Injection des bindings a11y typés
     # ------------------------------------------------------------------ #
     log('➕ Injection bindings attrRole / ariaHidden / ariaLabelledBy')
     svg_text = re.sub(
@@ -250,8 +347,10 @@ def extract_and_convert(svg_path: Path) -> None:
     )
 
     # ------------------------------------------------------------------ #
-    # 4. Construction du composant Vue SFC
+    # 5. Construction du composant Vue SFC
     # ------------------------------------------------------------------ #
+    ids_code = _emit_ids_object_code(id_map)
+
     vue_content = (
         '<template>\n' + svg_text + '\n</template>\n\n'
         '<script setup lang="ts">\n'
@@ -268,9 +367,11 @@ def extract_and_convert(svg_path: Path) -> None:
         'const attrRole       = computed(() => props.role === true ? undefined : String(props.role));\n'
         'const ariaHidden     = computed(() => props.role === true);\n'
         'const ariaLabelledBy = computed(() => props.role === true ? undefined : "titleId descId");\n\n'
+        '// -- IDs dynamiques pour scoper les defs et leurs références --\n'
+        f'{ids_code}\n'
         'onMounted(() => {\n'
         '  if (props.role !== true && (!props.title || !props.desc)) {\n'
-        '    console.warn("[' + vue_name + '.vue] title et desc sont requis quand role ≠ true");\n'
+        f'    console.warn("[{vue_name}.vue] title et desc sont requis quand role ≠ true");\n'
         '  }\n'
         '});\n'
         '// généré automatiquement par convert_svg.py\n'
@@ -278,18 +379,16 @@ def extract_and_convert(svg_path: Path) -> None:
     )
 
     # ------------------------------------------------------------------ #
-    # 5. Écriture + formatage
+    # 6. Écriture + formatage
     # ------------------------------------------------------------------ #
     vue_file_path.write_text(vue_content, 'utf-8', newline='\n')
     log(f'📝 Composant écrit → {vue_file_path}')
     format_with_prettier(vue_file_path)
     log(f'✅ Composant généré : {vue_file_path}')
 
-
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
-
 
 def main() -> None:
     log(f'🚀 Scan des SVG dans {MEDIA_ROOT}')
@@ -301,7 +400,6 @@ def main() -> None:
         except Exception as exc:
             log(f'❌ Erreur sur {svg}: {exc}')
     log('🏁 Pipeline terminé')
-
 
 if __name__ == '__main__':
     main()

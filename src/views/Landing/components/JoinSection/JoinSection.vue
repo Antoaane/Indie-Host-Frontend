@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 // DEPS
-import { computed } from 'vue'
+import { computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 
 // CONTENT
 import type { ItemSection } from '@/content/types'
@@ -53,6 +53,50 @@ const formProps = computed(() => {
     }
   }
   return { ...(parsedProps || {}), data: formMeta.value?.data }
+})
+
+let widgetId: number | null = null
+
+function waitForHcaptcha(): Promise<void> {
+  if ((window as any).hcaptcha) return Promise.resolve()
+  return new Promise((res) => {
+    const t = setInterval(() => {
+      if ((window as any).hcaptcha) {
+        clearInterval(t)
+        res()
+      }
+    }, 50)
+  })
+}
+
+onMounted(async () => {
+  // si tu charges via GTM/Axeptio: api.js doit être avec `?render=explicit`
+  await waitForHcaptcha()
+  await nextTick() // s’assurer que le DOM de JoinSection est là
+
+  const el = document.querySelector('.h-captcha') as HTMLElement | null
+  if (!el) return
+
+  // sécurité contre les conteneurs invisibles au moment du render
+  const start = Date.now()
+  while (el && (el.offsetHeight === 0 || getComputedStyle(el).display === 'none') && Date.now() - start < 3000) {
+    await new Promise((r) => setTimeout(r, 50))
+  }
+
+  widgetId = (window as any).hcaptcha.render(el, {
+    sitekey: el.getAttribute('data-sitekey') || 'TA_CLE_PUBLIQUE',
+    size: 'normal',
+    theme: 'light',
+  })
+})
+
+onBeforeUnmount(() => {
+  const hc = (window as any).hcaptcha
+  if (hc && widgetId != null) {
+    try {
+      hc.reset(widgetId)
+    } catch {}
+  }
 })
 </script>
 

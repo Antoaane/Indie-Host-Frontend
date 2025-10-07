@@ -212,9 +212,9 @@ div:has(> .step-section) {
       padding-top: 1rem;
       @include little-text($accent, false);
 
-      @include min-width(lg) {
-        @include gutters(padding, inline, 2);
-      }
+      // @include min-width(lg) {
+      //   @include gutters(padding, inline, 2);
+      // }
     }
   }
 }

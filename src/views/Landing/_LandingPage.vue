@@ -13,6 +13,7 @@ const HeroSection = defineAsyncComponent(() => import('./components/HeroSection/
 const BenefitsSection = defineAsyncComponent(() => import('./components/BenefitsSection/BenefitsSection.vue'))
 const CustomizationSection = defineAsyncComponent(() => import('./components/CustomizationSection/CustomizationSection.vue'))
 const HabitsSection = defineAsyncComponent(() => import('./components/HabitsSection/HabitsSection.vue'))
+const FeaturesSection = defineAsyncComponent(() => import('./components/FeaturesSection/FeaturesSection.vue'))
 const StrengthsSection = defineAsyncComponent(() => import('./components/StrengthsSection/StrengthsSection.vue'))
 const UsageSection = defineAsyncComponent(() => import('./components/UsageSection/UsageSection.vue'))
 const JoinSection = defineAsyncComponent(() => import('./components/JoinSection/JoinSection.vue'))
@@ -47,10 +48,11 @@ let smoother: ReturnType<typeof ScrollSmoother.create>
   <main id="landing-page">
     <HeroSection />
     <BenefitsSection />
-    <HabitsSection />
+    <!-- <HabitsSection /> -->
+    <FeaturesSection />
+    <UsageSection />
     <CustomizationSection />
     <StrengthsSection />
-    <UsageSection />
     <JoinSection />
     <FaqSection />
   </main>

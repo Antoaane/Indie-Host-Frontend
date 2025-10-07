@@ -1,5 +1,3 @@
-<!-- File: src/components/svgs/images/ShapesBgCroped.vue -->
-
 <template>
   <svg
     :role="attrRole"
@@ -9,16 +7,16 @@
     fill="none"
     viewBox="0 0 1920 1390"
   >
-    <g clip-path="url(#clip0_519_14128)">
+    <g :clip-path="url(ids.clip0_519_14128)">
       <g>
         <path
-          fill="url(#paint0_linear_519_14128)"
+          :fill="url(ids.paint0_linear_519_14128)"
           stroke="none"
           d="M80.8745 -260.982L-741 1386.98H902.749L80.8745 -260.982Z"
-          filter="url(#grain)"
+          :filter="url(ids.grain)"
         />
         <path
-          fill="url(#paint0_linear_519_14128)"
+          :fill="url(ids.paint0_linear_519_14128)"
           stroke="none"
           d="M80.8745 -260.982L-741 1386.98H902.749L80.8745 -260.982Z"
           opacity="0.5"
@@ -29,13 +27,13 @@
           d="M80.8745 -260.982L-741 1386.98H902.749L80.8745 -260.982Z"
         />
         <path
-          fill="url(#paint1_linear_519_14128)"
+          :fill="url(ids.paint1_linear_519_14128)"
           stroke="none"
           d="M1761.47 -260.5C2235.47 -260.5 2619.68 108.213 2619.68 563C2619.68 1017.79 2235.47 1386.5 1761.47 1386.5C1287.47 1386.5 903.249 1017.79 903.249 563C903.249 108.213 1287.47 -260.5 1761.47 -260.5Z"
-          filter="url(#grain)"
+          :filter="url(ids.grain)"
         />
         <path
-          fill="url(#paint1_linear_519_14128)"
+          :fill="url(ids.paint1_linear_519_14128)"
           stroke="none"
           d="M1761.47 -260.5C2235.47 -260.5 2619.68 108.213 2619.68 563C2619.68 1017.79 2235.47 1386.5 1761.47 1386.5C1287.47 1386.5 903.249 1017.79 903.249 563C903.249 108.213 1287.47 -260.5 1761.47 -260.5Z"
           opacity="0.5"
@@ -49,7 +47,7 @@
     </g>
     <defs>
       <filter
-        id="grain"
+        :id="ids.grain"
         filterUnits="userSpaceOnUse"
       >
         <feTurbulence
@@ -82,7 +80,7 @@
         <feMerge><feMergeNode in="maskedGrain" /></feMerge>
       </filter>
       <linearGradient
-        id="paint0_linear_519_14128"
+        :id="ids.paint0_linear_519_14128"
         x1="80.8745"
         x2="80.8745"
         y1="-260.982"
@@ -106,7 +104,7 @@
         />
       </linearGradient>
       <linearGradient
-        id="paint1_linear_519_14128"
+        :id="ids.paint1_linear_519_14128"
         x1="1761.47"
         x2="1761.47"
         y1="-261"
@@ -123,7 +121,7 @@
           stop-opacity="0"
         />
       </linearGradient>
-      <clipPath id="clip0_519_14128">
+      <clipPath :id="ids.clip0_519_14128">
         <rect
           width="1920"
           height="1390"
@@ -162,6 +160,16 @@ const props = withDefaults(
 const attrRole = computed(() => (props.role === true ? undefined : String(props.role)))
 const ariaHidden = computed(() => props.role === true)
 const ariaLabelledBy = computed(() => (props.role === true ? undefined : 'titleId descId'))
+
+// -- IDs dynamiques pour scoper les defs et leurs références --
+const uid = Math.random().toString(36).slice(2)
+const ids = {
+  grain: `grain_${uid}`,
+  paint0_linear_519_14128: `paint0_linear_519_14128_${uid}`,
+  paint1_linear_519_14128: `paint1_linear_519_14128_${uid}`,
+  clip0_519_14128: `clip0_519_14128_${uid}`,
+} as Record<string, string>
+const url = (v: string) => `url(#${v})`
 
 onMounted(() => {
   if (props.role !== true && (!props.title || !props.desc)) {

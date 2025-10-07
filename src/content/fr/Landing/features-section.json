@@ -1,0 +1,32 @@
+{
+  "id": "features-section",
+  "items": {
+    "features": {
+      "tag": "component",
+      "meta": {
+        "variant": "Features",
+        "props": "",
+        "data": [
+          {
+            "title": "Modifiez et <strong>personnalisez</strong> vos annonces",
+            "description": "Personnalisez librement vos annonces avec un éditeur visuel simple et intuitif. Prévisualisez chaque modification en temps réel, et modifiez vos contenus en un clic : cliquez sur un élément dans l’aperçu, vous êtes instantanément redirigé vers le bon champ. <br />Une annonce crée et non publiée restera en brouillon, vous garderez toujours vos modifications.",
+            "video-1": "/assets/media/videos/notification.webm",
+            "video-2": "/assets/media/videos/notification.webm",
+            "image": "/assets/media/images/customization-image.png",
+            "format": "vtc",
+            "alt": "Page d'édition d'une annonce"
+          },
+          {
+            "title": "Importez vos annonces existantes <strong>en un clic</strong>",
+            "description": "Gagnez du temps en important vos annonces Airbnb et Booking.com en un clic. Récupérez automatiquement vos photos, descriptions, équipements, tarifs et calendriers. Vous n’avez plus qu’à personnaliser votre annonce si vous le souhaitez, et à la publier.",
+            "video-1": "/assets/media/videos/import-auto.webm",
+            "video-2": "/assets/media/videos/import-auto.webm",
+            "image": "/assets/media/images/auto-import.png",
+            "format": "hzt",
+            "alt": "Page d'édition d'une annonce"
+          }
+        ]
+      }
+    }
+  }
+}

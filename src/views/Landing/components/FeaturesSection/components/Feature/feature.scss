@@ -1,0 +1,141 @@
+/* File: src/views/Landing/components/FeaturesSection/components/Feature/feature.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+
+.feature {
+  // @include gutters(padding, all, 2);
+
+  @include min-width(lg) {
+    padding-left: 5rem;
+  }
+
+  &>div {
+    gap: 1rem;
+    position: relative;
+
+    @include gutters(padding, vertical);
+    @include gutters(padding, horizontal, 3);
+
+    @include min-width(lg) {
+      gap: 3rem;
+    }
+
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+
+    .text {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      grid-column: span 4 / span 4;
+
+      &:has(+ .vtc) {
+        padding-right: 3rem;
+        grid-column: span 6 / span 6;
+      }
+
+      &>div {
+        width: auto;
+        height: max-content;
+
+        display: flex;
+        flex-direction: column;
+
+        @include min-width(xl) {
+          width: calc(var(--container-size) / 3);
+        }
+
+        h2 {
+          margin: 0 !important;
+          @include h2-title($accent, false, true, false);
+        }
+
+        p {
+          margin: 0;
+          @include base-text($accent);
+        }
+      }
+    }
+
+    .media {
+      height: calc(90vh - ((var(--gutter-spacing) * 2) + 70px));
+
+      &.hzt {
+        display: flex;
+        align-items: center;
+
+        grid-column: span 8 / span 8;
+
+        video,
+        img {
+          height: auto;
+          width: 100%;
+          object-fit: contain;
+
+          @include halo(sm, true, white, 0.5);
+
+          @include min-width(lg) {
+            border-radius: borders.$rounded-md;
+          }
+
+          @include min-width(xl) {
+            border-radius: borders.$rounded-lg;
+          }
+        }
+      }
+
+      &.vtc {
+        grid-column: span 6 / span 6;
+
+        padding-left: 3rem;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        video,
+        img {
+          height: 80%;
+          width: auto;
+          object-fit: contain;
+
+          border: 7.5px solid rgba($accent, 0.75);
+
+          @include min-width(lg) {
+            border-radius: borders.$rounded-lg;
+          }
+
+          @include min-width(xl) {
+            border-radius: borders.$rounded-xl;
+          }
+
+          @include min-width(xxl) {
+            border-radius: borders.$rounded-xxl;
+          }
+
+          @include halo(lg, true, white, 0.5);
+        }
+      }
+    }
+
+    .decorative {
+      height: 100%;
+      width: auto;
+
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: -1;
+
+      &.right {
+        right: 0;
+      }
+
+      &.left {
+        left: 0;
+      }
+    }
+  }
+}
