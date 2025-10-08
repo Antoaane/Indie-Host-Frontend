@@ -3,14 +3,16 @@
 <script setup lang="ts">
 // DEPS
 import { computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
-
-// CONTENT
-import type { ItemSection } from '@/content/types'
-import rawContent from '@/content/fr/Landing/join-section.json'
-
 // COMPONENTS
 import FrenchFlag from '@/components/svgs/icons/FrenchFlag.vue'
 import form from '@/views/Landing/components/JoinSection/components/FormComp/FormComp.vue'
+import Carousel from '@/views/Landing/components/HabitsSection/components/Carousel/Carousel.vue'
+import SlidesTitles from '@/views/Landing/components/HabitsSection/components/SlidesTitles/SlidesTitles.vue'
+// UTILS
+import { vp } from '@/utils/viewport'
+// CONTENT
+import type { ItemSection } from '@/content/types'
+import rawContent from '@/content/fr/Landing/join-section.json'
 
 // Map des variantes "component" du JSON → composants Vue
 const componentMap: Record<string, any> = {
@@ -103,9 +105,7 @@ onBeforeUnmount(() => {
 <template>
   <section :id="section.id">
     <div class="container__xl">
-      <!-- HEADER -->
       <div class="title">
-        <!-- Drapeau (optionnel) -->
         <div>
           <component
             v-if="FlagComp"
@@ -118,36 +118,7 @@ onBeforeUnmount(() => {
         <p v-html="items['text-1']?.content" />
       </div>
 
-      <!-- MAIN -->
       <div class="main">
-        <div class="content">
-          <p v-html="items['text-2']?.content" />
-          <p v-html="items['text-3']?.content" />
-
-          <div
-            class="form-container"
-            v-if="FormComp"
-          >
-            <!-- Le titre du formulaire est déjà dans meta.data.title -->
-            <component
-              :is="FormComp"
-              v-bind="formProps"
-            />
-          </div>
-
-          <!-- CTA secondaire (optionnel) -->
-          <!-- <p v-if="items['cta-1']">
-            <a
-              class="cta"
-              :href="cta.href"
-              :target="cta.target"
-              :rel="cta.rel"
-              :aria-label="cta.ariaLabel"
-              v-html="cta.content"
-            />
-          </p> -->
-        </div>
-
         <div
           class="illustration"
           v-if="items['image-1']"
@@ -158,9 +129,35 @@ onBeforeUnmount(() => {
             loading="lazy"
             class="image"
           />
+          <!-- <div class="overflow">
+            <div class="container">
+              <Carousel v-if="vp.lg.value" />
+              <SlidesTitles v-if="!vp.lg.value" />
+            </div>
+          </div> -->
+        </div>
+
+        <div class="content">
+          <p v-html="items['text-2']?.content" />
+          <p v-html="items['text-3']?.content" />
+
+          <div
+            class="form-container"
+            v-if="FormComp"
+          >
+            <component
+              :is="FormComp"
+              v-bind="formProps"
+            />
+          </div>
         </div>
       </div>
     </div>
+    <!-- Slide en grand -->
+    <!-- <div
+      id="slideDisplayRef"
+      class="slide-display"
+    /> -->
   </section>
 </template>
 

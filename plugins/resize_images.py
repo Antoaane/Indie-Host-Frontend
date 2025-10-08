@@ -131,90 +131,91 @@
 #     batch_resize(IMAGE_FOLDER)
 #     print("🌟 Traitement terminé.")
 
+# ------------------------------------------------------------------------------
 
-import os
-import shutil
-from PIL import Image
-import platform
+# import os
+# import shutil
+# from PIL import Image
+# import platform
 
-IMAGE_FOLDER = 'public/assets/media/images'
-OLD_FOLDER = os.path.join(IMAGE_FOLDER, 'old')
+# IMAGE_FOLDER = 'public/assets/media/images'
+# OLD_FOLDER = os.path.join(IMAGE_FOLDER, 'old')
 
-# Créé les dossiers si nécessaire
-def ensure_folders():
-    os.makedirs(IMAGE_FOLDER, exist_ok=True)
-    os.makedirs(OLD_FOLDER, exist_ok=True)
+# # Créé les dossiers si nécessaire
+# def ensure_folders():
+#     os.makedirs(IMAGE_FOLDER, exist_ok=True)
+#     os.makedirs(OLD_FOLDER, exist_ok=True)
 
-# Déplace un fichier vers old/ en gérant les collisions avec (2), (3), ...
-def move_to_old(src_path):
-    base, ext = os.path.splitext(os.path.basename(src_path))
-    dest_name = f"{base}{ext}"
-    dest_path = os.path.join(OLD_FOLDER, dest_name)
-    counter = 2
-    while os.path.exists(dest_path):
-        dest_name = f"{base}({counter}){ext}"
-        dest_path = os.path.join(OLD_FOLDER, dest_name)
-        counter += 1
-    shutil.move(src_path, dest_path)
-    print(f"📦 Ancienne version déplacée → {dest_path}")
-    return dest_path
+# # Déplace un fichier vers old/ en gérant les collisions avec (2), (3), ...
+# def move_to_old(src_path):
+#     base, ext = os.path.splitext(os.path.basename(src_path))
+#     dest_name = f"{base}{ext}"
+#     dest_path = os.path.join(OLD_FOLDER, dest_name)
+#     counter = 2
+#     while os.path.exists(dest_path):
+#         dest_name = f"{base}({counter}){ext}"
+#         dest_path = os.path.join(OLD_FOLDER, dest_name)
+#         counter += 1
+#     shutil.move(src_path, dest_path)
+#     print(f"📦 Ancienne version déplacée → {dest_path}")
+#     return dest_path
 
-# Détermine la taille max en fonction des breakpoints
-def pick_new_side(width, height):
-    max_side = max(width, height)
-    breakpoints = [1920, 1280, 800, 600]
-    for bp in breakpoints:
-        if max_side > bp:
-            return bp
-        if max_side == bp:
-            return bp
-    return None  # trop petite
+# # Détermine la taille max en fonction des breakpoints
+# def pick_new_side(width, height):
+#     max_side = max(width, height)
+#     breakpoints = [1920, 1280, 800, 600]
+#     for bp in breakpoints:
+#         if max_side > bp:
+#             return bp
+#         if max_side == bp:
+#             return bp
+#     return None  # trop petite
 
-# Traitement d'une image (resize + conversion WebP + fallback JPEG)
-def process_image(path):
-    # Archive
-    old_path = move_to_old(path)
+# # Traitement d'une image (resize + conversion WebP + fallback JPEG)
+# def process_image(path):
+#     # Archive
+#     old_path = move_to_old(path)
 
-    # Ouvre l'ancienne image
-    img = Image.open(old_path)
-    width, height = img.size
+#     # Ouvre l'ancienne image
+#     img = Image.open(old_path)
+#     width, height = img.size
 
-    # Calcul du resize
-    new_side = pick_new_side(width, height)
-    if new_side:
-        if width >= height:
-            new_w = new_side
-            new_h = int(height * new_w / width)
-        else:
-            new_h = new_side
-            new_w = int(width * new_h / height)
-        img = img.resize((new_w, new_h), Image.LANCZOS)
-        print(f"🔻 Redimensionnée : {base := os.path.basename(path)} ({width}×{height} → {new_w}×{new_h})")
-    else:
-        new_w, new_h = width, height
-        print(f"✅ Pas de resize (trop petite) : {base := os.path.basename(path)} ({width}×{height})")
+#     # Calcul du resize
+#     new_side = pick_new_side(width, height)
+#     if new_side:
+#         if width >= height:
+#             new_w = new_side
+#             new_h = int(height * new_w / width)
+#         else:
+#             new_h = new_side
+#             new_w = int(width * new_h / height)
+#         img = img.resize((new_w, new_h), Image.LANCZOS)
+#         print(f"🔻 Redimensionnée : {base := os.path.basename(path)} ({width}×{height} → {new_w}×{new_h})")
+#     else:
+#         new_w, new_h = width, height
+#         print(f"✅ Pas de resize (trop petite) : {base := os.path.basename(path)} ({width}×{height})")
 
-    # Sauvegarde WebP
-    webp_path = os.path.splitext(path)[0] + '.webp'
-    img.save(webp_path, 'WEBP', quality=80, method=6)
-    print(f"🌐 WebP généré : {webp_path}")
+#     # Sauvegarde WebP
+#     webp_path = os.path.splitext(path)[0] + '.webp'
+#     img.save(webp_path, 'WEBP', quality=80, method=6)
+#     print(f"🌐 WebP généré : {webp_path}")
 
-    # Sauvegarde fallback JPEG
-    jpg_path = os.path.splitext(path)[0] + '.jpg'
-    rgb = img.convert('RGB')
-    rgb.save(jpg_path, 'JPEG', quality=80, optimize=True)
-    print(f"📷 JPEG fallback généré : {jpg_path}")
+#     # Sauvegarde fallback JPEG
+#     jpg_path = os.path.splitext(path)[0] + '.jpg'
+#     rgb = img.convert('RGB')
+#     rgb.save(jpg_path, 'JPEG', quality=80, optimize=True)
+#     print(f"📷 JPEG fallback généré : {jpg_path}")
 
-    img.close()
+#     img.close()
 
-def batch_convert(folder):
-    for fname in os.listdir(folder):
-        full = os.path.join(folder, fname)
-        if os.path.isfile(full) and fname.lower().endswith(('.png', '.jpg', '.jpeg')):
-            process_image(full)
+# def batch_convert(folder):
+#     for fname in os.listdir(folder):
+#         full = os.path.join(folder, fname)
+#         if os.path.isfile(full) and fname.lower().endswith(('.png', '.jpg', '.jpeg')):
+#             process_image(full)
 
-if __name__ == '__main__':
-    ensure_folders()
-    print(f"🚀 Conversion des images dans {IMAGE_FOLDER} en WebP + JPEG fallback…")
-    batch_convert(IMAGE_FOLDER)
-    print("🌟 Tout est prêt, à toi la bande passante libérée !")
+# if __name__ == '__main__':
+#     ensure_folders()
+#     print(f"🚀 Conversion des images dans {IMAGE_FOLDER} en WebP + JPEG fallback…")
+#     batch_convert(IMAGE_FOLDER)
+#     print("🌟 Tout est prêt, à toi la bande passante libérée !")

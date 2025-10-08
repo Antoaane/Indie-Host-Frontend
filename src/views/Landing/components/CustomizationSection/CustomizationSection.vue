@@ -21,6 +21,11 @@ const section = rawContent as ItemSection
       desc="Formes géométriques décoratives"
     />
     <div class="container">
+      <div class="temp">
+        <h2>Comment ça marche ?</h2>
+        <p>Notre volonté avec IndieHost est de favoriser l’autonomie dans la location en ligne courte durée pour vous et votre clientèle. De ce fait, nous remplaçons les commissions gourmandes des plateformes traditionnelles par un abonnement fixe raisonnable qui vous avantage.</p>
+      </div>
+
       <!-- <div class="content">
         <div>
           <h2 v-html="section.items['title-1'].content" />

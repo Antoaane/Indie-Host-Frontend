@@ -33,8 +33,6 @@ div:has(> .step-section) {
 
         position: relative;
 
-        border-left: 1px solid;
-
         @include min-width(xxs) {
           padding: 0 !important;
         }
@@ -47,6 +45,7 @@ div:has(> .step-section) {
           justify-content: center;
           align-items: end;
 
+          border-left: 1px solid;
           border-image: linear-gradient(to bottom, rgba($accent, 1) 20%, rgba($accent, 0) 40%, rgba($accent, 0) 60%, rgba($accent, 1) 80%) 1 round;
 
           @include gutters(padding, inline, 2);

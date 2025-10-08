@@ -3,11 +3,11 @@
   "items": {
     "title-1": {
       "tag": "h1",
-      "content": "Une plateforme de location avec <strong>0%</strong> de commissions"
+      "content": "Votre page de réservation avec <strong>0%</strong> de commissions"
     },
     "text-1": {
       "tag": "p",
-      "content": "IndieHost <u>élimine les commissions</u>. Des réservations plus accessibles pour vos voyageurs, et jusqu’à <b>20 % de revenus en plus</b> pour vous grâce à un abonnement fixe. Créez une page à votre image et proposez des tarifs plus justes sans vous séparer de vos outils habituels."
+      "content": "IndieHost vous <b>affranchie des commissions</b> et augmente vos revenus de <b>20%</b>. Reprenez le contrôle sur vos locations avec un espace de réservations personnalisable à votre image. Gagnez en autonomie avec nos outils de gestions intégrés et une mise en avant puissante sur internet."
     },
     "cta-1": {
       "tag": "a",
