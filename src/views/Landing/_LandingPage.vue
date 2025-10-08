@@ -50,8 +50,9 @@ let smoother: ReturnType<typeof ScrollSmoother.create>
     <BenefitsSection />
     <!-- <HabitsSection /> -->
     <FeaturesSection />
-    <UsageSection />
     <CustomizationSection />
+    <UsageSection />
+    <!-- <CustomizationSection /> -->
     <StrengthsSection />
     <JoinSection />
     <FaqSection />

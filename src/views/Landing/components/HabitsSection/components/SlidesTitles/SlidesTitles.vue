@@ -33,7 +33,7 @@ onMounted(() => {
   >
     <h2 v-html="section.items['title-1'].content" />
     <div class="slides-titles">
-      <div>
+      <!-- <div>
         <h3
           v-for="(txt, idx) in section.items['slider'].meta?.data"
           :key="idx"
@@ -41,13 +41,9 @@ onMounted(() => {
           :class="['title', { active: idx === activeSlideIndex }]"
           aria-live="polite"
         />
-      </div>
-      <!-- <div
-        ref="descriptionRef"
-        :style="`transform: translateY(${vp.lg.value ? 0 : illustrationSize + 16}px)`"
-      > -->
+      </div> -->
       <Carousel v-if="!vp.lg.value" />
-      <div ref="descriptionRef">
+      <!-- <div ref="descriptionRef">
         <p
           v-for="(txt, idx) in section.items['slider'].meta?.data"
           :key="idx"
@@ -55,7 +51,7 @@ onMounted(() => {
           :class="['description', { active: idx === activeSlideIndex }]"
           aria-live="polite"
         />
-      </div>
+      </div> -->
     </div>
   </div>
 </template>

@@ -21,7 +21,7 @@ const section = rawContent as ItemSection
       desc="Formes géométriques décoratives"
     />
     <div class="container">
-      <div class="content">
+      <!-- <div class="content">
         <div>
           <h2 v-html="section.items['title-1'].content" />
           <div
@@ -48,7 +48,7 @@ const section = rawContent as ItemSection
           loading="lazy"
           alt="Customization"
         />
-      </div>
+      </div> -->
     </div>
   </section>
 </template>

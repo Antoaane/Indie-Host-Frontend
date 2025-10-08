@@ -1,10 +1,15 @@
 <!-- File: src/views/Landing/components/FeaturesSection/components/Feature/Feature.vue -->
 
 <script setup lang="ts">
-// COMPONENTS
+// UTILS
+import { vp } from '@/utils/viewport'
+// ASSETS
 import Left from '@/components/svgs/images/Left.vue'
 import Right from '@/components/svgs/images/Right.vue'
 import EndLeft from '@/components/svgs/images/EndLeft.vue'
+import RightSharp from '@/components/svgs/images/RightSharp.vue'
+import LeftSharp from '@/components/svgs/images/LeftSharp.vue'
+import EndLeftSharp from '@/components/svgs/images/EndLeftSharp.vue'
 
 // PROPS
 const props = defineProps<{
@@ -64,25 +69,34 @@ const props = defineProps<{
         />
       </div>
 
-      <Right
-        class="decorative right"
-        aria-hidden="true"
-      />
-      <Left
-        class="decorative left"
-        aria-hidden="true"
-      />
-      <!-- <img
-        class="decorative left"
-        src="/assets/media/images/left.svg"
-        alt=""
-        aria-hidden="true"
-      /> -->
-
-      <EndLeft
-        class="decorative end-left"
-        aria-hidden="true"
-      />
+      <template v-if="vp.md.value">
+        <Right
+          class="decorative right"
+          aria-hidden="true"
+        />
+        <Left
+          class="decorative left"
+          aria-hidden="true"
+        />
+        <EndLeft
+          class="decorative end-left"
+          aria-hidden="true"
+        />
+      </template>
+      <template v-else>
+        <RightSharp
+          class="decorative right"
+          aria-hidden="true"
+        />
+        <LeftSharp
+          class="decorative left"
+          aria-hidden="true"
+        />
+        <EndLeftSharp
+          class="decorative end-left"
+          aria-hidden="true"
+        />
+      </template>
     </div>
   </div>
 </template>

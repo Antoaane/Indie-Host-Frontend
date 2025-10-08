@@ -9,37 +9,150 @@
     padding-bottom: 0 !important;
   }
 
-
   &>:nth-child(even) {
     // .feature.container
 
     &>div {
-
       direction: ltr;
+
+      border-bottom-right-radius: 3rem;
+      border-top-right-radius: 3rem;
+
+      @include min-width(lg) {
+        .vtc {
+          padding-right: 1rem;
+        }
+
+        .text:has(+ .vtc) {
+          padding-left: 1rem;
+        }
+      }
+
+      @include min-width(xl) {
+        .vtc {
+          padding-right: 3rem;
+        }
+
+        .text:has(+ .vtc) {
+          padding-left: 3rem;
+        }
+      }
+
+      @include min-width(xxl) {
+        .vtc {
+          padding-right: 4rem;
+        }
+
+        .text:has(+ .vtc) {
+          padding-left: 4rem;
+        }
+      }
 
       .right,
       .end-right,
       .end-left {
         display: none;
       }
+
+      &::before {
+        left: 0;
+        transform: translate(-50%, -50%) scaleX(0.85) scaleY(1.15);
+      }
+
+      &::after {
+        right: -25%;
+
+        @include min-width(lg) {
+          left: 0;
+          transform: translate(-50%, 50%) scaleX(0.6) scaleY(0.6);
+        }
+      }
     }
   }
 
   &>:nth-child(odd) {
-    // .feature.container
 
     &>div {
-      direction: rtl;
+      border-bottom-left-radius: 3rem;
+      border-top-left-radius: 3rem;
+
+      @include min-width(lg) {
+        direction: rtl;
+
+        .vtc {
+          padding-left: 1rem;
+        }
+
+        .text:has(+ .vtc) {
+          padding-right: 1rem;
+        }
+      }
+
+      @include min-width(xl) {
+        .vtc {
+          padding-left: 3rem;
+        }
+
+        .text:has(+ .vtc) {
+          padding-right: 3rem;
+        }
+      }
+
+      @include min-width(xxl) {
+        .vtc {
+          padding-left: 4rem;
+        }
+
+        .text:has(+ .vtc) {
+          padding-right: 4rem;
+        }
+      }
 
       p,
       h2 {
-        text-align: left !important;
+        direction: ltr;
       }
 
       .left,
       .end-right,
       .end-left {
         display: none;
+      }
+
+
+      &::before {
+        right: 0;
+        transform: translate(50%, -50%) scaleX(1.25) scaleY(0.8);
+      }
+
+      &::after {
+        left: -25%;
+
+        @include min-width(lg) {
+          right: 0;
+          transform: translate(50%, 50%) scaleX(0.8) scaleY(0.8);
+        }
+      }
+    }
+  }
+
+  // last child
+  &>:last-child {
+    &>div {
+      direction: ltr;
+
+      &::after {
+        display: none;
+      }
+
+      .right,
+      .end-right,
+      .left {
+        display: none;
+      }
+
+      .end-left {
+        display: block;
       }
     }
   }

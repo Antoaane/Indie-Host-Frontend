@@ -4,6 +4,7 @@
 
 #customization-section {
   position: relative;
+  margin-bottom: -25%;
 
   @include gutters(padding, top, 5);
   // @include gutters(padding, bottom, 3);

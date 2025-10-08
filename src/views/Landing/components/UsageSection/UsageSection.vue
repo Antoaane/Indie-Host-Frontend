@@ -44,7 +44,7 @@ import annonceReservationImg from '/assets/media/images/annonce-reservation-2.pn
       illustrationAlt="Borchure comportant le guide d'arrivée et le QR code menant vers votre messagerie"
       class="no-halo"
     />
-    <StepSection
+    <!-- <StepSection
       :step="4"
       title="Vous transformez vos voyageurs en clients réguliers"
       description="Vous personnalisez votre guide d’accueil puis nous vous l’envoyons en physique. Votre voyageur n’a plus qu’à scanner pour discuter avec vous sans créer de compte… et peut réserver en 1 clic pour la prochaine fois en profitant des avantages IndieHost.
@@ -55,7 +55,7 @@ import annonceReservationImg from '/assets/media/images/annonce-reservation-2.pn
       illustrationAlt="Borchure comportant le guide d'arrivée et le QR code menant vers votre messagerie"
       illustrationClass="brochure"
       class="no-halo"
-    />
+    /> -->
   </div>
 </template>
 

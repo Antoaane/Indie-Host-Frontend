@@ -4,36 +4,139 @@
 @use '@/styles/variables/borders' as borders;
 
 .feature {
-  // @include gutters(padding, all, 2);
+  margin-bottom: -2px;
 
   @include min-width(lg) {
     padding-left: 5rem;
   }
 
   &>div {
-    gap: 1rem;
     position: relative;
-
-    @include gutters(padding, vertical);
-    @include gutters(padding, horizontal, 3);
-
-    @include min-width(lg) {
-      gap: 3rem;
-    }
+    overflow: hidden;
 
     display: grid;
     grid-template-columns: repeat(12, 1fr);
+    row-gap: 3rem;
+
+    // border-radius: 130px;
+    @include gutters(padding, top, 1.5);
+    // @include gutters(padding, bottom);
+    // @include gutters(padding, inline);
+
+    @include min-width(xs) {
+      @include gutters(padding, vertical, 3);
+      @include gutters(padding, inline, 3);
+    }
+
+    @include min-width(lg) {
+      gap: 2rem;
+      border-radius: 85px;
+
+      @include gutters(padding, vertical);
+    }
+
+    @include min-width(xl) {
+      gap: 3rem;
+    }
+
+    @include min-width(xxl) {
+      gap: 4rem;
+    }
+
+    &::before {
+      content: '';
+
+      width: auto;
+      height: 30%;
+      aspect-ratio: 1/1;
+
+      position: absolute;
+      top: 0;
+      z-index: -1;
+
+      background: $accent;
+      border-radius: borders.$rounded;
+
+      opacity: 0.20;
+      filter: blur(100px);
+
+      display: none;
+
+      @include min-width(lg) {
+        display: block;
+      }
+    }
+
+    // &::after {
+    //   content: '';
+
+    //   width: 50%;
+    //   height: 110%;
+
+    //   position: absolute;
+    //   z-index: -1;
+
+    //   // background: red;
+    //   background: $secondary;
+
+    //   top: 1px;
+
+    //   @include min-width(sm) {
+    //     top: 2px;
+    //   }
+    // }
+
+    @include min-width(lg) {
+      &::after {
+        content: '';
+
+        width: auto;
+        height: 30%;
+        aspect-ratio: 1/1;
+
+        position: absolute;
+        top: auto;
+        bottom: 0;
+        z-index: -1;
+
+        background: $accent;
+        border-radius: borders.$rounded;
+
+        opacity: 0.20;
+        filter: blur(100px);
+
+        // display: none;
+
+        // @include min-width(lg) {
+        //   display: block;
+      }
+    }
 
     .text {
       display: flex;
       justify-content: center;
       align-items: center;
 
-      grid-column: span 4 / span 4;
+      grid-column: 1 / -1;
 
-      &:has(+ .vtc) {
-        padding-right: 3rem;
-        grid-column: span 6 / span 6;
+      @include gutters(padding, inline);
+
+      @include min-width(xxs) {
+        @include gutters(padding, inline, 2);
+      }
+
+      @include min-width(sm) {
+        @include gutters(padding, inline, 5);
+      }
+
+      @include min-width(lg) {
+        grid-column: span 5 / span 5;
+
+        @include gutters(padding, inline, 0);
+
+        &:has(+ .vtc) {
+          grid-column: span 6 / span 6;
+        }
       }
 
       &>div {
@@ -42,6 +145,7 @@
 
         display: flex;
         flex-direction: column;
+        gap: calc(var(--gutter-spacing) * 0.75);
 
         @include min-width(xl) {
           width: calc(var(--container-size) / 3);
@@ -60,13 +164,28 @@
     }
 
     .media {
-      height: calc(90vh - ((var(--gutter-spacing) * 2) + 70px));
+      height: auto;
+
+      @include gutters(padding, bottom, 1.5);
+      @include gutters(padding, inline, 1.5);
+
+      @include min-width(xs) {
+        @include gutters(padding, all, 0);
+      }
+
+      @include min-width(lg) {
+        height: calc(90vh - ((var(--gutter-spacing) * 2) + 70px));
+      }
 
       &.hzt {
         display: flex;
         align-items: center;
 
-        grid-column: span 8 / span 8;
+        grid-column: 1 / -1;
+
+        @include min-width(lg) {
+          grid-column: span 7 / span 7;
+        }
 
         video,
         img {
@@ -74,7 +193,17 @@
           width: 100%;
           object-fit: contain;
 
+          border-radius: borders.$rounded-xs;
+
           @include halo(sm, true, white, 0.5);
+
+          @include min-width(xs) {
+            border-radius: borders.$rounded-sm;
+          }
+
+          @include min-width(sm) {
+            border-radius: borders.$rounded-md;
+          }
 
           @include min-width(lg) {
             border-radius: borders.$rounded-md;
@@ -87,24 +216,53 @@
       }
 
       &.vtc {
-        grid-column: span 6 / span 6;
+        width: 100%;
+        height: auto;
 
-        padding-left: 3rem;
+        @include min-width(xs) {
+          height: calc(70vh - ((var(--gutter-spacing) * 2) + 70px));
+          width: auto;
+        }
+
+        @include min-width(lg) {
+          height: calc(90vh - ((var(--gutter-spacing) * 2) + 70px));
+          width: auto;
+        }
 
         display: flex;
         align-items: center;
         justify-content: center;
 
+        grid-column: 1 / -1;
+
+        @include min-width(lg) {
+          grid-column: span 6 / span 6;
+        }
+
         video,
         img {
-          height: 80%;
-          width: auto;
           object-fit: contain;
 
-          border: 7.5px solid rgba($accent, 0.75);
+          height: auto;
+          width: 80%;
+
+          // margin-bottom: -7.5px;
+
+          border: 7.5px solid rgba($accent, 0.8);
+          border-radius: borders.$rounded-xl;
+
+          @include halo(sm, true, white, 0.5);
+
+          @include min-width(xs) {
+            height: 100%;
+            width: auto;
+          }
 
           @include min-width(lg) {
-            border-radius: borders.$rounded-lg;
+            border-radius: borders.$rounded-xl;
+            height: 80%;
+
+            @include halo(lg, true, white, 0.5);
           }
 
           @include min-width(xl) {
@@ -112,10 +270,8 @@
           }
 
           @include min-width(xxl) {
-            border-radius: borders.$rounded-xxl;
+            border-radius: borders.$rounded-xl;
           }
-
-          @include halo(lg, true, white, 0.5);
         }
       }
     }
@@ -133,7 +289,8 @@
         right: 0;
       }
 
-      &.left {
+      &.left,
+      .end-left {
         left: 0;
       }
     }

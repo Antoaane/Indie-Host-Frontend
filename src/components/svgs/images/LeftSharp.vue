@@ -1,0 +1,126 @@
+<template>
+  <svg
+    :role="attrRole"
+    :aria-hidden="ariaHidden"
+    :aria-labelledby="ariaLabelledBy"
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 928 642"
+  >
+    <mask
+      :id="ids.path_1_inside_1_2012_117557"
+      fill="white"
+    >
+      <path d="M0.830078 25C0.830078 11.1929 12.023 0 25.8301 0H927.35V641.471H25.8301C12.023 641.471 0.830078 630.279 0.830078 616.471V25Z" />
+    </mask>
+    <path
+      :fill="url(ids.paint0_radial_2012_117557)"
+      d="M0.0800781 25C0.0800781 10.7787 11.6087 -0.75 25.8301 -0.75H927.35V0.75H25.8301C12.4372 0.75 1.58008 11.6071 1.58008 25H0.0800781ZM927.35 642.221H25.8301C11.6087 642.221 0.0800781 630.693 0.0800781 616.471H1.58008C1.58008 629.864 12.4372 640.721 25.8301 640.721H927.35V642.221ZM25.8301 642.221C11.6087 642.221 0.0800781 630.693 0.0800781 616.471V25C0.0800781 10.7787 11.6087 -0.75 25.8301 -0.75V0.75C12.4372 0.75 1.58008 11.6071 1.58008 25V616.471C1.58008 629.864 12.4372 640.721 25.8301 640.721V642.221ZM927.35 0V641.471V0Z"
+      :mask="url(ids.path_1_inside_1_2012_117557)"
+    />
+    <path
+      :fill="url(ids.paint1_radial_2012_117557)"
+      d="M0.0800781 25C0.0800781 10.7787 11.6087 -0.75 25.8301 -0.75H927.35V0.75H25.8301C12.4372 0.75 1.58008 11.6071 1.58008 25H0.0800781ZM927.35 642.221H25.8301C11.6087 642.221 0.0800781 630.693 0.0800781 616.471H1.58008C1.58008 629.864 12.4372 640.721 25.8301 640.721H927.35V642.221ZM25.8301 642.221C11.6087 642.221 0.0800781 630.693 0.0800781 616.471V25C0.0800781 10.7787 11.6087 -0.75 25.8301 -0.75V0.75C12.4372 0.75 1.58008 11.6071 1.58008 25V616.471C1.58008 629.864 12.4372 640.721 25.8301 640.721V642.221ZM927.35 0V641.471V0Z"
+      :mask="url(ids.path_1_inside_1_2012_117557)"
+    />
+    <path
+      :fill="url(ids.paint2_radial_2012_117557)"
+      d="M0.0800781 25C0.0800781 10.7787 11.6087 -0.75 25.8301 -0.75H927.35V0.75H25.8301C12.4372 0.75 1.58008 11.6071 1.58008 25H0.0800781ZM927.35 642.221H25.8301C11.6087 642.221 0.0800781 630.693 0.0800781 616.471H1.58008C1.58008 629.864 12.4372 640.721 25.8301 640.721H927.35V642.221ZM25.8301 642.221C11.6087 642.221 0.0800781 630.693 0.0800781 616.471V25C0.0800781 10.7787 11.6087 -0.75 25.8301 -0.75V0.75C12.4372 0.75 1.58008 11.6071 1.58008 25V616.471C1.58008 629.864 12.4372 640.721 25.8301 640.721V642.221ZM927.35 0V641.471V0Z"
+      :mask="url(ids.path_1_inside_1_2012_117557)"
+    />
+    <defs>
+      <radialGradient
+        :id="ids.paint0_radial_2012_117557"
+        cx="0"
+        cy="0"
+        r="1"
+        gradientTransform="translate(21.8301 627) rotate(1.17299) scale(150.632 227.184)"
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop stop-color="#FCFAFA" />
+        <stop
+          offset="1"
+          stop-color="#FCFAFA"
+          stop-opacity="0"
+        />
+      </radialGradient>
+      <radialGradient
+        :id="ids.paint1_radial_2012_117557"
+        cx="0"
+        cy="0"
+        r="1"
+        gradientTransform="translate(-16.123 6.66604) rotate(3.64438) scale(335.632 427.391)"
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop stop-color="#FCFAFA" />
+        <stop
+          offset="1"
+          stop-color="#FCFAFA"
+          stop-opacity="0"
+        />
+      </radialGradient>
+      <radialGradient
+        :id="ids.paint2_radial_2012_117557"
+        cx="0"
+        cy="0"
+        r="1"
+        gradientTransform="translate(56.8301 -3.35154e-05) rotate(16.1276) scale(216.001 345.451)"
+        gradientUnits="userSpaceOnUse"
+      >
+        <stop stop-color="#FCFAFA" />
+        <stop
+          offset="1"
+          stop-color="#FCFAFA"
+          stop-opacity="0"
+        />
+      </radialGradient>
+    </defs>
+    <title
+      v-if="!ariaHidden"
+      :id="'titleId'"
+    >
+      {{ title }}
+    </title>
+    <desc
+      v-if="!ariaHidden"
+      :id="'descId'"
+    >
+      {{ desc }}
+    </desc>
+  </svg>
+</template>
+
+<script setup lang="ts">
+import { computed, onMounted, withDefaults } from 'vue'
+
+const props = withDefaults(
+  defineProps<{
+    title?: string
+    desc?: string
+    role?: boolean | string
+  }>(),
+  { role: true },
+)
+
+// computed 100 % typés pour éviter les erreurs TS
+const attrRole = computed(() => (props.role === true ? undefined : String(props.role)))
+const ariaHidden = computed(() => props.role === true)
+const ariaLabelledBy = computed(() => (props.role === true ? undefined : 'titleId descId'))
+
+// -- IDs dynamiques pour scoper les defs et leurs références --
+const uid = Math.random().toString(36).slice(2)
+const ids = {
+  path_1_inside_1_2012_117557: `path-1-inside-1_2012_117557_${uid}`,
+  paint0_radial_2012_117557: `paint0_radial_2012_117557_${uid}`,
+  paint1_radial_2012_117557: `paint1_radial_2012_117557_${uid}`,
+  paint2_radial_2012_117557: `paint2_radial_2012_117557_${uid}`,
+} as Record<string, string>
+const url = (v: string) => `url(#${v})`
+
+onMounted(() => {
+  if (props.role !== true && (!props.title || !props.desc)) {
+    console.warn('[LeftSharp.vue] title et desc sont requis quand role ≠ true')
+  }
+})
+// généré automatiquement par convert_svg.py
+</script>
