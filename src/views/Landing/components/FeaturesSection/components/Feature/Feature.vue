@@ -18,6 +18,7 @@ const props = defineProps<{
     description: string
     'video-1'?: string
     'video-2'?: string
+    'video-3'?: string
     image?: string
     format?: 'hzt' | 'vtc' | 'sqr'
     alt?: string
@@ -52,6 +53,11 @@ const props = defineProps<{
 
           <source
             :src="feature['video-2']"
+            type="video/mp4"
+          />
+
+          <source
+            :src="feature['video-3']"
             type="video/mp4"
           />
 
