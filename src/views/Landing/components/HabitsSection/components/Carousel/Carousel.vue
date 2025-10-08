@@ -104,7 +104,8 @@ const initIllustrationSize = () => {
           <img
             class="slide-page-svg"
             loading="lazy"
-            :src="data.image"
+            :src="data['image-1']"
+            :onerror="`this.onerror=null; this.src='${data['image-2']}';`"
             :alt="data.alt"
           />
         </SwiperSlide>

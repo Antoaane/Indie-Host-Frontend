@@ -6,6 +6,8 @@ export interface GenericBlock {
   tag: string
   /** contenu libre : texte, HTML, src d’image, vide… */
   content?: string
+  /** contenu de secours */
+  fallback?: string
   /** méta-données libres : props, aria, SEO, data… */
   meta?: Record<string, any>
 }
@@ -21,7 +23,7 @@ export type ContentBlock = GenericBlock
 export interface ItemSection {
   /** identifiant HTML de ta section, ex. "faq-section" */
   id: string
-  /** 
+  /**
    * key = nom de ton bloc dans le JSON (input_1, title_1…)
    * value = n’importe quel ContentBlock
    */

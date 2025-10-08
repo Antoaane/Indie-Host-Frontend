@@ -35,7 +35,7 @@ const section = rawContent as ItemSection
           >
             <img
               class="customization-image"
-              src="/assets/media/images/customization-image.png"
+              src="/assets/media/images/png/customization-image.png"
               loading="lazy"
               alt="Customization"
             />
@@ -49,7 +49,7 @@ const section = rawContent as ItemSection
       >
         <img
           class="customization-image"
-          src="/assets/media/images/customization-image.png"
+          src="/assets/media/images/png/customization-image.png"
           loading="lazy"
           alt="Customization"
         />

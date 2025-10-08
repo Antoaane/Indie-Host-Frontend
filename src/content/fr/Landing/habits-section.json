@@ -14,31 +14,36 @@
           {
             "title": "Modifiez et <strong>personnalisez</strong> vos annonces",
             "description": "Une fois votre annonce importée, personnalisez-la librement avec un éditeur visuel simple et intuitif. Prévisualisez chaque modification en temps réel, et modifiez vos contenus en un clic : cliquez sur un élément dans l’aperçu, vous êtes instantanément redirigé vers le bon champ. <br />Une annonce crée et non publiée restera en brouillon, vous garderez toujours vos modifications.",
-            "image": "/assets/media/images/page-edition.jpg",
+            "image-1": "/assets/media/images/webp/page-edition.webp",
+            "image-2": "/assets/media/images/png/page-edition.png",
             "alt": "Page d'édition d'une annonce"
           },
           {
             "title": "Vos factures et vos performances <strong>au même endroit</strong>",
             "description": "Obtenez une vue claire et complète de vos performances : revenus générés, taux d’occupation, logements les plus populaires, et fidélité de vos voyageurs. Exportez facilement vos statistiques mensuelles détaillées et accédez rapidement à toutes vos factures en un clic.",
-            "image": "/assets/media/images/dashboard-vue-ensemble.png",
+            "image-1": "/assets/media/images/webp/dashboard-vue-ensemble.webp",
+            "image-2": "/assets/media/images/png/dashboard-vue-ensemble.png",
             "alt": "Page Tableau de bord"
           },
           {
             "title": "Vos réservations synchronisées et triées dans un <strong>espace intuitif</strong>",
             "description": "Ajoutez simplement le lien du calendrier Airbnb ou Booking sur votre annonce IndieHost : vos dates réservées ailleurs seront automatiquement bloquées ici, et vice versa.<br /><br /> Accédez aux historiques de réservation complets et organisés par logement. Consultez les informations utiles de vos voyageurs, suivez les paiements et gérez chaque réservation au besoin.",
-            "image": "/assets/media/images/dashboard-detail-logement.png",
+            "image-1": "/assets/media/images/webp/dashboard-detail-logement.webp",
+            "image-2": "/assets/media/images/png/dashboard-detail-logement.png",
             "alt": "Page gestion d'un logement"
           },
           {
             "title": "Des paiements pratiques, flexibles et <strong>sécurisées</strong>",
             "description": "Ne perdez plus aucun voyageur à cause d’un moyen de paiement limité. Acceptez facilement les méthodes qui vous conviennent : paiement intégral en ligne par CB, ou acompte en ligne et solde en espèces. Vos voyageurs réservent ainsi sans friction et en toute confiance.",
-            "image": "/assets/media/images/annonce-reservation.png",
+            "image-1": "/assets/media/images/webp/annonce-reservation.webp",
+            "image-2": "/assets/media/images/png/annonce-reservation.png",
             "alt": "Page de paiement"
           },
           {
             "title": "Communiquez <strong>simplement</strong>",
             "description": "Échangez simplement avec vos voyageurs grâce à la messagerie IndieHost : sécurisée, instantanée et modérée. Lorsqu’un visiteur scanne votre guide d’accueil, il peut vous écrire sans créer de compte. Vous reprenez ainsi le lien, même si la réservation vient d’une autre plateforme.",
-            "image": "/assets/media/images/messagerie.png",
+            "image-1": "/assets/media/images/webp/messagerie.webp",
+            "image-2": "/assets/media/images/png/messagerie.png",
             "alt": "Page de messagerie"
           }
         ]

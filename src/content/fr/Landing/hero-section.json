@@ -19,7 +19,8 @@
     },
     "image-1": {
       "tag": "img",
-      "content": "/assets/media/images/hero-image.png",
+      "content": "/assets/media/images/webp/hero-image.webp",
+      "fallback": "/assets/media/images/png/hero-image.png",
       "meta": {
         "alt": "Illustration d'une annonce IndieHost en version mobile pour réserver un logement en ligne, ainsi que la page de gestion de l'hôte en version bureau"
       }

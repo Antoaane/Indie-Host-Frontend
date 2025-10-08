@@ -8,12 +8,21 @@ div:has(> .step-section) {
     width: 100%;
     padding-top: 0 !important;
 
-    @include gutters(padding, bottom, 4);
+    @include gutters(padding, bottom, 6);
+
+    @include min-width(lg) {
+      @include gutters(padding, bottom, 4);
+    }
 
     .container {
       display: flex;
       flex-direction: column;
+
       gap: 1rem;
+
+      @include min-width(sm) {
+        gap: 2.5rem;
+      }
 
       @include gutters(padding, inline, 2);
 
@@ -143,6 +152,8 @@ div:has(> .step-section) {
             left: 0;
 
             transform: translateY(-50%);
+
+            border-radius: 1.75rem;
           }
         }
 
@@ -170,12 +181,13 @@ div:has(> .step-section) {
       }
     }
 
-    @include min-width(lg) {
-      &:not(.no-halo) {
-        .image {
-          @include halo(md, true, $accent, 0.3);
-        }
+    &:not(.no-halo) {
+      .image {
+        @include halo(md, true, $accent, 0.3);
       }
+    }
+
+    @include min-width(lg) {
 
       &:first-of-type {
         padding-top: 0;

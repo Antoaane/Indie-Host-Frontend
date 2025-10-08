@@ -16,10 +16,12 @@ const props = defineProps<{
   feature: {
     title: string
     description: string
+    animated?: boolean
     'video-1'?: string
     'video-2'?: string
-    'video-3'?: string
     image?: string
+    'image-1'?: string
+    'image-2'?: string
     format?: 'hzt' | 'vtc' | 'sqr'
     alt?: string
   }
@@ -38,6 +40,11 @@ const props = defineProps<{
       </div>
 
       <div :class="'media ' + props.feature.format || 'hzt'">
+        <!-- <img
+          class="default-theme"
+          src="/assets/media/images/webp/default-theme.webp"
+          onerror="this.onerror=null; this.src='/assets/media/images/png/default-theme.png';"
+        /> -->
         <video
           v-if="feature['video-1'] && feature['video-2']"
           :poster="feature.image"
@@ -56,23 +63,25 @@ const props = defineProps<{
             type="video/mp4"
           />
 
-          <source
-            :src="feature['video-3']"
-            type="video/mp4"
+          <img
+            :src="feature['image-1']"
+            :alt="feature.alt || 'Feature image'"
+            loading="lazy"
           />
 
           <img
-            :src="feature.image"
+            :src="feature['image-2']"
             :alt="feature.alt || 'Feature image'"
             loading="lazy"
           />
         </video>
-        <img
+        <!-- <img
           v-else-if="feature.image"
-          :src="feature.image"
+          :src="feature['image-1']"
+          onerror="this.onerror=null; this.src=feature['image-2'];"
           :alt="feature.alt || 'Feature image'"
           loading="lazy"
-        />
+        /> -->
       </div>
 
       <template v-if="vp.md.value">

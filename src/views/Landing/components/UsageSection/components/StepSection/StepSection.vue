@@ -14,8 +14,14 @@ const props = defineProps<{
   title: string
   /** Description courte accompagnant le titre. */
   description: string
-  /** Composant Vue servant d'illustration (un SVG le plus souvent). */
-  illustration: Component | string
+  /** Composant Vue servant de vidéo. */
+  video1?: string
+  /** Composant Vue servant de vidéo fallback. */
+  video2?: string
+  /** Composant Vue servant d'illustration webp. */
+  illustration1: Component | string
+  /** Composant Vue servant d'illustration png. */
+  illustration2: Component | string
   /** Titre de l'illustration. */
   illustrationTitle: string
   /** Description de l'illustration. */
@@ -49,20 +55,51 @@ const props = defineProps<{
         <img
           class="halo-png"
           loading="lazy"
-          src="/assets/media/images/halo1.png"
+          src="/assets/media/images/png/halo1.png"
           alt="Décoration contextuelle"
         />
         <!-- Illustration passée en paramètre avec nom de classe {nom du fichier} -->
+        <video
+          v-if="props.video1 && props.video2"
+          :class="[{ image: true }, props.illustrationClass]"
+          autoplay
+          loop
+          muted
+          playsinline
+        >
+          <source
+            :src="props.video1"
+            type="video/webm"
+          />
+
+          <source
+            :src="props.video2"
+            type="video/mp4"
+          />
+
+          <img
+            :src="props.illustration1 as unknown as string"
+            :alt="props.illustrationAlt || 'Feature image'"
+            loading="lazy"
+          />
+
+          <img
+            :src="props.illustration2 as unknown as string"
+            :alt="props.illustrationAlt || 'Feature image'"
+            loading="lazy"
+          />
+        </video>
         <img
-          v-if="typeof props.illustration === 'string'"
+          v-else-if="typeof props.illustration1 === 'string'"
           :class="[{ image: true }, props.illustrationClass]"
           loading="lazy"
-          :src="props.illustration"
+          :src="props.illustration1"
+          :onerror="`this.onerror=null; this.src='${props.illustration2}';`"
           :alt="props.illustrationTitle"
         />
         <component
           v-else
-          :is="props.illustration"
+          :is="props.illustration1"
           class="image"
           :title="props.illustrationTitle"
           :desc="props.illustrationAlt"
