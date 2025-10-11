@@ -30,7 +30,7 @@
 
     @include min-width(lg) {
       gap: 2rem;
-      border-radius: 93px;
+      border-radius: 85px;
 
       @include gutters(padding, vertical);
     }
