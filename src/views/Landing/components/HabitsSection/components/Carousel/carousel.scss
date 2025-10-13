@@ -133,7 +133,7 @@
 
         @include min-width(lg) {
           width: auto;
-          height: 105vh;
+          height: 90vh;
 
           left: 0;
 
@@ -142,7 +142,7 @@
         }
 
         @include min-width(xl) {
-          height: 130vh;
+          height: 110vh;
         }
 
         // @include min-width(xxl) {

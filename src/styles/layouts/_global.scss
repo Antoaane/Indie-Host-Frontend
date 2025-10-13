@@ -63,7 +63,7 @@ h6 {
 }
 
 [id*="-section"],
-[class*="-section"] {
+[class$="-section"] {
   height: max-content;
 
   display: flex;
