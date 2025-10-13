@@ -2,9 +2,10 @@
 
 @use '@/styles/variables/globals' as *;
 
-#habits-section {
+#habits-section,
+#join-section {
 
-  .illustration {
+  .slider-container {
     display: flex;
     justify-content: center;
 

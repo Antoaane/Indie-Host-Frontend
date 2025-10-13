@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 // DEPS
-import { activeSlideIndex, illustrationSize, descriptionSize } from '@/views/Landing/components/HabitsSection/stores/slider'
+import { activeSlideIndex, sliderContainerSize, descriptionSize } from '@/views/Landing/components/HabitsSection/stores/slider'
 import { onMounted, ref } from 'vue'
 import Carousel from '@/views/Landing/components/HabitsSection/components/Carousel/Carousel.vue'
 // UTILS
@@ -21,7 +21,7 @@ onMounted(() => {
   setTimeout(() => {
     descriptionRef.value?.classList.add('active')
     descriptionSize.value = descriptionRef.value?.clientHeight || 0
-    modSize.value = illustrationSize.value * 0.12 * 0.5
+    modSize.value = sliderContainerSize.value * 0.12 * 0.5
   }, 150)
 })
 </script>

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev-devchat": "cross-env DEVCHAT_DEV=true vite",
+    "dev-c": "cross-env DEVCHAT_DEV=true vite",
     "tag:files": "node ./plugins/file-path-comment/inject-comments.js",
     "svg:convert": "python ./plugins/svg-to-vue/convert_svg.py",
     "images:resize": "python ./plugins/resize_images.py",

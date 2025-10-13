@@ -104,60 +104,61 @@ onBeforeUnmount(() => {
 
 <template>
   <section :id="section.id">
-    <div class="container__xl">
-      <div class="title">
-        <div>
-          <component
-            v-if="FlagComp"
-            :is="FlagComp"
-            class="french-flag"
-            aria-hidden="true"
-          />
-          <h2 v-html="items['title-1']?.content" />
-        </div>
-        <p v-html="items['text-1']?.content" />
+    <div class="title">
+      <div>
+        <component
+          v-if="FlagComp"
+          :is="FlagComp"
+          class="french-flag"
+          aria-hidden="true"
+        />
+        <h2 v-html="items['title-1']?.content" />
       </div>
-
-      <div class="main">
-        <div
-          class="illustration"
-          v-if="items['image-1']"
-        >
-          <!-- <img
+      <p v-html="items['text-1']?.content" />
+    </div>
+    <div :class="section.id + '-container'">
+      <div class="container">
+        <div class="main">
+          <div
+            class="illustration"
+            v-if="items['image-1']"
+          >
+            <!-- <img
             :src="imageSrc"
             :alt="imageAlt"
             loading="lazy"
             class="image"
           /> -->
-          <div class="overflow">
-            <div class="carousel-container">
-              <Carousel v-if="vp.lg.value" />
-              <SlidesTitles v-if="!vp.lg.value" />
+            <div class="overflow">
+              <div class="carousel-container">
+                <Carousel v-if="vp.lg.value" />
+                <SlidesTitles v-if="!vp.lg.value" />
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="content">
-          <p v-html="items['text-2']?.content" />
-          <p v-html="items['text-3']?.content" />
+          <div class="content">
+            <p v-html="items['text-2']?.content" />
+            <p v-html="items['text-3']?.content" />
 
-          <div
-            class="form-container"
-            v-if="FormComp"
-          >
-            <component
-              :is="FormComp"
-              v-bind="formProps"
-            />
+            <div
+              class="form-container"
+              v-if="FormComp"
+            >
+              <component
+                :is="FormComp"
+                v-bind="formProps"
+              />
+            </div>
           </div>
         </div>
       </div>
     </div>
     <!-- Slide en grand -->
-    <!-- <div
+    <div
       id="slideDisplayRef"
       class="slide-display"
-    /> -->
+    />
   </section>
 </template>
 

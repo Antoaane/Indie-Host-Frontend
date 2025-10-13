@@ -15,7 +15,7 @@ import 'swiper/css/pagination'
 // UTILS
 import { vp } from '@/utils/viewport'
 import { useHabitsAnim } from '@/views/Landing/components/HabitsSection/utils/useHabitsAnim'
-import { illustrationSize, descriptionSize } from '@/views/Landing/components/HabitsSection/stores/slider'
+import { sliderContainerSize, descriptionSize } from '@/views/Landing/components/HabitsSection/stores/slider'
 // CONTENT
 import type { ItemSection } from '@/content/types'
 import rawContent from '@/content/fr/Landing/habits-section.json'
@@ -27,7 +27,7 @@ const swiperWrapper = ref<InstanceType<typeof Swiper> | null>(null)
 const carouselRef = ref<HTMLElement | null>(null)
 const lightRef = ref<HTMLElement | null>(null)
 const shadowRef = ref<HTMLElement | null>(null)
-const illustrationRef = ref<HTMLElement | null>(null)
+const sliderContainerRef = ref<HTMLElement | null>(null)
 
 const { onSwiperInit, onSlideChange } = useHabitsAnim({
   swiperInstance,
@@ -65,9 +65,9 @@ const swiperParams = computed(
     }) satisfies SwiperOptions,
 )
 
-const initIllustrationSize = () => {
+const initsliderContainerSize = () => {
   setTimeout(() => {
-    illustrationSize.value = illustrationRef.value?.clientHeight || 0
+    sliderContainerSize.value = sliderContainerRef.value?.clientHeight || 0
   }, 100)
 }
 </script>
@@ -75,24 +75,24 @@ const initIllustrationSize = () => {
 <template>
   <!-- <div
     class="illustration"
-    ref="illustrationRef"
+    ref="sliderContainerRef"
     :style="`transform: translateY(-${vp.lg.value ? 0 : descriptionSize + 24}px)`"
   > -->
   <div
-    class="illustration"
-    ref="illustrationRef"
+    class="slider-container"
+    ref="sliderContainerRef"
   >
     <div
       class="carousel"
       ref="carouselRef"
-      :style="vp.lg.value ? `margin-left: ${(illustrationSize * 0.125) / 2}px` : ''"
+      :style="vp.lg.value ? `margin-left: ${(sliderContainerSize * 0.125) / 2}px` : ''"
     >
       <Swiper
         ref="swiperWrapper"
         v-bind="swiperParams"
         @swiper="
           (e) => {
-            onSwiperInit(e), initIllustrationSize()
+            onSwiperInit(e), initsliderContainerSize()
           }
         "
         @slideChange="onSlideChange"

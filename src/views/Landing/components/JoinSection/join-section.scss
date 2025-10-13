@@ -5,213 +5,224 @@
 @use '@/styles/variables/animations' as *;
 @use "@/styles/components/buttons" as buttons;
 
+
 #join-section {
-  // @include gutters(padding, top, 2);
+  width: 100%;
 
-  box-sizing: content-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 
-  .container__xl {
+  .title {
     display: flex;
     flex-direction: column;
     align-items: center;
 
-    @include gutters(padding, inline, 2);
+    .french-flag {
+      height: 2rem;
+      width: auto;
+      margin: 0 0.5rem 0.5rem 0;
 
-    @include min-width(lg) {
-      gap: 4rem;
+      border-radius: borders.$rounded-xs;
     }
 
-    .title {
+    &>div {
+      display: flex;
+      align-items: center;
+
+      @include min-width(lg) {
+        gap: 0.5rem;
+        // margin-bottom: 1.5rem;
+      }
+
+      h2 {
+        margin: 0;
+        display: block;
+        align-items: center;
+
+        padding: 0 !important;
+        @include h2-title($accent, false);
+      }
+    }
+
+    p {
+      // margin-bottom: 1.5rem !important;
+      @include h4-title($accent, false);
+    }
+  }
+
+  .join-section-container {
+    // @include gutters(padding, top, 2);
+
+    box-sizing: content-box;
+    overflow: hidden;
+
+    .container {
       display: flex;
       flex-direction: column;
       align-items: center;
 
-      .french-flag {
-        height: 2rem;
-        width: auto;
-        margin: 0 0.5rem 0.5rem 0;
-
-        border-radius: borders.$rounded-xs;
-      }
-
-      &>div {
-        display: flex;
-        align-items: center;
-
-        @include min-width(lg) {
-          gap: 0.5rem;
-          // margin-bottom: 1.5rem;
-        }
-
-        h2 {
-          margin: 0;
-          display: block;
-          align-items: center;
-
-          padding: 0 !important;
-          @include h2-title($accent, false);
-        }
-      }
-
-      p {
-        // margin-bottom: 1.5rem !important;
-        @include h4-title($accent, false);
-      }
-    }
-
-    .main {
-      display: grid;
-      grid-template-columns: repeat(12, 1fr);
-      gap: 1.5rem;
+      @include gutters(padding, inline, 2);
 
       @include min-width(lg) {
-        flex-direction: row;
-        gap: 3rem;
+        gap: 4rem;
       }
 
-      .content {
-        grid-column: 1 / -1;
-        gap: 1rem;
-
-        display: flex;
-        flex-direction: column;
-        align-items: center;
+      .main {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 1.5rem;
 
         @include min-width(lg) {
-          grid-column: span 6 / span 6;
+          flex-direction: row;
+          gap: 3rem;
         }
 
-        p {
-          @include base-text($accent, false);
-
-          a {
-            @include buttons.link(white, true);
-            font-weight: 600;
-          }
-        }
-
-      }
-
-      .illustration {
-        grid-column: 1 / -1;
-        padding: 0 !important;
-        position: relative;
-
-        @include min-width(lg) {
-          grid-column: span 6 / span 6;
-        }
-
-        // @include min-width(lg) {
-        //   &::after {
-        //     content: '';
-        //     width: 100%;
-        //     height: 10vh;
-
-        //     position: absolute;
-        //     bottom: 1rem;
-        //     left: 0;
-        //     z-index: 99;
-
-        //     background-color: $secondary;
-        //   }
-
-        //   &::before {
-        //     content: '';
-        //     width: 100%;
-        //     height: 10vh;
-
-        //     position: absolute;
-        //     top: 1rem;
-        //     left: 0;
-        //     z-index: 99;
-
-        //     background-color: $secondary;
-        //   }
-        // }
-
-        .image {
-          width: 100%;
-          height: 100%;
-          border-radius: borders.$rounded-xl;
-          object-fit: cover;
-          @include soft-shadow();
-          margin: 0 auto;
-        }
-
-        .overflow {
-          width: 100%;
-          display: flex;
-          justify-content: center;
-
-          @include min-width(lg) {
-            overflow: hidden;
-          }
-
-          .carousel-container {
-            width: 100%;
-            // display: flex;
-            // flex-direction: column-reverse;
-            // align-items: center;
-            gap: 1.5rem;
-
-            @include min-width(lg) {
-              height: 80vh;
-              gap: 3rem;
-
-              // flex-direction: row;
-              // align-items: center;
-              // justify-content: flex-end;
-            }
-
-            // @include container(xxl, 5rem);
-            // @include gutters(padding, inline, 2);
-          }
-        }
-
-        .slide-display {
-          width: 100vw;
-          height: 100vh;
+        .content {
+          grid-column: 1 / -1;
+          gap: 1rem;
 
           display: flex;
-          justify-content: center;
+          flex-direction: column;
           align-items: center;
 
-          position: fixed;
-          top: 50%;
-          left: 50%;
-          z-index: -999;
-
-          transform: translate(-50%, -50%);
-          opacity: 0;
-          background-color: rgba($secondary, 0.85);
-
-          &:has(svg),
-          &:has(img) {
-            z-index: 9999;
+          @include min-width(lg) {
+            grid-column: span 6 / span 6;
           }
 
-          img {
-            max-width: 95vw;
-            max-height: 95vh;
+          p {
+            @include base-text($accent, false);
 
-            border-radius: borders.$rounded-xl;
-            border: 1px solid rgba($accent, 1);
-
-            @include min-width(lg) {
-              max-width: 85vw;
-              max-height: 90vh;
+            a {
+              @include buttons.link(white, true);
+              font-weight: 600;
             }
-
-            @include halo(lg);
           }
 
-          // .close-btn {
-          //   position: fixed;
-          //   top: 50%;
-          //   left: 50%;
+        }
+
+        .illustration {
+          grid-column: 1 / -1;
+          padding: 0 !important;
+          position: relative;
+
+          @include min-width(lg) {
+            grid-column: span 6 / span 6;
+          }
+
+          // @include min-width(lg) {
+          //   &::after {
+          //     content: '';
+          //     width: 100%;
+          //     height: 10vh;
+
+          //     position: absolute;
+          //     bottom: 1rem;
+          //     left: 0;
+          //     z-index: 99;
+
+          //     background-color: $secondary;
+          //   }
+
+          //   &::before {
+          //     content: '';
+          //     width: 100%;
+          //     height: 10vh;
+
+          //     position: absolute;
+          //     top: 1rem;
+          //     left: 0;
+          //     z-index: 99;
+
+          //     background-color: $secondary;
+          //   }
           // }
+
+          .image {
+            width: 100%;
+            height: 100%;
+            border-radius: borders.$rounded-xl;
+            object-fit: cover;
+            @include soft-shadow();
+            margin: 0 auto;
+          }
+
+          .overflow {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+
+            // @include min-width(lg) {
+            //   overflow: hidden;
+            // }
+
+            .carousel-container {
+              width: 100%;
+              display: flex;
+              flex-direction: column-reverse;
+              align-items: center;
+              gap: 1.5rem;
+
+              @include min-width(lg) {
+                height: 80vh;
+                gap: 3rem;
+
+                flex-direction: row;
+                align-items: center;
+                justify-content: flex-end;
+              }
+
+              // @include container(xxl, 5rem);
+              // @include gutters(padding, inline, 2);
+            }
+          }
         }
       }
     }
+  }
+
+  .slide-display {
+    width: 100vw;
+    height: 100vh;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    z-index: -999;
+
+    transform: translate(-50%, -50%);
+    opacity: 0;
+    background-color: rgba($secondary, 0.85);
+
+    &:has(svg),
+    &:has(img) {
+      z-index: 9999;
+    }
+
+    img {
+      max-width: 95vw;
+      max-height: 95vh;
+
+      border-radius: borders.$rounded-xl;
+      border: 1px solid rgba($accent, 1);
+
+      @include min-width(lg) {
+        max-width: 85vw;
+        max-height: 90vh;
+      }
+
+      @include halo(lg);
+    }
+
+    // .close-btn {
+    //   position: fixed;
+    //   top: 50%;
+    //   left: 50%;
+    // }
   }
 }
