@@ -31,7 +31,7 @@ onMounted(() => {
     class="content"
     :style="vp.lg.value ? `padding-right: ${modSize}px !important;` : ``"
   >
-    <h2 v-html="section.items['title-1'].content" />
+    <!-- <h2 v-html="section.items['title-1'].content" /> -->
     <div class="slides-titles">
       <!-- <div>
         <h3

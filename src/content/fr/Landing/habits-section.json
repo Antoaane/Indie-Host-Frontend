@@ -14,8 +14,8 @@
           {
             "title": "Modifiez et <strong>personnalisez</strong> vos annonces",
             "description": "Une fois votre annonce importée, personnalisez-la librement avec un éditeur visuel simple et intuitif. Prévisualisez chaque modification en temps réel, et modifiez vos contenus en un clic : cliquez sur un élément dans l’aperçu, vous êtes instantanément redirigé vers le bon champ. <br />Une annonce crée et non publiée restera en brouillon, vous garderez toujours vos modifications.",
-            "image-1": "/assets/media/images/webp/page-edition.webp",
-            "image-2": "/assets/media/images/png/page-edition.png",
+            "image-1": "/assets/media/images/webp/editeur.webp",
+            "image-2": "/assets/media/images/png/editeur.png",
             "alt": "Page d'édition d'une annonce"
           },
           {

@@ -16,41 +16,51 @@
 
   gap: 1rem;
 
-  .title {
+  .container {
     display: flex;
     flex-direction: column;
     align-items: center;
 
-    .french-flag {
-      height: 2rem;
-      width: auto;
-      margin: 0 0.5rem 0.5rem 0;
+    @include gutters(padding, inline, 2);
 
-      border-radius: borders.$rounded-xs;
+    @include min-width(lg) {
+      gap: 4rem;
     }
 
-    &>div {
+    .title {
       display: flex;
+      flex-direction: column;
       align-items: center;
 
-      @include min-width(lg) {
-        gap: 0.5rem;
-        // margin-bottom: 1.5rem;
+      .french-flag {
+        height: 2rem;
+        width: auto;
+        margin: 0 0.5rem 0.5rem 0;
+
+        border-radius: borders.$rounded-xs;
       }
 
-      h2 {
-        margin: 0;
-        display: block;
+      &>div {
+        display: flex;
         align-items: center;
 
-        padding: 0 !important;
-        @include h2-title($accent, false);
-      }
-    }
+        gap: 0.5rem;
 
-    p {
-      // margin-bottom: 1.5rem !important;
-      @include h4-title($accent, false);
+        h2 {
+          margin: 0;
+          display: block;
+          align-items: center;
+
+          padding: 0 !important;
+          @include h2-title($accent, false);
+        }
+      }
+
+      p {
+        text-align: center;
+
+        @include h4-title($accent, false);
+      }
     }
   }
 
@@ -74,7 +84,8 @@
       .main {
         display: grid;
         grid-template-columns: repeat(12, 1fr);
-        gap: 1.5rem;
+        row-gap: 3rem;
+        column-gap: 0;
 
         @include min-width(lg) {
           flex-direction: row;

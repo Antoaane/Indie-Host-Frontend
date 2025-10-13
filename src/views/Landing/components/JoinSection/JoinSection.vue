@@ -104,17 +104,19 @@ onBeforeUnmount(() => {
 
 <template>
   <section :id="section.id">
-    <div class="title">
-      <div>
-        <component
-          v-if="FlagComp"
-          :is="FlagComp"
-          class="french-flag"
-          aria-hidden="true"
-        />
-        <h2 v-html="items['title-1']?.content" />
+    <div class="container">
+      <div class="title">
+        <div>
+          <component
+            v-if="FlagComp"
+            :is="FlagComp"
+            class="french-flag"
+            aria-hidden="true"
+          />
+          <h2 v-html="items['title-1']?.content" />
+        </div>
+        <p v-html="items['text-1']?.content" />
       </div>
-      <p v-html="items['text-1']?.content" />
     </div>
     <div :class="section.id + '-container'">
       <div class="container">
