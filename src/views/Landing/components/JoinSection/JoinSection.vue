@@ -123,18 +123,18 @@ onBeforeUnmount(() => {
           class="illustration"
           v-if="items['image-1']"
         >
-          <img
+          <!-- <img
             :src="imageSrc"
             :alt="imageAlt"
             loading="lazy"
             class="image"
-          />
-          <!-- <div class="overflow">
-            <div class="container">
+          /> -->
+          <div class="overflow">
+            <div class="carousel-container">
               <Carousel v-if="vp.lg.value" />
               <SlidesTitles v-if="!vp.lg.value" />
             </div>
-          </div> -->
+          </div>
         </div>
 
         <div class="content">

@@ -50,7 +50,7 @@ const isDonation = computed(() => route.path === '/donation')
           <a href="#habits-section"> Fonctionnalités </a>
         </li>
         <li>
-          <a href="#usage-section"> Comment ça marche ? </a>
+          <a href="#customization-section"> Comment ça marche ? </a>
         </li>
       </template>
       <template v-else>
@@ -93,7 +93,7 @@ const isDonation = computed(() => route.path === '/donation')
           </li>
           <li>
             <a
-              href="#usage-section"
+              href="#customization-section"
               @click="toggleMobileMenu"
             >
               Comment ça marche ?

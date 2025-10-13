@@ -48,7 +48,7 @@ let smoother: ReturnType<typeof ScrollSmoother.create>
   <main id="landing-page">
     <HeroSection />
     <BenefitsSection />
-    <!-- <HabitsSection /> -->
+    <HabitsSection />
     <FeaturesSection />
     <CustomizationSection />
     <UsageSection />
