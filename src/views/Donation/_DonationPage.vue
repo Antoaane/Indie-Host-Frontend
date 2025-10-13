@@ -1,18 +1,18 @@
-<!-- File: src/views/Crowdfunding/_DonationPage.vue -->
+<!-- File: src/views/Donation/_DonationPage.vue -->
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
-import DonationHeroSection from '@/views/Crowdfunding/components/DonationHeroSection/DonationHeroSection.vue'
-import DonationFormPanel from '@/views/Crowdfunding/components/DonationFormPanel/DonationFormPanel.vue'
-import DonationStatusBanner from '@/views/Crowdfunding/components/DonationStatusBanner/DonationStatusBanner.vue'
+import DonationHeroSection from '@/views/Donation/components/DonationHeroSection/DonationHeroSection.vue'
+import DonationFormPanel from '@/views/Donation/components/DonationFormPanel/DonationFormPanel.vue'
+import DonationStatusBanner from '@/views/Donation/components/DonationStatusBanner/DonationStatusBanner.vue'
 
 import type { ItemSection, ContentBlock } from '@/content/types'
-import pageContent from '@/content/fr/Crowdfunding/donation-page.json'
-import statusContent from '@/content/fr/Crowdfunding/donation-status.json'
-import heroContent from '@/content/fr/Crowdfunding/donation-article.json'
-import panelContent from '@/content/fr/Crowdfunding/donation-panel.json'
+import pageContent from '@/content/fr/Donation/donation-page.json'
+import statusContent from '@/content/fr/Donation/donation-status.json'
+import heroContent from '@/content/fr/Donation/donation-article.json'
+import panelContent from '@/content/fr/Donation/donation-panel.json'
 
 interface SectionEntry {
   key: string
@@ -199,4 +199,4 @@ const donationLink = computed(() => (import.meta.env.VITE_DONATION_LINK ?? '').t
   </main>
 </template>
 
-<style lang="scss" src="@/views/Crowdfunding/_donation-page.scss"></style>
+<style lang="scss" src="@/views/Donation/_donation-page.scss"></style>

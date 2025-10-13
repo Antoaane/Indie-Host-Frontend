@@ -1,4 +1,4 @@
-<!-- File: src/views/Crowdfunding/components/DonationFormPanel/DonationFormPanel.vue -->
+<!-- File: src/views/Donation/components/DonationFormPanel/DonationFormPanel.vue -->
 
 <script setup lang="ts">
 import { computed } from 'vue'
@@ -333,4 +333,4 @@ const handleCtaClick = (entry: SectionEntry) => {
   </aside>
 </template>
 
-<style lang="scss" scoped src="@/views/Crowdfunding/components/DonationFormPanel/DonationFormPanel.scss"></style>
+<style lang="scss" scoped src="@/views/Donation/components/DonationFormPanel/DonationFormPanel.scss"></style>

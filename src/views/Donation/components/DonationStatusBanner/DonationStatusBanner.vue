@@ -1,4 +1,4 @@
-<!-- File: src/views/Crowdfunding/components/DonationStatusBanner/DonationStatusBanner.vue -->
+<!-- File: src/views/Donation/components/DonationStatusBanner/DonationStatusBanner.vue -->
 
 <script setup lang="ts">
 import { computed } from 'vue'
@@ -59,4 +59,4 @@ const statusClass = computed(() => {
   </div>
 </template>
 
-<style lang="scss" scoped src="@/views/Crowdfunding/components/DonationStatusBanner/DonationStatusBanner.scss"></style>
+<style lang="scss" scoped src="@/views/Donation/components/DonationStatusBanner/DonationStatusBanner.scss"></style>

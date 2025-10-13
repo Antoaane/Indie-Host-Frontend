@@ -1,4 +1,4 @@
-<!-- File: src/views/Crowdfunding/components/DonationHeroSection/DonationHeroSection.vue -->
+<!-- File: src/views/Donation/components/DonationHeroSection/DonationHeroSection.vue -->
 
 <script setup lang="ts">
 import { computed } from 'vue'
@@ -215,4 +215,4 @@ const extractRichBlocks = (block: ContentBlock): HeroRichBlock[] => {
   </article>
 </template>
 
-<style lang="scss" scoped src="@/views/Crowdfunding/components/DonationHeroSection/DonationHeroSection.scss"></style>
+<style lang="scss" scoped src="@/views/Donation/components/DonationHeroSection/DonationHeroSection.scss"></style>
