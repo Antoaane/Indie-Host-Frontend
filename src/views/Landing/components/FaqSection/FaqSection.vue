@@ -16,11 +16,7 @@ const { filteredData, suggestions, search, selectSuggestion } = useFaq()
 </script>
 
 <template>
-  <section
-    :id="section.id"
-    itemscope
-    itemtype="https://schema.org/FAQPage"
-  >
+  <section :id="section.id">
     <div class="container__xl">
       <h2>
         {{ items['title-1'].content }}

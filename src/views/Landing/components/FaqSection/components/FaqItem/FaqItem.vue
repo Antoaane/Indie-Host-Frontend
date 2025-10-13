@@ -67,11 +67,7 @@ function highlight(text?: string) {
         </template>
         <!-- Contenu : réponse -->
         <template #content>
-          <div
-            itemprop="acceptedAnswer"
-            itemtype="https://schema.org/Answer"
-            itemscope
-          >
+          <div itemprop="acceptedAnswer">
             <p
               v-html="highlight(props.node.answer)"
               itemprop="text"
