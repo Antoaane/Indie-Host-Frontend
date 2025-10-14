@@ -1,33 +1,89 @@
-# ihf
+<!-- File: README.md -->
 
-This template should help get you started developing with Vue 3 in Vite.
+# ihf — Setup rapide
 
-## Recommended IDE Setup
+Vite + Vue 3 + TS.
+Plugins internes :
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- `file-path-comment` (entêtes automatiques)
+- `svg-to-vue` (SVG → SFC + extraction d’images + SVGO/Prettier).
 
-## Type Support for `.vue` Imports in TS
+---
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+## 1) Prérequis
 
-## Customize configuration
+- [**Node.js ≥ 18** + **npm**](https://nodejs.org/en/download)
+- [**Python 3.10+**](https://www.python.org/downloads/release/python-3100/)
+- [**Git**](https://git-scm.com/downloads)
+- [**Prettier**](https://prettier.io/docs/en/install.html)
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+---
 
-## Project Setup
+## 2) Installation
 
-```sh
+### macOS / Linux
+
+```bash
+cp .env.example .env
 npm install
+
+python -m pip install --upgrade pip
+pip install -r requirement.txt
+
+npm run dev   # http://localhost:5179
 ```
 
-### Compile and Hot-Reload for Development
+### Windows (PowerShell)
 
-```sh
-npm run dev
+```powershell
+Copy-Item .env.example .env
+npm install
+
+python -m pip install --upgrade pip
+pip install -r requirement.txt
+
+npm run dev   # http://localhost:5179
 ```
 
-### Type-Check, Compile and Minify for Production
+> Si seul `py` fonctionne sous Windows, remplacez `python` par `py -3`, ou adaptez l’appel dans `plugins/svg-to-vue/vite-plugin-svg-to-vue.ts`.
 
-```sh
-npm run build
+---
+
+## 3) Variables d’environnement
+
+```env
+# .env
+VITE_DONATION_LINK=https://votre-lien
 ```
+
+---
+
+## 4) Scripts utiles
+
+```bash
+npm run dev         # Lance Vite (5179) + pipeline SVG (auto)
+npm run build       # type-check + build
+npm run preview     # sert le build
+npm run type-check  # vue-tsc
+npm run format      # Prettier sur src/
+npm run tag:files   # Entête "File: <path>" normalisé dans /src
+npm run svg:convert # Lancement manuel du convertisseur SVG
+npm run watch       # SASS input.scss -> output.css
+```
+
+---
+
+## 5) Plugins (résumé)
+
+- **file-path-comment** : ajoute/synchronise la première ligne `File: <path>` (styles adaptés), nettoie les lignes vides en trop.
+- **svg-to-vue** :
+  - Parcourt `public/assets/media/**/*.svg`
+  - Extrait les images base64 → `public/assets/media/images/` (dédup par perceptual hash)
+  - Scope dynamiquement les `id` + réécrit `url(#id)` / `href="#id"` en bindings Vue
+  - Injecte des bindings a11y (`role`, `aria-hidden`, `aria-labelledby`)
+  - Génère des SFC dans `src/components/svgs/**`
+  - **SVGO** si dispo, **Prettier** ensuite
+
+> Le script cherche `plugins/svg-to-vue/svgo.config.js`. Copiez `plugins/svgo.config.js` à cet emplacement (cf. Installation).
+
+---
