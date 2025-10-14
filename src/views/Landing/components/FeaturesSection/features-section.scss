@@ -5,7 +5,7 @@
 
 #features-section {
   @include min-width(lg) {
-    padding-top: calc(300vh + (var(--gutter-spacing))) !important;
+    padding-top: calc(0vh + (var(--gutter-spacing))) !important;
     padding-bottom: 0 !important;
   }
 

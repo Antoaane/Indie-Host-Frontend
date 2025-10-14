@@ -4,17 +4,18 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
+import { ScrollSmoother } from 'gsap/ScrollSmoother'
 import CSSRulePlugin from 'gsap/CSSRulePlugin'
 // UTILS
 import { vp } from '@/utils/viewport'
 import { set } from '@vueuse/core'
 
-gsap.registerPlugin(ScrollTrigger, CSSRulePlugin)
+gsap.registerPlugin(ScrollTrigger, CSSRulePlugin, ScrollSmoother)
 
 // ────────────────────────────────────────────────────────────────────────────────
 // CONSTANTS
 // ────────────────────────────────────────────────────────────────────────────────
-const EASE = 'power2.inOut'
+const EASE = 'power1.inOut'
 const BASE_DURATION = vp.lg.value ? 2 : 1.5
 
 export const totalOta = ref(0)
@@ -40,10 +41,18 @@ function buildDesktopTimeline() {
   /* ENTRÉE                                                                   */
   /* ------------------------------------------------------------------------ */
 
-  tl.addLabel('enter')
+  tl.addLabel('enter',) // `pre-enter+=0.05`)
     .to('#indiehost', {
       width: `${longer + shorter}%`,
-      duration: BASE_DURATION
+      ease: 'none',
+      duration: BASE_DURATION,
+    }, 'enter')
+
+    .to('.total-gains', {
+      width: '7.5rem',
+      opacity: 1,
+      delay: BASE_DURATION / 3,
+      duration: BASE_DURATION / 2
     }, 'enter')
 
   tl.addLabel('pre-reveal', `enter+=${BASE_DURATION * 0.5}`)
@@ -58,11 +67,13 @@ function buildDesktopTimeline() {
       duration: BASE_DURATION / 3
     }, 'pre-reveal')
 
+
+
   /* ------------------------------------------------------------------------ */
   /* REVEAL                                                                  */
   /* ------------------------------------------------------------------------ */
 
-  tl.addLabel('reveal', `enter+=${BASE_DURATION * 0.7}`)
+  tl.addLabel('reveal', `enter+=${BASE_DURATION * 0.73}`)
     .to('.animation-desktop .gains .advantages', {
       '--rgd-start': 'rgba(0, 255, 166, 0.6)',
       duration: BASE_DURATION / 3,
@@ -80,12 +91,6 @@ function buildDesktopTimeline() {
       duration: BASE_DURATION / 3
     }, 'reveal')
 
-    .to('.total-gains', {
-      width: '7.5rem',
-      opacity: 1,
-      duration: BASE_DURATION / 2
-    }, 'reveal')
-
   /* ------------------------------------------------------------------------ */
   /* REVEAL END                                                             */
   /* ------------------------------------------------------------------------ */
@@ -98,7 +103,7 @@ function buildDesktopTimeline() {
   const revealTween = tl.to(obj, {
     // target dynamique : GSAP évaluera la fonction à chaque invalidation/replay
     val: () => totalOta.value,
-    duration: BASE_DURATION / 2,
+    duration: BASE_DURATION / 10,
     ease: 'power2.out',
     onUpdate() {
       displayTotalOta.value = Math.round(obj.val)   // ici obj.val est déjà un number
@@ -312,6 +317,49 @@ function buildMobileTimeline() {
   return tl
 }
 
+// ────────────────────────────────────────────────────────────────────────────────
+// SCROLLSPEED SENTINEL (pour ralentir le scroll lors de la section)
+// ────────────────────────────────────────────────────────────────────────────────
+
+function attachScrollSpeedSentinel() {
+  const smoother = ScrollSmoother.get() // récupère l'instance existante
+  if (!smoother) return
+
+  const normal = 1
+  const slow = 0.45
+
+  // un seul trigger, réutilisable
+  ScrollTrigger.getById('benefits-speed')?.kill()
+
+  ScrollTrigger.create({
+    id: 'benefits-speed',
+    trigger: '#benefits-section',
+    start: 'top top',
+    end: 'bottom bottom',
+    onEnter: () => {
+      (smoother as any).vars.speed = slow;
+      (smoother as any).scrollTrigger.update();
+      console.log('smoother-speed :', (smoother as any).vars.speed);
+      console.log('smoother :', smoother);
+      console.log('smoother-get :', ScrollSmoother.get());
+    },
+    onEnterBack: () => {
+      (smoother as any).vars.speed = slow;
+      (smoother as any).scrollTrigger.update();
+      console.log('smoother-speed :', (smoother as any).vars.speed);
+      console.log('smoother :', smoother);
+      console.log('smoother-get :', ScrollSmoother.get());
+    },
+    onLeave: () => {
+      (smoother as any).vars.speed = normal;
+      (smoother as any).scrollTrigger.update();
+    },
+    onLeaveBack: () => {
+      (smoother as any).vars.speed = normal;
+      (smoother as any).scrollTrigger.update();
+    },
+  })
+}
 
 // ────────────────────────────────────────────────────────────────────────────────
 // HOOK (sélection de la version via matchMedia)
@@ -327,7 +375,11 @@ export function useBenefitsAnim() {
       mm.add('(min-width:1024px)', () => {
         const tl = buildDesktopTimeline()
         attachScrollTrigger(tl)
-        return () => tl.kill()
+        attachScrollSpeedSentinel()   // ⬅️ ICI
+        return () => {
+          ScrollTrigger.getById('benefits-speed')?.kill() // nettoyage
+          tl.kill()
+        }
       })
 
       // Mobile < 1024 px ------------------------------------------------------
@@ -348,12 +400,15 @@ export function useBenefitsAnim() {
 function attachScrollTrigger(tl: gsap.core.Timeline) {
   ScrollTrigger.create({
     trigger: '#benefits-section',
-    start: vp.lg.value ? 'top top' : 'top 15%',
-    end: vp.lg.value ? '+=300%' : '',
-    scrub: vp.lg.value ? 0.5 : false,
-    pin: vp.lg.value ? true : false,
-    anticipatePin: vp.lg.value ? 1 : 0,
-    animation: tl,
+    start: vp.lg.value ? 'top 25%' : 'top 15%',
+    end: vp.lg.value ? '+=50%' : '',
+    // scrub: vp.lg.value ? 1 : false,
+    scrub: 1,
+    pin: false,
+    // pin: vp.lg.value ? true : false,
+    anticipatePin: 0,
+    // anticipatePin: vp.lg.value ? 1 : 0,
     invalidateOnRefresh: true,
+    animation: tl,
   })
 }

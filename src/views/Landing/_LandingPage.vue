@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 // DEPS
-import { defineAsyncComponent } from 'vue'
+import { defineAsyncComponent, onMounted, onBeforeUnmount } from 'vue'
 import { ScrollSmoother } from 'gsap/ScrollSmoother'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import gsap from 'gsap'
@@ -25,22 +25,23 @@ if (vp.lg.value) {
 
 let smoother: ReturnType<typeof ScrollSmoother.create>
 
-// onMounted(() => {
-//   if (vp.lg.value) {
-//     smoother = ScrollSmoother.create({
-//       // wrapper: 'body',
-//       // content: '#landing-page',
-//       smooth: 1.2,
-//       effects: true,
-//     })
-//   }
-// })
+onMounted(() => {
+  if (vp.lg.value) {
+    smoother = ScrollSmoother.create({
+      wrapper: '#app',
+      content: '#landing-page',
+      smooth: 1.2,
+      effects: true,
+      speed: 1,
+    })
+  }
+})
 
-// onBeforeUnmount(() => {
-//   if (vp.lg.value) {
-//     smoother.kill()
-//   }
-// })
+onBeforeUnmount(() => {
+  if (vp.lg.value) {
+    smoother.kill()
+  }
+})
 </script>
 
 <template>

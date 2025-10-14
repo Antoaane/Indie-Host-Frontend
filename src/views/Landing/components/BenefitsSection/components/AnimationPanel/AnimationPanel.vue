@@ -20,9 +20,9 @@ const props = defineProps<{
 }>()
 
 onMounted(() => {
-  commissionsAnim.value = props.commissions
+  commissionsAnim.value = 20
   totalOta.value = props.total
-  displayTotalOta.value = totalOta.value - commissionsAnim.value
+  displayTotalOta.value = totalOta.value
 
   watch(
     () => props.commissions,
@@ -67,7 +67,7 @@ useBenefitsAnim() // init GSAP
             v-html="`${displayTotalOta} €`"
           />
           <span class="total-gains">
-            <span>&nbsp;+ {{ commissionsAnim }} €</span>
+            <span>&nbsp;+ {{ commissionsAnim }} %</span>
           </span>
         </p>
         <p
