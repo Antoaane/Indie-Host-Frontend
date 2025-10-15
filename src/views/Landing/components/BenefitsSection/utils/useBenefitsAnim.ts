@@ -375,11 +375,7 @@ export function useBenefitsAnim() {
       mm.add('(min-width:1024px)', () => {
         const tl = buildDesktopTimeline()
         attachScrollTrigger(tl)
-        attachScrollSpeedSentinel()   // ⬅️ ICI
-        return () => {
-          ScrollTrigger.getById('benefits-speed')?.kill() // nettoyage
-          tl.kill()
-        }
+        return () => tl.kill()
       })
 
       // Mobile < 1024 px ------------------------------------------------------

@@ -19,18 +19,21 @@
     row-gap: 3rem;
 
     // border-radius: 130px;
-    @include gutters(padding, top, 1.5);
-    // @include gutters(padding, bottom);
-    // @include gutters(padding, inline);
+    @include gutters(padding, vertical, 3);
+    @include gutters(padding, inline, 2);
+
+    @include min-width(xxs) {
+      @include gutters(padding, inline, 3);
+    }
 
     @include min-width(xs) {
       @include gutters(padding, vertical, 3);
-      @include gutters(padding, inline, 3);
+      // @include gutters(padding, inline, 3);
     }
 
     @include min-width(lg) {
       gap: 2rem;
-      border-radius: 85px;
+      // border-radius: 85px;
 
       @include gutters(padding, vertical);
     }
@@ -43,75 +46,6 @@
       gap: 4rem;
     }
 
-    &::before {
-      content: '';
-
-      width: auto;
-      height: 30%;
-      aspect-ratio: 1/1;
-
-      position: absolute;
-      top: 0;
-      z-index: -1;
-
-      background: $accent;
-      border-radius: borders.$rounded;
-
-      opacity: 0.20;
-      filter: blur(100px);
-
-      display: none;
-
-      @include min-width(lg) {
-        display: block;
-      }
-    }
-
-    // &::after {
-    //   content: '';
-
-    //   width: 50%;
-    //   height: 110%;
-
-    //   position: absolute;
-    //   z-index: -1;
-
-    //   // background: red;
-    //   background: $secondary;
-
-    //   top: 1px;
-
-    //   @include min-width(sm) {
-    //     top: 2px;
-    //   }
-    // }
-
-    @include min-width(lg) {
-      &::after {
-        content: '';
-
-        width: auto;
-        height: 30%;
-        aspect-ratio: 1/1;
-
-        position: absolute;
-        top: auto;
-        bottom: 0;
-        z-index: -1;
-
-        background: $accent;
-        border-radius: borders.$rounded;
-
-        opacity: 0.20;
-        filter: blur(100px);
-
-        // display: none;
-
-        // @include min-width(lg) {
-        //   display: block;
-      }
-    }
-
     .text {
       display: flex;
       justify-content: center;
@@ -119,10 +53,10 @@
 
       grid-column: 1 / -1;
 
-      @include gutters(padding, inline);
+      // @include gutters(padding, inline);
 
       @include min-width(xxs) {
-        @include gutters(padding, inline, 2);
+        // @include gutters(padding, inline, 2);
       }
 
       @include min-width(sm) {
@@ -166,8 +100,7 @@
     .media {
       height: auto;
 
-      @include gutters(padding, bottom, 1.5);
-      @include gutters(padding, inline, 1.5);
+      // @include gutters(padding, inline, 1.5);
 
       @include min-width(xs) {
         @include gutters(padding, all, 0);
@@ -285,12 +218,15 @@
       transform: translateY(-50%);
       z-index: -1;
 
-      &.right {
+      &.glow-right,
+      &.glow-bottom-right,
+      &.glow-top-right {
         right: 0;
       }
 
-      &.left,
-      .end-left {
+      &.glow-left,
+      &.glow-bottom-left,
+      &.glow-top-left {
         left: 0;
       }
     }

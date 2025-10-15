@@ -32,27 +32,40 @@
       flex-direction: column;
       align-items: center;
 
-      .french-flag {
-        height: 2rem;
-        width: auto;
-        margin: 0 0.5rem 0.5rem 0;
-
-        border-radius: borders.$rounded-xs;
-      }
-
       &>div {
         display: flex;
+        flex-direction: column;
         align-items: center;
+        justify-content: center;
 
         gap: 0.5rem;
 
+        @include min-width(md) {
+          flex-direction: row;
+        }
+
+        .french-flag {
+          height: 2rem;
+          width: auto;
+          margin: 0 0.5rem 0.5rem 0;
+
+          border-radius: borders.$rounded-xs;
+        }
+
         h2 {
+          padding: 0 !important;
           margin: 0;
+
           display: block;
           align-items: center;
 
-          padding: 0 !important;
+          text-align: center;
+
           @include h2-title($accent, false);
+
+          @include min-width(md) {
+            text-align: left;
+          }
         }
       }
 

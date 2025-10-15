@@ -1,10 +1,12 @@
-/* File: src/views/Landing/components/CustomizationSection/customization-section.scss */
+/* File: src/views/Landing/components/HowSection/how-section.scss */
 
 @use '@/styles/variables/globals' as *;
 
-#customization-section {
+#how-section {
+  min-height: 0 !important;
+  // margin-bottom: -25vw;
+
   position: relative;
-  margin-bottom: -25vw;
 
   justify-content: flex-start !important; //temp
 
@@ -13,22 +15,20 @@
 
   @include min-width(lg) {
     @include gutters(padding, top, 7.5);
-    @include gutters(padding, bottom, 5);
+    // @include gutters(padding, bottom, 5);
   }
 
-  margin-bottom: 0rem;
+  // @include min-width(lg) {
+  //   margin-bottom: -36rem;
+  // }
 
-  @include min-width(lg) {
-    margin-bottom: -36rem;
-  }
+  // @include min-width(xl) {
+  //   margin-bottom: -34rem;
+  // }
 
-  @include min-width(xl) {
-    margin-bottom: -34rem;
-  }
-
-  @include min-width(xxl) {
-    margin-bottom: -32rem;
-  }
+  // @include min-width(xxl) {
+  //   margin-bottom: -32rem;
+  // }
 
   .gradiant-separator {
     width: 125%;

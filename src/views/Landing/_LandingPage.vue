@@ -11,7 +11,7 @@ import { vp } from '@/utils/viewport'
 // COMPONENTS
 const HeroSection = defineAsyncComponent(() => import('./components/HeroSection/HeroSection.vue'))
 const BenefitsSection = defineAsyncComponent(() => import('./components/BenefitsSection/BenefitsSection.vue'))
-const CustomizationSection = defineAsyncComponent(() => import('./components/CustomizationSection/CustomizationSection.vue'))
+const HowSection = defineAsyncComponent(() => import('./components/HowSection/HowSection.vue'))
 const HabitsSection = defineAsyncComponent(() => import('./components/HabitsSection/HabitsSection.vue'))
 const FeaturesSection = defineAsyncComponent(() => import('./components/FeaturesSection/FeaturesSection.vue'))
 const StrengthsSection = defineAsyncComponent(() => import('./components/StrengthsSection/StrengthsSection.vue'))
@@ -32,7 +32,7 @@ onMounted(() => {
       content: '#landing-page',
       smooth: 1.2,
       effects: true,
-      speed: 1,
+      // speed: 1,
     })
   }
 })
@@ -51,9 +51,9 @@ onBeforeUnmount(() => {
     <BenefitsSection v-if="vp.lg.value" />
     <!-- <HabitsSection /> -->
     <FeaturesSection />
-    <CustomizationSection />
+    <HowSection />
     <UsageSection />
-    <!-- <CustomizationSection /> -->
+    <!-- <HowSection /> -->
     <StrengthsSection />
     <JoinSection />
     <FaqSection />

@@ -4,12 +4,14 @@
 // UTILS
 import { vp } from '@/utils/viewport'
 // ASSETS
-import Left from '@/components/svgs/images/Left.vue'
-import Right from '@/components/svgs/images/Right.vue'
-import EndLeft from '@/components/svgs/images/EndLeft.vue'
-import RightSharp from '@/components/svgs/images/RightSharp.vue'
-import LeftSharp from '@/components/svgs/images/LeftSharp.vue'
-import EndLeftSharp from '@/components/svgs/images/EndLeftSharp.vue'
+import GlowTopRight from '@/components/svgs/images/GlowTopRight.vue'
+import GlowLeft from '@/components/svgs/images/GlowLeft.vue'
+import GlowRight from '@/components/svgs/images/GlowRight.vue'
+import GlowBottomLeft from '@/components/svgs/images/GlowBottomLeft.vue'
+import GlowTopRightSharp from '@/components/svgs/images/GlowTopRightSharp.vue'
+import GlowRightSharp from '@/components/svgs/images/GlowRightSharp.vue'
+import GlowLeftSharp from '@/components/svgs/images/GlowLeftSharp.vue'
+import GlowBottomLeftSharp from '@/components/svgs/images/GlowBottomLeftSharp.vue'
 
 // PROPS
 const props = defineProps<{
@@ -85,30 +87,38 @@ const props = defineProps<{
       </div>
 
       <template v-if="vp.md.value">
-        <Right
-          class="decorative right"
+        <GlowTopRight
+          class="decorative glow-top-right"
           aria-hidden="true"
         />
-        <Left
-          class="decorative left"
+        <GlowRight
+          class="decorative glow-right"
           aria-hidden="true"
         />
-        <EndLeft
-          class="decorative end-left"
+        <GlowLeft
+          class="decorative glow-left"
+          aria-hidden="true"
+        />
+        <GlowBottomLeft
+          class="decorative glow-bottom-left"
           aria-hidden="true"
         />
       </template>
       <template v-else>
-        <RightSharp
-          class="decorative right"
+        <GlowTopRightSharp
+          class="decorative glow-top-right"
           aria-hidden="true"
         />
-        <LeftSharp
-          class="decorative left"
+        <GlowRightSharp
+          class="decorative glow-right"
           aria-hidden="true"
         />
-        <EndLeftSharp
-          class="decorative end-left"
+        <GlowLeftSharp
+          class="decorative glow-left"
+          aria-hidden="true"
+        />
+        <GlowBottomLeftSharp
+          class="decorative glow-bottom-left"
           aria-hidden="true"
         />
       </template>

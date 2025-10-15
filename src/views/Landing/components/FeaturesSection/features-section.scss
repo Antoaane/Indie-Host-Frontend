@@ -48,25 +48,27 @@
         }
       }
 
-      .right,
-      .end-right,
-      .end-left {
+      .glow-right,
+      .glow-bottom-right,
+      .glow-bottom-left,
+      .glow-top-left,
+      .glow-top-right {
         display: none;
       }
 
-      &::before {
-        left: 0;
-        transform: translate(-50%, -50%) scaleX(0.85) scaleY(1.15);
-      }
+      // &::before {
+      //   left: 0;
+      //   transform: translate(-50%, -50%) scaleX(0.85) scaleY(1.15);
+      // }
 
-      &::after {
-        right: -25%;
+      // &::after {
+      //   right: -25%;
 
-        @include min-width(lg) {
-          left: 0;
-          transform: translate(-50%, 50%) scaleX(0.6) scaleY(0.6);
-        }
-      }
+      //   @include min-width(lg) {
+      //     left: 0;
+      //     transform: translate(-50%, 50%) scaleX(0.6) scaleY(0.6);
+      //   }
+      // }
     }
   }
 
@@ -113,45 +115,71 @@
         direction: ltr;
       }
 
-      .left,
-      .end-right,
-      .end-left {
+      .glow-left,
+      .glow-bottom-right,
+      .glow-bottom-left,
+      .glow-top-left,
+      .glow-top-right {
         display: none;
       }
 
 
-      &::before {
-        right: 0;
-        transform: translate(50%, -50%) scaleX(1.25) scaleY(0.8);
-      }
+      // &::before {
+      //   right: 0;
+      //   transform: translate(50%, -50%) scaleX(1.25) scaleY(0.8);
+      // }
 
-      &::after {
-        left: -25%;
+      // &::after {
+      //   left: -25%;
 
-        @include min-width(lg) {
-          right: 0;
-          transform: translate(50%, 50%) scaleX(0.8) scaleY(0.8);
-        }
-      }
+      //   @include min-width(lg) {
+      //     right: 0;
+      //     transform: translate(50%, 50%) scaleX(0.8) scaleY(0.8);
+      //   }
+      // }
     }
   }
 
   // last child
+  &>:first-child {
+    &>div {
+      direction: ltr;
+
+      // &::after {
+      //   display: none;
+      // }
+
+      .glow-right,
+      .glow-left,
+      .glow-top-left,
+      .glow-bottom-right,
+      .glow-bottom-left {
+        display: none;
+      }
+
+      .glow-top-right {
+        display: block;
+      }
+    }
+  }
+
   &>:last-child {
     &>div {
       direction: ltr;
 
-      &::after {
+      // &::after {
+      //   display: none;
+      // }
+
+      .glow-right,
+      .glow-left,
+      .glow-bottom-right,
+      .glow-top-left,
+      .glow-top-right {
         display: none;
       }
 
-      .right,
-      .end-right,
-      .left {
-        display: none;
-      }
-
-      .end-left {
+      .glow-bottom-left {
         display: block;
       }
     }
