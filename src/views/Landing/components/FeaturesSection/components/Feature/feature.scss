@@ -6,9 +6,9 @@
 .feature {
   margin-bottom: -2px;
 
-  @include min-width(lg) {
-    padding-left: 5rem;
-  }
+  // @include min-width(lg) {
+  //   padding-left: 5rem;
+  // }
 
   &>div {
     position: relative;

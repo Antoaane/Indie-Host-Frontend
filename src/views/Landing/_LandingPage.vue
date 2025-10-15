@@ -48,7 +48,7 @@ onBeforeUnmount(() => {
   <!-- <VueLenis root> -->
   <main id="landing-page">
     <HeroSection />
-    <BenefitsSection />
+    <BenefitsSection v-if="vp.lg.value" />
     <!-- <HabitsSection /> -->
     <FeaturesSection />
     <CustomizationSection />

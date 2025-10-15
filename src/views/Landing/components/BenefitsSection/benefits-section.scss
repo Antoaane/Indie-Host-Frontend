@@ -3,19 +3,22 @@
 @use '@/styles/variables/globals' as *;
 
 #benefits-section {
-  height: 100vh !important;
-  padding-top: calc(var(--gutter-spacing) + 55px);
+  min-height: 0 !important;
+  height: 35vw !important;
+  // padding-top: calc(var(--gutter-spacing) + 55px);
+  padding: 0 !important;
 
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1rem;
 
-  @include gutters(padding, bottom, 3);
+  // @include gutters(padding, bottom, 3);
 
   @include min-width(lg) {
-    padding-top: calc(var(--gutter-spacing) + 70px);
-    @include gutters(padding, bottom, 3);
+    // padding-top: calc(var(--gutter-spacing) + 70px);
+    @include gutters(margin, top, 3);
+    @include gutters(margin, bottom, 6);
   }
 
   .container {

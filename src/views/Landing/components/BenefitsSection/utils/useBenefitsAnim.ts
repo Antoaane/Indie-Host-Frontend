@@ -400,7 +400,7 @@ export function useBenefitsAnim() {
 function attachScrollTrigger(tl: gsap.core.Timeline) {
   ScrollTrigger.create({
     trigger: '#benefits-section',
-    start: vp.lg.value ? 'top 25%' : 'top 15%',
+    start: vp.lg.value ? 'top 35%' : 'top 15%',
     end: vp.lg.value ? '+=50%' : '',
     // scrub: vp.lg.value ? 1 : false,
     scrub: 1,
