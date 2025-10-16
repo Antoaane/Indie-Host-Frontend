@@ -6,7 +6,7 @@ header {
   width: 100%;
 
   position: fixed;
-  top: 0.5rem;
+  top: 0;
   left: 50%;
   z-index: 9999;
 
@@ -15,10 +15,11 @@ header {
 
   transform: translateX(-50%);
 
-  @include gutters(padding, all);
+  @include gutters(padding, all, 0.75);
 
   @include min-width(md) {
     top: 0;
+    @include gutters(padding, all);
   }
 
   @include min-width(lg) {

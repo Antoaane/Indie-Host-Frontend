@@ -25,8 +25,7 @@ const isDonation = computed(() => route.path === '/donation')
 <template>
   <nav class="navbar-landing">
     <a
-      v-if="vp.lg.value"
-      href="/#hero-section"
+      href="/"
       class="navbar__logo"
     >
       <component
@@ -44,13 +43,16 @@ const isDonation = computed(() => route.path === '/donation')
     >
       <template v-if="!isDonation">
         <li>
-          <a href="#join-section"> Tenez moi au courant ! </a>
+          <a href="#join-section"> Essayer gratuitement </a>
         </li>
         <li>
-          <a href="#habits-section"> Fonctionnalités </a>
+          <a href="#features-section"> Fonctionnalités </a>
         </li>
         <li>
           <a href="#how-section"> Comment ça marche ? </a>
+        </li>
+        <li>
+          <a href="#strengths-section"> Nos valeurs </a>
         </li>
       </template>
       <template v-else>
@@ -61,12 +63,15 @@ const isDonation = computed(() => route.path === '/donation')
     </ul>
 
     <!-- Mobile Menu Button -->
-    <component
-      class="navbar__mobile-toggle"
-      :is="icons.burgerMenu.adapt"
+
+    <div
+      :class="{ 'navbar__mobile-toggle': true, active: isMobileMenuOpen }"
       v-if="!vp.lg.value"
       @click="toggleMobileMenu"
-    />
+    >
+      <span class="cheese" />
+      <span class="steak" />
+    </div>
 
     <!-- Mobile Menu -->
     <transition name="fade-slide">
@@ -75,30 +80,50 @@ const isDonation = computed(() => route.path === '/donation')
         v-if="!vp.lg.value && isMobileMenuOpen"
       >
         <ul class="navbar__mobile-links">
-          <li>
-            <a
-              href="#join-section"
-              @click="toggleMobileMenu"
-            >
-              Tenez moi au courant !
-            </a>
-          </li>
-          <li>
-            <a
-              href="#habits-section"
-              @click="toggleMobileMenu"
-            >
-              Fonctionnalités
-            </a>
-          </li>
-          <li>
-            <a
-              href="#how-section"
-              @click="toggleMobileMenu"
-            >
-              Comment ça marche ?
-            </a>
-          </li>
+          <template v-if="!isDonation">
+            <li>
+              <a
+                href="#join-section"
+                @click="toggleMobileMenu"
+              >
+                Essayer gratuitement
+              </a>
+            </li>
+            <li>
+              <a
+                href="#features-section"
+                @click="toggleMobileMenu"
+              >
+                Fonctionnalités
+              </a>
+            </li>
+            <li>
+              <a
+                href="#how-section"
+                @click="toggleMobileMenu"
+              >
+                Comment ça marche ?
+              </a>
+            </li>
+            <li>
+              <a
+                href="#strengths-section"
+                @click="toggleMobileMenu"
+              >
+                Nos valeurs
+              </a>
+            </li>
+          </template>
+          <template v-else>
+            <li>
+              <a
+                href="/"
+                @click="toggleMobileMenu"
+              >
+                Retour à l'accueil
+              </a>
+            </li>
+          </template>
         </ul>
       </div>
     </transition>

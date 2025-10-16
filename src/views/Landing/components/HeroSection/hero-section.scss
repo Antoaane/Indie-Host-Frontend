@@ -4,7 +4,7 @@
 @use '@/styles/components/buttons' as buttons;
 
 #hero-section {
-  padding-top: calc(55px + 1.5rem);
+  padding-top: calc(((var(--gutter-spacing) * 0.75 * 2) + 60px) + 5vh);
   display: flex;
   position: relative;
 
