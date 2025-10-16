@@ -14,7 +14,7 @@
     },
     "text-1": {
       "tag": "p",
-      "content": "IndieHost est un projet indépendant. Nos investisseurs, <strong>c’est vous</strong>."
+      "content": "IndieHost est un projet <strong>indépendant</strong>, vous pouvez nous aider."
     },
     "text-2": {
       "tag": "p",
@@ -22,7 +22,7 @@
     },
     "text-3": {
       "tag": "p",
-      "content": "Nous détestons le spam autant que vous&nbsp;: <strong>nous vous enverrons juste un e-mail</strong> pour vous tenir informé·e — et, si vous le souhaitez, vous pouvez aussi faire un <a href=\"/donation\">don pour soutenir le projet</a>."
+      "content": "Nous détestons le spam autant que vous&nbsp;: <strong>nous vous enverrons juste un e-mail</strong> pour vous tenir informé.e — et, si vous le souhaitez, vous pouvez aussi faire un <a href=\"/donation\">don pour soutenir le projet</a>."
     },
     "slider": {
       "tag": "component",
@@ -74,7 +74,7 @@
         "variant": "NewsletterForm",
         "props": "",
         "data": {
-          "title": "<strong>Restez informé·e</strong>",
+          "title": "<strong>Rejoindre la file d'attente</strong>",
           "fields": [
             {
               "type": "email",
@@ -100,7 +100,7 @@
             {
               "type": "checkbox",
               "name": "early_access",
-              "label": "Je veux être tenu·e informé·e du lancement et tester en avant-première",
+              "label": "Je veux être tenu.e informé.e du lancement et tester en avant-première",
               "required": true
             }
           ],
