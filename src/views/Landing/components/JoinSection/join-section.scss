@@ -22,6 +22,7 @@
     align-items: center;
 
     @include gutters(padding, inline, 2);
+    @include gutters(margin, vertical, 1);
 
     @include min-width(lg) {
       gap: 4rem;

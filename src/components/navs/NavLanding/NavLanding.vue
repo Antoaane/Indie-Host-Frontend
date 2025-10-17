@@ -43,16 +43,36 @@ const isDonation = computed(() => route.path === '/donation')
     >
       <template v-if="!isDonation">
         <li>
-          <a href="#join-section"> Essayer gratuitement </a>
+          <a
+            href=""
+            data-target="#join-section"
+          >
+            Essayer gratuitement
+          </a>
         </li>
         <li>
-          <a href="#features-section"> Fonctionnalités </a>
+          <a
+            href=""
+            data-target="#features-section"
+          >
+            Fonctionnalités
+          </a>
         </li>
         <li>
-          <a href="#how-section"> Comment ça marche ? </a>
+          <a
+            href=""
+            data-target="#how-section"
+          >
+            Comment ça marche ?
+          </a>
         </li>
         <li>
-          <a href="#strengths-section"> Nos valeurs </a>
+          <a
+            href=""
+            data-target="#strengths-section"
+          >
+            Nos valeurs
+          </a>
         </li>
       </template>
       <template v-else>
@@ -83,7 +103,8 @@ const isDonation = computed(() => route.path === '/donation')
           <template v-if="!isDonation">
             <li>
               <a
-                href="#join-section"
+                href=""
+                data-target="#join-section"
                 @click="toggleMobileMenu"
               >
                 Essayer gratuitement
@@ -91,7 +112,8 @@ const isDonation = computed(() => route.path === '/donation')
             </li>
             <li>
               <a
-                href="#features-section"
+                href=""
+                data-target="#features-section"
                 @click="toggleMobileMenu"
               >
                 Fonctionnalités
@@ -99,7 +121,8 @@ const isDonation = computed(() => route.path === '/donation')
             </li>
             <li>
               <a
-                href="#how-section"
+                href=""
+                data-target="#how-section"
                 @click="toggleMobileMenu"
               >
                 Comment ça marche ?
@@ -107,7 +130,8 @@ const isDonation = computed(() => route.path === '/donation')
             </li>
             <li>
               <a
-                href="#strengths-section"
+                href=""
+                data-target="#strengths-section"
                 @click="toggleMobileMenu"
               >
                 Nos valeurs
