@@ -25,6 +25,20 @@ const isDonation = computed(() => route.path === '/donation')
 <template>
   <nav class="navbar-landing">
     <a
+      v-if="!isDonation"
+      href=""
+      data-target="#hero-section"
+      class="navbar__logo"
+    >
+      <component
+        :is="icons.logoFull.adapt"
+        title="IndieHost"
+        desc="Logo de IndieHost, plateforme de gestion de locations saisonnières"
+        role="img"
+      />
+    </a>
+    <a
+      v-else
       href="/"
       class="navbar__logo"
     >

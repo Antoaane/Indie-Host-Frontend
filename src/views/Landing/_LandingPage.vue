@@ -23,18 +23,18 @@ if (vp.lg.value) {
   gsap.registerPlugin(ScrollTrigger, ScrollSmoother)
 }
 
-let smoother: ReturnType<typeof ScrollSmoother.create>
+// let smoother: ReturnType<typeof ScrollSmoother.create>
 
 onMounted(() => {
-  if (vp.lg.value) {
-    smoother = ScrollSmoother.create({
-      wrapper: '#app',
-      content: '#landing-page',
-      smooth: 1.2,
-      effects: true,
-      // speed: 1,
-    })
-  }
+  // if (vp.lg.value) {
+  //   smoother = ScrollSmoother.create({
+  //     wrapper: '#app',
+  //     content: '#landing-page',
+  //     smooth: 1.2,
+  //     effects: true,
+  //     // speed: 1,
+  //   })
+  // }
 
   // 1) Tape précisément les liens
   const links = document.querySelectorAll<HTMLAnchorElement>('a[data-target]')
@@ -52,12 +52,12 @@ onMounted(() => {
       if (!target) return
 
       // 4) Scroll via Smoother si dispo, sinon scroll natif
-      if (smoother) {
-        // 3e param = position facultative (string/number) si tu veux affiner
-        smoother.scrollTo(target, true)
-      } else {
-        target.scrollIntoView({ behavior: 'smooth' })
-      }
+      // if (smoother) {
+      //   // 3e param = position facultative (string/number) si tu veux affiner
+      //   smoother.scrollTo(target, true)
+      // } else {
+      target.scrollIntoView({ behavior: 'smooth' })
+      // }
     }
 
     // important: passive false si tu preventDefault
@@ -66,9 +66,9 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  if (vp.lg.value) {
-    smoother.kill()
-  }
+  // if (vp.lg.value) {
+  //   smoother.kill()
+  // }
 })
 </script>
 
