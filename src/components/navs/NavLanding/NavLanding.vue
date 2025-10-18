@@ -17,6 +17,26 @@ const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value
 }
 
+function scrollToTarget(e: MouseEvent, isDropdown: boolean = true) {
+  e.preventDefault()
+
+  if (!vp.lg.value && isDropdown) {
+    toggleMobileMenu()
+  }
+
+  const link = e.currentTarget as HTMLAnchorElement
+  const selector = link.dataset.target
+  if (!selector) return
+
+  const target = document.querySelector<HTMLElement>(selector)
+  if (!target) return
+
+  // const smoother = ScrollSmoother.get()
+  // if (smoother) smoother.scrollTo(target, true)
+  // else
+  target.scrollIntoView({ behavior: 'smooth' })
+}
+
 const route = useRoute()
 
 const isDonation = computed(() => route.path === '/donation')
@@ -24,11 +44,11 @@ const isDonation = computed(() => route.path === '/donation')
 
 <template>
   <nav class="navbar-landing">
-    <a
+    <button
       v-if="!isDonation"
-      href=""
       data-target="#hero-section"
       class="navbar__logo"
+      @click="scrollToTarget($event, false)"
     >
       <component
         :is="icons.logoFull.adapt"
@@ -36,7 +56,7 @@ const isDonation = computed(() => route.path === '/donation')
         desc="Logo de IndieHost, plateforme de gestion de locations saisonnières"
         role="img"
       />
-    </a>
+    </button>
     <a
       v-else
       href="/"
@@ -57,36 +77,40 @@ const isDonation = computed(() => route.path === '/donation')
     >
       <template v-if="!isDonation">
         <li>
-          <a
+          <button
             href=""
             data-target="#join-section"
+            @click="scrollToTarget"
           >
             Essayer gratuitement
-          </a>
+          </button>
         </li>
         <li>
-          <a
+          <button
             href=""
             data-target="#features-section"
+            @click="scrollToTarget"
           >
             Fonctionnalités
-          </a>
+          </button>
         </li>
         <li>
-          <a
+          <button
             href=""
             data-target="#how-section"
+            @click="scrollToTarget"
           >
             Comment ça marche ?
-          </a>
+          </button>
         </li>
         <li>
-          <a
+          <button
             href=""
             data-target="#strengths-section"
+            @click="scrollToTarget"
           >
             Nos valeurs
-          </a>
+          </button>
         </li>
       </template>
       <template v-else>
@@ -116,40 +140,36 @@ const isDonation = computed(() => route.path === '/donation')
         <ul class="navbar__mobile-links">
           <template v-if="!isDonation">
             <li>
-              <a
-                href=""
+              <button
                 data-target="#join-section"
-                @click="toggleMobileMenu"
+                @click="scrollToTarget"
               >
                 Essayer gratuitement
-              </a>
+              </button>
             </li>
             <li>
-              <a
-                href=""
+              <button
                 data-target="#features-section"
-                @click="toggleMobileMenu"
+                @click="scrollToTarget"
               >
                 Fonctionnalités
-              </a>
+              </button>
             </li>
             <li>
-              <a
-                href=""
+              <button
                 data-target="#how-section"
-                @click="toggleMobileMenu"
+                @click="scrollToTarget"
               >
                 Comment ça marche ?
-              </a>
+              </button>
             </li>
             <li>
-              <a
-                href=""
+              <button
                 data-target="#strengths-section"
-                @click="toggleMobileMenu"
+                @click="scrollToTarget"
               >
                 Nos valeurs
-              </a>
+              </button>
             </li>
           </template>
           <template v-else>

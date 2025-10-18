@@ -35,34 +35,28 @@ onMounted(() => {
   //     // speed: 1,
   //   })
   // }
-
   // 1) Tape précisément les liens
-  const links = document.querySelectorAll<HTMLAnchorElement>('a[data-target]')
-
-  links.forEach((link) => {
-    const handler = (e: Event) => {
-      e.preventDefault()
-
-      // 2) Accès typé à dataset
-      const selector = link.dataset.target
-      if (!selector) return
-
-      // 3) Cible typée
-      const target = document.querySelector<HTMLElement>(selector)
-      if (!target) return
-
-      // 4) Scroll via Smoother si dispo, sinon scroll natif
-      // if (smoother) {
-      //   // 3e param = position facultative (string/number) si tu veux affiner
-      //   smoother.scrollTo(target, true)
-      // } else {
-      target.scrollIntoView({ behavior: 'smooth' })
-      // }
-    }
-
-    // important: passive false si tu preventDefault
-    link.addEventListener('click', handler, { passive: false })
-  })
+  // const links = document.querySelectorAll<HTMLAnchorElement>('a[data-target]')
+  // links.forEach((link) => {
+  //   const handler = (e: Event) => {
+  //     e.preventDefault()
+  //     // 2) Accès typé à dataset
+  //     const selector = link.dataset.target
+  //     if (!selector) return
+  //     // 3) Cible typée
+  //     const target = document.querySelector<HTMLElement>(selector)
+  //     if (!target) return
+  //     // 4) Scroll via Smoother si dispo, sinon scroll natif
+  //     // if (smoother) {
+  //     //   // 3e param = position facultative (string/number) si tu veux affiner
+  //     //   smoother.scrollTo(target, true)
+  //     // } else {
+  //     target.scrollIntoView({ behavior: 'smooth' })
+  //     // }
+  //   }
+  //   // important: passive false si tu preventDefault
+  //   link.addEventListener('click', handler, { passive: false })
+  // })
 })
 
 onBeforeUnmount(() => {
