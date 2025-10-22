@@ -10,7 +10,18 @@
 
   h3 {
     @include h3-title($accent, true);
-    margin-bottom: 1rem;
+    @include gutters(margin, bottom, 0.5);
+  }
+
+  p {
+    @include base-text($accent, false);
+    @include gutters(margin, bottom, 2);
+    @include container(md);
+
+    a {
+      @include buttons.link(white, true);
+      font-weight: 600;
+    }
   }
 
   form {

@@ -22,10 +22,10 @@
     align-items: center;
 
     @include gutters(padding, inline, 2);
-    @include gutters(margin, vertical, 1);
+    // @include gutters(margin, vertical, 1);
 
     @include min-width(lg) {
-      gap: 4rem;
+      gap: 1rem;
     }
 
     .title {
@@ -72,9 +72,23 @@
 
       p {
         text-align: center;
+        @include base-text($accent, false);
+        @include container(md);
 
-        @include h4-title($accent, false);
+        a {
+          @include buttons.link(white, true);
+          font-weight: 600;
+        }
       }
+    }
+
+    .roadmap {
+      width: 100%;
+
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
     }
   }
 
@@ -120,16 +134,6 @@
           @include min-width(lg) {
             grid-column: span 6 / span 6;
           }
-
-          p {
-            @include base-text($accent, false);
-
-            a {
-              @include buttons.link(white, true);
-              font-weight: 600;
-            }
-          }
-
         }
 
         .illustration {
@@ -172,7 +176,7 @@
 
                 flex-direction: row;
                 align-items: center;
-                justify-content: flex-end;
+                justify-content: center;
               }
 
               // @include container(xxl, 5rem);

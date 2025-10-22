@@ -13,6 +13,8 @@ import { vp } from '@/utils/viewport'
 // CONTENT
 import type { ItemSection } from '@/content/types'
 import rawContent from '@/content/fr/Landing/join-section.json'
+// ASSETS
+import RoadMapImg from '@/components/svgs/images/RoadMapImg.vue'
 
 // Map des variantes "component" du JSON → composants Vue
 const componentMap: Record<string, any> = {
@@ -115,7 +117,11 @@ onBeforeUnmount(() => {
           />
           <h2 v-html="items['title-1']?.content" />
         </div>
-        <p v-html="items['text-1']?.content" />
+        <p v-html="items['text-2']?.content" />
+      </div>
+
+      <div class="roadmap">
+        <RoadMapImg />
       </div>
     </div>
     <div :class="section.id + '-container'">
@@ -140,13 +146,12 @@ onBeforeUnmount(() => {
           </div>
 
           <div class="content">
-            <p v-html="items['text-2']?.content" />
-            <p v-html="items['text-3']?.content" />
-
             <div
               class="form-container"
               v-if="FormComp"
             >
+              <h3 v-html="items['title-2'].content" />
+              <p v-html="items['text-3']?.content" />
               <component
                 :is="FormComp"
                 v-bind="formProps"

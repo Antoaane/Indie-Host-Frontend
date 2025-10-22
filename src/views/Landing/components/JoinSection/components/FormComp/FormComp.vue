@@ -31,7 +31,6 @@ type SubmitDef = {
 }
 
 type NewsletterFormData = {
-  title?: string
   fields?: FieldDef[]
   groups?: CheckboxGroup[]
   consents?: ConsentDef[]
@@ -46,11 +45,6 @@ const iconMap: Record<string, any> = { SendIcon }
 </script>
 
 <template>
-  <h3
-    v-if="data.title"
-    v-html="data.title"
-  />
-
   <!-- ✅ Post direct vers Formspree -->
   <form
     action="https://formspree.io/f/meorqbyk"

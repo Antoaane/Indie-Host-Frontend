@@ -68,13 +68,16 @@
         ]
       }
     },
+    "title-2": {
+      "tag": "h3",
+      "content": "<strong>Rejoindre la file d'attente</strong>"
+    },
     "form-1": {
       "tag": "component",
       "meta": {
         "variant": "NewsletterForm",
         "props": "",
         "data": {
-          "title": "<strong>Rejoindre la file d'attente</strong>",
           "fields": [
             {
               "type": "email",
