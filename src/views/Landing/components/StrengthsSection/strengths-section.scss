@@ -76,6 +76,8 @@
         height: min-content;
         position: relative;
 
+        backdrop-filter: blur(10px);
+
         @include min-width(lg) {
           flex: 1 0;
         }

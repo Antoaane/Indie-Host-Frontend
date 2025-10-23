@@ -14,7 +14,7 @@ import { vp } from '@/utils/viewport'
 import type { ItemSection } from '@/content/types'
 import rawContent from '@/content/fr/Landing/join-section.json'
 // ASSETS
-import RoadMapImg from '@/components/svgs/images/RoadMapImg.vue'
+import RoadMapDark from '@/components/svgs/images/RoadMapDark.vue'
 
 // Map des variantes "component" du JSON → composants Vue
 const componentMap: Record<string, any> = {
@@ -121,7 +121,7 @@ onBeforeUnmount(() => {
       </div>
 
       <div class="roadmap">
-        <RoadMapImg />
+        <RoadMapDark />
       </div>
     </div>
     <div :class="section.id + '-container'">

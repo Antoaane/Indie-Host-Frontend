@@ -3,6 +3,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { ItemSection, ContentBlock } from '@/content/types'
+// ASSETS
+import RoadMapLight from '@/components/svgs/images/RoadMapLight.vue'
 
 interface HeroRichBlock {
   type?: string
@@ -183,25 +185,7 @@ const extractRichBlocks = (block: ContentBlock): HeroRichBlock[] => {
             />
           </template>
 
-          <video
-            controls
-            autoplay
-            playsinline
-            muted
-            loop
-          >
-            <!-- webm -->
-            <source
-              src="/public/assets/media/videos/indiehost-demo.webm"
-              type="video/webm"
-            />
-            <!-- mp4 -->
-            <source
-              src="/public/assets/media/videos/indiehost-demo.mp4"
-              type="video/mp4"
-            />
-            Your browser does not support the video tag.
-          </video>
+          <RoadMapLight />
         </div>
 
         <component

@@ -1,3 +1,5 @@
+<!-- File: src/components/svgs/images/RoadMapImg.vue -->
+
 <template>
   <svg
     :role="attrRole"
@@ -744,7 +746,7 @@ const url = (v: string) => `url(#${v})`
 
 onMounted(() => {
   if (props.role !== true && (!props.title || !props.desc)) {
-    console.warn('[RoadMapImg.vue] title et desc sont requis quand role ≠ true')
+    console.warn('[RoadMapDark.vue] title et desc sont requis quand role ≠ true')
   }
 })
 // généré automatiquement par convert_svg.py

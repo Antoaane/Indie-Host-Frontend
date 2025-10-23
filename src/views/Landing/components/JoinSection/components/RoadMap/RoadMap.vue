@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 // ASSETS
-import RoadMap from '@/components/svgs/images/RoadMapImg.vue'
+import RoadMap from '@/components/svgs/images/RoadMapDark.vue'
 </script>
 
 <template>
