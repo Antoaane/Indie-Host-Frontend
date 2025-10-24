@@ -73,7 +73,7 @@ function buildDesktopTimeline() {
   /* REVEAL                                                                  */
   /* ------------------------------------------------------------------------ */
 
-  tl.addLabel('reveal', `enter+=${BASE_DURATION * 0.73}`)
+  tl.addLabel('reveal', `enter+=${BASE_DURATION * 0.85}`)
     .to('.animation-desktop .gains .advantages', {
       '--rgd-start': 'rgba(0, 255, 166, 0.6)',
       duration: BASE_DURATION / 3,
@@ -87,8 +87,8 @@ function buildDesktopTimeline() {
         return w * 0.5 - shortPx / 2
       },
       opacity: 1,
-      ease: 'power2.out',
-      duration: BASE_DURATION / 3
+      ease: 'none',
+      duration: BASE_DURATION / 6
     }, 'reveal')
 
   /* ------------------------------------------------------------------------ */
@@ -396,8 +396,8 @@ export function useBenefitsAnim() {
 function attachScrollTrigger(tl: gsap.core.Timeline) {
   ScrollTrigger.create({
     trigger: '#benefits-section',
-    start: vp.lg.value ? 'top 35%' : 'top 15%',
-    end: vp.lg.value ? '+=50%' : '',
+    start: 'top 40%',
+    end: '+=50%',
     // scrub: vp.lg.value ? 1 : false,
     scrub: 1,
     pin: false,
