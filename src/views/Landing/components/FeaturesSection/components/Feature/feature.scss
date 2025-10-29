@@ -182,7 +182,7 @@
           // margin-bottom: -7.5px;
 
           border: 7.5px solid rgba($accent, 0.8);
-          border-radius: borders.$rounded-xl;
+          border-radius: borders.$rounded-xxl;
 
           @include halo(sm, true, white, 0.5);
 
@@ -192,18 +192,18 @@
           }
 
           @include min-width(lg) {
-            border-radius: borders.$rounded-xl;
+            border-radius: borders.$rounded-xxl;
             height: 80%;
 
             @include halo(lg, true, white, 0.5);
           }
 
           @include min-width(xl) {
-            border-radius: borders.$rounded-xl;
+            border-radius: borders.$rounded-xxl;
           }
 
           @include min-width(xxl) {
-            border-radius: borders.$rounded-xl;
+            border-radius: borders.$rounded-xxl;
           }
         }
       }
