@@ -21,167 +21,147 @@
         "props": "",
         "data": [
           {
-            "id": "cat-debuter",
-            "title": "Bien démarrer avec IndieHost",
+            "id": "cat-comprendre",
+            "title": "Comprendre IndieHost",
             "children": [
               {
                 "id": "q-1",
-                "question": "Quelles sont les étapes essentielles pour débuter en location saisonnière avec IndieHost ?",
-                "answer": "IndieHost simplifie votre entrée dans la location courte durée. Voici les étapes clés : Créez votre compte, importez votre annonce existante depuis Airbnb ou Booking.com, ou créez-en une nouvelle, configurez votre calendrier, vos tarifs et vos conditions de réservation, publiez votre page de réservation personnalisée."
+                "question": "Qu'est-ce qu'IndieHost ?",
+                "answer": "IndieHost est une plateforme de réservation de logements de courte durée qui redonne le pouvoir aux propriétaires. Notre mission est de vous libérer des commissions excessives des grandes plateformes (OTA). Nous vous fournissons tous les outils (site web, moteur de réservation, paiement, calendrier) pour gérer vos réservations en direct, sans jamais prendre de commission sur vos revenus."
               },
               {
                 "id": "q-2",
-                "question": "Comment équiper mon logement pour débuter la location saisonnière ?",
-                "answer": "Il est important de proposer un logement propre, fonctionnel et rassurant. Literie de qualité, Wi-Fi, cuisine équipée, salle de bain pratique, chauffage/clim. IndieHost vous guide pas à pas pour identifier les équipements essentiels et les valoriser."
+                "question": "Quelle est la différence avec Airbnb ou Booking.com ?",
+                "answer": "Contrairement aux OTA traditionnelles (Airbnb, Booking…), IndieHost ne prend aucune commission sur vos réservations. Vous gardez le contrôle total sur votre relation client, votre image de marque et vos tarifs. De plus, vous pouvez personnaliser votre page et utiliser votre nom de domaine, ce qui est impossible sur les plateformes classiques."
               },
               {
                 "id": "q-3",
-                "question": "Est-ce que je peux tester IndieHost gratuitement ?",
-                "answer": "Oui. IndieHost ne vous facture rien tant que vous n’avez pas de réservation. Vous pouvez créer et tester votre page gratuitement."
+                "question": "Si vous ne prenez pas de commission, comment vous rémunérez-vous ?",
+                "answer": "Notre modèle est transparent. Nous proposons un Plan 'IndieHost' 100% gratuit qui couvre tous les besoins essentiels (paiement, calendrier, 2 annonces). Nous générons des revenus via des abonnements mensuels optionnels (SuperHost et MegaHost) pour les propriétaires qui ont besoin de fonctionnalités plus avancées (plus d'annonces, connexion PMS, personnalisation poussée) et via des options à la carte (comme l'intégration Google Travel ou la vérification KYC)."
               },
               {
                 "id": "q-4",
-                "question": "Dois-je déclarer mon activité de location saisonnière ?",
-                "answer": "Oui. La déclaration en mairie est obligatoire dans de nombreuses communes. IndieHost vous aide à préparer les documents nécessaires."
+                "question": "À quel type d'hôte s'adresse IndieHost ?",
+                "answer": "IndieHost est conçu pour tous les types d'hôtes :<br /><br />Les Particuliers (Plan Gratuit) : Ceux qui louent leur résidence principale occasionnellement.<br /><br />Les Semi-Pros (Plan SuperHost) : Propriétaires de résidences secondaires, gîtes ou logements insolites qui gèrent quelques biens.<br /><br />Les Professionnels (Plan MegaHost) : Gérants de gîtes, petits hôtels ou conciergeries qui ont besoin d'outils de gestion complets.<br /><br />Chaque plan s’adapte à votre niveau d’activité et de professionnalisation."
               },
               {
                 "id": "q-5",
-                "question": "Comment fixer un bon tarif de location pour débuter ?",
-                "answer": "Analysez les prix locaux, tenez compte de la saison et commencez avec un tarif compétitif. IndieHost propose un système intelligent pour ajuster automatiquement vos tarifs."
-              },
-              {
-                "id": "q-6",
-                "question": "Quelle fiscalité s’applique si je loue mon logement avec IndieHost ?",
-                "answer": "En tant que particulier, vous êtes généralement soumis au régime micro-BIC avec un abattement de 50 %. IndieHost vous aide à suivre vos revenus et générer des rapports pour votre déclaration fiscale."
+                "question": "Que signifie réservation directe ?",
+                "answer": "La réservation directe signifie que le voyageur réserve directement auprès de vous, le propriétaire, sans intermédiaire. IndieHost vous fournit la technologie pour que vous puissiez accepter ces réservations sur votre propre page. L'avantage est double : vous ne payez aucune commission et vous maîtrisez l'intégralité de la relation client (données, communication, fidélisation)."
               }
             ]
           },
           {
-            "id": "cat-gestion",
-            "title": "Gérer facilement votre location saisonnière",
+            "id": "cat-nos-offres",
+            "title": "Tarifs et Abonnements",
             "children": [
               {
                 "id": "q-7",
-                "question": "Comment créer une page de réservation pour mon logement sans savoir coder ?",
-                "answer": "IndieHost permet de générer automatiquement une page de réservation personnalisée à partir de votre annonce existante. Aucun besoin de savoir coder, l’import se fait en quelques clics à partir de vos données Airbnb ou Booking."
+                "question": "Le plan 'IndieHost' est-il vraiment gratuit ? Y a-t-il des frais cachés ?",
+                "answer": "Oui, le plan 'IndieHost' est à 0€/mois, sans frais cachés de notre part. Il inclut 2 annonces, le paiement en ligne (via Stripe), la facturation, la synchronisation iCal, la messagerie et le tableau de bord. Les seuls frais qui s'appliquent sont les frais de transaction standards prélevés par notre partenaire de paiement, Stripe (comme pour toute transaction en ligne), sur lesquels nous ne prenons aucune marge."
               },
               {
                 "id": "q-8",
-                "question": "Est-ce que les voyageurs peuvent me contacter facilement sans créer de compte ?",
-                "answer": "Oui. Grâce à la messagerie intégrée, les voyageurs peuvent envoyer un message instantanément sans compte. Cela simplifie la prise de contact et réduit les frictions."
+                "question": "Puis-je annuler mon abonnement payant (SuperHost/MegaHost) à tout moment ?",
+                "answer": "Nos abonnements payants sont sans engagement et peuvent être résiliés à n'importe quel moment, sans aucun frais de résiliation. L'annulation se fait simplement depuis votre tableau de bord. Votre abonnement restera actif jusqu'à la fin de votre période de facturation en cours (mensuelle ou annuelle), et vous ne serez pas facturé pour la période suivante."
               },
               {
                 "id": "q-9",
-                "question": "Comment partager facilement les informations importantes de mon logement aux voyageurs ?",
-                "answer": "IndieHost propose un QR code dans votre logement, donnant accès à toutes les infos utiles via une page claire, sans téléchargement ni inscription."
+                "question": "Puis-je ajouter des options spécifiques sans changer de plan ?",
+                "answer": "Oui. Par exemple, si vous êtes sur le plan Gratuit, vous pouvez souscrire à des options payantes spécifiques sans passer au plan SuperHost, comme :L'intégration Google Travel, l'achat ou le rattachement d'un nom de domaine personnalisé, la possibilité d'accepter des acomptes"
               },
               {
                 "id": "q-10",
-                "question": "Quelle est la meilleure solution pour faire un check-in autonome dans une location saisonnière ?",
-                "answer": "En scannant le QR code, vos voyageurs accèdent instantanément à votre page IndieHost sans compte. Ils peuvent vous envoyer un message, consulter les infos essentielles et suivre les instructions d’arrivée, même en votre absence."
-              },
-              {
-                "id": "q-11",
-                "question": "Comment automatiser le ménage dans ma location saisonnière ?",
-                "answer": "Des services et plateformes comme IndieHost permettent de connecter votre calendrier à des prestataires locaux pour organiser automatiquement les prestations de ménage après chaque départ."
+                "question": "Que se passe-t-il si j'ai plusieurs logements à différents endroits ?",
+                "answer": "Notre règle est que les annonces d'un même compte doivent appartenir à la même personne (physique ou morale). Si vous gérez des biens pour des propriétaires différents, chaque propriétaire devra créer son propre compte IndieHost."
               }
             ]
           },
           {
-            "id": "cat-automatisation",
-            "title": "Automatiser votre location courte durée",
+            "id": "cat-paiements-en-ligne",
+            "title": "Paiements en ligne",
             "children": [
               {
                 "id": "q-12",
-                "question": "Comment personnaliser les conditions de paiement pour chaque réservation ?",
-                "answer": "Avec IndieHost, adaptez vos conditions de paiement selon le logement ou le profil du voyageur. Choisissez acompte, paiement en ligne ou en espèces, tout est ajustable pour garder le contrôle."
+                "question": "Comment suis-je payé par les voyageurs ?",
+                "answer": "Nous utilisons Stripe Connect, la référence mondiale du paiement en ligne sécurisé. Lors de votre inscription, vous connectez votre compte bancaire à Stripe. Lorsqu'un voyageur paie, l'argent est traité par Stripe et transféré directement sur votre compte. IndieHost n'agit jamais comme intermédiaire financier et ne conserve jamais votre argent."
               },
               {
                 "id": "q-13",
-                "question": "Comment adapter mes tarifs automatiquement selon la saison ou la demande ?",
-                "answer": "IndieHost ajuste automatiquement vos prix selon les périodes grâce à un système de variation en pourcentage ou un algorithme intelligent recommandant les meilleurs tarifs selon la demande."
+                "question": "Est-ce que IndieHost prélève une commission sur le paiement ?",
+                "answer": "Non, jamais. Vous recevez 100% du montant payé par le voyageur (moins les frais de transaction standards de Stripe, qui sont inévitables pour tout paiement par carte bancaire)."
               },
               {
                 "id": "q-14",
-                "question": "Comment suivre les performances de ma location saisonnière ?",
-                "answer": "IndieHost offre un tableau de bord détaillé avec statistiques sur réservations, revenus et occupation pour optimiser votre stratégie."
+                "question": "Puis-je demander un acompte au lieu du paiement total ?",
+                "answer": "Oui. Vous pouvez configurer vos propres règles de paiement. La possibilité d'accepter des acomptes (plutôt que 100% à la réservation) est une option payante à 5€/mois sur le plan Gratuit, et est incluse par défaut dans les plans SuperHost et MegaHost."
               },
               {
                 "id": "q-15",
-                "question": "Comment automatiser les messages envoyés aux voyageurs dans une location courte durée ?",
-                "answer": "Configurez des messages automatiques pour confirmations, instructions d’arrivée et remerciements, personnalisables selon vos préférences via IndieHost."
+                "question": "Le paiement est-il sécurisé pour mes clients ?",
+                "answer": "Totalement. Stripe Connect gère des milliards de transactions et respecte les normes de sécurité les plus strictes (PCI DSS). Les voyageurs peuvent payer en toute confiance, sachant que leurs informations bancaires sont cryptées et protégées."
               },
               {
                 "id": "q-16",
-                "question": "Quel outil utiliser pour envoyer des messages automatiques aux locataires ?",
-                "answer": "Plusieurs solutions permettent cette automatisation, notamment IndieHost avec sa messagerie intégrée et scénarios personnalisables."
+                "question": "Quand est-ce que je reçois l'argent de la réservation ?",
+                "answer": "Pour sécuriser la transaction à la fois pour l'hôte et pour le voyageur, le paiement est conservé de manière sécurisée par notre partenaire Stripe après la confirmation de la réservation. La somme est ensuite transférée sur votre compte une fois que le client a validé son entrée dans le logement (check-in). Ce système de mise sous séquestre garantit que le logement est conforme et que le voyageur est bien arrivé, établissant une confiance mutuelle. Une fois le paiement libéré, il apparaît sur votre compte Stripe puis est viré sur votre compte bancaire selon le calendrier habituel de Stripe (généralement quelques jours)."
               }
             ]
           },
           {
-            "id": "cat-reservations",
-            "title": "Réservations et gestion des voyageurs",
+            "id": "cat-start",
+            "title": "Démarrer sur IndieHost",
             "children": [
               {
                 "id": "q-17",
-                "question": "Puis-je poser des questions aux voyageurs avant d'accepter une réservation ?",
-                "answer": "Oui, IndieHost encourage les échanges préalables pour clarifier attentes, détecter malentendus et assurer compatibilité avant validation, réduisant les mauvaises surprises."
+                "question": "Comment créer mon annonce sur IndieHost ",
+                "answer": "Avec notre éditeur en direct. À gauche, vous remplissez vos informations (titre, photos, équipements) ; à droite, vous visualisez instantanément le rendu final. En quelques minutes, votre page est prête à être partagée."
               },
               {
                 "id": "q-18",
-                "question": "Comment gérer les annulations de dernière minute sans stress ?",
-                "answer": "IndieHost vous alerte en temps réel en cas d’annulation tardive, vous permettant de réagir rapidement, relancer un autre voyageur ou ajuster votre disponibilité."
+                "question": "Combien d’annonces puis-je créer ?",
+                "answer": "Avec le plan gratuit, vous pouvez créer jusqu'à deux logements, avec le plan superhost cinq et avec le plan megahost vous pouvez aller jusqu'à quinze (extensibles sur demande)"
               },
               {
                 "id": "q-19",
-                "question": "Comment gérer un avis négatif injustifié sur IndieHost ?",
-                "answer": "IndieHost offre un système de modération pour contester les commentaires infondés. Une équipe examine les cas et peut supprimer les avis inappropriés pour garantir un environnement de confiance."
+                "question": "Quelles informations sont demandées à l’inscription ?",
+                "answer": "Lors de votre inscription, nous vous demanderons vos informations administratives de base. Ceci est nécessaire pour assurer la conformité légale de la plateforme, notamment pour la gestion des paiements via Stripe et, si vous êtes un particulier, pour la redistribution future des taxes de séjour."
               },
               {
                 "id": "q-20",
-                "question": "Comment gérer une demande de location de longue durée ?",
-                "answer": "IndieHost permet de définir des conditions spécifiques pour les séjours prolongés, incluant contrats adaptés, paiements échelonnés et règles personnalisées pour une expérience optimale."
+                "question": "L'outil est-il compliqué à utiliser pour quelqu'un de peu technique ? ",
+                "answer": "Non, l'outil est conçu pour être intuitif. L'éditeur 'live' vous guide pas à pas. De plus, votre tableau de bord centralise toutes les informations clés (rémunération, voyageurs) de manière claire et visuelle. Pour une gestion encore plus simple au quotidien, une application mobile est disponible, vous permettant de gérer vos annonces et vos réservations directement depuis votre téléphone."
               }
             ]
           },
           {
-            "id": "cat-securite",
-            "title": "Sécurité et conformité juridique",
+            "id": "cat-synchronisation",
+            "title": "Gestion des Réservations et Synchronisation",
             "children": [
               {
                 "id": "q-21",
-                "question": "Quels sont les risques juridiques si je loue sans respecter la réglementation locale ?",
-                "answer": "Louer sans respecter la loi peut entraîner des amendes jusqu'à 50 000 €, voire 80 000 € et prison en cas de fausse déclaration. IndieHost vous accompagne pour rester conforme et vous alerte en cas de risque."
+                "question": "Comment fonctionne la synchronisation du calendrier iCAL ?",
+                "answer": "La synchronisation est bidirectionnelle. Vous donnez à IndieHost vos liens iCAL (Airbnb, Booking, etc.) pour importer vos réservations externes, et IndieHost vous fournit un lien iCAL à copier dans vos autres plateformes. Dès qu'une réservation est prise sur une plateforme, elle bloque les dates sur toutes les autres, évitant ainsi les doubles réservations."
               },
               {
                 "id": "q-22",
-                "question": "Que risque-t-on en cas de dépassement du quota de 120 nuits par an pour une résidence principale ?",
-                "answer": "En France, louer plus de 120 nuits/an sans autorisation peut coûter jusqu’à 10 000 € d’amende, plus 5 000 € pour absence de déclaration. IndieHost suit ce quota et vous notifie."
+                "question": "Puis-je ajouter manuellement une réservation prise par téléphone ?",
+                "answer": "Oui, cette fonctionnalité est incluse dans les plans SuperHost et MegaHost. Elle vous permet d'ajouter ou de modifier manuellement des réservations (par exemple, un habituté qui fait une réservation téléphonique) directement dans votre calendrier IndieHost pour bloquer les dates."
               },
               {
                 "id": "q-23",
-                "question": "La copropriété peut-elle interdire la location courte durée ?",
-                "answer": "Oui, un règlement de copropriété peut interdire la location courte durée. En cas de non-respect, le syndic peut saisir la justice et condamner à des dommages-intérêts. IndieHost conseille de documenter ces cas."
+                "question": "Comment le calendrier affiche-t-il mes réservations ?",
+                "answer": "Votre calendrier IndieHost centralise tout. Il affiche vos réservations avec une visualisation claire de leur provenance (IndieHost, Airbnb, Booking, Manuelle...). Vous disposez de plusieurs vues (mensuelle, hebdomadaire) pour une gestion facilitée."
               },
               {
                 "id": "q-24",
-                "question": "Existe-t-il un système de caution flexible pour protéger mon logement ?",
-                "answer": "Oui, IndieHost permet de configurer une caution prélevée ou simplement autorisée, avec gestion 100 % en ligne depuis le tableau de bord."
+                "question": "Comment suis-je notifié d'une nouvelle réservation ?",
+                "answer": "Vous recevez des notifications en temps réel via l'application, sms ou par email) pour toute nouvelle demande de réservation ou confirmation de paiement, vous permettant d'être très réactif avec vos voyageurs."
               },
               {
                 "id": "q-25",
-                "question": "Quelle est la meilleure solution pour éviter les fêtes ou squatteurs dans ma location ?",
-                "answer": "IndieHost aide à limiter les risques par vérification des profils, séjours courts, filtres, et suivi via messagerie intégrée, anticipant ainsi les situations à risque."
-              },
-              {
-                "id": "q-26",
-                "question": "Que faire si un locataire dégrade mon logement ?",
-                "answer": "IndieHost propose un outil de certification numérique couvrant légalement contre les dégradations. Un agent dédié aide en cas de litige ou dommage."
-              },
-              {
-                "id": "q-27",
-                "question": "Comment sécuriser ma maison quand je loue à distance ?",
-                "answer": "Grâce au check-in autonome et messagerie intégrée, vous pouvez gérer arrivées et départs à distance tout en maintenant la communication efficace."
+                "question": "Puis-je automatiser la communication avec mes voyageurs (SMS, notifications) ?",
+                "answer": "Oui. Pour vous faire gagner du temps et professionnaliser l'accueil, nos plans avancés (SuperHost et MegaHost) incluent un système de messagerie automatisée. Vous pouvez programmer l'envoi de SMS et de notifications à des moments clés du parcours voyageur (ex: confirmation de réservation, rappel J-7, instructions d'arrivée la veille, message de bienvenue à l'arrivée, instructions de départ)."
               }
             ]
           },
@@ -191,157 +171,91 @@
             "children": [
               {
                 "id": "q-28",
-                "question": "Comment fixer le bon prix pour ma location saisonnière ?",
-                "answer": "Pour un tarif cohérent, considérez saisonnalité, concurrence, événements locaux, coûts fixes. IndieHost ajuste vos tarifs via un algorithme intelligent en gardant le contrôle."
+                "question": "Si je ne suis pas sur Airbnb, comment les voyageurs vont-ils me trouver ?",
+                "answer": "IndieHost vous donne les outils pour l'acquisition directe. Vous pouvez partager le lien de votre page IndieHost sur vos réseaux sociaux, Google Maps, etc. De plus, nous proposons une option payante puissante : l'intégration à Google Travel (Google Hotels)."
               },
               {
                 "id": "q-29",
-                "question": "Quels équipements rendent une annonce plus attractive pour les voyageurs ?",
-                "answer": "Wi-Fi rapide, linge propre, cuisine équipée, produits d’accueil, guide d’arrivée et check-in autonome améliorent considérablement l’attractivité de votre annonce. IndieHost vous aide à valoriser ces atouts."
+                "question": "Qu'est-ce que l'intégration Google Travel ?",
+                "answer": "C'est une option (payante pour les plans Gratuit/SuperHost, incluse pour MegaHost) qui référence votre annonce directement dans les résultats de recherche de Google Travel / Google Hotels. C'est un canal d'acquisition extrêmement puissant qui touche des millions de voyageurs."
               },
               {
                 "id": "q-30",
-                "question": "Comment améliorer la visibilité de mon annonce de location sur Internet ?",
-                "answer": "Un titre clair, photos pro, description précise, avis vérifiés, page moderne et sans commission optimisent la visibilité locale. IndieHost vous guide pour créer cette expérience."
+                "question": "Quel est l'intérêt d'être sur Google Travel avec IndieHost ?",
+                "answer": "L'argument est simple : puisque vous n'avez aucune commission à payer sur IndieHost, vous pouvez afficher sur Google Travel un prix inférieur de 15% à 20% à celui de vos annonces sur Booking ou Airbnb. Vous devenez ainsi l'offre la plus compétitive et captez les réservations en direct."
               },
               {
                 "id": "q-31",
-                "question": "Quelles assurances sont nécessaires pour une location de vacances ?",
-                "answer": "Assurance propriétaire non-occupant et assurance dégradations recommandées. IndieHost propose un outil de certification numérique et un agent dédié pour renforcer la couverture."
+                "question": "IndieHost possède-t-il un moteur de recherche pour les voyageurs ?",
+                "answer": "Oui. En plus de votre page d'annonce individuelle, IndieHost dispose d'un moteur de recherche (par lieu, date, nombre de personnes) qui permet aux voyageurs visitant notre site de découvrir votre logement."
               },
               {
                 "id": "q-32",
-                "question": "Quel est le pourcentage de commission prélevé par Airbnb ou Booking ?",
-                "answer": "Les commissions varient de 15 à 20 % par réservation, partagées entre hôte et voyageur, augmentant le prix final et réduisant la marge. IndieHost permet de garder 100 % du montant payé."
-              },
-              {
-                "id": "q-33",
-                "question": "Comment envoyer un code promo à mes anciens voyageurs ?",
-                "answer": "IndieHost facilite la relance des anciens voyageurs avec offres spéciales, permettant d’attirer plus de réservations, notamment en période creuse, tout en restant rentable."
-              },
-              {
-                "id": "q-34",
-                "question": "Comment rendre mon annonce visible localement quand je loue ma maison ?",
-                "answer": "IndieHost optimise le référencement local, guidant les utilisateurs vers votre page selon leur localisation, dates et préférences, maximisant les chances de réservation directe."
-              },
-              {
-                "id": "q-35",
-                "question": "Comment fidéliser les voyageurs qui réservent sur ma page IndieHost ?",
-                "answer": "IndieHost aide à bâtir une relation de confiance avec les voyageurs, encourageant les réservations directes et la fidélisation via des outils simples de gestion et communication."
-              },
-              {
-                "id": "q-36",
-                "question": "Quel est le meilleur site pour créer sa page de réservation courte durée ?",
-                "answer": "Des plateformes comme IndieHost permettent de créer rapidement une page personnalisée, sans commission, avec paiement, messagerie et synchronisation des calendriers."
-              },
-              {
-                "id": "q-37",
-                "question": "Comment éviter les frais de commission sur Airbnb ou Booking ?",
-                "answer": "IndieHost permet d’éviter totalement les commissions des plateformes, avec des outils de gestion complets sans prélèvement de pourcentage."
+                "question": "Aidez-vous à fidéliser les clients et à créer une relation directe ?",
+                "answer": "Oui, c'est un pilier de l'offre IndieHost. La fidélisation commence dès le premier séjour grâce au livret d'accueil numérique.<br /><br />Canal de Communication Direct : Via un QR code placé dans le logement, le voyageur accède à un guide numérique complet. Ce guide intègre une messagerie instantanée dédiée, vous offrant un canal de communication direct et professionnel avec votre voyageur (pour toutes les infos du séjour) qui vous appartient, contrairement aux messageries des OTA.<br /><br />Expérience Premium : Ce livret centralise toutes les informations nécessaires au bon déroulé du séjour (guides, contacts, etc.). Il améliore l'expérience du voyageur, ce qui favorise les bons avis (aidant votre acquisition future) et les réservations en direct (fidélisation).<br /><br />Outils de Re-marketing : Pour les plans avancés (MegaHost), vous disposez en plus d'outils de campagnes d'e-mailing pour recontacter vos anciens clients avec des offres spéciales et les inciter à réserver de nouveau chez vous."
               }
             ]
           },
           {
-            "id": "cat-facturation",
-            "title": "Facturation et obligations administratives",
+            "id": "cat-url-thèmes",
+            "title": "Nom de domaine et Thèmes",
             "children": [
               {
                 "id": "q-38",
-                "question": "Dois-je fournir une facture à mes voyageurs ?",
-                "answer": "Oui, surtout pour professionnels ou sur demande. IndieHost génère automatiquement des factures conformes aux normes fiscales."
+                "question": "Puis-je utiliser mon propre nom de domaine (ex: www.mon-gite.fr) ?",
+                "answer": "Absolument. C'est un de nos atouts majeurs pour votre indépendance. Vous pouvez acheter ou lier un nom de domaine existant à votre compte/annonce IndieHost. Cette fonctionnalité est incluse dans le plan MegaHost et disponible en option payante pour le plan SuperHost."
               },
               {
                 "id": "q-39",
-                "question": "Comment exporter mes données comptables facilement ?",
-                "answer": "IndieHost permet de télécharger les revenus locatifs au format CSV, compatibles avec la plupart des outils comptables."
+                "question": "Que se passe-t-il si je n'ai pas de nom de domaine ?",
+                "answer": "Pas de problème. Si vous n'avez pas de nom de domaine personnalisé, vous obtenez une URL IndieHost standard (par exemple indiehost.com/votre-propriete) que vous pouvez partager immédiatement."
               },
               {
                 "id": "q-40",
-                "question": "Quelles sont les obligations légales à respecter pour publier mon annonce ?",
-                "answer": "IndieHost guide étape par étape pour respecter les obligations légales : enregistrement, numéro d’autorisation, quotas, taxe de séjour."
-              }
-            ]
-          },
-          {
-            "id": "cat-multiannonces",
-            "title": "Gérer plusieurs annonces et rester conforme",
-            "children": [
-              {
-                "id": "q-41",
-                "question": "Puis-je ajouter un co-hôte pour m'aider à gérer mes réservations ?",
-                "answer": "Oui, IndieHost permet d’ajouter des co-hôtes avec accès personnalisés pour déléguer certaines tâches sans donner un accès complet."
+                "question": "Qu'est-ce que la 'banque de thèmes' ?",
+                "answer": "Ce sont des habillages graphiques pour votre page de réservation. Au lieu d'avoir la même apparence que tout le monde, vous pouvez choisir un thème (design, couleurs, typographie) qui correspond à l'ambiance de votre logement (moderne, rustique, luxe...)."
               },
               {
-                "id": "q-42",
-                "question": "Comment gérer plusieurs annonces de location depuis une seule plateforme ?",
-                "answer": "IndieHost offre une gestion multi-annonces avec interface centralisée, facilitant la supervision de vos logements."
+                "id": "q-41",
+                "question": "À quel point puis-je personnaliser mon annonce ?",
+                "answer": "Vous avez un contrôle avancé. Entre l'éditeur live (pour le contenu : photos, textes, équipements, règles) et le choix des thèmes (pour le design), vous pouvez créer une page de réservation unique et professionnelle qui reflète vraiment votre marque."
               }
             ]
           },
           {
-            "id": "cat-sync",
-            "title": "Synchroniser IndieHost avec un PMS, Google Agenda ou Airbnb",
+            "id": "cat-sécurité",
+            "title": "Sécurité et Conformité Légale",
             "children": [
               {
+                "id": "q-42",
+                "question": "Qu'est-ce que la vérification KYC ?",
+                "answer": "Le KYC (Know Your Customer) est un processus de vérification d'identité essentiel pour éviter les arnaques et rassurer les voyageurs. Nous vérifions votre identité (qui doit correspondre au nom du compte), un justificatif de propriété du bien, et votre numéro de déclaration de location en mairie."
+              },
+              {
                 "id": "q-43",
-                "question": "Qu'est-ce qu'un PMS et à quoi ça sert ?",
-                "answer": "Un PMS est un logiciel de gestion permettant de gérer plusieurs logements, synchroniser réservations, automatiser messages, calendrier et comptabilité. IndieHost propose une API publique pour faciliter la connexion."
+                "question": "La vérification KYC est-elle obligatoire ?",
+                "answer": "Elle est incluse et recommandée pour les plans SuperHost et MegaHost. Pour le plan Gratuit, c'est une option payante. Réussir le KYC vous octroie une pastille de réassurance (un badge 'Vérifié') sur votre annonce, ce qui augmente considérablement la confiance des voyageurs et votre taux de conversion."
               },
               {
                 "id": "q-44",
-                "question": "Comment synchroniser mon calendrier Airbnb avec d'autres plateformes comme Google Agenda ?",
-                "answer": "IndieHost intègre la synchronisation complète des calendriers, évitant les doubles réservations et centralisant la gestion sans effort."
+                "question": "Comment IndieHost gère-t-il la taxe de séjour ?",
+                "answer": "Pour les hôtes particuliers, notre système est conçu pour gérer la redistribution automatique des taxes de séjour aux collectivités compétentes. Cela vous libère d'une contrainte administrative complexe."
               },
               {
                 "id": "q-45",
-                "question": "Comment connecter IndieHost à mon PMS ou à mes outils de conciergerie ?",
-                "answer": "IndieHost propose une API publique pour intégrer des systèmes de gestion et outils professionnels, facilitant la centralisation."
-              },
-              {
-                "id": "q-46",
-                "question": "Comment synchroniser plusieurs calendriers de location sans logiciel complexe ?",
-                "answer": "Utilisez des systèmes générant des fichiers .ics compatibles pour synchronisation bidirectionnelle entre plateformes via IndieHost."
+                "question": "La vérification des voyageurs est-elle possible ?",
+                "answer": "Oui, nous prévoyons une option de vérification de l'identité du voyageur. C'est particulièrement utile si vous, en tant qu'hôte, émettez des contrats de location et avez besoin de certifier l'identité de votre locataire."
               }
             ]
           },
           {
-            "id": "cat-support",
-            "title": "Support client et analyse des performances locatives",
+            "id": "cat-pms",
+            "title": "Intégrations techniques avec PMS et RMS",
             "children": [
               {
-                "id": "q-47",
-                "question": "Comment annuler mon abonnement IndieHost ?",
-                "answer": "L’abonnement peut être annulé à tout moment depuis votre espace administrateur, sans préavis ni engagement. Aucune facturation si pas de réservation."
-              },
-              {
-                "id": "q-48",
-                "question": "Est-ce que je dois payer l’abonnement IndieHost si je n’ai pas de réservation ?",
-                "answer": "Non. Vous payez seulement si vous recevez au moins une réservation dans le mois, garantissant une rentabilité sans frais inutiles."
-              },
-              {
-                "id": "q-49",
-                "question": "Où trouver les tutoriels pour apprendre à utiliser IndieHost ?",
-                "answer": "Une base de connaissances complète avec tutoriels, vidéos et guides pas-à-pas est accessible depuis votre tableau de bord."
-              },
-              {
-                "id": "q-50",
-                "question": "Où trouver de l’aide quand j’ai un souci avec ma location IndieHost ?",
-                "answer": "Notre support humain est disponible pour questions techniques ou conseils sur la gestion de vos réservations."
-              },
-              {
-                "id": "q-51",
-                "question": "Où voir les performances financières de mes logements sur IndieHost ?",
-                "answer": "Le tableau de bord donne une vue détaillée du taux d’occupation, revenus, pourcentage de voyageurs réguliers, et habitudes de réservation."
-              },
-              {
-                "id": "q-52",
-                "question": "Comment accepter les paiements par carte bancaire en location courte durée ?",
-                "answer": "IndieHost offre un système de paiement flexible et sécurisé avec options d’acompte, paiement en ligne ou espèces, adaptables selon voyageurs ou logement."
-              },
-              {
-                "idtt": "q-53",
-                "questiontt": "Comment échapper à la malédiction du lobotomisateur ?",
-                "answertt": "C'est impossible ! Larry va d'abord vous rendre une petite visite, puis c'est le mastermind qui viendra vous toucher la nuit."
+                "id": "q-43",
+                "question": "IndieHost est-il compatible avec mon Channel Manager (PMS) ou mon RMS (Revenue Management System) ?",
+                "answer": "Oui. Nous savons que les SuperHosts et les Pros utilisent des outils comme SuperHote (PMS) ou des RMS (logiciels de tarification dynamique). L'intégration d'outils de gestion tiers est incluse dans les plans SuperHost et MegaHost. Elle vous permet de synchroniser vos annonces, tarifs, disponibilités et réservations IndieHost directement depuis votre outil de gestion centralisé, pour une efficacité maximale."
               }
             ]
           }
