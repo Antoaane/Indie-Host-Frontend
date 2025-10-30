@@ -1,0 +1,37 @@
+{
+  "note": {
+    "note": "int",
+    "distribution": {
+      "1": "int",
+      "2": "int",
+      "3": "int",
+      "4": "int",
+      "5": "int"
+    }
+  },
+  "otas-note": [
+    {
+      "ota": "string",
+      "note": "int",
+      "distribution": {
+        "1": "int",
+        "2": "int",
+        "3": "int",
+        "4": "int",
+        "5": "int"
+      }
+    }
+  ],
+  "comments": [
+    {
+      "profile-pic": "string",
+      "name": "string",
+      "note": "int",
+      "comment": "string",
+      "stay-dates": {
+        "arrival": "date",
+        "departure": "date"
+      }
+    }
+  ]
+}

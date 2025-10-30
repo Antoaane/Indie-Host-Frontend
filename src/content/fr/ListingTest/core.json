@@ -1,0 +1,31 @@
+{
+  "id": "string",
+  "title": "string",
+  "type": "string",
+  "place": "string",
+  "capacity": "int",
+  "rooms": [
+    {
+      "room-type": "string",
+      "beds": [
+        {
+          "type": "string",
+          "capacity": "int"
+        }
+      ]
+    }
+  ],
+  "policies": [
+    {
+      "policy": "string",
+      "description": "string"
+    }
+  ],
+  "host": {
+    "name": "string",
+    "status": "string",
+    "profile-pic": "string",
+    "catalog-link": "string"
+  },
+  "description": "string"
+}
