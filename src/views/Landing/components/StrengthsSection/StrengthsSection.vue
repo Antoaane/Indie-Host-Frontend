@@ -34,12 +34,22 @@ onMounted(() => {
     />
     <div class="container">
       <div class="title">
-        <h2 v-html="section.items['title-1'].content" />
-        <p v-html="section.items['subtitle-1'].content" />
+        <h2
+          data-sr
+          data-sr-y="-30"
+          v-html="section.items['title-1'].content"
+        />
+        <p
+          data-sr
+          data-sr-y="30"
+          v-html="section.items['subtitle-1'].content"
+        />
       </div>
 
       <div class="strengths">
         <div
+          data-sr
+          data-sr-y="50"
           class="strength"
           id="strength_1"
         >
@@ -73,6 +83,9 @@ onMounted(() => {
           </div>
         </div>
         <div
+          data-sr
+          data-sr-y="50"
+          data-sr-delay="0.5"
           class="strength"
           id="strength_2"
         >
@@ -106,6 +119,9 @@ onMounted(() => {
           </div>
         </div>
         <div
+          data-sr
+          data-sr-y="50"
+          data-sr-delay="0.75"
           class="strength"
           id="strength_3"
         >

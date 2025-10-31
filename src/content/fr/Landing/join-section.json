@@ -10,7 +10,7 @@
     },
     "title-1": {
       "tag": "h2",
-      "content": "Pas mal non ?&nbsp;<strong>C’est français !</strong>"
+      "content": "Pas mal non ?&nbsp;<strong data-sr data-sr-delay='1.5'>C’est français !</strong>"
     },
     "text-1": {
       "tag": "p",

@@ -7,6 +7,7 @@ import { ScrollSmoother } from 'gsap/ScrollSmoother'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import gsap from 'gsap'
 // UTILS
+import { sr } from '@/utils/ScrollReveal'
 import { vp } from '@/utils/viewport'
 // COMPONENTS
 const HeroSection = defineAsyncComponent(() => import('./components/HeroSection/HeroSection.vue'))
@@ -57,6 +58,10 @@ onMounted(() => {
   //   // important: passive false si tu preventDefault
   //   link.addEventListener('click', handler, { passive: false })
   // })
+
+  setTimeout(() => {
+    sr('[data-sr]')
+  }, 500)
 })
 
 onBeforeUnmount(() => {

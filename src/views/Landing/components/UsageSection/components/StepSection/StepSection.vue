@@ -36,12 +36,24 @@ const props = defineProps<{
     <div class="container">
       <!-- TITRE + SOUS-TITRE -->
       <div class="content">
-        <span class="step">
+        <span
+          data-sr
+          data-sr-x="-50"
+          data-sr-delay="0.5"
+          class="step"
+        >
           {{ props.step }}
         </span>
         <div>
-          <h2 v-html="props.title" />
+          <h2
+            data-sr
+            data-sr-x="-50"
+            v-html="props.title"
+          />
           <p
+            data-sr
+            data-sr-x="-50"
+            data-sr-delay="0.35"
             v-if="vp.sm.value"
             v-html="props.description"
             class="description"
@@ -50,7 +62,13 @@ const props = defineProps<{
       </div>
 
       <!-- ILLUSTRATION -->
-      <div class="illustration">
+      <div
+        data-sr
+        data-sr-x="100"
+        :data-sr-start="vp.lg.value ? 'top 50%' : 'top 100%'"
+        data-sr-end="bottom 0%"
+        class="illustration"
+      >
         <!-- Halo décoratif constant (change le src si besoin) -->
         <img
           class="halo-png"
@@ -108,6 +126,8 @@ const props = defineProps<{
       </div>
       <div v-if="!vp.sm.value">
         <p
+          data-sr
+          data-sr-y="50"
           class="description"
           v-html="props.description"
         />

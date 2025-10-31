@@ -1,13 +1,63 @@
 <!-- File: src/views/Landing/components/HeroSection/HeroSection.vue -->
 
 <script setup lang="ts">
+// DEPS
+import gsap from 'gsap'
 // ASSETS
 import ShapesBgCroped from '@/components/svgs/images/ShapesBgCroped.vue'
 // CONTENT
 import type { ItemSection } from '@/content/types'
 import rawContent from '@/content/fr/Landing/hero-section.json'
+import { onMounted } from 'vue'
 
 const section = rawContent as ItemSection
+
+onMounted(() => {
+  gsap.from(`#${section.id} h1`, {
+    x: -50,
+    opacity: 0,
+    delay: 0.25,
+    duration: 1,
+    ease: 'power2.inOut',
+  })
+
+  gsap.from(`#${section.id} p`, {
+    x: -50,
+    opacity: 0,
+    delay: 0.4,
+    duration: 1,
+    ease: 'power2.inOut',
+  })
+
+  gsap.from(`#${section.id} img`, {
+    x: 100,
+    opacity: 0,
+    delay: 0.25,
+    duration: 1,
+    ease: 'power2.inOut',
+  })
+
+  const cta = document.querySelector<HTMLElement>(`#${section.id} .cta`)
+  const nav = document.querySelector<HTMLElement>('[class^="navbar-"]')
+
+  nav?.style.setProperty('transition', 'none')
+  nav?.style.setProperty('opacity', '0')
+  nav?.style.setProperty('transform', 'translateY(-100px)')
+
+  cta?.style.setProperty('transition', 'none')
+  cta?.style.setProperty('opacity', '0')
+  cta?.style.setProperty('transform', 'translateX(-20px)')
+
+  setTimeout(() => {
+    cta?.style.setProperty('transition', 'all 1s cubic-bezier(0.75, 0, 0.25, 1)')
+    cta?.style.removeProperty('opacity')
+    cta?.style.removeProperty('transform')
+
+    nav?.style.setProperty('transition', 'all 1s cubic-bezier(0.75, 0, 0.25, 1)')
+    nav?.style.removeProperty('opacity')
+    nav?.style.removeProperty('transform')
+  }, 650)
+})
 </script>
 
 <template>

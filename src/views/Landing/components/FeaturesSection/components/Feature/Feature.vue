@@ -27,6 +27,7 @@ const props = defineProps<{
     format?: 'hzt' | 'vtc' | 'sqr'
     alt?: string
   }
+  index: number
 }>()
 </script>
 
@@ -35,13 +36,26 @@ const props = defineProps<{
     <div>
       <div class="text">
         <div>
-          <h2 v-html="feature.title" />
+          <h2
+            data-sr
+            :data-sr-x="index % 2 !== 0 ? 50 : -50"
+            v-html="feature.title"
+          />
 
-          <p v-html="feature.description" />
+          <p
+            data-sr
+            :data-sr-x="index % 2 !== 0 ? 50 : -50"
+            data-sr-delay="0.3"
+            v-html="feature.description"
+          />
         </div>
       </div>
 
-      <div :class="'media ' + props.feature.format || 'hzt'">
+      <div
+        data-sr
+        :data-sr-x="index % 2 !== 0 ? -50 : 50"
+        :class="'media ' + props.feature.format || 'hzt'"
+      >
         <!-- <img
           class="default-theme"
           src="/assets/media/images/webp/default-theme.webp"

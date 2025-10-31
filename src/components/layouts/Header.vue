@@ -18,6 +18,20 @@ const isLanding = computed(() => route.path === '/' || route.path === '/donation
 //   isLanding.value = window.location.pathname === '/'
 //   console.log('isLanding', isLanding.value)
 // })
+
+onMounted(() => {
+  const nav = document.querySelector<HTMLElement>('[class^="navbar-"]')
+
+  nav?.style.setProperty('transition', 'none')
+  nav?.style.setProperty('opacity', '0')
+  nav?.style.setProperty('transform', 'translateY(-100px)')
+
+  setTimeout(() => {
+    nav?.style.setProperty('transition', 'all 1s cubic-bezier(0.75, 0, 0.25, 1)')
+    nav?.style.removeProperty('opacity')
+    nav?.style.removeProperty('transform')
+  }, 650)
+})
 </script>
 
 <template>

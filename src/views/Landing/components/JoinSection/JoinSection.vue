@@ -112,21 +112,43 @@ onBeforeUnmount(() => {
           <component
             v-if="FlagComp"
             :is="FlagComp"
+            data-sr
+            data-sr-y="-20"
+            data-sr-delay="1.5"
             class="french-flag"
             aria-hidden="true"
           />
-          <h2 v-html="items['title-1']?.content" />
+          <h2
+            data-sr
+            data-sr-delay="0.5"
+            data-sr-y="-20"
+            v-html="items['title-1']?.content"
+          />
         </div>
-        <p v-html="items['text-2']?.content" />
+        <p
+          data-sr
+          data-sr-y="20"
+          data-sr-delay="1.25"
+          v-html="items['text-2']?.content"
+        />
       </div>
 
-      <div class="roadmap">
+      <div
+        data-sr
+        data-sr-duration="1.5"
+        class="roadmap"
+      >
         <RoadMapDark />
       </div>
     </div>
     <div :class="section.id + '-container'">
       <div class="container">
         <div class="main">
+          <!-- data-sr
+            data-sr-x="-100"
+            data-sr-start="top 50%"
+            data-sr-end="bottom 0%"
+            data-sr-delay="0.75" -->
           <div
             class="illustration"
             v-if="items['image-1']"
@@ -146,6 +168,9 @@ onBeforeUnmount(() => {
           </div>
 
           <div class="content">
+            <!-- data-sr
+              data-sr-x="100"
+              data-sr-delay="0.75" -->
             <div
               class="form-container"
               v-if="FormComp"

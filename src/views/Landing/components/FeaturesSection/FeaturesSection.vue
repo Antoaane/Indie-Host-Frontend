@@ -12,9 +12,10 @@ const section = rawContent as ItemSection
 <template>
   <section id="features-section">
     <Feature
-      v-for="feature in section.items['features'].meta?.data"
+      v-for="(feature, i) in section.items['features'].meta?.data"
       :feature="feature"
       :format="feature.format || 'hzt'"
+      :index="i"
     />
   </section>
 </template>
