@@ -2,13 +2,14 @@
 
 <script setup lang="ts">
 // DEPS
-import { defineAsyncComponent, onMounted, onBeforeUnmount } from 'vue'
+import { defineAsyncComponent, onMounted, onBeforeUnmount, ref } from 'vue'
 import { ScrollSmoother } from 'gsap/ScrollSmoother'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import gsap from 'gsap'
 // UTILS
-import { sr } from '@/utils/ScrollReveal'
+import { sr } from '@/utils/scrollReveal'
 import { vp } from '@/utils/viewport'
+import detectOS from '@/utils/detectOs'
 // COMPONENTS
 const HeroSection = defineAsyncComponent(() => import('./components/HeroSection/HeroSection.vue'))
 const BenefitsSection = defineAsyncComponent(() => import('./components/BenefitsSection/BenefitsSection.vue'))
@@ -23,6 +24,14 @@ const FaqSection = defineAsyncComponent(() => import('./components/FaqSection/Fa
 if (vp.lg.value) {
   gsap.registerPlugin(ScrollTrigger, ScrollSmoother)
 }
+
+const os = ref<OSInfo | null>(null)
+// pas d'await au top-level
+detectOS().then((res) => {
+  os.value = res
+  console.log(res)
+  console.log(os.value?.os)
+})
 
 // let smoother: ReturnType<typeof ScrollSmoother.create>
 
@@ -60,6 +69,7 @@ onMounted(() => {
   // })
 
   setTimeout(() => {
+    if (os.value?.os === 'ios') return
     sr('[data-sr]')
   }, 500)
 })
