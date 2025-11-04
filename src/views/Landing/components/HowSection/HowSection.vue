@@ -2,8 +2,8 @@
 
 <script setup lang="ts">
 // UTILS
-import { vp } from '@/utils/viewport'
-import { sr } from '@/utils/ScrollReveal'
+// import { vp } from '@/utils/viewport'
+// import { sr } from '@/utils/scrollReveal'
 // ASSETS
 import CustomDomain from '@/components/svgs/images/CustomDomain.vue'
 import GradiantSeparator from '@/components/svgs/images/GradiantSeparator.vue'

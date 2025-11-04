@@ -83,6 +83,7 @@ onMounted(() => {
       <div class="illustration">
         <div>
           <img
+            fetchpriority="high"
             :src="section.items['image-1'].content"
             :onerror="`this.onerror=null; this.src='${section.items['image-1'].fallback}';`"
             :alt="section.items['image-1'].meta?.alt"
