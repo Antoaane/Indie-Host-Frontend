@@ -12,19 +12,19 @@ if (vp.lg.value) {
   gsap.registerPlugin(ScrollTrigger, ScrollSmoother)
 }
 
-let smoother: ReturnType<typeof ScrollSmoother.create>
+// let smoother: ReturnType<typeof ScrollSmoother.create>
 
 onMounted(() => {
-  if (vp.lg.value) {
-    smoother = ScrollSmoother.create({
-      smooth: 1.2,
-      effects: true,
-    })
-  }
+  // if (vp.lg.value) {
+  //   smoother = ScrollSmoother.create({
+  //     smooth: 1.2,
+  //     effects: true,
+  //   })
+  // }
 })
 
 onBeforeUnmount(() => {
-  if (vp.lg.value) smoother.kill()
+  // if (vp.lg.value) smoother.kill()
 })
 </script>
 
