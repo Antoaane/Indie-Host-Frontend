@@ -6,7 +6,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 // COMPONENTS
 import NavListing from '@/components/navs/NavListing/NavListing.vue'
-import NavLanding from '@/components/navs/NavLanding/NavLanding.vue'
+import Nav from '@/components/navs/Nav/Nav.vue'
 // import NavDashboard from '@/components/navs/nav/NavDashboard.vue'
 
 // const isLanding = ref<boolean>(true)
@@ -36,7 +36,24 @@ onMounted(() => {
 
 <template>
   <header>
-    <NavLanding v-if="isLanding" />
-    <NavListing v-else />
+    <Nav
+      v-if="isLanding"
+      :items="[
+        { id: 'join-section', name: 'Essayer gratuitement', link: '#join-section', target: true, cta: true },
+        { id: 'features-section', name: 'Fonctionnalités', link: '#features-section', target: true },
+        { id: 'how-section', name: 'Comment ça marche ?', link: '#how-section', target: true },
+        { id: 'strengths-section', name: 'Nos valeurs', link: '#strengths-section', target: true },
+      ]"
+      :full="false"
+    />
+
+    <Nav
+      v-else
+      :items="[
+        { id: 'messagery', name: 'Messagerie', link: '', target: true },
+        { id: 'reservations', name: 'Réservations', link: '', target: true },
+        { id: 'become-host', name: 'Devenir hôte', link: '', target: true, cta: true },
+      ]"
+    />
   </header>
 </template>

@@ -18,7 +18,7 @@ const toggleMobileMenu = () => {
 </script>
 
 <template>
-  <nav class="navbar-landing">
+  <nav class="navbar-listing">
     <a
       v-if="vp.lg.value"
       href="/#hero-section"

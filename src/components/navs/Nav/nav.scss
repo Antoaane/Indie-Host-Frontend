@@ -1,11 +1,11 @@
-/* File: src/components/navs/NavLanding/nav-landing.scss */
+/* File: src/components/navs/Nav/nav.scss */
 
 @use "@/styles/variables/globals" as *;
 @use '@/styles/variables/borders' as borders;
 @use '@/styles/variables/animations' as animations;
 @use '@/styles/components/buttons' as buttons;
 
-.navbar-landing {
+.navbar {
   width: 100%;
   height: 60px;
 
@@ -34,7 +34,9 @@
 
     @include soft-shadow();
 
-    @include container(xxl, -3rem);
+    &.contained {
+      @include container(xxl, -3rem);
+    }
   }
 
   .navbar__logo {
@@ -58,6 +60,19 @@
     }
   }
 
+  .navbar__search {
+    display: flex;
+    align-items: center;
+
+    input[type='search'] {
+      min-width: 220px;
+      padding: 0.5rem 0.75rem;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      outline: none;
+    }
+  }
+
   .navbar__links {
     display: flex;
     gap: 1.5rem;
@@ -65,7 +80,7 @@
     li {
       @include buttons.secondary;
 
-      &:first-child {
+      &.cta {
         @include buttons.primary(true);
       }
     }

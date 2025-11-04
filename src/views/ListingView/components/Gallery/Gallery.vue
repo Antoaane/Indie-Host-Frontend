@@ -7,7 +7,7 @@
       :items="items"
       :intervalMs="5000"
       :minSlots="2"
-      :maxSlots="6"
+      :maxSlots="5"
       :minTileW="45"
       :minTileH="20"
     />
