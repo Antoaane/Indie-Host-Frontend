@@ -6,8 +6,6 @@
   padding-top: $nav-height;
   height: calc(100vh - $nav-height);
 
-  @include gutters(margin, bottom);
-
   .sub-container {
     height: calc(100vh - $nav-height);
   }

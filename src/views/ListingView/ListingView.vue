@@ -41,20 +41,5 @@ onBeforeUnmount(() => {
 </template>
 
 <style lang="scss">
-@use '@/styles/variables/globals' as *;
-
-.listing-view {
-  height: 100%; /* <— important pour propager le 100% */
-  min-height: 0; /* <— évite l’overflow en flex context */
-  display: flex;
-  flex-direction: column;
-}
-
-.gallery-container {
-  height: 100%;
-  min-height: 0; /* <— idem */
-  padding-bottom: var(--gutter-spacing);
-
-  @include gutters(padding, inline);
-}
+@use '@/views/ListingView/listing-view.scss';
 </style>
