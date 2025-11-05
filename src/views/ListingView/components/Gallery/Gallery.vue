@@ -6,9 +6,9 @@
     <Mosaic
       :items="items"
       :intervalMs="5000"
-      :minSlots="2"
-      :maxSlots="5"
-      :minTileW="45"
+      :minSlots="3"
+      :maxSlots="6"
+      :minTileW="100"
       :minTileH="20"
     />
   </section>

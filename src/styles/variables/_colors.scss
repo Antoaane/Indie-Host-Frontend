@@ -24,3 +24,8 @@ $good: rgb(0, 255, 166);
 // $obsolete: #FF7A7A;
 $progressing: rgb(255, 216, 119);
 // $finished: #7dc6fb;
+
+:root {
+  --ui-primary: var(--secondary);
+  --ui-text-inverted: var(--accent);
+}

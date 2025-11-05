@@ -7,7 +7,7 @@
   min-height: 0;
   display: flex;
 
-  gap: calc(var(--gutter-spacing) / 2);
+  gap: calc(var(--gutter-spacing) / 3 * 2);
 
   @include gutters(padding, inline);
   @include gutters(padding, bottom);

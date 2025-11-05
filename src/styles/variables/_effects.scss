@@ -7,6 +7,10 @@
   box-shadow: 0px 4px $blur $spread $color;
 }
 
+@mixin big-shadow($color: rgba(0, 0, 0, 0.1), $blur: 10px, $spread: 0px) {
+  box-shadow: 0px 4px $blur $spread $color;
+}
+
 @mixin text-shadow($color: rgba(0, 0, 0, 0.5), $blur: 5px) {
   text-shadow: 0px 0px $blur $color;
   -webkit-text-shadow: 0px 0px $blur $color;

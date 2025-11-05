@@ -1,0 +1,140 @@
+/* File: src/views/ListingView/components/ListingCore/components/DatePicker/date-picker.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+
+.cal-root {
+  max-width: 36rem;
+
+  .cal-header {}
+
+  .cal-header {
+
+    button {}
+
+    .cal-heading {}
+  }
+
+  .cal-body {
+    border-radius: borders.$rounded-lg;
+
+    @include gutters(padding, all, 0.75);
+    @include big-shadow();
+
+    table.cal-grid {
+
+      thead {
+        tr.cal-gridWeekDaysRow {
+          padding-bottom: 0.25rem;
+          margin-bottom: 0.25rem;
+          gap: calc(var(--gutter-spacing) / 4);
+
+          border-bottom: 1px solid rgba($secondary, 0.1);
+
+          th.cal-headCell {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 1 / 1;
+
+            margin: 0;
+            padding: 0;
+            border: 0;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-weight: 700;
+          }
+        }
+      }
+
+      tbody.cal-gridBody {
+        tr.cal-gridRow {
+          td.cal-cell {
+            width: 100%;
+            height: auto;
+            aspect-ratio: 1 / 1;
+
+            margin: 0;
+            padding: 0;
+            border: 0;
+
+            &:has(.cal-cellTrigger[data-highlighted]) {
+              background-color: rgba($secondary, 0.1);
+            }
+
+            &:has(.cal-cellTrigger[data-highlighted-end="true"]) {
+              border-top-right-radius: borders.$rounded-md;
+              border-bottom-right-radius: borders.$rounded-md;
+
+              background-color: rgba($secondary, 0.1);
+            }
+
+            &:has(.cal-cellTrigger[data-selected="true"]) {
+              background-color: rgba($secondary, 0.1);
+            }
+
+            &:has(.cal-cellTrigger[data-selection-start="true"]) {
+              border-top-left-radius: borders.$rounded-md;
+              border-bottom-left-radius: borders.$rounded-md;
+
+              background-color: rgba($secondary, 0.1);
+            }
+
+            &:has(.cal-cellTrigger[data-selection-end="true"]) {
+              border-top-right-radius: borders.$rounded-md;
+              border-bottom-right-radius: borders.$rounded-md;
+
+              background-color: rgba($secondary, 0.1);
+            }
+
+            &:has(.cal-cellTrigger[data-outside-view]) {
+              opacity: 0;
+              pointer-events: none;
+            }
+
+            &:has(.cal-cellTrigger[data-outside-visible-view]) {
+              opacity: 0.25;
+              pointer-events: none;
+            }
+
+            .cal-cellTrigger {
+              width: 100%;
+              height: 100%;
+
+              margin: 0;
+              padding: 0;
+
+              border: 0;
+              border-radius: 0;
+
+              &[data-selection-start="true"] {
+                background-color: rgba($secondary, 1);
+                border-radius: borders.$rounded-md;
+
+                color: $accent;
+              }
+
+              &[data-selection-end="true"] {
+                background-color: rgba($secondary, 1);
+                border-radius: borders.$rounded-md;
+
+                color: $accent;
+              }
+
+              &[data-disabled] {
+                color: rgba($secondary, 0.4);
+              }
+
+              &[data-today] {
+                border: 1px solid rgba($secondary, 0.6);
+                border-radius: borders.$rounded-md;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
