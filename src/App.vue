@@ -9,5 +9,7 @@ import Header from '@/components/layouts/Header.vue'
   <Header />
 
   <!-- main -->
-  <RouterView />
+  <UApp>
+    <RouterView />
+  </UApp>
 </template>

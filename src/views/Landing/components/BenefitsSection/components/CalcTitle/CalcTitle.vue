@@ -14,7 +14,7 @@ defineProps<{
 </script>
 
 <template>
-  <div class="container">
+  <div class="wrapper">
     <h2 class="second-title">
       Votre logement pourrait vous rapporter <strong>{{ commissions }} €</strong> de <strong>plus</strong>
     </h2>

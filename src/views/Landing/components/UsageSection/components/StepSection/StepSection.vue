@@ -33,7 +33,7 @@ const props = defineProps<{
 
 <template>
   <section class="step-section">
-    <div class="container">
+    <div class="wrapper">
       <!-- TITRE + SOUS-TITRE -->
       <div class="content">
         <span

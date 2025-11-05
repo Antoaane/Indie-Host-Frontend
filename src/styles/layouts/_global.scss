@@ -17,6 +17,8 @@ body {
   overflow-x: hidden;
   scrollbar-width: none;
 
+  background-color: $secondary;
+
   main {
     z-index: 1;
     // height: 100vh;
@@ -45,7 +47,7 @@ h6 {
   box-sizing: border-box;
 }
 
-.container {
+.wrapper {
   width: 100%;
   margin-inline: auto;
 
@@ -55,8 +57,8 @@ h6 {
 }
 
 @each $size, $value in $max-widths {
-  .container__#{$size} {
-    @extend .container;
+  .wrapper__#{$size} {
+    @extend .wrapper;
 
     @include container($size);
   }

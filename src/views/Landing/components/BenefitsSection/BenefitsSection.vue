@@ -17,7 +17,7 @@ const { nights, price, total, commissions } = useBookingCalc()
 
 <template>
   <section :id="section.id">
-    <div class="container">
+    <div class="wrapper">
       <h2
         class="first-title"
         v-html="section.items['title-1'].content"

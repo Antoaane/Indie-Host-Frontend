@@ -32,7 +32,7 @@ onMounted(() => {
       title="Décoration du fond"
       desc="Formes géométriques décoratives"
     />
-    <div class="container">
+    <div class="wrapper">
       <div class="title">
         <h2
           data-sr

@@ -106,7 +106,7 @@ onBeforeUnmount(() => {
 
 <template>
   <section :id="section.id">
-    <div class="container">
+    <div class="wrapper">
       <div class="title">
         <div>
           <component
@@ -142,7 +142,7 @@ onBeforeUnmount(() => {
       </div>
     </div>
     <div :class="section.id + '-container'">
-      <div class="container">
+      <div class="wrapper">
         <div class="main">
           <!-- data-sr
             data-sr-x="-100"

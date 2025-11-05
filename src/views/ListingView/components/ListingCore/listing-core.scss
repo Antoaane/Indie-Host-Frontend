@@ -1,0 +1,11 @@
+/* File: src/views/ListingView/components/ListingCore/listing-core.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+
+#core {
+  height: 100%;
+
+  background-color: $accent;
+  border-radius: borders.$rounded-lg;
+}

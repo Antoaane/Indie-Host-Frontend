@@ -53,8 +53,8 @@ $breakpoints: (
 }
 
 @function get-gutter($multiple: 1) {
-  @return (base: calc(1rem * #{$multiple}),
-    md: calc(1.125rem * #{$multiple}),
+  @return (base: calc(0.75rem * #{$multiple}),
+    md: calc(1rem * #{$multiple}),
     lg: calc(1.25rem * #{$multiple}),
     xxl: calc(1.5rem * #{$multiple}));
 }
@@ -111,7 +111,7 @@ $gutter: get-gutter();
   }
 }
 
-$nav-height: calc(70px + (var(--gutter-spacing) * 2));
+$nav-height: calc(70px + (var(--gutter-spacing) + (var(--gutter-spacing) * 0.667)));
 
 @mixin gutters($type: padding, $sides: inline, $multiple: 1) {
   $gutter-values: get-gutter($multiple);

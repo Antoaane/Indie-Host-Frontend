@@ -2,7 +2,9 @@
 
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import './main.scss'
+import ui from '@nuxt/ui/vue-plugin'
+import '@/externalUI.css'
+import '@/main.scss'
 // import VueSplide from '@splidejs/vue-splide'
 // import '@splidejs/vue-splide/css'
 
@@ -18,6 +20,7 @@ import router from './router'
 
 const app = createApp(App)
 
+app.use(ui)
 app.use(createHead())
 // app.use(LenisVue)
 app.use(createPinia())

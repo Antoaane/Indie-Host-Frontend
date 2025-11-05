@@ -22,7 +22,7 @@ const section = rawContent as ItemSection
       title="Décoration du fond"
       desc="Formes géométriques décoratives"
     />
-    <div class="container">
+    <div class="wrapper">
       <div class="temp">
         <h2
           data-sr

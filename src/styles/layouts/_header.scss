@@ -15,11 +15,21 @@ header {
 
   transform: translateX(-50%);
 
-  @include gutters(padding, all, 0.75);
+  // @include gutters(padding, all, 0.75);
+
+  // @include gutters(padding, inline, 0.75);
+  // @include gutters(padding, top, 0.75);
+  // @include gutters(padding, bottom, (0.75*0.667));
+
+  @include gutters(padding, inline);
+  @include gutters(padding, top);
+  @include gutters(padding, bottom, 0.667);
 
   @include min-width(md) {
     top: 0;
-    @include gutters(padding, all);
+    // @include gutters(padding, inline);
+    // @include gutters(padding, top);
+    // @include gutters(padding, bottom, 0.667);
   }
 
   @include min-width(lg) {

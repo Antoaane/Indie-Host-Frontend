@@ -1,11 +1,10 @@
 import { fileURLToPath, URL } from 'node:url'
-
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import ViteRestart from 'vite-plugin-restart'
+import ui from '@nuxt/ui/vite'
 import svgLoader from 'vite-svg-loader'
-// import devChat from 'vite-plugin-devchat';
 import svgToVuePlugin from './plugins/svg-to-vue/vite-plugin-svg-to-vue';
 import fileCommentInjector from './plugins/file-path-comment/vite-plugin-file-comment'
 
@@ -19,7 +18,7 @@ export default defineConfig({
       restart: ['src/assets/media/**/*.svg'], // Restart vite si des SVG changent
     }),
     vue(),
-    // devChat(),
+    ui(),
     vueDevTools(),
     svgLoader(),
   ],

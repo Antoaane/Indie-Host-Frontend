@@ -14,7 +14,7 @@ import { X } from 'lucide-vue-next'
   <div class="habits-section-container">
     <section id="habits-section">
       <div class="overflow">
-        <div class="container">
+        <div class="wrapper">
           <Carousel v-if="vp.lg.value" />
           <SlidesTitles />
         </div>

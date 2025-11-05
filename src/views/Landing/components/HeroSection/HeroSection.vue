@@ -67,7 +67,7 @@ onMounted(() => {
       title="Décoration du fond"
       desc="Formes géométriques décoratives"
     />
-    <div class="container">
+    <div class="wrapper">
       <div class="content">
         <div>
           <h1 v-html="section.items['title-1'].content" />

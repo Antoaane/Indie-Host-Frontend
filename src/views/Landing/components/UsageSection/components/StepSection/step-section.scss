@@ -14,7 +14,7 @@ div:has(> .step-section) {
       @include gutters(padding, bottom, 4);
     }
 
-    .container {
+    .wrapper {
       display: flex;
       flex-direction: column;
 

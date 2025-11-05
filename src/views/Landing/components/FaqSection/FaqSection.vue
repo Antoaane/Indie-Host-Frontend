@@ -17,7 +17,7 @@ const { filteredData, suggestions, search, selectSuggestion } = useFaq()
 
 <template>
   <section :id="section.id">
-    <div class="container__xl">
+    <div class="wrapper__xl">
       <h2>
         {{ items['title-1'].content }}
       </h2>

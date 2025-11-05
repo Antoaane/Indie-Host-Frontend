@@ -1,0 +1,31 @@
+{
+  "id": "hero-section",
+  "items": {
+    "title-1": {
+      "tag": "h2",
+      "content": "Ce que ce logement comprend"
+    },
+    "title-2": {
+      "tag": "h2",
+      "content": "Les disponibilités de ce logement"
+    },
+    "cta-profile-1": {
+      "tag": "a",
+      "content": "Voir le profile",
+      "meta": {
+        "target": "_self"
+      }
+    },
+    "cta-profile-2": {
+      "tag": "a",
+      "content": "Voir les annonces",
+      "meta": {
+        "target": "_self"
+      }
+    },
+    "cta-description": {
+      "tag": "button",
+      "content": "Voir tout"
+    }
+  }
+}

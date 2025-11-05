@@ -1,8 +1,8 @@
-/* File: src/views/Landing/BenefitsSection/components/CalcTitle/calc-title.scss */
+/* File: src/views/Landing/components/BenefitsSection/components/CalcTitle/calc-title.scss */
 
 @use '@/styles/variables/globals' as *;
 
-.container:has(.second-title) {
+.wrapper:has(.second-title) {
   .second-title {
     width: 100%;
     max-width: 30rem;

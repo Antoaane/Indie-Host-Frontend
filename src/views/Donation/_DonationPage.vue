@@ -177,7 +177,7 @@ const donationLink = computed(() => (import.meta.env.VITE_DONATION_LINK ?? '').t
     </div>
 
     <section class="donation-page__section">
-      <div class="container__xl donation-page__content">
+      <div class="wrapper__xl donation-page__content">
         <DonationStatusBanner
           v-if="statusPayload"
           :status="statusPayload.status"

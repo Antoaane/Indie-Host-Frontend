@@ -1,31 +1,20 @@
 <!-- File: src/views/ListingView/ListingView.vue -->
 
 <script setup lang="ts">
+// DEPS
 import { onMounted, onBeforeUnmount } from 'vue'
 import { ScrollSmoother } from 'gsap/ScrollSmoother'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import gsap from 'gsap'
+
+// UTILS
 import { vp } from '@/utils/viewport'
+
+// COMPONENTS
 import Gallery from '@/views/ListingView/components/Gallery/Gallery.vue'
-
-if (vp.lg.value) {
-  gsap.registerPlugin(ScrollTrigger, ScrollSmoother)
-}
-
-// let smoother: ReturnType<typeof ScrollSmoother.create>
-
-onMounted(() => {
-  // if (vp.lg.value) {
-  //   smoother = ScrollSmoother.create({
-  //     smooth: 1.2,
-  //     effects: true,
-  //   })
-  // }
-})
-
-onBeforeUnmount(() => {
-  // if (vp.lg.value) smoother.kill()
-})
+import ListingCore from './components/ListingCore/ListingCore.vue'
+import Comments from './components/Comments/Comments.vue'
+import CheckoutMin from './components/Checkout/Checkout.vue'
 </script>
 
 <template>
@@ -34,8 +23,13 @@ onBeforeUnmount(() => {
       <Gallery />
     </div>
 
-    <div>
-      <!-- autres blocs -->
+    <div class="core-container">
+      <ListingCore />
+    </div>
+
+    <div class="stay-container">
+      <Comments />
+      <CheckoutMin />
     </div>
   </div>
 </template>
