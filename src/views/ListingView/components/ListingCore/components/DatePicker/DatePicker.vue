@@ -2,11 +2,10 @@
 
 <script setup lang="ts">
 import { shallowRef, computed, watch } from 'vue'
-import type { DateValue } from '@internationalized/date'
 import { CalendarDate } from '@internationalized/date'
-
-type ISO = string
-type RangeISO = { start: ISO; end: ISO }
+import type { RangeISO } from '@/views/ListingView/components/ListingCore/components/DatePicker/helpers/date'
+import { parseISO, toISO, todayCalendarDate } from '@/views/ListingView/components/ListingCore/components/DatePicker/helpers/date'
+import { buildNumericRanges, makeIsDateDisabled } from '@/views/ListingView/components/ListingCore/components/DatePicker/utils/range'
 
 const props = withDefaults(
   defineProps<{
@@ -25,40 +24,13 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: RangeISO | null): void
 }>()
 
-/* ---------- helpers ---------- */
-const toNum = (d: { year: number; month: number; day: number }) => d.year * 10000 + d.month * 100 + d.day
-
-const parseISO = (iso: ISO) => {
-  const [
-    y,
-    m,
-    d,
-  ] = iso.split('-').map(Number)
-  return new CalendarDate(y, m, d)
-}
-
-const fmt2 = (n: number) => String(n).padStart(2, '0')
-const toISO = (d?: DateValue | null): ISO => (d ? `${d.year}-${fmt2(d.month)}-${fmt2(d.day)}` : '')
-
-/* ---------- disabled ranges ---------- */
-const rangesNum = computed(() =>
-  props.disabledDates.map(({ start, end }) => {
-    const a = toNum(parseISO(start))
-    const b = toNum(parseISO(end))
-    return a <= b ? { start: a, end: b } : { start: b, end: a }
-  }),
-)
-
-const isDateDisabled = (date: DateValue) => {
-  const n = toNum(date)
-  return rangesNum.value.some((r) => n >= r.start && n <= r.end)
-}
+/* ---------- disabled ---------- */
+const rangesNum = computed(() => buildNumericRanges(props.disabledDates))
+const isDateDisabled = makeIsDateDisabled(props.disabledDates)
 
 /* ---------- selection (v-model) ---------- */
-// valeur interne pour <UCalendar> (CalendarDate)
 const internal = shallowRef<{ start?: CalendarDate; end?: CalendarDate } | undefined>()
 
-// init depuis modelValue
 if (props.modelValue?.start && props.modelValue?.end) {
   internal.value = {
     start: parseISO(props.modelValue.start),
@@ -66,7 +38,6 @@ if (props.modelValue?.start && props.modelValue?.end) {
   }
 }
 
-// renvoyer au parent en ISO à chaque changement
 watch(
   internal,
   (val) => {
@@ -81,12 +52,16 @@ watch(
   },
   { deep: true },
 )
+
+/* min-value pour interdire la sélection avant aujourd'hui */
+const today = todayCalendarDate()
 </script>
 
 <template>
   <UCalendar
     :v-model="internal"
     :is-date-disabled="isDateDisabled"
+    :min-value="today"
     :number-of-months="numberOfMonths"
     :year-controls="false"
     range

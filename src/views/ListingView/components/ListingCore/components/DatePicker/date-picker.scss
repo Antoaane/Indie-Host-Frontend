@@ -2,6 +2,7 @@
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
 
 .cal-root {
   max-width: 36rem;
@@ -60,24 +61,43 @@
             padding: 0;
             border: 0;
 
+            border-radius: borders.$rounded-md;
+
+            cursor: pointer;
+
+            @include animations.transition;
+
+            &:hover {
+              background-color: rgba($secondary, 0.3);
+              // border-radius: borders.$rounded-md;
+
+              color: $secondary;
+            }
+
             &:has(.cal-cellTrigger[data-highlighted]) {
               background-color: rgba($secondary, 0.1);
+              border-radius: 0;
             }
 
             &:has(.cal-cellTrigger[data-highlighted-end="true"]) {
               border-top-right-radius: borders.$rounded-md;
               border-bottom-right-radius: borders.$rounded-md;
+              border-top-left-radius: 0;
+              border-bottom-left-radius: 0;
 
               background-color: rgba($secondary, 0.1);
             }
 
             &:has(.cal-cellTrigger[data-selected="true"]) {
               background-color: rgba($secondary, 0.1);
+              border-radius: 0;
             }
 
             &:has(.cal-cellTrigger[data-selection-start="true"]) {
               border-top-left-radius: borders.$rounded-md;
               border-bottom-left-radius: borders.$rounded-md;
+              border-top-right-radius: 0;
+              border-bottom-right-radius: 0;
 
               background-color: rgba($secondary, 0.1);
             }
@@ -85,6 +105,8 @@
             &:has(.cal-cellTrigger[data-selection-end="true"]) {
               border-top-right-radius: borders.$rounded-md;
               border-bottom-right-radius: borders.$rounded-md;
+              border-top-left-radius: 0;
+              border-bottom-left-radius: 0;
 
               background-color: rgba($secondary, 0.1);
             }
@@ -125,6 +147,8 @@
 
               &[data-disabled] {
                 color: rgba($secondary, 0.4);
+                text-decoration: line-through;
+                text-decoration-thickness: 1.5px;
               }
 
               &[data-today] {
