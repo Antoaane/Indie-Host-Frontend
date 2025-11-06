@@ -6,12 +6,14 @@
   "capacity": 3,
   "rooms": [
     {
-      "room-type": "Chambre",
+      "room-name": "Chambre",
+      "room-type": "bedroom",
       "beds": [
         { "type": "Lit double", "capacity": 2, "quantity": 1 }]
     },
     {
-      "room-type": "Salon",
+      "room-name": "Salon",
+      "room-type": "living-room",
       "beds": [
         { "type": "lit simple", "capacity": 1, "quantity": 2 }]
     }

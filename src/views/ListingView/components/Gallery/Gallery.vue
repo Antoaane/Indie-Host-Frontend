@@ -5,7 +5,7 @@
 import Mosaic from './components/Mosaic/Mosaic.vue'
 
 // CONTENT
-import media from '@/content/fr/ListingTest/media.json'
+import media from '@/content/fr/ListingTest/medias.json'
 </script>
 
 <template>

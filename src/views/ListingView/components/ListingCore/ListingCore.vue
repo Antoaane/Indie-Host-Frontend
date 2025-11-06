@@ -5,13 +5,19 @@
 
 // UTILS
 import { vp } from '@/utils/viewport'
-import DatePicker from './components/DatePicker/DatePicker.vue'
 
 // COMPONENTS
+import Title from './components/Title/Title.vue'
+import DatePicker from './components/DatePicker/DatePicker.vue'
+
+//CONTENT
 </script>
 
 <template>
   <section id="core">
+    <!-- <Title
+
+    /> -->
     <DatePicker />
   </section>
 </template>
