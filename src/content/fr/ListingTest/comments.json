@@ -1,14 +1,67 @@
 {
   "comments": [
     {
-      "profile-pic": "string",
-      "name": "string",
-      "note": "int",
-      "comment": "string",
-      "stay-dates": {
-        "arrival": "date",
-        "departure": "date"
-      }
+      "profile-pic": "https://example.com/avatars/a1.jpg",
+      "name": "Camille",
+      "note": 5,
+      "comment": "Séjour magique sur le lac : hyper calme, terrasse au top et couchers de soleil de dingue. Arrivée autonome très pratique.",
+      "stay-dates": { "start": "2025-06-14", "end": "2025-06-16" }
+    },
+    {
+      "profile-pic": "https://example.com/avatars/a2.jpg",
+      "name": "Hugo",
+      "note": 5,
+      "comment": "Parfait pour une parenthèse nature près de Bordeaux. Propreté nickel, lit très confortable, on a adoré voir les cygnes depuis la terrasse !",
+      "stay-dates": { "start": "2025-05-02", "end": "2025-05-04" }
+    },
+    {
+      "profile-pic": "https://example.com/avatars/a3.jpg",
+      "name": "Sonia",
+      "note": 4,
+      "comment": "Très bel endroit, bien équipé. Wifi OK. Accès voiture recommandé car les commerces sont un peu loin.",
+      "stay-dates": { "start": "2025-04-10", "end": "2025-04-12" }
+    },
+    {
+      "profile-pic": "https://example.com/avatars/a4.jpg",
+      "name": "Mathilde",
+      "note": 5,
+      "comment": "Un petit coin de paradis ! On a adoré prendre le petit dej sur la terrasse avec la brume du matin. Déco super cosy.",
+      "stay-dates": { "start": "2025-03-21", "end": "2025-03-23" }
+    },
+    {
+      "profile-pic": "https://example.com/avatars/a5.jpg",
+      "name": "Alexandre",
+      "note": 5,
+      "comment": "Expérience incroyable ! On a vraiment déconnecté. Hôte réactive et tout est bien expliqué dans le guide d’arrivée.",
+      "stay-dates": { "start": "2025-02-15", "end": "2025-02-17" }
+    },
+    {
+      "profile-pic": "https://example.com/avatars/a6.jpg",
+      "name": "Léa",
+      "note": 4,
+      "comment": "Endroit original et paisible, parfait pour se ressourcer. Un peu frais le soir sur l’eau, mais chauffage efficace.",
+      "stay-dates": { "start": "2024-11-08", "end": "2024-11-10" }
+    },
+    {
+      "profile-pic": "https://example.com/avatars/a7.jpg",
+      "name": "Thomas",
+      "note": 5,
+      "comment": "Super séjour en amoureux ! La péniche est très bien pensée, propre et bien décorée. On reviendra cet été pour profiter du paddle.",
+      "stay-dates": { "start": "2024-08-03", "end": "2024-08-06" }
+    },
+    {
+      "profile-pic": "https://example.com/avatars/a8.jpg",
+      "name": "Inès",
+      "note": 5,
+      "comment": "J’ai adoré le calme et la vue sur le lac. Le lieu est vraiment unique, on entend juste les oiseaux et l’eau qui bouge doucement.",
+      "stay-dates": { "start": "2024-07-19", "end": "2024-07-21" }
+    },
+    {
+      "profile-pic": "https://example.com/avatars/a9.jpg",
+      "name": "Benoît",
+      "note": 5,
+      "comment": "Tout était parfait : accueil simple, logement impeccable, cadre sublime. Un grand merci pour cette parenthèse apaisante !",
+      "stay-dates": { "start": "2024-05-10", "end": "2024-05-12" }
     }
   ]
 }

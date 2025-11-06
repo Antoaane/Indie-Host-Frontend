@@ -3,6 +3,7 @@
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
 @use '@/styles/variables/animations' as animations;
+@use '@/styles/components/buttons' as buttons;
 
 .cal-root {
   max-width: 36rem;
@@ -11,7 +12,10 @@
 
   .cal-header {
 
-    button {}
+
+    button {
+      // @include buttons.primary();
+    }
 
     .cal-heading {}
   }

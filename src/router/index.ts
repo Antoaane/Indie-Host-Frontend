@@ -14,7 +14,7 @@ const router = createRouter({
       component: LandingPage,
     },
     {
-      path: '/listing',
+      path: '/listing-test',
       name: 'listing',
       component: Listing,
     },

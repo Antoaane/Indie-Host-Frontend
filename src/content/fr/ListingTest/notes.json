@@ -1,24 +1,29 @@
 {
   "note": {
-    "note": "int",
-    "distribution": {
-      "1": "int",
-      "2": "int",
-      "3": "int",
-      "4": "int",
-      "5": "int"
-    }
+    "note": 4.68,
+    "distribution": { "1": 0, "2": 0, "3": 0, "4": 8, "5": 17 }
   },
   "otas-note": [
     {
-      "ota": "string",
-      "note": "int",
+      "ota": "airbnb",
+      "note": 4.93,
       "distribution": {
-        "1": "int",
-        "2": "int",
-        "3": "int",
-        "4": "int",
-        "5": "int"
+        "1": 0,
+        "2": 0,
+        "3": 3,
+        "4": 8,
+        "5": 170
+      }
+    },
+    {
+      "ota": "booking",
+      "note": 4.71,
+      "distribution": {
+        "1": 0,
+        "2": 0,
+        "3": 3,
+        "4": 6,
+        "5": 15
       }
     }
   ]

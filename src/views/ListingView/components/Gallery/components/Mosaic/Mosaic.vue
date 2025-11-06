@@ -7,12 +7,12 @@ import Tile from '@/views/ListingView/components/Gallery/components/Tile.vue'
 import { clamp, randInt, rand, boundedRandAround } from '@/views/ListingView/components/Gallery/utils/math'
 import type { Rect, Slot, Item, Ori } from '@/views/ListingView/components/Gallery/utils/types'
 import { generateLayout } from '@/views/ListingView/components/Gallery/utils/layout'
-import { preloadOrientations, rectToOri } from '@/views/ListingView/components/Gallery/utils/orientation'
-import { tileStyle } from '@/views/ListingView/components/Gallery/utils/style'
+import { preloadOrientations } from '@/views/ListingView/components/Gallery/utils/orientation'
+import { tileStyle, TINY_RECT } from '@/views/ListingView/components/Gallery/utils/style'
 import { fancyboxShow } from '@/views/ListingView/components/Gallery/utils/fancybox'
 
 const props = defineProps<{
-  items?: Item[]
+  items: Item[] // Maintenant obligatoire
   intervalMs?: number
   minSlots?: number
   maxSlots?: number
@@ -20,27 +20,10 @@ const props = defineProps<{
   minTileH?: number
 }>()
 
-// Images par défaut (fixes) — avec index pour l’ordre d’apparition
-const DEFAULT_IMAGES: Item[] = [
-  { image: '/assets/media/images/listing-test/image0.jpg', alt: '0', index: 0 },
-  { image: '/assets/media/images/listing-test/image1.jpg', alt: '1', index: 1 },
-  { image: '/assets/media/images/listing-test/image2.jpg', alt: '2', index: 2 },
-  { image: '/assets/media/images/listing-test/image3.jpg', alt: '3', index: 3 },
-  { image: '/assets/media/images/listing-test/image4.jpg', alt: '4', index: 4 },
-  { image: '/assets/media/images/listing-test/image5.jpg', alt: '5', index: 5 },
-  { image: '/assets/media/images/listing-test/image6.jpg', alt: '6', index: 6 },
-  { image: '/assets/media/images/listing-test/image7.jpg', alt: '7', index: 7 },
-  { image: '/assets/media/images/listing-test/image8.jpg', alt: '8', index: 8 },
-  { image: '/assets/media/images/listing-test/image9.jpg', alt: '9', index: 9 },
-  { image: '/assets/media/images/listing-test/image10.jpg', alt: '10', index: 10 },
-]
-
-const resolvedItems = computed<Item[]>(() => (props.items?.length ? props.items : DEFAULT_IMAGES))
-
-// Tri par index si présent (ordre d’apparition)
+// Tri par index si présent (ordre d'apparition)
 const orderedItems = computed<Item[]>(() => {
   const arr = [
-    ...resolvedItems.value,
+    ...props.items,
   ]
   if (arr.some((i) => typeof i.index === 'number')) {
     arr.sort((a, b) => (a.index ?? 0) - (b.index ?? 0))
@@ -69,10 +52,10 @@ const slots = reactive<Slot[]>([])
 let nextId = 0
 let timer: number | null = null
 
-// curseur d’apparition (respecte `index`)
+// curseur d'apparition (respecte `index`)
 let appearanceCursor = 0
 
-// pour l’orientation native
+// pour l'orientation native
 const imgOri = ref<Ori[]>([])
 
 /* --------------------------
@@ -107,7 +90,7 @@ function newObjPosFor(idx: number, first = false) {
     Main logic
 ---------------------------*/
 
-/** Kick initial : déclenche une première transition d’object-position au 1er rendu */
+/** Kick initial : déclenche une première transition d'object-position au 1er rendu */
 function kickInitialObjPos() {
   // double rAF pour garantir que le premier style est peint, puis on modifie
   requestAnimationFrame(() => {
@@ -121,7 +104,7 @@ function kickInitialObjPos() {
 }
 
 function refreshOrientations() {
-  imgOri.value = preloadOrientations(resolvedItems.value, (idx, ori) => {
+  imgOri.value = preloadOrientations(props.items, (idx, ori) => {
     imgOri.value[idx] = ori
   })
 }
@@ -130,7 +113,7 @@ function nextLayout() {
   const visibleCount = randInt(minSlots.value, maxSlots.value)
   const layout = generateLayout(visibleCount, minTileW.value, minTileH.value)
 
-  // images visibles pour ce cycle, **dans l’ordre** (index)
+  // images visibles pour ce cycle, **dans l'ordre** (index)
   const visibles: Item[] = []
   for (let i = 0; i < visibleCount; i++) {
     const it = orderedItems.value[(appearanceCursor + i) % orderedItems.value.length]
@@ -138,8 +121,8 @@ function nextLayout() {
   }
   appearanceCursor = (appearanceCursor + 1) % orderedItems.value.length
 
-  // map -> index réels (dans resolvedItems)
-  const realIndexOf = (it: Item) => resolvedItems.value.findIndex((x) => x.image === it.image)
+  // map -> index réels (dans props.items)
+  const realIndexOf = (it: Item) => props.items.findIndex((x) => x.src === it.src)
   const visibleIdxs = visibles.map(realIndexOf).filter((i) => i >= 0)
 
   assignLayoutToAll(layout, visibleIdxs)
@@ -147,42 +130,52 @@ function nextLayout() {
 
 function assignLayoutToAll(rects: Rect[], visibleReal: number[]) {
   // (re)init des slots : un par image
-  const needInit = slots.length !== resolvedItems.value.length
+  const needInit = slots.length !== props.items.length
   if (needInit) {
     slots.splice(0, slots.length)
     lastX.length = 0
     lastY.length = 0
 
-    for (let i = 0; i < resolvedItems.value.length; i++) {
+    for (let i = 0; i < props.items.length; i++) {
       const firstPos = initObjPosFor(i) // position initiale (peinte à F0)
-      slots.push({
+      const newSlot: Slot = {
         id: nextId++,
-        rect: { x: 50, y: 50, w: 0.0001, h: 0.0001 },
+        rect: TINY_RECT, // safe rect par défaut
         imageIndex: i,
         objPos: firstPos,
-      })
+      }
+      slots.push(newSlot)
     }
   }
 
   const rectsForCycle = rects.slice(0, visibleReal.length)
-  for (let i = 0; i < slots.length; i++) {
-    const pos = visibleReal.indexOf(i)
-    if (pos >= 0) {
-      // visible → prend un vrai rect
-      slots[i].rect = rectsForCycle[pos]
-    } else {
-      // invisible → se réduit au centre
-      slots[i].rect = { x: 50, y: 50, w: 0.0001, h: 0.0001 }
-    }
-    // variations continues (minDelta faible après le kick)
-    if (!needInit) {
+
+  // Utiliser nextTick/rAF pour garantir que Vue a terminé le rendu initial
+  if (needInit) {
+    // Attendre le prochain tick avant d'initialiser les rects
+    requestAnimationFrame(() => {
+      for (let i = 0; i < slots.length; i++) {
+        const pos = visibleReal.indexOf(i)
+        if (pos >= 0) {
+          slots[i].rect = rectsForCycle[pos]
+        } else {
+          slots[i].rect = TINY_RECT
+        }
+      }
+      // déclenchement du 1er mouvement après assignation
+      kickInitialObjPos()
+    })
+  } else {
+    // Mise à jour normale
+    for (let i = 0; i < slots.length; i++) {
+      const pos = visibleReal.indexOf(i)
+      if (pos >= 0) {
+        slots[i].rect = rectsForCycle[pos]
+      } else {
+        slots[i].rect = TINY_RECT
+      }
       slots[i].objPos = newObjPosFor(i, false)
     }
-  }
-
-  // si on vient d'initialiser, on déclenche le 1er mouvement immédiatement
-  if (needInit) {
-    kickInitialObjPos()
   }
 }
 
@@ -222,7 +215,7 @@ watch(
     intervalMs,
     minSlots,
     maxSlots,
-    () => resolvedItems.value.length,
+    () => props.items.length,
   ],
   () => {
     refreshOrientations()
@@ -231,12 +224,12 @@ watch(
 )
 
 function openLightbox(startIndexReal: number) {
-  // Lightbox dans l’ordre `index`
-  const items = orderedItems.value.map((it) => ({ src: it.image, type: 'image', alt: it.alt }))
-  const clicked = resolvedItems.value[startIndexReal]
+  // Lightbox dans l'ordre `index`
+  const items = orderedItems.value.map((it) => ({ src: it.src, type: 'image', alt: it.alt }))
+  const clicked = props.items[startIndexReal]
   const startIndex = Math.max(
     0,
-    orderedItems.value.findIndex((i) => i.image === clicked.image),
+    orderedItems.value.findIndex((i) => i.src === clicked.src),
   )
   fancyboxShow(items, startIndex)
 }
@@ -244,17 +237,18 @@ function openLightbox(startIndexReal: number) {
 
 <template>
   <div
+    v-if="slots.length > 0"
     class="mosaic-container"
     ref="container"
   >
     <Tile
       v-for="slot in slots"
       :key="slot.id"
-      :style-obj="tileStyle(slot.rect, GAP_PX)"
-      :src="resolvedItems[slot.imageIndex % resolvedItems.length]?.image"
-      :alt="resolvedItems[slot.imageIndex % resolvedItems.length]?.alt"
+      :style-obj="tileStyle(slot.rect || TINY_RECT, GAP_PX)"
+      :src="props.items[slot.imageIndex % props.items.length]?.src"
+      :alt="props.items[slot.imageIndex % props.items.length]?.alt"
       :obj-pos="slot.objPos"
-      @click="openLightbox(slot.imageIndex % resolvedItems.length)"
+      @click="openLightbox(slot.imageIndex % props.items.length)"
     />
   </div>
 </template>

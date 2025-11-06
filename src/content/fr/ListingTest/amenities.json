@@ -1,8 +1,184 @@
 {
   "amenities": [
     {
-      "name": "string",
-      "description": "string"
+      "id": 0,
+      "name": "Vue jardin",
+      "description": "Panorama direct sur les arbres et la nature environnante depuis la terrasse."
+    },
+    {
+      "id": 1,
+      "name": "Vue lac",
+      "description": "Logement posé sur le lac de Baurech, vue dégagée sur l’eau."
+    },
+    {
+      "id": 2,
+      "name": "Accès à la plage",
+      "description": "Petite plage / mise à l’eau autour du plan d’eau (selon saison et zone autorisée)."
+    },
+    {
+      "id": 3,
+      "name": "Terrasse aménagée",
+      "description": "Grande terrasse bois avec table à manger et chaises longues."
+    },
+    {
+      "id": 4,
+      "name": "Cuisine équipée",
+      "description": "Plaques, frigo, vaisselle, table haute et ustensiles inclus."
+    },
+    {
+      "id": 5,
+      "name": "Wifi",
+      "description": "Connexion disponible dans le logement."
+    },
+    {
+      "id": 6,
+      "name": "Arrivée autonome",
+      "description": "Boîte à clé sécurisée, check-in flexible."
+    },
+    {
+      "id": 7,
+      "name": "Détecteur de fumée",
+      "description": "Présent dans la zone principale du logement."
+    },
+    {
+      "id": 8,
+      "name": "Détecteur de monoxyde de carbone",
+      "description": "Non renseigné ou non applicable à ce type de logement."
+    },
+    {
+      "id": 9,
+      "name": "Activités à proximité",
+      "description": "Wakeboard, paddle yoga, ski nautique, randonnées et vélo."
+    },
+    {
+      "id": 10,
+      "name": "Œnotourisme",
+      "description": "Vignobles Cadillac-Côtes-de-Bordeaux à 10 minutes."
+    },
+    {
+      "id": 11,
+      "name": "Parking gratuit sur place",
+      "description": "Places disponibles à proximité directe de la péniche."
+    },
+    {
+      "id": 12,
+      "name": "Climatisation réversible",
+      "description": "Chauffage en hiver, clim douce en été."
+    },
+    {
+      "id": 13,
+      "name": "Chauffage électrique",
+      "description": "Chauffage d’appoint pour les soirées fraîches."
+    },
+    {
+      "id": 14,
+      "name": "Linge fourni",
+      "description": "Draps, serviettes et torchons inclus."
+    },
+    {
+      "id": 15,
+      "name": "Machine à café Nespresso",
+      "description": "Cafetière avec capsules à disposition."
+    },
+    {
+      "id": 16,
+      "name": "Bouilloire et thé de bienvenue",
+      "description": "Sélection de thés et tisanes locales."
+    },
+    {
+      "id": 17,
+      "name": "Mini-bibliothèque",
+      "description": "Livres et magazines sur la nature et la navigation."
+    },
+    {
+      "id": 18,
+      "name": "Jeux de société",
+      "description": "Quelques classiques pour les soirées tranquilles."
+    },
+    {
+      "id": 19,
+      "name": "Hamac extérieur",
+      "description": "Tendu entre deux pins à côté du ponton."
+    },
+    {
+      "id": 20,
+      "name": "Barbecue électrique",
+      "description": "Utilisable sur la terrasse, ustensiles fournis."
+    },
+    {
+      "id": 21,
+      "name": "Éclairage d’ambiance",
+      "description": "Guirlande LED et spots intégrés sur la terrasse."
+    },
+    {
+      "id": 22,
+      "name": "Douche extérieure (été)",
+      "description": "Eau tempérée pour se rincer après baignade."
+    },
+    {
+      "id": 23,
+      "name": "Ponton privatif",
+      "description": "Accès direct au plan d’eau depuis la terrasse."
+    },
+    {
+      "id": 24,
+      "name": "Kit de secours",
+      "description": "Premiers soins, pansements et désinfectant."
+    },
+    {
+      "id": 25,
+      "name": "Extincteur",
+      "description": "Accessible dans la cuisine."
+    },
+    {
+      "id": 26,
+      "name": "Produits ménagers écologiques",
+      "description": "Savon noir, vinaigre blanc et éponge biodégradable."
+    },
+    {
+      "id": 27,
+      "name": "Porte-bagages mural",
+      "description": "Rangement optimisé pour petits espaces."
+    },
+    {
+      "id": 28,
+      "name": "Écran connecté 24''",
+      "description": "TV intelligente avec Netflix et YouTube."
+    },
+    {
+      "id": 29,
+      "name": "Bluetooth speaker",
+      "description": "Enceinte nomade à disposition (JBL ou équivalent)."
+    },
+    {
+      "id": 30,
+      "name": "Rideaux occultants",
+      "description": "Pour un sommeil paisible malgré la lumière du lac."
+    },
+    {
+      "id": 31,
+      "name": "Décoration artisanale locale",
+      "description": "Objets faits main par des créateurs girondins."
+    },
+    {
+      "id": 32,
+      "name": "Coffret dégustation Bordeaux",
+      "description": "Petite sélection de vins en option sur demande."
+    },
+    {
+      "id": 33,
+      "name": "Espace de télétravail",
+      "description": "Table haute + Wi-Fi stable pour travailler avec vue."
+    },
+    {
+      "id": 34,
+      "name": "Guides et cartes de randonnée",
+      "description": "Circuits pédestres et cyclo autour du domaine."
+    },
+    {
+      "id": 35,
+      "name": "Chaises longues pliantes",
+      "description": "Pour bronzer sur la terrasse ou au bord du lac."
     }
   ]
 }
