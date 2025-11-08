@@ -1,4 +1,4 @@
-// File: src/views/ListingView/components/ListingCore/types/listing.ts
+// File: src/views/ListingView/types/listing.ts
 
 // -------- MEDIAS --------
 export type ImageItem = { src: string; alt: string };
@@ -7,17 +7,21 @@ export type MediasModel = { images: ImageItem[]; videos: VideoItem[] };
 
 // -------- TITRE / EN-TÊTE --------
 export type TitleModel = {
-  id: string;
   title: string;
-  type: string;
-  place: string;
-  capacity: number;          // nb voyageurs max
-  headline: string;          // ex: "Maison flottante — Baurech, France"
+  type: string;        // ex: "Péniche"
+  location: {
+    city: string;
+    region: string;
+    country: string;
+  };
+  capacity: number;
+  bedrooms: { quantity: number; bed: number };
+  bathrooms: number;
 };
 
 // -------- POLITIQUES --------
-export type PolicyItem = { policy: string; description?: string };
-export type PoliciesModel = PolicyItem[];
+export type HighlightItem = { icon: string; name: string; description?: string };
+export type HighlightsModel = HighlightItem[];
 
 // -------- HÔTE --------
 export type HostProfileModel = {
@@ -35,7 +39,7 @@ export type DescriptionModel = {
 };
 
 // -------- ÉQUIPEMENTS --------
-export type AmenityItem = { id: number; name: string; description?: string };
+export type AmenityItem = { name: string; description?: string; icon: string };
 export type AmenitiesModel = AmenityItem[];
 
 // -------- CHAMBRES / LITS --------
@@ -97,7 +101,7 @@ export type CommentsModel = CommentItem[];
 // -------- BUNDLE GLOBAL --------
 export type ListingParsed = {
   title: TitleModel;
-  policies: PoliciesModel;
+  highlights: HighlightsModel;
   hostProfile: HostProfileModel;
   description: DescriptionModel;
   amenities: AmenitiesModel;

@@ -24,7 +24,12 @@ import CheckoutMin from './components/Checkout/Checkout.vue'
     </div>
 
     <div class="core-container">
-      <ListingCore />
+      <Suspense>
+        <ListingCore #default />
+        <template #fallback>
+          <div class="skeleton">Chargement…</div>
+        </template>
+      </Suspense>
     </div>
 
     <div class="stay-container">

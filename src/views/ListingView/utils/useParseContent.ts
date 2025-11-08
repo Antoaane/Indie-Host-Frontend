@@ -15,7 +15,7 @@ import commentsJSON from '@/content/fr/ListingTest/comments.json';
 import type {
   ListingParsed,
   TitleModel,
-  PoliciesModel,
+  HighlightsModel,
   HostProfileModel,
   DescriptionModel,
   AmenitiesModel,
@@ -69,20 +69,91 @@ async function loadComments(): Promise<RawComments> {
   return commentsJSON as RawComments;
 }
 
-// ---- PARSEURS ----
-function parseTitle(core: RawCore): TitleModel {
+/* ------------------------------------------------------------------ */
+/* ----------------------- HELPERS “ROOMS” -------------------------- */
+/* ------------------------------------------------------------------ */
+
+// Normalise les rooms brutes du core.json -> RoomItem[]
+function normalizeRooms(core: RawCore): RoomItem[] {
+  return (core.rooms ?? []).map(r => ({
+    name: r['room-name'],
+    type: r['room-type'],
+    beds: (r.beds ?? []).map(b => ({
+      type: b.type,
+      capacity: b.capacity,
+      quantity: b.quantity,
+    })),
+  }));
+}
+
+// Regroupe les rooms par type et calcule beds / capacity cumulés
+function groupRoomsByType(rooms: RoomItem[]): RoomsByType {
+  const byType: RoomsByType = {};
+  for (const r of rooms) {
+    const key = r.type; // ex: 'bedroom', 'living-room'
+    if (!byType[key]) byType[key] = { rooms: [], length: 0, beds: 0, capacity: 0 };
+    byType[key].rooms.push(r);
+    byType[key].length += 1;
+    byType[key].beds += r.beds.reduce((acc, b) => acc + b.quantity, 0);
+    byType[key].capacity += r.beds.reduce((acc, b) => acc + b.capacity * b.quantity, 0);
+  }
+  return byType;
+}
+
+// Résumé global (toutes pièces)
+function summarizeAll(rooms: RoomItem[]) {
+  const bedsCount = rooms.reduce(
+    (acc, r) => acc + r.beds.reduce((a, b) => a + b.quantity, 0),
+    0,
+  );
+  const capacityTotal = rooms.reduce(
+    (acc, r) => acc + r.beds.reduce((a, b) => a + b.capacity * b.quantity, 0),
+    0,
+  );
   return {
-    id: core.id,
-    title: core.title,
-    type: core.type,
-    place: core.place,
-    capacity: core.capacity,
-    headline: `${core.type.split(' / ')[0]} — ${core.place.split(',')[0]}, ${core.place.split(',').pop()?.trim() ?? ''}`,
+    roomsCount: rooms.length,
+    bedsCount,
+    capacityTotal,
   };
 }
 
-function parsePolicies(core: RawCore): PoliciesModel {
-  return core.policies.map(p => ({ policy: p.policy, description: p.description }));
+// Utilitaires d’agrégation par type
+const getTypeEntry = (byType: RoomsByType, key: string) =>
+  byType[key] ?? { rooms: [], length: 0, beds: 0, capacity: 0 };
+
+const sumLengthsMatching = (byType: RoomsByType, predicate: (key: string) => boolean) =>
+  Object.entries(byType).reduce((sum, [k, v]) => (predicate(k) ? sum + v.length : sum), 0);
+
+/* ------------------------------------------------------------------ */
+/* --------------------------- PARSEURS ----------------------------- */
+/* ------------------------------------------------------------------ */
+
+// Aligne sur les props du composant <Title>
+function parseTitle(core: RawCore): TitleModel {
+  const type = (core.type ?? '').split(' / ')[0].trim() || core.type;
+
+  const rooms = normalizeRooms(core);
+  const byType = groupRoomsByType(rooms);
+
+  const bedroom = getTypeEntry(byType, 'bedroom');
+  const bathrooms = sumLengthsMatching(byType, k => k.toLowerCase().includes('bath'));
+
+  return {
+    title: core.title,
+    type,
+    location: {
+      city: core.city ?? '',
+      region: core.region ?? '',
+      country: core.country ?? '',
+    },
+    capacity: core.capacity,
+    bedrooms: { quantity: bedroom.length, bed: bedroom.beds },
+    bathrooms,
+  };
+}
+
+function parseHighlights(core: RawCore): HighlightsModel {
+  return core.highlights.map(p => ({ icon: p.icon, name: p.name, description: p.description }));
 }
 
 function parseHost(core: RawCore): HostProfileModel {
@@ -102,56 +173,17 @@ function parseDescription(core: RawCore): DescriptionModel {
 }
 
 function parseAmenities(amenities: RawAmenities): AmenitiesModel {
-  return amenities.amenities.map(a => ({ id: a.id, name: a.name, description: a.description }));
-}
-
-// ---- Rooms: version avec regroupement par type (bedroom, living-room, etc.)
-function groupRoomsByType(rooms: RoomItem[]): RoomsByType {
-  const byType: RoomsByType = {};
-
-  for (const r of rooms) {
-    const key = r.type; // ex: 'bedroom', 'living-room'
-    if (!byType[key]) {
-      byType[key] = { rooms: [], length: 0, beds: 0, capacity: 0 };
-    }
-    byType[key].rooms.push(r);
-    byType[key].length += 1;
-
-    const bedsQty = r.beds.reduce((acc, b) => acc + b.quantity, 0);
-    const cap = r.beds.reduce((acc, b) => acc + b.capacity * b.quantity, 0);
-
-    byType[key].beds += bedsQty;
-    byType[key].capacity += cap;
-  }
-
-  return byType;
+  return amenities.amenities.map(a => ({ name: a.name, description: a.description, icon: a.icon }));
 }
 
 function parseRooms(core: RawCore): RoomsModel {
-  const rooms: RoomItem[] = core.rooms.map(r => ({
-    name: r['room-name'],
-    type: r['room-type'],
-    beds: r.beds.map(b => ({ type: b.type, capacity: b.capacity, quantity: b.quantity })),
-  }));
-
-  const bedsCount = rooms.reduce(
-    (acc, r) => acc + r.beds.reduce((a, b) => a + b.quantity, 0),
-    0,
-  );
-  const capacityTotal = rooms.reduce(
-    (acc, r) => acc + r.beds.reduce((a, b) => a + b.capacity * b.quantity, 0),
-    0,
-  );
-
+  const rooms = normalizeRooms(core);
   const byType = groupRoomsByType(rooms);
+  const summary = summarizeAll(rooms);
 
   return {
     rooms,
-    summary: {
-      roomsCount: rooms.length,
-      bedsCount,
-      capacityTotal,
-    },
+    summary,
     byType,
   };
 }
@@ -205,7 +237,7 @@ export async function listingCore(): Promise<ListingParsed> {
 
   return {
     title: parseTitle(core),
-    policies: parsePolicies(core),
+    highlights: parseHighlights(core),
     hostProfile: parseHost(core),
     description: parseDescription(core),
     amenities: parseAmenities(amenities),
@@ -219,5 +251,5 @@ export async function listingCore(): Promise<ListingParsed> {
 
 // ---- EXEMPLE D’USAGE ----
 // const data = await listingCore();
-// const { bedroom } = data.rooms.byType; // <- accès direct demandé
-// console.log(bedroom.length, bedroom.beds);
+// const bedroom = data.rooms.byType['bedroom']; // accès direct demandé
+// console.log(bedroom.length, bedroom.beds, data.rooms.summary.capacityTotal);

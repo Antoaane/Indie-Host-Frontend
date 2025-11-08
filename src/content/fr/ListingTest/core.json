@@ -1,8 +1,10 @@
 {
   "id": "53028879",
   "title": "Maison flottante / Houseboat ★ Baurechinsolite",
-  "type": "Péniche / Houseboat",
-  "place": "Baurech, Nouvelle-Aquitaine, France",
+  "type": "Péniche",
+  "city": "Baurech",
+  "region": "Nouvelle-Aquitaine",
+  "country": "France",
   "capacity": 3,
   "rooms": [
     {
@@ -18,9 +20,17 @@
         { "type": "lit simple", "capacity": 1, "quantity": 2 }]
     }
   ],
-  "policies": [
-    { "policy": "Annulation gratuite pendant 48h", "description": "Obtenez un remboursement intégral si vous changez d'avis" },
-    { "policy": "Arrivée autonome", "description": "Vous pouvez entrer dans les lieux en autonomie avec une boîte à clé sécurisée" }
+  "highlights": [
+    {
+      "name": "Annulation gratuite pendant 48h",
+      "description": "Si vous changez d'avis, votre réservation est annulable sans frais dans les 48 premières heures.",
+      "icon": "rotate-ccw"
+    },
+    {
+      "name": "Arrivée autonome",
+      "description": "Boîte à clé sécurisée, check-in flexible.",
+      "icon": "key-round"
+    }
   ],
   "host": {
     "name": "Delphine",

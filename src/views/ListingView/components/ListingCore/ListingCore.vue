@@ -5,19 +5,28 @@
 
 // UTILS
 import { vp } from '@/utils/viewport'
+import { listingCore } from '@/views/ListingView/utils/useParseContent'
 
 // COMPONENTS
-import Title from './components/Title/Title.vue'
-import DatePicker from './components/DatePicker/DatePicker.vue'
+import Title from '@/views/ListingView/components/ListingCore/components/Title/Title.vue'
+import DatePicker from '@/views/ListingView/components/ListingCore/components/DatePicker/DatePicker.vue'
 
 //CONTENT
+const data = await listingCore()
+const title = data.title // <- accès direct demandé
+console.log(title)
 </script>
 
 <template>
-  <section id="core">
-    <!-- <Title
-
-    /> -->
+  <section id="listing-core">
+    <Title
+      :title="title.title"
+      :type="title.type"
+      :location="title.location"
+      :capacity="title.capacity"
+      :bedrooms="title.bedrooms"
+      :bathrooms="title.bathrooms"
+    />
     <DatePicker />
   </section>
 </template>

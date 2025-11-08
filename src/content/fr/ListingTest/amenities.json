@@ -1,184 +1,184 @@
 {
   "amenities": [
     {
-      "id": 0,
       "name": "Vue jardin",
-      "description": "Panorama direct sur les arbres et la nature environnante depuis la terrasse."
+      "description": "Panorama direct sur les arbres et la nature environnante depuis la terrasse.",
+      "icon": "trees"
     },
     {
-      "id": 1,
       "name": "Vue lac",
-      "description": "Logement posé sur le lac de Baurech, vue dégagée sur l’eau."
+      "description": "Logement posé sur le lac de Baurech, vue dégagée sur l’eau.",
+      "icon": "waves"
     },
     {
-      "id": 2,
       "name": "Accès à la plage",
-      "description": "Petite plage / mise à l’eau autour du plan d’eau (selon saison et zone autorisée)."
+      "description": "Petite plage ou mise à l’eau autour du plan d’eau (selon saison).",
+      "icon": "umbrella"
     },
     {
-      "id": 3,
       "name": "Terrasse aménagée",
-      "description": "Grande terrasse bois avec table à manger et chaises longues."
+      "description": "Grande terrasse bois avec table à manger et chaises longues.",
+      "icon": "layout-grid"
     },
     {
-      "id": 4,
       "name": "Cuisine équipée",
-      "description": "Plaques, frigo, vaisselle, table haute et ustensiles inclus."
+      "description": "Plaques, frigo, vaisselle, table haute et ustensiles inclus.",
+      "icon": "utensils-crossed"
     },
     {
-      "id": 5,
       "name": "Wifi",
-      "description": "Connexion disponible dans le logement."
+      "description": "Connexion disponible dans le logement.",
+      "icon": "wifi"
     },
     {
-      "id": 6,
       "name": "Arrivée autonome",
-      "description": "Boîte à clé sécurisée, check-in flexible."
+      "description": "Boîte à clé sécurisée, check-in flexible.",
+      "icon": "key-round"
     },
     {
-      "id": 7,
       "name": "Détecteur de fumée",
-      "description": "Présent dans la zone principale du logement."
+      "description": "Présent dans la zone principale du logement.",
+      "icon": "alert-triangle"
     },
     {
-      "id": 8,
       "name": "Détecteur de monoxyde de carbone",
-      "description": "Non renseigné ou non applicable à ce type de logement."
+      "description": "Non renseigné ou non applicable à ce type de logement.",
+      "icon": "alert-octagon"
     },
     {
-      "id": 9,
       "name": "Activités à proximité",
-      "description": "Wakeboard, paddle yoga, ski nautique, randonnées et vélo."
+      "description": "Wakeboard, paddle yoga, ski nautique, randonnées et vélo.",
+      "icon": "map-pin"
     },
     {
-      "id": 10,
       "name": "Œnotourisme",
-      "description": "Vignobles Cadillac-Côtes-de-Bordeaux à 10 minutes."
+      "description": "Vignobles Cadillac-Côtes-de-Bordeaux à 10 minutes.",
+      "icon": "wine"
     },
     {
-      "id": 11,
       "name": "Parking gratuit sur place",
-      "description": "Places disponibles à proximité directe de la péniche."
+      "description": "Places disponibles à proximité directe de la péniche.",
+      "icon": "parking-circle"
     },
     {
-      "id": 12,
       "name": "Climatisation réversible",
-      "description": "Chauffage en hiver, clim douce en été."
+      "description": "Chauffage en hiver, clim douce en été.",
+      "icon": "thermometer-snowflake"
     },
     {
-      "id": 13,
       "name": "Chauffage électrique",
-      "description": "Chauffage d’appoint pour les soirées fraîches."
+      "description": "Chauffage d’appoint pour les soirées fraîches.",
+      "icon": "radiation"
     },
     {
-      "id": 14,
       "name": "Linge fourni",
-      "description": "Draps, serviettes et torchons inclus."
+      "description": "Draps, serviettes et torchons inclus.",
+      "icon": "bed-double"
     },
     {
-      "id": 15,
       "name": "Machine à café Nespresso",
-      "description": "Cafetière avec capsules à disposition."
+      "description": "Cafetière avec capsules à disposition.",
+      "icon": "coffee"
     },
     {
-      "id": 16,
       "name": "Bouilloire et thé de bienvenue",
-      "description": "Sélection de thés et tisanes locales."
+      "description": "Sélection de thés et tisanes locales.",
+      "icon": "cup-soda"
     },
     {
-      "id": 17,
       "name": "Mini-bibliothèque",
-      "description": "Livres et magazines sur la nature et la navigation."
+      "description": "Livres et magazines sur la nature et la navigation.",
+      "icon": "book-open-text"
     },
     {
-      "id": 18,
       "name": "Jeux de société",
-      "description": "Quelques classiques pour les soirées tranquilles."
+      "description": "Quelques classiques pour les soirées tranquilles.",
+      "icon": "dice-5"
     },
     {
-      "id": 19,
       "name": "Hamac extérieur",
-      "description": "Tendu entre deux pins à côté du ponton."
+      "description": "Tendu entre deux pins à côté du ponton.",
+      "icon": "moon-star"
     },
     {
-      "id": 20,
       "name": "Barbecue électrique",
-      "description": "Utilisable sur la terrasse, ustensiles fournis."
+      "description": "Utilisable sur la terrasse, ustensiles fournis.",
+      "icon": "flame"
     },
     {
-      "id": 21,
       "name": "Éclairage d’ambiance",
-      "description": "Guirlande LED et spots intégrés sur la terrasse."
+      "description": "Guirlande LED et spots intégrés sur la terrasse.",
+      "icon": "lightbulb"
     },
     {
-      "id": 22,
       "name": "Douche extérieure (été)",
-      "description": "Eau tempérée pour se rincer après baignade."
+      "description": "Eau tempérée pour se rincer après baignade.",
+      "icon": "shower-head"
     },
     {
-      "id": 23,
       "name": "Ponton privatif",
-      "description": "Accès direct au plan d’eau depuis la terrasse."
+      "description": "Accès direct au plan d’eau depuis la terrasse.",
+      "icon": "anchor"
     },
     {
-      "id": 24,
       "name": "Kit de secours",
-      "description": "Premiers soins, pansements et désinfectant."
+      "description": "Premiers soins, pansements et désinfectant.",
+      "icon": "first-aid-kit"
     },
     {
-      "id": 25,
       "name": "Extincteur",
-      "description": "Accessible dans la cuisine."
+      "description": "Accessible dans la cuisine.",
+      "icon": "fire-extinguisher"
     },
     {
-      "id": 26,
       "name": "Produits ménagers écologiques",
-      "description": "Savon noir, vinaigre blanc et éponge biodégradable."
+      "description": "Savon noir, vinaigre blanc et éponge biodégradable.",
+      "icon": "leaf"
     },
     {
-      "id": 27,
       "name": "Porte-bagages mural",
-      "description": "Rangement optimisé pour petits espaces."
+      "description": "Rangement optimisé pour petits espaces.",
+      "icon": "briefcase"
     },
     {
-      "id": 28,
       "name": "Écran connecté 24''",
-      "description": "TV intelligente avec Netflix et YouTube."
+      "description": "TV intelligente avec Netflix et YouTube.",
+      "icon": "tv"
     },
     {
-      "id": 29,
       "name": "Bluetooth speaker",
-      "description": "Enceinte nomade à disposition (JBL ou équivalent)."
+      "description": "Enceinte nomade à disposition (JBL ou équivalent).",
+      "icon": "speaker"
     },
     {
-      "id": 30,
       "name": "Rideaux occultants",
-      "description": "Pour un sommeil paisible malgré la lumière du lac."
+      "description": "Pour un sommeil paisible malgré la lumière du lac.",
+      "icon": "moon"
     },
     {
-      "id": 31,
       "name": "Décoration artisanale locale",
-      "description": "Objets faits main par des créateurs girondins."
+      "description": "Objets faits main par des créateurs girondins.",
+      "icon": "palette"
     },
     {
-      "id": 32,
       "name": "Coffret dégustation Bordeaux",
-      "description": "Petite sélection de vins en option sur demande."
+      "description": "Petite sélection de vins en option sur demande.",
+      "icon": "wine-off"
     },
     {
-      "id": 33,
       "name": "Espace de télétravail",
-      "description": "Table haute + Wi-Fi stable pour travailler avec vue."
+      "description": "Table haute + Wi-Fi stable pour travailler avec vue.",
+      "icon": "laptop"
     },
     {
-      "id": 34,
       "name": "Guides et cartes de randonnée",
-      "description": "Circuits pédestres et cyclo autour du domaine."
+      "description": "Circuits pédestres et cyclo autour du domaine.",
+      "icon": "map"
     },
     {
-      "id": 35,
       "name": "Chaises longues pliantes",
-      "description": "Pour bronzer sur la terrasse ou au bord du lac."
+      "description": "Pour bronzer sur la terrasse ou au bord du lac.",
+      "icon": "sun"
     }
   ]
 }

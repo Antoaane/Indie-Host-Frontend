@@ -7,7 +7,8 @@ import core from '@/content/fr/ListingTest/core.json'
 
 const props = defineProps<{
   title: string
-  location: string
+  type: string
+  location: { city: string; region: string; country: string }
   capacity: number
   bedrooms: { quantity: number; bed: number }
   bathrooms: number
@@ -15,18 +16,18 @@ const props = defineProps<{
 </script>
 
 <template>
-  <h1>
-    {{ title }}
-  </h1>
-  <h2>
-    {{ location }}
-  </h2>
-  <ul>
-    <li> {{ capacity }} voyageur{{ capacity > 1 ? 's' : '' }} </li>
-    <li> {{ bedrooms.quantity }} chambres </li>
-    <li> {{ bedrooms.bed }} chambres </li>
-    <li> {{ bathrooms }} salles de bain </li>
-  </ul>
+  <div class="title">
+    <h1>
+      {{ title }}
+    </h1>
+    <h2> {{ type }} — {{ location.city }}, {{ location.country }} </h2>
+    <ul>
+      <li> {{ capacity }} voyageur{{ capacity > 1 ? 's' : '' }} </li>
+      <li> {{ bedrooms.quantity }} chambres </li>
+      <li> {{ bedrooms.bed }} chambres </li>
+      <li> {{ bathrooms }} salles de bain </li>
+    </ul>
+  </div>
 </template>
 
 <style lang="scss">
