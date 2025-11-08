@@ -9,7 +9,7 @@
   margin-top: 1.5rem;
 
   h3 {
-    @include h3-title($accent, true);
+    @include lp-h3-title($accent, true);
     @include gutters(margin, bottom, 0.5);
   }
 

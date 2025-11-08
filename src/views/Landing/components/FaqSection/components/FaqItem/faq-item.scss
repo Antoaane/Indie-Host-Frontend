@@ -1,4 +1,4 @@
-/* File: src/views/Landing/FaqSection/components/FaqItem/faq-item.scss */
+/* File: src/views/Landing/components/FaqSection/components/FaqItem/faq-item.scss */
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/animations' as animations;
@@ -6,12 +6,12 @@
 // Styles de base pour les titres et paragraphes
 h3 {
   margin: 0 !important;
-  @include h3-title($accent);
+  @include lp-h3-title($accent);
 }
 
 h4 {
   margin: 0 !important;
-  @include h4-title($accent);
+  @include lp-h4-title($accent);
 }
 
 mark {

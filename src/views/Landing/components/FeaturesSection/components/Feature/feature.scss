@@ -87,7 +87,7 @@
 
         h2 {
           margin: 0 !important;
-          @include h2-title($accent, false, true, false);
+          @include lp-h2-title($accent, false, true, false);
         }
 
         p {

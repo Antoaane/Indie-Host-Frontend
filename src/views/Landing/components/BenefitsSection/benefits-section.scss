@@ -29,7 +29,7 @@
     .first-title {
       padding-top: 1rem;
       margin: 0 !important;
-      @include h2-title($accent);
+      @include lp-h2-title($accent);
     }
   }
 

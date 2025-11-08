@@ -62,7 +62,7 @@
 
           text-align: center;
 
-          @include h2-title($accent, false);
+          @include lp-h2-title($accent, false);
 
           @include min-width(md) {
             text-align: left;

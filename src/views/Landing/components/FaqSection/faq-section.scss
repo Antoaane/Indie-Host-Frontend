@@ -1,4 +1,4 @@
-/* File: src/views/Landing/FaqSection/faq-section.scss */
+/* File: src/views/Landing/components/FaqSection/faq-section.scss */
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
@@ -8,7 +8,7 @@
 #faq-section {
   h2 {
     text-align: center;
-    @include h2-title($accent, false);
+    @include lp-h2-title($accent, false);
     @include gutters(margin, bottom, 3);
   }
 

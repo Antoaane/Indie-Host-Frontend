@@ -1,4 +1,4 @@
-/* File: src/views/Landing/BenefitsSection/components/AnimationPanel/animation-panel.scss */
+/* File: src/views/Landing/components/BenefitsSection/components/AnimationPanel/animation-panel.scss */
 
 @use '@/styles/variables/globals' as *;
 
@@ -109,7 +109,7 @@
           opacity: 0;
 
           font-weight: 800;
-          @include h3-title();
+          @include lp-h3-title();
 
           &>span {
             width: max-content;
@@ -146,7 +146,7 @@
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
 
-        @include h2-title();
+        @include lp-h2-title();
       }
     }
 
@@ -232,7 +232,7 @@
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
 
-          @include h3-title();
+          @include lp-h3-title();
         }
       }
     }
@@ -326,7 +326,7 @@
           text-align: center;
           font-size: 12cqw !important;
 
-          @include h4-title($accent);
+          @include lp-h4-title($accent);
 
           .focus {
             margin: 0 !important;
@@ -334,7 +334,7 @@
 
             font-size: 22cqw !important;
 
-            @include h2-title($accent);
+            @include lp-h2-title($accent);
           }
 
           .unfocus {
@@ -343,7 +343,7 @@
 
             font-size: 12cqw !important;
 
-            @include h4-title($accent);
+            @include lp-h4-title($accent);
 
             .line {
               content: '';
@@ -394,7 +394,7 @@
         -webkit-text-fill-color: transparent;
 
         @include halo(xs, true, $secondary, 0.25);
-        @include h2-title();
+        @include lp-h2-title();
       }
     }
   }
@@ -507,7 +507,7 @@
 
           font-weight: 700 !important;
           font-family: 'outfit', sans-serif !important;
-          @include h2-title();
+          @include lp-h2-title();
         }
 
         .total-gains {
@@ -530,7 +530,7 @@
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
 
-          @include h3-title();
+          @include lp-h3-title();
 
           >span {
             white-space: nowrap;
@@ -558,7 +558,7 @@
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
 
-        @include h4-title();
+        @include lp-h4-title();
       }
     }
 
@@ -658,7 +658,7 @@
 
           font-size: 4cqw !important;
           font-weight: 800;
-          @include h3-title();
+          @include lp-h3-title();
         }
       }
 
@@ -687,7 +687,7 @@
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
 
-          @include h2-title();
+          @include lp-h2-title();
         }
       }
     }

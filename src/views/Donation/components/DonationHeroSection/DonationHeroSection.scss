@@ -21,7 +21,7 @@
 }
 
 .donation-hero__title {
-  @include h2-title($secondary, true, false, false);
+  @include lp-h2-title($secondary, true, false, false);
 }
 
 .donation-hero__lead {
@@ -46,7 +46,7 @@
   max-width: 70ch;
 
   h3 {
-    @include h3-title($secondary, true, false);
+    @include lp-h3-title($secondary, true, false);
   }
 
   p {

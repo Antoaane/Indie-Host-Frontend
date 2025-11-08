@@ -1,0 +1,23 @@
+/* File: src/views/ListingView/components/ListingCore/components/Title/title.scss */
+
+@use '@/styles/variables/globals' as *;
+
+#listing-core {
+  h1 {
+    @include h1-title
+  }
+
+  h2 {
+    @include h2-title
+  }
+
+  h3 {
+    @include h3-title
+  }
+
+  p {
+    @include base-text
+  }
+
+  .title {}
+}

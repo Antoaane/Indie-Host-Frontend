@@ -34,7 +34,7 @@
       padding: 0 !important;
 
       text-align: center;
-      @include h2-title($accent, false);
+      @include lp-h2-title($accent, false);
 
       @include min-width(lg) {
         margin-bottom: 0;
@@ -87,12 +87,12 @@
           pointer-events: none;
 
           text-align: center;
-          @include h4-title($accent);
+          @include lp-h4-title($accent);
           @include animations.transition(750ms);
 
           @include min-width(lg) {
             text-align: left;
-            @include h3-title($accent, false, false);
+            @include lp-h3-title($accent, false, false);
           }
 
           * {

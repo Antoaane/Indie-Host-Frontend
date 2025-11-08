@@ -9,7 +9,7 @@
     margin-bottom: 0.5rem;
 
     text-align: center;
-    @include h3-title($accent);
+    @include lp-h3-title($accent);
     @include gutters(padding, inline, 1);
   }
 

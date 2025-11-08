@@ -112,7 +112,7 @@ div:has(> .step-section) {
           h2 {
             margin: 1rem 0;
             padding: 0 !important;
-            @include h3-title($accent, false);
+            @include lp-h3-title($accent, false);
           }
         }
       }

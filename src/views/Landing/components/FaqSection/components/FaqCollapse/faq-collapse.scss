@@ -1,4 +1,4 @@
-/* File: src/views/Landing/FaqSection/components/FaqCollapse/faq-collapse.scss */
+/* File: src/views/Landing/components/FaqSection/components/FaqCollapse/faq-collapse.scss */
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/animations' as animations;
@@ -36,13 +36,13 @@
       h3 {
         margin: 0 !important;
         text-align: left !important;
-        @include h3-title($accent);
+        @include lp-h3-title($accent);
       }
 
       h4 {
         margin: 0 !important;
         text-align: left !important;
-        @include h4-title($accent);
+        @include lp-h4-title($accent);
       }
 
       .lucide-chevron-left-icon {

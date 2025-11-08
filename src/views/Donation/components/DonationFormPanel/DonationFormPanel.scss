@@ -22,7 +22,7 @@
 }
 
 .donation-form__title {
-  @include h3-title($secondary, false, false);
+  @include lp-h3-title($secondary, false, false);
 }
 
 .donation-form__intro {
