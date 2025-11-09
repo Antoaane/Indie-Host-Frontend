@@ -1,6 +1,7 @@
 /* File: src/views/ListingView/components/ListingCore/components/Title/title.scss */
 
 @use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
 
 #listing-core {
   h1 {
@@ -19,5 +20,26 @@
     @include base-text
   }
 
-  .title {}
+  .title {
+    h2 {
+      font-weight: 500;
+    }
+
+    ul {
+      display: flex;
+      align-items: center;
+
+      opacity: 0.75;
+
+      span {
+        height: 5px;
+        width: 5px;
+        margin-inline: 0.5rem;
+        margin-top: 3px;
+
+        background-color: $secondary;
+        border-radius: borders.$rounded;
+      }
+    }
+  }
 }

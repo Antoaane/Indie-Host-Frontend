@@ -22,9 +22,12 @@ const props = defineProps<{
     </h1>
     <h2> {{ type }} — {{ location.city }}, {{ location.country }} </h2>
     <ul>
-      <li> {{ capacity }} voyageur{{ capacity > 1 ? 's' : '' }} </li>
-      <li> {{ bedrooms.quantity }} chambres </li>
-      <li> {{ bedrooms.bed }} chambres </li>
+      <li> {{ capacity }} voyageur{{ capacity > 1 ? 's' : '' }} </li
+      ><span></span>
+      <li> {{ bedrooms.quantity }} chambres </li
+      ><span></span>
+      <li> {{ bedrooms.bed }} chambres </li
+      ><span></span>
       <li> {{ bathrooms }} salles de bain </li>
     </ul>
   </div>

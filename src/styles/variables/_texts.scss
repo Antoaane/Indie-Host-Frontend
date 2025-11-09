@@ -150,7 +150,7 @@
   }
 }
 
-@mixin h1-title($color : $secondary, $bigger: true, $colorful: true, $gutters: true, $size: 1.5rem) {
+@mixin h1-title($color : $secondary, $bigger: true, $colorful: true, $gutters: false, $size: 1.5rem) {
   $md-size : $size * 1.125;
   $lg-size : $size * 1.25;
 
@@ -216,7 +216,7 @@
   }
 }
 
-@mixin h2-title($color : $secondary, $bigger: true, $colorful: true, $gutters: true, $size: 1.25rem) {
+@mixin h2-title($color : $secondary, $bigger: true, $colorful: true, $gutters: false, $size: 1.25rem) {
   $md-size : $size * 1.125;
   $lg-size : $size * 1.25;
 
@@ -282,72 +282,10 @@
   }
 }
 
-// @mixin h2-title($color : $secondary, $bigger: true, $colorful: true, $gutters: true, $size: 1.25rem) {
-//   margin-top: 0;
-//   margin-bottom: 0.75rem;
+@mixin h3-title($color : $secondary, $bigger: true, $colorful: true, $gutters: false, $size: 1.125rem) {
+  $md-size : $size * 1.125;
+  $lg-size : $size * 1.25;
 
-//   font-family: 'Fustat', sans-serif;
-//   font-weight: 700;
-//   color: $color;
-
-//   font-size: $size;
-//   line-height: calc($size + ($size * 0.1));
-
-//   @if $gutters {
-//     @include gutters(padding, inline);
-//   }
-
-//   @include min-width(md) {
-//     $md-size : $size * 1.25;
-//     font-size: calc($md-size + ($md-size * 0.1));
-//     line-height: 2.25rem;
-//   }
-
-//   @include min-width(lg) {
-//     $lg-size : $size * 1.5;
-//     margin-top: 0;
-//     margin-bottom: 0.5rem;
-
-//     font-size: $lg-size;
-//     line-height: calc($lg-size + ($lg-size * 0.1));
-//   }
-
-//   &:has(strong) {
-//     line-height: 2rem;
-
-//     @include min-width(md) {
-//       line-height: 2.5rem;
-//     }
-
-//     @include min-width(lg) {
-//       line-height: 3rem;
-//     }
-//   }
-
-//   strong {
-//     @if $colorful {
-//       background: linear-gradient(87deg, $primary_gradiant_second 0%, $primary_gradiant_third 100%);
-//       background-clip: text;
-//       -webkit-background-clip: text;
-//       -webkit-text-fill-color: transparent;
-//       font-weight: inherit !important;
-//     }
-
-//     @if $bigger {
-//       font-size: 2.25rem;
-
-//       @include min-width(md) {
-//         font-size: 2.75rem;
-//       }
-
-//       @include min-width(lg) {
-//         font-size: 3.25rem;
-//       }
-//     }
-//   }
-// }
-
-@mixin h3-title($color : $secondary, $bigger: true, $colorful: true, $gutters: true, $size: 1.125rem) {
   margin-top: 0;
   margin-bottom: 0.75rem;
 
@@ -363,13 +301,11 @@
   }
 
   @include min-width(md) {
-    $md-size : $size * 1.25;
     font-size: calc($md-size + ($md-size * 0.1));
     line-height: 2.25rem;
   }
 
   @include min-width(lg) {
-    $lg-size : $size * 1.5;
     margin-top: 0;
     margin-bottom: 0.5rem;
 
@@ -378,14 +314,14 @@
   }
 
   &:has(strong) {
-    line-height: 2rem;
+    line-height: calc($size * 1.3334);
 
     @include min-width(md) {
-      line-height: 2.5rem;
+      line-height: calc($md-size * 1.3334);
     }
 
     @include min-width(lg) {
-      line-height: 3rem;
+      line-height: calc($lg-size * 1.3334);
     }
   }
 
@@ -399,20 +335,23 @@
     }
 
     @if $bigger {
-      font-size: 2.25rem;
+      font-size: $size * 1.5;
 
       @include min-width(md) {
-        font-size: 2.75rem;
+        font-size: $size * 1.75;
       }
 
       @include min-width(lg) {
-        font-size: 3.25rem;
+        font-size: $size * 2;
       }
     }
   }
 }
 
-@mixin h4-title($color : $secondary, $bigger: true, $colorful: true, $gutters: true, $size: 1.0625rem) {
+@mixin h4-title($color : $secondary, $bigger: true, $colorful: true, $gutters: false, $size: 1.0625rem) {
+  $md-size : $size * 1.125;
+  $lg-size : $size * 1.25;
+
   margin-top: 0;
   margin-bottom: 0.75rem;
 
@@ -428,13 +367,11 @@
   }
 
   @include min-width(md) {
-    $md-size : $size * 1.25;
     font-size: calc($md-size + ($md-size * 0.1));
     line-height: 2.25rem;
   }
 
   @include min-width(lg) {
-    $lg-size : $size * 1.5;
     margin-top: 0;
     margin-bottom: 0.5rem;
 
@@ -443,14 +380,14 @@
   }
 
   &:has(strong) {
-    line-height: 2rem;
+    line-height: calc($size * 1.3334);
 
     @include min-width(md) {
-      line-height: 2.5rem;
+      line-height: calc($md-size * 1.3334);
     }
 
     @include min-width(lg) {
-      line-height: 3rem;
+      line-height: calc($lg-size * 1.3334);
     }
   }
 
@@ -464,14 +401,14 @@
     }
 
     @if $bigger {
-      font-size: 2.25rem;
+      font-size: $size * 1.5;
 
       @include min-width(md) {
-        font-size: 2.75rem;
+        font-size: $size * 1.75;
       }
 
       @include min-width(lg) {
-        font-size: 3.25rem;
+        font-size: $size * 2;
       }
     }
   }
