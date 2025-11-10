@@ -15,7 +15,7 @@ export type TitleModel = {
     country: string;
   };
   capacity: number;
-  bedrooms: { quantity: number; bed: number };
+  bedrooms: { quantity: number; bed?: number };
   bathrooms: number;
 };
 
@@ -27,6 +27,8 @@ export type PerksModel = PerkItem[];
 export type HostProfileModel = {
   name: string;
   status?: string;
+  seniority: number;
+  globalNote?: number;
   avatar?: string;
   catalogLink?: string;
 };
@@ -58,7 +60,7 @@ export type RoomsSummary = {
 
 export type RoomsGroupSummary = {
   length: number;         // nombre de pièces pour ce type (ex: nb de "bedroom")
-  beds: number;           // total de lits pour ce type
+  beds?: number;           // total de lits pour ce type
   capacity: number;       // capacité totale pour ce type
 };
 

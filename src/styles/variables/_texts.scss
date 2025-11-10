@@ -3,13 +3,24 @@
 @use "@/styles/variables/colors" as *;
 @use "@/styles/variables/breakpoints" as *;
 
-@mixin base-text($color : $secondary, $bold: false, $underline: false, $italic: false) {
+@mixin base-text($color : $secondary, $bold: false, $underline: false, $italic: false, $thin: true) {
   margin: 0;
 
   font-family: 'outfit', sans-serif;
   color: $color;
 
-  font-weight: if($bold, 700, 200);
+  @if $bold {
+    font-weight: 700;
+  }
+
+  @else if $thin {
+    font-weight: 200;
+  }
+
+  @else {
+    font-weight: 300;
+  }
+
   text-decoration: if($underline, underline, none);
   text-underline-offset: 0.2rem;
   text-decoration-thickness: 0.05rem;
@@ -37,13 +48,24 @@
   }
 }
 
-@mixin little-text($color : $secondary, $bold: false, $underline: false, $italic: false) {
+@mixin little-text($color : $secondary, $bold: false, $underline: false, $italic: false, $thin: true) {
   margin: 0;
 
   font-family: 'outfit', sans-serif;
   color: $color;
 
-  font-weight: if($bold, 700, 200);
+  @if $bold {
+    font-weight: 700;
+  }
+
+  @else if $thin {
+    font-weight: 200;
+  }
+
+  @else {
+    font-weight: 300;
+  }
+
   text-decoration: if($underline, underline, none);
   text-underline-offset: 0.2rem;
   text-decoration-thickness: 0.05rem;

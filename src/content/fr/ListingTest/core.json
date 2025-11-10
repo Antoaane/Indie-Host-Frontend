@@ -15,9 +15,13 @@
     },
     {
       "room-name": "Salon",
-      "room-type": "living-room",
+      "room-type": "livingroom",
       "beds": [
         { "type": "lit simple", "capacity": 1, "quantity": 2 }]
+    },
+    {
+      "room-name": "Salle de bain",
+      "room-type": "bathroom"
     }
   ],
   "perks": [
@@ -34,8 +38,10 @@
   ],
   "host": {
     "name": "Delphine",
-    "status": "SuperHost — Hôte depuis 4 ans",
-    "profile-pic": "https://a0.muscache.com/im/pictures/user/abb92beb-fd44-4562-9fff-45a19adddd23.jpg?im_w=720",
+    "status": "SuperHost",
+    "seniority": 48,
+    "global-note": 4.95,
+    "avatar": "https://a0.muscache.com/im/pictures/user/abb92beb-fd44-4562-9fff-45a19adddd23.jpg?im_w=720",
     "catalog-link": "https://www.airbnb.fr/rooms/53028879#host-profile"
   },
   "brief": "Logement insolite à 20km de Bordeaux, idéal pour un séjour en couple, en famille ou entre amis. Cette maison flottante avec terrasse située sur le lac de Baurech, en plein coeur de la nature, vous séduira par sa vue, son calme et son confort. Séjour unique, hors du temps garantit !",

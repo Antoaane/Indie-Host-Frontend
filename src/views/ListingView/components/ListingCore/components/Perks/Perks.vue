@@ -44,5 +44,55 @@ function resolveIcon(name: string) {
 </template>
 
 <style lang="scss">
-@use '@/views/ListingView/components/ListingCore/components/Perks/perks.scss';
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+
+.perks-listing-comp {
+  ul {
+    display: flex;
+    gap: var(--gutter-spacing-md);
+
+    li {
+      padding: var(--gutter-spacing-md);
+
+      flex-grow: 1;
+      flex-basis: 50%;
+
+      display: flex;
+      gap: var(--gutter-spacing-md);
+
+      border: solid 1px $quaternary;
+      border-radius: borders.$rounded-lg;
+
+      .lucide {
+        margin-top: var(--gutter-spacing-xs);
+
+        flex-shrink: 0;
+        flex-basis: 2rem;
+        height: 2rem;
+
+        stroke: $secondary;
+
+        * {
+          stroke: $secondary;
+        }
+      }
+
+      div {
+        flex-shrink: 1;
+
+        h3 {
+          margin-bottom: var(--gutter-spacing-xs) !important;
+          font-weight: 500 !important;
+          @include base-text;
+        }
+
+        p {
+          opacity: 0.65;
+          @include little-text($thin: false);
+        }
+      }
+    }
+  }
+}
 </style>

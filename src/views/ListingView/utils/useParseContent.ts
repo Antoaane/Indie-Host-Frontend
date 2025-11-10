@@ -94,7 +94,7 @@ function groupRoomsByType(rooms: RoomItem[]): RoomsByType {
     if (!byType[key]) byType[key] = { rooms: [], length: 0, beds: 0, capacity: 0 };
     byType[key].rooms.push(r);
     byType[key].length += 1;
-    byType[key].beds += r.beds.reduce((acc, b) => acc + b.quantity, 0);
+    if (byType[key].beds) { byType[key].beds += r.beds.reduce((acc, b) => acc + b.quantity, 0); }
     byType[key].capacity += r.beds.reduce((acc, b) => acc + b.capacity * b.quantity, 0);
   }
   return byType;
@@ -160,7 +160,9 @@ function parseHost(core: RawCore): HostProfileModel {
   return {
     name: core.host.name,
     status: core.host.status,
-    avatar: core.host['profile-pic'],
+    seniority: core.host.seniority,
+    globalNote: core.host['global-note'],
+    avatar: core.host.avatar,
     catalogLink: core.host['catalog-link'],
   };
 }

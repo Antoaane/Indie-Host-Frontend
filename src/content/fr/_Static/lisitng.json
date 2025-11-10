@@ -9,23 +9,49 @@
       "tag": "h2",
       "content": "Les disponibilités de ce logement"
     },
-    "cta-profile-1": {
+    "profile-cta-1": {
       "tag": "a",
       "content": "Voir le profile",
       "meta": {
         "target": "_self"
       }
     },
-    "cta-profile-2": {
+    "profile-cta-2": {
       "tag": "a",
       "content": "Voir les annonces",
       "meta": {
         "target": "_self"
       }
     },
-    "cta-description": {
+    "description-cta": {
       "tag": "button",
       "content": "Voir tout"
+    },
+    "profile-seniority-text-1": {
+      "tag": "li",
+      "content": "Hôte depuis"
+    },
+    "profile-seniority-text-2": {
+      "tag": "li",
+      "content": "ans"
+    },
+    "rooms": {
+      "tag": "content",
+      "data": {
+        "bedroom": "chambre",
+        "livingroom": "salon",
+        "bathroom": "salle de bain",
+        "bedrooms": "chambres",
+        "livingrooms": "salons",
+        "bathrooms": "salles de bains"
+      }
+    },
+    "capacity": {
+      "tag": "content",
+      "data": {
+        "traveler": "voyageur",
+        "travelers": "voyageurs"
+      }
     }
   }
 }

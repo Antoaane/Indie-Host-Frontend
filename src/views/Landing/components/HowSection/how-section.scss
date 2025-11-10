@@ -129,7 +129,7 @@
           .customization-image {
             width: 100%;
             max-height: 80vh;
-            padding: var(--gutter-spacing-double) 0;
+            padding: var(--gutter-spacing-4xl) 0;
             object-fit: contain;
 
             @include halo(lg, true, black, 0.5);
