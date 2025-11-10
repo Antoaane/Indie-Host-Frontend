@@ -62,7 +62,14 @@ $breakpoints: (
 $gutter: get-gutter();
 
 :root {
+  --gutter-spacing-xs: calc(#{map.get($gutter, base)} * 0.25);
+  --gutter-spacing-sm: calc(#{map.get($gutter, base)} * 0.5);
+  --gutter-spacing-md: calc(#{map.get($gutter, base)} * 0.75);
   --gutter-spacing: #{map.get($gutter, base)};
+  --gutter-spacing-xl: calc(#{map.get($gutter, base)} * 1.25);
+  --gutter-spacing-xxl: calc(#{map.get($gutter, base)} * 1.5);
+  --gutter-spacing-xxxl: calc(#{map.get($gutter, base)} * 1.75);
+  --gutter-spacing-double: calc(#{map.get($gutter, base)} * 2);
   --container-size: #{map.get($max-widths, xxs)};
 }
 
@@ -87,14 +94,28 @@ $gutter: get-gutter();
 @include min-width(md) {
   :root {
     --container-size: #{map.get($max-widths, md)};
+    --gutter-spacing-xs: calc(#{map.get($gutter, md)} * 0.25);
+    --gutter-spacing-sm: calc(#{map.get($gutter, md)} * 0.5);
+    --gutter-spacing-md: calc(#{map.get($gutter, md)} * 0.75);
     --gutter-spacing: #{map.get($gutter, md)};
+    --gutter-spacing-xl: calc(#{map.get($gutter, md)} * 1.25);
+    --gutter-spacing-xxl: calc(#{map.get($gutter, md)} * 1.5);
+    --gutter-spacing-xxxl: calc(#{map.get($gutter, md)} * 1.75);
+    --gutter-spacing-double: calc(#{map.get($gutter, md)} * 2);
   }
 }
 
 @include min-width(lg) {
   :root {
     --container-size: #{map.get($max-widths, lg)};
+    --gutter-spacing-xs: calc(#{map.get($gutter, lg)} * 0.25);
+    --gutter-spacing-sm: calc(#{map.get($gutter, lg)} * 0.5);
+    --gutter-spacing-md: calc(#{map.get($gutter, lg)} * 0.75);
     --gutter-spacing: #{map.get($gutter, lg)};
+    --gutter-spacing-xl: calc(#{map.get($gutter, lg)} * 1.25);
+    --gutter-spacing-xxl: calc(#{map.get($gutter, lg)} * 1.5);
+    --gutter-spacing-xxxl: calc(#{map.get($gutter, lg)} * 1.75);
+    --gutter-spacing-double: calc(#{map.get($gutter, lg)} * 2);
   }
 }
 
@@ -107,7 +128,14 @@ $gutter: get-gutter();
 @include min-width(xxl) {
   :root {
     --container-size: #{map.get($max-widths, xxl)};
+    --gutter-spacing-xs: calc(#{map.get($gutter, xxl)} * 0.25);
+    --gutter-spacing-sm: calc(#{map.get($gutter, xxl)} * 0.5);
+    --gutter-spacing-md: calc(#{map.get($gutter, xxl)} * 0.75);
     --gutter-spacing: #{map.get($gutter, xxl)};
+    --gutter-spacing-xl: calc(#{map.get($gutter, xxl)} * 1.25);
+    --gutter-spacing-xxl: calc(#{map.get($gutter, xxl)} * 1.5);
+    --gutter-spacing-xxxl: calc(#{map.get($gutter, xxl)} * 1.75);
+    --gutter-spacing-double: calc(#{map.get($gutter, xxl)} * 2);
   }
 }
 

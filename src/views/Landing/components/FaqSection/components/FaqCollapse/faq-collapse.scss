@@ -74,11 +74,11 @@
         //   content: ' ';
         //   display: block;
         //   width: 0.75rem;
-        //   height: calc(50% + (var(--gutter-spacing) * 0.25));
+        //   height: calc(50% + var(--gutter-spacing-xs));
 
         //   position: absolute;
         //   left: -1.5rem;
-        //   top: calc((var(--gutter-spacing) * 0.25) * (-1));
+        //   top: calc(var(--gutter-spacing-xs) * (-1));
 
         //   border-left: 1px solid $accent;
         //   border-bottom: 1px solid $accent;

@@ -10,11 +10,12 @@ import { listingCore } from '@/views/ListingView/utils/useParseContent'
 // COMPONENTS
 import Title from '@/views/ListingView/components/ListingCore/components/Title/Title.vue'
 import DatePicker from '@/views/ListingView/components/ListingCore/components/DatePicker/DatePicker.vue'
+import Perks from './components/Perks/Perks.vue'
 
 //CONTENT
 const data = await listingCore()
-const title = data.title // <- accès direct demandé
-console.log(title)
+const title = data.title
+const perks = data.perks
 </script>
 
 <template>
@@ -27,6 +28,7 @@ console.log(title)
       :bedrooms="title.bedrooms"
       :bathrooms="title.bathrooms"
     />
+    <Perks :perks="perks" />
     <DatePicker />
   </section>
 </template>

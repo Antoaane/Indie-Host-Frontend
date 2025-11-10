@@ -15,8 +15,8 @@
 
   border-radius: borders.$rounded-lg;
   border: 1px solid rgba($accent, 0.25);
-  // background-color: rgba(lighten($quaternary, 5%), 0.75);
-  // background-color: lighten($quaternary, 10%);
+  // background-color: rgba(lighten($quinary, 5%), 0.75);
+  // background-color: lighten($quinary, 10%);
   background-color: $accent;
 
   @include gutters(padding, left, 1);
@@ -144,7 +144,7 @@
     width: 100%;
 
     position: absolute;
-    top: calc((var(--gutter-spacing) * 0.75 * 2) + 60px);
+    top: calc((var(--gutter-spacing-md) * 2) + 60px);
 
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 

@@ -20,7 +20,7 @@
         { "type": "lit simple", "capacity": 1, "quantity": 2 }]
     }
   ],
-  "highlights": [
+  "perks": [
     {
       "name": "Annulation gratuite pendant 48h",
       "description": "Si vous changez d'avis, votre réservation est annulable sans frais dans les 48 premières heures.",

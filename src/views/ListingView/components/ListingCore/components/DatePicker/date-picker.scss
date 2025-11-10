@@ -8,17 +8,15 @@
 .cal-root {
   max-width: 36rem;
 
-  .cal-header {}
-
-  .cal-header {
+  // .cal-header {
 
 
-    button {
-      // @include buttons.primary();
-    }
+  //   button {
+  //     // @include buttons.primary();
+  //   }
 
-    .cal-heading {}
-  }
+  //   .cal-heading {}
+  // }
 
   .cal-body {
     border-radius: borders.$rounded-lg;

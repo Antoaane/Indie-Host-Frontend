@@ -20,8 +20,8 @@ export type TitleModel = {
 };
 
 // -------- POLITIQUES --------
-export type HighlightItem = { icon: string; name: string; description?: string };
-export type HighlightsModel = HighlightItem[];
+export type PerkItem = { icon: string; name: string; description?: string };
+export type PerksModel = PerkItem[];
 
 // -------- HÔTE --------
 export type HostProfileModel = {
@@ -101,7 +101,7 @@ export type CommentsModel = CommentItem[];
 // -------- BUNDLE GLOBAL --------
 export type ListingParsed = {
   title: TitleModel;
-  highlights: HighlightsModel;
+  perks: PerksModel;
   hostProfile: HostProfileModel;
   description: DescriptionModel;
   amenities: AmenitiesModel;

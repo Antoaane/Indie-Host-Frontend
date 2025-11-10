@@ -40,7 +40,7 @@
     z-index: -1;
 
     transform-origin: top center;
-    transform: translate(-50%, calc(var(--gutter-spacing) * -0.5)) scaleX(-1) scaleY(1.5) rotate(3.5deg);
+    transform: translate(-50%, var(--gutter-spacing-sm)) scaleX(-1) scaleY(1.5) rotate(3.5deg);
 
     @include min-width(lg) {
       transform: translate(-50%, calc(var(--gutter-spacing) * 5)) scaleX(-1) scaleY(0.6) rotate(10deg);
@@ -129,7 +129,7 @@
           .customization-image {
             width: 100%;
             max-height: 80vh;
-            padding: calc(var(--gutter-spacing) * 2) 0;
+            padding: var(--gutter-spacing-double) 0;
             object-fit: contain;
 
             @include halo(lg, true, black, 0.5);
@@ -154,7 +154,7 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      gap: calc(var(--gutter-spacing) * 0.75);
+      gap: var(--gutter-spacing-md);
 
       padding-top: 2rem;
       padding-bottom: 2rem;

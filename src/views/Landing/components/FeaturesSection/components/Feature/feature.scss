@@ -79,7 +79,7 @@
 
         display: flex;
         flex-direction: column;
-        gap: calc(var(--gutter-spacing) * 0.75);
+        gap: var(--gutter-spacing-md);
 
         @include min-width(xl) {
           width: calc(var(--container-size) / 3);
@@ -107,7 +107,7 @@
       }
 
       @include min-width(lg) {
-        height: calc(90vh - ((var(--gutter-spacing) * 2) + 70px));
+        height: calc(90vh - (var(--gutter-spacing-double) + 70px));
       }
 
       &.hzt {
@@ -153,12 +153,12 @@
         height: auto;
 
         @include min-width(xs) {
-          height: calc(70vh - ((var(--gutter-spacing) * 2) + 70px));
+          height: calc(70vh - (var(--gutter-spacing-double) + 70px));
           width: auto;
         }
 
         @include min-width(lg) {
-          height: calc(90vh - ((var(--gutter-spacing) * 2) + 70px));
+          height: calc(90vh - (var(--gutter-spacing-double) + 70px));
           width: auto;
         }
 

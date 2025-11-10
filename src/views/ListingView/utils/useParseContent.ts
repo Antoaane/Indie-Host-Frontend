@@ -15,7 +15,7 @@ import commentsJSON from '@/content/fr/ListingTest/comments.json';
 import type {
   ListingParsed,
   TitleModel,
-  HighlightsModel,
+  PerksModel,
   HostProfileModel,
   DescriptionModel,
   AmenitiesModel,
@@ -152,8 +152,8 @@ function parseTitle(core: RawCore): TitleModel {
   };
 }
 
-function parseHighlights(core: RawCore): HighlightsModel {
-  return core.highlights.map(p => ({ icon: p.icon, name: p.name, description: p.description }));
+function parsePerks(core: RawCore): PerksModel {
+  return core.perks.map(p => ({ icon: p.icon, name: p.name, description: p.description }));
 }
 
 function parseHost(core: RawCore): HostProfileModel {
@@ -237,7 +237,7 @@ export async function listingCore(): Promise<ListingParsed> {
 
   return {
     title: parseTitle(core),
-    highlights: parseHighlights(core),
+    perks: parsePerks(core),
     hostProfile: parseHost(core),
     description: parseDescription(core),
     amenities: parseAmenities(amenities),

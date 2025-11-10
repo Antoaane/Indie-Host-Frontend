@@ -3,8 +3,6 @@
 <script setup lang="ts">
 // DEPS
 // CONTENT
-import core from '@/content/fr/ListingTest/core.json'
-
 const props = defineProps<{
   title: string
   type: string
@@ -16,7 +14,7 @@ const props = defineProps<{
 </script>
 
 <template>
-  <div class="title">
+  <div class="title-listing-comp">
     <h1>
       {{ title }}
     </h1>
