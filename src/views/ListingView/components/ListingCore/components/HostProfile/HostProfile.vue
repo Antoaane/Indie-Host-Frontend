@@ -7,7 +7,7 @@ import type { HostProfileModel } from '@/views/ListingView/types/listing'
 import listing from '@/content/fr/_Static/lisitng.json'
 
 const props = defineProps<{
-  host: HostProfileModel
+  data: HostProfileModel
 }>()
 
 const content = listing.items
@@ -19,23 +19,19 @@ function monthsToYears(months: number): number {
 </script>
 
 <template>
-  <div class="hostprofile-listing-comp">
+  <div class="hostprofile-listing__comp">
     <img
-      :src="host.avatar"
-      :alt="host.name"
+      :src="data.avatar"
+      :alt="data.name"
     />
     <div>
-      <h2>
-        {{ host.name }}
-      </h2>
+      <h2 v-html="data.name" />
       <ul>
-        <li>
-          {{ host.status }}
-        </li>
-        <li v-if="host.seniority > 1">
+        <li v-html="data.status" />
+        <li v-if="data.seniority > 1">
           <span>&nbsp;—&nbsp;</span>
           {{ content['profile-seniority-text-1'].content }}
-          {{ monthsToYears(host.seniority) }}
+          {{ monthsToYears(data.seniority) }}
           {{ content['profile-seniority-text-2'].content }}
         </li>
       </ul>
@@ -47,7 +43,7 @@ function monthsToYears(months: number): number {
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
 
-.hostprofile-listing-comp {
+.hostprofile-listing__comp {
   padding: var(--gutter-spacing-sm);
 
   display: flex;

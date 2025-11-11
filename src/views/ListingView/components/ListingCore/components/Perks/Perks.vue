@@ -7,7 +7,7 @@ import * as LucideIcons from 'lucide-vue-next'
 import type { PerkItem } from '@/views/ListingView/types/listing'
 // CONTENT
 const props = defineProps<{
-  perks: PerkItem[]
+  data: PerkItem[]
 }>()
 
 // Transforme "rotate-ccw" ou "wifi" → "RotateCcw", "Wifi"
@@ -26,17 +26,17 @@ function resolveIcon(name: string) {
 </script>
 
 <template>
-  <div class="perks-listing-comp">
+  <div class="perks-listing__comp">
     <ul>
-      <li v-for="perk in perks">
+      <li v-for="perk in data">
         <component
           :is="resolveIcon(perk.icon)"
           class="perk-icon"
           aria-hidden="true"
         />
         <div>
-          <h3>{{ perk.name }}</h3>
-          <p>{{ perk.description }}</p>
+          <h3 v-html="perk.name" />
+          <p v-html="perk.description" />
         </div>
       </li>
     </ul>
@@ -47,7 +47,7 @@ function resolveIcon(name: string) {
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
 
-.perks-listing-comp {
+.perks-listing__comp {
   ul {
     display: flex;
     gap: var(--gutter-spacing-md);
@@ -82,7 +82,7 @@ function resolveIcon(name: string) {
         flex-shrink: 1;
 
         h3 {
-          margin-bottom: var(--gutter-spacing-xs) !important;
+          margin-bottom: var(--gutter-spacing-2xs) !important;
           font-weight: 500 !important;
           @include base-text;
         }

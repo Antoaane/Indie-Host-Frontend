@@ -138,7 +138,7 @@ function parseTitle(core: RawCore): TitleModel {
   const bedroom = getTypeEntry(byType, 'bedroom');
   const bathrooms = sumLengthsMatching(byType, k => k.toLowerCase().includes('bath'));
 
-  return {
+  const title = {
     title: core.title,
     type,
     location: {
@@ -150,6 +150,8 @@ function parseTitle(core: RawCore): TitleModel {
     bedrooms: { quantity: bedroom.length, bed: bedroom.beds },
     bathrooms,
   };
+
+  return title;
 }
 
 function parsePerks(core: RawCore): PerksModel {

@@ -1,0 +1,74 @@
+/* File: src/views/ListingView/components/ListingCore/components/Description/description.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/components/buttons' as buttons;
+
+.description-listing__comp {
+  p {
+    @include base-text($thin: false);
+  }
+
+  .description__trigger {
+    margin-top: var(--gutter-spacing-sm);
+    @include buttons.secondary($padding: false);
+  }
+
+  /* Backdrop */
+  .backdrop[data-popup] {
+    width: 100vw;
+    height: 100vh;
+
+    padding-top: calc($nav-height + var(--gutter-spacing));
+    padding-bottom: calc(var(--gutter-spacing) * 2);
+    padding-inline: var(--gutter-spacing);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    position: fixed;
+    inset: 50%;
+    z-index: 9999;
+
+    transform: translate(-50%, -50%);
+
+    background-color: rgba($secondary, $alpha: 0.5);
+    backdrop-filter: blur(2.5px);
+
+    .display__description-blocks {
+      height: max-content;
+      max-height: 100%;
+      padding: var(--gutter-spacing-md);
+
+      position: relative;
+
+      background-color: $accent;
+      border-radius: borders.$rounded-lg;
+
+      @include container($max: md);
+
+      .block {
+        margin-bottom: var(--gutter-spacing);
+
+        h2 {
+          @include h2-title;
+        }
+
+        h3 {
+          @include h4-title;
+        }
+      }
+
+      .close-container {
+        position: absolute;
+        top: var(--gutter-spacing-md);
+        right: var(--gutter-spacing-md);
+
+        .close-btn {
+          @include buttons.primary($padding: false);
+        }
+      }
+    }
+  }
+}

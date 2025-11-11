@@ -46,7 +46,7 @@ $button-themes: (
 );
 
 // Mixin bouton primaire dynamique
-@mixin primary($cta: false, $theme: black) {
+@mixin primary($cta: false, $theme: black, $padding: true) {
   $colors: map.get($button-themes, $theme);
 
   width: max-content;
@@ -64,8 +64,15 @@ $button-themes: (
 
   &>* {
     width: 100%;
-    padding: 0.4rem 1rem 0.5rem 1rem;
     box-sizing: border-box;
+
+    @if $padding {
+      padding: 0.4rem 1rem 0.5rem 1rem;
+    }
+
+    @else {
+      padding: 0.4rem;
+    }
 
     display: inline-flex;
     align-items: center;
@@ -183,7 +190,7 @@ $button-themes: (
 }
 
 // Bouton secondaire inchangé (peut aussi être refactoré avec map)
-@mixin secondary($theme: white) {
+@mixin secondary($theme: white, $padding: true) {
   $colors: map.get($button-themes, $theme);
 
   list-style: none;
@@ -197,7 +204,14 @@ $button-themes: (
 
   &>* {
     display: inline-block;
-    padding: 0.4rem 1rem 0.5rem 1rem;
+
+    @if $padding {
+      padding: 0.4rem 1rem 0.5rem 1rem;
+    }
+
+    @else {
+      padding: 0;
+    }
 
     border: none;
     background-color: $translucent;

@@ -1,42 +1,38 @@
 <!-- File: src/views/ListingView/components/ListingCore/components/Title/Title.vue -->
 
 <script setup lang="ts">
-// DEPS
+// TYPES
+import type { TitleModel } from '@/views/ListingView/types/listing'
 // CONTENT
 import listing from '@/content/fr/_Static/lisitng.json'
 
 const props = defineProps<{
-  title: string
-  type: string
-  location: { city: string; region: string; country: string }
-  capacity: number
-  bedrooms: { quantity: number; bed?: number }
-  bathrooms: number
+  data: TitleModel
 }>()
 
 const content = listing.items
 </script>
 
 <template>
-  <div class="title-listing-comp">
+  <div class="title-listing__comp">
     <h1>
-      {{ title }}
+      {{ data.title }}
     </h1>
-    <h2> {{ type }} — {{ location.city }}, {{ location.country }} </h2>
+    <h2> {{ data.type }} — {{ data.location.city }}, {{ data.location.country }} </h2>
     <ul>
-      <li> {{ capacity }} {{ capacity > 1 ? content.capacity.data.travelers : content.capacity.data.traveler }} </li>
+      <li> {{ data.capacity }} {{ data.capacity > 1 ? content.capacity.data.travelers : content.capacity.data.traveler }} </li>
 
       <li>
         <span></span>
-        {{ bedrooms.quantity }} {{ bedrooms.quantity > 1 ? content.capacity.data.travelers : content.capacity.data.traveler }}
+        {{ data.bedrooms.quantity }} {{ data.bedrooms.quantity > 1 ? content.capacity.data.travelers : content.capacity.data.traveler }}
       </li>
-      <li v-if="bedrooms.bed">
+      <li v-if="data.bedrooms.bed">
         <span></span>
-        {{ bedrooms.bed }} {{ bedrooms.bed > 1 ? content.rooms.data.bedrooms : content.rooms.data.bedroom }}
+        {{ data.bedrooms.bed }} {{ data.bedrooms.bed > 1 ? content.rooms.data.bedrooms : content.rooms.data.bedroom }}
       </li>
       <li>
         <span></span>
-        {{ bathrooms }} {{ bathrooms > 1 ? content.rooms.data.bathrooms : content.rooms.data.bathroom }}
+        {{ data.bathrooms }} {{ data.bathrooms > 1 ? content.rooms.data.bathrooms : content.rooms.data.bathroom }}
       </li>
     </ul>
   </div>
@@ -46,7 +42,7 @@ const content = listing.items
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
 
-.title-listing-comp {
+.title-listing__comp {
   h1 {
     @include h1-title;
   }

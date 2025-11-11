@@ -23,6 +23,10 @@
         "target": "_self"
       }
     },
+    "description-title": {
+      "tag": "h2",
+      "content": "À propos du logement"
+    },
     "description-cta": {
       "tag": "button",
       "content": "Voir tout"
