@@ -6,28 +6,27 @@ import FaqItem from '@/views/Landing/components/FaqSection/components/FaqItem/Fa
 import { useFaq } from '@/views/Landing/components/FaqSection/utils/useFaq'
 import Footer from '@/components/layouts/Footer.vue'
 // CONTENT
-import type { ItemSection, ContentBlock } from '@/content/types'
-import rawContent from '@/content/fr/Landing/faq-section.json'
+import type { FaqContent } from '@/views/Landing/types/content'
+import { formatRichText } from '@/utils/i18n'
 
-const section = rawContent as unknown as ItemSection
-const items = section.items as Record<string, ContentBlock>
+const props = defineProps<{
+  content: FaqContent
+}>()
 
-const { filteredData, suggestions, search, selectSuggestion } = useFaq()
+const { filteredData, suggestions, search, selectSuggestion } = useFaq(props.content.nodes)
 </script>
 
 <template>
-  <section :id="section.id">
+  <section id="faq-section">
     <div class="wrapper__xl">
-      <h2>
-        {{ items['title-1'].content }}
-      </h2>
+      <h2 v-html="formatRichText(props.content.title)" />
 
       <!-- Input de recherche -->
       <input
         v-model="search"
         type="search"
-        :placeholder="items['input-1'].meta?.placeholder"
-        :aria-label="items['input-1'].meta?.ariaLabel"
+        :placeholder="props.content.searchPlaceholder"
+        :aria-label="props.content.searchLabel"
         class="faq-search"
         autocomplete="off"
       />

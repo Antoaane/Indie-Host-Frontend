@@ -7,14 +7,18 @@ import { X } from 'lucide-vue-next'
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 // TYPES
 import type { DescriptionModel } from '@/views/ListingView/types/listing'
-// CONTENT
-import listing from '@/content/fr/_Static/lisitng.json'
+
+interface DescriptionCopy {
+  title: string
+  ctaLabel: string
+}
 
 const props = defineProps<{
   data: DescriptionModel
+  copy: DescriptionCopy
 }>()
 
-const content = listing.items
+const copy = props.copy
 
 /* ---------- state ---------- */
 const isOpen = ref(false)
@@ -62,7 +66,7 @@ onBeforeUnmount(() => {
         type="button"
         :aria-expanded="isOpen"
         :aria-controls="'listing-description-dialog'"
-        v-html="content['description-cta'].content"
+        v-html="copy.ctaLabel"
         @click="openPopup"
       />
     </div>
@@ -97,7 +101,7 @@ onBeforeUnmount(() => {
               </div>
             </div>
 
-            <h2 v-html="content['description-title'].content" />
+            <h2 v-html="copy.title" />
             <div class="block">
               <p v-html="data.brief" />
             </div>

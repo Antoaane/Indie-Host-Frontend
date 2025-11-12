@@ -11,10 +11,12 @@ import { useDropDown } from '@/views/Landing/components/StrengthsSection/utils/u
 import { Wallet, ShieldCheck, Users, ChevronDown } from 'lucide-vue-next'
 import ShapesCircle from '@/components/svgs/images/ShapesCircle.vue'
 // CONTENT
-import type { ItemSection } from '@/content/types'
-import rawContent from '@/content/fr/Landing/strengths-section.json'
+import type { StrengthsContent } from '@/views/Landing/types/content'
+import { formatRichText } from '@/utils/i18n'
 
-const section = rawContent as ItemSection
+const props = defineProps<{
+  content: StrengthsContent
+}>()
 
 useStrengthsAnim()
 
@@ -37,21 +39,23 @@ onMounted(() => {
         <h2
           data-sr
           data-sr-y="-30"
-          v-html="section.items['title-1'].content"
+          v-html="formatRichText(content.title)"
         />
         <p
           data-sr
           data-sr-y="30"
-          v-html="section.items['subtitle-1'].content"
+          v-html="formatRichText(content.subtitle)"
         />
       </div>
 
       <div class="strengths">
         <div
+          v-for="(pillar, index) in content.pillars"
+          :key="pillar.id"
           data-sr
           data-sr-y="50"
+          :data-sr-delay="index * 0.25"
           class="strength"
-          id="strength_1"
         >
           <span>
             <span>
@@ -61,87 +65,16 @@ onMounted(() => {
           <div>
             <div class="strength-title">
               <div class="icon-container">
-                <Wallet
+                <component
+                  :is="[Wallet, ShieldCheck, Users][index] || Wallet"
                   :size="24"
                   class="strength-icon"
                 />
               </div>
-              <h3 v-html="section.items['card-1-title'].content" />
+              <h3 v-html="formatRichText(pillar.title)" />
             </div>
             <span></span>
-            <p v-html="section.items['card-1-text'].content" />
-            <div
-              v-if="!vp.lg.value"
-              class="trigger"
-            >
-              <p> Voir plus </p>
-              <ChevronDown
-                :size="16"
-                class="chevron-down"
-              />
-            </div>
-          </div>
-        </div>
-        <div
-          data-sr
-          data-sr-y="50"
-          data-sr-delay="0.5"
-          class="strength"
-          id="strength_2"
-        >
-          <span>
-            <span>
-              <span></span>
-            </span>
-          </span>
-          <div>
-            <div class="strength-title">
-              <div class="icon-container">
-                <ShieldCheck
-                  :size="24"
-                  class="strength-icon"
-                />
-              </div>
-              <h3 v-html="section.items['card-2-title'].content" />
-            </div>
-            <span></span>
-            <p v-html="section.items['card-2-text'].content" />
-            <div
-              v-if="!vp.lg.value"
-              class="trigger"
-            >
-              <p> Voir plus </p>
-              <ChevronDown
-                :size="16"
-                class="chevron-down"
-              />
-            </div>
-          </div>
-        </div>
-        <div
-          data-sr
-          data-sr-y="50"
-          data-sr-delay="0.75"
-          class="strength"
-          id="strength_3"
-        >
-          <span>
-            <span>
-              <span></span>
-            </span>
-          </span>
-          <div>
-            <div class="strength-title">
-              <div class="icon-container">
-                <Users
-                  :size="24"
-                  class="strength-icon"
-                />
-              </div>
-              <h3 v-html="section.items['card-3-title'].content" />
-            </div>
-            <span></span>
-            <p v-html="section.items['card-3-text'].content" />
+            <p v-html="formatRichText(pillar.description)" />
             <div
               v-if="!vp.lg.value"
               class="trigger"

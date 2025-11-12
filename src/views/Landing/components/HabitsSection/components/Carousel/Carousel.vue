@@ -16,11 +16,14 @@ import 'swiper/css/pagination'
 import { vp } from '@/utils/viewport'
 import { useHabitsAnim } from '@/views/Landing/components/HabitsSection/utils/useHabitsAnim'
 import { sliderContainerSize, descriptionSize } from '@/views/Landing/components/HabitsSection/stores/slider'
-// CONTENT
-import type { ItemSection } from '@/content/types'
-import rawContent from '@/content/fr/Landing/habits-section.json'
+// TYPES
+import type { HabitsSlide } from '@/views/Landing/types/content'
 
-const section = rawContent as ItemSection
+const props = defineProps<{
+  slides: HabitsSlide[]
+}>()
+
+const slides = computed(() => props.slides ?? [])
 
 const swiperInstance = ref<SwiperClass | null>(null)
 const swiperWrapper = ref<InstanceType<typeof Swiper> | null>(null)
@@ -98,15 +101,23 @@ const initsliderContainerSize = () => {
         @slideChange="onSlideChange"
       >
         <SwiperSlide
-          v-for="(data, idx) in section.items['slider'].meta?.data"
-          :key="idx"
+          v-for="slide in slides"
+          :key="slide.id"
         >
           <img
+            v-if="slide.images?.[0]?.webp"
             class="slide-page-svg"
             loading="lazy"
-            :src="data['image-1']"
-            :onerror="`this.onerror=null; this.src='${data['image-2']}';`"
-            :alt="data.alt"
+            :src="slide.images[0]?.webp"
+            :onerror="slide.images[0]?.png ? `this.onerror=null; this.src='${slide.images[0]?.png}';` : undefined"
+            :alt="slide.images[0]?.alt"
+          />
+          <img
+            v-else
+            class="slide-page-svg"
+            loading="lazy"
+            src="/assets/media/images/webp/editeur.webp"
+            alt="Habits illustration"
           />
         </SwiperSlide>
       </Swiper>

@@ -3,14 +3,36 @@
 <script setup lang="ts">
 // TYPES
 import type { TitleModel } from '@/views/ListingView/types/listing'
-// CONTENT
-import listing from '@/content/fr/_Static/lisitng.json'
+import { computed } from 'vue'
+import { formatICUMessage } from '@/utils/i18n'
+
+interface TitlePlurals {
+  travelers: string
+  beds: string
+  bedrooms: string
+  bathrooms: string
+}
 
 const props = defineProps<{
   data: TitleModel
+  plurals: TitlePlurals
 }>()
 
-const content = listing.items
+const travelerLabel = computed(() =>
+  formatICUMessage(props.plurals.travelers, { count: props.data.capacity }),
+)
+
+const bedroomLabel = computed(() =>
+  formatICUMessage(props.plurals.bedrooms, { count: props.data.bedrooms.quantity }),
+)
+
+const bedsLabel = computed(() =>
+  formatICUMessage(props.plurals.beds, { count: props.data.bedrooms.bed ?? 0 }),
+)
+
+const bathroomsLabel = computed(() =>
+  formatICUMessage(props.plurals.bathrooms, { count: props.data.bathrooms }),
+)
 </script>
 
 <template>
@@ -20,19 +42,19 @@ const content = listing.items
     </h1>
     <h2> {{ data.type }} — {{ data.location.city }}, {{ data.location.country }} </h2>
     <ul>
-      <li> {{ data.capacity }} {{ data.capacity > 1 ? content.capacity.data.travelers : content.capacity.data.traveler }} </li>
+      <li> {{ data.capacity }} {{ travelerLabel }} </li>
 
       <li>
         <span></span>
-        {{ data.bedrooms.quantity }} {{ data.bedrooms.quantity > 1 ? content.capacity.data.travelers : content.capacity.data.traveler }}
+        {{ data.bedrooms.quantity }} {{ bedroomLabel }}
       </li>
       <li v-if="data.bedrooms.bed">
         <span></span>
-        {{ data.bedrooms.bed }} {{ data.bedrooms.bed > 1 ? content.rooms.data.bedrooms : content.rooms.data.bedroom }}
+        {{ data.bedrooms.bed }} {{ bedsLabel }}
       </li>
       <li>
         <span></span>
-        {{ data.bathrooms }} {{ data.bathrooms > 1 ? content.rooms.data.bathrooms : content.rooms.data.bathroom }}
+        {{ data.bathrooms }} {{ bathroomsLabel }}
       </li>
     </ul>
   </div>

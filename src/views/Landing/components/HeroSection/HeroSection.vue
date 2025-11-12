@@ -6,14 +6,18 @@ import gsap from 'gsap'
 // ASSETS
 import ShapesBgCroped from '@/components/svgs/images/ShapesBgCroped.vue'
 // CONTENT
-import type { ItemSection } from '@/content/types'
-import rawContent from '@/content/fr/Landing/hero-section.json'
+import type { HeroContent } from '@/views/Landing/types/content'
 import { onMounted } from 'vue'
+import { formatRichText } from '@/utils/i18n'
 
-const section = rawContent as ItemSection
+const props = defineProps<{
+  content: HeroContent
+}>()
+
+const sectionId = 'hero-section'
 
 onMounted(() => {
-  gsap.from(`#${section.id} h1`, {
+  gsap.from(`#${sectionId} h1`, {
     x: -50,
     opacity: 0,
     delay: 0.25,
@@ -21,7 +25,7 @@ onMounted(() => {
     ease: 'power2.inOut',
   })
 
-  gsap.from(`#${section.id} p`, {
+  gsap.from(`#${sectionId} p`, {
     x: -50,
     opacity: 0,
     delay: 0.4,
@@ -29,7 +33,7 @@ onMounted(() => {
     ease: 'power2.inOut',
   })
 
-  gsap.from(`#${section.id} img`, {
+  gsap.from(`#${sectionId} img`, {
     x: 100,
     opacity: 0,
     delay: 0.25,
@@ -37,7 +41,7 @@ onMounted(() => {
     ease: 'power2.inOut',
   })
 
-  const cta = document.querySelector<HTMLElement>(`#${section.id} .cta`)
+  const cta = document.querySelector<HTMLElement>(`#${sectionId} .cta`)
   const nav = document.querySelector<HTMLElement>('[class^="navbar-"]')
 
   nav?.style.setProperty('transition', 'none')
@@ -61,7 +65,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <section :id="section.id">
+  <section :id="sectionId">
     <ShapesBgCroped
       class="shapes-bg"
       title="Décoration du fond"
@@ -70,12 +74,14 @@ onMounted(() => {
     <div class="wrapper">
       <div class="content">
         <div>
-          <h1 v-html="section.items['title-1'].content" />
-          <p v-html="section.items['text-1'].content" />
+          <h1 v-html="formatRichText(content.title)" />
+          <p v-html="formatRichText(content.description)" />
           <div class="cta">
             <a
-              :href="section.items['cta-1'].meta?.href"
-              v-html="section.items['cta-1'].content"
+              :href="content.primaryCta.href"
+              :target="content.primaryCta.target"
+              :rel="content.primaryCta.rel || (content.primaryCta.target === '_blank' ? 'noopener noreferrer' : undefined)"
+              v-html="formatRichText(content.primaryCta.label)"
             />
           </div>
         </div>
@@ -84,9 +90,9 @@ onMounted(() => {
         <div>
           <img
             fetchpriority="high"
-            :src="section.items['image-1'].content"
-            :onerror="`this.onerror=null; this.src='${section.items['image-1'].fallback}';`"
-            :alt="section.items['image-1'].meta?.alt"
+            :src="content.images[0]?.webp"
+            :onerror="content.images[0]?.png ? `this.onerror=null; this.src='${content.images[0]?.png}';` : undefined"
+            :alt="content.images[0]?.alt"
             class="hero-image"
           />
           <span></span>

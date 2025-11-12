@@ -3,16 +3,20 @@
 <script setup lang="ts">
 // DEPS
 import { activeSlideIndex, sliderContainerSize, descriptionSize } from '@/views/Landing/components/HabitsSection/stores/slider'
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import Carousel from '@/views/Landing/components/HabitsSection/components/Carousel/Carousel.vue'
 // UTILS
 import { vp } from '@/utils/viewport'
 import { set } from '@vueuse/core'
-// CONTENT
-import type { ItemSection } from '@/content/types'
-import rawContent from '@/content/fr/Landing/habits-section.json'
+// TYPES
+import type { HabitsSlide } from '@/views/Landing/types/content'
+import { formatRichText } from '@/utils/i18n'
 
-const section = rawContent as ItemSection
+const props = defineProps<{
+  slides: HabitsSlide[]
+}>()
+
+const slides = computed(() => props.slides ?? [])
 
 const descriptionRef = ref<HTMLElement | null>(null)
 const modSize = ref<number>(0)
@@ -31,27 +35,20 @@ onMounted(() => {
     class="content"
     :style="vp.lg.value ? `padding-right: ${modSize}px !important;` : ``"
   >
-    <!-- <h2 v-html="section.items['title-1'].content" /> -->
     <div class="slides-titles">
-      <!-- <div>
-        <h3
-          v-for="(txt, idx) in section.items['slider'].meta?.data"
-          :key="idx"
-          v-html="txt.title"
-          :class="['title', { active: idx === activeSlideIndex }]"
-          aria-live="polite"
-        />
-      </div> -->
-      <Carousel v-if="!vp.lg.value" />
-      <!-- <div ref="descriptionRef">
+      <Carousel
+        v-if="!vp.lg.value"
+        :slides="slides"
+      />
+      <div ref="descriptionRef">
         <p
-          v-for="(txt, idx) in section.items['slider'].meta?.data"
-          :key="idx"
-          v-html="txt.description"
+          v-for="(slide, idx) in slides"
+          :key="slide.id"
+          v-html="formatRichText(slide.description)"
           :class="['description', { active: idx === activeSlideIndex }]"
           aria-live="polite"
         />
-      </div> -->
+      </div>
     </div>
   </div>
 </template>

@@ -11,8 +11,8 @@ import SlidesTitles from '@/views/Landing/components/HabitsSection/components/Sl
 // UTILS
 import { vp } from '@/utils/viewport'
 // CONTENT
-import type { ItemSection } from '@/content/types'
-import rawContent from '@/content/fr/Landing/join-section.json'
+import type { JoinContent, HabitsSlide } from '@/views/Landing/types/content'
+import { formatRichText } from '@/utils/i18n'
 // ASSETS
 import RoadMapDark from '@/components/svgs/images/RoadMapDark.vue'
 
@@ -22,42 +22,27 @@ const componentMap: Record<string, any> = {
   NewsletterForm: form,
 }
 
-const section = rawContent as ItemSection
+const props = defineProps<{
+  content: JoinContent
+  slides: HabitsSlide[]
+}>()
 
-// Helpers pour accéder aux items
-const items = section.items
+const slides = computed(() => props.slides ?? [])
 
-const flagVariant = computed(() => items['icon-flag']?.meta?.variant ?? '')
+const flagVariant = computed(() => props.content.flagIcon ?? '')
 const FlagComp = computed(() => componentMap[flagVariant.value])
 
-const formMeta = computed(() => items['form-1']?.meta ?? {})
+const formMeta = computed(() => props.content.form)
 const FormComp = computed(() => componentMap[formMeta.value?.variant ?? ''])
 
-const imageSrc = computed(() => items['image-1']?.content ?? '')
-const imageAlt = computed(() => items['image-1']?.meta?.alt ?? '')
-
-const cta = computed(() => ({
-  href: items['cta-1']?.meta?.href ?? '#',
-  target: items['cta-1']?.meta?.target ?? '_self',
-  rel: items['cta-1']?.meta?.rel ?? undefined,
-  ariaLabel: items['cta-1']?.meta?.ariaLabel ?? undefined,
-  content: items['cta-1']?.content ?? '',
+const formProps = computed(() => ({
+  data: {
+    fields: formMeta.value?.fields ?? [],
+    groups: formMeta.value?.groups ?? [],
+    consents: formMeta.value?.consents ?? [],
+    submit: formMeta.value?.submit,
+  },
 }))
-
-// Props/slots pour le composant "component" (formulaire)
-const formProps = computed(() => {
-  // `props` est une string dans le JSON pour être homogène ; on parse s'il y a quelque chose d'utile
-  const rawProps = formMeta.value?.props
-  let parsedProps: Record<string, any> = {}
-  if (rawProps && typeof rawProps === 'string' && rawProps.trim()) {
-    try {
-      parsedProps = JSON.parse(rawProps)
-    } catch {
-      // on ignore silencieusement si non-JSON (ex: chaîne vide)
-    }
-  }
-  return { ...(parsedProps || {}), data: formMeta.value?.data }
-})
 
 let widgetId: number | null = null
 
@@ -105,7 +90,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section :id="section.id">
+  <section id="join-section">
     <div class="wrapper">
       <div class="title">
         <div>
@@ -122,14 +107,14 @@ onBeforeUnmount(() => {
             data-sr
             data-sr-delay="0.5"
             data-sr-y="-20"
-            v-html="items['title-1']?.content"
+            v-html="formatRichText(content.title)"
           />
         </div>
         <p
           data-sr
           data-sr-y="20"
           data-sr-delay="1.25"
-          v-html="items['text-2']?.content"
+          v-html="formatRichText(content.description)"
         />
       </div>
 
@@ -141,7 +126,7 @@ onBeforeUnmount(() => {
         <RoadMapDark />
       </div>
     </div>
-    <div :class="section.id + '-container'">
+    <div class="join-section-container">
       <div class="wrapper">
         <div class="main">
           <!-- data-sr
@@ -151,7 +136,7 @@ onBeforeUnmount(() => {
             data-sr-delay="0.75" -->
           <div
             class="illustration"
-            v-if="items['image-1']"
+            v-if="slides.length"
           >
             <!-- <img
             :src="imageSrc"
@@ -161,8 +146,14 @@ onBeforeUnmount(() => {
           /> -->
             <div class="overflow">
               <div class="carousel-container">
-                <Carousel v-if="vp.lg.value" />
-                <SlidesTitles v-if="!vp.lg.value" />
+                <Carousel
+                  v-if="vp.lg.value"
+                  :slides="slides"
+                />
+                <SlidesTitles
+                  v-if="!vp.lg.value"
+                  :slides="slides"
+                />
               </div>
             </div>
           </div>
@@ -175,8 +166,8 @@ onBeforeUnmount(() => {
               class="form-container"
               v-if="FormComp"
             >
-              <h3 v-html="items['title-2'].content" />
-              <p v-html="items['text-3']?.content" />
+              <h3 v-html="formatRichText(formMeta.title)" />
+              <p v-html="formatRichText(formMeta.description)" />
               <component
                 :is="FormComp"
                 v-bind="formProps"

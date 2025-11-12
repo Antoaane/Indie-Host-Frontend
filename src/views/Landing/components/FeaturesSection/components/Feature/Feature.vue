@@ -3,6 +3,7 @@
 <script setup lang="ts">
 // UTILS
 import { vp } from '@/utils/viewport'
+import { formatRichText } from '@/utils/i18n'
 // ASSETS
 import GlowTopRight from '@/components/svgs/images/GlowTopRight.vue'
 import GlowLeft from '@/components/svgs/images/GlowLeft.vue'
@@ -12,23 +13,16 @@ import GlowTopRightSharp from '@/components/svgs/images/GlowTopRightSharp.vue'
 import GlowRightSharp from '@/components/svgs/images/GlowRightSharp.vue'
 import GlowLeftSharp from '@/components/svgs/images/GlowLeftSharp.vue'
 import GlowBottomLeftSharp from '@/components/svgs/images/GlowBottomLeftSharp.vue'
+import type { FeatureItem } from '@/views/Landing/types/content'
 
 // PROPS
 const props = defineProps<{
-  feature: {
-    title: string
-    description: string
-    animated?: boolean
-    'video-1'?: string
-    'video-2'?: string
-    image?: string
-    'image-1'?: string
-    'image-2'?: string
-    format?: 'hzt' | 'vtc' | 'sqr'
-    alt?: string
-  }
+  feature: FeatureItem
   index: number
 }>()
+
+const media = props.feature.images?.[0]
+const video = props.feature.videos?.[0]
 </script>
 
 <template>
@@ -39,14 +33,14 @@ const props = defineProps<{
           <h2
             data-sr
             :data-sr-x="index % 2 !== 0 ? 50 : -50"
-            v-html="feature.title"
+            v-html="formatRichText(feature.title)"
           />
 
           <p
             data-sr
             :data-sr-x="index % 2 !== 0 ? 50 : -50"
             data-sr-delay="0.3"
-            v-html="feature.description"
+            v-html="formatRichText(feature.description)"
           />
         </div>
       </div>
@@ -54,50 +48,48 @@ const props = defineProps<{
       <div
         data-sr
         :data-sr-x="index % 2 !== 0 ? -50 : 50"
-        :class="'media ' + props.feature.format || 'hzt'"
+        :class="'media ' + (props.feature.layout || 'hzt')"
       >
-        <!-- <img
-          class="default-theme"
-          src="/assets/media/images/webp/default-theme.webp"
-          onerror="this.onerror=null; this.src='/assets/media/images/png/default-theme.png';"
-        /> -->
         <video
-          v-if="feature['video-1'] && feature['video-2']"
-          :poster="feature.image"
+          v-if="video?.webm || video?.mp4"
           autoplay
           loop
           muted
           playsinline
         >
           <source
-            :src="feature['video-1']"
+            v-if="video?.webm"
+            :src="video.webm"
             type="video/webm"
           />
 
           <source
-            :src="feature['video-2']"
+            v-if="video?.mp4"
+            :src="video.mp4"
             type="video/mp4"
           />
 
           <img
-            :src="feature['image-1']"
-            :alt="feature.alt || 'Feature image'"
+            v-if="media?.webp"
+            :src="media.webp"
+            :alt="media?.alt || 'Feature image'"
             loading="lazy"
           />
 
           <img
-            :src="feature['image-2']"
-            :alt="feature.alt || 'Feature image'"
+            v-if="media?.png"
+            :src="media.png"
+            :alt="media?.alt || 'Feature image'"
             loading="lazy"
           />
         </video>
-        <!-- <img
-          v-else-if="feature.image"
-          :src="feature['image-1']"
-          onerror="this.onerror=null; this.src=feature['image-2'];"
-          :alt="feature.alt || 'Feature image'"
+        <img
+          v-else-if="media?.webp"
+          :src="media.webp"
+          :onerror="media?.png ? `this.onerror=null; this.src='${media.png}';` : undefined"
+          :alt="media?.alt || 'Feature image'"
           loading="lazy"
-        /> -->
+        />
       </div>
 
       <template v-if="vp.md.value">

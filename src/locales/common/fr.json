@@ -1,0 +1,16 @@
+{
+  "plurals": {
+    "travelers": "{count, plural, one {voyageur} other {voyageurs}}",
+    "beds": "{count, plural, one {lit} other {lits}}",
+    "bedrooms": "{count, plural, one {chambre} other {chambres}}",
+    "bathrooms": "{count, plural, one {salle de bain} other {salles de bains}}"
+  },
+  "host": {
+    "seniority": "{years, plural, one {Hôte depuis # an} other {Hôte depuis # ans}}"
+  },
+  "ctas": {
+    "viewProfile": "Voir le profil",
+    "viewListings": "Voir les annonces",
+    "seeMore": "Voir tout"
+  }
+}

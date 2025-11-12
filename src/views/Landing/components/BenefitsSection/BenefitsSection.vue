@@ -7,20 +7,22 @@ import useBookingCalc from '@/views/Landing/components/BenefitsSection/utils/use
 import AnimationPanel from '@/views/Landing/components/BenefitsSection/components/AnimationPanel/AnimationPanel.vue'
 import CalcTitle from '@/views/Landing/components/BenefitsSection/components/CalcTitle/CalcTitle.vue'
 // CONTENT
-import type { ItemSection } from '@/content/types'
-import rawContent from '@/content/fr/Landing/benefits-section.json'
+import type { BenefitsContent } from '@/views/Landing/types/content'
+import { formatRichText } from '@/utils/i18n'
 
-const section = rawContent as ItemSection
+const props = defineProps<{
+  content: BenefitsContent
+}>()
 
 const { nights, price, total, commissions } = useBookingCalc()
 </script>
 
 <template>
-  <section :id="section.id">
+  <section id="benefits-section">
     <div class="wrapper">
       <h2
         class="first-title"
-        v-html="section.items['title-1'].content"
+        v-html="formatRichText(content.title)"
       />
     </div>
 

@@ -10,6 +10,9 @@ import gsap from 'gsap'
 import { sr } from '@/utils/scrollReveal'
 import { vp } from '@/utils/viewport'
 import detectOS from '@/utils/detectOs'
+// CONTENT
+import landingLocale from '@/locales/landing/fr.json'
+import type { LandingContent } from '@/views/Landing/types/content'
 // COMPONENTS
 const HeroSection = defineAsyncComponent(() => import('./components/HeroSection/HeroSection.vue'))
 const BenefitsSection = defineAsyncComponent(() => import('./components/BenefitsSection/BenefitsSection.vue'))
@@ -20,6 +23,8 @@ const StrengthsSection = defineAsyncComponent(() => import('./components/Strengt
 const UsageSection = defineAsyncComponent(() => import('./components/UsageSection/UsageSection.vue'))
 const JoinSection = defineAsyncComponent(() => import('./components/JoinSection/JoinSection.vue'))
 const FaqSection = defineAsyncComponent(() => import('./components/FaqSection/FaqSection.vue'))
+
+const content = landingLocale as LandingContent
 
 if (vp.lg.value) {
   gsap.registerPlugin(ScrollTrigger, ScrollSmoother)
@@ -84,16 +89,24 @@ onBeforeUnmount(() => {
 <template>
   <!-- <VueLenis root> -->
   <main id="landing-page">
-    <HeroSection />
-    <BenefitsSection v-if="vp.lg.value" />
-    <!-- <HabitsSection /> -->
-    <FeaturesSection />
-    <HowSection />
-    <UsageSection />
-    <!-- <HowSection /> -->
-    <StrengthsSection />
-    <JoinSection />
-    <FaqSection />
+    <HeroSection :content="content.hero" />
+    <BenefitsSection
+      v-if="vp.lg.value"
+      :content="content.benefits"
+    />
+    <UsageSection :steps="content.usage.steps" />
+    <FeaturesSection :items="content.features.items" />
+    <HowSection :content="content.how" />
+    <!-- <HabitsSection
+      :content="content.habits"
+      :slides="content.habits.slides"
+    /> -->
+    <StrengthsSection :content="content.strengths" />
+    <JoinSection
+      :content="content.join"
+      :slides="content.habits.slides"
+    />
+    <FaqSection :content="content.faq" />
   </main>
   <!-- </VueLenis> -->
 </template>

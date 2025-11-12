@@ -2,19 +2,19 @@
 
 <script setup lang="ts">
 // CONTENT
-import type { ItemSection } from '@/content/types'
-import rawContent from '@/content/fr/Landing/features-section.json'
+import type { FeatureItem } from '@/views/Landing/types/content'
 import Feature from './components/Feature/Feature.vue'
 
-const section = rawContent as ItemSection
+const props = defineProps<{
+  items: FeatureItem[]
+}>()
 </script>
 
 <template>
   <section id="features-section">
     <Feature
-      v-for="(feature, i) in section.items['features'].meta?.data"
+      v-for="(feature, i) in props.items"
       :feature="feature"
-      :format="feature.format || 'hzt'"
       :index="i"
     />
   </section>

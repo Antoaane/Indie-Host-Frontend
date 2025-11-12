@@ -1,0 +1,98 @@
+{
+  "page": {
+    "title": "Soutenir le développement d’IndieHost",
+    "subtitles": [
+      "IndieHost est encore en construction. Chaque contribution nous aide à avancer plus vite : hébergement, outils techniques, temps de développement et tests avec les premiers hôtes.",
+      "Votre soutien, même modeste, nous permet de transformer une idée en une plateforme concrète, pensée pour rester simple, utile et indépendante."
+    ]
+  },
+  "article": {
+    "eyebrow": "Pourquoi soutenir IndieHost ?",
+    "title": "Un projet indépendant en construction",
+    "lead": "Nous développons IndieHost pas à pas, pour permettre aux hôtes de garder le contrôle de leurs réservations et de créer un lien direct avec leurs voyageurs. Votre aide rend ce développement possible.",
+    "intro": "Chaque contribution accélère la mise en ligne de la plateforme et nous rapproche d’un outil simple, utile et durable.",
+    "sections": [
+      {
+        "type": "section",
+        "title": "À quoi sert votre soutien",
+        "paragraphs": [
+          "Les dons financent l’essentiel : serveurs, sécurité des paiements, sauvegardes, et le temps de développement nécessaire pour stabiliser et enrichir la plateforme."
+        ],
+        "items": null,
+        "content": null,
+        "cite": null
+      },
+      {
+        "type": "section",
+        "title": "Une démarche collective",
+        "paragraphs": [
+          "IndieHost avance grâce aux retours et au soutien de sa communauté. Chaque contribution, financière ou simplement par le bouche-à-oreille, participe à rendre le projet concret."
+        ],
+        "items": null,
+        "content": null,
+        "cite": null
+      },
+      {
+        "type": "section",
+        "title": "Notre engagement",
+        "paragraphs": [
+          "Construire une solution qui reste indépendante, claire et respectueuse. Pas de commissions cachées, pas de complexité inutile, mais une plateforme qui redonne du contrôle aux hôtes."
+        ],
+        "items": null,
+        "content": null,
+        "cite": null
+      },
+      {
+        "type": "section",
+        "title": "Feuille de route",
+        "paragraphs": [],
+        "items": null,
+        "content": null,
+        "cite": null
+      }
+    ]
+  },
+  "panel": {
+    "title": "Contribuer dès maintenant",
+    "intro": [
+      "Les dons servent directement à faire avancer IndieHost : couvrir l’infrastructure technique, développer de nouvelles fonctionnalités et tester la plateforme avec les premiers utilisateurs.",
+      "Votre contribution nous aide à rester indépendants et à proposer une alternative transparente aux plateformes de réservation classiques."
+    ],
+    "steps": [],
+    "primaryCta": {
+      "label": "Soutenir IndieHost"
+    },
+    "note": "Paiement sécurisé par Stripe Connect. Données traitées selon le RGPD : pas de revente, pas de publicité.",
+    "warnings": [
+      {
+        "id": "missingLink",
+        "text": "Lien de contribution manquant. Définissez `VITE_DONATION_LINK` dans votre environnement.",
+        "condition": "missing-link"
+      }
+    ]
+  },
+  "status": {
+    "messages": {
+      "success": {
+        "severity": "positive",
+        "title": "Contribution confirmée",
+        "body": "Merci pour votre soutien. Nous vous enverrons un point d’avancement avec ce que votre contribution a concrètement financé."
+      },
+      "cancel": {
+        "severity": "info",
+        "title": "Paiement annulé",
+        "body": "La transaction a été interrompue. Vous pouvez réessayer plus tard, sans aucune incidence."
+      },
+      "error": {
+        "severity": "negative",
+        "title": "Un problème est survenu",
+        "body": "Le paiement n’a pas abouti. Vérifiez vos informations ou réessayez un peu plus tard."
+      },
+      "pending": {
+        "severity": "neutral",
+        "title": "Paiement en cours de validation",
+        "body": "Quelques secondes peuvent être nécessaires. Si rien ne change, vous serez notifié·e par e-mail."
+      }
+    }
+  }
+}

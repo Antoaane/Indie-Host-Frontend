@@ -4,17 +4,10 @@
 import { ref, computed, watch } from 'vue'
 import { useHead } from '@unhead/vue'
 
-// CONTENT
-import type { ItemSection } from '@/content/types'
-import type { FaqNode } from '@/views/Landing/components/FaqSection/types/faqType'
-import rawContent from '@/content/fr/Landing/faq-section.json'
-
-const jsonContent = (rawContent as unknown) as ItemSection
-const faqData = jsonContent.items['faq'].meta?.data
-
-export function useFaq() {
+import type { FaqNode } from '@/views/Landing/types/content'
+export function useFaq(initialNodes: FaqNode[] = []) {
   // → L’arbre complet de la FAQ
-  const data = ref<FaqNode[]>(faqData)
+  const data = ref<FaqNode[]>(initialNodes)
 
   // → Search text (réactif)
   const search = ref<string>('')

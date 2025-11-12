@@ -1,0 +1,50 @@
+{
+  "listing": {
+    "headings": {
+      "features": "Ce que ce logement comprend",
+      "availability": "Les disponibilités de ce logement",
+      "description": "À propos du logement"
+    },
+    "description": {
+      "ctaLabel": "Voir tout"
+    }
+  },
+  "amenityIcons": [
+    "trees",
+    "waves",
+    "umbrella",
+    "layout-grid",
+    "utensils-crossed",
+    "wifi",
+    "key-round",
+    "alert-triangle",
+    "alert-octagon",
+    "map-pin",
+    "wine",
+    "parking-circle",
+    "thermometer-snowflake",
+    "radiation",
+    "bed-double",
+    "coffee",
+    "cup-soda",
+    "book-open-text",
+    "dice-5",
+    "moon-star",
+    "flame",
+    "lightbulb",
+    "shower-head",
+    "anchor",
+    "first-aid-kit",
+    "fire-extinguisher",
+    "leaf",
+    "briefcase",
+    "tv",
+    "speaker",
+    "moon",
+    "palette",
+    "wine-off",
+    "laptop",
+    "map",
+    "sun"
+  ]
+}

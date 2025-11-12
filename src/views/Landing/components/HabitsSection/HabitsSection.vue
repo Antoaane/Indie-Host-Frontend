@@ -4,10 +4,20 @@
 // COMPONENTS
 import SlidesTitles from '@/views/Landing/components/HabitsSection/components/SlidesTitles/SlidesTitles.vue'
 import Carousel from '@/views/Landing/components/HabitsSection/components/Carousel/Carousel.vue'
+// DEPS
+import { computed } from 'vue'
 // UTILS
 import { vp } from '@/utils/viewport'
-// ASSETS
-import { X } from 'lucide-vue-next'
+// CONTENT
+import type { HabitsContent, HabitsSlide } from '@/views/Landing/types/content'
+import { formatRichText } from '@/utils/i18n'
+
+const props = defineProps<{
+  content: HabitsContent
+  slides?: HabitsSlide[]
+}>()
+
+const slides = computed(() => props.slides ?? props.content.slides ?? [])
 </script>
 
 <template>
@@ -15,8 +25,14 @@ import { X } from 'lucide-vue-next'
     <section id="habits-section">
       <div class="overflow">
         <div class="wrapper">
-          <Carousel v-if="vp.lg.value" />
-          <SlidesTitles />
+          <header class="section-heading">
+            <h2 v-html="formatRichText(props.content.title)" />
+          </header>
+          <Carousel
+            v-if="vp.lg.value"
+            :slides="slides"
+          />
+          <SlidesTitles :slides="slides" />
         </div>
       </div>
       <!-- Slide en grand -->

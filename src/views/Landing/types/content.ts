@@ -1,0 +1,148 @@
+// File: src/views/Landing/types/content.ts
+
+export interface MediaAsset {
+  webp: string
+  png?: string
+  alt?: string
+}
+
+export interface VideoAsset {
+  webm?: string
+  mp4?: string
+}
+
+export interface CtaLink {
+  label: string
+  href: string
+  target?: string
+  rel?: string
+  ariaLabel?: string
+}
+
+export interface HeroContent {
+  title: string
+  description: string
+  primaryCta: CtaLink
+  images: MediaAsset[]
+}
+
+export interface BenefitsContent {
+  title: string
+}
+
+export interface UsageStep {
+  id: string
+  title: string
+  description: string
+  videos?: VideoAsset[]
+  images?: MediaAsset[]
+}
+
+export interface FeaturesContent {
+  items: FeatureItem[]
+}
+
+export interface FeatureItem {
+  id: string
+  title: string
+  description: string
+  layout?: 'hzt' | 'vtc' | 'sqr'
+  videos?: VideoAsset[]
+  images?: MediaAsset[]
+}
+
+export interface HowContent {
+  title: string
+  body: string
+}
+
+export interface HabitsContent {
+  title: string
+  slides: HabitsSlide[]
+}
+
+export type HabitsSlide = {
+  id: string
+  title: string
+  description: string
+  images: MediaAsset[]
+}
+
+export interface StrengthsContent {
+  title: string
+  subtitle: string
+  pillars: Array<{
+    id: string
+    title: string
+    description: string
+  }>
+}
+
+export interface JoinFormField {
+  name: string
+  placeholder: string
+  type: string
+  required?: boolean
+}
+
+export interface JoinFormGroup {
+  legend: string
+  name: string
+  type: string
+  options: Array<{ label: string; value: string }>
+}
+
+export interface JoinFormConsent {
+  label: string
+  name: string
+  type: string
+  required?: boolean
+}
+
+export interface JoinFormSubmit {
+  label: string
+  icon?: string
+}
+
+export interface JoinContent {
+  title: string
+  description: string
+  flagIcon: string
+  cta: CtaLink
+  form: {
+    title: string
+    description: string
+    variant: string
+    fields: JoinFormField[]
+    groups: JoinFormGroup[]
+    consents: JoinFormConsent[]
+    submit: JoinFormSubmit
+  }
+}
+
+export interface FaqNode {
+  id: string
+  title?: string
+  question?: string
+  answer?: string
+  children?: FaqNode[]
+}
+
+export interface FaqContent {
+  title: string
+  searchPlaceholder: string
+  searchLabel?: string
+  nodes: FaqNode[]
+}
+
+export interface LandingContent {
+  hero: HeroContent
+  benefits: BenefitsContent
+  usage: { steps: UsageStep[] }
+  features: FeaturesContent
+  how: HowContent
+  habits: HabitsContent
+  strengths: StrengthsContent
+  join: JoinContent
+  faq: FaqContent
+}

@@ -3,19 +3,23 @@
 <script setup lang="ts">
 // TYPES
 import type { HostProfileModel } from '@/views/ListingView/types/listing'
-// CONTENT
-import listing from '@/content/fr/_Static/lisitng.json'
+import { computed } from 'vue'
+import { formatICUMessage } from '@/utils/i18n'
+
+interface HostProfileLabels {
+  seniority: string
+}
 
 const props = defineProps<{
   data: HostProfileModel
+  labels: HostProfileLabels
 }>()
 
-const content = listing.items
-
-function monthsToYears(months: number): number {
-  const years = Math.round(months / 12)
-  return years
-}
+const seniorityText = computed(() => {
+  if (!props.data.seniority) return ''
+  const years = Math.round(props.data.seniority / 12)
+  return formatICUMessage(props.labels.seniority, { years })
+})
 </script>
 
 <template>
@@ -30,9 +34,7 @@ function monthsToYears(months: number): number {
         <li v-html="data.status" />
         <li v-if="data.seniority > 1">
           <span>&nbsp;—&nbsp;</span>
-          {{ content['profile-seniority-text-1'].content }}
-          {{ monthsToYears(data.seniority) }}
-          {{ content['profile-seniority-text-2'].content }}
+          {{ seniorityText }}
         </li>
       </ul>
     </div>
