@@ -78,43 +78,52 @@ function normalizeRooms(core: RawCore): RoomItem[] {
   return (core.rooms ?? []).map(r => ({
     name: r['room-name'],
     type: r['room-type'],
-    beds: (r.beds ?? []).map(b => ({
-      type: b.type,
-      capacity: b.capacity,
-      quantity: b.quantity,
-    })),
+    // ⬇️ NE PAS forcer [] : on ne met "beds" que s'il y en a
+    ...(r.beds && r.beds.length
+      ? {
+        beds: r.beds.map(b => ({
+          type: b.type,
+          capacity: b.capacity,
+          quantity: b.quantity,
+        })),
+      }
+      : {}),
   }));
 }
+
 
 // Regroupe les rooms par type et calcule beds / capacity cumulés
 function groupRoomsByType(rooms: RoomItem[]): RoomsByType {
   const byType: RoomsByType = {};
   for (const r of rooms) {
-    const key = r.type; // ex: 'bedroom', 'living-room'
+    const key = r.type;
     if (!byType[key]) byType[key] = { rooms: [], length: 0, beds: 0, capacity: 0 };
+
     byType[key].rooms.push(r);
     byType[key].length += 1;
-    if (byType[key].beds) { byType[key].beds += r.beds.reduce((acc, b) => acc + b.quantity, 0); }
-    byType[key].capacity += r.beds.reduce((acc, b) => acc + b.capacity * b.quantity, 0);
+
+    // ⬇️ Supporte rooms sans beds
+    const bedsQty = r.beds?.reduce((acc, b) => acc + (b.quantity ?? 0), 0) ?? 0;
+    const cap = r.beds?.reduce((acc, b) => acc + (b.capacity ?? 0) * (b.quantity ?? 0), 0) ?? 0;
+
+    // "beds" peut rester 0 (même si optionnel côté type)
+    byType[key].beds = (byType[key].beds ?? 0) + bedsQty;
+    byType[key].capacity += cap;
   }
   return byType;
 }
 
 // Résumé global (toutes pièces)
 function summarizeAll(rooms: RoomItem[]) {
-  const bedsCount = rooms.reduce(
-    (acc, r) => acc + r.beds.reduce((a, b) => a + b.quantity, 0),
-    0,
-  );
-  const capacityTotal = rooms.reduce(
-    (acc, r) => acc + r.beds.reduce((a, b) => a + b.capacity * b.quantity, 0),
-    0,
-  );
-  return {
-    roomsCount: rooms.length,
-    bedsCount,
-    capacityTotal,
-  };
+  const bedsCount =
+    rooms.reduce((acc, r) => acc + (r.beds?.reduce((a, b) => a + (b.quantity ?? 0), 0) ?? 0), 0);
+  const capacityTotal =
+    rooms.reduce(
+      (acc, r) =>
+        acc + (r.beds?.reduce((a, b) => a + (b.capacity ?? 0) * (b.quantity ?? 0), 0) ?? 0),
+      0,
+    );
+  return { roomsCount: rooms.length, bedsCount, capacityTotal };
 }
 
 // Utilitaires d’agrégation par type
@@ -138,21 +147,16 @@ function parseTitle(core: RawCore): TitleModel {
   const bedroom = getTypeEntry(byType, 'bedroom');
   const bathrooms = sumLengthsMatching(byType, k => k.toLowerCase().includes('bath'));
 
-  const title = {
+  return {
     title: core.title,
     type,
-    location: {
-      city: core.city ?? '',
-      region: core.region ?? '',
-      country: core.country ?? '',
-    },
+    location: { city: core.city ?? '', region: core.region ?? '', country: core.country ?? '' },
     capacity: core.capacity,
-    bedrooms: { quantity: bedroom.length, bed: bedroom.beds },
+    bedrooms: { quantity: bedroom.length, bed: bedroom.beds ?? 0 }, // ⬅️ safe
     bathrooms,
   };
-
-  return title;
 }
+
 
 function parsePerks(core: RawCore): PerksModel {
   return core.perks.map(p => ({ icon: p.icon, name: p.name, description: p.description }));

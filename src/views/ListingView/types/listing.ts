@@ -49,7 +49,7 @@ export type BedItem = { type: string; capacity: number; quantity: number };
 export type RoomItem = {
   name: string;           // "Chambre", "Salon"...
   type: string;           // "bedroom", "living-room"...
-  beds: BedItem[];
+  beds?: BedItem[];
 };
 
 export type RoomsSummary = {

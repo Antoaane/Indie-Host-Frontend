@@ -11,13 +11,15 @@
       "room-name": "Chambre",
       "room-type": "bedroom",
       "beds": [
-        { "type": "Lit double", "capacity": 2, "quantity": 1 }]
+        { "type": "double", "capacity": 2, "quantity": 1 },
+        { "type": "single", "capacity": 1, "quantity": 3 }
+      ]
     },
     {
       "room-name": "Salon",
       "room-type": "livingroom",
       "beds": [
-        { "type": "lit simple", "capacity": 1, "quantity": 2 }]
+        { "type": "single", "capacity": 1, "quantity": 2 }]
     },
     {
       "room-name": "Salle de bain",

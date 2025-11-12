@@ -13,6 +13,7 @@ import DatePicker from '@/views/ListingView/components/ListingCore/components/Da
 import Perks from '@/views/ListingView/components/ListingCore/components/Perks/Perks.vue'
 import HostProfile from '@/views/ListingView/components/ListingCore/components/HostProfile/HostProfile.vue'
 import Description from '@/views/ListingView/components/ListingCore/components/Description/Description.vue'
+import Rooms from '@/views/ListingView/components/ListingCore/components/Rooms/Rooms.vue'
 
 //CONTENT
 const data = await listingCore()
@@ -24,6 +25,9 @@ const data = await listingCore()
     <Perks :data="data.perks" />
     <HostProfile :data="data.hostProfile" />
     <Description :data="data.description" />
+    <div>
+      <Rooms :data="data.rooms" />
+    </div>
     <DatePicker />
   </section>
 </template>
