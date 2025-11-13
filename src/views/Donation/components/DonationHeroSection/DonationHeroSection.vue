@@ -4,7 +4,6 @@
 import { computed } from 'vue'
 import RoadMapLight from '@/components/svgs/images/RoadMapLight.vue'
 import type { DonationArticleContent, DonationArticleSection } from '@/views/Donation/types/content'
-import { formatRichText } from '@/utils/i18n'
 
 const props = defineProps<{
   article: DonationArticleContent
@@ -50,7 +49,7 @@ const isQuoteSection = (section: DonationArticleSection) => section.type === 'qu
         :key="block.id"
         :is="block.id === 'title' ? 'h2' : block.id === 'eyebrow' ? 'p' : 'p'"
         :class="block.className"
-        v-html="formatRichText(block.text)"
+        v-html="block.text"
       />
     </div>
 
@@ -71,13 +70,13 @@ const isQuoteSection = (section: DonationArticleSection) => section.type === 'qu
             <li
               v-for="(item, idx) in section.items || []"
               :key="`${section.type}-${index}-item-${idx}`"
-              v-html="formatRichText(item)"
+            v-html="item"
             />
           </ul>
         </template>
 
         <blockquote v-else-if="isQuoteSection(section)">
-          <p v-html="formatRichText(section.content || '')" />
+          <p v-html="section.content || ''" />
           <cite v-if="section.cite">
             {{ section.cite }}
           </cite>
@@ -90,11 +89,11 @@ const isQuoteSection = (section: DonationArticleSection) => section.type === 'qu
           <p
             v-for="(paragraph, idx) in section.paragraphs || []"
             :key="`${section.type}-${index}-paragraph-${idx}`"
-            v-html="formatRichText(paragraph)"
+            v-html="paragraph"
           />
           <p
             v-if="section.content"
-            v-html="formatRichText(section.content)"
+            v-html="section.content"
           />
         </template>
 

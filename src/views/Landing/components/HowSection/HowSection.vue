@@ -7,7 +7,6 @@
 import GradiantSeparator from '@/components/svgs/images/GradiantSeparator.vue'
 // CONTENT
 import type { HowContent } from '@/views/Landing/types/content'
-import { formatRichText } from '@/utils/i18n'
 
 const props = defineProps<{
   content: HowContent
@@ -26,12 +25,12 @@ const props = defineProps<{
         <h2
           data-sr
           data-sr-y="-30"
-          v-html="formatRichText(content.title)"
+          v-html="content.title"
         />
         <p
           data-sr
           data-sr-y="30"
-          v-html="formatRichText(content.body)"
+          v-html="content.body"
         />
       </div>
 

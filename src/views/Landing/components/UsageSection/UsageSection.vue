@@ -5,7 +5,6 @@
 import StepSection from '@/views/Landing/components/UsageSection/components/StepSection/StepSection.vue'
 
 import type { UsageStep } from '@/views/Landing/types/content'
-import { formatRichText } from '@/utils/i18n'
 
 const props = defineProps<{
   steps: UsageStep[]
@@ -18,8 +17,8 @@ const props = defineProps<{
       v-for="(step, index) in props.steps"
       :key="step.id"
       :step="index + 1"
-      :title="formatRichText(step.title)"
-      :description="formatRichText(step.description)"
+      :title="step.title"
+      :description="step.description"
       :video1="step.videos?.[0]?.webm"
       :video2="step.videos?.[0]?.mp4"
       :illustration1="step.images?.[0]?.webp || ''"

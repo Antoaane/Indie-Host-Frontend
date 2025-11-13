@@ -12,7 +12,6 @@ import { Wallet, ShieldCheck, Users, ChevronDown } from 'lucide-vue-next'
 import ShapesCircle from '@/components/svgs/images/ShapesCircle.vue'
 // CONTENT
 import type { StrengthsContent } from '@/views/Landing/types/content'
-import { formatRichText } from '@/utils/i18n'
 
 const props = defineProps<{
   content: StrengthsContent
@@ -39,12 +38,12 @@ onMounted(() => {
         <h2
           data-sr
           data-sr-y="-30"
-          v-html="formatRichText(content.title)"
+          v-html="content.title"
         />
         <p
           data-sr
           data-sr-y="30"
-          v-html="formatRichText(content.subtitle)"
+          v-html="content.subtitle"
         />
       </div>
 
@@ -72,10 +71,10 @@ onMounted(() => {
                   class="strength-icon"
                 />
               </div>
-              <h3 v-html="formatRichText(pillar.title)" />
+              <h3 v-html="pillar.title" />
             </div>
             <span></span>
-            <p v-html="formatRichText(pillar.description)" />
+            <p v-html="pillar.description" />
             <div
               v-if="!vp.lg.value"
               class="trigger"

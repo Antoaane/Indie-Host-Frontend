@@ -10,7 +10,6 @@ import { computed } from 'vue'
 import { vp } from '@/utils/viewport'
 // CONTENT
 import type { HabitsContent, HabitsSlide } from '@/views/Landing/types/content'
-import { formatRichText } from '@/utils/i18n'
 
 const props = defineProps<{
   content: HabitsContent
@@ -26,7 +25,7 @@ const slides = computed(() => props.slides ?? props.content.slides ?? [])
       <div class="overflow">
         <div class="wrapper">
           <header class="section-heading">
-            <h2 v-html="formatRichText(props.content.title)" />
+            <h2 v-html="props.content.title" />
           </header>
           <Carousel
             v-if="vp.lg.value"

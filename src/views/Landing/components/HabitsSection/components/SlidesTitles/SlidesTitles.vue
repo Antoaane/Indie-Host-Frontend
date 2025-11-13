@@ -10,7 +10,6 @@ import { vp } from '@/utils/viewport'
 import { set } from '@vueuse/core'
 // TYPES
 import type { HabitsSlide } from '@/views/Landing/types/content'
-import { formatRichText } from '@/utils/i18n'
 
 const props = defineProps<{
   slides: HabitsSlide[]
@@ -44,7 +43,7 @@ onMounted(() => {
         <p
           v-for="(slide, idx) in slides"
           :key="slide.id"
-          v-html="formatRichText(slide.description)"
+          v-html="slide.description"
           :class="['description', { active: idx === activeSlideIndex }]"
           aria-live="polite"
         />

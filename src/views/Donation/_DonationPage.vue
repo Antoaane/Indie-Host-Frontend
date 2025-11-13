@@ -10,7 +10,6 @@ import DonationStatusBanner from '@/views/Donation/components/DonationStatusBann
 
 import donationLocale from '@/locales/donation/fr.json'
 import type { DonationContent } from '@/views/Donation/types/content'
-import { formatRichText } from '@/utils/i18n'
 
 const route = useRoute()
 const donationContent = donationLocale as DonationContent
@@ -60,7 +59,7 @@ const pageSubtitles = computed(() => donationContent.page.subtitles ?? [])
   <main class="donation-page">
     <h1
       class="donation-page__title"
-      v-html="formatRichText(pageTitle)"
+      v-html="pageTitle"
     />
 
     <div class="donation-page__subtitle-container">
@@ -68,7 +67,7 @@ const pageSubtitles = computed(() => donationContent.page.subtitles ?? [])
         v-for="subtitle in pageSubtitles"
         :key="subtitle"
         class="donation-page__subtitle"
-        v-html="formatRichText(subtitle)"
+        v-html="subtitle"
       />
     </div>
 

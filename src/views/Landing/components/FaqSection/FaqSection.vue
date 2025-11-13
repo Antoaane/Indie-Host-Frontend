@@ -7,7 +7,6 @@ import { useFaq } from '@/views/Landing/components/FaqSection/utils/useFaq'
 import Footer from '@/components/layouts/Footer.vue'
 // CONTENT
 import type { FaqContent } from '@/views/Landing/types/content'
-import { formatRichText } from '@/utils/i18n'
 
 const props = defineProps<{
   content: FaqContent
@@ -19,7 +18,7 @@ const { filteredData, suggestions, search, selectSuggestion } = useFaq(props.con
 <template>
   <section id="faq-section">
     <div class="wrapper__xl">
-      <h2 v-html="formatRichText(props.content.title)" />
+      <h2 v-html="props.content.title" />
 
       <!-- Input de recherche -->
       <input

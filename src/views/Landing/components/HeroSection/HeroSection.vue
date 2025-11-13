@@ -8,7 +8,6 @@ import ShapesBgCroped from '@/components/svgs/images/ShapesBgCroped.vue'
 // CONTENT
 import type { HeroContent } from '@/views/Landing/types/content'
 import { onMounted } from 'vue'
-import { formatRichText } from '@/utils/i18n'
 
 const props = defineProps<{
   content: HeroContent
@@ -74,14 +73,14 @@ onMounted(() => {
     <div class="wrapper">
       <div class="content">
         <div>
-          <h1 v-html="formatRichText(content.title)" />
-          <p v-html="formatRichText(content.description)" />
+          <h1 v-html="content.title" />
+          <p v-html="content.description" />
           <div class="cta">
             <a
               :href="content.primaryCta.href"
               :target="content.primaryCta.target"
               :rel="content.primaryCta.rel || (content.primaryCta.target === '_blank' ? 'noopener noreferrer' : undefined)"
-              v-html="formatRichText(content.primaryCta.label)"
+              v-html="content.primaryCta.label"
             />
           </div>
         </div>

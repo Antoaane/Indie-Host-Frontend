@@ -12,7 +12,6 @@ import SlidesTitles from '@/views/Landing/components/HabitsSection/components/Sl
 import { vp } from '@/utils/viewport'
 // CONTENT
 import type { JoinContent, HabitsSlide } from '@/views/Landing/types/content'
-import { formatRichText } from '@/utils/i18n'
 // ASSETS
 import RoadMapDark from '@/components/svgs/images/RoadMapDark.vue'
 
@@ -107,14 +106,14 @@ onBeforeUnmount(() => {
             data-sr
             data-sr-delay="0.5"
             data-sr-y="-20"
-            v-html="formatRichText(content.title)"
+            v-html="content.title"
           />
         </div>
         <p
           data-sr
           data-sr-y="20"
           data-sr-delay="1.25"
-          v-html="formatRichText(content.description)"
+          v-html="content.description"
         />
       </div>
 
@@ -166,8 +165,8 @@ onBeforeUnmount(() => {
               class="form-container"
               v-if="FormComp"
             >
-              <h3 v-html="formatRichText(formMeta.title)" />
-              <p v-html="formatRichText(formMeta.description)" />
+              <h3 v-html="formMeta.title" />
+              <p v-html="formMeta.description" />
               <component
                 :is="FormComp"
                 v-bind="formProps"

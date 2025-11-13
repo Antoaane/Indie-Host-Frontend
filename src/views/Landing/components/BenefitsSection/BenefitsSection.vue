@@ -8,7 +8,6 @@ import AnimationPanel from '@/views/Landing/components/BenefitsSection/component
 import CalcTitle from '@/views/Landing/components/BenefitsSection/components/CalcTitle/CalcTitle.vue'
 // CONTENT
 import type { BenefitsContent } from '@/views/Landing/types/content'
-import { formatRichText } from '@/utils/i18n'
 
 const props = defineProps<{
   content: BenefitsContent
@@ -22,7 +21,7 @@ const { nights, price, total, commissions } = useBookingCalc()
     <div class="wrapper">
       <h2
         class="first-title"
-        v-html="formatRichText(content.title)"
+        v-html="content.title"
       />
     </div>
 

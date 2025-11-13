@@ -3,7 +3,6 @@
 <script setup lang="ts">
 // UTILS
 import { vp } from '@/utils/viewport'
-import { formatRichText } from '@/utils/i18n'
 // ASSETS
 import GlowTopRight from '@/components/svgs/images/GlowTopRight.vue'
 import GlowLeft from '@/components/svgs/images/GlowLeft.vue'
@@ -33,14 +32,14 @@ const video = props.feature.videos?.[0]
           <h2
             data-sr
             :data-sr-x="index % 2 !== 0 ? 50 : -50"
-            v-html="formatRichText(feature.title)"
+            v-html="feature.title"
           />
 
           <p
             data-sr
             :data-sr-x="index % 2 !== 0 ? 50 : -50"
             data-sr-delay="0.3"
-            v-html="formatRichText(feature.description)"
+            v-html="feature.description"
           />
         </div>
       </div>

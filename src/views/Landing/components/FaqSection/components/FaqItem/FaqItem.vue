@@ -4,7 +4,6 @@
 import type { PropType } from 'vue'
 import { computed } from 'vue'
 import FaqCollapse from '@/views/Landing/components/FaqSection/components/FaqCollapse/FaqCollapse.vue'
-import { formatRichText } from '@/utils/i18n'
 
 // Type extrait du fichier faqData.ts
 export interface FaqNode {
@@ -62,7 +61,7 @@ function highlight(text?: string) {
         <!-- Résumé : question -->
         <template #summary>
           <h4
-            v-html="formatRichText(highlight(props.node.question))"
+            v-html="highlight(props.node.question)"
             itemprop="name"
           />
         </template>
@@ -70,7 +69,7 @@ function highlight(text?: string) {
         <template #content>
           <div itemprop="acceptedAnswer">
             <p
-              v-html="formatRichText(highlight(props.node.answer))"
+              v-html="highlight(props.node.answer)"
               itemprop="text"
             />
           </div>

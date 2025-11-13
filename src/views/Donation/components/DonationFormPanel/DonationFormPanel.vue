@@ -3,7 +3,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { DonationPanelContent } from '@/views/Donation/types/content'
-import { formatRichText } from '@/utils/i18n'
 
 const props = defineProps<{
   donationLink: string
@@ -29,11 +28,11 @@ const warnings = computed(() =>
 <template>
   <aside class="donation-form-panel">
     <header>
-      <h2 v-html="formatRichText(panel.title)" />
+      <h2 v-html="panel.title" />
       <p
         v-for="(paragraph, idx) in panel.intro"
         :key="`intro-${idx}`"
-        v-html="formatRichText(paragraph)"
+        v-html="paragraph"
       />
     </header>
 
@@ -70,7 +69,7 @@ const warnings = computed(() =>
     <p
       v-if="panel.note"
       class="donation-form-panel__note"
-      v-html="formatRichText(panel.note)"
+      v-html="panel.note"
     />
 
     <ul
@@ -80,7 +79,7 @@ const warnings = computed(() =>
       <li
         v-for="warning in warnings"
         :key="warning.id"
-        v-html="formatRichText(warning.text)"
+        v-html="warning.text"
       />
     </ul>
   </aside>
