@@ -30,42 +30,38 @@ interface StaticContent {
     description: {
       ctaLabel?: string
     }
+    title: {
+      travelers: string
+      beds: string
+      bedrooms: string
+      bathrooms: string
+    }
+    host: {
+      seniority: string
+    }
+    ctas: {
+      seeMore: string
+    }
+    rooms: {
+      bedType: {
+        simple: string
+        double: string
+        bunk: string
+      }
+    }
   }
   amenityIcons: string[]
 }
 
-interface CommonContent {
-  plurals: {
-    travelers: string
-    beds: string
-    bedrooms: string
-    bathrooms: string
-  }
-  host: {
-    seniority: string
-  }
-  ctas: {
-    seeMore: string
-  }
-}
-
 const staticContent = staticLocale as StaticContent
-const commonContent = commonLocale as CommonContent
 
-const titlePlurals = {
-  travelers: commonContent.plurals.travelers,
-  bedrooms: commonContent.plurals.bedrooms,
-  beds: commonContent.plurals.beds,
-  bathrooms: commonContent.plurals.bathrooms,
+const hostProfileStatic = {
+  seniority: staticContent.listing.host.seniority,
 }
 
-const hostProfileCopy = {
-  seniority: commonContent.host.seniority,
-}
-
-const descriptionCopy = {
+const descriptionStatic = {
   title: staticContent.listing.headings.description,
-  ctaLabel: staticContent.listing.description.ctaLabel || commonContent.ctas.seeMore,
+  ctaLabel: staticContent.listing.description.ctaLabel || staticContent.listing.ctas.seeMore,
 }
 </script>
 
@@ -73,19 +69,22 @@ const descriptionCopy = {
   <section id="listing-core">
     <Title
       :data="data.title"
-      :plurals="titlePlurals"
+      :staticContent="staticContent.listing.title"
     />
     <Perks :data="data.perks" />
     <HostProfile
       :data="data.hostProfile"
-      :labels="hostProfileCopy"
+      :staticContent="staticContent.listing.host"
     />
     <Description
       :data="data.description"
-      :copy="descriptionCopy"
+      :staticContent="descriptionStatic"
     />
     <div>
-      <Rooms :data="data.rooms" />
+      <Rooms
+        :data="data.rooms"
+        :staticContent="staticContent.listing.rooms"
+      />
     </div>
     <DatePicker />
   </section>

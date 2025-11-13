@@ -12,14 +12,14 @@
       "type": "bedroom",
       "beds": [
         { "type": "double", "capacity": 2, "quantity": 1 },
-        { "type": "single", "capacity": 1, "quantity": 3 }
+        { "type": "simple", "capacity": 1, "quantity": 3 }
       ]
     },
     {
       "room-name": "Salon",
       "type": "livingroom",
       "beds": [
-        { "type": "single", "capacity": 1, "quantity": 2 }]
+        { "type": "simple", "capacity": 1, "quantity": 2 }]
     },
     {
       "room-name": "Salle de bain",

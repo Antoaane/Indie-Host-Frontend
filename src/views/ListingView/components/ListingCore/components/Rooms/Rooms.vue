@@ -2,12 +2,21 @@
 
 <script setup lang="ts">
 // DEPS
+import { computed } from 'vue'
 import { BedDouble, BedSingle } from 'lucide-vue-next'
+// UTILS
+import { formatICUMessage } from '@/utils/i18n'
 // TYPES
-import type { RoomsModel } from '@/views/ListingView/types/listing'
+import type { RoomsModel, BedItem } from '@/views/ListingView/types/listing'
+
+// type BedKind = 'simple' | 'double' | 'bunk'
+// type BedItem = { type: string; quantity: number }
+// type RoomItem = { beds: BedItem[] }
+
 // CONTENT
 const props = defineProps<{
-  data: RoomsModel
+  data: RoomsModel // adapte si ton shape exact diffère
+  staticContent: { bedType: Record<string, any> }
 }>()
 
 function getBedIcon(bedType: string) {
@@ -15,11 +24,15 @@ function getBedIcon(bedType: string) {
     return BedDouble as Record<string, any>
   }
 
-  if (bedType == 'single') {
+  if (bedType == 'simple') {
     return BedSingle as Record<string, any>
   }
 
   return null
+}
+
+function bedLabel(bed: BedItem) {
+  return formatICUMessage(props.staticContent.bedType[bed.type], { count: bed.quantity })
 }
 </script>
 
@@ -48,9 +61,7 @@ function getBedIcon(bedType: string) {
                 v-for="bed in room.beds"
                 :key="bed.type"
               >
-                {{ bed.quantity }}
-                lit{{ bed.quantity > 1 ? 's' : '' }}
-                {{ bed.type }}
+                {{ bed.quantity }} {{ bedLabel(bed) }}
               </li>
             </ul>
           </div>

@@ -8,17 +8,17 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 // TYPES
 import type { DescriptionModel } from '@/views/ListingView/types/listing'
 
-interface DescriptionCopy {
+interface StaticContent {
   title: string
   ctaLabel: string
 }
 
 const props = defineProps<{
   data: DescriptionModel
-  copy: DescriptionCopy
+  staticContent: StaticContent
 }>()
 
-const copy = props.copy
+const staticContent = props.staticContent
 
 /* ---------- state ---------- */
 const isOpen = ref(false)
@@ -66,7 +66,7 @@ onBeforeUnmount(() => {
         type="button"
         :aria-expanded="isOpen"
         :aria-controls="'listing-description-dialog'"
-        v-html="copy.ctaLabel"
+        v-html="staticContent.ctaLabel"
         @click="openPopup"
       />
     </div>
@@ -101,7 +101,7 @@ onBeforeUnmount(() => {
               </div>
             </div>
 
-            <h2 v-html="copy.title" />
+            <h2 v-html="staticContent.title" />
             <div class="block">
               <p v-html="data.brief" />
             </div>

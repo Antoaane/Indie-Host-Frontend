@@ -6,19 +6,19 @@ import type { HostProfileModel } from '@/views/ListingView/types/listing'
 import { computed } from 'vue'
 import { formatICUMessage } from '@/utils/i18n'
 
-interface HostProfileLabels {
+interface StaticContent {
   seniority: string
 }
 
 const props = defineProps<{
   data: HostProfileModel
-  labels: HostProfileLabels
+  staticContent: StaticContent
 }>()
 
 const seniorityText = computed(() => {
   if (!props.data.seniority) return ''
   const years = Math.round(props.data.seniority / 12)
-  return formatICUMessage(props.labels.seniority, { years })
+  return formatICUMessage(props.staticContent.seniority, { years })
 })
 </script>
 

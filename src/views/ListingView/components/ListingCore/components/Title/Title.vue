@@ -6,7 +6,7 @@ import type { TitleModel } from '@/views/ListingView/types/listing'
 import { computed } from 'vue'
 import { formatICUMessage } from '@/utils/i18n'
 
-interface TitlePlurals {
+interface StaticContent {
   travelers: string
   beds: string
   bedrooms: string
@@ -15,24 +15,16 @@ interface TitlePlurals {
 
 const props = defineProps<{
   data: TitleModel
-  plurals: TitlePlurals
+  staticContent: StaticContent
 }>()
 
-const travelerLabel = computed(() =>
-  formatICUMessage(props.plurals.travelers, { count: props.data.capacity }),
-)
+const travelerLabel = computed(() => formatICUMessage(props.staticContent.travelers, { count: props.data.capacity }))
 
-const bedroomLabel = computed(() =>
-  formatICUMessage(props.plurals.bedrooms, { count: props.data.bedrooms.quantity }),
-)
+const bedroomLabel = computed(() => formatICUMessage(props.staticContent.bedrooms, { count: props.data.bedrooms.quantity }))
 
-const bedsLabel = computed(() =>
-  formatICUMessage(props.plurals.beds, { count: props.data.bedrooms.bed ?? 0 }),
-)
+const bedsLabel = computed(() => formatICUMessage(props.staticContent.beds, { count: props.data.bedrooms.bed ?? 0 }))
 
-const bathroomsLabel = computed(() =>
-  formatICUMessage(props.plurals.bathrooms, { count: props.data.bathrooms }),
-)
+const bathroomsLabel = computed(() => formatICUMessage(props.staticContent.bathrooms, { count: props.data.bathrooms }))
 </script>
 
 <template>
