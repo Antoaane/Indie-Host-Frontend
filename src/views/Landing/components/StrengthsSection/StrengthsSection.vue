@@ -52,6 +52,7 @@ onMounted(() => {
         <div
           v-for="(pillar, index) in content.pillars"
           :key="pillar.id"
+          :id="'strength_' + pillar.id"
           data-sr
           data-sr-y="50"
           :data-sr-delay="index * 0.25"
@@ -96,12 +97,12 @@ onMounted(() => {
 @use '@/views/Landing/components/StrengthsSection/strengths-section.scss';
 @use '@/styles/variables/borders' as borders;
 
-.box {
-  @include borders.squircle(0.12);
-  width: 160px;
-  aspect-ratio: 1;
-  background: #3b3a40; /* <= indispensable pour VOIR le coin */
-  outline: 1px solid rgba(255, 255, 255, 0.25);
-  outline-offset: -1px;
-}
+// .box {
+//   @include borders.squircle(0.12);
+//   width: 160px;
+//   aspect-ratio: 1;
+//   background: #3b3a40; /* <= indispensable pour VOIR le coin */
+//   outline: 1px solid rgba(255, 255, 255, 0.25);
+//   outline-offset: -1px;
+// }
 </style>

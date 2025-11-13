@@ -94,13 +94,13 @@ onBeforeUnmount(() => {
       v-if="vp.lg.value"
       :content="content.benefits"
     />
-    <UsageSection :steps="content.usage.steps" />
     <FeaturesSection :items="content.features.items" />
     <HowSection :content="content.how" />
     <!-- <HabitsSection
-      :content="content.habits"
-      :slides="content.habits.slides"
+    :content="content.habits"
+    :slides="content.habits.slides"
     /> -->
+    <UsageSection :steps="content.usage.steps" />
     <StrengthsSection :content="content.strengths" />
     <JoinSection
       :content="content.join"

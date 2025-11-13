@@ -9,7 +9,7 @@
   "rooms": [
     {
       "room-name": "Chambre",
-      "room-type": "bedroom",
+      "type": "bedroom",
       "beds": [
         { "type": "double", "capacity": 2, "quantity": 1 },
         { "type": "single", "capacity": 1, "quantity": 3 }
@@ -17,13 +17,13 @@
     },
     {
       "room-name": "Salon",
-      "room-type": "livingroom",
+      "type": "livingroom",
       "beds": [
         { "type": "single", "capacity": 1, "quantity": 2 }]
     },
     {
       "room-name": "Salle de bain",
-      "room-type": "bathroom"
+      "type": "bathroom"
     }
   ],
   "perks": [

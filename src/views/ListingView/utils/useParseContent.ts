@@ -77,7 +77,7 @@ async function loadComments(): Promise<RawComments> {
 function normalizeRooms(core: RawCore): RoomItem[] {
   return (core.rooms ?? []).map(r => ({
     name: r['room-name'],
-    type: r['room-type'],
+    type: r.type,
     // ⬇️ NE PAS forcer [] : on ne met "beds" que s'il y en a
     ...(r.beds && r.beds.length
       ? {
