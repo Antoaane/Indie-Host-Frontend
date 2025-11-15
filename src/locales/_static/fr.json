@@ -28,6 +28,29 @@
         "double": "{count, plural, one {lit double} other {lits doubles}}",
         "bunk": "{count, plural, one {lit superposé} other {lits superposés}}"
       }
+    },
+    "commentsWidget": {
+      "title": "Avis des voyageurs",
+      "ctaLabel": "Voir tous les avis",
+      "summary": {
+        "overallLabel": "Note globale",
+        "ratingUnit": "sur 5",
+        "countLabel": "{count, plural, one {# avis} other {# avis}}"
+      },
+      "distribution": {
+        "title": "Répartition des notes",
+        "ratingLabel": "{count, plural, one {# étoile} other {# étoiles}}"
+      },
+      "comment": {
+        "stayLabel": "Séjour du {start} au {end}"
+      },
+      "preview": {
+        "maxItems": 3
+      },
+      "empty": {
+        "title": "Pas encore d'avis",
+        "subtitle": "Les premiers voyageurs partageront bientôt leur expérience."
+      }
     }
   },
   "amenityIcons": [
