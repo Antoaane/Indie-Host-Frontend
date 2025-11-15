@@ -23,9 +23,7 @@ const scoreLabel = computed(() =>
 
 <template>
   <section class="listint-comments__summary">
-    <header>
-      <h3>{{ overallLabel }}</h3>
-    </header>
+    <h3>{{ overallLabel }}</h3>
     <div>
       <strong>{{ scoreLabel }}</strong>
       <span>{{ ratingUnit }}</span>

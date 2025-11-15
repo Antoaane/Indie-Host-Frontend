@@ -25,7 +25,7 @@ function initials(name: string): string {
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
-    .map(part => part[0]?.toUpperCase() ?? '')
+    .map((part) => part[0]?.toUpperCase() ?? '')
     .join('')
 }
 
@@ -33,11 +33,19 @@ const fallbackInitials = computed(() => initials(props.comment.name))
 </script>
 
 <template>
-  <article class="listint-comments__comment">
-    <header>
+  <div class="listint-comments__comment">
+    <div>
       <div class="listint-comments__comment-avatar">
-        <img v-if="comment.avatar" :src="comment.avatar" :alt="comment.name" />
-        <span v-else aria-hidden="true">{{ fallbackInitials }}</span>
+        <img
+          v-if="comment.avatar"
+          :src="comment.avatar"
+          :alt="comment.name"
+        />
+        <span
+          v-else
+          aria-hidden="true"
+          >{{ fallbackInitials }}</span
+        >
       </div>
       <div class="listint-comments__comment-meta">
         <h4>{{ comment.name }}</h4>
@@ -47,7 +55,7 @@ const fallbackInitials = computed(() => initials(props.comment.name))
         <strong>{{ ratingLabel }}</strong>
         <span>{{ ratingUnit }}</span>
       </div>
-    </header>
-    <p>{{ comment.comment }}</p>
-  </article>
+    </div>
+    <blockquote>{{ comment.comment }}</blockquote>
+  </div>
 </template>
