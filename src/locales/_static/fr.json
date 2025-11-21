@@ -32,7 +32,6 @@
     "commentsWidget": {
       "title": "Avis des voyageurs",
       "ctaLabel": "Voir tous les avis",
-      "ctaCloseLabel": "Masquer les avis",
       "summary": {
         "overallLabel": "Note globale",
         "ratingUnit": "sur 5",
