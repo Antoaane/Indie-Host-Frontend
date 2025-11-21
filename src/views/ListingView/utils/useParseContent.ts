@@ -26,6 +26,7 @@ import type {
   MediasModel,
   NotesModel,
   CommentsModel,
+  CommentsPagesModel,
 } from '@/views/ListingView/types/listing';
 
 // Typages "bruts" déduits des JSON exemples
@@ -222,14 +223,20 @@ function parseNotes(notes: RawNotes): NotesModel {
   };
 }
 
-function parseComments(raw: RawComments): CommentsModel {
-  return raw.comments.map(c => ({
-    avatar: c['profile-pic'],
-    name: c.name,
-    note: c.note,
-    comment: c.comment,
-    stayDates: c['stay-dates'],
-  }));
+function parseComments(raw: RawComments): { pages: CommentsPagesModel; flat: CommentsModel } {
+  const pages = (raw.comments || []).map(page =>
+    page.map(c => ({
+      avatar: c['profile-pic'],
+      name: c.name,
+      note: c.note,
+      comment: c.comment,
+      stayDates: c['stay-dates'],
+    })),
+  );
+
+  const flat = pages.flat();
+
+  return { pages, flat };
 }
 
 // ---- UTIL PRINCIPAL ----
@@ -243,6 +250,8 @@ export async function listingCore(): Promise<ListingParsed> {
     loadComments(),
   ]);
 
+  const parsedComments = parseComments(comments);
+
   return {
     title: parseTitle(core),
     perks: parsePerks(core),
@@ -253,7 +262,8 @@ export async function listingCore(): Promise<ListingParsed> {
     bookings: parseBookings(bookings),
     medias: parseMedias(medias),
     notes: parseNotes(notes),
-    comments: parseComments(comments),
+    comments: parsedComments.flat,
+    commentsPages: parsedComments.pages,
   };
 }
 
