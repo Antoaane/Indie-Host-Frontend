@@ -99,6 +99,8 @@ export type CommentItem = {
   stayDates?: { start: string; end: string };
 };
 export type CommentsModel = CommentItem[];
+export type CommentsPageModel = CommentItem[];
+export type CommentsPagesModel = CommentsPageModel[];
 
 // -------- BUNDLE GLOBAL --------
 export type ListingParsed = {
@@ -112,4 +114,5 @@ export type ListingParsed = {
   medias: MediasModel;
   notes: NotesModel;
   comments: CommentsModel;
+  commentsPages: CommentsPagesModel;
 };
