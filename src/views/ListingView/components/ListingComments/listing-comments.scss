@@ -1,0 +1,90 @@
+/* File: src/views/ListingView/components/ListingComments/listing-comments.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+
+#listing-comments {
+  height: 100%;
+  overflow-y: scroll;
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--gutter-spacing-xl);
+
+  background-color: $accent;
+  border-radius: borders.$rounded-lg;
+
+  overflow-y: scroll;
+  scrollbar-width: thin;
+  /* auto | thin | none */
+  scrollbar-color: rgba($secondary, 0.25) $translucent;
+  /* thumb | track */
+
+  @include gutters(padding, all);
+}
+
+.listing-comments__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background-color: rgba($secondary, 0.35);
+  padding: var(--gutter-spacing-xl);
+}
+
+.listing-comments__overlay-panel {
+  position: relative;
+
+  width: min(1100px, 100%);
+  max-height: 90vh;
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--gutter-spacing-lg);
+
+  background-color: $accent;
+  border-radius: borders.$rounded-lg;
+  box-shadow: 0 12px 40px rgba($secondary, 0.2);
+  overflow: hidden;
+
+  @include gutters(padding, all);
+}
+
+.listing-comments__overlay-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gutter-spacing-md);
+}
+
+.listing-comments__overlay-close {
+  border: none;
+  background: transparent;
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.listing-comments__overlay-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gutter-spacing-lg);
+  overflow: hidden;
+}
+
+.listing-comments__overlay-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gutter-spacing-lg);
+
+  @include gutters(padding, horizontal);
+
+  scrollbar-width: thin;
+  scrollbar-color: rgba($secondary, 0.25) $translucent;
+}

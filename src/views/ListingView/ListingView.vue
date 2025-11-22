@@ -13,7 +13,7 @@ import { vp } from '@/utils/viewport'
 // COMPONENTS
 import Gallery from '@/views/ListingView/components/Gallery/Gallery.vue'
 import ListingCore from '@/views/ListingView/components/ListingCore/ListingCore.vue'
-import ListintComments from '@/views/ListingView/components/ListintComments/ListintComments.vue'
+import ListingComments from '@/views/ListingView/components/ListingComments/ListingComments.vue'
 import CheckoutMin from '@/views/ListingView/components/Checkout/Checkout.vue'
 </script>
 
@@ -34,7 +34,7 @@ import CheckoutMin from '@/views/ListingView/components/Checkout/Checkout.vue'
 
     <div class="stay-container">
       <Suspense>
-        <ListintComments #default />
+        <ListingComments #default />
         <template #fallback>
           <div class="skeleton">Chargement…</div>
         </template>

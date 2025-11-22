@@ -1,4 +1,4 @@
-<!-- File: src/views/ListingView/components/ListintComments/components/SummaryCard/SummaryCard.vue -->
+<!-- File: src/views/ListingView/components/ListingComments/components/SummaryCard/SummaryCard.vue -->
 
 <script setup lang="ts">
 import { computed } from 'vue'
@@ -19,10 +19,14 @@ const scoreLabel = computed(() =>
     maximumFractionDigits: 2,
   }),
 )
+
+console.log(`${props.score !== null ? '✅' : '❌'} [SummaryCard.vue](setup) summary:score input=${props.score}`)
+console.log(`${hasScore.value ? '✅' : '❌'} [SummaryCard.vue](hasScore) summary:hasScore value=${hasScore.value}`)
+console.log(`${'ℹ️'} [SummaryCard.vue](scoreLabel) summary:scoreLabel formatted=${scoreLabel.value}`)
 </script>
 
 <template>
-  <section class="listint-comments__summary">
+  <section class="listing-comments__summary">
     <h3>{{ overallLabel }}</h3>
     <div>
       <strong>{{ scoreLabel }}</strong>

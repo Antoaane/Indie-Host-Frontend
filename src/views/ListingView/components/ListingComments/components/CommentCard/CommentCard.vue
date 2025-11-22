@@ -1,4 +1,4 @@
-<!-- File: src/views/ListingView/components/ListintComments/components/CommentCard/CommentCard.vue -->
+<!-- File: src/views/ListingView/components/ListingComments/components/CommentCard/CommentCard.vue -->
 
 <script setup lang="ts">
 import { computed } from 'vue'
@@ -30,12 +30,17 @@ function initials(name: string): string {
 }
 
 const fallbackInitials = computed(() => initials(props.comment.name))
+
+console.log(`${props.comment ? '✅' : '❌'} [CommentCard.vue](setup) comment:received name=${props.comment?.name}`)
+console.log(`${'ℹ️'} [CommentCard.vue](ratingLabel) comment:rating formatted=${ratingLabel.value}`)
+console.log(`${'ℹ️'} [CommentCard.vue](stayLabel) comment:stay label=${stayLabel.value}`)
+console.log(`${fallbackInitials.value ? '✅' : '❌'} [CommentCard.vue](fallbackInitials) comment:initials value=${fallbackInitials.value}`)
 </script>
 
 <template>
-  <div class="listint-comments__comment">
+  <div class="listing-comments__comment">
     <div>
-      <div class="listint-comments__comment-avatar">
+      <div class="listing-comments__comment-avatar">
         <img
           v-if="comment.avatar"
           :src="comment.avatar"
@@ -47,11 +52,11 @@ const fallbackInitials = computed(() => initials(props.comment.name))
           >{{ fallbackInitials }}</span
         >
       </div>
-      <div class="listint-comments__comment-meta">
+      <div class="listing-comments__comment-meta">
         <h4>{{ comment.name }}</h4>
         <p v-if="stayLabel">{{ stayLabel }}</p>
       </div>
-      <div class="listint-comments__comment-note">
+      <div class="listing-comments__comment-note">
         <strong>{{ ratingLabel }}</strong>
         <span>{{ ratingUnit }}</span>
       </div>

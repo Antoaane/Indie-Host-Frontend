@@ -236,6 +236,9 @@ function parseComments(raw: RawComments): { pages: CommentsPagesModel; flat: Com
 
   const flat = pages.flat();
 
+  console.log(`${flat.length ? '✅' : '❌'} [useParseContent.ts](parseComments) comments:parse parsedCount=${flat.length} ready`);
+  console.log(`${'ℹ️'} [useParseContent.ts](parseComments) comments:pagesDetected pagesCount=${pages.length} loaded`);
+
   return { pages, flat };
 }
 
@@ -251,6 +254,8 @@ export async function listingCore(): Promise<ListingParsed> {
   ]);
 
   const parsedComments = parseComments(comments);
+  console.log(`${parsedComments.flat.length ? '✅' : '❌'} [useParseContent.ts](listingCore) listingCore:load commentsCount=${parsedComments.flat.length} aggregated`);
+  console.log(`${'ℹ️'} [useParseContent.ts](listingCore) listingCore:commentsPages available=${parsedComments.pages.length} cached`);
 
   return {
     title: parseTitle(core),
