@@ -40,21 +40,25 @@ console.log(`${fallbackInitials.value ? '✅' : '❌'} [CommentCard.vue](fallbac
 <template>
   <div class="listing-comments__comment">
     <div>
-      <div class="listing-comments__comment-avatar">
+      <div class="listing-comments__comment-meta">
         <img
           v-if="comment.avatar"
           :src="comment.avatar"
           :alt="comment.name"
+          class="listing-comments__comment-avatar"
         />
         <span
           v-else
           aria-hidden="true"
-          >{{ fallbackInitials }}</span
+          class="listing-comments__comment-avatar"
         >
-      </div>
-      <div class="listing-comments__comment-meta">
-        <h4>{{ comment.name }}</h4>
-        <p v-if="stayLabel">{{ stayLabel }}</p>
+          {{ fallbackInitials }}
+        </span>
+
+        <div>
+          <h4>{{ comment.name }}</h4>
+          <p v-if="stayLabel">{{ stayLabel }}</p>
+        </div>
       </div>
       <div class="listing-comments__comment-note">
         <strong>{{ ratingLabel }}</strong>
@@ -64,3 +68,49 @@ console.log(`${fallbackInitials.value ? '✅' : '❌'} [CommentCard.vue](fallbac
     <blockquote>{{ comment.comment }}</blockquote>
   </div>
 </template>
+
+<style lang="scss">
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+
+.listing-comments__comment {
+  .listing-comments__comment-meta {
+    display: flex;
+    align-items: center;
+
+    .listing-comments__comment-avatar {
+      width: 3rem;
+      height: 3rem;
+      border-radius: borders.$rounded;
+      background-color: $quaternary;
+      color: $secondary;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1.25rem;
+    }
+
+    div {
+      display: flex;
+      flex-direction: column;
+
+      h4 {
+        margin: 0 !important;
+        @include h4-title;
+      }
+      p {
+        @include little-text;
+      }
+    }
+  }
+
+  .listing-comments__comment-note {
+  }
+
+  blockquote {
+    margin: 0 !important;
+    @include base-text($thin: false);
+  }
+}
+</style>

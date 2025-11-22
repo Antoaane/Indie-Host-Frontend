@@ -2,12 +2,7 @@
 
 <script setup lang="ts">
 // DEPS
-import {
-  computed,
-  nextTick,
-  onMounted,
-  ref,
-} from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 
 // UTILS
 import { listingCore } from '@/views/ListingView/utils/useParseContent'
@@ -260,7 +255,7 @@ onMounted(() => {
       @click.self="closeOverlay"
     >
       <div class="listing-comments__overlay-panel">
-        <header class="listing-comments__overlay-header">
+        <div class="listing-comments__overlay-header">
           <div>
             <h2>{{ content.title }}</h2>
             <p v-if="commentsCount">{{ countLabel }}</p>
@@ -271,23 +266,25 @@ onMounted(() => {
             @click="closeOverlay"
             >×</button
           >
-        </header>
+        </div>
 
         <div class="listing-comments__overlay-body">
-          <SummaryCard
-            v-if="hasData"
-            :score="overallScore"
-            :rating-unit="content.summary.ratingUnit"
-            :overall-label="content.summary.overallLabel"
-            :count-label="countLabel"
-          />
+          <div class="listing-comments__overlay-summary">
+            <SummaryCard
+              v-if="hasData"
+              :score="overallScore"
+              :rating-unit="content.summary.ratingUnit"
+              :overall-label="content.summary.overallLabel"
+              :count-label="countLabel"
+            />
 
-          <DistributionList
-            v-if="distribution.entries.length"
-            :entries="distribution.entries"
-            :title="content.distribution.title"
-            :rating-label="content.distribution.ratingLabel"
-          />
+            <DistributionList
+              v-if="distribution.entries.length"
+              :entries="distribution.entries"
+              :title="content.distribution.title"
+              :rating-label="content.distribution.ratingLabel"
+            />
+          </div>
 
           <div
             ref="overlayScrollEl"

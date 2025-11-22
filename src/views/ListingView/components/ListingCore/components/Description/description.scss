@@ -15,7 +15,8 @@
   }
 
   /* Backdrop */
-  .backdrop[data-popup] {
+  .backdrop[data-popup],
+  #listing-description-dialog {
     width: 100vw;
     height: 100vh;
 

@@ -2,6 +2,7 @@
 
 <script setup lang="ts">
 import { formatICUMessage } from '@/utils/i18n'
+import { Star } from 'lucide-vue-next'
 
 const props = defineProps<{
   entries: Array<{ rating: number; count: number; percentage: number }>
@@ -20,22 +21,109 @@ console.log(`${props.entries.length ? '✅' : '❌'} [DistributionList.vue](setu
 <template>
   <section class="listing-comments__distribution">
     <h3>{{ title }}</h3>
-    <ul>
-      <li
-        v-for="entry in entries"
-        :key="entry.rating"
-      >
-        <div>
-          <span>{{ labelFor(entry) }}</span>
+    <div>
+      <ul class="listing-comments__progress-list">
+        <li
+          v-for="(entry, e) in entries.slice().reverse()"
+          :key="entry.rating"
+        >
+          <span class="stars">{{ e + 1 }} <Star :size="14" /></span>
           <progress
             :value="entry.percentage"
             max="100"
           >
             {{ entry.percentage }}%
           </progress>
-        </div>
-        <span>{{ entry.count }}</span>
-      </li>
-    </ul>
+        </li>
+      </ul>
+
+      <ul class="listing-comments__count-list">
+        <li
+          v-for="entry in entries.slice().reverse()"
+          :key="entry.rating"
+        >
+          <span>{{ entry.count }}</span>
+        </li>
+      </ul>
+    </div>
   </section>
 </template>
+
+<style lang="scss">
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+
+.listing-comments__distribution {
+  max-width: 16rem;
+
+  div {
+    display: flex;
+    gap: var(--gutter-spacing-md);
+
+    ul {
+      display: flex;
+      flex-direction: column-reverse;
+      justify-content: space-between;
+
+      li {
+        height: 100%;
+        width: 100%;
+
+        display: flex;
+        align-items: center;
+        gap: var(--gutter-spacing-sm);
+
+        progress {
+          width: 100%;
+          height: 8px;
+          appearance: none;
+          -webkit-appearance: none;
+          border: none;
+          background: $quaternary; /* gris clair */
+          border-radius: 4px;
+          overflow: hidden;
+
+          &::-webkit-progress-bar {
+            background: $quaternary; /* fond gris */
+          }
+
+          &::-webkit-progress-value {
+            background: $secondary; /* barre noire */
+            transition: width 0.25s ease;
+          }
+
+          /* Firefox */
+          &::-moz-progress-bar {
+            background: $secondary; /* barre noire */
+            transition: width 0.25s ease;
+          }
+        }
+
+        span {
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          gap: var(--gutter-spacing-2xs);
+
+          .lucide-star-icon {
+            fill: $secondary;
+            stroke: $secondary;
+          }
+        }
+
+        .stars {
+          width: 30px;
+        }
+      }
+    }
+
+    .listing-comments__progress-list {
+      flex: 1;
+    }
+
+    .listing-comments__count-list {
+      width: max-content;
+    }
+  }
+}
+</style>
