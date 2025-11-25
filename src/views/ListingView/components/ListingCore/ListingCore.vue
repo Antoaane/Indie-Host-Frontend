@@ -43,6 +43,7 @@ interface StaticContent {
       seeMore: string
     }
     rooms: {
+      title: string
       bedType: {
         simple: string
         double: string

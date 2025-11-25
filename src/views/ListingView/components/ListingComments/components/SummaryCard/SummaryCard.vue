@@ -75,7 +75,6 @@ console.log(`${'ℹ️'} [SummaryCard.vue](scoreLabel) summary:scoreLabel format
 
 .listing-comments__summary {
   display: flex;
-  justify-content: center;
   align-items: center;
   gap: var(--gutter-spacing-md);
 

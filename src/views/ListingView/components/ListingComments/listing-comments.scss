@@ -136,10 +136,12 @@
             .listing-comments__summary {
               width: 100%;
               height: 100%;
+
+              &>div {
+                margin-left: var(--gutter-spacing-md);
+              }
             }
           }
-
-          .listing-comments__distribution {}
         }
 
         .listing-comments__overlay-list {

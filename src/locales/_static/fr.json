@@ -24,6 +24,7 @@
       "seeMore": "Voir tout"
     },
     "rooms": {
+      "title": "Pour bien dormir",
       "bedType": {
         "simple": "{count, plural, one {lit simple} other {lits simples}}",
         "double": "{count, plural, one {lit double} other {lits doubles}}",
