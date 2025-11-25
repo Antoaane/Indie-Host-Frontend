@@ -40,7 +40,7 @@ function bedLabel(bed: BedItem) {
   <div class="rooms-listing__comp">
     <ul>
       <li v-for="room in data.rooms">
-        <div v-if="room.beds">
+        <div :class="room.beds ? '' : 'hide'">
           <div class="bed-icon__container">
             <div
               v-for="(bed, bIndex) in room.beds"
@@ -77,9 +77,24 @@ function bedLabel(bed: BedItem) {
 
 .rooms-listing__comp {
   & > ul {
-    display: flex;
-    flex-direction: column;
+    display: grid;
     gap: var(--gutter-spacing-md);
+
+    @include min-width(md) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @include min-width(lg) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    @include min-width(xxl) {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    & > li:has(> div.hide) {
+      display: none;
+    }
 
     & > li {
       padding: var(--gutter-spacing-md);
@@ -93,17 +108,24 @@ function bedLabel(bed: BedItem) {
       border: solid 1px $quaternary;
       border-radius: borders.$rounded-lg;
 
-      .lucide {
-        margin-top: var(--gutter-spacing-xs);
+      & > div {
+        .bed-icon__container {
+          display: flex;
+          gap: var(--gutter-spacing-xs);
 
-        flex-shrink: 0;
-        flex-basis: 2rem;
-        height: 2rem;
+          .lucide {
+            margin-top: var(--gutter-spacing-xs);
 
-        stroke: $secondary;
+            flex-shrink: 0;
+            flex-basis: 2rem;
+            height: 2rem;
 
-        * {
-          stroke: $secondary;
+            stroke: $secondary;
+
+            * {
+              stroke: $secondary;
+            }
+          }
         }
       }
     }
