@@ -1,9 +1,17 @@
 <!-- File: src/views/ListingView/components/ListingComments/components/CommentCard/CommentCard.vue -->
 
 <script setup lang="ts">
+// DEPS
 import { computed } from 'vue'
+
+// UTILS
+import { formatRatingValue } from '@/views/ListingView/utils/formatters'
+
+// TYPES
 import type { CommentItem } from '@/views/ListingView/types/listing'
-import { formatRatingValue, formatStayPeriodLabel } from '@/views/ListingView/utils/formatters'
+
+// ASSETS
+import { Star } from 'lucide-vue-next'
 
 const props = defineProps<{
   comment: CommentItem
@@ -18,7 +26,26 @@ const ratingLabel = computed(() =>
   }),
 )
 
-const stayLabel = computed(() => formatStayPeriodLabel(props.comment.stayDates, props.stayTemplate))
+const stayLabel = computed(() => {
+  const range = props.comment.stayDates
+
+  if (!range?.start || !range?.end) {
+    return ''
+  }
+
+  const start = new Date(range.start)
+  const end = new Date(range.end)
+
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    return ''
+  }
+
+  const monthYear = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(start)
+  const nights = Math.max(1, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)))
+  const nightsLabel = `${nights} nuit${nights > 1 ? 's' : ''}`
+
+  return `${monthYear} — ${nightsLabel}`
+})
 
 function initials(name: string): string {
   return name
@@ -57,12 +84,16 @@ console.log(`${fallbackInitials.value ? '✅' : '❌'} [CommentCard.vue](fallbac
 
         <div>
           <h4>{{ comment.name }}</h4>
-          <p v-if="stayLabel">{{ stayLabel }}</p>
+          <div class="listing-comments__comment-note">
+            <p v-if="stayLabel">{{ stayLabel }}</p>
+            <div>
+              <Star
+                v-for="star in comment.note"
+                :size="12"
+              />
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="listing-comments__comment-note">
-        <strong>{{ ratingLabel }}</strong>
-        <span>{{ ratingUnit }}</span>
       </div>
     </div>
     <blockquote>{{ comment.comment }}</blockquote>
@@ -74,38 +105,64 @@ console.log(`${fallbackInitials.value ? '✅' : '❌'} [CommentCard.vue](fallbac
 @use '@/styles/variables/borders' as borders;
 
 .listing-comments__comment {
+  margin-bottom: var(--gutter-spacing-xl);
+
   .listing-comments__comment-meta {
+    margin-bottom: var(--gutter-spacing-sm);
+
     display: flex;
     align-items: center;
+    gap: var(--gutter-spacing-md);
 
     .listing-comments__comment-avatar {
       width: 3rem;
       height: 3rem;
-      border-radius: borders.$rounded;
-      background-color: $quaternary;
-      color: $secondary;
+
       display: flex;
       align-items: center;
       justify-content: center;
+
       font-weight: bold;
       font-size: 1.25rem;
+      color: $secondary;
+
+      border-radius: borders.$rounded;
+      background-color: $quaternary;
     }
 
-    div {
+    & > div {
       display: flex;
       flex-direction: column;
 
       h4 {
         margin: 0 !important;
-        @include h4-title;
+        font-weight: 500 !important;
+
+        @include base-text($bigger: true);
       }
-      p {
-        @include little-text;
+
+      .listing-comments__comment-note {
+        display: flex;
+        align-items: end;
+        gap: var(--gutter-spacing-sm);
+
+        p {
+          @include little-text($thin: false);
+        }
+
+        & > div {
+          margin-bottom: 2px;
+
+          display: flex;
+          gap: 1px;
+
+          .lucide-star-icon {
+            fill: $secondary;
+            stroke: $secondary;
+          }
+        }
       }
     }
-  }
-
-  .listing-comments__comment-note {
   }
 
   blockquote {

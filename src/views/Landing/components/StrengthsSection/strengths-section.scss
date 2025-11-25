@@ -54,7 +54,7 @@
       p {
         margin: 0;
         text-align: center;
-        @include base-text($accent, false);
+        @include base-text($accent, $bold: false, $bigger: true);
       }
     }
 
@@ -194,7 +194,7 @@
             height: 100%;
             overflow: hidden;
 
-            @include base-text($accent);
+            @include base-text($accent, $bigger: true);
 
             @include min-width(lg) {
               max-height: none;
@@ -219,7 +219,7 @@
               -webkit-text-fill-color: transparent;
               font-weight: inherit !important;
 
-              @include base-text($accent);
+              @include base-text($accent, $bigger: true);
             }
 
             .chevron-down {

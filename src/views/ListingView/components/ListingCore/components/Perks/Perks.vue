@@ -84,7 +84,7 @@ function resolveIcon(name: string) {
         h3 {
           margin-bottom: var(--gutter-spacing-2xs) !important;
           font-weight: 500 !important;
-          @include base-text;
+          @include base-text($bigger: true);
         }
 
         p {

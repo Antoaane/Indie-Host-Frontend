@@ -3,7 +3,7 @@
 @use "@/styles/variables/colors" as *;
 @use "@/styles/variables/breakpoints" as *;
 
-@mixin base-text($color : $secondary, $bold: false, $underline: false, $italic: false, $thin: true) {
+@mixin base-text($color : $secondary, $bold: false, $underline: false, $italic: false, $thin: true, $bigger: false) {
   margin: 0;
 
   font-family: 'outfit', sans-serif;
@@ -29,9 +29,11 @@
   font-size: 1rem;
   line-height: 1.25rem;
 
-  @include min-width(md) {
-    font-size: 1.125rem;
-    line-height: 1.5rem;
+  @if $bigger {
+    @include min-width(md) {
+      font-size: 1.125rem;
+      line-height: 1.5rem;
+    }
   }
 
   b,
@@ -75,7 +77,7 @@
   line-height: 1.125rem;
 
   @include min-width(md) {
-    font-size: 1rem;
+    font-size: 0.875rem;
     line-height: 1.25rem;
   }
 
@@ -114,13 +116,24 @@
   }
 }
 
-@mixin main-title($color : $secondary, $bigger: true, $colorful: true) {
+@mixin main-title($color : $secondary, $bigger: true, $colorful: true, $gradiant: false) {
   margin-top: 0;
   margin-bottom: 1rem;
 
   font-family: 'Fustat', sans-serif;
   font-weight: 700;
-  color: $color;
+
+  @if $gradiant {
+    background: -webkit-linear-gradient(top, rgba($color, 1) 0%, rgba($color, 0.75) 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  @else {
+    color: $color;
+  }
 
   font-size: 1.75rem;
   line-height: 2.5rem;
@@ -172,13 +185,24 @@
   }
 }
 
-@mixin h1-title($color : $secondary, $bigger: true, $colorful: true, $gutters: false) {
+@mixin h1-title($color : $secondary, $bigger: true, $colorful: true, $gutters: false, $gradiant: false) {
   margin-top: 0;
   margin-bottom: 0.75rem;
 
   font-family: 'Fustat', sans-serif;
   font-weight: 700;
-  color: $color;
+
+  @if $gradiant {
+    background: -webkit-linear-gradient(top, rgba($color, 1) 0%, rgba($color, 0.75) 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  @else {
+    color: $color;
+  }
 
   font-size: 24px;
   line-height: 28px;
@@ -222,13 +246,24 @@
   }
 }
 
-@mixin h2-title($color : $secondary, $bigger: true, $colorful: true, $gutters: false) {
+@mixin h2-title($color : $secondary, $bigger: true, $colorful: true, $gutters: false, $gradiant: false) {
   margin-top: 0;
   margin-bottom: 0.75rem;
 
   font-family: 'Fustat', sans-serif;
   font-weight: 700;
-  color: $color;
+
+  @if $gradiant {
+    background: -webkit-linear-gradient(top, rgba($color, 1) 0%, rgba($color, 0.75) 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  @else {
+    color: $color;
+  }
 
   font-size: 22px;
   line-height: 26px;
@@ -272,16 +307,27 @@
   }
 }
 
-@mixin h3-title($color : $secondary, $bigger: true, $colorful: true, $gutters: false) {
+@mixin h3-title($color : $secondary, $bigger: true, $colorful: true, $gutters: false, $gradiant: false) {
   margin-top: 0;
   margin-bottom: 0.75rem;
 
   font-family: 'Fustat', sans-serif;
-  font-weight: 700;
-  color: $color;
+  font-weight: 600;
 
-  font-size: 20px;
-  line-height: 24px;
+  @if $gradiant {
+    background: -webkit-linear-gradient(top, rgba($color, 1) 0%, rgba($color, 0.75) 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  @else {
+    color: $color;
+  }
+
+  font-size: 18px;
+  line-height: 22px;
 
   @if $gutters {
     @include gutters(padding, inline);
@@ -291,15 +337,15 @@
     margin-top: 0;
     margin-bottom: 0.5rem;
 
-    font-size: 22px;
-    line-height: 26px;
+    font-size: 20px;
+    line-height: 24px;
   }
 
   &:has(strong) {
-    line-height: 28px;
+    line-height: 24px;
 
     @include min-width(lg) {
-      line-height: 30px;
+      line-height: 28px;
     }
   }
 
@@ -322,13 +368,24 @@
   }
 }
 
-@mixin h4-title($color : $secondary, $bigger: true, $colorful: true, $gutters: false) {
+@mixin h4-title($color : $secondary, $bigger: true, $colorful: true, $gutters: false, $gradiant: false) {
   margin-top: 0;
   margin-bottom: 0.75rem;
 
   font-family: 'Fustat', sans-serif;
   font-weight: 700;
-  color: $color;
+
+  @if $gradiant {
+    background: -webkit-linear-gradient(top, rgba($color, 1) 0%, rgba($color, 0.75) 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  @else {
+    color: $color;
+  }
 
   font-size: 18px;
   line-height: 22px;
@@ -341,15 +398,15 @@
     margin-top: 0;
     margin-bottom: 0.5rem;
 
-    font-size: 20px;
-    line-height: 24px;
+    font-size: 18px;
+    line-height: 22px;
   }
 
   &:has(strong) {
-    line-height: 26px;
+    line-height: 24px;
 
     @include min-width(lg) {
-      line-height: 28px;
+      line-height: 26px;
     }
   }
 

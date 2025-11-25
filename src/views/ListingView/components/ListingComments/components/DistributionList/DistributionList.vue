@@ -54,9 +54,14 @@ console.log(`${props.entries.length ? '✅' : '❌'} [DistributionList.vue](setu
 @use '@/styles/variables/borders' as borders;
 
 .listing-comments__distribution {
-  max-width: 16rem;
+  width: 100%;
+  h3 {
+    max-width: 16rem;
+    @include h3-title($colorful: false);
+  }
 
   div {
+    max-width: 16rem;
     display: flex;
     gap: var(--gutter-spacing-md);
 
@@ -75,12 +80,12 @@ console.log(`${props.entries.length ? '✅' : '❌'} [DistributionList.vue](setu
 
         progress {
           width: 100%;
-          height: 8px;
+          height: 6px;
           appearance: none;
           -webkit-appearance: none;
           border: none;
           background: $quaternary; /* gris clair */
-          border-radius: 4px;
+          border-radius: borders.$rounded;
           overflow: hidden;
 
           &::-webkit-progress-bar {
@@ -105,6 +110,8 @@ console.log(`${props.entries.length ? '✅' : '❌'} [DistributionList.vue](setu
           justify-content: flex-end;
           gap: var(--gutter-spacing-2xs);
 
+          @include little-text($thin: false);
+
           .lucide-star-icon {
             fill: $secondary;
             stroke: $secondary;
@@ -123,6 +130,7 @@ console.log(`${props.entries.length ? '✅' : '❌'} [DistributionList.vue](setu
 
     .listing-comments__count-list {
       width: max-content;
+      @include little-text($thin: false);
     }
   }
 }

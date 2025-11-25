@@ -73,7 +73,7 @@ const seniorityText = computed(() => {
     h2 {
       margin-bottom: var(--gutter-spacing-xs) !important;
       font-weight: 500 !important;
-      @include base-text;
+      @include base-text($bigger: true);
     }
 
     ul {

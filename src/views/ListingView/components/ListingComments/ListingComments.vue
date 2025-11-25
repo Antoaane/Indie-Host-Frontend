@@ -4,6 +4,11 @@
 // DEPS
 import { computed, nextTick, onMounted, ref } from 'vue'
 
+// COMPONENTS
+import SummaryCard from './components/SummaryCard/SummaryCard.vue'
+import DistributionList from './components/DistributionList/DistributionList.vue'
+import CommentCard from './components/CommentCard/CommentCard.vue'
+
 // UTILS
 import { listingCore } from '@/views/ListingView/utils/useParseContent'
 import { formatICUMessage } from '@/utils/i18n'
@@ -12,13 +17,11 @@ import { buildDistributionFromComments, computePercentage } from '@/views/Listin
 // TYPES
 import type { CommentsModel, NotesModel } from '@/views/ListingView/types/listing'
 
+// ASSETS
+import { X } from 'lucide-vue-next'
+
 // CONTENT
 import staticLocale from '@/locales/_static/fr.json'
-
-// COMPONENTS
-import SummaryCard from './components/SummaryCard/SummaryCard.vue'
-import DistributionList from './components/DistributionList/DistributionList.vue'
-import CommentCard from './components/CommentCard/CommentCard.vue'
 
 interface CommentsWidgetStaticContent {
   title: string
@@ -199,52 +202,59 @@ onMounted(() => {
 <template>
   <section id="listing-comments">
     <div>
-      <div>
-        <h2>{{ content.title }}</h2>
-        <p v-if="commentsCount">{{ countLabel }}</p>
+      <div class="listing-comments__header">
+        <!-- <h2>{{ content.title }}</h2> -->
+        <!-- <p v-if="commentsCount">{{ countLabel }}</p> -->
+        <SummaryCard
+          v-if="hasData"
+          :score="overallScore"
+          :rating-unit="content.summary.ratingUnit"
+          :overall-label="content.summary.overallLabel"
+          :count-label="countLabel"
+        />
       </div>
-      <button
-        type="button"
-        :disabled="!commentsCount"
-        @click="openOverlay"
-        >{{ content.ctaLabel }}</button
+    </div>
+
+    <div class="listing-comments__scroll-container">
+      <div
+        v-if="previewComments.length"
+        class="listing-comments__list"
       >
+        <!-- <DistributionList
+          v-if="distribution.entries.length"
+          :entries="distribution.entries"
+          :title="content.distribution.title"
+          :rating-label="content.distribution.ratingLabel"
+        /> -->
+
+        <!-- <div
+          v-else
+          class="listing-comments__empty"
+        >
+          <h3>{{ content.empty.title }}</h3>
+          <p v-if="content.empty.subtitle">{{ content.empty.subtitle }}</p>
+        </div> -->
+        <CommentCard
+          v-for="comment in previewComments"
+          :key="`${comment.name}-${comment.comment}`"
+          :comment="comment"
+          :stay-template="content.comment.stayLabel"
+          :rating-unit="content.summary.ratingUnit"
+        />
+      </div>
     </div>
 
-    <SummaryCard
-      v-if="hasData"
-      :score="overallScore"
-      :rating-unit="content.summary.ratingUnit"
-      :overall-label="content.summary.overallLabel"
-      :count-label="countLabel"
-    />
-
-    <DistributionList
-      v-if="distribution.entries.length"
-      :entries="distribution.entries"
-      :title="content.distribution.title"
-      :rating-label="content.distribution.ratingLabel"
-    />
-
-    <div
-      v-if="previewComments.length"
-      class="listing-comments__list"
-    >
-      <CommentCard
-        v-for="comment in previewComments"
-        :key="`${comment.name}-${comment.comment}`"
-        :comment="comment"
-        :stay-template="content.comment.stayLabel"
-        :rating-unit="content.summary.ratingUnit"
-      />
-    </div>
-
-    <div
-      v-else
-      class="listing-comments__empty"
-    >
-      <h3>{{ content.empty.title }}</h3>
-      <p v-if="content.empty.subtitle">{{ content.empty.subtitle }}</p>
+    <div class="listing-comments__more">
+      <div>
+        <button
+          type="button"
+          class=""
+          :disabled="!commentsCount"
+          @click="openOverlay"
+        >
+          {{ content.ctaLabel }}
+        </button>
+      </div>
     </div>
 
     <div
@@ -256,27 +266,28 @@ onMounted(() => {
     >
       <div class="listing-comments__overlay-panel">
         <div class="listing-comments__overlay-header">
-          <div>
-            <h2>{{ content.title }}</h2>
-            <p v-if="commentsCount">{{ countLabel }}</p>
+          <div class="listing-comments__overlay-close">
+            <button
+              type="button"
+              @click="closeOverlay"
+            >
+              <X :size="24" />
+            </button>
           </div>
-          <button
-            type="button"
-            class="listing-comments__overlay-close"
-            @click="closeOverlay"
-            >×</button
-          >
         </div>
 
         <div class="listing-comments__overlay-body">
           <div class="listing-comments__overlay-summary">
-            <SummaryCard
-              v-if="hasData"
-              :score="overallScore"
-              :rating-unit="content.summary.ratingUnit"
-              :overall-label="content.summary.overallLabel"
-              :count-label="countLabel"
-            />
+            <div class="summary_container">
+              <h2>{{ content.title }}</h2>
+              <SummaryCard
+                v-if="hasData"
+                :score="overallScore"
+                :rating-unit="content.summary.ratingUnit"
+                :overall-label="content.summary.overallLabel"
+                :count-label="countLabel"
+              />
+            </div>
 
             <DistributionList
               v-if="distribution.entries.length"

@@ -58,7 +58,7 @@ const bathroomsLabel = computed(() => formatICUMessage(props.staticContent.bathr
 
 .title-listing__comp {
   h1 {
-    @include h1-title;
+    @include h1-title($gradiant: true);
   }
 
   h2 {

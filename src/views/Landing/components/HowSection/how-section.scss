@@ -139,7 +139,7 @@
         p {
           padding-top: 1rem;
 
-          @include base-text($accent);
+          @include base-text($accent, $bigger: true);
 
           @include min-width(lg) {
             text-align: left;
@@ -177,7 +177,7 @@
       }
 
       p {
-        @include base-text($accent);
+        @include base-text($accent, $bigger: true);
         text-align: center;
         max-width: 42rem;
       }

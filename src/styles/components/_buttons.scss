@@ -46,10 +46,17 @@ $button-themes: (
 );
 
 // Mixin bouton primaire dynamique
-@mixin primary($cta: false, $theme: black, $padding: true) {
+@mixin primary($cta: false, $theme: black, $padding: true, $fullwidth: false) {
   $colors: map.get($button-themes, $theme);
 
-  width: max-content;
+  @if $fullwidth {
+    width: 100%;
+  }
+
+  @else {
+    width: max-content;
+  }
+
   display: block;
   position: relative;
   z-index: 1;

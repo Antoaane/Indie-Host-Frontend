@@ -17,7 +17,7 @@
     text-decoration: underline !important;
     text-underline-offset: 0.3rem;
 
-    @include base-text($accent);
+    @include base-text($accent, $bigger: true);
 
     span {
       display: inline-block;
@@ -25,7 +25,7 @@
 
       text-decoration: underline !important;
       text-underline-offset: 0.3rem;
-      @include base-text($accent);
+      @include base-text($accent, $bigger: true);
 
       input {
         width: 115%;

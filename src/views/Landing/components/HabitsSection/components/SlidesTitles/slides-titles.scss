@@ -120,7 +120,7 @@
           pointer-events: none;
 
           text-align: center;
-          @include base-text($accent);
+          @include base-text($accent, $bigger: true);
           @include animations.transition(750ms);
 
           @include min-width(lg) {

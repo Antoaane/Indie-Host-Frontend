@@ -40,7 +40,6 @@
     .display__description-blocks {
       height: max-content;
       max-height: 100%;
-      padding: var(--gutter-spacing-md);
 
       position: relative;
 
@@ -48,6 +47,7 @@
       border-radius: borders.$rounded-lg;
 
       @include container($max: md);
+      @include gutters(padding, all, 2);
 
       .block {
         margin-bottom: var(--gutter-spacing);

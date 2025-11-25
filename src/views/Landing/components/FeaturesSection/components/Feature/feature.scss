@@ -92,7 +92,7 @@
 
         p {
           margin: 0;
-          @include base-text($accent);
+          @include base-text($accent, $bigger: true);
         }
       }
     }

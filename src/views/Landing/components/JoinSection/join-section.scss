@@ -72,7 +72,7 @@
 
       p {
         text-align: center;
-        @include base-text($accent, false);
+        @include base-text($accent, $bold: false, $bigger: true);
         @include container(md);
 
         a {

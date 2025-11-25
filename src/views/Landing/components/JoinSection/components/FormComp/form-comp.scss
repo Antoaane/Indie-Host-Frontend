@@ -14,7 +14,7 @@
   }
 
   p {
-    @include base-text($accent, false);
+    @include base-text($accent, $bold: false, $bigger: true);
     @include gutters(margin, bottom, 2);
     @include container(md);
 
@@ -56,7 +56,7 @@
 
       legend {
         font-weight: 700;
-        @include base-text($accent);
+        @include base-text($accent, $bigger: true);
         margin-bottom: 0.5rem;
       }
 
@@ -82,7 +82,7 @@
       }
 
       span {
-        @include base-text($accent);
+        @include base-text($accent, $bigger: true);
       }
     }
 

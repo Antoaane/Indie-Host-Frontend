@@ -76,18 +76,18 @@
           margin-bottom: 2rem;
 
           text-align: center;
-          @include base-text($accent);
+          @include base-text($accent, $bigger: true);
 
           @include min-width(lg) {
             text-align: left;
           }
 
           &>u {
-            @include base-text($accent, false, true);
+            @include base-text($accent, $bigger: true, $underline: true);
           }
 
           &>b {
-            @include base-text($accent, true);
+            @include base-text($accent, $bigger: true, $bold: true);
           }
         }
 
