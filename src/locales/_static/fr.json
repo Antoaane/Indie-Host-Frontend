@@ -2,11 +2,10 @@
   "listing": {
     "headings": {
       "features": "Ce que ce logement comprend",
-      "rooms": "Pour bien dormir",
-      "availability": "Les disponibilités de ce logement",
-      "description": "À propos du logement"
+      "availability": "Les disponibilités de ce logement"
     },
     "description": {
+      "title": "À propos du logement",
       "ctaLabel": "Voir tout"
     },
     "title": {

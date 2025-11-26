@@ -25,9 +25,9 @@ interface StaticContent {
     headings: {
       features: string
       availability: string
-      description: string
     }
     description: {
+      title: string
       ctaLabel?: string
     }
     title: {
@@ -61,7 +61,7 @@ const hostProfileStatic = {
 }
 
 const descriptionStatic = {
-  title: staticContent.listing.headings.description,
+  title: staticContent.listing.description.title,
   ctaLabel: staticContent.listing.description.ctaLabel || staticContent.listing.ctas.seeMore,
 }
 </script>
@@ -73,13 +73,13 @@ const descriptionStatic = {
       :staticContent="staticContent.listing.title"
     />
     <Perks :data="data.perks" />
-    <HostProfile
-      :data="data.hostProfile"
-      :staticContent="staticContent.listing.host"
-    />
     <Description
       :data="data.description"
       :staticContent="descriptionStatic"
+    />
+    <HostProfile
+      :data="data.hostProfile"
+      :staticContent="staticContent.listing.host"
     />
     <div>
       <Rooms

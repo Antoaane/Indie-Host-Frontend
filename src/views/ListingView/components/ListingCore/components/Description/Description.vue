@@ -59,6 +59,10 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="description-listing__comp">
+    <h2>
+      {{ staticContent.title }}
+    </h2>
+
     <p v-html="data.brief" />
 
     <div class="description__trigger">

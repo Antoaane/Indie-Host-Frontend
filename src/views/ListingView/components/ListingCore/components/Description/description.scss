@@ -5,6 +5,12 @@
 @use '@/styles/components/buttons' as buttons;
 
 .description-listing__comp {
+
+  h2 {
+    margin-bottom: var(--gutter-spacing-md) !important;
+    @include h2-title($gradiant: true);
+  }
+
   p {
     @include base-text($thin: false);
   }
