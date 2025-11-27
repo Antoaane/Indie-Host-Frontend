@@ -285,7 +285,7 @@
     },
     "form": {
       "title": "<strong>Rejoindre la file d'attente</strong>",
-      "description": "Nous détestons le spam autant que vous : <strong>nous vous enverrons juste un e-mail</strong> pour vous tenir informé.e — et, si vous le souhaitez, vous pouvez aussi faire un don pour soutenir le projet.",
+      "description": "Nous détestons le spam autant que vous : <strong>nous vous enverrons juste un e-mail</strong> pour vous tenir informé.e — et, si vous le souhaitez, vous pouvez aussi <a href='/donation'>faire un don pour soutenir le projet</a>.",
       "variant": "NewsletterForm",
       "fields": [
         {

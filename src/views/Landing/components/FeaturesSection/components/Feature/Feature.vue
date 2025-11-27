@@ -25,7 +25,7 @@ const video = props.feature.videos?.[0]
 </script>
 
 <template>
-  <div class="feature container">
+  <div class="feature wrapper">
     <div>
       <div class="text">
         <div>
