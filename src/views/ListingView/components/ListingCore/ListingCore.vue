@@ -15,6 +15,7 @@ import DatePicker from '@/views/ListingView/components/ListingCore/components/Da
 import Perks from '@/views/ListingView/components/ListingCore/components/Perks/Perks.vue'
 import HostProfile from '@/views/ListingView/components/ListingCore/components/HostProfile/HostProfile.vue'
 import Description from '@/views/ListingView/components/ListingCore/components/Description/Description.vue'
+import Amenities from '@/views/ListingView/components/ListingCore/components/Amenities/Amenities.vue'
 import Rooms from '@/views/ListingView/components/ListingCore/components/Rooms/Rooms.vue'
 
 //CONTENT
@@ -50,6 +51,11 @@ interface StaticContent {
         bunk: string
       }
     }
+    amenities: {
+      title: string
+      ctaLabel: string
+      overlayTitle?: string
+    }
   }
   amenityIcons: string[]
 }
@@ -76,6 +82,10 @@ const descriptionStatic = {
     <Description
       :data="data.description"
       :staticContent="descriptionStatic"
+    />
+    <Amenities
+      :data="data.amenities"
+      :static-content="staticContent.listing.amenities"
     />
     <HostProfile
       :data="data.hostProfile"

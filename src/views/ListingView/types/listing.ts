@@ -41,7 +41,14 @@ export type DescriptionModel = {
 };
 
 // -------- ÉQUIPEMENTS --------
-export type AmenityItem = { name: string; description?: string; icon: string };
+export type AmenityItem = {
+  name: string;
+  description?: string;
+  icon: string;
+  category: string;
+  relevance: number;
+  pinned: boolean;
+};
 export type AmenitiesModel = AmenityItem[];
 
 // -------- CHAMBRES / LITS --------

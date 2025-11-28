@@ -1,0 +1,182 @@
+/* File: src/views/ListingView/components/ListingCore/components/Amenities/amenities.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/components/buttons' as buttons;
+
+.amenities-listing__comp {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gutter-spacing-md);
+
+  h2 {
+    margin-bottom: var(--gutter-spacing-sm) !important;
+    @include h2-title($gradiant: true);
+  }
+
+  .amenities-listing__preview {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: var(--gutter-spacing-sm);
+
+    @include min-width(md) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @include min-width(lg) {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    @include min-width(xl) {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: var(--gutter-spacing-sm);
+
+      padding: var(--gutter-spacing-md);
+
+      border: solid 1px $quaternary;
+      border-radius: borders.$rounded-lg;
+
+      background-color: rgba($accent, 0.75);
+
+      .amenity-icon {
+        height: 1.5rem;
+        width: 1.5rem;
+        stroke: $secondary;
+        flex-shrink: 0;
+      }
+
+      .amenity-name {
+        @include base-text($bigger: true, $thin: false);
+      }
+    }
+  }
+
+  .amenities-listing__cta {
+    @include buttons.primary($fullwidth: true);
+  }
+}
+
+.amenities-overlay {
+  width: 100vw;
+  height: 100vh;
+
+  padding-top: calc($nav-height + var(--gutter-spacing));
+  padding-bottom: calc(var(--gutter-spacing) * 2);
+  padding-inline: var(--gutter-spacing);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  position: fixed;
+  inset: 50%;
+  z-index: 9999;
+
+  transform: translate(-50%, -50%);
+
+  background-color: rgba($secondary, $alpha: 0.2);
+  backdrop-filter: blur(1px);
+
+  .amenities-overlay__panel {
+    width: 100%;
+    max-height: 100%;
+    padding-bottom: var(--gutter-spacing-lg);
+
+    display: flex;
+    flex-direction: column;
+    gap: var(--gutter-spacing-lg);
+
+    position: relative;
+
+    background-color: $accent;
+    border-radius: borders.$rounded-lg;
+
+    @include container($max: md);
+    @include gutters(padding, horizontal, 2);
+    @include gutters(padding, top, 2);
+
+    .amenities-overlay__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--gutter-spacing-md);
+
+      .amenities-overlay__title {
+        h2 {
+          @include h2-title;
+        }
+      }
+
+      .amenities-overlay__close {
+        @include buttons.primary($padding: false);
+      }
+    }
+
+    .amenities-overlay__body {
+      overflow-y: auto;
+      display: grid;
+      gap: var(--gutter-spacing-lg);
+
+      scrollbar-width: thin;
+      scrollbar-color: rgba($secondary, 0.25) $translucent;
+
+      .amenities-overlay__category {
+        display: flex;
+        flex-direction: column;
+        gap: var(--gutter-spacing-sm);
+
+        h3 {
+          @include base-text($bigger: true, $thin: false);
+        }
+
+        ul {
+          display: grid;
+          gap: var(--gutter-spacing-sm);
+          grid-template-columns: repeat(1, 1fr);
+
+          @include min-width(md) {
+            grid-template-columns: repeat(2, 1fr);
+          }
+
+          li {
+            display: flex;
+            gap: var(--gutter-spacing-sm);
+            align-items: flex-start;
+
+            padding: var(--gutter-spacing-md);
+
+            border: solid 1px $quaternary;
+            border-radius: borders.$rounded-lg;
+
+            .amenity-icon {
+              height: 1.5rem;
+              width: 1.5rem;
+              stroke: $secondary;
+              flex-shrink: 0;
+            }
+
+            .amenity-texts {
+              display: flex;
+              flex-direction: column;
+              gap: var(--gutter-spacing-3xs);
+
+              .amenity-name {
+                @include base-text($bigger: true, $thin: false);
+              }
+
+              .amenity-description {
+                opacity: 0.75;
+                @include little-text($thin: false);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

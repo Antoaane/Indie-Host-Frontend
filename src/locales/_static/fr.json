@@ -30,6 +30,11 @@
         "bunk": "{count, plural, one {lit superposé} other {lits superposés}}"
       }
     },
+    "amenities": {
+      "title": "Ce que le logement offre",
+      "ctaLabel": "Voir tous les équipements",
+      "overlayTitle": "Tous les équipements"
+    },
     "commentsWidget": {
       "title": "Avis des voyageurs",
       "ctaLabel": "Voir tous les avis",

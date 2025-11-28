@@ -182,7 +182,14 @@ function parseDescription(core: RawCore): DescriptionModel {
 }
 
 function parseAmenities(amenities: RawAmenities): AmenitiesModel {
-  return amenities.amenities.map(a => ({ name: a.name, description: a.description, icon: a.icon }));
+  return amenities.amenities.map((a) => ({
+    name: a.name,
+    description: a.description,
+    icon: a.icon,
+    category: a.category,
+    relevance: a.relevance,
+    pinned: Boolean(a.pinned),
+  }));
 }
 
 function parseRooms(core: RawCore): RoomsModel {

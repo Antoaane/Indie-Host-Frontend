@@ -1,184 +1,292 @@
 {
   "amenities": [
     {
-      "name": "Vue jardin",
-      "description": "Panorama direct sur les arbres et la nature environnante depuis la terrasse.",
-      "icon": "trees"
+      "name": "Accès ponton privatif",
+      "description": "Accès direct au plan d'eau",
+      "icon": "anchor",
+      "category": "Vue & accès",
+      "relevance": 98,
+      "pinned": true
     },
     {
-      "name": "Vue lac",
-      "description": "Logement posé sur le lac de Baurech, vue dégagée sur l’eau.",
-      "icon": "waves"
+      "name": "Vue panoramique sur le lac",
+      "description": "Salon ouvert sur l'eau",
+      "icon": "waves",
+      "category": "Vue & accès",
+      "relevance": 96,
+      "pinned": true
     },
     {
-      "name": "Accès à la plage",
-      "description": "Petite plage ou mise à l’eau autour du plan d’eau (selon saison).",
-      "icon": "umbrella"
+      "name": "Accès plage ou bord de mer",
+      "description": "Petite plage aménagée",
+      "icon": "umbrella",
+      "category": "Vue & accès",
+      "relevance": 90,
+      "pinned": true
     },
     {
-      "name": "Terrasse aménagée",
-      "description": "Grande terrasse bois avec table à manger et chaises longues.",
-      "icon": "layout-grid"
+      "name": "Terrasse bois aménagée",
+      "description": "Table + chaises longues",
+      "icon": "layout-grid",
+      "category": "Extérieur & détente",
+      "relevance": 92,
+      "pinned": true
     },
     {
-      "name": "Cuisine équipée",
-      "description": "Plaques, frigo, vaisselle, table haute et ustensiles inclus.",
-      "icon": "utensils-crossed"
-    },
-    {
-      "name": "Wifi",
-      "description": "Connexion disponible dans le logement.",
-      "icon": "wifi"
-    },
-    {
-      "name": "Arrivée autonome",
-      "description": "Boîte à clé sécurisée, check-in flexible.",
-      "icon": "key-round"
-    },
-    {
-      "name": "Détecteur de fumée",
-      "description": "Présent dans la zone principale du logement.",
-      "icon": "alert-triangle"
-    },
-    {
-      "name": "Détecteur de monoxyde de carbone",
-      "description": "Non renseigné ou non applicable à ce type de logement.",
-      "icon": "alert-octagon"
-    },
-    {
-      "name": "Activités à proximité",
-      "description": "Wakeboard, paddle yoga, ski nautique, randonnées et vélo.",
-      "icon": "map-pin"
-    },
-    {
-      "name": "Œnotourisme",
-      "description": "Vignobles Cadillac-Côtes-de-Bordeaux à 10 minutes.",
-      "icon": "wine"
-    },
-    {
-      "name": "Parking gratuit sur place",
-      "description": "Places disponibles à proximité directe de la péniche.",
-      "icon": "parking-circle"
-    },
-    {
-      "name": "Climatisation réversible",
-      "description": "Chauffage en hiver, clim douce en été.",
-      "icon": "thermometer-snowflake"
-    },
-    {
-      "name": "Chauffage électrique",
-      "description": "Chauffage d’appoint pour les soirées fraîches.",
-      "icon": "radiation"
-    },
-    {
-      "name": "Linge fourni",
-      "description": "Draps, serviettes et torchons inclus.",
-      "icon": "bed-double"
-    },
-    {
-      "name": "Machine à café Nespresso",
-      "description": "Cafetière avec capsules à disposition.",
-      "icon": "coffee"
-    },
-    {
-      "name": "Bouilloire et thé de bienvenue",
-      "description": "Sélection de thés et tisanes locales.",
-      "icon": "cup-soda"
-    },
-    {
-      "name": "Mini-bibliothèque",
-      "description": "Livres et magazines sur la nature et la navigation.",
-      "icon": "book-open-text"
-    },
-    {
-      "name": "Jeux de société",
-      "description": "Quelques classiques pour les soirées tranquilles.",
-      "icon": "dice-5"
-    },
-    {
-      "name": "Hamac extérieur",
-      "description": "Tendu entre deux pins à côté du ponton.",
-      "icon": "moon-star"
-    },
-    {
-      "name": "Barbecue électrique",
-      "description": "Utilisable sur la terrasse, ustensiles fournis.",
-      "icon": "flame"
-    },
-    {
-      "name": "Éclairage d’ambiance",
-      "description": "Guirlande LED et spots intégrés sur la terrasse.",
-      "icon": "lightbulb"
-    },
-    {
-      "name": "Douche extérieure (été)",
-      "description": "Eau tempérée pour se rincer après baignade.",
-      "icon": "shower-head"
-    },
-    {
-      "name": "Ponton privatif",
-      "description": "Accès direct au plan d’eau depuis la terrasse.",
-      "icon": "anchor"
-    },
-    {
-      "name": "Kit de secours",
-      "description": "Premiers soins, pansements et désinfectant.",
-      "icon": "first-aid-kit"
-    },
-    {
-      "name": "Extincteur",
-      "description": "Accessible dans la cuisine.",
-      "icon": "fire-extinguisher"
-    },
-    {
-      "name": "Produits ménagers écologiques",
-      "description": "Savon noir, vinaigre blanc et éponge biodégradable.",
-      "icon": "leaf"
-    },
-    {
-      "name": "Porte-bagages mural",
-      "description": "Rangement optimisé pour petits espaces.",
-      "icon": "briefcase"
-    },
-    {
-      "name": "Écran connecté 24''",
-      "description": "TV intelligente avec Netflix et YouTube.",
-      "icon": "tv"
-    },
-    {
-      "name": "Bluetooth speaker",
-      "description": "Enceinte nomade à disposition (JBL ou équivalent).",
-      "icon": "speaker"
-    },
-    {
-      "name": "Rideaux occultants",
-      "description": "Pour un sommeil paisible malgré la lumière du lac.",
-      "icon": "moon"
-    },
-    {
-      "name": "Décoration artisanale locale",
-      "description": "Objets faits main par des créateurs girondins.",
-      "icon": "palette"
-    },
-    {
-      "name": "Coffret dégustation Bordeaux",
-      "description": "Petite sélection de vins en option sur demande.",
-      "icon": "wine-off"
-    },
-    {
-      "name": "Espace de télétravail",
-      "description": "Table haute + Wi-Fi stable pour travailler avec vue.",
-      "icon": "laptop"
-    },
-    {
-      "name": "Guides et cartes de randonnée",
-      "description": "Circuits pédestres et cyclo autour du domaine.",
-      "icon": "map"
+      "name": "Hamac côté pinède",
+      "description": "À l'ombre des pins",
+      "icon": "moon-star",
+      "category": "Extérieur & détente",
+      "relevance": 70,
+      "pinned": false
     },
     {
       "name": "Chaises longues pliantes",
-      "description": "Pour bronzer sur la terrasse ou au bord du lac.",
-      "icon": "sun"
+      "description": "Pour bronzer au lac",
+      "icon": "sun",
+      "category": "Extérieur & détente",
+      "relevance": 72,
+      "pinned": false
+    },
+    {
+      "name": "Barbecue électrique",
+      "description": "Ustensiles fournis",
+      "icon": "flame",
+      "category": "Extérieur & détente",
+      "relevance": 74,
+      "pinned": false
+    },
+    {
+      "name": "Douche extérieure été",
+      "description": "Eau tempérée",
+      "icon": "shower-head",
+      "category": "Extérieur & détente",
+      "relevance": 64,
+      "pinned": false
+    },
+    {
+      "name": "Espace repas extérieur",
+      "description": "Grande table familiale",
+      "icon": "utensils-crossed",
+      "category": "Extérieur & détente",
+      "relevance": 76,
+      "pinned": false
+    },
+    {
+      "name": "Éclairage d'ambiance",
+      "description": "Guirlande LED",
+      "icon": "lightbulb",
+      "category": "Extérieur & détente",
+      "relevance": 60,
+      "pinned": false
+    },
+    {
+      "name": "Wifi haut débit",
+      "description": "Stable sur tout le bateau",
+      "icon": "wifi",
+      "category": "Confort & travail",
+      "relevance": 94,
+      "pinned": true
+    },
+    {
+      "name": "Espace de travail dédié",
+      "description": "Table haute + prise",
+      "icon": "laptop",
+      "category": "Confort & travail",
+      "relevance": 86,
+      "pinned": true
+    },
+    {
+      "name": "Climatisation réversible",
+      "description": "Chaud / froid",
+      "icon": "thermometer-snowflake",
+      "category": "Confort & travail",
+      "relevance": 88,
+      "pinned": true
+    },
+    {
+      "name": "Chauffage d'appoint",
+      "description": "Convecteurs électriques",
+      "icon": "radiation",
+      "category": "Confort & travail",
+      "relevance": 65,
+      "pinned": false
+    },
+    {
+      "name": "Rideaux occultants",
+      "description": "Nuit complète",
+      "icon": "moon",
+      "category": "Confort & travail",
+      "relevance": 62,
+      "pinned": false
+    },
+    {
+      "name": "Linge de lit et de bain",
+      "description": "Draps et serviettes",
+      "icon": "bed-double",
+      "category": "Confort & travail",
+      "relevance": 78,
+      "pinned": false
+    },
+    {
+      "name": "Cuisine équipée",
+      "description": "Plaques, frigo, vaisselle",
+      "icon": "utensils-crossed",
+      "category": "Cuisine & boissons",
+      "relevance": 85,
+      "pinned": true
+    },
+    {
+      "name": "Machine à café Nespresso",
+      "description": "Capsules incluses",
+      "icon": "coffee",
+      "category": "Cuisine & boissons",
+      "relevance": 82,
+      "pinned": false
+    },
+    {
+      "name": "Bouilloire + thés",
+      "description": "Sélection locale",
+      "icon": "cup-soda",
+      "category": "Cuisine & boissons",
+      "relevance": 64,
+      "pinned": false
+    },
+    {
+      "name": "Coffret dégustation Bordeaux",
+      "description": "En option sur demande",
+      "icon": "wine",
+      "category": "Cuisine & boissons",
+      "relevance": 58,
+      "pinned": false
+    },
+    {
+      "name": "Arrivée autonome",
+      "description": "Boîte à clé sécurisée",
+      "icon": "key-round",
+      "category": "Sécurité",
+      "relevance": 80,
+      "pinned": false
+    },
+    {
+      "name": "Détecteur de fumée",
+      "description": "Dans la zone principale",
+      "icon": "alert-triangle",
+      "category": "Sécurité",
+      "relevance": 84,
+      "pinned": false
+    },
+    {
+      "name": "Détecteur monoxyde",
+      "description": "Sécurité vérifiée",
+      "icon": "alert-octagon",
+      "category": "Sécurité",
+      "relevance": 54,
+      "pinned": false
+    },
+    {
+      "name": "Kit de secours",
+      "description": "Premiers soins",
+      "icon": "first-aid-kit",
+      "category": "Sécurité",
+      "relevance": 68,
+      "pinned": false
+    },
+    {
+      "name": "Extincteur accessible",
+      "description": "Dans la cuisine",
+      "icon": "fire-extinguisher",
+      "category": "Sécurité",
+      "relevance": 66,
+      "pinned": false
+    },
+    {
+      "name": "Parking gratuit sur place",
+      "description": "Places devant le ponton",
+      "icon": "parking-circle",
+      "category": "Arrivée & mobilité",
+      "relevance": 83,
+      "pinned": true
+    },
+    {
+      "name": "Activités lac et nature",
+      "description": "Paddle, yoga, vélo",
+      "icon": "map-pin",
+      "category": "Arrivée & mobilité",
+      "relevance": 61,
+      "pinned": false
+    },
+    {
+      "name": "Guides et cartes locales",
+      "description": "Randos à proximité",
+      "icon": "map",
+      "category": "Arrivée & mobilité",
+      "relevance": 59,
+      "pinned": false
+    },
+    {
+      "name": "Œnotourisme Cadillac",
+      "description": "Domaines à 10 minutes",
+      "icon": "wine-off",
+      "category": "Arrivée & mobilité",
+      "relevance": 57,
+      "pinned": false
+    },
+    {
+      "name": "Mini-bibliothèque",
+      "description": "Livres nature et navigation",
+      "icon": "book-open-text",
+      "category": "Vie à bord",
+      "relevance": 55,
+      "pinned": false
+    },
+    {
+      "name": "Jeux de société",
+      "description": "Classiques familiaux",
+      "icon": "dice-5",
+      "category": "Vie à bord",
+      "relevance": 56,
+      "pinned": false
+    },
+    {
+      "name": "Écran connecté 24''",
+      "description": "Netflix & YouTube",
+      "icon": "tv",
+      "category": "Vie à bord",
+      "relevance": 69,
+      "pinned": false
+    },
+    {
+      "name": "Enceinte Bluetooth",
+      "description": "JBL ou équivalent",
+      "icon": "speaker",
+      "category": "Vie à bord",
+      "relevance": 63,
+      "pinned": false
+    },
+    {
+      "name": "Décoration artisanale locale",
+      "description": "Créateurs girondins",
+      "icon": "palette",
+      "category": "Vie à bord",
+      "relevance": 52,
+      "pinned": false
+    },
+    {
+      "name": "Produits ménagers écologiques",
+      "description": "Savon noir & vinaigre",
+      "icon": "leaf",
+      "category": "Vie à bord",
+      "relevance": 53,
+      "pinned": false
+    },
+    {
+      "name": "Porte-bagages mural",
+      "description": "Rangement optimisé",
+      "icon": "briefcase",
+      "category": "Vie à bord",
+      "relevance": 51,
+      "pinned": false
     }
   ]
 }
