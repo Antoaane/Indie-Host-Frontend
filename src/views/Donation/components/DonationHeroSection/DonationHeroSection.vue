@@ -70,7 +70,7 @@ const isQuoteSection = (section: DonationArticleSection) => section.type === 'qu
             <li
               v-for="(item, idx) in section.items || []"
               :key="`${section.type}-${index}-item-${idx}`"
-            v-html="item"
+              v-html="item"
             />
           </ul>
         </template>
@@ -97,8 +97,12 @@ const isQuoteSection = (section: DonationArticleSection) => section.type === 'qu
           />
         </template>
 
-        <RoadMapLight v-if="index === 0" />
+        <RoadMapLight v-if="index === 3" />
       </div>
     </section>
   </article>
 </template>
+
+<style lang="scss">
+@import '@/views/Donation/components/DonationHeroSection/donation-hero-section.scss';
+</style>

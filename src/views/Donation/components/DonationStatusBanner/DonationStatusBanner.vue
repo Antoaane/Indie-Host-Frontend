@@ -59,4 +59,4 @@ const statusClass = computed(() => {
   </div>
 </template>
 
-<style lang="scss" scoped src="@/views/Donation/components/DonationStatusBanner/DonationStatusBanner.scss"></style>
+<style lang="scss" scoped src="@/views/Donation/components/DonationStatusBanner/donation-status-banner.scss"></style>

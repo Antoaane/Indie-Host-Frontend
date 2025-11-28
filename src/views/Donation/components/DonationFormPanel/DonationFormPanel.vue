@@ -9,89 +9,140 @@ const props = defineProps<{
   panel: DonationPanelContent
 }>()
 
-const isLinkAvailable = computed(() => props.donationLink.trim().length > 0)
+/**
+ * --- TITLE ---
+ */
+const title = computed(() => props.panel.title || 'Contribuer maintenant')
 
-const warnings = computed(() =>
-  (props.panel.warnings ?? []).filter((warning) => {
-    if (!warning.condition) return true
-    if (warning.condition === 'missing-link') {
-      return !isLinkAvailable.value
-    }
-    if (warning.condition === 'requires-link') {
-      return isLinkAvailable.value
-    }
+/**
+ * --- INTRO ---
+ */
+const introBlocks = computed(() => props.panel.intro ?? [])
+
+/**
+ * --- STEPS ---
+ */
+const steps = computed(() => props.panel.steps || [])
+const stepsTitle = computed(() => steps.value[0]?.title || '')
+const stepsItems = computed(() => steps.value.map((s) => s.body).filter(Boolean))
+const stepsOrdered = computed(() => true) // panel.steps est toujours ordonné dans ton JSON
+
+/**
+ * --- CTA ---
+ */
+const primaryCta = computed(() => props.panel.primaryCta.label || 'Soutenir IndieHost')
+
+const isLinkAvailable = computed(() => props.donationLink && props.donationLink.trim().length > 0)
+
+const isCtaDisabled = computed(() => !isLinkAvailable.value)
+
+const handleCtaClick = () => {
+  if (!isLinkAvailable.value) {
+    console.warn('[Donation] VITE_DONATION_LINK manquant.')
+    return
+  }
+  window.location.href = props.donationLink
+}
+
+/**
+ * --- NOTES ---
+ */
+const note = computed(() => props.panel.note)
+
+/**
+ * --- WARNINGS ---
+ */
+const activeWarnings = computed(() =>
+  props.panel.warnings.filter((w) => {
+    if (!w.condition) return true
+    if (w.condition === 'missing-link') return !isLinkAvailable.value
+    if (w.condition === 'requires-link') return isLinkAvailable.value
     return true
   }),
 )
 </script>
 
 <template>
-  <aside class="donation-form-panel">
-    <header>
-      <h2 v-html="panel.title" />
-      <p
-        v-for="(paragraph, idx) in panel.intro"
-        :key="`intro-${idx}`"
-        v-html="paragraph"
+  <aside
+    class="donation-form"
+    aria-labelledby="donation-form-title"
+  >
+    <!-- HEADER -->
+    <div class="donation-form__header">
+      <h2
+        id="donation-form-title"
+        class="donation-form__title"
+        v-html="title"
       />
-    </header>
 
-    <section
-      v-if="panel.steps?.length"
-      class="donation-form-panel__steps"
-    >
-      <ol>
-        <li
-          v-for="(step, idx) in panel.steps"
-          :key="`step-${idx}`"
+      <div class="donation-form__intro-group">
+        <template
+          v-for="(text, i) in introBlocks"
+          :key="`intro-${i}`"
         >
-          <strong v-if="step.title">
-            {{ step.title }}
-          </strong>
-          <p v-if="step.body">
-            {{ step.body }}
-          </p>
-        </li>
-      </ol>
-    </section>
-
-    <div class="donation-form-panel__cta">
-      <a
-        class="primary"
-        :href="isLinkAvailable ? props.donationLink : undefined"
-        :aria-disabled="!isLinkAvailable"
-        :class="{ disabled: !isLinkAvailable }"
-      >
-        {{ panel.primaryCta.label }}
-      </a>
+          <p
+            class="donation-form__intro"
+            v-html="text"
+          />
+        </template>
+      </div>
     </div>
 
+    <!-- STEPS -->
+    <section
+      v-if="stepsItems.length"
+      class="donation-form__steps-wrapper"
+    >
+      <p
+        v-if="stepsTitle"
+        class="donation-form__steps-title"
+        v-html="stepsTitle"
+      />
+      <component
+        :is="stepsOrdered ? 'ol' : 'ul'"
+        class="donation-form__steps"
+      >
+        <li
+          v-for="(step, index) in stepsItems"
+          :key="`step-${index}`"
+          v-html="step"
+        />
+      </component>
+    </section>
+
+    <!-- CTA -->
+    <div
+      v-if="primaryCta"
+      class="donation-form__actions"
+      data-has-secondary="false"
+    >
+      <button
+        type="button"
+        :disabled="isCtaDisabled"
+        @click="handleCtaClick"
+      >
+        {{ primaryCta }}
+      </button>
+    </div>
+
+    <!-- NOTE -->
     <p
-      v-if="panel.note"
-      class="donation-form-panel__note"
-      v-html="panel.note"
+      v-if="note"
+      class="donation-form__security"
+      v-html="note"
     />
 
-    <ul
-      v-if="warnings.length"
-      class="donation-form-panel__warnings"
+    <!-- WARNINGS -->
+    <template
+      v-for="(warning, i) in activeWarnings"
+      :key="`warning-${i}`"
     >
-      <li
-        v-for="warning in warnings"
-        :key="warning.id"
+      <p
+        class="donation-form__env-warn"
         v-html="warning.text"
       />
-    </ul>
+    </template>
   </aside>
 </template>
 
-<style scoped lang="scss">
-@use '@/views/Donation/components/DonationFormPanel/DonationFormPanel.scss';
-
-.donation-form-panel__cta {
-  .primary.disabled {
-    pointer-events: none;
-    opacity: 0.5;
-  }
-}
-</style>
+<style lang="scss" scoped src="@/views/Donation/components/DonationFormPanel/donation-form-panel.scss"></style>

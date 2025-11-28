@@ -8,10 +8,10 @@ export interface DonationPageContent {
 export interface DonationArticleSection {
   type: string
   title?: string
-  paragraphs?: string[]
-  items?: string[]
-  content?: string
-  cite?: string
+  paragraphs?: string[] | null
+  items?: string[] | null
+  content?: string | null
+  cite?: string | null
 }
 
 export interface DonationArticleContent {
