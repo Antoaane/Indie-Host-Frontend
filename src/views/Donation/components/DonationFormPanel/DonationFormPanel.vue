@@ -95,3 +95,8 @@ const warnings = computed(() =>
   }
 }
 </style>
+<style
+  scoped
+  lang="scss"
+  src="@/views/Donation/components/DonationFormPanel/DonationFormPanel.patch.scss"
+></style>

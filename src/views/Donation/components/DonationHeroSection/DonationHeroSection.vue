@@ -102,3 +102,14 @@ const isQuoteSection = (section: DonationArticleSection) => section.type === 'qu
     </section>
   </article>
 </template>
+
+<style
+  scoped
+  lang="scss"
+  src="@/views/Donation/components/DonationHeroSection/DonationHeroSection.scss"
+></style>
+<style
+  scoped
+  lang="scss"
+  src="@/views/Donation/components/DonationHeroSection/DonationHeroSection.patch.scss"
+></style>
