@@ -1,0 +1,65 @@
+/* File: src/views/Donation/components/DonationFormPanel/DonationFormPanel.patch.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+
+.donation-form-panel {
+  display: grid;
+  gap: 1.25rem;
+  width: 100%;
+  align-self: stretch;
+  box-sizing: border-box;
+  border-radius: borders.$rounded-xl;
+  position: relative;
+  isolation: isolate;
+
+  @include gutters(padding, all, 2);
+
+  @include min-width(md) {
+    position: sticky;
+    top: calc($nav-height + 1rem);
+  }
+}
+
+.donation-form-panel > header {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.donation-form-panel__steps {
+  margin: 0;
+  padding: 0;
+}
+
+.donation-form-panel__steps ol {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.donation-form-panel__cta {
+  display: flex;
+  width: 100%;
+
+  .primary {
+    flex: 1 1 auto;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.85rem 1rem;
+    text-align: center;
+  }
+}
+
+.donation-form-panel__note,
+.donation-form-panel__warnings {
+  margin: 0;
+}
+
+.donation-form-panel__warnings {
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.5rem;
+}

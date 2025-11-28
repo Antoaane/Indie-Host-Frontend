@@ -1,0 +1,22 @@
+/* File: src/views/Donation/_donation-page.patch.scss */
+
+@use '@/styles/variables/globals' as *;
+
+.donation-page {
+  position: relative;
+  isolation: isolate;
+  padding-top: calc($nav-height + var(--gutter-spacing));
+}
+
+.donation-page__content {
+  position: relative;
+  overflow: hidden;
+}
+
+.donation-page__grid {
+  align-items: start;
+
+  > * {
+    min-width: 0;
+  }
+}
