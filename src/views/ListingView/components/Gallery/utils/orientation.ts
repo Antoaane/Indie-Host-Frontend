@@ -28,7 +28,7 @@ export function preloadOrientations(
       onUpdate(idx, ori)
     }
     im.onerror = () => { arr[idx] = 'H'; onUpdate(idx, 'H') }
-    im.src = it.image
+    im.src = it.src
   })
   return arr
 }

@@ -7,7 +7,7 @@ import { ScrollSmoother } from 'gsap/ScrollSmoother'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import gsap from 'gsap'
 // UTILS
-import { sr } from '@/utils/scrollReveal'
+import { sr } from '@/utils/ScrollReveal'
 import { vp } from '@/utils/viewport'
 import detectOS from '@/utils/detectOs'
 // CONTENT
