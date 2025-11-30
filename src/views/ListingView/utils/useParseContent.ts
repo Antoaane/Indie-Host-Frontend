@@ -208,6 +208,7 @@ function parseBookings(bookings: RawBookings): BookingsModel {
   return {
     price: bookings.price,
     bookedDays: bookings['booked-days'].map(d => ({ start: d.start, end: d.end })),
+    fees: (bookings.fees ?? []).map(fee => ({ name: fee.name, amount: fee.amount })),
   };
 }
 

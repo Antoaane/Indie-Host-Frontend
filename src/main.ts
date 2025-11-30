@@ -13,7 +13,6 @@ import 'swiper/css/pagination'
 import 'swiper/css/navigation'
 
 // import LenisVue from 'lenis/vue'
-import { createHead } from '@unhead/vue/client'
 
 import App from './App.vue'
 import router from './router'
@@ -21,7 +20,6 @@ import router from './router'
 const app = createApp(App)
 
 app.use(ui)
-app.use(createHead())
 // app.use(LenisVue)
 app.use(createPinia())
 app.use(router)

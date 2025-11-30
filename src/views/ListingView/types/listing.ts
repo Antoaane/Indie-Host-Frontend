@@ -82,9 +82,11 @@ export type RoomsModel = {
 
 // -------- RÉSERVATIONS / TARIFS --------
 export type BookedRange = { start: string; end: string };
+export type FeeItem = { name: string; amount: number };
 export type BookingsModel = {
   price: number;                   // prix / nuit (base)
   bookedDays: BookedRange[];       // périodes occupées
+  fees?: FeeItem[];                // frais additionnels fixes
 };
 
 // -------- NOTES / COMMENTAIRES --------

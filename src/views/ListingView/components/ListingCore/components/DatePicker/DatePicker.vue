@@ -14,7 +14,7 @@ const props = withDefaults(
     modelValue?: RangeISO | null
   }>(),
   {
-    numberOfMonths: 2,
+    numberOfMonths: 1,
     disabledDates: () => [],
     modelValue: null,
   },
