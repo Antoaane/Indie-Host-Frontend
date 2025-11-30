@@ -83,13 +83,13 @@ const descriptionStatic = {
       :data="data.description"
       :staticContent="descriptionStatic"
     />
-    <Amenities
-      :data="data.amenities"
-      :static-content="staticContent.listing.amenities"
-    />
     <HostProfile
       :data="data.hostProfile"
       :staticContent="staticContent.listing.host"
+    />
+    <Amenities
+      :data="data.amenities"
+      :static-content="staticContent.listing.amenities"
     />
     <div>
       <Rooms
