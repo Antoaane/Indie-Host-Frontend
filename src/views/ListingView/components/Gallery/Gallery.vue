@@ -10,12 +10,18 @@ import media from '@/content/fr/ListingTest/medias.json'
 
 <template>
   <section class="gallery">
+    <div class="cover-image">
+      <img
+        :src="media.images[0].src"
+        :alt="media.images[0].alt"
+      />
+    </div>
     <Mosaic
       :items="media.images"
       :intervalMs="5000"
-      :minSlots="3"
-      :maxSlots="6"
-      :minTileW="100"
+      :minSlots="2"
+      :maxSlots="4"
+      :minTileW="45"
       :minTileH="20"
     />
   </section>
