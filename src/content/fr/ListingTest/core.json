@@ -5,6 +5,8 @@
   "city": "Baurech",
   "region": "Nouvelle-Aquitaine",
   "country": "France",
+  "latitude": 44.71084288338777,
+  "longitude": -0.44289892384105545,
   "capacity": 3,
   "rooms": [
     {
