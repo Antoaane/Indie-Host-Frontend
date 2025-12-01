@@ -2,7 +2,8 @@
   "images": [
     {
       "src": "/assets/media/images/listing-test/image0.jpg",
-      "alt": "Maison flottante sur le lac de Baurech avec terrasse en bois"
+      "alt": "Maison flottante sur le lac de Baurech avec terrasse en bois",
+      "cover": true
     },
     {
       "src": "/assets/media/images/listing-test/image1.jpg",

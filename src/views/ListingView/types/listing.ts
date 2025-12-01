@@ -1,7 +1,7 @@
 // File: src/views/ListingView/types/listing.ts
 
 // -------- MEDIAS --------
-export type ImageItem = { src: string; alt: string };
+export type ImageItem = { src: string; alt: string; cover?: boolean };
 export type VideoItem = { src: string; poster?: string; alt?: string };
 export type MediasModel = { images: ImageItem[]; videos: VideoItem[] };
 

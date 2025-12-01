@@ -214,7 +214,11 @@ function parseBookings(bookings: RawBookings): BookingsModel {
 
 function parseMedias(medias: RawMedias): MediasModel {
   return {
-    images: medias.images.map(i => ({ src: i.src, alt: i.alt })),
+    images: medias.images.map(i => ({
+      src: i.src,
+      alt: i.alt,
+      ...(typeof i.cover === 'boolean' ? { cover: i.cover } : {}),
+    })),
     videos: medias.videos ?? [],
   };
 }
