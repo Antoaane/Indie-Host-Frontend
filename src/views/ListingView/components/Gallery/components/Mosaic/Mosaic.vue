@@ -10,9 +10,11 @@ import { generateLayout } from '@/views/ListingView/components/Gallery/utils/lay
 import { preloadOrientations } from '@/views/ListingView/components/Gallery/utils/orientation'
 import { tileStyle, TINY_RECT } from '@/views/ListingView/components/Gallery/utils/style'
 import { fancyboxShow } from '@/views/ListingView/components/Gallery/utils/fancybox'
+import { orderByIndex } from '@/views/ListingView/components/Gallery/utils/order'
 
 const props = defineProps<{
   items: Item[] // Maintenant obligatoire
+  lightboxItems?: Item[]
   intervalMs?: number
   minSlots?: number
   maxSlots?: number
@@ -21,15 +23,9 @@ const props = defineProps<{
 }>()
 
 // Tri par index si présent (ordre d'apparition)
-const orderedItems = computed<Item[]>(() => {
-  const arr = [
-    ...props.items,
-  ]
-  if (arr.some((i) => typeof i.index === 'number')) {
-    arr.sort((a, b) => (a.index ?? 0) - (b.index ?? 0))
-  }
-  return arr
-})
+const orderedItems = computed<Item[]>(() => orderByIndex(props.items))
+const lightboxItems = computed<Item[]>(() => props.lightboxItems ?? props.items)
+const orderedLightboxItems = computed<Item[]>(() => orderByIndex(lightboxItems.value))
 
 const intervalMs = computed(() => props.intervalMs ?? 2000)
 const minSlots = computed(() => Math.max(2, props.minSlots ?? 2))
@@ -225,11 +221,11 @@ watch(
 
 function openLightbox(startIndexReal: number) {
   // Lightbox dans l'ordre `index`
-  const items = orderedItems.value.map((it) => ({ src: it.src, type: 'image', alt: it.alt }))
+  const items = orderedLightboxItems.value.map((it) => ({ src: it.src, type: 'image', alt: it.alt }))
   const clicked = props.items[startIndexReal]
   const startIndex = Math.max(
     0,
-    orderedItems.value.findIndex((i) => i.src === clicked.src),
+    orderedLightboxItems.value.findIndex((i) => i.src === clicked.src),
   )
   fancyboxShow(items, startIndex)
 }

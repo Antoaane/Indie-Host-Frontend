@@ -15,12 +15,13 @@
 
   .cover-image {
     flex: 0 0 40%;
+    overflow: hidden;
+    cursor: pointer;
+
     border-top-left-radius: borders.$rounded-lg;
     border-top-right-radius: borders.$rounded-lg;
     border-bottom-left-radius: 5px;
     border-bottom-right-radius: 5px;
-
-    overflow: hidden;
 
     img {
       width: 100%;

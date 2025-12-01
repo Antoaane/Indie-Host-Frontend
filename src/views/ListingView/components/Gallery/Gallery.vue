@@ -4,12 +4,35 @@
 import { computed } from 'vue'
 // COMPONENTS
 import Mosaic from './components/Mosaic/Mosaic.vue'
-
+// UTILS
+import { fancyboxShow } from '@/views/ListingView/components/Gallery/utils/fancybox'
+import { orderByIndex } from '@/views/ListingView/components/Gallery/utils/order'
+import type { Item } from '@/views/ListingView/components/Gallery/utils/types'
 // CONTENT
 import media from '@/content/fr/ListingTest/medias.json'
 
 const coverImage = computed(() => media.images.find(img => img.cover === true))
 const mosaicImages = computed(() => media.images.filter(img => !img.cover))
+
+const lightboxItems = computed<Item[]>(() => {
+  const base: Item[] = []
+  if (coverImage.value) base.push(coverImage.value)
+  base.push(...mosaicImages.value)
+  return orderByIndex(base)
+})
+
+const lightboxPayload = computed(() =>
+  lightboxItems.value.map((img) => ({ src: img.src, type: 'image', alt: img.alt })),
+)
+
+function openCoverLightbox() {
+  if (!coverImage.value) return
+  const startIndex = Math.max(
+    0,
+    lightboxItems.value.findIndex((img) => img.src === coverImage.value?.src),
+  )
+  fancyboxShow(lightboxPayload.value, startIndex)
+}
 </script>
 
 <template>
@@ -17,6 +40,11 @@ const mosaicImages = computed(() => media.images.filter(img => !img.cover))
     <div
       v-if="coverImage"
       class="cover-image"
+      role="button"
+      tabindex="0"
+      @click="openCoverLightbox"
+      @keydown.enter.prevent="openCoverLightbox"
+      @keydown.space.prevent="openCoverLightbox"
     >
       <img
         :src="coverImage.src"
@@ -25,6 +53,7 @@ const mosaicImages = computed(() => media.images.filter(img => !img.cover))
     </div>
     <Mosaic
       :items="mosaicImages"
+      :lightbox-items="lightboxItems"
       :intervalMs="5000"
       :minSlots="2"
       :maxSlots="4"
