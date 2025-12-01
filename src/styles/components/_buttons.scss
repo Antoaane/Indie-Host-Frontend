@@ -43,6 +43,18 @@ $button-themes: (
     hover-outline-opacity: 0.75,
     hover-outline-color: $accent,
   ),
+  dark: (text-color: $accent,
+    bg-color: $secondary,
+    outline-opacity: 0.1,
+    outline-color: $secondary,
+    icon-color: $accent,
+
+    hover-icon-color: $secondary,
+    hover-text-color: $secondary,
+    hover-bg-color: $accent,
+    hover-outline-opacity: 0.75,
+    hover-outline-color: $accent,
+  ),
 );
 
 // Mixin bouton primaire dynamique

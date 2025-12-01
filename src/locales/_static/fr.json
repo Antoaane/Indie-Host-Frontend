@@ -51,7 +51,7 @@
         "stayLabel": "Séjour du {start} au {end}"
       },
       "preview": {
-        "maxItems": 3
+        "maxItems": 5
       },
       "empty": {
         "title": "Pas encore d'avis",

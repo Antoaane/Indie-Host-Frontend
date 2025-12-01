@@ -4,6 +4,7 @@
 @use "sass:list";
 @use "@/styles/variables/globals" as *;
 @use '@/styles/variables/borders' as borders;
+@use '@/styles/components/buttons' as buttons;
 
 
 html {
@@ -88,6 +89,25 @@ ul {
     margin-bottom: 0;
     padding-top: calc(var(--gutter-spacing) + 70px);
     @include gutters(padding, bottom, 2);
+  }
+}
+
+.btn-primary {
+  @include buttons.primary();
+
+  &__full {
+    @include buttons.primary($fullwidth: true);
+  }
+}
+
+@each $color, $theme in buttons.$button-themes {
+
+  .btn-primary__#{$color} {
+    @include buttons.primary($theme: $color);
+
+    &__full {
+      @include buttons.primary($theme: $color, $fullwidth: true);
+    }
   }
 }
 

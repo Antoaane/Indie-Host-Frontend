@@ -59,7 +59,7 @@ const data = await listingCore()
 console.log(`${data?.comments?.length ? '✅' : '❌'} [ListingComments.vue](setup) listingCore:resolved commentsCount=${data.comments?.length ?? 0} fetched`)
 console.log(`${'ℹ️'} [ListingComments.vue](setup) contentLoaded=commentsWidget ready for render`)
 
-const previewLimit = content.preview?.maxItems ?? 3
+const previewLimit = content.preview?.maxItems ?? 5
 
 const overlayStep = 10
 const isOverlayOpen = ref(false)

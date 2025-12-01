@@ -7,8 +7,9 @@
 @use '@/styles/components/inputs' as inputs;
 
 #checkout {
-  position: sticky;
-  top: calc($nav-height + var(--gutter-spacing));
+  // position: sticky;
+  // top: calc($nav-height + var(--gutter-spacing));
+  flex: 0 0 auto;
 }
 
 .checkout-card {
@@ -24,9 +25,11 @@
 }
 
 .checkout-card__header {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: calc(var(--gutter-spacing-xs) / 2);
+  padding-right: 6rem;
 
   h2 {
     margin: 0;
@@ -53,52 +56,73 @@
       color: rgba($secondary, 0.8);
     }
   }
-}
 
-.checkout-card__field-group {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--gutter-spacing-sm);
-}
+  .checkout-card__price {
+    position: absolute;
+    top: 0.35rem;
+    right: 0;
 
-.checkout-card__field {
-  width: 100%;
-  text-align: left;
+    padding: 0.25rem 0.65rem;
+    border-radius: borders.$rounded-md;
+    border: 1px solid rgba($secondary, 0.08);
+    background: rgba($secondary, 0.04);
 
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-
-  border: none;
-  border-radius: borders.$rounded-md;
-  background: $tertiary;
-  @include animations.transition(200ms);
-  @include inputs.text($tertiary, borders.$rounded-md);
-
-  span {
-    font-size: 0.95rem;
-    font-weight: 400;
-    color: rgba($secondary, 0.7);
-  }
-
-  strong {
-    font-size: 1.1rem;
     font-weight: 700;
     color: $secondary;
-  }
-
-  &:hover {
-    background: $quaternary;
+    white-space: nowrap;
   }
 }
 
-.checkout-card__field--full {
-  width: 100%;
-}
+.checkout-card__fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gutter-spacing-sm);
 
-.checkout-card__dates,
-.checkout-card__guests {
-  position: relative;
+  .checkout-card__field-group {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--gutter-spacing-sm);
+
+    .checkout-card__field {
+      width: 100%;
+      text-align: left;
+
+      display: flex;
+      gap: 0.35rem;
+
+      // border: none;
+      // border-radius: borders.$rounded-md;
+      // background: $tertiary;
+      @include animations.transition(200ms);
+      // @include inputs.text($tertiary, borders.$rounded-md);
+
+      span {
+        // font-size: 0.95rem;
+        // font-weight: 400;
+        // color: rgba($secondary, 0.7);
+      }
+
+      strong {
+        // font-size: 1.1rem;
+        // font-weight: 700;
+        // color: $secondary;
+      }
+
+      // &:hover {
+      //   background: $quaternary;
+      // }
+
+      &--full {
+        width: 100%;
+      }
+    }
+  }
+
+
+  .checkout-card__dates,
+  .checkout-card__guests {
+    position: relative;
+  }
 }
 
 .checkout-card__calendar {
@@ -194,6 +218,7 @@
 
   padding-top: var(--gutter-spacing-xs);
   border-top: 1px solid rgba($secondary, 0.08);
+  overflow: hidden;
 }
 
 .checkout-card__line {
@@ -226,33 +251,50 @@
   display: flex;
   flex-direction: column;
   gap: var(--gutter-spacing-2xs);
-}
 
-.checkout-card__button {
-  @include buttons.primary($cta: true, $fullwidth: true);
+  .btn-primary__full {
+    @include buttons.primary($cta: true, $fullwidth: true);
 
-  button {
-    padding-block: 0.85rem;
-    font-weight: 600;
-    font-size: 1rem;
-    gap: var(--gutter-spacing-xs);
+    button {
+      // padding-block: 0.85rem;
+      // font-weight: 600;
+      // font-size: 1rem;
+      // gap: var(--gutter-spacing-xs);
 
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  .checkout-card__hint {
+    margin: 0;
+    height: 0.5rem;
+
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+
+    position: relative;
+    top: var(--gutter-spacing-xs);
+    color: rgba($secondary, 0.65);
+
+    font-size: 0.75rem;
+    line-height: 1.125rem;
+
+    @include min-width(md) {
+      font-size: 0.75rem;
+      line-height: 1.125rem;
+    }
+
+    * {
+      stroke: rgba($secondary, 0.65);
     }
   }
 }
 
-.checkout-card__hint {
-  margin: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
 
-  color: rgba($secondary, 0.75);
-  font-size: 0.95rem;
-}
 
 .fade-enter-active,
 .fade-leave-active {
@@ -263,6 +305,34 @@
 .fade-leave-to {
   opacity: 0;
   transform: translateY(4px);
+}
+
+.summary-toggle-enter-active,
+.summary-toggle-leave-active {
+  transition: max-height 200ms ease, opacity 200ms ease;
+}
+
+.summary-toggle-enter-from,
+.summary-toggle-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+
+.summary-toggle-enter-to,
+.summary-toggle-leave-from {
+  max-height: 480px;
+  opacity: 1;
+}
+
+.price-toggle-enter-active,
+.price-toggle-leave-active {
+  transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.price-toggle-enter-from,
+.price-toggle-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
 }
 
 @include min-width(md) {

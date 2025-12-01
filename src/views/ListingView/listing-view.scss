@@ -28,9 +28,14 @@
 }
 
 .stay-container {
+  max-height: calc(100vh - $nav-height);
+  min-height: 0;
+
   flex-grow: 0;
   flex-basis: 25vw;
   flex-shrink: 0;
-  height: 100%;
-  min-height: 0;
+  gap: var(--gutter-spacing-md);
+
+  display: flex;
+  flex-direction: column;
 }

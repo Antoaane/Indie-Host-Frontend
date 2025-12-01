@@ -51,6 +51,7 @@ const bookedRanges = computed<RangeISO[]>(() =>
 
 const calendarOpen = ref(false)
 const guestsOpen = ref(false)
+const expanded = ref(false)
 
 const selection = ref<RangeISO | null>(null)
 
@@ -149,9 +150,7 @@ const rangeLabel = computed(() => {
 })
 
 const nightlyTotal = computed(() => nights.value * pricePerNight.value)
-const feesTotal = computed(() =>
-  fees.value.reduce((acc, fee) => acc + (Number.isFinite(fee.amount) ? fee.amount : 0), 0),
-)
+const feesTotal = computed(() => fees.value.reduce((acc, fee) => acc + (Number.isFinite(fee.amount) ? fee.amount : 0), 0))
 const total = computed(() => nightlyTotal.value + feesTotal.value)
 
 const currency = new Intl.NumberFormat('fr-FR', {
@@ -177,6 +176,8 @@ const priceBreakdown = computed(() => {
   return list
 })
 
+const pricePerNightLabel = computed(() => `${currency.format(pricePerNight.value)} / nuit`)
+
 const calendarLayer = ref<HTMLElement | null>(null)
 const guestsLayer = ref<HTMLElement | null>(null)
 
@@ -188,6 +189,7 @@ onClickOutside(guestsLayer, () => {
 })
 
 function openCalendar() {
+  if (!expanded.value) expanded.value = true
   guestsOpen.value = false
   calendarOpen.value = true
 }
@@ -224,217 +226,238 @@ function reserve() {
 <template>
   <section id="checkout">
     <div class="checkout-card">
-      <header class="checkout-card__header">
+      <div class="checkout-card__header">
         <h2>Vous réservez</h2>
-        <button
+        <transition name="price-toggle">
+          <span
+            v-if="!expanded"
+            class="checkout-card__price"
+          >
+            {{ pricePerNightLabel }}
+          </span>
+        </transition>
+        <!-- <button
           type="button"
           class="checkout-card__range"
           @click="openCalendar"
         >
           {{ rangeLabel }}
-        </button>
-      </header>
-
-      <div
-        ref="calendarLayer"
-        class="checkout-card__dates"
-      >
-        <div class="checkout-card__field-group">
-          <button
-            type="button"
-            class="checkout-card__field"
-            @click="openCalendar"
-          >
-            <span>Du</span>
-            <strong>{{ formatDateLabel(selection?.start) }}</strong>
-          </button>
-          <button
-            type="button"
-            class="checkout-card__field"
-            @click="openCalendar"
-          >
-            <span>au</span>
-            <strong>{{ formatDateLabel(selection?.end) }}</strong>
-          </button>
-        </div>
-
-        <transition name="fade">
-          <div
-            v-if="calendarOpen"
-            class="checkout-card__calendar"
-          >
-            <DatePicker
-              v-model:model-value="selection"
-              :disabled-dates="bookedRanges"
-              :number-of-months="2"
-            />
-          </div>
-        </transition>
+        </button> -->
       </div>
 
-      <div
-        ref="guestsLayer"
-        class="checkout-card__guests"
-      >
-        <button
-          type="button"
-          class="checkout-card__field checkout-card__field--full"
-          @click="toggleGuests"
-        >
-          <span>pour</span>
-          <strong>{{ occupantLabel }}</strong>
-        </button>
-
-        <transition name="fade">
-          <div
-            v-if="guestsOpen"
-            class="checkout-card__dropdown"
-          >
-            <div class="checkout-card__dropdown-item">
-              <div>
-                <p>Adultes</p>
-                <small>13 ans et plus</small>
-              </div>
-              <div class="checkout-card__counter">
-                <button
-                  type="button"
-                  aria-label="Retirer un adulte"
-                  :disabled="occupants.adults <= 1"
-                  @click="updateCount('adults', -1)"
-                >
-                  <Minus :size="16" />
-                </button>
-                <span>{{ occupants.adults }}</span>
-                <button
-                  type="button"
-                  aria-label="Ajouter un adulte"
-                  @click="updateCount('adults', 1)"
-                >
-                  <Plus :size="16" />
-                </button>
-              </div>
-            </div>
-
-            <div class="checkout-card__dropdown-item">
-              <div>
-                <p>Enfants</p>
-                <small>2 à 12 ans</small>
-              </div>
-              <div class="checkout-card__counter">
-                <button
-                  type="button"
-                  aria-label="Retirer un enfant"
-                  :disabled="occupants.children <= 0"
-                  @click="updateCount('children', -1)"
-                >
-                  <Minus :size="16" />
-                </button>
-                <span>{{ occupants.children }}</span>
-                <button
-                  type="button"
-                  aria-label="Ajouter un enfant"
-                  @click="updateCount('children', 1)"
-                >
-                  <Plus :size="16" />
-                </button>
-              </div>
-            </div>
-
-            <div class="checkout-card__dropdown-item">
-              <div>
-                <p>Bébés</p>
-                <small>Moins de 2 ans</small>
-              </div>
-              <div class="checkout-card__counter">
-                <button
-                  type="button"
-                  aria-label="Retirer un bébé"
-                  :disabled="occupants.babies <= 0"
-                  @click="updateCount('babies', -1)"
-                >
-                  <Minus :size="16" />
-                </button>
-                <span>{{ occupants.babies }}</span>
-                <button
-                  type="button"
-                  aria-label="Ajouter un bébé"
-                  @click="updateCount('babies', 1)"
-                >
-                  <Plus :size="16" />
-                </button>
-              </div>
-            </div>
-
-            <div class="checkout-card__dropdown-item">
-              <div>
-                <p>Animaux</p>
-                <small>Chien, chat...</small>
-              </div>
-              <div class="checkout-card__counter">
-                <button
-                  type="button"
-                  aria-label="Retirer un animal"
-                  :disabled="occupants.animals <= 0"
-                  @click="updateCount('animals', -1)"
-                >
-                  <Minus :size="16" />
-                </button>
-                <span>{{ occupants.animals }}</span>
-                <button
-                  type="button"
-                  aria-label="Ajouter un animal"
-                  @click="updateCount('animals', 1)"
-                >
-                  <Plus :size="16" />
-                </button>
-              </div>
-            </div>
-
-            <div class="checkout-card__dropdown-item">
-              <div>
-                <p>Personnes PMR</p>
-                <small>Besoin d’aménagement</small>
-              </div>
-              <div class="checkout-card__counter">
-                <button
-                  type="button"
-                  aria-label="Retirer une personne PMR"
-                  :disabled="occupants.pmr <= 0"
-                  @click="updateCount('pmr', -1)"
-                >
-                  <Minus :size="16" />
-                </button>
-                <span>{{ occupants.pmr }}</span>
-                <button
-                  type="button"
-                  aria-label="Ajouter une personne PMR"
-                  @click="updateCount('pmr', 1)"
-                >
-                  <Plus :size="16" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </transition>
-      </div>
-
-      <div class="checkout-card__summary">
+      <div class="checkout-card__fields">
         <div
-          v-for="line in priceBreakdown"
-          :key="line.label"
-          class="checkout-card__line"
+          ref="calendarLayer"
+          class="checkout-card__dates"
         >
-          <p>{{ line.label }}</p>
-          <span>{{ line.amount }}</span>
+          <div class="checkout-card__field-group">
+            <div class="btn-primary__white__full">
+              <button
+                type="button"
+                class="checkout-card__field"
+                @click="openCalendar"
+              >
+                <span>Du</span>
+                <strong>{{ formatDateLabel(selection?.start) }}</strong>
+              </button>
+            </div>
+            <div class="btn-primary__white__full">
+              <button
+                type="button"
+                class="checkout-card__field"
+                @click="openCalendar"
+              >
+                <span>au</span>
+                <strong>{{ formatDateLabel(selection?.end) }}</strong>
+              </button>
+            </div>
+          </div>
+
+          <transition name="fade">
+            <div
+              v-if="calendarOpen"
+              class="checkout-card__calendar"
+            >
+              <DatePicker
+                v-model:model-value="selection"
+                :disabled-dates="bookedRanges"
+                :number-of-months="1"
+              />
+            </div>
+          </transition>
         </div>
-        <div class="checkout-card__line checkout-card__line--total">
-          <p>Total</p>
-          <span>{{ currency.format(total) }}</span>
+
+        <div
+          ref="guestsLayer"
+          class="checkout-card__guests"
+        >
+          <div class="btn-primary__white__full">
+            <button
+              type="button"
+              class="checkout-card__field checkout-card__field--full"
+              @click="toggleGuests"
+            >
+              <span>pour</span>
+              <strong>{{ occupantLabel }}</strong>
+            </button>
+          </div>
+
+          <transition name="fade">
+            <div
+              v-if="guestsOpen"
+              class="checkout-card__dropdown"
+            >
+              <div class="checkout-card__dropdown-item">
+                <div>
+                  <p>Adultes</p>
+                  <small>13 ans et plus</small>
+                </div>
+                <div class="checkout-card__counter">
+                  <button
+                    type="button"
+                    aria-label="Retirer un adulte"
+                    :disabled="occupants.adults <= 1"
+                    @click="updateCount('adults', -1)"
+                  >
+                    <Minus :size="16" />
+                  </button>
+                  <span>{{ occupants.adults }}</span>
+                  <button
+                    type="button"
+                    aria-label="Ajouter un adulte"
+                    @click="updateCount('adults', 1)"
+                  >
+                    <Plus :size="16" />
+                  </button>
+                </div>
+              </div>
+
+              <div class="checkout-card__dropdown-item">
+                <div>
+                  <p>Enfants</p>
+                  <small>2 à 12 ans</small>
+                </div>
+                <div class="checkout-card__counter">
+                  <button
+                    type="button"
+                    aria-label="Retirer un enfant"
+                    :disabled="occupants.children <= 0"
+                    @click="updateCount('children', -1)"
+                  >
+                    <Minus :size="16" />
+                  </button>
+                  <span>{{ occupants.children }}</span>
+                  <button
+                    type="button"
+                    aria-label="Ajouter un enfant"
+                    @click="updateCount('children', 1)"
+                  >
+                    <Plus :size="16" />
+                  </button>
+                </div>
+              </div>
+
+              <div class="checkout-card__dropdown-item">
+                <div>
+                  <p>Bébés</p>
+                  <small>Moins de 2 ans</small>
+                </div>
+                <div class="checkout-card__counter">
+                  <button
+                    type="button"
+                    aria-label="Retirer un bébé"
+                    :disabled="occupants.babies <= 0"
+                    @click="updateCount('babies', -1)"
+                  >
+                    <Minus :size="16" />
+                  </button>
+                  <span>{{ occupants.babies }}</span>
+                  <button
+                    type="button"
+                    aria-label="Ajouter un bébé"
+                    @click="updateCount('babies', 1)"
+                  >
+                    <Plus :size="16" />
+                  </button>
+                </div>
+              </div>
+
+              <div class="checkout-card__dropdown-item">
+                <div>
+                  <p>Animaux</p>
+                  <small>Chien, chat...</small>
+                </div>
+                <div class="checkout-card__counter">
+                  <button
+                    type="button"
+                    aria-label="Retirer un animal"
+                    :disabled="occupants.animals <= 0"
+                    @click="updateCount('animals', -1)"
+                  >
+                    <Minus :size="16" />
+                  </button>
+                  <span>{{ occupants.animals }}</span>
+                  <button
+                    type="button"
+                    aria-label="Ajouter un animal"
+                    @click="updateCount('animals', 1)"
+                  >
+                    <Plus :size="16" />
+                  </button>
+                </div>
+              </div>
+
+              <div class="checkout-card__dropdown-item">
+                <div>
+                  <p>Personnes PMR</p>
+                  <small>Besoin d’aménagement</small>
+                </div>
+                <div class="checkout-card__counter">
+                  <button
+                    type="button"
+                    aria-label="Retirer une personne PMR"
+                    :disabled="occupants.pmr <= 0"
+                    @click="updateCount('pmr', -1)"
+                  >
+                    <Minus :size="16" />
+                  </button>
+                  <span>{{ occupants.pmr }}</span>
+                  <button
+                    type="button"
+                    aria-label="Ajouter une personne PMR"
+                    @click="updateCount('pmr', 1)"
+                  >
+                    <Plus :size="16" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </transition>
         </div>
       </div>
+
+      <transition name="summary-toggle">
+        <div
+          v-show="expanded"
+          class="checkout-card__summary"
+        >
+          <div
+            v-for="line in priceBreakdown"
+            :key="line.label"
+            class="checkout-card__line"
+          >
+            <p>{{ line.label }}</p>
+            <span>{{ line.amount }}</span>
+          </div>
+          <div class="checkout-card__line checkout-card__line--total">
+            <p>Total</p>
+            <span>{{ currency.format(total) }}</span>
+          </div>
+        </div>
+      </transition>
 
       <div class="checkout-card__cta">
-        <div class="checkout-card__button">
+        <div class="btn-primary__full">
           <button
             type="button"
             :disabled="!nights"
@@ -445,7 +468,7 @@ function reserve() {
           </button>
         </div>
         <p class="checkout-card__hint">
-          <UsersRound :size="16" />
+          <UsersRound :size="12" />
           Confirmation immédiate et paiement sécurisé
         </p>
       </div>
