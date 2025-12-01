@@ -1,0 +1,13 @@
+/* File: src/views/ListingView/components/ListingCore/components/Availabilities/availabilities.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+
+.availabilities-listing__comp {
+
+
+  h2 {
+    margin-bottom: var(--gutter-spacing-md) !important;
+    @include h2-title($gradiant: true);
+  }
+}

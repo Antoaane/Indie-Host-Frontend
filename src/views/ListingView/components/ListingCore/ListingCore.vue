@@ -11,12 +11,14 @@ import commonLocale from '@/locales/common/fr.json'
 
 // COMPONENTS
 import Title from '@/views/ListingView/components/ListingCore/components/Title/Title.vue'
-import DatePicker from '@/views/ListingView/components/ListingCore/components/DatePicker/DatePicker.vue'
 import Perks from '@/views/ListingView/components/ListingCore/components/Perks/Perks.vue'
 import HostProfile from '@/views/ListingView/components/ListingCore/components/HostProfile/HostProfile.vue'
 import Description from '@/views/ListingView/components/ListingCore/components/Description/Description.vue'
 import Amenities from '@/views/ListingView/components/ListingCore/components/Amenities/Amenities.vue'
 import Rooms from '@/views/ListingView/components/ListingCore/components/Rooms/Rooms.vue'
+import Availabilities from '@/views/ListingView/components/ListingCore/components/Availabilities/Availabilities.vue'
+
+import Map from '@/views/ListingView/components/ListingCore/components/Map/Map.vue'
 
 //CONTENT
 const data = await listingCore()
@@ -26,6 +28,7 @@ interface StaticContent {
     headings: {
       features: string
       availability: string
+      map: string
     }
     description: {
       title: string
@@ -91,13 +94,20 @@ const descriptionStatic = {
       :data="data.amenities"
       :static-content="staticContent.listing.amenities"
     />
-    <div>
-      <Rooms
-        :data="data.rooms"
-        :staticContent="staticContent.listing.rooms"
-      />
-    </div>
-    <DatePicker />
+    <Rooms
+      :data="data.rooms"
+      :staticContent="staticContent.listing.rooms"
+    />
+    <Availabilities
+      :data="data.bookings"
+      :static-content="staticContent.listing.headings"
+    />
+    <Map
+      :latitude="data.map.latitude"
+      :longitude="data.map.longitude"
+      :zoom="data.map.zoom"
+      :static-content="staticContent.listing.headings"
+    />
   </section>
 </template>
 

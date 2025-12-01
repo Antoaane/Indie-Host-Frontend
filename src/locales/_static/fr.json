@@ -2,7 +2,8 @@
   "listing": {
     "headings": {
       "features": "Ce que ce logement comprend",
-      "availability": "Les disponibilités de ce logement"
+      "availability": "Les disponibilités de ce logement",
+      "map": "Localisation du logement"
     },
     "description": {
       "title": "À propos du logement",

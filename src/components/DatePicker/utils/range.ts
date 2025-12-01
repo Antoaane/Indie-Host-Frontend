@@ -1,7 +1,7 @@
 // File: src/views/ListingView/components/ListingCore/components/DatePicker/utils/range.ts
 
-import type { RangeISO } from '@/views/ListingView/components/ListingCore/components/DatePicker/helpers/date'
-import { parseISO, toNum, todayCalendarDate } from '@/views/ListingView/components/ListingCore/components/DatePicker/helpers/date'
+import type { RangeISO } from '@/components/DatePicker/helpers/date'
+import { parseISO, toNum, todayCalendarDate } from '@/components/DatePicker/helpers/date'
 
 /** Convertit les ranges ISO en bornes numériques triées */
 export const buildNumericRanges = (ranges: RangeISO[]) =>

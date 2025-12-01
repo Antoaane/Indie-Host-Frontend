@@ -40,6 +40,12 @@ export type DescriptionModel = {
   blocks: DescriptionBlock[];
 };
 
+export type MapModel = {
+  latitude: number;
+  longitude: number;
+  zoom?: number;
+};
+
 // -------- ÉQUIPEMENTS --------
 export type AmenityItem = {
   name: string;
@@ -117,6 +123,7 @@ export type ListingParsed = {
   perks: PerksModel;
   hostProfile: HostProfileModel;
   description: DescriptionModel;
+  map: MapModel;
   amenities: AmenitiesModel;
   rooms: RoomsModel;
   bookings: BookingsModel;

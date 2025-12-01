@@ -1,11 +1,11 @@
-<!-- File: src/views/ListingView/components/ListingCore/components/DatePicker/DatePicker.vue -->
+<!-- File: src/components/DatePicker/DatePicker.vue -->
 
 <script setup lang="ts">
 import { shallowRef, computed, watch } from 'vue'
 import { CalendarDate } from '@internationalized/date'
-import type { RangeISO } from '@/views/ListingView/components/ListingCore/components/DatePicker/helpers/date'
-import { parseISO, toISO, todayCalendarDate } from '@/views/ListingView/components/ListingCore/components/DatePicker/helpers/date'
-import { buildNumericRanges, makeIsDateDisabled } from '@/views/ListingView/components/ListingCore/components/DatePicker/utils/range'
+import type { RangeISO } from '@/components/DatePicker/helpers/date'
+import { parseISO, toISO, todayCalendarDate } from '@/components/DatePicker/helpers/date'
+import { buildNumericRanges, makeIsDateDisabled } from '@/components/DatePicker/utils/range'
 
 const props = withDefaults(
   defineProps<{
@@ -83,5 +83,5 @@ const today = todayCalendarDate()
 </template>
 
 <style lang="scss">
-@use '@/views/ListingView/components/ListingCore/components/DatePicker/date-picker.scss';
+@use '@/components/DatePicker/date-picker.scss';
 </style>

@@ -4,10 +4,11 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { onClickOutside } from '@vueuse/core'
 import { CalendarCheck, Minus, Plus, UsersRound } from 'lucide-vue-next'
-import type { RangeISO } from '@/views/ListingView/components/ListingCore/components/DatePicker/helpers/date'
-import { parseISO, todayCalendarDate, toISO } from '@/views/ListingView/components/ListingCore/components/DatePicker/helpers/date'
-import { makeIsDateDisabled } from '@/views/ListingView/components/ListingCore/components/DatePicker/utils/range'
-import DatePicker from '@/views/ListingView/components/ListingCore/components/DatePicker/DatePicker.vue'
+import type { RangeISO } from '@/components/DatePicker/helpers/date'
+import { parseISO, todayCalendarDate, toISO } from '@/components/DatePicker/helpers/date'
+import { makeIsDateDisabled } from '@/components/DatePicker/utils/range'
+import DatePicker from '@/components/DatePicker/DatePicker.vue'
+
 import type { BookedRange, FeeItem } from '@/views/ListingView/types/listing'
 
 type OccupantKey = 'adults' | 'children' | 'babies' | 'animals' | 'pmr'

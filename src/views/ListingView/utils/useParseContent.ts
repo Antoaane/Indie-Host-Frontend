@@ -27,6 +27,7 @@ import type {
   NotesModel,
   CommentsModel,
   CommentsPagesModel,
+  MapModel,
 } from '@/views/ListingView/types/listing';
 
 // Typages "bruts" déduits des JSON exemples
@@ -181,6 +182,18 @@ function parseDescription(core: RawCore): DescriptionModel {
   };
 }
 
+function parseMap(core: RawCore): MapModel {
+  const latitude = Number(core.latitude ?? core.lat ?? 0);
+  const longitude = Number(core.longitude ?? core.lng ?? 0);
+  const zoom = typeof core.zoom === 'number' ? core.zoom : undefined;
+
+  return {
+    latitude,
+    longitude,
+    ...(zoom ? { zoom } : {}),
+  };
+}
+
 function parseAmenities(amenities: RawAmenities): AmenitiesModel {
   return amenities.amenities.map((a) => ({
     name: a.name,
@@ -274,6 +287,7 @@ export async function listingCore(): Promise<ListingParsed> {
     perks: parsePerks(core),
     hostProfile: parseHost(core),
     description: parseDescription(core),
+    map: parseMap(core),
     amenities: parseAmenities(amenities),
     rooms: parseRooms(core),
     bookings: parseBookings(bookings),
