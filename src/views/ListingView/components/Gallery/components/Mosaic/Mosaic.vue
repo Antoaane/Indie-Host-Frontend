@@ -74,8 +74,8 @@ function newObjPosFor(idx: number, first = false) {
   const prevX = lastX[idx] ?? 50
   const prevY = lastY[idx] ?? 50
 
-  const x = Math.round(boundedRandAround(prevX, 20, 80, 18, first ? 6 : 3))
-  const y = Math.round(boundedRandAround(prevY, 40, 60, 8, first ? 2 : 1))
+  const x = Math.round(boundedRandAround(prevX, 0, 100, 50, 30))
+  const y = Math.round(boundedRandAround(prevY, 40, 60, 10, 5))
 
   lastX[idx] = x
   lastY[idx] = y
@@ -249,4 +249,4 @@ function openLightbox(startIndexReal: number) {
   </div>
 </template>
 
-<style lang="scss" src="./mosaic.scss"></style>
+<style lang="scss" src="@/views/ListingView/components/Gallery/components/Mosaic/mosaic.scss"></style>

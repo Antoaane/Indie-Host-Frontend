@@ -11,8 +11,8 @@ import type { Item } from '@/views/ListingView/components/Gallery/utils/types'
 // CONTENT
 import media from '@/content/fr/ListingTest/medias.json'
 
-const coverImage = computed(() => media.images.find(img => img.cover === true))
-const mosaicImages = computed(() => media.images.filter(img => !img.cover))
+const coverImage = computed(() => media.images.find((img) => img.cover === true))
+const mosaicImages = computed(() => media.images.filter((img) => !img.cover))
 
 const lightboxItems = computed<Item[]>(() => {
   const base: Item[] = []
@@ -21,9 +21,7 @@ const lightboxItems = computed<Item[]>(() => {
   return orderByIndex(base)
 })
 
-const lightboxPayload = computed(() =>
-  lightboxItems.value.map((img) => ({ src: img.src, type: 'image', alt: img.alt })),
-)
+const lightboxPayload = computed(() => lightboxItems.value.map((img) => ({ src: img.src, type: 'image', alt: img.alt })))
 
 function openCoverLightbox() {
   if (!coverImage.value) return
@@ -54,11 +52,11 @@ function openCoverLightbox() {
     <Mosaic
       :items="mosaicImages"
       :lightbox-items="lightboxItems"
-      :intervalMs="5000"
-      :minSlots="2"
+      :intervalMs="10000"
+      :minSlots="3"
       :maxSlots="4"
       :minTileW="45"
-      :minTileH="20"
+      :minTileH="45"
     />
   </section>
 </template>
