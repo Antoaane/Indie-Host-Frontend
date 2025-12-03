@@ -29,16 +29,19 @@ const props = withDefaults(
     pricePerNight: number
     fees?: FeeItem[]
     bookedDays?: BookedRange[]
+    modelValue?: RangeISO | null
   }>(),
   {
     pricePerNight: 0,
     fees: () => [],
     bookedDays: () => [],
+    modelValue: null,
   },
 )
 
 const emit = defineEmits<{
   (e: 'reserve', payload: ReservationPayload): void
+  (e: 'update:modelValue', value: RangeISO | null): void
 }>()
 
 const pricePerNight = computed(() => props.pricePerNight)
@@ -54,7 +57,16 @@ const calendarOpen = ref(false)
 const guestsOpen = ref(false)
 const expanded = ref(false)
 
-const selection = ref<RangeISO | null>(null)
+const selection = computed<RangeISO | null>({
+  get: () => props.modelValue,
+  set: (value) => emit('update:modelValue', value),
+})
+
+function setSelection(range: RangeISO | null) {
+  if (range && selection.value?.start === range.start && selection.value?.end === range.end) return
+  if (!range && !selection.value) return
+  selection.value = range
+}
 
 const occupants = reactive<Record<OccupantKey, number>>({
   adults: 2,
@@ -92,7 +104,7 @@ function findNextRange(minNights: number): RangeISO | null {
 
 const initialRange = findNextRange(MIN_NIGHTS)
 if (!selection.value && initialRange) {
-  selection.value = initialRange
+  setSelection(initialRange)
 }
 
 function isSelectedRangeValid() {
@@ -105,7 +117,7 @@ function isSelectedRangeValid() {
 
 watch(bookedRanges, () => {
   if (!selection.value || !isSelectedRangeValid()) {
-    selection.value = findNextRange(MIN_NIGHTS)
+    setSelection(findNextRange(MIN_NIGHTS))
   }
 })
 
@@ -113,6 +125,10 @@ watch(
   selection,
   (val) => {
     if (val?.start && val?.end) {
+      if (!isSelectedRangeValid()) {
+        setSelection(findNextRange(MIN_NIGHTS))
+        return
+      }
       calendarOpen.value = false
     }
   },
@@ -142,12 +158,12 @@ function formatDateLabel(iso?: string | null) {
   if (!iso) return 'Ajouter une date'
   const date = new Date(iso)
   if (Number.isNaN(date.getTime())) return 'Ajouter une date'
-  return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' }).format(date)
+  return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date)
 }
 
 const rangeLabel = computed(() => {
-  if (!selection.value?.start || !selection.value?.end || !nights.value) return 'Sélectionnez vos dates'
-  return `${nights.value} nuit${nights.value > 1 ? 's' : ''} du ${formatDateLabel(selection.value.start)} au ${formatDateLabel(selection.value.end)}`
+  if (!selection.value?.start || !selection.value?.end || nights.value <= 0) return 'Sélectionnez vos dates'
+  return `Du ${formatDateLabel(selection.value.start)} au ${formatDateLabel(selection.value.end)}`
 })
 
 const nightlyTotal = computed(() => nights.value * pricePerNight.value)
@@ -251,25 +267,15 @@ function reserve() {
           ref="calendarLayer"
           class="checkout-card__dates"
         >
-          <div class="checkout-card__field-group">
+          <div class="checkout-card__field-group checkout-card__field-group--single">
             <div class="btn-primary__white__full">
               <button
                 type="button"
-                class="checkout-card__field"
+                class="checkout-card__field checkout-card__field--full"
                 @click="openCalendar"
               >
-                <span>Du</span>
-                <strong>{{ formatDateLabel(selection?.start) }}</strong>
-              </button>
-            </div>
-            <div class="btn-primary__white__full">
-              <button
-                type="button"
-                class="checkout-card__field"
-                @click="openCalendar"
-              >
-                <span>au</span>
-                <strong>{{ formatDateLabel(selection?.end) }}</strong>
+                <span>Dates</span>
+                <strong>{{ rangeLabel }}</strong>
               </button>
             </div>
           </div>
@@ -282,7 +288,7 @@ function reserve() {
               <DatePicker
                 v-model:model-value="selection"
                 :disabled-dates="bookedRanges"
-                :number-of-months="1"
+                :number-of-months="2"
               />
             </div>
           </transition>

@@ -50,7 +50,7 @@
   }
 }
 
-@mixin little-text($color : $secondary, $bold: false, $underline: false, $italic: false, $thin: true) {
+@mixin little-text($color: $secondary, $bold: false, $underline: false, $italic: false, $thin: true) {
   margin: 0;
 
   font-family: 'outfit', sans-serif;

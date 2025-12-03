@@ -2,12 +2,14 @@
 
 <script setup lang="ts">
 // DEPS
+import { computed } from 'vue'
 
 // UTILS
 import { vp } from '@/utils/viewport'
 import { listingCore } from '@/views/ListingView/utils/useParseContent'
 import staticLocale from '@/locales/_static/fr.json'
 import commonLocale from '@/locales/common/fr.json'
+import type { RangeISO } from '@/components/DatePicker/helpers/date'
 
 // COMPONENTS
 import Title from '@/views/ListingView/components/ListingCore/components/Title/Title.vue'
@@ -21,6 +23,24 @@ import Availabilities from '@/views/ListingView/components/ListingCore/component
 import Map from '@/views/ListingView/components/ListingCore/components/Map/Map.vue'
 
 //CONTENT
+const props = withDefaults(
+  defineProps<{
+    modelValue?: RangeISO | null
+  }>(),
+  {
+    modelValue: null,
+  },
+)
+
+const emit = defineEmits<{
+  (e: 'update:modelValue', value: RangeISO | null): void
+}>()
+
+const selection = computed<RangeISO | null>({
+  get: () => props.modelValue,
+  set: (value) => emit('update:modelValue', value),
+})
+
 const data = await listingCore()
 
 interface StaticContent {
@@ -99,6 +119,7 @@ const descriptionStatic = {
       :staticContent="staticContent.listing.rooms"
     />
     <Availabilities
+      v-model:model-value="selection"
       :data="data.bookings"
       :static-content="staticContent.listing.headings"
     />

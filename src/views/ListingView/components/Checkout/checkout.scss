@@ -83,6 +83,10 @@
     grid-template-columns: repeat(2, 1fr);
     gap: var(--gutter-spacing-sm);
 
+    &--single {
+      grid-template-columns: 1fr;
+    }
+
     .checkout-card__field {
       width: 100%;
       text-align: left;

@@ -10,6 +10,7 @@ import gsap from 'gsap'
 // UTILS
 import { vp } from '@/utils/viewport'
 import { listingCore } from '@/views/ListingView/utils/useParseContent'
+import type { RangeISO } from '@/components/DatePicker/helpers/date'
 
 // COMPONENTS
 import Gallery from '@/views/ListingView/components/Gallery/Gallery.vue'
@@ -20,6 +21,7 @@ import CheckoutMin from '@/views/ListingView/components/Checkout/Checkout.vue'
 import type { ListingParsed } from '@/views/ListingView/types/listing'
 
 const listingData = ref<ListingParsed | null>(null)
+const bookingRange = ref<RangeISO | null>(null)
 
 onMounted(async () => {
   listingData.value = await listingCore()
@@ -34,7 +36,7 @@ onMounted(async () => {
 
     <div class="core-container">
       <Suspense>
-        <ListingCore #default />
+        <ListingCore v-model:model-value="bookingRange" />
         <template #fallback>
           <div class="skeleton">Chargement…</div>
         </template>
@@ -42,14 +44,9 @@ onMounted(async () => {
     </div>
 
     <div class="stay-container">
-      <Suspense>
-        <ListingComments #default />
-        <template #fallback>
-          <div class="skeleton">Chargement…</div>
-        </template>
-      </Suspense>
       <template v-if="listingData">
         <CheckoutMin
+          v-model:model-value="bookingRange"
           :price-per-night="listingData.bookings.price"
           :fees="listingData.bookings.fees"
           :booked-days="listingData.bookings.bookedDays"
@@ -58,6 +55,13 @@ onMounted(async () => {
       <template v-else>
         <div class="skeleton">Chargement…</div>
       </template>
+
+      <Suspense>
+        <ListingComments #default />
+        <template #fallback>
+          <div class="skeleton">Chargement…</div>
+        </template>
+      </Suspense>
     </div>
   </div>
 </template>
