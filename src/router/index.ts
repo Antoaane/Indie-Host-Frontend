@@ -20,7 +20,7 @@ const router = createRouter({
       component: SignInView,
     },
     {
-      path: '/listing-test',
+      path: '/listing-test/:slug?',
       name: 'listing',
       component: Listing,
     },

@@ -35,7 +35,7 @@ console.log(`${'ℹ️'} [SummaryCard.vue](scoreLabel) summary:scoreLabel format
   <section class="listing-comments__summary">
     <!-- <h3>{{ overallLabel }}</h3> -->
     <div>
-      <h3>{{ scoreLabel }}</h3>
+      <h3 v-html="scoreLabel"></h3>
 
       <Star :size="24" />
       <svg
@@ -65,7 +65,7 @@ console.log(`${'ℹ️'} [SummaryCard.vue](scoreLabel) summary:scoreLabel format
         </defs>
       </svg>
     </div>
-    <strong>{{ countLabel }}</strong>
+    <strong v-html="countLabel"></strong>
   </section>
 </template>
 
