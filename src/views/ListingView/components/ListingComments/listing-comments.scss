@@ -55,7 +55,7 @@
     bottom: var(--gutter-spacing);
 
     div {
-      @include buttons.primary($fullwidth: true);
+      @include buttons.primary($fullwidth: true, $theme: white);
     }
   }
 
@@ -110,7 +110,7 @@
         top: var(--gutter-spacing-md);
 
         .listing-comments__overlay-close {
-          @include buttons.primary($padding: false);
+          @include buttons.primary($padding: false, $theme: white);
         }
       }
 

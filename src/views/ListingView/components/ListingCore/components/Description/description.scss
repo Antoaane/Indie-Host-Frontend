@@ -73,7 +73,7 @@
         right: var(--gutter-spacing-md);
 
         .close-btn {
-          @include buttons.primary($padding: false);
+          @include buttons.primary($padding: false, $theme: white);
         }
       }
     }

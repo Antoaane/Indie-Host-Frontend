@@ -57,7 +57,7 @@
   }
 
   .amenities-listing__cta {
-    @include buttons.primary($fullwidth: true);
+    @include buttons.primary($theme: white, $fullwidth: true);
   }
 }
 
@@ -113,7 +113,7 @@
       }
 
       .amenities-overlay__close {
-        @include buttons.primary($padding: false);
+        @include buttons.primary($theme: white, $padding: false);
       }
     }
 
