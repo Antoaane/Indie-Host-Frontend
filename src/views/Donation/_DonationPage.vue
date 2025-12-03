@@ -95,3 +95,4 @@ const pageSubtitles = computed(() => donationContent.page.subtitles ?? [])
 </template>
 
 <style lang="scss" src="@/views/Donation/_donation-page.scss"></style>
+<style lang="scss" src="@/views/Donation/_donation-page.patch.scss"></style>

@@ -1,0 +1,28 @@
+/* File: src/views/Donation/components/DonationHeroSection/DonationHeroSection.patch.scss */
+
+@use '@/styles/variables/globals' as *;
+
+.donation-hero {
+  position: relative;
+  isolation: isolate;
+}
+
+.donation-hero__intro,
+.donation-hero__body {
+  max-width: 100%;
+}
+
+.donation-hero__body {
+  grid-auto-rows: auto;
+}
+
+.donation-hero__body-block {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.donation-hero__body-block svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}

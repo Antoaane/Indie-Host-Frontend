@@ -145,4 +145,14 @@ const activeWarnings = computed(() =>
   </aside>
 </template>
 
-<style lang="scss" scoped src="@/views/Donation/components/DonationFormPanel/donation-form-panel.scss"></style>
+<style scoped lang="scss">
+@use '@/views/Donation/components/DonationFormPanel/donation-form-panel.scss';
+
+.donation-form-panel__cta {
+  .primary.disabled {
+    pointer-events: none;
+    opacity: 0.5;
+  }
+}
+</style>
+<style scoped lang="scss" src="@/views/Donation/components/DonationFormPanel/DonationFormPanel.patch.scss"></style>

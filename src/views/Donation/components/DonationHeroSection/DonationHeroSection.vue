@@ -103,6 +103,4 @@ const isQuoteSection = (section: DonationArticleSection) => section.type === 'qu
   </article>
 </template>
 
-<style lang="scss">
-@import '@/views/Donation/components/DonationHeroSection/donation-hero-section.scss';
-</style>
+<style scoped lang="scss" src="@/views/Donation/components/DonationHeroSection/donation-hero-section.scss"></style>
