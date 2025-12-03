@@ -92,13 +92,28 @@
       text-align: left;
 
       display: flex;
-      gap: 0.35rem;
+      justify-content: space-evenly;
+      // gap: 0.35rem;
 
       // border: none;
       // border-radius: borders.$rounded-md;
       // background: $tertiary;
       @include animations.transition(200ms);
       // @include inputs.text($tertiary, borders.$rounded-md);
+
+      // button {
+      //   display: flex;
+      //   justify-content: space-evenly;
+
+      span {
+        display: block !important;
+
+        &.line {
+          transform: translateY(-4%) scaleY(1.65);
+        }
+      }
+
+      // }
 
       span {
         // font-size: 0.95rem;

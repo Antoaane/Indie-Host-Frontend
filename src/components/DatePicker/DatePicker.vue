@@ -32,11 +32,7 @@ const internal = shallowRef<{ start?: CalendarDate; end?: CalendarDate } | undef
 
 function syncInternalFromModel(value: RangeISO | null | undefined) {
   if (value?.start && value?.end) {
-    const alreadySynced =
-      internal.value?.start &&
-      internal.value?.end &&
-      toISO(internal.value.start) === value.start &&
-      toISO(internal.value.end) === value.end
+    const alreadySynced = internal.value?.start && internal.value?.end && toISO(internal.value.start) === value.start && toISO(internal.value.end) === value.end
 
     if (!alreadySynced) {
       internal.value = {

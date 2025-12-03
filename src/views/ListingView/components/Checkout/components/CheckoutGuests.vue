@@ -1,0 +1,172 @@
+<script setup lang="ts">
+import { ref } from 'vue'
+import { onClickOutside } from '@vueuse/core'
+import { Minus, Plus } from 'lucide-vue-next'
+
+type OccupantKey = 'adults' | 'children' | 'babies' | 'animals' | 'pmr'
+
+const props = defineProps<{
+  open: boolean
+  occupantLabel: string
+  occupants: Record<OccupantKey, number>
+  updateCount: (key: OccupantKey, delta: number) => void
+}>()
+
+const emit = defineEmits<{
+  (e: 'toggle'): void
+  (e: 'close'): void
+}>()
+
+const guestsLayer = ref<HTMLElement | null>(null)
+onClickOutside(guestsLayer, () => emit('close'))
+</script>
+
+<template>
+  <div
+    ref="guestsLayer"
+    class="checkout-card__guests"
+  >
+    <div class="btn-primary__white__full">
+      <button
+        type="button"
+        class="checkout-card__field checkout-card__field--full"
+        @click="emit('toggle')"
+      >
+        <span>pour</span>
+        <strong>{{ occupantLabel }}</strong>
+      </button>
+    </div>
+
+    <transition name="fade">
+      <div
+        v-if="open"
+        class="checkout-card__dropdown"
+      >
+        <div class="checkout-card__dropdown-item">
+          <div>
+            <p>Adultes</p>
+            <small>13 ans et plus</small>
+          </div>
+          <div class="checkout-card__counter">
+            <button
+              type="button"
+              aria-label="Retirer un adulte"
+              :disabled="occupants.adults <= 1"
+              @click="props.updateCount('adults', -1)"
+            >
+              <Minus :size="16" />
+            </button>
+            <span>{{ occupants.adults }}</span>
+            <button
+              type="button"
+              aria-label="Ajouter un adulte"
+              @click="props.updateCount('adults', 1)"
+            >
+              <Plus :size="16" />
+            </button>
+          </div>
+        </div>
+
+        <div class="checkout-card__dropdown-item">
+          <div>
+            <p>Enfants</p>
+            <small>2 à 12 ans</small>
+          </div>
+          <div class="checkout-card__counter">
+            <button
+              type="button"
+              aria-label="Retirer un enfant"
+              :disabled="occupants.children <= 0"
+              @click="props.updateCount('children', -1)"
+            >
+              <Minus :size="16" />
+            </button>
+            <span>{{ occupants.children }}</span>
+            <button
+              type="button"
+              aria-label="Ajouter un enfant"
+              @click="props.updateCount('children', 1)"
+            >
+              <Plus :size="16" />
+            </button>
+          </div>
+        </div>
+
+        <div class="checkout-card__dropdown-item">
+          <div>
+            <p>Bébés</p>
+            <small>Moins de 2 ans</small>
+          </div>
+          <div class="checkout-card__counter">
+            <button
+              type="button"
+              aria-label="Retirer un bébé"
+              :disabled="occupants.babies <= 0"
+              @click="props.updateCount('babies', -1)"
+            >
+              <Minus :size="16" />
+            </button>
+            <span>{{ occupants.babies }}</span>
+            <button
+              type="button"
+              aria-label="Ajouter un bébé"
+              @click="props.updateCount('babies', 1)"
+            >
+              <Plus :size="16" />
+            </button>
+          </div>
+        </div>
+
+        <div class="checkout-card__dropdown-item">
+          <div>
+            <p>Animaux</p>
+            <small>Chien, chat...</small>
+          </div>
+          <div class="checkout-card__counter">
+            <button
+              type="button"
+              aria-label="Retirer un animal"
+              :disabled="occupants.animals <= 0"
+              @click="props.updateCount('animals', -1)"
+            >
+              <Minus :size="16" />
+            </button>
+            <span>{{ occupants.animals }}</span>
+            <button
+              type="button"
+              aria-label="Ajouter un animal"
+              @click="props.updateCount('animals', 1)"
+            >
+              <Plus :size="16" />
+            </button>
+          </div>
+        </div>
+
+        <div class="checkout-card__dropdown-item">
+          <div>
+            <p>Personnes PMR</p>
+            <small>Besoin d'aménagement</small>
+          </div>
+          <div class="checkout-card__counter">
+            <button
+              type="button"
+              aria-label="Retirer une personne PMR"
+              :disabled="occupants.pmr <= 0"
+              @click="props.updateCount('pmr', -1)"
+            >
+              <Minus :size="16" />
+            </button>
+            <span>{{ occupants.pmr }}</span>
+            <button
+              type="button"
+              aria-label="Ajouter une personne PMR"
+              @click="props.updateCount('pmr', 1)"
+            >
+              <Plus :size="16" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
+  </div>
+</template>

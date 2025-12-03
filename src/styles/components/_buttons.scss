@@ -113,6 +113,11 @@ $button-themes: (
       color: map.get($colors, icon-color);
       stroke: map.get($colors, icon-color);
     }
+
+    strong {
+      color: map.get($colors, text-color);
+
+    }
   }
 
   @if $cta {
@@ -161,6 +166,7 @@ $button-themes: (
   }
 
   &:hover {
+
     &>* {
 
       // Gestion hover spécifique selon thème
@@ -174,6 +180,10 @@ $button-themes: (
       &>* {
         color: map.get($button-themes, $theme, hover-icon-color);
         stroke: map.get($button-themes, $theme, hover-icon-color);
+      }
+
+      strong {
+        color: map.get($button-themes, $theme, hover-text-color);
       }
 
       // }
