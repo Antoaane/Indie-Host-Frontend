@@ -61,6 +61,7 @@ const logIssues = (segment: SegmentKey, issues: Issue[]) => {
   });
 };
 
+
 const sanitizeDistribution = (value: unknown) => {
   if (!isObject(value)) return undefined;
   const entries = Object.entries(value).reduce<Record<string, number>>((acc, [k, v]) => {
@@ -71,432 +72,464 @@ const sanitizeDistribution = (value: unknown) => {
   return Object.keys(entries).length ? entries : undefined;
 };
 
-function sanitizeCore(input: unknown): SanitizeResult<RawCore> {
-  if (!isObject(input)) return { data: {}, issues: [{ key: 'core', expected: 'object', received: input ?? 'absent' }] };
-  const safe: Partial<RawCore> = {};
+type FieldSchema = {
+  type: 'string' | 'number' | 'boolean' | 'object' | 'array' | 'custom';
+  source?: string | string[] | string[][];
+  target?: string;
+  required?: boolean;
+  domVisible?: boolean;
+  expected?: string;
+  fields?: Record<string, FieldSchema>;
+  element?: FieldSchema;
+  minItems?: number;
+  sanitizer?: (value: unknown) => unknown | undefined;
+};
+
+const toPathOptions = (schema: FieldSchema, defaultKey: string): string[][] => {
+  const provided = schema.source;
+  if (!provided) return [[defaultKey]];
+  if (Array.isArray(provided) && typeof provided[0] === 'string') return [provided as string[]];
+  if (typeof provided === 'string') return [[provided]];
+  return provided as string[][];
+};
+
+const resolveValue = (source: unknown, paths: string[][]): { value: unknown; provided: boolean } => {
+  for (const path of paths) {
+    let current: unknown = source;
+    let provided = true;
+    for (const key of path) {
+      if (isObject(current) && key in current) {
+        current = (current as Record<string, unknown>)[key];
+      }
+      else {
+        provided = false;
+        break;
+      }
+    }
+    if (provided) return { value: current, provided: true };
+  }
+  return { value: undefined, provided: false };
+};
+
+type SanitizedValue<T> = { value?: T; issues: Issue[]; provided: boolean };
+
+const sanitizeValue = <T>(
+  schema: FieldSchema,
+  rawParent: unknown,
+  key: string,
+  silentIssues = false,
+): SanitizedValue<T> => {
+  const { value: rawValue, provided } = resolveValue(rawParent, toPathOptions(schema, key));
   const issues: Issue[] = [];
-  const address = isObject((input as Record<string, unknown>).address)
-    ? ((input as Record<string, unknown>).address as Record<string, unknown>)
-    : undefined;
+  const expected = schema.expected ?? schema.type;
 
-  const idRaw = (input as Record<string, unknown>).id;
-  const titleRaw = (input as Record<string, unknown>).title;
-  const typeRaw = (input as Record<string, unknown>).type;
-  const briefRaw = (input as Record<string, unknown>).brief;
-  const cityRaw = (input as Record<string, unknown>).city ?? address?.city;
-  const regionRaw = (input as Record<string, unknown>).region ?? address?.region;
-  const countryRaw = (input as Record<string, unknown>).country ?? address?.country;
+  const pushIssue = (received: unknown) => {
+    if (!silentIssues) issues.push({ key, expected, received });
+  };
 
-  const id = asString(idRaw);
-  const title = asString(titleRaw);
-  const type = asString(typeRaw);
-  const brief = asString(briefRaw);
-  const city = asString(cityRaw);
-  const region = asString(regionRaw);
-  const country = asString(countryRaw);
+  const sanitizedInput = schema.sanitizer ? schema.sanitizer(rawValue) : rawValue;
 
-  if (id) safe.id = id as never;
-  else issues.push({ key: 'id', expected: 'string', received: idRaw ?? 'absent' });
-
-  if (title) safe.title = title as never;
-  else issues.push({ key: 'title', expected: 'string', received: titleRaw ?? 'absent' });
-
-  if (type) safe.type = type as never;
-  else issues.push({ key: 'type', expected: 'string', received: typeRaw ?? 'absent' });
-
-  if (city) safe.city = city as never;
-  else issues.push({ key: 'city', expected: 'string', received: cityRaw ?? 'absent' });
-
-  if (region) safe.region = region as never;
-  else issues.push({ key: 'region', expected: 'string', received: regionRaw ?? 'absent' });
-
-  if (country) safe.country = country as never;
-  else issues.push({ key: 'country', expected: 'string', received: countryRaw ?? 'absent' });
-
-  if (brief) safe.brief = brief as never;
-  else issues.push({ key: 'brief', expected: 'string', received: briefRaw ?? 'absent' });
-
-  const capacity = asNumber((input as Record<string, unknown>).capacity);
-  if (capacity !== undefined) safe.capacity = capacity as never;
-  else issues.push({ key: 'capacity', expected: 'number', received: (input as Record<string, unknown>).capacity ?? 'absent' });
-
-  const latitude = asNumber((input as Record<string, unknown>).latitude ?? (input as Record<string, unknown>).lat);
-  if (latitude !== undefined) safe.latitude = latitude as never;
-  else issues.push({ key: 'latitude', expected: 'number', received: (input as Record<string, unknown>).latitude ?? (input as Record<string, unknown>).lat ?? 'absent' });
-
-  const longitude = asNumber((input as Record<string, unknown>).longitude ?? (input as Record<string, unknown>).lng);
-  if (longitude !== undefined) safe.longitude = longitude as never;
-  else issues.push({ key: 'longitude', expected: 'number', received: (input as Record<string, unknown>).longitude ?? (input as Record<string, unknown>).lng ?? 'absent' });
-
-  const zoom = asNumber((input as Record<string, unknown>).zoom);
-  if (zoom !== undefined) safe.zoom = zoom as never;
-
-  const roomsSource = (input as Record<string, unknown>).rooms;
-  if (Array.isArray(roomsSource)) {
-    const rooms = (roomsSource as unknown[])
-      .map((room: unknown) => {
-        if (!isObject(room)) return null;
-        const roomObj = room as Record<string, unknown>;
-        const type = asString(roomObj.type);
-        if (!type) return null;
-
-        const normalized: Record<string, unknown> = { type };
-        const roomName = asString(roomObj['room-name'] ?? roomObj.name);
-        if (roomName) normalized['room-name'] = roomName;
-
-        if (Array.isArray(roomObj.beds)) {
-          const beds = roomObj.beds
-            .map((bed: unknown) => {
-              if (!isObject(bed)) return null;
-              const bedObj = bed as Record<string, unknown>;
-              const bedType = asString(bedObj.type);
-              const capacity = asNumber(bedObj.capacity);
-              const quantity = asNumber(bedObj.quantity);
-              if (!bedType || capacity === undefined || quantity === undefined) return null;
-              return { type: bedType, capacity, quantity };
-            })
-            .filter(Boolean);
-
-          if (beds.length) normalized.beds = beds;
-        }
-
-        return normalized as RawCore['rooms'][number];
-      })
-      .filter(Boolean);
-
-    if (rooms.length) safe.rooms = rooms as RawCore['rooms'];
-    else issues.push({ key: 'rooms', expected: 'array<room>', received: roomsSource });
-  }
-  else {
-    issues.push({ key: 'rooms', expected: 'array', received: roomsSource ?? 'absent' });
+  if (schema.type === 'string') {
+    const value = asString(sanitizedInput);
+    if (value !== undefined) return { value: value as T, issues, provided };
+    if (schema.required || provided) pushIssue(rawValue ?? 'absent');
+    return { issues, provided };
   }
 
-  const perksSource = (input as Record<string, unknown>).perks;
-  if (Array.isArray(perksSource)) {
-    const perks = (perksSource as unknown[])
-      .map((perk: unknown) => {
-        if (!isObject(perk)) return null;
-        const perkObj = perk as Record<string, unknown>;
-        const icon = asString(perkObj.icon);
-        const name = asString(perkObj.name);
-        const description = asString(perkObj.description);
-        if (!icon || !name) return null;
-        return description ? { icon, name, description } : { icon, name };
-      })
-      .filter(Boolean);
-
-    if (perks.length) safe.perks = perks as RawCore['perks'];
-    else issues.push({ key: 'perks', expected: 'array<perk>', received: perksSource });
-  }
-  else {
-    issues.push({ key: 'perks', expected: 'array', received: perksSource ?? 'absent' });
+  if (schema.type === 'number') {
+    const value = asNumber(sanitizedInput);
+    if (value !== undefined) return { value: value as T, issues, provided };
+    if (schema.required || provided) pushIssue(rawValue ?? 'absent');
+    return { issues, provided };
   }
 
-  if (isObject((input as Record<string, unknown>).host)) {
-    const host = (input as Record<string, unknown>).host as Record<string, unknown>;
-    const name = asString(host.name);
-    const seniority = asNumber(host.seniority);
-    const status = asString(host.status);
-    const globalNote = asNumber(host['global-note'] ?? host.globalNote);
-    const avatar = asString(host.avatar ?? host.picture);
-    const catalogLink = asString(host['catalog-link'] ?? host.catalogLink);
-
-    const hostSafe: Partial<RawCore['host']> = {};
-    if (name) hostSafe.name = name;
-    if (status) hostSafe.status = status;
-    if (seniority !== undefined) hostSafe.seniority = seniority as never;
-    if (globalNote !== undefined) hostSafe['global-note'] = globalNote as never;
-    if (avatar) hostSafe.avatar = avatar;
-    if (catalogLink) hostSafe['catalog-link'] = catalogLink;
-
-    if (Object.keys(hostSafe).length) safe.host = hostSafe as RawCore['host'];
-  }
-  else {
-    issues.push({ key: 'host', expected: 'object', received: (input as Record<string, unknown>).host ?? 'absent' });
+  if (schema.type === 'boolean') {
+    const value = asBoolean(sanitizedInput);
+    if (value !== undefined) return { value: value as T, issues, provided };
+    if (schema.required || provided) pushIssue(rawValue ?? 'absent');
+    return { issues, provided };
   }
 
-  const descriptionSource = (input as Record<string, unknown>).description;
-  if (Array.isArray(descriptionSource)) {
-    const blocks = (descriptionSource as unknown[])
-      .map((block: unknown) => {
-        if (!isObject(block)) return null;
-        const blockObj = block as Record<string, unknown>;
-        const title = asString(blockObj.title);
-        const content = asString(blockObj.content);
-        if (!title || !content) return null;
-        return { title, content };
-      })
-      .filter(Boolean);
-
-    if (blocks.length) safe.description = blocks as RawCore['description'];
-    else issues.push({ key: 'description', expected: 'array<block>', received: descriptionSource });
-  }
-  else {
-    issues.push({ key: 'description', expected: 'array', received: descriptionSource ?? 'absent' });
+  if (schema.type === 'custom') {
+    const value = schema.sanitizer ? (schema.sanitizer(sanitizedInput) as T | undefined) : undefined;
+    if (value !== undefined) return { value, issues, provided };
+    if (schema.required || provided) pushIssue(rawValue ?? 'absent');
+    return { issues, provided };
   }
 
-  return { data: safe, issues };
-}
+  if (schema.type === 'object') {
+    if (!isObject(sanitizedInput)) {
+      if (schema.required || provided) pushIssue(rawValue ?? 'absent');
+      return { issues, provided };
+    }
 
-function sanitizeBookings(input: unknown): SanitizeResult<RawBookings> {
-  if (!isObject(input)) return { data: {}, issues: [{ key: 'bookings', expected: 'object', received: input ?? 'absent' }] };
-  const safe: Partial<RawBookings> = {};
+    const collected: Record<string, unknown> = {};
+    Object.entries(schema.fields ?? {}).forEach(([fieldKey, fieldSchema]) => {
+      const targetKey = fieldSchema.target ?? fieldKey;
+      const result = sanitizeValue(fieldSchema, sanitizedInput, targetKey, silentIssues);
+      issues.push(...result.issues);
+      if (result.value !== undefined) collected[targetKey] = result.value;
+    });
+
+    return {
+      value: Object.keys(collected).length ? (collected as T) : undefined,
+      issues,
+      provided,
+    };
+  }
+
+  if (schema.type === 'array') {
+    if (!Array.isArray(sanitizedInput)) {
+      if (schema.required || provided) pushIssue(rawValue ?? 'absent');
+      return { issues, provided };
+    }
+
+    const items = sanitizedInput
+      .map(item => sanitizeValue(schema.element!, item, key, true).value)
+      .filter(value => value !== undefined) as unknown[];
+
+    const minItems = schema.minItems ?? 1;
+    if (items.length >= minItems) return { value: items as T, issues, provided };
+
+    if (schema.required || provided) pushIssue(rawValue);
+    return { issues, provided };
+  }
+
+  return { issues, provided };
+};
+
+const mergeValue = (schema: FieldSchema, staticValue: unknown, partialValue: unknown, fallback: boolean): unknown => {
+  if (schema.type === 'string') {
+    const value = (partialValue ?? staticValue) as string | undefined;
+    if (value === undefined) return undefined;
+    const shouldWrap = fallback || partialValue === undefined;
+    return schema.domVisible ? wrapFallbackText(value, shouldWrap) : value;
+  }
+
+  if (schema.type === 'number' || schema.type === 'boolean' || schema.type === 'custom') {
+    return partialValue ?? staticValue;
+  }
+
+  if (schema.type === 'object') {
+    const base: Record<string, unknown> = isObject(staticValue)
+      ? { ...(staticValue as Record<string, unknown>) }
+      : {};
+    const partialObject = isObject(partialValue) ? (partialValue as Record<string, unknown>) : undefined;
+    const staticObject = isObject(staticValue) ? (staticValue as Record<string, unknown>) : undefined;
+
+    Object.entries(schema.fields ?? {}).forEach(([fieldKey, fieldSchema]) => {
+      const targetKey = fieldSchema.target ?? fieldKey;
+      const merged = mergeValue(
+        fieldSchema,
+        staticObject ? staticObject[targetKey] : undefined,
+        partialObject ? partialObject[targetKey] : undefined,
+        fallback || (partialObject ? partialObject[targetKey] === undefined : true),
+      );
+      if (merged !== undefined) base[targetKey] = merged;
+    });
+
+    return base;
+  }
+
+  if (schema.type === 'array') {
+    const usePartial = Array.isArray(partialValue) && (partialValue as unknown[]).length > 0;
+    const sourceArray = usePartial
+      ? (partialValue as unknown[])
+      : Array.isArray(staticValue)
+        ? (staticValue as unknown[])
+        : [];
+    const childFallback = fallback || !usePartial;
+
+    return sourceArray.map(item =>
+      mergeValue(schema.element!, usePartial ? undefined : item, usePartial ? item : undefined, childFallback),
+    );
+  }
+
+  return partialValue ?? staticValue;
+};
+
+const sanitizeSegment = <T>(schema: FieldSchema, input: unknown, segmentKey: SegmentKey): SanitizeResult<T> => {
   const issues: Issue[] = [];
-
-  const price = asNumber((input as Record<string, unknown>).price);
-  if (price !== undefined) safe.price = price as never;
-  else issues.push({ key: 'price', expected: 'number', received: (input as Record<string, unknown>).price ?? 'absent' });
-
-  const bookedSource =
-    (input as Record<string, unknown>)['booked-days'] ??
-    (input as Record<string, unknown>).bookedDays;
-
-  if (Array.isArray(bookedSource)) {
-    const bookedDays = (bookedSource as unknown[])
-      .map((item: unknown) => {
-        if (!isObject(item)) return null;
-        const itemObj = item as Record<string, unknown>;
-        const start = asString(itemObj.start);
-        const end = asString(itemObj.end);
-        if (!start || !end) return null;
-        return { start, end };
-      })
-      .filter(Boolean);
-
-    if (bookedDays.length) safe['booked-days'] = bookedDays as RawBookings['booked-days'];
-    else issues.push({ key: 'booked-days', expected: 'array<range>', received: bookedSource });
-  }
-  else {
-    issues.push({ key: 'booked-days', expected: 'array', received: bookedSource ?? 'absent' });
+  if (!isObject(input)) {
+    return { data: {} as Partial<T>, issues: [{ key: segmentKey, expected: 'object', received: input ?? 'absent' }] };
   }
 
-  const feesSource = (input as Record<string, unknown>).fees;
-  if (Array.isArray(feesSource)) {
-    const fees = (feesSource as unknown[])
-      .map((fee: unknown) => {
-        if (!isObject(fee)) return null;
-        const feeObj = fee as Record<string, unknown>;
-        const name = asString(feeObj.name);
-        const amount = asNumber(feeObj.amount);
-        if (!name || amount === undefined) return null;
-        return { name, amount };
-      })
-      .filter(Boolean);
+  const result = sanitizeValue<T>(schema, input, segmentKey);
+  issues.push(...result.issues);
+  return { data: (result.value ?? {}) as Partial<T>, issues };
+};
 
-    if (fees.length) safe.fees = fees as RawBookings['fees'];
-    else issues.push({ key: 'fees', expected: 'array<fee>', received: feesSource });
-  }
-  else if (feesSource !== undefined) {
-    issues.push({ key: 'fees', expected: 'array', received: feesSource });
-  }
+const mergeSegment = <T>(schema: FieldSchema, staticSegment: T, partial: Partial<T>): T =>
+  mergeValue(schema, staticSegment, partial, false) as T;
 
-  return { data: safe, issues };
-}
-
-function sanitizeMedias(input: unknown): SanitizeResult<RawMedias> {
-  if (!isObject(input)) return { data: {}, issues: [{ key: 'medias', expected: 'object', received: input ?? 'absent' }] };
-  const safe: Partial<RawMedias> = {};
-  const issues: Issue[] = [];
-
-  const imagesSource = (input as Record<string, unknown>).images;
-  if (Array.isArray(imagesSource)) {
-    const images = (imagesSource as unknown[])
-      .map((image: unknown) => {
-        if (!isObject(image)) return null;
-        const imageObj = image as Record<string, unknown>;
-        const src = asString(imageObj.src ?? imageObj.url);
-        const alt = asString(
-          imageObj.alt ?? imageObj.title ?? imageObj.description,
-        );
-        const cover = asBoolean(imageObj.cover);
-        if (!src || !alt) return null;
-        return cover !== undefined ? { src, alt, cover } : { src, alt };
-      })
-      .filter(Boolean);
-
-    if (images.length) safe.images = images as RawMedias['images'];
-    else issues.push({ key: 'images', expected: 'array<image>', received: imagesSource });
-  }
-  else {
-    issues.push({ key: 'images', expected: 'array', received: imagesSource ?? 'absent' });
-  }
-
-  const videosSource = (input as Record<string, unknown>).videos;
-  if (Array.isArray(videosSource)) {
-    const videos = (videosSource as unknown[])
-      .map((video: unknown) => {
-        if (typeof video === 'string') return { src: video };
-        if (!isObject(video)) return null;
-        const videoObj = video as Record<string, unknown>;
-        const src = asString(videoObj.src ?? videoObj.url);
-        if (!src) return null;
-        const poster = asString(videoObj.poster);
-        const alt = asString(videoObj.alt);
-        return {
-          src,
-          ...(poster ? { poster } : {}),
-          ...(alt ? { alt } : {}),
-        };
-      })
-      .filter(Boolean);
-
-    if (videos.length) safe.videos = videos as RawMedias['videos'];
-    else issues.push({ key: 'videos', expected: 'array<video>', received: videosSource });
-  }
-  else if (videosSource !== undefined) {
-    issues.push({ key: 'videos', expected: 'array', received: videosSource });
-  }
-
-  return { data: safe, issues };
-}
-
-function sanitizeAmenities(input: unknown): SanitizeResult<RawAmenities> {
-  if (!isObject(input)) return { data: {}, issues: [{ key: 'amenities', expected: 'object', received: input ?? 'absent' }] };
-  const safe: Partial<RawAmenities> = {};
-  const issues: Issue[] = [];
-
-  const amenitiesSource = (input as Record<string, unknown>).amenities;
-  if (Array.isArray(amenitiesSource)) {
-    const amenities = (amenitiesSource as unknown[])
-      .map((amenity: unknown) => {
-        if (!isObject(amenity)) return null;
-        const amenityObj = amenity as Record<string, unknown>;
-        const name = asString(amenityObj.name);
-        const description = asString(amenityObj.description);
-        const icon = asString(amenityObj.icon);
-        const category = asString(amenityObj.category);
-        const relevance = asNumber(amenityObj.relevance);
-        const pinned = asBoolean(amenityObj.pinned);
-        if (!name || !icon || !category || relevance === undefined) return null;
-        return {
-          name,
-          description,
-          icon,
-          category,
-          relevance,
-          pinned: Boolean(pinned),
-        };
-      })
-      .filter(Boolean);
-
-    if (amenities.length) safe.amenities = amenities as RawAmenities['amenities'];
-    else issues.push({ key: 'amenities', expected: 'array<amenity>', received: amenitiesSource });
-  }
-  else {
-    issues.push({ key: 'amenities', expected: 'array', received: amenitiesSource ?? 'absent' });
-  }
-
-  return { data: safe, issues };
-}
-
-function sanitizeNotes(input: unknown): SanitizeResult<RawNotes> {
-  if (!isObject(input)) return { data: {}, issues: [{ key: 'notes', expected: 'object', received: input ?? 'absent' }] };
-  const safe: Partial<RawNotes> = {};
-  const issues: Issue[] = [];
-
-  if (isObject((input as Record<string, unknown>).note)) {
-    const noteNode = (input as Record<string, unknown>).note as Record<string, unknown>;
-    const noteValue = asNumber(noteNode.note ?? noteNode.overall);
-    const distribution = sanitizeDistribution(noteNode.distribution);
-    const payload: Record<string, unknown> = {};
-    if (noteValue !== undefined) payload.note = noteValue;
-    if (distribution) payload.distribution = distribution;
-    if (Object.keys(payload).length) safe.note = payload as RawNotes['note'];
-  }
-  else {
-    issues.push({ key: 'note', expected: 'object', received: (input as Record<string, unknown>).note ?? 'absent' });
-  }
-
-  if (Array.isArray((input as Record<string, unknown>)['otas-note'])) {
-    const otas = ((input as Record<string, unknown>)['otas-note'] as unknown[])
-      .map((ota: unknown) => {
-        if (!isObject(ota)) return null;
-        const otaObj = ota as Record<string, unknown>;
-        const otaName = asString(otaObj.ota);
-        const note = asNumber(otaObj.note);
-        const distribution = sanitizeDistribution(otaObj.distribution);
-        if (!otaName || note === undefined) return null;
-        return {
-          ota: otaName,
-          note,
-          ...(distribution ? { distribution } : {}),
-        };
-      })
-      .filter(Boolean);
-
-    if (otas.length) safe['otas-note'] = otas as RawNotes['otas-note'];
-  }
-  else if ((input as Record<string, unknown>)['otas-note'] !== undefined) {
-    issues.push({ key: 'otas-note', expected: 'array', received: (input as Record<string, unknown>)['otas-note'] });
-  }
-
-  return { data: safe, issues };
-}
-
-function sanitizeComments(input: unknown): SanitizeResult<RawComments> {
-  if (!isObject(input)) return { data: {}, issues: [{ key: 'comments', expected: 'object', received: input ?? 'absent' }] };
-  const safe: Partial<RawComments> = {};
-  const issues: Issue[] = [];
-
-  const commentsSource = (input as Record<string, unknown>).comments;
-  if (Array.isArray(commentsSource)) {
-    const pages = (commentsSource as unknown[])
-      .map((page: unknown) => {
-        if (!Array.isArray(page)) return null;
-        const items = (page as unknown[])
-          .map((comment: unknown) => {
-            if (!isObject(comment)) return null;
-            const commentObj = comment as Record<string, unknown>;
-            const name = asString(commentObj.name);
-            const note = asNumber(commentObj.note);
-            const text = asString(commentObj.comment ?? commentObj.text);
-            const avatar = asString(
-              commentObj['profile-pic'] ??
-              commentObj.avatar ??
-              commentObj.profilePic,
-            );
-            const stayNode =
-              commentObj['stay-dates'] ??
-              commentObj.stayDates;
-            const stayDates = isObject(stayNode)
-              ? {
-                start: asString((stayNode as Record<string, unknown>).start),
-                end: asString((stayNode as Record<string, unknown>).end),
-              }
-              : undefined;
-
-            if (!name || note === undefined || !text) return null;
-            return {
-              name,
-              note,
-              comment: text,
-              ...(avatar ? { 'profile-pic': avatar } : {}),
-              ...(stayDates?.start && stayDates.end ? { 'stay-dates': stayDates } : {}),
-            };
-          })
-          .filter(Boolean);
-
-        return items.length ? items : null;
-      })
-      .filter(Boolean);
-
-    if (pages.length) safe.comments = pages as RawComments['comments'];
-    else issues.push({ key: 'comments', expected: 'array<comment[]>', received: commentsSource });
-  }
-  else {
-    issues.push({ key: 'comments', expected: 'array', received: commentsSource ?? 'absent' });
-  }
-
-  return { data: safe, issues };
-}
+const segmentSchemas: Record<SegmentKey, FieldSchema> = {
+  core: {
+    type: 'object',
+    fields: {
+      id: { type: 'string', required: true },
+      title: { type: 'string', required: true, domVisible: true },
+      type: { type: 'string', required: true, domVisible: true },
+      brief: { type: 'string', required: true, domVisible: true },
+      city: {
+        type: 'string',
+        required: true,
+        domVisible: true,
+        source: [
+          ['city'],
+          ['address', 'city'],
+        ],
+      },
+      region: {
+        type: 'string',
+        required: true,
+        domVisible: true,
+        source: [
+          ['region'],
+          ['address', 'region'],
+        ],
+      },
+      country: {
+        type: 'string',
+        required: true,
+        domVisible: true,
+        source: [
+          ['country'],
+          ['address', 'country'],
+        ],
+      },
+      capacity: { type: 'number', required: true },
+      latitude: { type: 'number', required: true, source: [['latitude'], ['lat']] },
+      longitude: { type: 'number', required: true, source: [['longitude'], ['lng']] },
+      zoom: { type: 'number' },
+      rooms: {
+        type: 'array',
+        required: true,
+        expected: 'array<room>',
+        element: {
+          type: 'object',
+          fields: {
+            type: { type: 'string', required: true, domVisible: true },
+            'room-name': { type: 'string', domVisible: true, source: [['room-name'], ['name']] },
+            beds: {
+              type: 'array',
+              element: {
+                type: 'object',
+                fields: {
+                  type: { type: 'string', required: true, domVisible: true },
+                  capacity: { type: 'number', required: true },
+                  quantity: { type: 'number', required: true },
+                },
+              },
+            },
+          },
+        },
+      },
+      perks: {
+        type: 'array',
+        required: true,
+        expected: 'array<perk>',
+        element: {
+          type: 'object',
+          fields: {
+            icon: { type: 'string', required: true },
+            name: { type: 'string', required: true, domVisible: true },
+            description: { type: 'string', domVisible: true },
+          },
+        },
+      },
+      host: {
+        type: 'object',
+        required: true,
+        fields: {
+          name: { type: 'string', domVisible: true },
+          seniority: { type: 'number' },
+          status: { type: 'string', domVisible: true },
+          'global-note': { type: 'number', source: [['global-note'], ['globalNote']] },
+          avatar: { type: 'string', source: [['avatar'], ['picture']] },
+          'catalog-link': { type: 'string', source: [['catalog-link'], ['catalogLink']] },
+        },
+      },
+      description: {
+        type: 'array',
+        required: true,
+        expected: 'array<block>',
+        element: {
+          type: 'object',
+          fields: {
+            title: { type: 'string', required: true, domVisible: true },
+            content: { type: 'string', required: true, domVisible: true },
+          },
+        },
+      },
+    },
+  },
+  bookings: {
+    type: 'object',
+    fields: {
+      price: { type: 'number', required: true },
+      'booked-days': {
+        type: 'array',
+        required: true,
+        expected: 'array<range>',
+        source: [['booked-days'], ['bookedDays']],
+        element: {
+          type: 'object',
+          fields: {
+            start: { type: 'string', required: true },
+            end: { type: 'string', required: true },
+          },
+        },
+      },
+      fees: {
+        type: 'array',
+        expected: 'array<fee>',
+        element: {
+          type: 'object',
+          fields: {
+            name: { type: 'string', required: true, domVisible: true },
+            amount: { type: 'number', required: true },
+          },
+        },
+      },
+    },
+  },
+  medias: {
+    type: 'object',
+    fields: {
+      images: {
+        type: 'array',
+        required: true,
+        expected: 'array<image>',
+        element: {
+          type: 'object',
+          fields: {
+            src: { type: 'string', required: true, source: [['src'], ['url']] },
+            alt: {
+              type: 'string',
+              required: true,
+              domVisible: true,
+              source: [
+                ['alt'],
+                ['title'],
+                ['description'],
+              ],
+            },
+            cover: { type: 'boolean' },
+          },
+        },
+      },
+      videos: {
+        type: 'array',
+        element: {
+          type: 'object',
+          sanitizer: (value: unknown) => (typeof value === 'string' ? { src: value } : value),
+          fields: {
+            src: { type: 'string', required: true, source: [['src'], ['url']] },
+            poster: { type: 'string' },
+            alt: { type: 'string', domVisible: true },
+          },
+        },
+      },
+    },
+  },
+  amenities: {
+    type: 'object',
+    fields: {
+      amenities: {
+        type: 'array',
+        required: true,
+        expected: 'array<amenity>',
+        element: {
+          type: 'object',
+          fields: {
+            icon: { type: 'string', required: true },
+            name: { type: 'string', required: true, domVisible: true },
+            description: { type: 'string', domVisible: true },
+          },
+        },
+      },
+    },
+  },
+  notes: {
+    type: 'object',
+    fields: {
+      note: {
+        type: 'object',
+        required: true,
+        fields: {
+          note: { type: 'number', source: [['note'], ['overall']] },
+          distribution: { type: 'custom', sanitizer: sanitizeDistribution },
+        },
+      },
+      'otas-note': {
+        type: 'array',
+        source: [['otas-note']],
+        element: {
+          type: 'object',
+          fields: {
+            ota: { type: 'string', required: true },
+            note: { type: 'number', required: true },
+            distribution: { type: 'custom', sanitizer: sanitizeDistribution },
+          },
+        },
+      },
+    },
+  },
+  comments: {
+    type: 'object',
+    fields: {
+      comments: {
+        type: 'array',
+        required: true,
+        expected: 'array<comment[]>',
+        element: {
+          type: 'array',
+          expected: 'array<comment>',
+          element: {
+            type: 'object',
+            fields: {
+              name: { type: 'string', required: true, domVisible: true },
+              note: { type: 'number', required: true },
+              comment: { type: 'string', required: true, domVisible: true, source: [['comment'], ['text']] },
+              'profile-pic': {
+                type: 'string',
+                source: [
+                  ['profile-pic'],
+                  ['avatar'],
+                  ['profilePic'],
+                ],
+              },
+              'stay-dates': {
+                type: 'object',
+                fields: {
+                  start: { type: 'string', required: true },
+                  end: { type: 'string', required: true },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+};
 
 const sanitizers: Record<SegmentKey, (input: unknown) => SanitizeResult<RawSegments[SegmentKey]>> = {
-  core: sanitizeCore,
-  bookings: sanitizeBookings,
-  medias: sanitizeMedias,
-  amenities: sanitizeAmenities,
-  notes: sanitizeNotes,
-  comments: sanitizeComments,
+  core: input => sanitizeSegment(segmentSchemas.core, input, 'core'),
+  bookings: input => sanitizeSegment(segmentSchemas.bookings, input, 'bookings'),
+  medias: input => sanitizeSegment(segmentSchemas.medias, input, 'medias'),
+  amenities: input => sanitizeSegment(segmentSchemas.amenities, input, 'amenities'),
+  notes: input => sanitizeSegment(segmentSchemas.notes, input, 'notes'),
+  comments: input => sanitizeSegment(segmentSchemas.comments, input, 'comments'),
+};
+
+const mergers: Record<SegmentKey, (staticData: any, partial: any) => any> = {
+  core: (staticData, partial) => mergeSegment(segmentSchemas.core, staticData, partial),
+  bookings: (staticData, partial) => mergeSegment(segmentSchemas.bookings, staticData, partial),
+  medias: (staticData, partial) => mergeSegment(segmentSchemas.medias, staticData, partial),
+  amenities: (staticData, partial) => mergeSegment(segmentSchemas.amenities, staticData, partial),
+  notes: (staticData, partial) => mergeSegment(segmentSchemas.notes, staticData, partial),
+  comments: (staticData, partial) => mergeSegment(segmentSchemas.comments, staticData, partial),
 };
 
 async function fetchSegment(segment: SegmentKey, listingId: string) {
@@ -511,156 +544,6 @@ async function fetchSegment(segment: SegmentKey, listingId: string) {
     return null;
   }
 }
-
-function mergeCore(staticData: RawCore, partial: Partial<RawCore>): RawCore {
-  const fallbackTitle = partial.title === undefined;
-  const fallbackType = partial.type === undefined;
-  const fallbackCity = partial.city === undefined;
-  const fallbackRegion = partial.region === undefined;
-  const fallbackCountry = partial.country === undefined;
-  const fallbackBrief = partial.brief === undefined;
-  const fallbackRooms = !partial.rooms?.length;
-  const fallbackPerks = !partial.perks?.length;
-  const fallbackDescription = !partial.description?.length;
-  const fallbackHostName = !partial.host || partial.host.name === undefined;
-  const fallbackHostStatus = !partial.host || partial.host.status === undefined;
-  return {
-    ...staticData,
-    ...(partial.id ? { id: partial.id } : {}),
-    title: wrapFallbackText(partial.title ?? staticData.title, fallbackTitle),
-    type: wrapFallbackText(partial.type ?? staticData.type, fallbackType),
-    city: wrapFallbackText(partial.city ?? staticData.city, fallbackCity),
-    region: wrapFallbackText(partial.region ?? staticData.region, fallbackRegion),
-    country: wrapFallbackText(partial.country ?? staticData.country, fallbackCountry),
-    capacity: partial.capacity ?? staticData.capacity,
-    latitude: partial.latitude ?? staticData.latitude,
-    longitude: partial.longitude ?? staticData.longitude,
-    ...(partial.zoom !== undefined ? { zoom: partial.zoom } : {}),
-    rooms: (partial.rooms?.length ? partial.rooms : staticData.rooms).map(room => ({
-      ...room,
-      ['room-name']: room['room-name']
-        ? wrapFallbackText(room['room-name'] as string, fallbackRooms)
-        : room['room-name'],
-      type: wrapFallbackText(room.type, fallbackRooms),
-      ...(room.beds
-        ? {
-          beds: room.beds.map(bed => ({
-            ...bed,
-            type: wrapFallbackText(bed.type, fallbackRooms),
-          })),
-        }
-        : {}),
-    })),
-    perks: (partial.perks?.length ? partial.perks : staticData.perks).map(perk => ({
-      ...perk,
-      name: wrapFallbackText(perk.name, fallbackPerks),
-      ...(perk.description ? { description: wrapFallbackText(perk.description, fallbackPerks) } : {}),
-    })),
-    host: {
-      ...staticData.host,
-      ...(isObject(partial.host)
-        ? {
-          ...(partial.host.name ? { name: wrapFallbackText(partial.host.name, false) } : {}),
-          ...(partial.host.status ? { status: wrapFallbackText(partial.host.status, false) } : {}),
-          ...(partial.host.seniority !== undefined ? { seniority: partial.host.seniority } : {}),
-          ...(partial.host['global-note'] !== undefined
-            ? { 'global-note': partial.host['global-note'] }
-            : {}),
-          ...(partial.host.avatar ? { avatar: partial.host.avatar } : {}),
-          ...(partial.host['catalog-link'] ? { 'catalog-link': partial.host['catalog-link'] } : {}),
-        }
-        : {}),
-      ...(fallbackHostName && staticData.host.name
-        ? { name: wrapFallbackText(staticData.host.name, true) }
-        : {}),
-      ...(fallbackHostStatus && staticData.host.status
-        ? { status: wrapFallbackText(staticData.host.status, true) }
-        : {}),
-    },
-    brief: wrapFallbackText(partial.brief ?? staticData.brief, fallbackBrief),
-    description: (partial.description?.length ? partial.description : staticData.description).map(desc => ({
-      title: wrapFallbackText(desc.title, fallbackDescription),
-      content: wrapFallbackText(desc.content, fallbackDescription),
-    })),
-  };
-}
-
-function mergeBookings(staticData: RawBookings, partial: Partial<RawBookings>): RawBookings {
-  const fallbackFees = !partial.fees;
-  const feesSource = partial.fees ?? staticData.fees;
-  const merged: RawBookings = {
-    price: partial.price ?? staticData.price,
-    'booked-days': partial['booked-days']?.length
-      ? partial['booked-days']
-      : staticData['booked-days'],
-    ...(feesSource
-      ? {
-        fees: feesSource.map(fee => ({
-          ...fee,
-          name: wrapFallbackText(fee.name, fallbackFees),
-        })),
-      }
-      : {}),
-  };
-
-  return merged;
-}
-
-function mergeMedias(staticData: RawMedias, partial: Partial<RawMedias>): RawMedias {
-  const fallbackImages = !partial.images?.length;
-  const fallbackVideos = !partial.videos;
-  return {
-    images: (partial.images?.length ? partial.images : staticData.images).map(image => ({
-      ...image,
-      alt: wrapFallbackText(image.alt, fallbackImages),
-    })),
-    videos: (partial.videos ?? staticData.videos ?? []).map(video => ({
-      ...video,
-      ...(video.alt ? { alt: wrapFallbackText(video.alt, fallbackVideos) } : {}),
-    })),
-  };
-}
-
-function mergeAmenities(staticData: RawAmenities, partial: Partial<RawAmenities>): RawAmenities {
-  const fallbackAmenities = !partial.amenities?.length;
-  return {
-    amenities: (partial.amenities?.length ? partial.amenities : staticData.amenities).map(amenity => ({
-      ...amenity,
-      name: wrapFallbackText(amenity.name, fallbackAmenities),
-      ...(amenity.description ? { description: wrapFallbackText(amenity.description, fallbackAmenities) } : {}),
-    })),
-  };
-}
-
-function mergeNotes(staticData: RawNotes, partial: Partial<RawNotes>): RawNotes {
-  const merged: RawNotes = {
-    note: partial.note ?? staticData.note,
-    'otas-note': partial['otas-note']?.length ? partial['otas-note'] : staticData['otas-note'],
-  };
-  return merged;
-}
-
-function mergeComments(staticData: RawComments, partial: Partial<RawComments>): RawComments {
-  const fallbackComments = !partial.comments?.length;
-  return {
-    comments: (partial.comments?.length ? partial.comments : staticData.comments).map(page =>
-      page.map(comment => ({
-        ...comment,
-        name: wrapFallbackText(comment.name, fallbackComments),
-        comment: wrapFallbackText(comment.comment, fallbackComments),
-      })),
-    ),
-  };
-}
-
-const mergers: Record<SegmentKey, (staticData: any, partial: any) => any> = {
-  core: mergeCore,
-  bookings: mergeBookings,
-  medias: mergeMedias,
-  amenities: mergeAmenities,
-  notes: mergeNotes,
-  comments: mergeComments,
-};
 
 const staticSegments: RawSegments = {
   core: coreJSON,
