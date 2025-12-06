@@ -60,7 +60,9 @@ function getRoomDisplayName(roomName: string, index: number) {
 
 <template>
   <div class="rooms-listing__comp">
-    <h2 v-html="staticContent.title" />
+    <h2>
+      {{ staticContent.title }}
+    </h2>
     <ul>
       <template
         v-for="(room, index) in data.rooms"
@@ -68,7 +70,9 @@ function getRoomDisplayName(roomName: string, index: number) {
       >
         <li v-if="room.beds">
           <div>
-            <h3 v-html="getRoomDisplayName(room.name, index)" />
+            <h3>
+              {{ getRoomDisplayName(room.name, index) }}
+            </h3>
             <div class="bed-icon__container">
               <template
                 v-for="(bed, bIndex) in room.beds"
@@ -89,8 +93,9 @@ function getRoomDisplayName(roomName: string, index: number) {
               <li
                 v-for="bed in room.beds"
                 :key="bed.type"
-                v-html="`${bed.quantity} ${bedLabel(bed)}`"
-              />
+              >
+                {{ bed.quantity }} {{ bedLabel(bed) }}
+              </li>
             </ul>
           </div>
         </li>

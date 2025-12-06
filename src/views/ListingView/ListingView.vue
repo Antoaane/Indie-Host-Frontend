@@ -31,10 +31,7 @@ onMounted(async () => {
 <template>
   <div class="listing-view">
     <div class="gallery-container">
-      <Suspense>
-        <Gallery />
-        <template #fallback><div class="skeleton">Chargement…</div></template>
-      </Suspense>
+      <Gallery />
     </div>
 
     <div class="core-container">

@@ -1,16 +1,17 @@
 // File: src/views/ListingView/utils/useParseContent.ts
 
-import { useRoute } from 'vue-router';
-import {
-  DEFAULT_LISTING_ID,
-  loadListingSegments,
-  type RawAmenities,
-  type RawBookings,
-  type RawComments,
-  type RawCore,
-  type RawMedias,
-  type RawNotes,
-} from '@/views/ListingView/utils/listingContentGateway';
+// --- MODE: "local-json" pour le MVP / "remote" pour le backend ---
+const USE_REMOTE = false;
+
+// ---- LOCAL JSON (MVP) ----
+import coreJSON from '@/content/fr/ListingTest/core.json';
+import bookingsJSON from '@/content/fr/ListingTest/bookings.json';
+import mediasJSON from '@/content/fr/ListingTest/medias.json';
+import amenitiesJSON from '@/content/fr/ListingTest/amenities.json';
+import notesJSON from '@/content/fr/ListingTest/notes.json';
+import commentsJSON from '@/content/fr/ListingTest/comments.json';
+
+// ---- TYPES ----
 import type {
   ListingParsed,
   TitleModel,
@@ -29,23 +30,49 @@ import type {
   MapModel,
 } from '@/views/ListingView/types/listing';
 
-const parsedCache = new Map<string, Promise<ListingParsed>>();
+// Typages "bruts" déduits des JSON exemples
+type RawCore = typeof coreJSON;
+type RawBookings = typeof bookingsJSON;
+type RawMedias = typeof mediasJSON;
+type RawAmenities = typeof amenitiesJSON;
+type RawNotes = typeof notesJSON;
+type RawComments = typeof commentsJSON;
 
-function resolveListingId(explicitSlug?: string): string {
-  if (explicitSlug?.trim()) return explicitSlug.trim();
-  try {
-    const route = useRoute();
-    const param = route.params.slug;
-    if (typeof param === 'string' && param.trim()) return param.trim();
-    if (Array.isArray(param) && param[0]?.trim()) return param[0].trim();
-  } catch (_error) {
-    // ignore hook access outside of setup
-  }
-  return DEFAULT_LISTING_ID;
+// ---- FETCH distant (inactif tant que USE_REMOTE=false) ----
+async function fetchRemote<T>(url: string): Promise<T> {
+  const { default: axios } = await import('axios'); // import dynamique
+  const { data } = await axios.get<T>(url, { withCredentials: false });
+  return data;
+}
+
+// ---- LOADERS ----
+async function loadCore(): Promise<RawCore> {
+  if (USE_REMOTE) return fetchRemote<RawCore>('/api/listings/53028879/core');
+  return coreJSON as RawCore;
+}
+async function loadBookings(): Promise<RawBookings> {
+  if (USE_REMOTE) return fetchRemote<RawBookings>('/api/listings/53028879/bookings');
+  return bookingsJSON as RawBookings;
+}
+async function loadMedias(): Promise<RawMedias> {
+  if (USE_REMOTE) return fetchRemote<RawMedias>('/api/listings/53028879/medias');
+  return mediasJSON as RawMedias;
+}
+async function loadAmenities(): Promise<RawAmenities> {
+  if (USE_REMOTE) return fetchRemote<RawAmenities>('/api/listings/53028879/amenities');
+  return amenitiesJSON as RawAmenities;
+}
+async function loadNotes(): Promise<RawNotes> {
+  if (USE_REMOTE) return fetchRemote<RawNotes>('/api/listings/53028879/notes');
+  return notesJSON as RawNotes;
+}
+async function loadComments(): Promise<RawComments> {
+  if (USE_REMOTE) return fetchRemote<RawComments>('/api/listings/53028879/comments');
+  return commentsJSON as RawComments;
 }
 
 /* ------------------------------------------------------------------ */
-/* ----------------------- HELPERS ROOMS ----------------------------- */
+/* ----------------------- HELPERS “ROOMS” -------------------------- */
 /* ------------------------------------------------------------------ */
 
 // Normalise les rooms brutes du core.json -> RoomItem[]
@@ -53,7 +80,7 @@ function normalizeRooms(core: RawCore): RoomItem[] {
   return (core.rooms ?? []).map(r => ({
     name: r['room-name'],
     type: r.type,
-    // ⚠️ Ne pas forcer [] : on ne met "beds" que s'il y en a
+    // ⬇️ NE PAS forcer [] : on ne met "beds" que s'il y en a
     ...(r.beds && r.beds.length
       ? {
         beds: r.beds.map(b => ({
@@ -77,7 +104,7 @@ function groupRoomsByType(rooms: RoomItem[]): RoomsByType {
     byType[key].rooms.push(r);
     byType[key].length += 1;
 
-    // ⚠️ Supporte rooms sans beds
+    // ⬇️ Supporte rooms sans beds
     const bedsQty = r.beds?.reduce((acc, b) => acc + (b.quantity ?? 0), 0) ?? 0;
     const cap = r.beds?.reduce((acc, b) => acc + (b.capacity ?? 0) * (b.quantity ?? 0), 0) ?? 0;
 
@@ -127,7 +154,7 @@ function parseTitle(core: RawCore): TitleModel {
     type,
     location: { city: core.city ?? '', region: core.region ?? '', country: core.country ?? '' },
     capacity: core.capacity,
-    bedrooms: { quantity: bedroom.length, bed: bedroom.beds ?? 0 }, // ⚠️ safe
+    bedrooms: { quantity: bedroom.length, bed: bedroom.beds ?? 0 }, // ⬅️ safe
     bathrooms,
   };
 }
@@ -240,8 +267,16 @@ function parseComments(raw: RawComments): { pages: CommentsPagesModel; flat: Com
   return { pages, flat };
 }
 
-async function buildListingParsed(listingId: string): Promise<ListingParsed> {
-  const { core, bookings, medias, amenities, notes, comments } = await loadListingSegments(listingId);
+// ---- UTIL PRINCIPAL ----
+export async function listingCore(): Promise<ListingParsed> {
+  const [core, bookings, medias, amenities, notes, comments] = await Promise.all([
+    loadCore(),
+    loadBookings(),
+    loadMedias(),
+    loadAmenities(),
+    loadNotes(),
+    loadComments(),
+  ]);
 
   const parsedComments = parseComments(comments);
   console.log(`${parsedComments.flat.length ? '✅' : '❌'} [useParseContent.ts](listingCore) listingCore:load commentsCount=${parsedComments.flat.length} aggregated`);
@@ -263,16 +298,7 @@ async function buildListingParsed(listingId: string): Promise<ListingParsed> {
   };
 }
 
-// ---- Util principal ----
-export async function listingCore(slug?: string): Promise<ListingParsed> {
-  const listingId = resolveListingId(slug);
-  if (!parsedCache.has(listingId)) {
-    parsedCache.set(listingId, buildListingParsed(listingId));
-  }
-  return parsedCache.get(listingId)!;
-}
-
-// ---- Exemple d’usage ----
+// ---- EXEMPLE D’USAGE ----
 // const data = await listingCore();
 // const bedroom = data.rooms.byType['bedroom']; // accès direct demandé
 // console.log(bedroom.length, bedroom.beds, data.rooms.summary.capacityTotal);

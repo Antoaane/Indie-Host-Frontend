@@ -29,18 +29,25 @@ const bathroomsLabel = computed(() => formatICUMessage(props.staticContent.bathr
 
 <template>
   <div class="title-listing__comp">
-    <h1 v-html="data.title" />
-    <h2 v-html="`${data.type} — ${data.location.city}, ${data.location.country}`" />
+    <h1>
+      {{ data.title }}
+    </h1>
+    <h2> {{ data.type }} — {{ data.location.city }}, {{ data.location.country }} </h2>
     <ul>
-      <li v-html="`${data.capacity} ${travelerLabel}`" />
+      <li> {{ data.capacity }} {{ travelerLabel }} </li>
 
-      <li v-html="`<span></span> ${data.bedrooms.quantity} ${bedroomLabel}`" />
-      <li
-        v-if="data.bedrooms.bed"
-        v-html="`<span></span> ${data.bedrooms.bed} ${bedsLabel}`"
-      />
-
-      <li v-html="`<span></span> ${data.bathrooms} ${bathroomsLabel}`" />
+      <li>
+        <span></span>
+        {{ data.bedrooms.quantity }} {{ bedroomLabel }}
+      </li>
+      <li v-if="data.bedrooms.bed">
+        <span></span>
+        {{ data.bedrooms.bed }} {{ bedsLabel }}
+      </li>
+      <li>
+        <span></span>
+        {{ data.bathrooms }} {{ bathroomsLabel }}
+      </li>
     </ul>
   </div>
 </template>

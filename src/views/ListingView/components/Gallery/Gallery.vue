@@ -9,12 +9,10 @@ import { fancyboxShow } from '@/views/ListingView/components/Gallery/utils/fancy
 import { orderByIndex } from '@/views/ListingView/components/Gallery/utils/order'
 import type { Item } from '@/views/ListingView/components/Gallery/utils/types'
 // CONTENT
-import { listingCore } from '@/views/ListingView/utils/useParseContent'
+import media from '@/content/fr/ListingTest/medias.json'
 
-const { medias } = await listingCore()
-
-const coverImage = computed(() => medias.images.find((img) => img.cover === true))
-const mosaicImages = computed(() => medias.images.filter((img) => !img.cover))
+const coverImage = computed(() => media.images.find((img) => img.cover === true))
+const mosaicImages = computed(() => media.images.filter((img) => !img.cover))
 
 const lightboxItems = computed<Item[]>(() => {
   const base: Item[] = []

@@ -4,10 +4,7 @@
 @use '@/styles/variables/borders' as borders;
 
 .availabilities-listing__comp {
-  .cal-root {
-    max-width: none !important;
-    width: 100%;
-  }
+
 
   h2 {
     margin-bottom: var(--gutter-spacing-md) !important;

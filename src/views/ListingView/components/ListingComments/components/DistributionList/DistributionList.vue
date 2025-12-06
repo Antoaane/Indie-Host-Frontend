@@ -20,22 +20,20 @@ console.log(`${props.entries.length ? '✅' : '❌'} [DistributionList.vue](setu
 
 <template>
   <section class="listing-comments__distribution">
-    <h3 v-html="title"></h3>
+    <h3>{{ title }}</h3>
     <div>
       <ul class="listing-comments__progress-list">
         <li
           v-for="(entry, e) in entries.slice().reverse()"
           :key="entry.rating"
         >
-          <span class="stars">
-            <span v-html="e + 1"></span>
-            <Star :size="14" />
-          </span>
+          <span class="stars">{{ e + 1 }} <Star :size="14" /></span>
           <progress
             :value="entry.percentage"
             max="100"
-            v-html="`${entry.percentage}%`"
-          ></progress>
+          >
+            {{ entry.percentage }}%
+          </progress>
         </li>
       </ul>
 
@@ -44,7 +42,7 @@ console.log(`${props.entries.length ? '✅' : '❌'} [DistributionList.vue](setu
           v-for="entry in entries.slice().reverse()"
           :key="entry.rating"
         >
-          <span v-html="entry.count"></span>
+          <span>{{ entry.count }}</span>
         </li>
       </ul>
     </div>

@@ -5,7 +5,6 @@ import { computed } from 'vue'
 import DatePicker from '@/components/DatePicker/DatePicker.vue'
 import type { BookingsModel } from '@/views/ListingView/types/listing'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
-import { vp } from '@/utils/viewport'
 
 const props = withDefaults(
   defineProps<{
@@ -40,7 +39,6 @@ const disabledDates = computed<RangeISO[]>(() => (props.data?.bookedDays ?? []).
     <DatePicker
       v-model:model-value="selection"
       :disabled-dates="disabledDates"
-      :numberOfMonths="vp.lg ? 3 : 2"
     />
   </div>
 </template>

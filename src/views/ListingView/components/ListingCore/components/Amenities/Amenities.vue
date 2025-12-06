@@ -92,7 +92,9 @@ function closeOverlay() {
 <template>
   <section class="amenities-listing__comp">
     <div class="amenities-listing__header">
-      <h2 v-html="staticContent.title"></h2>
+      <h2>
+        {{ staticContent.title }}
+      </h2>
     </div>
 
     <ul
@@ -108,10 +110,7 @@ function closeOverlay() {
           class="amenity-icon"
           aria-hidden="true"
         />
-        <span
-          class="amenity-name"
-          v-html="amenity.name"
-        ></span>
+        <span class="amenity-name">{{ amenity.name }}</span>
       </li>
     </ul>
 
@@ -119,8 +118,9 @@ function closeOverlay() {
       <button
         type="button"
         @click="openOverlay"
-        v-html="staticContent.ctaLabel"
-      ></button>
+      >
+        {{ staticContent.ctaLabel }}
+      </button>
     </div>
 
     <div
@@ -133,7 +133,7 @@ function closeOverlay() {
       <div class="amenities-overlay__panel">
         <div class="amenities-overlay__header">
           <div class="amenities-overlay__title">
-            <h2 v-html="staticContent.overlayTitle || staticContent.title"></h2>
+            <h2>{{ staticContent.overlayTitle || staticContent.title }}</h2>
           </div>
           <div class="amenities-overlay__close">
             <button
@@ -151,31 +151,29 @@ function closeOverlay() {
 
         <div class="amenities-overlay__body">
           <div
-          v-for="category in categorizedAmenities"
-          :key="category.name"
-          class="amenities-overlay__category"
-        >
-          <h3 v-html="category.name"></h3>
-          <ul>
-            <li
-              v-for="amenity in category.items"
-              :key="`${category.name}-${amenity.name}`"
-            >
+            v-for="category in categorizedAmenities"
+            :key="category.name"
+            class="amenities-overlay__category"
+          >
+            <h3>{{ category.name }}</h3>
+            <ul>
+              <li
+                v-for="amenity in category.items"
+                :key="`${category.name}-${amenity.name}`"
+              >
                 <component
                   :is="resolveIcon(amenity.icon)"
                   class="amenity-icon"
                   aria-hidden="true"
                 />
                 <div class="amenity-texts">
-                  <p
-                    class="amenity-name"
-                    v-html="amenity.name"
-                  ></p>
+                  <p class="amenity-name">{{ amenity.name }}</p>
                   <p
                     v-if="amenity.description"
                     class="amenity-description"
-                    v-html="amenity.description"
-                  ></p>
+                  >
+                    {{ amenity.description }}
+                  </p>
                 </div>
               </li>
             </ul>

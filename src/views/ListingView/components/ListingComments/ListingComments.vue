@@ -251,8 +251,9 @@ onMounted(() => {
           class=""
           :disabled="!commentsCount"
           @click="openOverlay"
-          v-html="content.ctaLabel"
-        ></button>
+        >
+          {{ content.ctaLabel }}
+        </button>
       </div>
     </div>
 
@@ -278,7 +279,7 @@ onMounted(() => {
         <div class="listing-comments__overlay-body">
           <div class="listing-comments__overlay-summary">
             <div class="summary_container">
-              <h2 v-html="content.title" />
+              <h2>{{ content.title }}</h2>
               <SummaryCard
                 v-if="hasData"
                 :score="overallScore"

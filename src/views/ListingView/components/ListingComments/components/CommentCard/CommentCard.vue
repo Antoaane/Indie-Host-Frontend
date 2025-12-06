@@ -78,16 +78,14 @@ console.log(`${fallbackInitials.value ? '✅' : '❌'} [CommentCard.vue](fallbac
           v-else
           aria-hidden="true"
           class="listing-comments__comment-avatar"
-          v-html="fallbackInitials"
-        ></span>
+        >
+          {{ fallbackInitials }}
+        </span>
 
         <div>
-          <h4 v-html="comment.name"></h4>
+          <h4>{{ comment.name }}</h4>
           <div class="listing-comments__comment-note">
-            <p
-              v-if="stayLabel"
-              v-html="stayLabel"
-            ></p>
+            <p v-if="stayLabel">{{ stayLabel }}</p>
             <div>
               <Star
                 v-for="star in comment.note"
@@ -98,7 +96,7 @@ console.log(`${fallbackInitials.value ? '✅' : '❌'} [CommentCard.vue](fallbac
         </div>
       </div>
     </div>
-    <blockquote v-html="comment.comment"></blockquote>
+    <blockquote>{{ comment.comment }}</blockquote>
   </div>
 </template>
 
