@@ -11,8 +11,24 @@
     @include h2-title($gradiant: true);
   }
 
-  p {
-    @include base-text($thin: false);
+  &>span {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 7;
+    /* Nombre de lignes visibles */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal;
+
+    &>span {
+      @include base-text($thin: false);
+
+    }
+
+    h3 {
+      margin-top: var(--gutter-spacing-md) !important;
+      @include h4-title;
+    }
   }
 
   .description__trigger {
@@ -55,7 +71,8 @@
       @include container($max: md);
       @include gutters(padding, all, 2);
 
-      .block {
+      // .block {
+      .display__description-full {
         margin-bottom: var(--gutter-spacing);
 
         h2 {
@@ -63,6 +80,7 @@
         }
 
         h3 {
+          margin-top: var(--gutter-spacing-md) !important;
           @include h4-title;
         }
       }

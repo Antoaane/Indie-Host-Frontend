@@ -18,7 +18,7 @@ const props = defineProps<{
   staticContent: StaticContent
 }>()
 
-const travelerLabel = computed(() => formatICUMessage(props.staticContent.travelers, { count: props.data.capacity }))
+const travelerLabel = computed(() => formatICUMessage(props.staticContent.travelers, { count: props.data.guest_capacity }))
 
 const bedroomLabel = computed(() => formatICUMessage(props.staticContent.bedrooms, { count: props.data.bedrooms.quantity }))
 
@@ -32,7 +32,7 @@ const bathroomsLabel = computed(() => formatICUMessage(props.staticContent.bathr
     <h1 v-html="data.title" />
     <h2 v-html="`${data.type} — ${data.location.city}, ${data.location.country}`" />
     <ul>
-      <li v-html="`${data.capacity} ${travelerLabel}`" />
+      <li> {{ data.guest_capacity }} {{ travelerLabel }} </li>
 
       <li v-html="`<span></span> ${data.bedrooms.quantity} ${bedroomLabel}`" />
       <li

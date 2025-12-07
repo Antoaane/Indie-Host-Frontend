@@ -1,16 +1,24 @@
 // File: src/views/ListingView/utils/useParseContent.ts
 
-import { useRoute } from 'vue-router';
 import {
-  DEFAULT_LISTING_ID,
-  loadListingSegments,
-  type RawAmenities,
-  type RawBookings,
-  type RawComments,
-  type RawCore,
-  type RawMedias,
-  type RawNotes,
-} from '@/views/ListingView/utils/listingContentGateway';
+  loadCore,
+  loadBookings,
+  loadMedias,
+  loadAmenities,
+  loadNotes,
+  loadComments,
+} from './fetchListingRaw';
+
+import type {
+  RawCore,
+  RawBookings,
+  RawMedias,
+  RawAmenities,
+  RawNotes,
+  RawComments,
+} from './fetchListingRaw';
+
+// ---- TYPES ----
 import type {
   ListingParsed,
   TitleModel,
@@ -29,23 +37,8 @@ import type {
   MapModel,
 } from '@/views/ListingView/types/listing';
 
-const parsedCache = new Map<string, Promise<ListingParsed>>();
-
-function resolveListingId(explicitSlug?: string): string {
-  if (explicitSlug?.trim()) return explicitSlug.trim();
-  try {
-    const route = useRoute();
-    const param = route.params.slug;
-    if (typeof param === 'string' && param.trim()) return param.trim();
-    if (Array.isArray(param) && param[0]?.trim()) return param[0].trim();
-  } catch (_error) {
-    // ignore hook access outside of setup
-  }
-  return DEFAULT_LISTING_ID;
-}
-
 /* ------------------------------------------------------------------ */
-/* ----------------------- HELPERS ROOMS ----------------------------- */
+/* ----------------------- HELPERS ƒ?oROOMSƒ?? -------------------------- */
 /* ------------------------------------------------------------------ */
 
 // Normalise les rooms brutes du core.json -> RoomItem[]
@@ -53,7 +46,7 @@ function normalizeRooms(core: RawCore): RoomItem[] {
   return (core.rooms ?? []).map(r => ({
     name: r['room-name'],
     type: r.type,
-    // ⚠️ Ne pas forcer [] : on ne met "beds" que s'il y en a
+    // ƒªÎ‹÷? NE PAS forcer [] : on ne met "beds" que s'il y en a
     ...(r.beds && r.beds.length
       ? {
         beds: r.beds.map(b => ({
@@ -67,7 +60,7 @@ function normalizeRooms(core: RawCore): RoomItem[] {
 }
 
 
-// Regroupe les rooms par type et calcule beds / capacity cumulés
+// Regroupe les rooms par type et calcule beds / capacity cumulÇ¸s
 function groupRoomsByType(rooms: RoomItem[]): RoomsByType {
   const byType: RoomsByType = {};
   for (const r of rooms) {
@@ -77,18 +70,18 @@ function groupRoomsByType(rooms: RoomItem[]): RoomsByType {
     byType[key].rooms.push(r);
     byType[key].length += 1;
 
-    // ⚠️ Supporte rooms sans beds
+    // ƒªÎ‹÷? Supporte rooms sans beds
     const bedsQty = r.beds?.reduce((acc, b) => acc + (b.quantity ?? 0), 0) ?? 0;
     const cap = r.beds?.reduce((acc, b) => acc + (b.capacity ?? 0) * (b.quantity ?? 0), 0) ?? 0;
 
-    // "beds" peut rester 0 (même si optionnel côté type)
+    // "beds" peut rester 0 (mÇ¦me si optionnel cÇïtÇ¸ type)
     byType[key].beds = (byType[key].beds ?? 0) + bedsQty;
     byType[key].capacity += cap;
   }
   return byType;
 }
 
-// Résumé global (toutes pièces)
+// RÇ¸sumÇ¸ global (toutes piÇùces)
 function summarizeAll(rooms: RoomItem[]) {
   const bedsCount =
     rooms.reduce((acc, r) => acc + (r.beds?.reduce((a, b) => a + (b.quantity ?? 0), 0) ?? 0), 0);
@@ -101,7 +94,7 @@ function summarizeAll(rooms: RoomItem[]) {
   return { roomsCount: rooms.length, bedsCount, capacityTotal };
 }
 
-// Utilitaires d’agrégation par type
+// Utilitaires dƒ?TagrÇ¸gation par type
 const getTypeEntry = (byType: RoomsByType, key: string) =>
   byType[key] ?? { rooms: [], length: 0, beds: 0, capacity: 0 };
 
@@ -126,8 +119,8 @@ function parseTitle(core: RawCore): TitleModel {
     title: core.title,
     type,
     location: { city: core.city ?? '', region: core.region ?? '', country: core.country ?? '' },
-    capacity: core.capacity,
-    bedrooms: { quantity: bedroom.length, bed: bedroom.beds ?? 0 }, // ⚠️ safe
+    guest_capacity: core.guest_capacity,
+    bedrooms: { quantity: bedroom.length, bed: bedroom.beds ?? 0 }, // ƒª.‹÷? safe
     bathrooms,
   };
 }
@@ -150,8 +143,8 @@ function parseHost(core: RawCore): HostProfileModel {
 
 function parseDescription(core: RawCore): DescriptionModel {
   return {
-    brief: core.brief,
-    blocks: core.description.map(b => ({ title: b.title, content: b.content })),
+    description: core.description,
+    // blocks: core.description.map(b => ({ title: b.title, content: b.content })),
   };
 }
 
@@ -234,18 +227,26 @@ function parseComments(raw: RawComments): { pages: CommentsPagesModel; flat: Com
 
   const flat = pages.flat();
 
-  console.log(`${flat.length ? '✅' : '❌'} [useParseContent.ts](parseComments) comments:parse parsedCount=${flat.length} ready`);
-  console.log(`${'ℹ️'} [useParseContent.ts](parseComments) comments:pagesDetected pagesCount=${pages.length} loaded`);
+  console.log(`${flat.length ? 'ƒo.' : 'ƒ?O'} [useParseContent.ts](parseComments) comments:parse parsedCount=${flat.length} ready`);
+  console.log(`${'ƒ"û‹÷?'} [useParseContent.ts](parseComments) comments:pagesDetected pagesCount=${pages.length} loaded`);
 
   return { pages, flat };
 }
 
-async function buildListingParsed(listingId: string): Promise<ListingParsed> {
-  const { core, bookings, medias, amenities, notes, comments } = await loadListingSegments(listingId);
+// ---- UTIL PRINCIPAL ----
+export async function listingCore(): Promise<ListingParsed> {
+  const [core, bookings, medias, amenities, notes, comments] = await Promise.all([
+    loadCore(),
+    loadBookings(),
+    loadMedias(),
+    loadAmenities(),
+    loadNotes(),
+    loadComments(),
+  ]);
 
   const parsedComments = parseComments(comments);
-  console.log(`${parsedComments.flat.length ? '✅' : '❌'} [useParseContent.ts](listingCore) listingCore:load commentsCount=${parsedComments.flat.length} aggregated`);
-  console.log(`${'ℹ️'} [useParseContent.ts](listingCore) listingCore:commentsPages available=${parsedComments.pages.length} cached`);
+  console.log(`${parsedComments.flat.length ? 'ƒo.' : 'ƒ?O'} [useParseContent.ts](listingCore) listingCore:load commentsCount=${parsedComments.flat.length} aggregated`);
+  console.log(`${'ƒ"û‹÷?'} [useParseContent.ts](listingCore) listingCore:commentsPages available=${parsedComments.pages.length} cached`);
 
   return {
     title: parseTitle(core),
@@ -263,16 +264,7 @@ async function buildListingParsed(listingId: string): Promise<ListingParsed> {
   };
 }
 
-// ---- Util principal ----
-export async function listingCore(slug?: string): Promise<ListingParsed> {
-  const listingId = resolveListingId(slug);
-  if (!parsedCache.has(listingId)) {
-    parsedCache.set(listingId, buildListingParsed(listingId));
-  }
-  return parsedCache.get(listingId)!;
-}
-
-// ---- Exemple d’usage ----
+// ---- EXEMPLE Dƒ?TUSAGE ----
 // const data = await listingCore();
-// const bedroom = data.rooms.byType['bedroom']; // accès direct demandé
+// const bedroom = data.rooms.byType['bedroom']; // accÇùs direct demandÇ¸
 // console.log(bedroom.length, bedroom.beds, data.rooms.summary.capacityTotal);
