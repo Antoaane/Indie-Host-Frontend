@@ -14,7 +14,7 @@ export type TitleModel = {
     region: string;
     country: string;
   };
-  capacity: number;
+  guest_capacity: number;
   bedrooms: { quantity: number; bed?: number };
   bathrooms: number;
 };
@@ -36,8 +36,8 @@ export type HostProfileModel = {
 // -------- DESCRIPTION --------
 export type DescriptionBlock = { title: string; content: string };
 export type DescriptionModel = {
-  brief?: string;
-  blocks: DescriptionBlock[];
+  description: string;
+  // blocks: DescriptionBlock[];
 };
 
 export type MapModel = {

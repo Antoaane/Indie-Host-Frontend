@@ -1,15 +1,22 @@
 // File: src/views/ListingView/utils/useParseContent.ts
 
-// --- MODE: "local-json" pour le MVP / "remote" pour le backend ---
-const USE_REMOTE = false;
+import {
+  loadCore,
+  loadBookings,
+  loadMedias,
+  loadAmenities,
+  loadNotes,
+  loadComments,
+} from './fetchListingRaw';
 
-// ---- LOCAL JSON (MVP) ----
-import coreJSON from '@/content/fr/ListingTest/core.json';
-import bookingsJSON from '@/content/fr/ListingTest/bookings.json';
-import mediasJSON from '@/content/fr/ListingTest/medias.json';
-import amenitiesJSON from '@/content/fr/ListingTest/amenities.json';
-import notesJSON from '@/content/fr/ListingTest/notes.json';
-import commentsJSON from '@/content/fr/ListingTest/comments.json';
+import type {
+  RawCore,
+  RawBookings,
+  RawMedias,
+  RawAmenities,
+  RawNotes,
+  RawComments,
+} from './fetchListingRaw';
 
 // ---- TYPES ----
 import type {
@@ -30,49 +37,8 @@ import type {
   MapModel,
 } from '@/views/ListingView/types/listing';
 
-// Typages "bruts" déduits des JSON exemples
-type RawCore = typeof coreJSON;
-type RawBookings = typeof bookingsJSON;
-type RawMedias = typeof mediasJSON;
-type RawAmenities = typeof amenitiesJSON;
-type RawNotes = typeof notesJSON;
-type RawComments = typeof commentsJSON;
-
-// ---- FETCH distant (inactif tant que USE_REMOTE=false) ----
-async function fetchRemote<T>(url: string): Promise<T> {
-  const { default: axios } = await import('axios'); // import dynamique
-  const { data } = await axios.get<T>(url, { withCredentials: false });
-  return data;
-}
-
-// ---- LOADERS ----
-async function loadCore(): Promise<RawCore> {
-  if (USE_REMOTE) return fetchRemote<RawCore>('/api/listings/53028879/core');
-  return coreJSON as RawCore;
-}
-async function loadBookings(): Promise<RawBookings> {
-  if (USE_REMOTE) return fetchRemote<RawBookings>('/api/listings/53028879/bookings');
-  return bookingsJSON as RawBookings;
-}
-async function loadMedias(): Promise<RawMedias> {
-  if (USE_REMOTE) return fetchRemote<RawMedias>('/api/listings/53028879/medias');
-  return mediasJSON as RawMedias;
-}
-async function loadAmenities(): Promise<RawAmenities> {
-  if (USE_REMOTE) return fetchRemote<RawAmenities>('/api/listings/53028879/amenities');
-  return amenitiesJSON as RawAmenities;
-}
-async function loadNotes(): Promise<RawNotes> {
-  if (USE_REMOTE) return fetchRemote<RawNotes>('/api/listings/53028879/notes');
-  return notesJSON as RawNotes;
-}
-async function loadComments(): Promise<RawComments> {
-  if (USE_REMOTE) return fetchRemote<RawComments>('/api/listings/53028879/comments');
-  return commentsJSON as RawComments;
-}
-
 /* ------------------------------------------------------------------ */
-/* ----------------------- HELPERS “ROOMS” -------------------------- */
+/* ----------------------- HELPERS ƒ?oROOMSƒ?? -------------------------- */
 /* ------------------------------------------------------------------ */
 
 // Normalise les rooms brutes du core.json -> RoomItem[]
@@ -80,7 +46,7 @@ function normalizeRooms(core: RawCore): RoomItem[] {
   return (core.rooms ?? []).map(r => ({
     name: r['room-name'],
     type: r.type,
-    // ⬇️ NE PAS forcer [] : on ne met "beds" que s'il y en a
+    // ƒªÎ‹÷? NE PAS forcer [] : on ne met "beds" que s'il y en a
     ...(r.beds && r.beds.length
       ? {
         beds: r.beds.map(b => ({
@@ -94,7 +60,7 @@ function normalizeRooms(core: RawCore): RoomItem[] {
 }
 
 
-// Regroupe les rooms par type et calcule beds / capacity cumulés
+// Regroupe les rooms par type et calcule beds / capacity cumulÇ¸s
 function groupRoomsByType(rooms: RoomItem[]): RoomsByType {
   const byType: RoomsByType = {};
   for (const r of rooms) {
@@ -104,18 +70,18 @@ function groupRoomsByType(rooms: RoomItem[]): RoomsByType {
     byType[key].rooms.push(r);
     byType[key].length += 1;
 
-    // ⬇️ Supporte rooms sans beds
+    // ƒªÎ‹÷? Supporte rooms sans beds
     const bedsQty = r.beds?.reduce((acc, b) => acc + (b.quantity ?? 0), 0) ?? 0;
     const cap = r.beds?.reduce((acc, b) => acc + (b.capacity ?? 0) * (b.quantity ?? 0), 0) ?? 0;
 
-    // "beds" peut rester 0 (même si optionnel côté type)
+    // "beds" peut rester 0 (mÇ¦me si optionnel cÇïtÇ¸ type)
     byType[key].beds = (byType[key].beds ?? 0) + bedsQty;
     byType[key].capacity += cap;
   }
   return byType;
 }
 
-// Résumé global (toutes pièces)
+// RÇ¸sumÇ¸ global (toutes piÇùces)
 function summarizeAll(rooms: RoomItem[]) {
   const bedsCount =
     rooms.reduce((acc, r) => acc + (r.beds?.reduce((a, b) => a + (b.quantity ?? 0), 0) ?? 0), 0);
@@ -128,7 +94,7 @@ function summarizeAll(rooms: RoomItem[]) {
   return { roomsCount: rooms.length, bedsCount, capacityTotal };
 }
 
-// Utilitaires d’agrégation par type
+// Utilitaires dƒ?TagrÇ¸gation par type
 const getTypeEntry = (byType: RoomsByType, key: string) =>
   byType[key] ?? { rooms: [], length: 0, beds: 0, capacity: 0 };
 
@@ -153,8 +119,8 @@ function parseTitle(core: RawCore): TitleModel {
     title: core.title,
     type,
     location: { city: core.city ?? '', region: core.region ?? '', country: core.country ?? '' },
-    capacity: core.capacity,
-    bedrooms: { quantity: bedroom.length, bed: bedroom.beds ?? 0 }, // ⬅️ safe
+    guest_capacity: core.guest_capacity,
+    bedrooms: { quantity: bedroom.length, bed: bedroom.beds ?? 0 }, // ƒª.‹÷? safe
     bathrooms,
   };
 }
@@ -177,8 +143,8 @@ function parseHost(core: RawCore): HostProfileModel {
 
 function parseDescription(core: RawCore): DescriptionModel {
   return {
-    brief: core.brief,
-    blocks: core.description.map(b => ({ title: b.title, content: b.content })),
+    description: core.description,
+    // blocks: core.description.map(b => ({ title: b.title, content: b.content })),
   };
 }
 
@@ -261,8 +227,8 @@ function parseComments(raw: RawComments): { pages: CommentsPagesModel; flat: Com
 
   const flat = pages.flat();
 
-  console.log(`${flat.length ? '✅' : '❌'} [useParseContent.ts](parseComments) comments:parse parsedCount=${flat.length} ready`);
-  console.log(`${'ℹ️'} [useParseContent.ts](parseComments) comments:pagesDetected pagesCount=${pages.length} loaded`);
+  console.log(`${flat.length ? 'ƒo.' : 'ƒ?O'} [useParseContent.ts](parseComments) comments:parse parsedCount=${flat.length} ready`);
+  console.log(`${'ƒ"û‹÷?'} [useParseContent.ts](parseComments) comments:pagesDetected pagesCount=${pages.length} loaded`);
 
   return { pages, flat };
 }
@@ -279,8 +245,8 @@ export async function listingCore(): Promise<ListingParsed> {
   ]);
 
   const parsedComments = parseComments(comments);
-  console.log(`${parsedComments.flat.length ? '✅' : '❌'} [useParseContent.ts](listingCore) listingCore:load commentsCount=${parsedComments.flat.length} aggregated`);
-  console.log(`${'ℹ️'} [useParseContent.ts](listingCore) listingCore:commentsPages available=${parsedComments.pages.length} cached`);
+  console.log(`${parsedComments.flat.length ? 'ƒo.' : 'ƒ?O'} [useParseContent.ts](listingCore) listingCore:load commentsCount=${parsedComments.flat.length} aggregated`);
+  console.log(`${'ƒ"û‹÷?'} [useParseContent.ts](listingCore) listingCore:commentsPages available=${parsedComments.pages.length} cached`);
 
   return {
     title: parseTitle(core),
@@ -298,7 +264,7 @@ export async function listingCore(): Promise<ListingParsed> {
   };
 }
 
-// ---- EXEMPLE D’USAGE ----
+// ---- EXEMPLE Dƒ?TUSAGE ----
 // const data = await listingCore();
-// const bedroom = data.rooms.byType['bedroom']; // accès direct demandé
+// const bedroom = data.rooms.byType['bedroom']; // accÇùs direct demandÇ¸
 // console.log(bedroom.length, bedroom.beds, data.rooms.summary.capacityTotal);

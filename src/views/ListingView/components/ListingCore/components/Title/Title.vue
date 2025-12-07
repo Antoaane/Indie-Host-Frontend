@@ -18,7 +18,7 @@ const props = defineProps<{
   staticContent: StaticContent
 }>()
 
-const travelerLabel = computed(() => formatICUMessage(props.staticContent.travelers, { count: props.data.capacity }))
+const travelerLabel = computed(() => formatICUMessage(props.staticContent.travelers, { count: props.data.guest_capacity }))
 
 const bedroomLabel = computed(() => formatICUMessage(props.staticContent.bedrooms, { count: props.data.bedrooms.quantity }))
 
@@ -34,7 +34,7 @@ const bathroomsLabel = computed(() => formatICUMessage(props.staticContent.bathr
     </h1>
     <h2> {{ data.type }} — {{ data.location.city }}, {{ data.location.country }} </h2>
     <ul>
-      <li> {{ data.capacity }} {{ travelerLabel }} </li>
+      <li> {{ data.guest_capacity }} {{ travelerLabel }} </li>
 
       <li>
         <span></span>

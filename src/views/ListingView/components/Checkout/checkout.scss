@@ -146,17 +146,26 @@
 
 .checkout-card__calendar {
   position: absolute;
-  z-index: 5;
-  inset: auto 0 0 0;
-  transform: translateY(calc(100% + 0.35rem));
+  z-index: 99;
+  top: 0;
+  right: -0.75rem;
+  transform: translateY(2.5rem);
 
-  width: max-content;
-  max-width: min(100%, 32rem);
-  @include gutters(padding, all, 0.25);
+  width: 30rem;
+  @include gutters(padding, all, 0.5);
 
-  background: $accent;
-  border-radius: borders.$rounded-lg;
-  @include big-shadow();
+  background: rgba($accent, 0.5);
+  backdrop-filter: blur(12px);
+  border-bottom-left-radius: borders.$rounded-xxl;
+  border-bottom-right-radius: borders.$rounded-xxl;
+  border-top-right-radius: borders.$rounded-xl;
+  border-top-right-radius: borders.$rounded-xl;
+  @include big-shadow($color: rgba(0, 0, 0, 0.25));
+
+  .cal-body {
+    margin-top: 0.5rem;
+    background: rgba($accent, 0.75);
+  }
 }
 
 .checkout-card__dropdown {

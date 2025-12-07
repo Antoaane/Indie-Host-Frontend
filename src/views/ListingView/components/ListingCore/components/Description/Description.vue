@@ -63,7 +63,7 @@ onBeforeUnmount(() => {
       {{ staticContent.title }}
     </h2>
 
-    <p v-html="data.brief" />
+    <span v-html="data.description" />
 
     <div class="description__trigger">
       <button
@@ -106,7 +106,11 @@ onBeforeUnmount(() => {
             </div>
 
             <h2 v-html="staticContent.title" />
-            <div class="block">
+            <span
+              class="display__description-full"
+              v-html="data.description"
+            />
+            <!-- <div class="block">
               <p v-html="data.brief" />
             </div>
             <div
@@ -116,7 +120,7 @@ onBeforeUnmount(() => {
             >
               <h3 v-html="block.title" />
               <p v-html="block.content" />
-            </div>
+            </div> -->
           </div>
         </transition>
       </div>

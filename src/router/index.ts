@@ -25,6 +25,11 @@ const router = createRouter({
       component: Listing,
     },
     {
+      path: '/listing-test/:id',
+      name: 'listing-id',
+      component: Listing,
+    },
+    {
       path: '/donation',
       name: 'Donation',
       component: () => import('@/views/Donation/_DonationPage.vue'),

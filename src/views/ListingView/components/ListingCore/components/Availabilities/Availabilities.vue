@@ -39,6 +39,7 @@ const disabledDates = computed<RangeISO[]>(() => (props.data?.bookedDays ?? []).
     <DatePicker
       v-model:model-value="selection"
       :disabled-dates="disabledDates"
+      :numberOfMonths="3"
     />
   </div>
 </template>
