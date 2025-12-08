@@ -310,6 +310,18 @@
               "value": "booking"
             },
             {
+              "label": "Abritel",
+              "value": "abritel"
+            },
+            {
+              "label": "Expedia Grp.",
+              "value": "expedia"
+            },
+            {
+              "label": "Mon propre site web",
+              "value": "website"
+            },
+            {
               "label": "Autre",
               "value": "autre"
             },

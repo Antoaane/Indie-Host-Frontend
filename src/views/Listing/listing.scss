@@ -3,10 +3,19 @@
 @use '@/styles/variables/globals' as *;
 
 #listing-page {
-  padding-top: $nav-height;
-  height: calc(100vh - $nav-height);
+  height: 100vh;
+
+  @include min-width(lg) {
+    padding-top: $nav-height;
+    height: calc(100vh - $nav-height);
+
+    .sub-container {
+      height: calc(100vh - $nav-height);
+    }
+  }
 
   .sub-container {
-    height: calc(100vh - $nav-height);
+    height: 100vh;
   }
+
 }

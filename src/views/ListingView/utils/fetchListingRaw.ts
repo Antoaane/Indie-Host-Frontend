@@ -3,18 +3,18 @@
 import coreJSON from '@/content/fr/ListingTest/core.json';
 import bookingsJSON from '@/content/fr/ListingTest/bookings.json';
 import mediasJSON from '@/content/fr/ListingTest/medias.json';
-import amenitiesJSON from '@/content/fr/ListingTest/amenities.json';
 import notesJSON from '@/content/fr/ListingTest/notes.json';
 import commentsJSON from '@/content/fr/ListingTest/comments.json';
+import hostJSON from '@/content/fr/ListingTest/host.json';
 
 // Typages "bruts" dÇ¸duits des JSON exemples
 type RawCoreBase = typeof coreJSON;
 export type RawCore = RawCoreBase & { lat?: number; lng?: number; zoom?: number };
 export type RawBookings = typeof bookingsJSON;
 export type RawMedias = typeof mediasJSON;
-export type RawAmenities = typeof amenitiesJSON;
 export type RawNotes = typeof notesJSON;
 export type RawComments = typeof commentsJSON;
+export type RawHost = typeof hostJSON;
 
 const BASE_API_URL = import.meta.env.VITE_API_BASE_URL;
 const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
@@ -61,16 +61,6 @@ export async function loadMedias(): Promise<RawMedias> {
   }
 }
 
-export async function loadAmenities(): Promise<RawAmenities> {
-  if (!USE_REMOTE) return amenitiesJSON as RawAmenities;
-  try {
-    return await fetchRemote<RawAmenities>(buildUrl('amenities'));
-  } catch (err) {
-    console.warn('[fetchListingRaw] loadAmenities fallback to local JSON', err);
-    return amenitiesJSON as RawAmenities;
-  }
-}
-
 export async function loadNotes(): Promise<RawNotes> {
   if (!USE_REMOTE) return notesJSON as RawNotes;
   try {
@@ -88,5 +78,15 @@ export async function loadComments(): Promise<RawComments> {
   } catch (err) {
     console.warn('[fetchListingRaw] loadComments fallback to local JSON', err);
     return commentsJSON as RawComments;
+  }
+}
+
+export async function loadHost(): Promise<RawHost> {
+  if (!USE_REMOTE) return hostJSON as RawHost;
+  try {
+    return await fetchRemote<RawHost>(buildUrl('host'));
+  } catch (err) {
+    console.warn('[fetchListingRaw] loadHost fallback to local JSON', err);
+    return hostJSON as RawHost;
   }
 }

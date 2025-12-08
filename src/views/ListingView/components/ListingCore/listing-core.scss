@@ -17,13 +17,18 @@ html:has(#listing-core) {
   background-color: $accent;
   border-radius: borders.$rounded-lg;
 
-  overflow-y: scroll;
+  // overflow-y: scroll;
   scrollbar-width: thin;
   /* auto | thin | none */
   scrollbar-color: rgba($secondary, 0.25) $translucent;
   /* thumb | track */
 
   @include gutters(padding, all);
+
+  @include min-width(lg) {
+    overflow: hidden;
+    overflow-y: scroll;
+  }
 
   /* Cible la scrollbar entière */
   ::-webkit-scrollbar {

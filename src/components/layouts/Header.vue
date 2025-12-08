@@ -2,11 +2,14 @@
 
 <script setup lang="ts">
 // DEPS
-import { ref, onMounted, computed } from 'vue'
+import { onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
 // COMPONENTS
 import NavListing from '@/components/navs/NavListing/NavListing.vue'
 import Nav from '@/components/navs/Nav/Nav.vue'
+import BottomNav from '@/components/navs/BottomNav/BottomNav.vue'
+// UTILS
+import { vp } from '@/utils/viewport'
 // import NavDashboard from '@/components/navs/nav/NavDashboard.vue'
 
 // const isLanding = ref<boolean>(true)
@@ -31,6 +34,8 @@ onMounted(() => {
     nav?.style.removeProperty('opacity')
     nav?.style.removeProperty('transform')
   }, 650)
+
+  // console.log('lg ?', vp.lg.value)
 })
 </script>
 
@@ -48,7 +53,7 @@ onMounted(() => {
     />
 
     <Nav
-      v-else
+      v-if="vp.lg.value"
       :items="[
         { id: 'messagery', name: 'Messagerie', link: '', target: true },
         { id: 'reservations', name: 'Réservations', link: '', target: true },

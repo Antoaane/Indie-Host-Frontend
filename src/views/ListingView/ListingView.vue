@@ -29,44 +29,87 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="listing-view">
-    <div class="gallery-container">
-      <Suspense>
-        <Gallery />
-        <template #fallback><div class="skeleton">Chargement…</div></template>
-      </Suspense>
-    </div>
+  <template v-if="vp.lg.value">
+    <div class="listing-view">
+      <div class="gallery-container">
+        <Suspense>
+          <Gallery />
+          <template #fallback><div class="skeleton">Chargement…</div></template>
+        </Suspense>
+      </div>
 
-    <div class="core-container">
-      <Suspense>
-        <ListingCore v-model:model-value="bookingRange" />
-        <template #fallback>
-          <div class="skeleton">Chargement…</div>
-        </template>
-      </Suspense>
-    </div>
+      <div class="core-container">
+        <Suspense>
+          <ListingCore v-model:model-value="bookingRange" />
+          <template #fallback>
+            <div class="skeleton">Chargement…</div>
+          </template>
+        </Suspense>
+      </div>
 
-    <div class="stay-container">
-      <template v-if="listingData">
+      <div class="stay-container">
         <CheckoutMin
+          v-if="listingData"
           v-model:model-value="bookingRange"
           :price-per-night="listingData.bookings.price"
           :fees="listingData.bookings.fees"
           :booked-days="listingData.bookings.bookedDays"
         />
-      </template>
-      <template v-else>
-        <div class="skeleton">Chargement…</div>
-      </template>
-
-      <Suspense>
-        <ListingComments #default />
-        <template #fallback>
+        <template v-else>
           <div class="skeleton">Chargement…</div>
         </template>
-      </Suspense>
+
+        <Suspense>
+          <ListingComments #default />
+          <template #fallback>
+            <div class="skeleton">Chargement…</div>
+          </template>
+        </Suspense>
+      </div>
     </div>
-  </div>
+  </template>
+
+  <template v-else>
+    <div class="listing_main">
+      <div class="gallery-container">
+        <Suspense>
+          <Gallery />
+          <template #fallback><div class="skeleton">Chargement…</div></template>
+        </Suspense>
+      </div>
+
+      <div class="core-container">
+        <Suspense>
+          <ListingCore v-model:model-value="bookingRange" />
+          <template #fallback>
+            <div class="skeleton">Chargement…</div>
+          </template>
+        </Suspense>
+      </div>
+
+      <div class="comments-container">
+        <Suspense>
+          <ListingComments #default />
+          <template #fallback>
+            <div class="skeleton">Chargement…</div>
+          </template>
+        </Suspense>
+      </div>
+
+      <footer>
+        <CheckoutMin
+          v-if="listingData"
+          v-model:model-value="bookingRange"
+          :price-per-night="listingData.bookings.price"
+          :fees="listingData.bookings.fees"
+          :booked-days="listingData.bookings.bookedDays"
+        />
+        <template v-else>
+          <div class="skeleton">Chargement…</div>
+        </template>
+      </footer>
+    </div>
+  </template>
 </template>
 
 <style lang="scss">

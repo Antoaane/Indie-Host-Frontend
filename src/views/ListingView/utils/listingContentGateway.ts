@@ -4,24 +4,24 @@
 import coreJSON from '@/content/fr/ListingTest/core.json';
 import bookingsJSON from '@/content/fr/ListingTest/bookings.json';
 import mediasJSON from '@/content/fr/ListingTest/medias.json';
-import amenitiesJSON from '@/content/fr/ListingTest/amenities.json';
 import notesJSON from '@/content/fr/ListingTest/notes.json';
 import commentsJSON from '@/content/fr/ListingTest/comments.json';
+import hostJSON from '@/content/fr/ListingTest/host.json';
 
 export type RawCore = (typeof coreJSON) & { lat?: number; lng?: number; zoom?: number };
 export type RawBookings = typeof bookingsJSON;
 export type RawMedias = typeof mediasJSON;
-export type RawAmenities = typeof amenitiesJSON;
 export type RawNotes = typeof notesJSON;
 export type RawComments = typeof commentsJSON;
+export type RawHost = typeof hostJSON;
 
 export type RawSegments = {
   core: RawCore;
   bookings: RawBookings;
   medias: RawMedias;
-  amenities: RawAmenities;
   notes: RawNotes;
   comments: RawComments;
+  host: RawHost;
 };
 
 export const DEFAULT_LISTING_ID = (coreJSON as { id?: string }).id || 'listing-test';
@@ -192,27 +192,35 @@ function sanitizeCore(input: unknown): SanitizeResult<RawCore> {
     issues.push({ key: 'perks', expected: 'array', received: perksSource ?? 'absent' });
   }
 
-  if (isObject((input as Record<string, unknown>).host)) {
-    const host = (input as Record<string, unknown>).host as Record<string, unknown>;
-    const name = asString(host.name);
-    const seniority = asNumber(host.seniority);
-    const status = asString(host.status);
-    const globalNote = asNumber(host['global-note'] ?? host.globalNote);
-    const avatar = asString(host.avatar ?? host.picture);
-    const catalogLink = asString(host['catalog-link'] ?? host.catalogLink);
+  const amenitiesSource = (input as Record<string, unknown>).amenities;
+  if (Array.isArray(amenitiesSource)) {
+    const amenities = (amenitiesSource as unknown[])
+      .map((amenity: unknown) => {
+        if (!isObject(amenity)) return null;
+        const amenityObj = amenity as Record<string, unknown>;
+        const name = asString(amenityObj.name);
+        const description = asString(amenityObj.description);
+        const icon = asString(amenityObj.icon);
+        const category = asString(amenityObj.category);
+        const relevance = asNumber(amenityObj.relevance);
+        const pinned = asBoolean(amenityObj.pinned);
+        if (!name || !icon || !category || relevance === undefined) return null;
+        return {
+          name,
+          description,
+          icon,
+          category,
+          relevance,
+          pinned: Boolean(pinned),
+        };
+      })
+      .filter(Boolean);
 
-    const hostSafe: Partial<RawCore['host']> = {};
-    if (name) hostSafe.name = name;
-    if (status) hostSafe.status = status;
-    if (seniority !== undefined) hostSafe.seniority = seniority as never;
-    if (globalNote !== undefined) hostSafe['global-note'] = globalNote as never;
-    if (avatar) hostSafe.avatar = avatar;
-    if (catalogLink) hostSafe['catalog-link'] = catalogLink;
-
-    if (Object.keys(hostSafe).length) safe.host = hostSafe as RawCore['host'];
+    if (amenities.length) safe.amenities = amenities as RawCore['amenities'];
+    else issues.push({ key: 'amenities', expected: 'array<amenity>', received: amenitiesSource });
   }
   else {
-    issues.push({ key: 'host', expected: 'object', received: (input as Record<string, unknown>).host ?? 'absent' });
+    issues.push({ key: 'amenities', expected: 'array', received: amenitiesSource ?? 'absent' });
   }
 
   const descriptionSource = (input as Record<string, unknown>).description;
@@ -234,6 +242,37 @@ function sanitizeCore(input: unknown): SanitizeResult<RawCore> {
   else {
     issues.push({ key: 'description', expected: 'array', received: descriptionSource ?? 'absent' });
   }
+
+  return { data: safe, issues };
+}
+
+function sanitizeHost(input: unknown): SanitizeResult<RawHost> {
+  if (!isObject(input)) return { data: {}, issues: [{ key: 'host', expected: 'object', received: input ?? 'absent' }] };
+  const safe: Partial<RawHost> = {};
+  const issues: Issue[] = [];
+
+  const name = asString((input as Record<string, unknown>).name);
+  const status = asString((input as Record<string, unknown>).status);
+  const seniority = asNumber((input as Record<string, unknown>).seniority);
+  const globalNote = asNumber(
+    (input as Record<string, unknown>)['global-note'] ??
+    (input as Record<string, unknown>).globalNote,
+  );
+  const avatar = asString(
+    (input as Record<string, unknown>).avatar ??
+    (input as Record<string, unknown>).picture,
+  );
+  const catalogLink = asString(
+    (input as Record<string, unknown>)['catalog-link'] ??
+    (input as Record<string, unknown>).catalogLink,
+  );
+
+  if (name) safe.name = name as never;
+  if (status) safe.status = status as never;
+  if (seniority !== undefined) safe.seniority = seniority as never;
+  if (globalNote !== undefined) safe['global-note'] = globalNote as never;
+  if (avatar) safe.avatar = avatar as never;
+  if (catalogLink) safe['catalog-link'] = catalogLink as never;
 
   return { data: safe, issues };
 }
@@ -350,45 +389,6 @@ function sanitizeMedias(input: unknown): SanitizeResult<RawMedias> {
   return { data: safe, issues };
 }
 
-function sanitizeAmenities(input: unknown): SanitizeResult<RawAmenities> {
-  if (!isObject(input)) return { data: {}, issues: [{ key: 'amenities', expected: 'object', received: input ?? 'absent' }] };
-  const safe: Partial<RawAmenities> = {};
-  const issues: Issue[] = [];
-
-  const amenitiesSource = (input as Record<string, unknown>).amenities;
-  if (Array.isArray(amenitiesSource)) {
-    const amenities = (amenitiesSource as unknown[])
-      .map((amenity: unknown) => {
-        if (!isObject(amenity)) return null;
-        const amenityObj = amenity as Record<string, unknown>;
-        const name = asString(amenityObj.name);
-        const description = asString(amenityObj.description);
-        const icon = asString(amenityObj.icon);
-        const category = asString(amenityObj.category);
-        const relevance = asNumber(amenityObj.relevance);
-        const pinned = asBoolean(amenityObj.pinned);
-        if (!name || !icon || !category || relevance === undefined) return null;
-        return {
-          name,
-          description,
-          icon,
-          category,
-          relevance,
-          pinned: Boolean(pinned),
-        };
-      })
-      .filter(Boolean);
-
-    if (amenities.length) safe.amenities = amenities as RawAmenities['amenities'];
-    else issues.push({ key: 'amenities', expected: 'array<amenity>', received: amenitiesSource });
-  }
-  else {
-    issues.push({ key: 'amenities', expected: 'array', received: amenitiesSource ?? 'absent' });
-  }
-
-  return { data: safe, issues };
-}
-
 function sanitizeNotes(input: unknown): SanitizeResult<RawNotes> {
   if (!isObject(input)) return { data: {}, issues: [{ key: 'notes', expected: 'object', received: input ?? 'absent' }] };
   const safe: Partial<RawNotes> = {};
@@ -492,9 +492,9 @@ function sanitizeComments(input: unknown): SanitizeResult<RawComments> {
 
 const sanitizers: Record<SegmentKey, (input: unknown) => SanitizeResult<RawSegments[SegmentKey]>> = {
   core: sanitizeCore,
+  host: sanitizeHost,
   bookings: sanitizeBookings,
   medias: sanitizeMedias,
-  amenities: sanitizeAmenities,
   notes: sanitizeNotes,
   comments: sanitizeComments,
 };
@@ -521,9 +521,8 @@ function mergeCore(staticData: RawCore, partial: Partial<RawCore>): RawCore {
   const fallbackBrief = partial.brief === undefined;
   const fallbackRooms = !partial.rooms?.length;
   const fallbackPerks = !partial.perks?.length;
+  const fallbackAmenities = !partial.amenities?.length;
   const fallbackDescription = !partial.description?.length;
-  const fallbackHostName = !partial.host || partial.host.name === undefined;
-  const fallbackHostStatus = !partial.host || partial.host.status === undefined;
   return {
     ...staticData,
     ...(partial.id ? { id: partial.id } : {}),
@@ -556,32 +555,37 @@ function mergeCore(staticData: RawCore, partial: Partial<RawCore>): RawCore {
       name: wrapFallbackText(perk.name, fallbackPerks),
       ...(perk.description ? { description: wrapFallbackText(perk.description, fallbackPerks) } : {}),
     })),
-    host: {
-      ...staticData.host,
-      ...(isObject(partial.host)
-        ? {
-          ...(partial.host.name ? { name: wrapFallbackText(partial.host.name, false) } : {}),
-          ...(partial.host.status ? { status: wrapFallbackText(partial.host.status, false) } : {}),
-          ...(partial.host.seniority !== undefined ? { seniority: partial.host.seniority } : {}),
-          ...(partial.host['global-note'] !== undefined
-            ? { 'global-note': partial.host['global-note'] }
-            : {}),
-          ...(partial.host.avatar ? { avatar: partial.host.avatar } : {}),
-          ...(partial.host['catalog-link'] ? { 'catalog-link': partial.host['catalog-link'] } : {}),
-        }
-        : {}),
-      ...(fallbackHostName && staticData.host.name
-        ? { name: wrapFallbackText(staticData.host.name, true) }
-        : {}),
-      ...(fallbackHostStatus && staticData.host.status
-        ? { status: wrapFallbackText(staticData.host.status, true) }
-        : {}),
-    },
+    amenities: (partial.amenities?.length ? partial.amenities : staticData.amenities).map(amenity => ({
+      ...amenity,
+      name: wrapFallbackText(amenity.name, fallbackAmenities),
+      ...(amenity.description ? { description: wrapFallbackText(amenity.description, fallbackAmenities) } : {}),
+    })),
     brief: wrapFallbackText(partial.brief ?? staticData.brief, fallbackBrief),
     description: (partial.description?.length ? partial.description : staticData.description).map(desc => ({
       title: wrapFallbackText(desc.title, fallbackDescription),
       content: wrapFallbackText(desc.content, fallbackDescription),
     })),
+  };
+}
+
+function mergeHost(staticData: RawHost, partial: Partial<RawHost>): RawHost {
+  const fallbackHostName = partial.name === undefined;
+  const fallbackHostStatus = partial.status === undefined;
+
+  return {
+    ...staticData,
+    ...(partial.name ? { name: wrapFallbackText(partial.name, false) } : {}),
+    ...(partial.status ? { status: wrapFallbackText(partial.status, false) } : {}),
+    ...(partial.seniority !== undefined ? { seniority: partial.seniority } : {}),
+    ...(partial['global-note'] !== undefined ? { 'global-note': partial['global-note'] } : {}),
+    ...(partial.avatar ? { avatar: partial.avatar } : {}),
+    ...(partial['catalog-link'] ? { 'catalog-link': partial['catalog-link'] } : {}),
+    ...(fallbackHostName && staticData.name
+      ? { name: wrapFallbackText(staticData.name, true) }
+      : {}),
+    ...(fallbackHostStatus && staticData.status
+      ? { status: wrapFallbackText(staticData.status, true) }
+      : {}),
   };
 }
 
@@ -621,17 +625,6 @@ function mergeMedias(staticData: RawMedias, partial: Partial<RawMedias>): RawMed
   };
 }
 
-function mergeAmenities(staticData: RawAmenities, partial: Partial<RawAmenities>): RawAmenities {
-  const fallbackAmenities = !partial.amenities?.length;
-  return {
-    amenities: (partial.amenities?.length ? partial.amenities : staticData.amenities).map(amenity => ({
-      ...amenity,
-      name: wrapFallbackText(amenity.name, fallbackAmenities),
-      ...(amenity.description ? { description: wrapFallbackText(amenity.description, fallbackAmenities) } : {}),
-    })),
-  };
-}
-
 function mergeNotes(staticData: RawNotes, partial: Partial<RawNotes>): RawNotes {
   const merged: RawNotes = {
     note: partial.note ?? staticData.note,
@@ -655,18 +648,18 @@ function mergeComments(staticData: RawComments, partial: Partial<RawComments>): 
 
 const mergers: Record<SegmentKey, (staticData: any, partial: any) => any> = {
   core: mergeCore,
+  host: mergeHost,
   bookings: mergeBookings,
   medias: mergeMedias,
-  amenities: mergeAmenities,
   notes: mergeNotes,
   comments: mergeComments,
 };
 
 const staticSegments: RawSegments = {
   core: coreJSON,
+  host: hostJSON,
   bookings: bookingsJSON,
   medias: mediasJSON,
-  amenities: amenitiesJSON,
   notes: notesJSON,
   comments: commentsJSON,
 };
@@ -674,35 +667,35 @@ const staticSegments: RawSegments = {
 const rawCache = new Map<string, Promise<RawSegments>>();
 
 async function loadSegmentsOnce(listingId: string): Promise<RawSegments> {
-  const [coreRemote, bookingsRemote, mediasRemote, amenitiesRemote, notesRemote, commentsRemote] =
+  const [coreRemote, hostRemote, bookingsRemote, mediasRemote, notesRemote, commentsRemote] =
     await Promise.all([
       fetchSegment('core', listingId),
+      fetchSegment('host', listingId),
       fetchSegment('bookings', listingId),
       fetchSegment('medias', listingId),
-      fetchSegment('amenities', listingId),
       fetchSegment('notes', listingId),
       fetchSegment('comments', listingId),
     ]);
 
   const sanitizedCore = sanitizers.core(coreRemote);
+  const sanitizedHost = sanitizers.host(hostRemote);
   const sanitizedBookings = sanitizers.bookings(bookingsRemote);
   const sanitizedMedias = sanitizers.medias(mediasRemote);
-  const sanitizedAmenities = sanitizers.amenities(amenitiesRemote);
   const sanitizedNotes = sanitizers.notes(notesRemote);
   const sanitizedComments = sanitizers.comments(commentsRemote);
 
   logIssues('core', sanitizedCore.issues);
+  logIssues('host', sanitizedHost.issues);
   logIssues('bookings', sanitizedBookings.issues);
   logIssues('medias', sanitizedMedias.issues);
-  logIssues('amenities', sanitizedAmenities.issues);
   logIssues('notes', sanitizedNotes.issues);
   logIssues('comments', sanitizedComments.issues);
 
   return {
     core: mergers.core(staticSegments.core, sanitizedCore.data),
+    host: mergers.host(staticSegments.host, sanitizedHost.data),
     bookings: mergers.bookings(staticSegments.bookings, sanitizedBookings.data),
     medias: mergers.medias(staticSegments.medias, sanitizedMedias.data),
-    amenities: mergers.amenities(staticSegments.amenities, sanitizedAmenities.data),
     notes: mergers.notes(staticSegments.notes, sanitizedNotes.data),
     comments: mergers.comments(staticSegments.comments, sanitizedComments.data),
   };

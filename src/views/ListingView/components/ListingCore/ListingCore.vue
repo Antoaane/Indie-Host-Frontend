@@ -119,6 +119,7 @@ const descriptionStatic = {
       :staticContent="staticContent.listing.rooms"
     />
     <Availabilities
+      v-if="vp.lg.value"
       v-model:model-value="selection"
       :data="data.bookings"
       :static-content="staticContent.listing.headings"

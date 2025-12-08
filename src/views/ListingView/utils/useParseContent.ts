@@ -4,18 +4,18 @@ import {
   loadCore,
   loadBookings,
   loadMedias,
-  loadAmenities,
   loadNotes,
   loadComments,
+  loadHost,
 } from './fetchListingRaw';
 
 import type {
   RawCore,
   RawBookings,
   RawMedias,
-  RawAmenities,
   RawNotes,
   RawComments,
+  RawHost,
 } from './fetchListingRaw';
 
 // ---- TYPES ----
@@ -130,14 +130,14 @@ function parsePerks(core: RawCore): PerksModel {
   return core.perks.map(p => ({ icon: p.icon, name: p.name, description: p.description }));
 }
 
-function parseHost(core: RawCore): HostProfileModel {
+function parseHost(host: RawHost): HostProfileModel {
   return {
-    name: core.host.name,
-    status: core.host.status,
-    seniority: core.host.seniority,
-    globalNote: core.host['global-note'],
-    avatar: core.host.avatar,
-    catalogLink: core.host['catalog-link'],
+    name: host.name,
+    status: host.status,
+    seniority: host.seniority,
+    globalNote: host['global-note'],
+    avatar: host.avatar,
+    catalogLink: host['catalog-link'],
   };
 }
 
@@ -160,8 +160,8 @@ function parseMap(core: RawCore): MapModel {
   };
 }
 
-function parseAmenities(amenities: RawAmenities): AmenitiesModel {
-  return amenities.amenities.map((a) => ({
+function parseAmenities(core: RawCore): AmenitiesModel {
+  return (core.amenities ?? []).map((a) => ({
     name: a.name,
     description: a.description,
     icon: a.icon,
@@ -235,11 +235,11 @@ function parseComments(raw: RawComments): { pages: CommentsPagesModel; flat: Com
 
 // ---- UTIL PRINCIPAL ----
 export async function listingCore(): Promise<ListingParsed> {
-  const [core, bookings, medias, amenities, notes, comments] = await Promise.all([
+  const [core, host, bookings, medias, notes, comments] = await Promise.all([
     loadCore(),
+    loadHost(),
     loadBookings(),
     loadMedias(),
-    loadAmenities(),
     loadNotes(),
     loadComments(),
   ]);
@@ -251,10 +251,10 @@ export async function listingCore(): Promise<ListingParsed> {
   return {
     title: parseTitle(core),
     perks: parsePerks(core),
-    hostProfile: parseHost(core),
+    hostProfile: parseHost(host),
     description: parseDescription(core),
     map: parseMap(core),
-    amenities: parseAmenities(amenities),
+    amenities: parseAmenities(core),
     rooms: parseRooms(core),
     bookings: parseBookings(bookings),
     medias: parseMedias(medias),

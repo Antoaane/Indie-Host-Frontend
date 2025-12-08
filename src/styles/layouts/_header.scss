@@ -26,7 +26,7 @@ header {
   @include gutters(padding, bottom, 0.667);
 
   @include min-width(md) {
-    top: 0;
+    // top: 0;
     // @include gutters(padding, inline);
     // @include gutters(padding, top);
     // @include gutters(padding, bottom, 0.667);
@@ -34,5 +34,9 @@ header {
 
   @include min-width(lg) {
     justify-content: center;
+  }
+
+  &:has(.bottom-nav) {
+    bottom: 0;
   }
 }
