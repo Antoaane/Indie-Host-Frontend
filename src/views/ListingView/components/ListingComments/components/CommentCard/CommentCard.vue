@@ -5,6 +5,7 @@
 import { computed } from 'vue'
 
 // UTILS
+import { vp } from '@/utils/viewport'
 import { formatRatingValue } from '@/views/ListingView/utils/formatters'
 
 // TYPES
@@ -83,7 +84,10 @@ console.log(`${fallbackInitials.value ? '✅' : '❌'} [CommentCard.vue](fallbac
 
         <div>
           <h4 v-html="comment.name"></h4>
-          <div class="listing-comments__comment-note">
+          <div
+            v-if="vp.lg.value"
+            class="listing-comments__comment-note"
+          >
             <p
               v-if="stayLabel"
               v-html="stayLabel"
@@ -91,23 +95,66 @@ console.log(`${fallbackInitials.value ? '✅' : '❌'} [CommentCard.vue](fallbac
             <div>
               <Star
                 v-for="star in comment.note"
-                :size="12"
+                :size="vp.lg.value ? 12 : 10"
               />
             </div>
           </div>
         </div>
       </div>
+      <div
+        v-if="!vp.lg.value"
+        class="listing-comments__comment-note"
+      >
+        <p
+          v-if="stayLabel"
+          v-html="stayLabel"
+        ></p>
+        <div>
+          <Star
+            v-for="star in comment.note"
+            :size="vp.lg.value ? 12 : 10"
+          />
+        </div>
+      </div>
     </div>
     <blockquote v-html="comment.comment"></blockquote>
+    <span class="see-more">
+      <button v-if="!vp.lg.value"> Lire plus </button>
+    </span>
   </div>
 </template>
 
 <style lang="scss">
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
+@use '@/styles/components/buttons' as buttons;
 
 .listing-comments__comment {
-  margin-bottom: var(--gutter-spacing-xl);
+  padding-right: calc(var(--gutter-spacing-3xl) * 2);
+  height: 100%;
+
+  &::after {
+    content: '';
+    height: 75%;
+    width: 0.5px;
+
+    position: absolute;
+    right: var(--gutter-spacing-3xl);
+    top: 50%;
+    transform: translateY(-50%);
+
+    background-color: rgba($secondary, 0.5);
+  }
+
+  @include min-width(lg) {
+    height: auto;
+    padding-right: 0;
+    margin-bottom: var(--gutter-spacing-xl);
+
+    &::after {
+      display: none;
+    }
+  }
 
   .listing-comments__comment-meta {
     margin-bottom: var(--gutter-spacing-sm);
@@ -142,27 +189,33 @@ console.log(`${fallbackInitials.value ? '✅' : '❌'} [CommentCard.vue](fallbac
 
         @include base-text($bigger: true);
       }
+    }
+  }
 
-      .listing-comments__comment-note {
-        display: flex;
-        align-items: end;
-        gap: var(--gutter-spacing-sm);
+  .listing-comments__comment-note {
+    margin-bottom: 0.5rem;
 
-        p {
-          @include little-text($thin: false);
-        }
+    display: flex;
+    align-items: end;
+    gap: var(--gutter-spacing-sm);
 
-        & > div {
-          margin-bottom: 2px;
+    @include min-width(lg) {
+      margin-bottom: 0;
+    }
 
-          display: flex;
-          gap: 1px;
+    p {
+      @include little-text($thin: false);
+    }
 
-          .lucide-star-icon {
-            fill: $secondary;
-            stroke: $secondary;
-          }
-        }
+    & > div {
+      margin-bottom: 2px;
+
+      display: flex;
+      gap: 1px;
+
+      .lucide-star-icon {
+        fill: $secondary;
+        stroke: $secondary;
       }
     }
   }
@@ -170,6 +223,23 @@ console.log(`${fallbackInitials.value ? '✅' : '❌'} [CommentCard.vue](fallbac
   blockquote {
     margin: 0 !important;
     @include base-text($thin: false);
+
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+
+    @include min-width(lg) {
+      display: inline;
+      text-overflow: unset;
+      overflow: visible;
+    }
+  }
+
+  .see-more {
+    margin-top: 0.5rem;
+    @include buttons.secondary($padding: false);
   }
 }
 </style>

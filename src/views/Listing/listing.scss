@@ -8,6 +8,7 @@
   @include min-width(lg) {
     padding-top: $nav-height;
     height: calc(100vh - $nav-height);
+    overflow: hidden;
   }
 
   .sub-container {

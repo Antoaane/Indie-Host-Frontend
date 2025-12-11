@@ -7,7 +7,8 @@
 
 .listing-view footer {
   background: $secondary;
-  padding-block: calc(var(--gutter-spacing-sm) + 0.35rem);
+  padding-top: var(--gutter-spacing-sm);
+  padding-bottom: var(--gutter-spacing);
 
   display: flex;
   justify-content: center;
@@ -184,6 +185,7 @@
     height: borders.$rounded-xl;
 
     position: absolute;
+    z-index: 5;
     top: 1px;
     transform: translateY(-100%);
 

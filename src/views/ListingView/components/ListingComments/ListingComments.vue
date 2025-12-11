@@ -3,6 +3,10 @@
 <script setup lang="ts">
 // DEPS
 import { computed, nextTick, onMounted, ref } from 'vue'
+import type { SwiperOptions } from 'swiper/types'
+import type { SwiperModule } from 'swiper/types'
+import { Swiper, SwiperSlide } from 'swiper/vue'
+import { Autoplay, Pagination } from 'swiper/modules'
 
 // COMPONENTS
 import SummaryCard from './components/SummaryCard/SummaryCard.vue'
@@ -10,6 +14,7 @@ import DistributionList from './components/DistributionList/DistributionList.vue
 import CommentCard from './components/CommentCard/CommentCard.vue'
 
 // UTILS
+import { vp } from '@/utils/viewport'
 import { listingCore } from '@/views/ListingView/utils/useParseContent'
 import { formatICUMessage } from '@/utils/i18n'
 import { buildDistributionFromComments, computePercentage } from '@/views/ListingView/utils/formatters'
@@ -197,13 +202,33 @@ const hasData = computed(() => {
 onMounted(() => {
   console.log(`${hasData.value ? '✅' : '❌'} [ListingComments.vue](onMounted) comments:mounted hydrated=${hasData.value} DOMMounted`)
 })
+
+const swiperParams = computed(
+  () =>
+    ({
+      modules: [
+        Autoplay as SwiperModule,
+        Pagination as SwiperModule,
+      ],
+
+      direction: 'horizontal',
+
+      slidesPerView: 1.15,
+      spaceBetween: 0,
+
+      pagination: false,
+
+      // centeredSlides: true,
+      navigation: false,
+    }) satisfies SwiperOptions,
+)
 </script>
 
 <template>
   <section id="listing-comments">
     <div>
       <div class="listing-comments__header">
-        <!-- <h2>{{ content.title }}</h2> -->
+        <h2 v-if="!vp.lg.value">{{ content.title }}</h2>
         <!-- <p v-if="commentsCount">{{ countLabel }}</p> -->
         <SummaryCard
           v-if="hasData"
@@ -220,27 +245,31 @@ onMounted(() => {
         v-if="previewComments.length"
         class="listing-comments__list"
       >
-        <!-- <DistributionList
-          v-if="distribution.entries.length"
-          :entries="distribution.entries"
-          :title="content.distribution.title"
-          :rating-label="content.distribution.ratingLabel"
-        /> -->
-
-        <!-- <div
-          v-else
-          class="listing-comments__empty"
-        >
-          <h3>{{ content.empty.title }}</h3>
-          <p v-if="content.empty.subtitle">{{ content.empty.subtitle }}</p>
-        </div> -->
         <CommentCard
+          v-if="vp.lg.value"
           v-for="comment in previewComments"
           :key="`${comment.name}-${comment.comment}`"
           :comment="comment"
           :stay-template="content.comment.stayLabel"
           :rating-unit="content.summary.ratingUnit"
         />
+        <Swiper
+          v-if="!vp.lg.value"
+          ref="swiperWrapper"
+          v-bind="swiperParams"
+        >
+          <SwiperSlide
+            v-for="comment in previewComments"
+            :key="`${comment.name}-${comment.comment}`"
+          >
+            <CommentCard
+              :key="`${comment.name}-${comment.comment}`"
+              :comment="comment"
+              :stay-template="content.comment.stayLabel"
+              :rating-unit="content.summary.ratingUnit"
+            />
+          </SwiperSlide>
+        </Swiper>
       </div>
     </div>
 

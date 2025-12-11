@@ -6,12 +6,13 @@
 
 #listing-comments {
   min-height: 0;
+  height: max-content;
   flex: 1 1 auto;
   padding-bottom: calc(2.125rem + var(--gutter-spacing)) !important;
 
   display: flex;
   flex-direction: column;
-  gap: var(--gutter-spacing-md);
+  gap: var(--gutter-spacing);
 
   position: relative;
 
@@ -19,6 +20,10 @@
   border-radius: borders.$rounded-lg;
 
   @include gutters(padding, all);
+
+  @include min-width(lg) {
+    height: auto;
+  }
 
   &::after {
     content: '';
@@ -35,11 +40,16 @@
 
   .listing-comments__header {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    gap: var(--gutter-spacing-md);
+
+    h2 {
+      @include h2-title;
+    }
   }
 
   .listing-comments__scroll-container {
+    margin-bottom: calc(2rem + var(--gutter-spacing-xl));
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
@@ -47,12 +57,20 @@
     /* auto | thin | none */
     scrollbar-color: rgba($secondary, 0.25) $translucent;
     /* thumb | track */
+
+    @include min-width(lg) {
+      margin-bottom: 0;
+    }
   }
 
   .listing-comments__more {
-    width: calc(100% - (var(--gutter-spacing) * 2));
+    width: calc(100% - (var(--gutter-spacing) * 3));
     position: absolute;
     bottom: var(--gutter-spacing);
+
+    @include min-width(lg) {
+      width: calc(100% - (var(--gutter-spacing) * 2));
+    }
 
     div {
       @include buttons.primary($fullwidth: true, $theme: white);

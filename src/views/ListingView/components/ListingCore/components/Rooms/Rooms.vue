@@ -145,7 +145,7 @@ function getRoomDisplayName(roomName: string, index: number) {
         justify-content: space-between;
 
         h3 {
-          @include base-text($bigger: true, $thin: false);
+          @include base-text($bigger: true, $bold: true);
         }
 
         .bed-icon__container {

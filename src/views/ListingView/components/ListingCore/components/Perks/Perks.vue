@@ -49,14 +49,19 @@ function resolveIcon(name: string) {
 
 .perks-listing__comp {
   ul {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
     gap: var(--gutter-spacing-md);
+
+    @include min-width(lg) {
+      grid-template-columns: repeat(2, 1fr);
+    }
 
     li {
       padding: var(--gutter-spacing-md);
 
-      flex-grow: 1;
-      flex-basis: 50%;
+      // flex-grow: 1;
+      // flex-basis: 50%;
 
       display: flex;
       gap: var(--gutter-spacing-md);
