@@ -20,13 +20,8 @@ const router = createRouter({
       component: SignInView,
     },
     {
-      path: '/listing-test/:slug?',
+      path: '/listing-test/:id?',
       name: 'listing',
-      component: Listing,
-    },
-    {
-      path: '/listing-test/:id',
-      name: 'listing-id',
       component: Listing,
     },
     {

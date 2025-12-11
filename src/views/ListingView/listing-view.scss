@@ -1,23 +1,23 @@
 /* File: src/views/ListingView/listing-view.scss */
 
 @use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
 
 .listing-view {
   height: 100%;
   min-height: 0;
   display: flex;
   flex-direction: column;
-
-  gap: calc(var(--gutter-spacing) / 3 * 2);
-
-  @include gutters(padding, inline);
-  @include gutters(padding, bottom);
+  position: relative;
 
   @include min-width(lg) {
     flex-direction: row;
+    gap: calc(var(--gutter-spacing) / 3 * 2);
+    @include gutters(padding, inline);
+    @include gutters(padding, bottom);
   }
 
-  .gallery-container {
+  &>.gallery-container {
     flex-grow: 0;
     flex-basis: 25vw;
     flex-shrink: 0;
@@ -25,13 +25,13 @@
     min-height: 0;
   }
 
-  .core-container {
+  &>.core-container {
     flex: 1;
     height: 100%;
     min-height: 0;
   }
 
-  .stay-container {
+  &>.stay-container {
     max-height: calc(100vh - $nav-height);
     min-height: 0;
 
@@ -42,5 +42,31 @@
 
     display: flex;
     flex-direction: column;
+  }
+}
+
+.listing_main {
+  height: 100%;
+  overflow: hidden;
+  overflow-y: scroll;
+  scrollbar-width: none;
+
+  .core-container {
+    @include gutters(padding, inline, 0.5);
+
+    &>div {
+      background-color: $accent;
+      border-radius: borders.$rounded-xl;
+
+      #listing-core {
+        background-color: $translucent !important;
+        @include gutters(padding, all, 1.5, $important: true);
+      }
+
+      #listing-comments {
+        background-color: $translucent !important;
+        @include gutters(padding, all, 1.5, $important: true);
+      }
+    }
   }
 }

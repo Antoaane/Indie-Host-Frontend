@@ -52,7 +52,7 @@ onClickOutside(calendarLayer, () => emit('close'))
         <DatePicker
           v-model:model-value="selection"
           :disabled-dates="bookedRanges"
-          :number-of-months="2"
+          :numberOfMonths="2"
         />
       </div>
     </transition>

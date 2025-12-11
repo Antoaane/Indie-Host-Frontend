@@ -3,47 +3,57 @@
     {
       "src": "/assets/media/images/listing-test/image0.jpg",
       "alt": "Maison flottante sur le lac de Baurech avec terrasse en bois",
-      "cover": true
+      "position": 0
     },
     {
       "src": "/assets/media/images/listing-test/image1.jpg",
-      "alt": "Maison flottante sur le lac de Baurech avec terrasse en bois"
+      "alt": "Maison flottante sur le lac de Baurech avec terrasse en bois",
+      "position": 1
     },
     {
       "src": "/assets/media/images/listing-test/image2.jpg",
-      "alt": "Maison flottante sur le lac de Baurech avec terrasse en bois"
+      "alt": "Maison flottante sur le lac de Baurech avec terrasse en bois",
+      "position": 2
     },
     {
       "src": "/assets/media/images/listing-test/image3.jpg",
-      "alt": "Maison flottante sur le lac de Baurech avec terrasse en bois"
+      "alt": "Maison flottante sur le lac de Baurech avec terrasse en bois",
+      "position": 3
     },
     {
       "src": "/assets/media/images/listing-test/image4.jpg",
-      "alt": "Maison flottante sur le lac de Baurech avec terrasse en bois"
+      "alt": "Maison flottante sur le lac de Baurech avec terrasse en bois",
+      "position": 4
     },
     {
       "src": "/assets/media/images/listing-test/image5.jpg",
-      "alt": "Maison flottante sur le lac de Baurech avec terrasse en bois"
+      "alt": "Maison flottante sur le lac de Baurech avec terrasse en bois",
+      "position": 5
     },
     {
       "src": "/assets/media/images/listing-test/image6.jpg",
-      "alt": "Maison flottante sur le lac de Baurech avec terrasse en bois"
+      "alt": "Maison flottante sur le lac de Baurech avec terrasse en bois",
+      "position": 6
     },
     {
       "src": "/assets/media/images/listing-test/image7.jpg",
-      "alt": "Maison flottante sur le lac de Baurech avec terrasse en bois"
+      "alt": "Maison flottante sur le lac de Baurech avec terrasse en bois",
+      "position": 7
     },
     {
       "src": "/assets/media/images/listing-test/image8.jpg",
-      "alt": "Maison flottante sur le lac de Baurech avec terrasse en bois"
+      "alt": "Maison flottante sur le lac de Baurech avec terrasse en bois",
+      "position": 8
     },
     {
       "src": "/assets/media/images/listing-test/image9.jpg",
-      "alt": "Maison flottante sur le lac de Baurech avec terrasse en bois"
+      "alt": "Maison flottante sur le lac de Baurech avec terrasse en bois",
+      "position": 9
     },
     {
       "src": "/assets/media/images/listing-test/image10.jpg",
-      "alt": "Maison flottante sur le lac de Baurech avec terrasse en bois"
+      "alt": "Maison flottante sur le lac de Baurech avec terrasse en bois",
+      "position": 10
     }
   ],
   "videos": []

@@ -112,7 +112,8 @@ const descriptionStatic = {
     />
     <Amenities
       :data="data.amenities"
-      :static-content="staticContent.listing.amenities"
+      :staticContent="staticContent.listing.amenities"
+      :previewCount="vp.lg.value ? 8 : 6"
     />
     <Rooms
       :data="data.rooms"

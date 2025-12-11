@@ -53,7 +53,7 @@ onMounted(() => {
     />
 
     <Nav
-      v-if="vp.lg.value"
+      v-if="vp.lg.value && !isLanding"
       :items="[
         { id: 'messagery', name: 'Messagerie', link: '', target: true },
         { id: 'reservations', name: 'Réservations', link: '', target: true },

@@ -4,6 +4,7 @@ export type Item = {
   src: string  // au lieu de 'image'
   alt: string
   index?: number
+  position?: number
 }
 export type Rect = {
   x: number;

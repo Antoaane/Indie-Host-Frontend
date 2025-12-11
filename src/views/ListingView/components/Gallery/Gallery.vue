@@ -1,10 +1,16 @@
 <!-- File: src/views/ListingView/components/Gallery/Gallery.vue -->
 
 <script setup lang="ts">
+// DEPS
 import { computed } from 'vue'
+import type { SwiperOptions } from 'swiper/types'
+import type { SwiperModule } from 'swiper/types'
+import { Swiper, SwiperSlide } from 'swiper/vue'
+import { Autoplay, Pagination } from 'swiper/modules'
 // COMPONENTS
 import Mosaic from './components/Mosaic/Mosaic.vue'
 // UTILS
+import { vp } from '@/utils/viewport'
 import { fancyboxShow } from '@/views/ListingView/components/Gallery/utils/fancybox'
 import { orderByIndex } from '@/views/ListingView/components/Gallery/utils/order'
 import type { Item } from '@/views/ListingView/components/Gallery/utils/types'
@@ -13,14 +19,13 @@ import { listingCore } from '@/views/ListingView/utils/useParseContent'
 
 const { medias } = await listingCore()
 
-const coverImage = computed(() => medias.images.find((img) => img.cover === true))
-const mosaicImages = computed(() => medias.images.filter((img) => !img.cover))
+const orderedImages = computed(() => orderByIndex(medias.images))
+
+const coverImage = computed(() => orderedImages.value.find((img) => (img.position ?? 0) === 0) ?? orderedImages.value[0])
+const mosaicImages = computed(() => orderedImages.value.filter((img) => img !== coverImage.value))
 
 const lightboxItems = computed<Item[]>(() => {
-  const base: Item[] = []
-  if (coverImage.value) base.push(coverImage.value)
-  base.push(...mosaicImages.value)
-  return orderByIndex(base)
+  return orderedImages.value
 })
 
 const lightboxPayload = computed(() => lightboxItems.value.map((img) => ({ src: img.src, type: 'image', alt: img.alt })))
@@ -33,10 +38,44 @@ function openCoverLightbox() {
   )
   fancyboxShow(lightboxPayload.value, startIndex)
 }
+
+const slides = computed(() => orderedImages.value)
+console.log('slides', slides)
+
+const swiperParams = computed(
+  () =>
+    ({
+      modules: [
+        Autoplay as SwiperModule,
+        Pagination as SwiperModule,
+      ],
+
+      direction: 'horizontal',
+
+      slidesPerView: 1,
+      spaceBetween: 0,
+
+      // autoplay: {
+      //   delay: 3000,
+      //   disableOnInteraction: true,
+      // },
+
+      pagination: {
+        clickable: true,
+      },
+
+      // loop: true,
+      centeredSlides: true,
+      navigation: false,
+    }) satisfies SwiperOptions,
+)
 </script>
 
 <template>
-  <section class="gallery">
+  <section
+    v-if="vp.lg.value"
+    class="gallery"
+  >
     <div
       v-if="coverImage"
       class="cover-image"
@@ -60,6 +99,28 @@ function openCoverLightbox() {
       :minTileW="45"
       :minTileH="45"
     />
+  </section>
+
+  <section
+    v-if="!vp.lg.value"
+    class="gallery"
+  >
+    <Swiper
+      ref="swiperWrapper"
+      v-bind="swiperParams"
+    >
+      <SwiperSlide
+        v-for="slide in slides"
+        :key="slide.position"
+      >
+        <img
+          class="slide-page-svg"
+          loading="lazy"
+          :src="slide.src"
+          :alt="slide.alt"
+        />
+      </SwiperSlide>
+    </Swiper>
   </section>
 </template>
 

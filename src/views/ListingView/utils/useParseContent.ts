@@ -193,10 +193,10 @@ function parseBookings(bookings: RawBookings): BookingsModel {
 
 function parseMedias(medias: RawMedias): MediasModel {
   return {
-    images: medias.images.map(i => ({
+    images: medias.images.map((i, idx) => ({
       src: i.src,
       alt: i.alt,
-      ...(typeof i.cover === 'boolean' ? { cover: i.cover } : {}),
+      position: typeof i.position === 'number' ? i.position : idx,
     })),
     videos: medias.videos ?? [],
   };

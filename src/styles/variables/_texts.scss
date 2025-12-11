@@ -30,10 +30,10 @@
   line-height: 1.25rem;
 
   @if $bigger {
-    @include min-width(md) {
-      font-size: 1.125rem;
-      line-height: 1.5rem;
-    }
+    // @include min-width(md) {
+    font-size: 1.125rem;
+    line-height: 1.5rem;
+    // }
   }
 
   b,
@@ -73,13 +73,13 @@
   text-decoration-thickness: 0.05rem;
   font-style: if($italic, italic, normal);
 
-  font-size: 0.875rem;
+  // font-size: 0.875rem;
   line-height: 1.125rem;
 
-  @include min-width(md) {
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-  }
+  // @include min-width(md) {
+  font-size: 0.875rem;
+  // line-height: 1.25rem;
+  // }
 
   b,
   i,
@@ -186,11 +186,13 @@
 }
 
 @mixin h1-title($color : $secondary, $bigger: true, $colorful: true, $gutters: false, $gradiant: false) {
-  margin-top: 0;
-  margin-bottom: 0.75rem;
+  // margin-top: 0;
+  // margin-bottom: 0.75rem;
 
   font-family: 'Fustat', sans-serif;
   font-weight: 700;
+  // font-size: 24px;
+  // line-height: 28px;
 
   @if $gradiant {
     background: -webkit-linear-gradient(top, rgba($color, 1) 0%, rgba($color, 0.75) 100%);
@@ -204,20 +206,18 @@
     color: $color;
   }
 
-  font-size: 24px;
-  line-height: 28px;
 
   @if $gutters {
     @include gutters(padding, inline);
   }
 
-  @include min-width(lg) {
-    margin-top: 0;
-    margin-bottom: 0.5rem;
+  // @include min-width(lg) {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
 
-    font-size: 26px;
-    line-height: 30px;
-  }
+  font-size: 26px;
+  line-height: 30px;
+  // }
 
   &:has(strong) {
     line-height: 32px;
@@ -237,21 +237,23 @@
     }
 
     @if $bigger {
-      font-size: 28px;
+      // font-size: 28px;
 
-      @include min-width(lg) {
-        font-size: 30px;
-      }
+      // @include min-width(lg) {
+      font-size: 30px;
+      // }
     }
   }
 }
 
 @mixin h2-title($color : $secondary, $bigger: true, $colorful: true, $gutters: false, $gradiant: false) {
-  margin-top: 0;
-  margin-bottom: 0.75rem;
+  // margin-top: 0;
+  // margin-bottom: 0.75rem;
 
   font-family: 'Fustat', sans-serif;
   font-weight: 700;
+  // font-size: 22px;
+  // line-height: 26px;
 
   @if $gradiant {
     background: -webkit-linear-gradient(top, rgba($color, 1) 0%, rgba($color, 0.75) 100%);
@@ -265,27 +267,25 @@
     color: $color;
   }
 
-  font-size: 22px;
-  line-height: 26px;
 
   @if $gutters {
     @include gutters(padding, inline);
   }
 
-  @include min-width(lg) {
-    margin-top: 0;
-    margin-bottom: 0.5rem;
+  // @include min-width(lg) {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
 
-    font-size: 24px;
-    line-height: 28px;
-  }
+  font-size: 24px;
+  line-height: 28px;
+  // }
 
   &:has(strong) {
-    line-height: 30px;
+    // line-height: 30px;
 
-    @include min-width(lg) {
-      line-height: 32px;
-    }
+    // @include min-width(lg) {
+    line-height: 32px;
+    // }
   }
 
   strong {
@@ -298,21 +298,23 @@
     }
 
     @if $bigger {
-      font-size: 26px;
+      // font-size: 26px;
 
-      @include min-width(lg) {
-        font-size: 28px;
-      }
+      // @include min-width(lg) {
+      font-size: 28px;
+      // }
     }
   }
 }
 
 @mixin h3-title($color : $secondary, $bigger: true, $colorful: true, $gutters: false, $gradiant: false) {
-  margin-top: 0;
-  margin-bottom: 0.75rem;
+  // margin-top: 0;
+  // margin-bottom: 0.75rem;
 
   font-family: 'Fustat', sans-serif;
   font-weight: 600;
+  // font-size: 18px;
+  // line-height: 22px;
 
   @if $gradiant {
     background: -webkit-linear-gradient(top, rgba($color, 1) 0%, rgba($color, 0.75) 100%);
@@ -326,27 +328,25 @@
     color: $color;
   }
 
-  font-size: 18px;
-  line-height: 22px;
 
   @if $gutters {
     @include gutters(padding, inline);
   }
 
-  @include min-width(lg) {
-    margin-top: 0;
-    margin-bottom: 0.5rem;
+  // @include min-width(lg) {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
 
-    font-size: 20px;
-    line-height: 24px;
-  }
+  font-size: 20px;
+  line-height: 24px;
+  // }
 
   &:has(strong) {
-    line-height: 24px;
+    // line-height: 24px;
 
-    @include min-width(lg) {
-      line-height: 28px;
-    }
+    // @include min-width(lg) {
+    line-height: 28px;
+    // }
   }
 
   strong {
@@ -359,21 +359,23 @@
     }
 
     @if $bigger {
-      font-size: 24px;
+      // font-size: 24px;
 
-      @include min-width(lg) {
-        font-size: 26px;
-      }
+      // @include min-width(lg) {
+      font-size: 26px;
+      // }
     }
   }
 }
 
 @mixin h4-title($color : $secondary, $bigger: true, $colorful: true, $gutters: false, $gradiant: false) {
-  margin-top: 0;
-  margin-bottom: 0.75rem;
+  // margin-top: 0;
+  // margin-bottom: 0.75rem;
 
   font-family: 'Fustat', sans-serif;
   font-weight: 700;
+  // font-size: 18px;
+  // line-height: 22px;
 
   @if $gradiant {
     background: -webkit-linear-gradient(top, rgba($color, 1) 0%, rgba($color, 0.75) 100%);
@@ -387,27 +389,25 @@
     color: $color;
   }
 
-  font-size: 18px;
-  line-height: 22px;
 
   @if $gutters {
     @include gutters(padding, inline);
   }
 
-  @include min-width(lg) {
-    margin-top: 0;
-    margin-bottom: 0.5rem;
+  // @include min-width(lg) {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
 
-    font-size: 18px;
-    line-height: 22px;
-  }
+  font-size: 18px;
+  line-height: 22px;
+  // }
 
   &:has(strong) {
-    line-height: 24px;
+    // line-height: 24px;
 
-    @include min-width(lg) {
-      line-height: 26px;
-    }
+    // @include min-width(lg) {
+    line-height: 26px;
+    // }
   }
 
   strong {
@@ -420,11 +420,11 @@
     }
 
     @if $bigger {
-      font-size: 22px;
+      // font-size: 22px;
 
-      @include min-width(lg) {
-        font-size: 24px;
-      }
+      // @include min-width(lg) {
+      font-size: 24px;
+      // }
     }
   }
 }

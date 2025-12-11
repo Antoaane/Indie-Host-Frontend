@@ -151,16 +151,16 @@ function closeOverlay() {
 
         <div class="amenities-overlay__body">
           <div
-          v-for="category in categorizedAmenities"
-          :key="category.name"
-          class="amenities-overlay__category"
-        >
-          <h3 v-html="category.name"></h3>
-          <ul>
-            <li
-              v-for="amenity in category.items"
-              :key="`${category.name}-${amenity.name}`"
-            >
+            v-for="category in categorizedAmenities"
+            :key="category.name"
+            class="amenities-overlay__category"
+          >
+            <h3 v-html="category.name"></h3>
+            <ul>
+              <li
+                v-for="amenity in category.items"
+                :key="`${category.name}-${amenity.name}`"
+              >
                 <component
                   :is="resolveIcon(amenity.icon)"
                   class="amenity-icon"
@@ -170,12 +170,12 @@ function closeOverlay() {
                   <p
                     class="amenity-name"
                     v-html="amenity.name"
-                  ></p>
+                  />
                   <p
                     v-if="amenity.description"
                     class="amenity-description"
                     v-html="amenity.description"
-                  ></p>
+                  />
                 </div>
               </li>
             </ul>

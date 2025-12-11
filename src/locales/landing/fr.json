@@ -1,7 +1,7 @@
 {
   "hero": {
     "title": "Votre page de réservation avec <strong>0%</strong> de commissions",
-    "description": "IndieHost permet aux loueurs de gérer leurs réservations en toute autonomie grâce à une page d’annonces personnalisable, des outils intégrés et une visibilité en ligne optimale, sans commission, pour augmenter leurs marges <strong>jusqu’à +20 %.</strong>",
+    "description": "IndieHost permet aux hôtes de gérer leurs réservations en toute autonomie grâce à une page d’annonces personnalisable, des outils intégrés et une visibilité en ligne optimale, sans commission, pour augmenter leurs marges <strong>jusqu’à +20 %.</strong>",
     "primaryCta": {
       "label": "Essayez en premier !",
       "href": "#join-section",

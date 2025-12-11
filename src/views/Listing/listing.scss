@@ -8,14 +8,13 @@
   @include min-width(lg) {
     padding-top: $nav-height;
     height: calc(100vh - $nav-height);
-
-    .sub-container {
-      height: calc(100vh - $nav-height);
-    }
   }
 
   .sub-container {
     height: 100vh;
-  }
 
+    @include min-width(lg) {
+      height: calc(100vh - $nav-height);
+    }
+  }
 }

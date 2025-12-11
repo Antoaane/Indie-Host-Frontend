@@ -8,9 +8,9 @@ import ListingView from '@/views/ListingView/ListingView.vue'
 
 const route = useRoute()
 const listingKey = computed(() => {
-  const slug = route.params.slug
-  if (typeof slug === 'string' && slug.trim()) return slug.trim()
-  if (Array.isArray(slug) && slug[0]?.trim()) return slug[0].trim()
+  const id = route.params.id
+  if (typeof id === 'string' && id.trim()) return id.trim()
+  if (Array.isArray(id) && id[0]?.trim()) return id[0].trim()
   return 'default-listing'
 })
 </script>

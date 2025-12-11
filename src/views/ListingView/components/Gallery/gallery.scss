@@ -11,17 +11,22 @@
 
   display: flex;
   flex-direction: column;
-  gap: 6px;
+
+  @include min-width(lg) {
+    gap: 6px;
+  }
 
   .cover-image {
     flex: 0 0 40%;
     overflow: hidden;
     cursor: pointer;
 
-    border-top-left-radius: borders.$rounded-lg;
-    border-top-right-radius: borders.$rounded-lg;
-    border-bottom-left-radius: 5px;
-    border-bottom-right-radius: 5px;
+    @include min-width(lg) {
+      border-top-left-radius: borders.$rounded-lg;
+      border-top-right-radius: borders.$rounded-lg;
+      border-bottom-left-radius: 5px;
+      border-bottom-right-radius: 5px;
+    }
 
     img {
       width: 100%;
@@ -52,5 +57,44 @@
     min-height: 0;
     display: flex;
     flex-direction: column;
+  }
+}
+
+.gallery:has(.swiper-initialized) {
+  aspect-ratio: 4 / 3;
+  margin-bottom: - borders.$rounded-lg;
+  position: relative;
+  z-index: -1;
+
+  &::after {
+    content: '';
+    display: block;
+
+    width: 100%;
+    height: calc(borders.$rounded-lg * 2);
+
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    z-index: 1;
+
+    background: linear-gradient(0deg, rgba($secondary, 1) 0%, rgba($secondary, 0) 100%);
+  }
+
+  .swiper {
+    width: 100%;
+    height: 100%;
+
+    .swiper-wrapper {
+
+      .swiper-slide {
+
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+      }
+    }
   }
 }

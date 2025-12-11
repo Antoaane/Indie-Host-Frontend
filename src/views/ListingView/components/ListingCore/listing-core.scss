@@ -15,7 +15,7 @@ html:has(#listing-core) {
   gap: var(--gutter-spacing-2xl);
 
   background-color: $accent;
-  border-radius: borders.$rounded-lg;
+  border-radius: borders.$rounded-xxl;
 
   // overflow-y: scroll;
   scrollbar-width: thin;
@@ -28,6 +28,7 @@ html:has(#listing-core) {
   @include min-width(lg) {
     overflow: hidden;
     overflow-y: scroll;
+    border-radius: borders.$rounded-lg;
   }
 
   /* Cible la scrollbar entière */

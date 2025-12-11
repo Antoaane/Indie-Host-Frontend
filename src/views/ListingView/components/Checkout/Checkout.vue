@@ -62,20 +62,15 @@ const calendarOpen = ref(false)
 const guestsOpen = ref(false)
 const expanded = ref(false)
 
-const selection = ref<RangeISO | null>(props.modelValue)
-
-watch(
-  () => props.modelValue,
-  (val) => {
-    selection.value = val
-  },
-  { deep: true },
-)
+const selection = computed<RangeISO | null>({
+  get: () => props.modelValue,
+  set: (value) => emit('update:modelValue', value),
+})
 
 function setSelection(range: RangeISO | null) {
-  if (range && selection.value?.start === range.start && selection.value?.end === range.end) return
-  if (!range && !selection.value) return
-  selection.value = range
+  const current = props.modelValue
+  if (range && current?.start === range.start && current?.end === range.end) return
+  if (!range && !current) return
   emit('update:modelValue', range)
 }
 
@@ -88,6 +83,14 @@ const occupants = reactive<OccupantCounts>({
 })
 
 const isDateDisabled = computed(() => makeIsDateDisabled(bookedRanges.value))
+
+const nights = computed(() => {
+  if (!selection.value?.start || !selection.value?.end) return 0
+  const start = new Date(selection.value.start)
+  const end = new Date(selection.value.end)
+  const diff = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+  return diff > 0 ? Math.round(diff) : 0
+})
 
 const initialRange = findNextAvailableRange(MIN_NIGHTS, isDateDisabled.value)
 if (!selection.value && initialRange) {
@@ -105,7 +108,7 @@ watch(bookedRanges, () => {
 })
 
 watch(
-  selection,
+  () => selection.value,
   (val) => {
     if (val?.start && val?.end) {
       if (!isSelectedRangeValid()) {
@@ -117,14 +120,6 @@ watch(
   },
   { deep: true },
 )
-
-const nights = computed(() => {
-  if (!selection.value?.start || !selection.value?.end) return 0
-  const start = new Date(selection.value.start)
-  const end = new Date(selection.value.end)
-  const diff = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
-  return diff > 0 ? Math.round(diff) : 0
-})
 
 const travelerCount = computed(() => occupants.adults + occupants.children)
 const occupantLabel = computed(() => buildOccupantLabel(occupants, travelerCount.value))
