@@ -132,7 +132,8 @@
           @include gutters();
 
           @include min-width(lg) {
-            grid-column: span 6 / span 6;
+            // grid-column: span 6 / span 6;
+            grid-column: 1 / -1;
           }
         }
 

@@ -133,17 +133,17 @@ onBeforeUnmount(() => {
             data-sr-start="top 50%"
             data-sr-end="bottom 0%"
             data-sr-delay="0.75" -->
-          <div
+          <!-- <div
             class="illustration"
             v-if="slides.length"
-          >
-            <!-- <img
+          > -->
+          <!-- <img
             :src="imageSrc"
             :alt="imageAlt"
             loading="lazy"
             class="image"
           /> -->
-            <div class="overflow">
+          <!-- <div class="overflow">
               <div class="carousel-container">
                 <Carousel
                   v-if="vp.lg.value"
@@ -154,8 +154,8 @@ onBeforeUnmount(() => {
                   :slides="slides"
                 />
               </div>
-            </div>
-          </div>
+            </div> -->
+          <!-- </div> -->
 
           <div class="content">
             <!-- data-sr

@@ -342,9 +342,9 @@ const swiperParams = computed(
           type="button"
           class=""
           :disabled="!commentsCount"
-          @click="openOverlay"
+          @click="openOverlay()"
           v-html="content.ctaLabel"
-        ></button>
+        />
       </div>
     </div>
 

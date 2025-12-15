@@ -7,22 +7,32 @@ import { ScrollSmoother } from 'gsap/ScrollSmoother'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import gsap from 'gsap'
 // UTILS
-import { sr } from '@/utils/ScrollReveal'
+import { sr } from '@/utils/scrollReveal'
 import { vp } from '@/utils/viewport'
 import detectOS from '@/utils/detectOs'
 // CONTENT
 import landingLocale from '@/locales/landing/fr.json'
 import type { LandingContent } from '@/views/Landing/types/content'
 // COMPONENTS
-const HeroSection = defineAsyncComponent(() => import('./components/HeroSection/HeroSection.vue'))
-const BenefitsSection = defineAsyncComponent(() => import('./components/BenefitsSection/BenefitsSection.vue'))
-const HowSection = defineAsyncComponent(() => import('./components/HowSection/HowSection.vue'))
-const HabitsSection = defineAsyncComponent(() => import('./components/HabitsSection/HabitsSection.vue'))
-const FeaturesSection = defineAsyncComponent(() => import('./components/FeaturesSection/FeaturesSection.vue'))
-const StrengthsSection = defineAsyncComponent(() => import('./components/StrengthsSection/StrengthsSection.vue'))
-const UsageSection = defineAsyncComponent(() => import('./components/UsageSection/UsageSection.vue'))
-const JoinSection = defineAsyncComponent(() => import('./components/JoinSection/JoinSection.vue'))
-const FaqSection = defineAsyncComponent(() => import('./components/FaqSection/FaqSection.vue'))
+import HeroSection from '@/views/Landing/components/HeroSection/HeroSection.vue'
+import BenefitsSection from '@/views/Landing/components/BenefitsSection/BenefitsSection.vue'
+import HowSection from '@/views/Landing/components/HowSection/HowSection.vue'
+// import HabitsSection from '@/views/Landing/components/HabitsSection/HabitsSection.vue'
+import FeaturesSection from '@/views/Landing/components/FeaturesSection/FeaturesSection.vue'
+import StrengthsSection from '@/views/Landing/components/StrengthsSection/StrengthsSection.vue'
+import UsageSection from '@/views/Landing/components/UsageSection/UsageSection.vue'
+import JoinSection from '@/views/Landing/components/JoinSection/JoinSection.vue'
+import FaqSection from '@/views/Landing/components/FaqSection/FaqSection.vue'
+
+// const HeroSection = defineAsyncComponent(() => import('./components/HeroSection/HeroSection.vue'))
+// const BenefitsSection = defineAsyncComponent(() => import('./components/BenefitsSection/BenefitsSection.vue'))
+// const HowSection = defineAsyncComponent(() => import('./components/HowSection/HowSection.vue'))
+// const HabitsSection = defineAsyncComponent(() => import('./components/HabitsSection/HabitsSection.vue'))
+// const FeaturesSection = defineAsyncComponent(() => import('./components/FeaturesSection/FeaturesSection.vue'))
+// const StrengthsSection = defineAsyncComponent(() => import('./components/StrengthsSection/StrengthsSection.vue'))
+// const UsageSection = defineAsyncComponent(() => import('./components/UsageSection/UsageSection.vue'))
+// const JoinSection = defineAsyncComponent(() => import('./components/JoinSection/JoinSection.vue'))
+// const FaqSection = defineAsyncComponent(() => import('./components/FaqSection/FaqSection.vue'))
 
 const content = landingLocale as LandingContent
 
