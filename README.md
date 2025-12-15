@@ -54,7 +54,16 @@ npm run dev   # http://localhost:5179
 ```env
 # .env
 VITE_DONATION_LINK=https://votre-lien
+VITE_API_BASE_URL=https://api-staging.indiehost.fr/v1
+VITE_API_PROXY_TARGET=https://api-staging.indiehost.fr
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_XXXXXXXXXXXXXXXX
 ```
+
+Notes:
+
+- En dev, l’app proxifie automatiquement les appels API via Vite (pas de CORS) si `VITE_API_BASE_URL` est une URL absolue (ex: `https://…/v1`).
+- Du coup dans l’onglet Network, tu verras souvent `http://localhost:5179/v1/...` : c’est normal, c’est le proxy Vite qui forward vers ton backend distant.
+- Si vous mettez `VITE_API_BASE_URL=/v1`, renseignez aussi `VITE_API_PROXY_TARGET` (ex: `https://api-staging.indiehost.fr`) pour que le proxy Vite sache où forward.
 
 ---
 

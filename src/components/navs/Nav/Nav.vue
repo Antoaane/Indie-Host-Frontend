@@ -3,7 +3,8 @@
 <script setup lang="ts">
 // DEPS
 import { computed } from 'vue'
-import { useRoute } from 'vue-router' // ⬅️ new
+import { useRoute } from 'vue-router'
+import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/vue'
 
 // UTILS
 import { vp } from '@/utils/viewport'
@@ -131,6 +132,16 @@ const isLanding = computed(() => route.path === '/')
             </a>
           </li>
         </template>
+        <li>
+          <SignedOut>
+            <SignInButton>
+              <button> Se connecter </button>
+            </SignInButton>
+          </SignedOut>
+          <SignedIn>
+            <UserButton />
+          </SignedIn>
+        </li>
       </template>
     </ul>
 

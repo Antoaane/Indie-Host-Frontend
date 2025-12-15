@@ -83,6 +83,14 @@
       &.cta {
         @include buttons.primary(true);
       }
+
+      .cl-rootBox {
+        padding: 0;
+        height: 100%;
+
+        display: flex;
+        align-items: center;
+      }
     }
   }
 

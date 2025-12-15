@@ -1,5 +1,5 @@
 import { fileURLToPath, URL } from 'node:url'
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import ViteRestart from 'vite-plugin-restart'
@@ -8,30 +8,116 @@ import svgLoader from 'vite-svg-loader'
 import svgToVuePlugin from './plugins/svg-to-vue/vite-plugin-svg-to-vue';
 import fileCommentInjector from './plugins/file-path-comment/vite-plugin-file-comment'
 
+type ParsedEndpoint = {
+  origin?: string
+  path?: string
+}
+
+function normalizePathPrefix(rawPath: string): string {
+  const trimmed = (rawPath ?? '').trim()
+  if (!trimmed) return '/'
+
+  const withLeadingSlash = trimmed.startsWith('/') ? trimmed : `/${trimmed}`
+  const noTrailingSlash = withLeadingSlash.replace(/\/+$/, '')
+  return noTrailingSlash || '/'
+}
+
+function parseEndpoint(raw: string): ParsedEndpoint {
+  const trimmed = (raw ?? '').trim()
+  if (!trimmed) return {}
+
+  try {
+    const parsed = new URL(trimmed)
+    return {
+      origin: parsed.origin,
+      path: normalizePathPrefix(parsed.pathname),
+    }
+  } catch {
+    if (trimmed.startsWith('/')) {
+      return { path: normalizePathPrefix(trimmed) }
+    }
+    return {}
+  }
+}
+
+function stripPrefix(path: string, prefix: string): string {
+  if (!prefix || prefix === '/') return path
+  if (path === prefix) return ''
+  if (path.startsWith(`${prefix}/`) || path.startsWith(`${prefix}?`)) return path.slice(prefix.length)
+  return path
+}
+
+function joinBasePath(basePath: string, rest: string): string {
+  const normalizedBase = normalizePathPrefix(basePath)
+  if (!rest) return normalizedBase
+  if (normalizedBase === '/') return rest.startsWith('/') ? rest : `/${rest}`
+  return rest.startsWith('/') ? `${normalizedBase}${rest}` : `${normalizedBase}/${rest}`
+}
 
 // https://vite.dev/config/
-export default defineConfig({
-  plugins: [
-    fileCommentInjector(),
-    svgToVuePlugin(),
-    ViteRestart({
-      restart: ['src/assets/media/**/*.svg'], // Restart vite si des SVG changent
-    }),
-    vue(),
-    ui(),
-    vueDevTools(),
-    svgLoader(),
-  ],
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
+  const rawApiBaseUrl = (env.VITE_API_BASE_URL ?? '').trim()
+  const rawApiProxyTarget = (env.VITE_API_PROXY_TARGET ?? '').trim()
+
+  const parsedBase = parseEndpoint(rawApiBaseUrl)
+  const parsedProxyTarget = parseEndpoint(rawApiProxyTarget)
+
+  const apiProxyPath = parsedBase.path
+
+  const apiTargetOrigin = parsedBase.origin || parsedProxyTarget.origin
+  const apiTargetBasePath =
+    parsedBase.path || (parsedProxyTarget.path && parsedProxyTarget.path !== '/' ? parsedProxyTarget.path : undefined)
+
+  return {
+    plugins: [
+      fileCommentInjector(),
+      svgToVuePlugin(),
+      ViteRestart({
+        restart: ['src/assets/media/**/*.svg'], // Restart vite si des SVG changent
+      }),
+      vue(),
+      ui(),
+      vueDevTools(),
+      svgLoader(),
+    ],
+    resolve: {
+      alias: {
+        '@': fileURLToPath(new URL('./src', import.meta.url)),
+      },
     },
-  },
-  server: {
-    host: true,
-    port: 5179
-  },
-  esbuild: {
-    drop: ['debugger']
+    server: {
+      host: true,
+      port: 5179,
+      proxy:
+        apiProxyPath && apiTargetOrigin
+          ? {
+              [apiProxyPath]: {
+                target: apiTargetOrigin,
+                changeOrigin: true,
+                secure: true,
+                rewrite: (path) => {
+                  const proxyPrefix = normalizePathPrefix(apiProxyPath)
+                  const targetPrefix = normalizePathPrefix(apiTargetBasePath ?? proxyPrefix)
+
+                  const remainder = stripPrefix(path, proxyPrefix)
+                  if (
+                    targetPrefix !== '/' &&
+                    (remainder === targetPrefix ||
+                      remainder.startsWith(`${targetPrefix}/`) ||
+                      remainder.startsWith(`${targetPrefix}?`))
+                  ) {
+                    return remainder
+                  }
+
+                  return joinBasePath(targetPrefix, remainder)
+                },
+              },
+            }
+          : undefined,
+    },
+    esbuild: {
+      drop: ['debugger'],
+    },
   }
 })

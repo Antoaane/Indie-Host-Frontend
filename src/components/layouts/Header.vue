@@ -4,13 +4,17 @@
 // DEPS
 import { onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useAuth } from '@clerk/vue'
 // COMPONENTS
 import NavListing from '@/components/navs/NavListing/NavListing.vue'
 import Nav from '@/components/navs/Nav/Nav.vue'
 import BottomNav from '@/components/navs/BottomNav/BottomNav.vue'
 // UTILS
 import { vp } from '@/utils/viewport'
+import clerkToken from '@/utils/clerkToken'
 // import NavDashboard from '@/components/navs/nav/NavDashboard.vue'
+
+const { getToken } = useAuth()
 
 // const isLanding = ref<boolean>(true)
 
@@ -22,7 +26,7 @@ const isLanding = computed(() => route.path === '/' || route.path === '/donation
 //   console.log('isLanding', isLanding.value)
 // })
 
-onMounted(() => {
+onMounted(async () => {
   const nav = document.querySelector<HTMLElement>('[class^="navbar-"]')
 
   nav?.style.setProperty('transition', 'none')
@@ -35,7 +39,8 @@ onMounted(() => {
     nav?.style.removeProperty('transform')
   }, 650)
 
-  // console.log('lg ?', vp.lg.value)
+  clerkToken.value = await getToken.value()
+  console.log('✅[clerkToken] fetched new token :', clerkToken.value)
 })
 </script>
 
