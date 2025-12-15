@@ -65,7 +65,8 @@
 
       #listing-comments {
         background-color: $translucent !important;
-        @include gutters(padding, all, 1.5, $important: true);
+        @include gutters(padding, inline, 1.5, $important: true);
+        @include gutters(padding, top, 1.5, $important: true);
       }
     }
   }

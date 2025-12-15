@@ -3,6 +3,7 @@
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
 @use '@/styles/components/buttons' as buttons;
+@use '@/styles/components/overlays' as overlays;
 
 .description-listing__comp {
 
@@ -39,37 +40,12 @@
   /* Backdrop */
   .backdrop[data-popup],
   #listing-description-dialog {
-    width: 100vw;
-    height: 100vh;
-
-    padding-top: calc($nav-height + var(--gutter-spacing));
-    padding-bottom: calc(var(--gutter-spacing) * 2);
-    padding-inline: var(--gutter-spacing);
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    position: fixed;
-    inset: 50%;
-    z-index: 9999;
-
-    transform: translate(-50%, -50%);
-
-    background-color: rgba($secondary, $alpha: 0.5);
-    backdrop-filter: blur(2.5px);
+    @extend %overlay-backdrop;
 
     .display__description-blocks {
-      height: max-content;
-      max-height: 100%;
-
-      position: relative;
-
-      background-color: $accent;
-      border-radius: borders.$rounded-lg;
-
-      @include container($max: md);
+      @extend %overlay-panel;
       @include gutters(padding, all, 2);
+      padding-bottom: calc(var(--gutter-spacing) * 2) !important;
 
       // .block {
       .display__description-full {
@@ -97,3 +73,5 @@
     }
   }
 }
+
+@include overlays.transition('description-overlay');

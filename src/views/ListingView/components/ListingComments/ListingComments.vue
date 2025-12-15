@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 // DEPS
-import { computed, nextTick, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import type { SwiperOptions } from 'swiper/types'
 import type { SwiperModule } from 'swiper/types'
 import { Swiper, SwiperSlide } from 'swiper/vue'
@@ -61,8 +61,8 @@ interface StaticContentRoot {
 const content = (staticLocale as StaticContentRoot).listing.commentsWidget
 
 const data = await listingCore()
-console.log(`${data?.comments?.length ? '✅' : '❌'} [ListingComments.vue](setup) listingCore:resolved commentsCount=${data.comments?.length ?? 0} fetched`)
-console.log(`${'ℹ️'} [ListingComments.vue](setup) contentLoaded=commentsWidget ready for render`)
+// console.log(`${data?.comments?.length ? '✅' : '❌'} [ListingComments.vue](setup) listingCore:resolved commentsCount=${data.comments?.length ?? 0} fetched`)
+// console.log(`${'ℹ️'} [ListingComments.vue](setup) contentLoaded=commentsWidget ready for render`)
 
 const previewLimit = content.preview?.maxItems ?? 5
 
@@ -73,36 +73,36 @@ const overlayScrollEl = ref<HTMLElement | null>(null)
 
 const comments = computed(() => {
   const value = data.comments ?? []
-  console.log(`${value.length ? '✅' : '❌'} [ListingComments.vue](comments) comments:computed listLength=${value.length} prepared`)
+  // console.log(`${value.length ? '✅' : '❌'} [ListingComments.vue](comments) comments:computed listLength=${value.length} prepared`)
   return value
 })
 const commentsCount = computed(() => {
   const count = comments.value.length
-  console.log(`${count ? '✅' : '❌'} [ListingComments.vue](commentsCount) commentsCount:computed total=${count} ready`)
+  // console.log(`${count ? '✅' : '❌'} [ListingComments.vue](commentsCount) commentsCount:computed total=${count} ready`)
   return count
 })
 
 const countLabel = computed(() => {
   const label = formatICUMessage(content.summary.countLabel, { count: commentsCount.value })
-  console.log(`${'ℹ️'} [ListingComments.vue](countLabel) countLabel:computed formatted=${label} applied`)
+  // console.log(`${'ℹ️'} [ListingComments.vue](countLabel) countLabel:computed formatted=${label} applied`)
   return label
 })
 
 const overallScore = computed(() => {
   const overall = data.notes?.overall
   if (typeof overall === 'number' && !Number.isNaN(overall)) {
-    console.log(`${'✅'} [ListingComments.vue](overallScore) overallScore:computed fromNotes=${overall} reused`)
+    // console.log(`${'✅'} [ListingComments.vue](overallScore) overallScore:computed fromNotes=${overall} reused`)
     return overall
   }
 
   if (!commentsCount.value) {
-    console.log(`${'❌'} [ListingComments.vue](overallScore) overallScore:computed unavailable=null noComments`)
+    // console.log(`${'❌'} [ListingComments.vue](overallScore) overallScore:computed unavailable=null noComments`)
     return null
   }
 
   const sum = comments.value.reduce((acc, comment) => acc + comment.note, 0)
   const value = commentsCount.value ? sum / commentsCount.value : null
-  console.log(`${typeof value === 'number' ? '✅' : '❌'} [ListingComments.vue](overallScore) overallScore:computed averaged=${value} calculated`)
+  // console.log(`${typeof value === 'number' ? '✅' : '❌'} [ListingComments.vue](overallScore) overallScore:computed averaged=${value} calculated`)
   return value
 })
 
@@ -130,46 +130,85 @@ function resolveDistribution(notes: NotesModel | undefined, list: CommentsModel)
     })),
   }
 
-  console.log(`${resolved.entries.length ? '✅' : '❌'} [ListingComments.vue](resolveDistribution) distribution:resolved totalEntries=${resolved.total} compiled`)
-  console.log(`${'ℹ️'} [ListingComments.vue](resolveDistribution) distribution:sourceNotes used=${Boolean(notes?.distribution)} validated`)
+  // console.log(`${resolved.entries.length ? '✅' : '❌'} [ListingComments.vue](resolveDistribution) distribution:resolved totalEntries=${resolved.total} compiled`)
+  // console.log(`${'ℹ️'} [ListingComments.vue](resolveDistribution) distribution:sourceNotes used=${Boolean(notes?.distribution)} validated`)
 
   return resolved
 }
 
 const distribution = computed(() => {
   const resolved = resolveDistribution(data.notes, comments.value)
-  console.log(`${resolved.entries.length ? '✅' : '❌'} [ListingComments.vue](distribution) distribution:computed totalEntries=${resolved.total} readyForUI`)
+  // console.log(`${resolved.entries.length ? '✅' : '❌'} [ListingComments.vue](distribution) distribution:computed totalEntries=${resolved.total} readyForUI`)
   return resolved
 })
 
 const previewComments = computed(() => {
   const preview = comments.value.slice(0, previewLimit)
-  console.log(`${preview.length ? '✅' : '❌'} [ListingComments.vue](previewComments) preview:computed items=${preview.length} trimmed`)
+  // console.log(`${preview.length ? '✅' : '❌'} [ListingComments.vue](previewComments) preview:computed items=${preview.length} trimmed`)
   return preview
 })
 
 const overlayComments = computed(() => {
   const overlayList = comments.value.slice(0, overlayLimit.value)
-  console.log(`${overlayList.length ? '✅' : '❌'} [ListingComments.vue](overlayComments) overlay:computed items=${overlayList.length} limit=${overlayLimit.value}`)
+  // console.log(`${overlayList.length ? '✅' : '❌'} [ListingComments.vue](overlayComments) overlay:computed items=${overlayList.length} limit=${overlayLimit.value}`)
   return overlayList
 })
 
 const canLoadOverlay = computed(() => overlayComments.value.length < comments.value.length)
 
-function openOverlay() {
-  overlayLimit.value = overlayStep
+function computeOverlayLimitForIndex(index: number) {
+  if (index < 0) {
+    return overlayStep
+  }
+
+  const neededPages = Math.floor(index / overlayStep) + 1
+  const neededLimit = neededPages * overlayStep
+
+  return Math.min(Math.max(overlayStep, neededLimit), comments.value.length)
+}
+
+async function scrollOverlayToIndex(index: number) {
+  await nextTick()
+
+  const scrollEl = overlayScrollEl.value
+  if (!scrollEl) {
+    return
+  }
+
+  const target = scrollEl.querySelector(`[data-comment-index="${index}"]`) as HTMLElement | null
+  if (!target) {
+    return
+  }
+
+  const offset = 275
+  scrollEl.scrollTop = Math.max(0, target.offsetTop - offset)
+}
+
+function openOverlay(targetIndex?: number) {
+  lockScroll()
+  overlayLimit.value = typeof targetIndex === 'number' ? computeOverlayLimitForIndex(targetIndex) : overlayStep
+
   isOverlayOpen.value = true
-  console.log(`${'ℹ️'} [ListingComments.vue](openOverlay) overlay:state open=${isOverlayOpen.value} limit=${overlayLimit.value}`)
+  // console.log(`${'ℹ️'} [ListingComments.vue](openOverlay) overlay:state open=${isOverlayOpen.value} limit=${overlayLimit.value}`)
+
   nextTick(() => {
-    if (overlayScrollEl.value) {
-      overlayScrollEl.value.scrollTop = 0
+    if (!overlayScrollEl.value) {
+      return
     }
+
+    if (typeof targetIndex === 'number') {
+      scrollOverlayToIndex(targetIndex)
+      return
+    }
+
+    overlayScrollEl.value.scrollTop = 0
   })
 }
 
 function closeOverlay() {
   isOverlayOpen.value = false
-  console.log(`${'ℹ️'} [ListingComments.vue](closeOverlay) overlay:state open=${isOverlayOpen.value}`)
+  unlockScroll()
+  // console.log(`${'ℹ️'} [ListingComments.vue](closeOverlay) overlay:state open=${isOverlayOpen.value}`)
 }
 
 function loadMoreOverlay() {
@@ -178,7 +217,7 @@ function loadMoreOverlay() {
   }
   const nextLimit = Math.min(overlayLimit.value + overlayStep, comments.value.length)
   overlayLimit.value = nextLimit
-  console.log(`${'ℹ️'} [ListingComments.vue](loadMoreOverlay) overlay:paginate limit=${overlayLimit.value} total=${comments.value.length}`)
+  // console.log(`${'ℹ️'} [ListingComments.vue](loadMoreOverlay) overlay:paginate limit=${overlayLimit.value} total=${comments.value.length}`)
 }
 
 function handleOverlayScroll(event: Event) {
@@ -195,12 +234,31 @@ function handleOverlayScroll(event: Event) {
 
 const hasData = computed(() => {
   const value = typeof overallScore.value === 'number' || commentsCount.value > 0 || distribution.value.entries.length > 0
-  console.log(`${value ? '✅' : '❌'} [ListingComments.vue](hasData) hasData:computed ready=${value} gating`)
+  // console.log(`${value ? '✅' : '❌'} [ListingComments.vue](hasData) hasData:computed ready=${value} gating`)
   return value
 })
 
+function lockScroll() {
+  document.documentElement.style.overflow = 'hidden'
+}
+
+function unlockScroll() {
+  document.documentElement.style.overflow = ''
+}
+
+function onKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape' && isOverlayOpen.value) {
+    closeOverlay()
+  }
+}
+
 onMounted(() => {
-  console.log(`${hasData.value ? '✅' : '❌'} [ListingComments.vue](onMounted) comments:mounted hydrated=${hasData.value} DOMMounted`)
+  window.addEventListener('keydown', onKeydown)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeydown)
+  unlockScroll()
 })
 
 const swiperParams = computed(
@@ -228,7 +286,10 @@ const swiperParams = computed(
   <section id="listing-comments">
     <div>
       <div class="listing-comments__header">
-        <h2 v-if="!vp.lg.value">{{ content.title }}</h2>
+        <h2
+          v-if="!vp.lg.value"
+          v-html="`${content.title} — ${countLabel}`"
+        />
         <!-- <p v-if="commentsCount">{{ countLabel }}</p> -->
         <SummaryCard
           v-if="hasData"
@@ -259,7 +320,7 @@ const swiperParams = computed(
           v-bind="swiperParams"
         >
           <SwiperSlide
-            v-for="comment in previewComments"
+            v-for="(comment, index) in previewComments"
             :key="`${comment.name}-${comment.comment}`"
           >
             <CommentCard
@@ -267,6 +328,8 @@ const swiperParams = computed(
               :comment="comment"
               :stay-template="content.comment.stayLabel"
               :rating-unit="content.summary.ratingUnit"
+              :index="index"
+              @read-more="openOverlay"
             />
           </SwiperSlide>
         </Swiper>
@@ -285,62 +348,66 @@ const swiperParams = computed(
       </div>
     </div>
 
-    <div
-      v-if="isOverlayOpen"
-      class="listing-comments__overlay"
-      role="dialog"
-      aria-modal="true"
-      @click.self="closeOverlay"
-    >
-      <div class="listing-comments__overlay-panel">
-        <div class="listing-comments__overlay-header">
-          <div class="listing-comments__overlay-close">
-            <button
-              type="button"
-              @click="closeOverlay"
-            >
-              <X :size="24" />
-            </button>
+    <Transition name="listing-comments-overlay">
+      <div
+        v-if="isOverlayOpen"
+        class="listing-comments__overlay"
+        role="dialog"
+        aria-modal="true"
+        @click.self="closeOverlay"
+      >
+        <div class="listing-comments__overlay-panel">
+          <div class="listing-comments__overlay-header">
+            <div class="listing-comments__overlay-close">
+              <button
+                type="button"
+                @click="closeOverlay"
+              >
+                <X :size="24" />
+              </button>
+            </div>
           </div>
-        </div>
 
-        <div class="listing-comments__overlay-body">
-          <div class="listing-comments__overlay-summary">
-            <div class="summary_container">
-              <h2 v-html="content.title" />
-              <SummaryCard
-                v-if="hasData"
-                :score="overallScore"
-                :rating-unit="content.summary.ratingUnit"
-                :overall-label="content.summary.overallLabel"
-                :count-label="countLabel"
+          <div class="listing-comments__overlay-body">
+            <div class="listing-comments__overlay-summary">
+              <div class="summary_container">
+                <h2 v-html="`${content.title} — ${countLabel}`" />
+                <SummaryCard
+                  v-if="hasData"
+                  :score="overallScore"
+                  :rating-unit="content.summary.ratingUnit"
+                  :overall-label="content.summary.overallLabel"
+                  :count-label="countLabel"
+                />
+              </div>
+
+              <DistributionList
+                v-if="distribution.entries.length"
+                :entries="distribution.entries"
+                :title="content.distribution.title"
+                :rating-label="content.distribution.ratingLabel"
               />
             </div>
 
-            <DistributionList
-              v-if="distribution.entries.length"
-              :entries="distribution.entries"
-              :title="content.distribution.title"
-              :rating-label="content.distribution.ratingLabel"
-            />
-          </div>
-
-          <div
-            ref="overlayScrollEl"
-            class="listing-comments__overlay-list"
-            @scroll="handleOverlayScroll"
-          >
-            <CommentCard
-              v-for="comment in overlayComments"
-              :key="`${comment.name}-${comment.comment}`"
-              :comment="comment"
-              :stay-template="content.comment.stayLabel"
-              :rating-unit="content.summary.ratingUnit"
-            />
+            <div
+              ref="overlayScrollEl"
+              class="listing-comments__overlay-list"
+              @scroll="handleOverlayScroll"
+            >
+              <CommentCard
+                v-for="(comment, index) in overlayComments"
+                :key="`${comment.name}-${comment.comment}`"
+                :comment="comment"
+                :data-comment-index="index"
+                :stay-template="content.comment.stayLabel"
+                :rating-unit="content.summary.ratingUnit"
+                :see-more="false"
+              />
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </Transition>
   </section>
 </template>
 

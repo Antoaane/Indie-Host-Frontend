@@ -5,6 +5,7 @@
 import { computed } from 'vue'
 
 // UTILS
+import { vp } from '@/utils/viewport'
 import { formatRatingValue } from '@/views/ListingView/utils/formatters'
 
 // ASSETS
@@ -26,9 +27,9 @@ const scoreLabel = computed(() =>
   }),
 )
 
-console.log(`${props.score !== null ? '✅' : '❌'} [SummaryCard.vue](setup) summary:score input=${props.score}`)
-console.log(`${hasScore.value ? '✅' : '❌'} [SummaryCard.vue](hasScore) summary:hasScore value=${hasScore.value}`)
-console.log(`${'ℹ️'} [SummaryCard.vue](scoreLabel) summary:scoreLabel formatted=${scoreLabel.value}`)
+// console.log(`${props.score !== null ? '✅' : '❌'} [SummaryCard.vue](setup) summary:score input=${props.score}`)
+// console.log(`${hasScore.value ? '✅' : '❌'} [SummaryCard.vue](hasScore) summary:hasScore value=${hasScore.value}`)
+// console.log(`${'ℹ️'} [SummaryCard.vue](scoreLabel) summary:scoreLabel formatted=${scoreLabel.value}`)
 </script>
 
 <template>
@@ -65,7 +66,10 @@ console.log(`${'ℹ️'} [SummaryCard.vue](scoreLabel) summary:scoreLabel format
         </defs>
       </svg>
     </div>
-    <strong v-html="countLabel"></strong>
+    <strong
+      v-if="vp.lg.value"
+      v-html="countLabel"
+    ></strong>
   </section>
 </template>
 

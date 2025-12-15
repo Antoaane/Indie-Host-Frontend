@@ -14,10 +14,21 @@ import type { CommentItem } from '@/views/ListingView/types/listing'
 // ASSETS
 import { Star } from 'lucide-vue-next'
 
-const props = defineProps<{
-  comment: CommentItem
-  stayTemplate: string
-  ratingUnit: string
+const props = withDefaults(
+  defineProps<{
+    comment: CommentItem
+    stayTemplate: string
+    ratingUnit: string
+    seeMore?: boolean
+    index?: number
+  }>(),
+  {
+    seeMore: true,
+  },
+)
+
+const emit = defineEmits<{
+  (event: 'read-more', index: number): void
 }>()
 
 const ratingLabel = computed(() =>
@@ -59,10 +70,16 @@ function initials(name: string): string {
 
 const fallbackInitials = computed(() => initials(props.comment.name))
 
-console.log(`${props.comment ? '✅' : '❌'} [CommentCard.vue](setup) comment:received name=${props.comment?.name}`)
-console.log(`${'ℹ️'} [CommentCard.vue](ratingLabel) comment:rating formatted=${ratingLabel.value}`)
-console.log(`${'ℹ️'} [CommentCard.vue](stayLabel) comment:stay label=${stayLabel.value}`)
-console.log(`${fallbackInitials.value ? '✅' : '❌'} [CommentCard.vue](fallbackInitials) comment:initials value=${fallbackInitials.value}`)
+function handleReadMoreClick() {
+  if (typeof props.index === 'number') {
+    emit('read-more', props.index)
+  }
+}
+
+// console.log(`${props.comment ? '✅' : '❌'} [CommentCard.vue](setup) comment:received name=${props.comment?.name}`)
+// console.log(`${'ℹ️'} [CommentCard.vue](ratingLabel) comment:rating formatted=${ratingLabel.value}`)
+// console.log(`${'ℹ️'} [CommentCard.vue](stayLabel) comment:stay label=${stayLabel.value}`)
+// console.log(`${fallbackInitials.value ? '✅' : '❌'} [CommentCard.vue](fallbackInitials) comment:initials value=${fallbackInitials.value}`)
 </script>
 
 <template>
@@ -118,8 +135,16 @@ console.log(`${fallbackInitials.value ? '✅' : '❌'} [CommentCard.vue](fallbac
       </div>
     </div>
     <blockquote v-html="comment.comment"></blockquote>
-    <span class="see-more">
-      <button v-if="!vp.lg.value"> Lire plus </button>
+    <span
+      v-if="!vp.lg.value && props.seeMore"
+      class="see-more"
+    >
+      <button
+        type="button"
+        @click="handleReadMoreClick"
+      >
+        Lire plus
+      </button>
     </span>
   </div>
 </template>
@@ -129,8 +154,15 @@ console.log(`${fallbackInitials.value ? '✅' : '❌'} [CommentCard.vue](fallbac
 @use '@/styles/variables/borders' as borders;
 @use '@/styles/components/buttons' as buttons;
 
+.swiper-slide:last-of-type {
+  .listing-comments__comment::after {
+    display: none;
+  }
+}
+
 .listing-comments__comment {
   padding-right: calc(var(--gutter-spacing-3xl) * 2);
+  padding-left: 1rem;
   height: 100%;
 
   &::after {
@@ -221,6 +253,7 @@ console.log(`${fallbackInitials.value ? '✅' : '❌'} [CommentCard.vue](fallbac
   }
 
   blockquote {
+    min-height: 80px;
     margin: 0 !important;
     @include base-text($thin: false);
 
@@ -231,6 +264,7 @@ console.log(`${fallbackInitials.value ? '✅' : '❌'} [CommentCard.vue](fallbac
     overflow: hidden;
 
     @include min-width(lg) {
+      min-height: none;
       display: inline;
       text-overflow: unset;
       overflow: visible;

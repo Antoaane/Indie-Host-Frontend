@@ -4,6 +4,7 @@
 @use '@/styles/variables/borders' as borders;
 @use '@/styles/variables/animations' as animations;
 @use '@/styles/components/buttons' as buttons;
+@use '@/styles/components/overlays' as overlays;
 
 .listing-view footer {
   background: $secondary;
@@ -104,38 +105,18 @@
     }
 
     &__overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 40;
-
-      display: grid;
-      place-items: center;
-    }
-
-    &__backdrop {
-      position: absolute;
-      inset: 0;
-      background: rgba($secondary, 0.45);
-      backdrop-filter: blur(2px);
+      z-index: 9999;
+      @extend %overlay-backdrop;
     }
 
     &__panel {
-      position: relative;
-      width: min(640px, calc(100% - (var(--gutter-spacing) * 2)));
-      max-height: calc(100vh - $nav-height);
-
-      padding: var(--gutter-spacing);
-      background: $accent;
-      border-radius: borders.$rounded-xl;
-      @include big-shadow($color: rgba($secondary, 0.35));
-
-      overflow: hidden;
+      @extend %overlay-panel;
     }
 
     &__close {
       position: absolute;
-      top: var(--gutter-spacing-2xs);
-      right: var(--gutter-spacing-2xs);
+      top: var(--gutter-spacing-md);
+      right: var(--gutter-spacing-md);
 
       border: none;
       background: $translucent;
@@ -147,6 +128,9 @@
 
     &__content {
       margin-top: var(--gutter-spacing-xs);
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba($secondary, 0.25) $translucent;
     }
 
     &__placeholder {
@@ -156,27 +140,6 @@
       padding: var(--gutter-spacing);
       border: 1px dashed rgba($secondary, 0.15);
       border-radius: borders.$rounded-lg;
-    }
-
-    &__fade-enter-active,
-    &__fade-leave-active {
-      @include animations.transition(200ms);
-    }
-
-    &__fade-enter-from,
-    &__fade-leave-to {
-      opacity: 0;
-    }
-
-    &__slide-enter-active,
-    &__slide-leave-active {
-      @include animations.transition(220ms);
-    }
-
-    &__slide-enter-from,
-    &__slide-leave-to {
-      transform: translateY(1rem);
-      opacity: 0;
     }
   }
 
@@ -219,4 +182,6 @@
       transform: scaleX(-1);
     }
   }
+
+  @include overlays.transition('checkout-min-overlay');
 }

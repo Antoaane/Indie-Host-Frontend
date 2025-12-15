@@ -75,8 +75,7 @@ onBeforeUnmount(() => {
       />
     </div>
 
-    <!-- Transition wrapper -->
-    <transition name="fade">
+    <Transition name="description-overlay">
       <div
         v-if="isOpen"
         :data-popup="isOpen"
@@ -87,70 +86,44 @@ onBeforeUnmount(() => {
         id="listing-description-dialog"
         @click.self="closePopup"
       >
-        <transition name="fade-content">
-          <div
-            v-if="isOpen"
-            class="display__description-blocks"
-            @click.stop
-          >
-            <div class="close-container">
-              <div class="close-btn">
-                <button
-                  type="button"
-                  aria-label="Fermer"
-                  @click="closePopup"
-                >
-                  <X />
-                </button>
-              </div>
+        <div
+          class="display__description-blocks"
+          @click.stop
+        >
+          <div class="close-container">
+            <div class="close-btn">
+              <button
+                type="button"
+                aria-label="Fermer"
+                @click="closePopup"
+              >
+                <X />
+              </button>
             </div>
-
-            <h2 v-html="staticContent.title" />
-            <span
-              class="display__description-full"
-              v-html="data.description"
-            />
-            <!-- <div class="block">
-              <p v-html="data.brief" />
-            </div>
-            <div
-              v-for="block in data.blocks"
-              :key="block.title"
-              class="block"
-            >
-              <h3 v-html="block.title" />
-              <p v-html="block.content" />
-            </div> -->
           </div>
-        </transition>
+
+          <h2 v-html="staticContent.title" />
+          <span
+            class="display__description-full"
+            v-html="data.description"
+          />
+          <!-- <div class="block">
+            <p v-html="data.brief" />
+          </div>
+          <div
+            v-for="block in data.blocks"
+            :key="block.title"
+            class="block"
+          >
+            <h3 v-html="block.title" />
+            <p v-html="block.content" />
+          </div> -->
+        </div>
       </div>
-    </transition>
+    </Transition>
   </div>
 </template>
 
 <style lang="scss">
 @use '@/views/ListingView/components/ListingCore/components/Description/description.scss';
-
-/* Transition - backdrop fade */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.25s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-
-/* Transition - content fade with slight scale */
-.fade-content-enter-active,
-.fade-content-leave-active {
-  transition:
-    opacity 0.25s ease,
-    transform 0.25s ease;
-}
-.fade-content-enter-from,
-.fade-content-leave-to {
-  opacity: 0;
-  transform: scale(0.98);
-}
 </style>

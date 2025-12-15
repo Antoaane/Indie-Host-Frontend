@@ -1,7 +1,7 @@
 <!-- File: src/views/ListingView/components/CheckoutMin/CheckoutMin.vue -->
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { formatDateLabel } from '@/views/ListingView/components/Checkout/utils/labels'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
 import type { BookedRange, FeeItem } from '@/views/ListingView/types/listing'
@@ -30,6 +30,8 @@ const selection = computed<RangeISO | null>({
 })
 
 const overlayOpen = ref(false)
+const triggerEl = ref<HTMLElement | null>(null)
+const closeButtonEl = ref<HTMLButtonElement | null>(null)
 
 const currency = new Intl.NumberFormat('fr-FR', {
   style: 'currency',
@@ -46,13 +48,44 @@ const rangeLabel = computed(() => {
   return 'Sélectionnez vos dates'
 })
 
-function openOverlay() {
-  overlayOpen.value = true
+function lockScroll() {
+  document.documentElement.style.overflow = 'hidden'
 }
 
-function closeOverlay() {
-  overlayOpen.value = false
+function unlockScroll() {
+  document.documentElement.style.overflow = ''
 }
+
+async function openOverlay() {
+  if (overlayOpen.value) return
+  overlayOpen.value = true
+  lockScroll()
+  await nextTick()
+  closeButtonEl.value?.focus()
+}
+
+async function closeOverlay() {
+  if (!overlayOpen.value) return
+  overlayOpen.value = false
+  unlockScroll()
+  await nextTick()
+  triggerEl.value?.focus?.()
+}
+
+function onKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape' && overlayOpen.value) {
+    closeOverlay()
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', onKeydown)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeydown)
+  unlockScroll()
+})
 </script>
 
 <template>
@@ -61,6 +94,10 @@ function closeOverlay() {
       class="checkout-min__bar"
       role="button"
       tabindex="0"
+      ref="triggerEl"
+      aria-haspopup="dialog"
+      :aria-expanded="overlayOpen"
+      :aria-controls="'checkout-min-dialog'"
       @click="openOverlay"
       @keydown.enter.prevent="openOverlay"
       @keydown.space.prevent="openOverlay"
@@ -87,40 +124,35 @@ function closeOverlay() {
       </div>
     </div>
 
-    <Teleport to="body">
-      <transition name="checkout-min__fade">
+    <Teleport to="footer">
+      <Transition name="checkout-min-overlay">
         <div
           v-if="overlayOpen"
           class="checkout-min__overlay"
+          id="checkout-min-dialog"
+          role="dialog"
+          aria-modal="true"
+          @click.self="closeOverlay"
         >
-          <div
-            class="checkout-min__backdrop"
-            @click="closeOverlay"
-          />
-
-          <transition name="checkout-min__slide">
-            <div
-              v-if="overlayOpen"
-              class="checkout-min__panel"
+          <div class="checkout-min__panel">
+            <button
+              ref="closeButtonEl"
+              type="button"
+              class="checkout-min__close"
+              aria-label="Fermer"
+              @click="closeOverlay"
             >
-              <button
-                type="button"
-                class="checkout-min__close"
-                aria-label="Fermer"
-                @click="closeOverlay"
-              >
-                ✕
-              </button>
+              ✕
+            </button>
 
-              <div class="checkout-min__content">
-                <slot>
-                  <p class="checkout-min__placeholder"> Les détails du checkout arriveront ici. </p>
-                </slot>
-              </div>
+            <div class="checkout-min__content">
+              <slot>
+                <p class="checkout-min__placeholder"> Les détails du checkout arriveront ici. </p>
+              </slot>
             </div>
-          </transition>
+          </div>
         </div>
-      </transition>
+      </Transition>
     </Teleport>
   </div>
 </template>
