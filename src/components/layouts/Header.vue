@@ -7,6 +7,7 @@ import { useRoute } from 'vue-router'
 // COMPONENTS
 import NavListing from '@/components/navs/NavListing/NavListing.vue'
 import NavLanding from '@/components/navs/NavLanding/NavLanding.vue'
+import NavBlog from '@/components/navs/NavBlog/NavBlog.vue'
 // import NavDashboard from '@/components/navs/nav/NavDashboard.vue'
 
 // const isLanding = ref<boolean>(true)
@@ -14,6 +15,7 @@ import NavLanding from '@/components/navs/NavLanding/NavLanding.vue'
 const route = useRoute()
 
 const isLanding = computed(() => route.path === '/' || route.path === '/donation')
+const isBlog = computed(() => route.path === '/blog')
 // onMounted(() => {
 //   isLanding.value = window.location.pathname === '/'
 //   console.log('isLanding', isLanding.value)
@@ -37,6 +39,7 @@ onMounted(() => {
 <template>
   <header>
     <NavLanding v-if="isLanding" />
+    <NavBlog v-else-if="isBlog" />
     <NavListing v-else />
   </header>
 </template>

@@ -1,0 +1,143 @@
+/* File: src/views/Blog/_blog-page.scss */
+
+.blog-page {
+  min-height: 100vh;
+  padding-top: 8rem;
+  padding-bottom: 4rem;
+
+  &__title {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+
+  &__content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 0;
+  }
+}
+
+// Search Modal Styles
+.search-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 4rem 1rem;
+  z-index: 9999;
+  overflow-y: auto;
+
+  &__container {
+    background: white;
+    border-radius: 1rem;
+    max-width: 700px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    color: #333;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid #e5e5e5;
+
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin: 0;
+    }
+  }
+
+  &__close {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: #000;
+    }
+  }
+
+  &__form {
+    padding: 1.5rem 2rem;
+  }
+
+  &__input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  &__icon {
+    position: absolute;
+    left: 1rem;
+    color: #999;
+    pointer-events: none;
+  }
+
+  &__input {
+    width: 100%;
+    padding: 0.875rem 1rem 0.875rem 3rem;
+    border: 2px solid #e5e5e5;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    transition: border-color 0.2s ease;
+
+    &:focus {
+      outline: none;
+      border-color: #4f46e5;
+    }
+  }
+
+  &__results {
+    padding: 1rem 2rem 2rem;
+    min-height: 200px;
+  }
+
+  &__placeholder {
+    text-align: center;
+    color: #999;
+    padding: 2rem 0;
+  }
+
+  &__results-list {
+    p {
+      color: #666;
+      margin-bottom: 1rem;
+    }
+  }
+}
+
+// Transitions
+.search-modal-enter-active,
+.search-modal-leave-active {
+  transition: opacity 0.3s ease;
+
+  .search-modal__container {
+    transition: transform 0.3s ease;
+  }
+}
+
+.search-modal-enter-from,
+.search-modal-leave-to {
+  opacity: 0;
+
+  .search-modal__container {
+    transform: translateY(-20px) scale(0.95);
+  }
+}

@@ -1,0 +1,200 @@
+/* File: src/components/navs/NavBlog/nav-blog.scss */
+
+@use '@/components/navs/NavLanding/nav-landing.scss';
+@use '@/styles/components/buttons' as buttons;
+
+// Appliquer le style des autres boutons au bouton rechercher
+.navbar__links li:has(.navbar__search-btn),
+.navbar__mobile-links li:has(.navbar__search-btn) {
+  @include buttons.secondary;
+}
+
+.navbar__search-btn {
+  // Le bouton hérite maintenant des styles du mixin secondary
+  display: inline-flex !important;
+  align-items: center;
+  gap: 0.5rem;
+
+  svg {
+    flex-shrink: 0;
+    display: inline-block;
+    margin: 0;
+  }
+
+  span {
+    line-height: 1;
+    display: inline-block;
+    white-space: nowrap;
+  }
+}
+
+.navbar__search-container {
+  flex: 1;
+  max-width: 600px;
+
+  // Supprimer tous les styles de bouton hérités
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  transform: none !important;
+  transition: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+
+  // Supprimer l'effet halo/aura/dégradé
+  &::before,
+  &::after {
+    display: none !important;
+    content: none !important;
+    opacity: 0 !important;
+  }
+
+  &:hover,
+  &:focus,
+  &:active {
+    background: transparent !important;
+    transform: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    filter: none !important;
+
+    &::before,
+    &::after {
+      display: none !important;
+      content: none !important;
+      opacity: 0 !important;
+    }
+
+    // FORCER TOUS LES SVG À RESTER VISIBLES AU HOVER
+    svg,
+    svg * {
+      opacity: 1 !important;
+      visibility: visible !important;
+      display: block !important;
+    }
+  }
+
+  // Forcer tous les enfants
+  * {
+    box-shadow: none !important;
+    filter: none !important;
+  }
+
+  // FORCER TOUS LES SVG DU CONTAINER À ÊTRE VISIBLES EN PERMANENCE
+  svg,
+  svg * {
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+    transition: none !important;
+  }
+}
+
+.navbar__search-form {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+
+  // Supprimer tous les effets sur le form
+  background: transparent !important;
+  border: none !important;
+  transform: none !important;
+  transition: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+
+  &:hover {
+    background: transparent !important;
+    transform: none !important;
+    box-shadow: none !important;
+    filter: none !important;
+
+    // Forcer tous les enfants au hover
+    * {
+      opacity: 1 !important;
+      visibility: visible !important;
+      transform: none !important;
+      filter: none !important;
+    }
+  }
+
+  // Forcer tous les SVG dans le form
+  svg,
+  svg * {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+.navbar__search-input {
+  width: 100%;
+  padding: 0.75rem 3.5rem 0.75rem 1.25rem; // Padding réduit à gauche car plus d'icône
+  background: transparent !important;
+  border: 1px solid #e0e0e0 !important;
+  border-radius: 2rem;
+  color: #000 !important;
+  font-size: 1rem;
+  outline: none !important;
+  transition: none !important;
+  transform: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+
+  &::placeholder {
+    color: #999;
+  }
+
+  &:hover,
+  &:focus,
+  &:active {
+    background: transparent !important;
+    border: 1px solid #e0e0e0 !important;
+    outline: none !important;
+    transform: none !important;
+    box-shadow: none !important;
+    filter: none !important;
+  }
+}
+
+.navbar__search-close {
+  position: absolute;
+  right: 1.25rem; // Décalé un peu plus à gauche
+  background: transparent;
+  border: none;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0.5rem; // Augmenté pour une zone cliquable plus grande
+  transition: none !important;
+  transform: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+
+  &:hover,
+  &:focus,
+  &:active {
+    color: #666;
+    background: transparent;
+    transform: none !important;
+    box-shadow: none !important;
+    filter: none !important;
+  }
+}
+
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
