@@ -71,7 +71,12 @@ const handleSearchSubmit = (e: Event) => {
           <a href="/blog">Blog</a>
         </li>
         <li>
-          <a href="/donation" target="_blank" rel="noopener noreferrer">Soutenir le projet</a>
+          <a
+            href="/donation"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Soutenir le projet</a
+          >
         </li>
         <li>
           <button
@@ -88,7 +93,10 @@ const handleSearchSubmit = (e: Event) => {
       <!-- Champ de recherche (visible si recherche ouverte) -->
       <template v-else>
         <li class="navbar__search-container">
-          <form @submit="handleSearchSubmit" class="navbar__search-form">
+          <form
+            @submit="handleSearchSubmit"
+            class="navbar__search-form"
+          >
             <input
               v-model="searchQuery"
               type="text"
@@ -153,13 +161,13 @@ const handleSearchSubmit = (e: Event) => {
             </a>
           </li>
           <li>
-            <button
+            <!-- <button
               class="navbar__search-btn"
               @click="openSearch"
             >
               <Search :size="20" />
               <span>Rechercher</span>
-            </button>
+            </button> -->
           </li>
         </ul>
       </div>
