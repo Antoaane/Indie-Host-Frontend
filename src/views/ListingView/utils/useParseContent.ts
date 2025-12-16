@@ -29,12 +29,12 @@ import type {
 } from '@/views/ListingView/types/listing';
 
 export type RawListingBundle = {
-  core?: RawCore | null;
-  bookings?: RawBookings | null;
-  medias?: RawMedias | null;
-  notes?: RawNotes | null;
-  comments?: RawComments | null;
-  host?: RawHost | null;
+  core?: Partial<RawCore> | null;
+  bookings?: Partial<RawBookings> | null;
+  medias?: Partial<RawMedias> | null;
+  notes?: Partial<RawNotes> | null;
+  comments?: Partial<RawComments> | null;
+  host?: Partial<RawHost> | null;
 };
 
 type Maybe<T> = T | null | undefined;
@@ -44,7 +44,7 @@ type Maybe<T> = T | null | undefined;
 /* ------------------------------------------------------------------ */
 
 // Normalise les rooms brutes du core.json -> RoomItem[]
-function normalizeRooms(core: Maybe<RawCore>): RoomItem[] {
+function normalizeRooms(core: Maybe<Partial<RawCore>>): RoomItem[] {
   return (core?.rooms ?? []).map(r => ({
     name: r['room-name'],
     type: r.type,
@@ -108,7 +108,7 @@ const sumLengthsMatching = (byType: RoomsByType, predicate: (key: string) => boo
 /* ------------------------------------------------------------------ */
 
 // Aligne sur les props du composant <Title>
-function parseTitle(core: Maybe<RawCore>): TitleModel {
+function parseTitle(core: Maybe<Partial<RawCore>>): TitleModel {
   const type = (core?.type ?? '').split(' / ')[0].trim() || core?.type || '';
 
   const rooms = normalizeRooms(core);
@@ -128,11 +128,11 @@ function parseTitle(core: Maybe<RawCore>): TitleModel {
 }
 
 
-function parsePerks(core: Maybe<RawCore>): PerksModel {
+function parsePerks(core: Maybe<Partial<RawCore>>): PerksModel {
   return (core?.perks ?? []).map(p => ({ icon: p.icon, name: p.name, description: p.description }));
 }
 
-function parseHost(host: Maybe<RawHost>): HostProfileModel {
+function parseHost(host: Maybe<Partial<RawHost>>): HostProfileModel {
   return {
     name: host?.name ?? '',
     status: host?.status,
@@ -143,14 +143,14 @@ function parseHost(host: Maybe<RawHost>): HostProfileModel {
   };
 }
 
-function parseDescription(core: Maybe<RawCore>): DescriptionModel {
+function parseDescription(core: Maybe<Partial<RawCore>>): DescriptionModel {
   return {
     description: core?.description ?? '',
     // blocks: core.description.map(b => ({ title: b.title, content: b.content })),
   };
 }
 
-function parseMap(core: Maybe<RawCore>): MapModel {
+function parseMap(core: Maybe<Partial<RawCore>>): MapModel {
   const latitude = Number(core?.latitude ?? core?.lat ?? 0);
   const longitude = Number(core?.longitude ?? core?.lng ?? 0);
   const zoom = typeof core?.zoom === 'number' ? core.zoom : undefined;
@@ -162,7 +162,7 @@ function parseMap(core: Maybe<RawCore>): MapModel {
   };
 }
 
-function parseAmenities(core: Maybe<RawCore>): AmenitiesModel {
+function parseAmenities(core: Maybe<Partial<RawCore>>): AmenitiesModel {
   return (core?.amenities ?? []).map((a) => ({
     name: a.name,
     description: a.description,
@@ -173,7 +173,7 @@ function parseAmenities(core: Maybe<RawCore>): AmenitiesModel {
   }));
 }
 
-function parseRooms(core: Maybe<RawCore>): RoomsModel {
+function parseRooms(core: Maybe<Partial<RawCore>>): RoomsModel {
   const rooms = normalizeRooms(core);
   const byType = groupRoomsByType(rooms);
   const summary = summarizeAll(rooms);
@@ -185,7 +185,7 @@ function parseRooms(core: Maybe<RawCore>): RoomsModel {
   };
 }
 
-function parseBookings(bookings: Maybe<RawBookings>): BookingsModel {
+function parseBookings(bookings: Maybe<Partial<RawBookings>>): BookingsModel {
   return {
     price: bookings?.price ?? 0,
     bookedDays: (bookings?.['booked-days'] ?? []).map(d => ({ start: d.start, end: d.end })),
@@ -193,7 +193,7 @@ function parseBookings(bookings: Maybe<RawBookings>): BookingsModel {
   };
 }
 
-function parseMedias(medias: Maybe<RawMedias>): MediasModel {
+function parseMedias(medias: Maybe<Partial<RawMedias>>): MediasModel {
   return {
     images: (medias?.images ?? []).map((i, idx) => ({
       src: i.src,
@@ -204,7 +204,7 @@ function parseMedias(medias: Maybe<RawMedias>): MediasModel {
   };
 }
 
-function parseNotes(notes: Maybe<RawNotes>): NotesModel {
+function parseNotes(notes: Maybe<Partial<RawNotes>>): NotesModel {
   return {
     overall: notes?.note?.note,
     distribution: notes?.note?.distribution,
@@ -216,7 +216,7 @@ function parseNotes(notes: Maybe<RawNotes>): NotesModel {
   };
 }
 
-function parseComments(raw: Maybe<RawComments>): { pages: CommentsPagesModel; flat: CommentsModel } {
+function parseComments(raw: Maybe<Partial<RawComments>>): { pages: CommentsPagesModel; flat: CommentsModel } {
   const pages = (raw?.comments || []).map(page =>
     page.map(c => ({
       avatar: c['profile-pic'],

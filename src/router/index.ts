@@ -4,6 +4,7 @@ import SignInView from '@/views/SignInView.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 const LandingPage = () => import('@/views/Landing/_LandingPage.vue')
 const Listing = () => import('@/views/Listing/_Listing.vue')
+const EditorRoute = () => import('@/views/Editor/EditorRoute.vue')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -27,6 +28,16 @@ const router = createRouter({
       path: '/donation',
       name: 'Donation',
       component: () => import('@/views/Donation/_DonationPage.vue'),
+    },
+    {
+      path: '/editor',
+      name: 'editor',
+      component: EditorRoute,
+    },
+    {
+      path: '/editor/:userId',
+      name: 'editor-user',
+      component: EditorRoute,
     },
   ],
 })
