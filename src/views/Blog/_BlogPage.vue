@@ -4,6 +4,8 @@
 // DEPS
 import { onMounted, onBeforeUnmount, ref } from 'vue'
 import { Search, X } from 'lucide-vue-next'
+// COMPONENTS
+import BlogHeroSection from './components/BlogHeroSection/BlogHeroSection.vue'
 // UTILS
 import { sr } from '@/utils/scrollReveal'
 import detectOS from '@/utils/detectOs'
@@ -73,15 +75,9 @@ onBeforeUnmount(() => {
     class="blog-page"
   >
     <div class="container__xl">
-      <h1
-        class="blog-page__title"
-        data-sr
-        >Blog</h1
-      >
+      <BlogHeroSection data-sr />
 
-      <section class="blog-page__content">
-        <p data-sr>Bienvenue sur le blog IndieHost.</p>
-      </section>
+      <section class="blog-page__content"> </section>
     </div>
 
     <!-- Search Modal -->
