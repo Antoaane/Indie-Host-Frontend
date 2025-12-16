@@ -6,10 +6,9 @@ import { computed } from 'vue'
 
 // UTILS
 import { vp } from '@/utils/viewport'
-import { listingCore } from '@/views/ListingView/utils/useParseContent'
 import staticLocale from '@/locales/_static/fr.json'
-import commonLocale from '@/locales/common/fr.json'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
+import type { ListingParsed } from '@/views/ListingView/types/listing'
 
 // COMPONENTS
 import Title from '@/views/ListingView/components/ListingCore/components/Title/Title.vue'
@@ -25,6 +24,7 @@ import Map from '@/views/ListingView/components/ListingCore/components/Map/Map.v
 //CONTENT
 const props = withDefaults(
   defineProps<{
+    data: ListingParsed
     modelValue?: RangeISO | null
   }>(),
   {
@@ -40,8 +40,6 @@ const selection = computed<RangeISO | null>({
   get: () => props.modelValue,
   set: (value) => emit('update:modelValue', value),
 })
-
-const data = await listingCore()
 
 interface StaticContent {
   listing: {
@@ -98,37 +96,37 @@ const descriptionStatic = {
 <template>
   <section id="listing-core">
     <Title
-      :data="data.title"
+      :data="props.data.title"
       :staticContent="staticContent.listing.title"
     />
-    <Perks :data="data.perks" />
+    <Perks :data="props.data.perks" />
     <Description
-      :data="data.description"
+      :data="props.data.description"
       :staticContent="descriptionStatic"
     />
     <HostProfile
-      :data="data.hostProfile"
+      :data="props.data.hostProfile"
       :staticContent="staticContent.listing.host"
     />
     <Amenities
-      :data="data.amenities"
+      :data="props.data.amenities"
       :staticContent="staticContent.listing.amenities"
       :previewCount="vp.lg.value ? 8 : 6"
     />
     <Rooms
-      :data="data.rooms"
+      :data="props.data.rooms"
       :staticContent="staticContent.listing.rooms"
     />
     <Availabilities
       v-if="vp.lg.value"
       v-model:model-value="selection"
-      :data="data.bookings"
+      :data="props.data.bookings"
       :static-content="staticContent.listing.headings"
     />
     <Map
-      :latitude="data.map.latitude"
-      :longitude="data.map.longitude"
-      :zoom="data.map.zoom"
+      :latitude="props.data.map.latitude"
+      :longitude="props.data.map.longitude"
+      :zoom="props.data.map.zoom"
       :static-content="staticContent.listing.headings"
     />
   </section>

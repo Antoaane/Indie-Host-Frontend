@@ -2,14 +2,11 @@
 
 <script setup lang="ts">
 // DEPS
-import { onMounted, onBeforeUnmount, ref } from 'vue'
-import { ScrollSmoother } from 'gsap/ScrollSmoother'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
-import gsap from 'gsap'
+import { computed, ref } from 'vue'
 
 // UTILS
 import { vp } from '@/utils/viewport'
-import { listingCore } from '@/views/ListingView/utils/useParseContent'
+import { listingCore, type RawListingBundle } from '@/views/ListingView/utils/useParseContent'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
 
 // COMPONENTS
@@ -21,31 +18,35 @@ import CheckoutMin from '@/views/ListingView/components/CheckoutMin/CheckoutMin.
 
 import type { ListingParsed } from '@/views/ListingView/types/listing'
 
-const listingData = ref<ListingParsed | null>(null)
-const bookingRange = ref<RangeISO | null>(null)
+const props = defineProps<{
+  rawListing?: RawListingBundle | null
+}>()
 
-onMounted(async () => {
-  listingData.value = await listingCore()
+const listingData = computed<ListingParsed | null>(() => {
+  if (!props.rawListing) return null
+  return listingCore(props.rawListing)
 })
+const bookingRange = ref<RangeISO | null>(null)
 </script>
 
 <template>
   <template v-if="vp.lg.value">
     <div class="listing-view">
       <div class="gallery-container">
-        <Suspense>
-          <Gallery />
-          <template #fallback><div class="skeleton">Chargement…</div></template>
-        </Suspense>
+        <Gallery
+          v-if="listingData"
+          :medias="listingData.medias"
+        />
+        <template v-else><div class="skeleton">Chargement…</div></template>
       </div>
 
       <div class="core-container">
-        <Suspense>
-          <ListingCore v-model:model-value="bookingRange" />
-          <template #fallback>
-            <div class="skeleton">Chargement…</div>
-          </template>
-        </Suspense>
+        <ListingCore
+          v-if="listingData"
+          v-model:model-value="bookingRange"
+          :data="listingData"
+        />
+        <template v-else><div class="skeleton">Chargement…</div></template>
       </div>
 
       <div class="stay-container">
@@ -60,12 +61,12 @@ onMounted(async () => {
           <div class="skeleton">Chargement…</div>
         </template>
 
-        <Suspense>
-          <ListingComments #default />
-          <template #fallback>
-            <div class="skeleton">Chargement…</div>
-          </template>
-        </Suspense>
+        <ListingComments
+          v-if="listingData"
+          :notes="listingData.notes"
+          :comments="listingData.comments"
+        />
+        <template v-else><div class="skeleton">Chargement…</div></template>
       </div>
     </div>
   </template>
@@ -74,27 +75,28 @@ onMounted(async () => {
     <div class="listing-view">
       <div class="listing_main">
         <div class="gallery-container">
-          <Suspense>
-            <Gallery />
-            <template #fallback><div class="skeleton">Chargement…</div></template>
-          </Suspense>
+          <Gallery
+            v-if="listingData"
+            :medias="listingData.medias"
+          />
+          <template v-else><div class="skeleton">Chargement…</div></template>
         </div>
 
         <div class="core-container">
           <div>
-            <Suspense>
-              <ListingCore v-model:model-value="bookingRange" />
-              <template #fallback>
-                <div class="skeleton">Chargement…</div>
-              </template>
-            </Suspense>
+            <ListingCore
+              v-if="listingData"
+              v-model:model-value="bookingRange"
+              :data="listingData"
+            />
+            <template v-else><div class="skeleton">Chargement…</div></template>
 
-            <Suspense>
-              <ListingComments #default />
-              <template #fallback>
-                <div class="skeleton">Chargement…</div>
-              </template>
-            </Suspense>
+            <ListingComments
+              v-if="listingData"
+              :notes="listingData.notes"
+              :comments="listingData.comments"
+            />
+            <template v-else><div class="skeleton">Chargement…</div></template>
           </div>
         </div>
       </div>

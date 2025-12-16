@@ -1,14 +1,5 @@
 // File: src/views/ListingView/utils/useParseContent.ts
 
-import {
-  loadCore,
-  loadBookings,
-  loadMedias,
-  loadNotes,
-  loadComments,
-  loadHost,
-} from './fetchListingRaw';
-
 import type {
   RawCore,
   RawBookings,
@@ -16,7 +7,7 @@ import type {
   RawNotes,
   RawComments,
   RawHost,
-} from './fetchListingRaw';
+} from '@/views/Listing/utils/fetchListingRaw';
 
 // ---- TYPES ----
 import type {
@@ -37,13 +28,24 @@ import type {
   MapModel,
 } from '@/views/ListingView/types/listing';
 
+export type RawListingBundle = {
+  core?: RawCore | null;
+  bookings?: RawBookings | null;
+  medias?: RawMedias | null;
+  notes?: RawNotes | null;
+  comments?: RawComments | null;
+  host?: RawHost | null;
+};
+
+type Maybe<T> = T | null | undefined;
+
 /* ------------------------------------------------------------------ */
 /* ----------------------- HELPERS ƒ?oROOMSƒ?? -------------------------- */
 /* ------------------------------------------------------------------ */
 
 // Normalise les rooms brutes du core.json -> RoomItem[]
-function normalizeRooms(core: RawCore): RoomItem[] {
-  return (core.rooms ?? []).map(r => ({
+function normalizeRooms(core: Maybe<RawCore>): RoomItem[] {
+  return (core?.rooms ?? []).map(r => ({
     name: r['room-name'],
     type: r.type,
     // ƒªÎ‹÷? NE PAS forcer [] : on ne met "beds" que s'il y en a
@@ -106,8 +108,8 @@ const sumLengthsMatching = (byType: RoomsByType, predicate: (key: string) => boo
 /* ------------------------------------------------------------------ */
 
 // Aligne sur les props du composant <Title>
-function parseTitle(core: RawCore): TitleModel {
-  const type = (core.type ?? '').split(' / ')[0].trim() || core.type;
+function parseTitle(core: Maybe<RawCore>): TitleModel {
+  const type = (core?.type ?? '').split(' / ')[0].trim() || core?.type || '';
 
   const rooms = normalizeRooms(core);
   const byType = groupRoomsByType(rooms);
@@ -116,42 +118,42 @@ function parseTitle(core: RawCore): TitleModel {
   const bathrooms = sumLengthsMatching(byType, k => k.toLowerCase().includes('bath'));
 
   return {
-    title: core.title,
+    title: core?.title ?? '',
     type,
-    location: { city: core.city ?? '', region: core.region ?? '', country: core.country ?? '' },
-    guest_capacity: core.guest_capacity,
+    location: { city: core?.city ?? '', region: core?.region ?? '', country: core?.country ?? '' },
+    guest_capacity: core?.guest_capacity ?? 0,
     bedrooms: { quantity: bedroom.length, bed: bedroom.beds ?? 0 }, // ƒª.‹÷? safe
     bathrooms,
   };
 }
 
 
-function parsePerks(core: RawCore): PerksModel {
-  return core.perks.map(p => ({ icon: p.icon, name: p.name, description: p.description }));
+function parsePerks(core: Maybe<RawCore>): PerksModel {
+  return (core?.perks ?? []).map(p => ({ icon: p.icon, name: p.name, description: p.description }));
 }
 
-function parseHost(host: RawHost): HostProfileModel {
+function parseHost(host: Maybe<RawHost>): HostProfileModel {
   return {
-    name: host.name,
-    status: host.status,
-    seniority: host.seniority,
-    globalNote: host['global-note'],
-    avatar: host.avatar,
-    catalogLink: host['catalog-link'],
+    name: host?.name ?? '',
+    status: host?.status,
+    seniority: host?.seniority ?? 0,
+    globalNote: host?.['global-note'],
+    avatar: host?.avatar,
+    catalogLink: host?.['catalog-link'],
   };
 }
 
-function parseDescription(core: RawCore): DescriptionModel {
+function parseDescription(core: Maybe<RawCore>): DescriptionModel {
   return {
-    description: core.description,
+    description: core?.description ?? '',
     // blocks: core.description.map(b => ({ title: b.title, content: b.content })),
   };
 }
 
-function parseMap(core: RawCore): MapModel {
-  const latitude = Number(core.latitude ?? core.lat ?? 0);
-  const longitude = Number(core.longitude ?? core.lng ?? 0);
-  const zoom = typeof core.zoom === 'number' ? core.zoom : undefined;
+function parseMap(core: Maybe<RawCore>): MapModel {
+  const latitude = Number(core?.latitude ?? core?.lat ?? 0);
+  const longitude = Number(core?.longitude ?? core?.lng ?? 0);
+  const zoom = typeof core?.zoom === 'number' ? core.zoom : undefined;
 
   return {
     latitude,
@@ -160,8 +162,8 @@ function parseMap(core: RawCore): MapModel {
   };
 }
 
-function parseAmenities(core: RawCore): AmenitiesModel {
-  return (core.amenities ?? []).map((a) => ({
+function parseAmenities(core: Maybe<RawCore>): AmenitiesModel {
+  return (core?.amenities ?? []).map((a) => ({
     name: a.name,
     description: a.description,
     icon: a.icon,
@@ -171,7 +173,7 @@ function parseAmenities(core: RawCore): AmenitiesModel {
   }));
 }
 
-function parseRooms(core: RawCore): RoomsModel {
+function parseRooms(core: Maybe<RawCore>): RoomsModel {
   const rooms = normalizeRooms(core);
   const byType = groupRoomsByType(rooms);
   const summary = summarizeAll(rooms);
@@ -183,30 +185,30 @@ function parseRooms(core: RawCore): RoomsModel {
   };
 }
 
-function parseBookings(bookings: RawBookings): BookingsModel {
+function parseBookings(bookings: Maybe<RawBookings>): BookingsModel {
   return {
-    price: bookings.price,
-    bookedDays: bookings['booked-days'].map(d => ({ start: d.start, end: d.end })),
-    fees: (bookings.fees ?? []).map(fee => ({ name: fee.name, amount: fee.amount })),
+    price: bookings?.price ?? 0,
+    bookedDays: (bookings?.['booked-days'] ?? []).map(d => ({ start: d.start, end: d.end })),
+    fees: (bookings?.fees ?? []).map(fee => ({ name: fee.name, amount: fee.amount })),
   };
 }
 
-function parseMedias(medias: RawMedias): MediasModel {
+function parseMedias(medias: Maybe<RawMedias>): MediasModel {
   return {
-    images: medias.images.map((i, idx) => ({
+    images: (medias?.images ?? []).map((i, idx) => ({
       src: i.src,
       alt: i.alt,
       position: typeof i.position === 'number' ? i.position : idx,
     })),
-    videos: medias.videos ?? [],
+    videos: medias?.videos ?? [],
   };
 }
 
-function parseNotes(notes: RawNotes): NotesModel {
+function parseNotes(notes: Maybe<RawNotes>): NotesModel {
   return {
-    overall: notes.note?.note,
-    distribution: notes.note?.distribution,
-    otas: (notes['otas-note'] || []).map(n => ({
+    overall: notes?.note?.note,
+    distribution: notes?.note?.distribution,
+    otas: (notes?.['otas-note'] || []).map(n => ({
       ota: n.ota as any,
       note: n.note,
       distribution: n.distribution,
@@ -214,8 +216,8 @@ function parseNotes(notes: RawNotes): NotesModel {
   };
 }
 
-function parseComments(raw: RawComments): { pages: CommentsPagesModel; flat: CommentsModel } {
-  const pages = (raw.comments || []).map(page =>
+function parseComments(raw: Maybe<RawComments>): { pages: CommentsPagesModel; flat: CommentsModel } {
+  const pages = (raw?.comments || []).map(page =>
     page.map(c => ({
       avatar: c['profile-pic'],
       name: c.name,
@@ -227,44 +229,39 @@ function parseComments(raw: RawComments): { pages: CommentsPagesModel; flat: Com
 
   const flat = pages.flat();
 
-  console.log(`${flat.length ? 'ƒo.' : 'ƒ?O'} [useParseContent.ts](parseComments) comments:parse parsedCount=${flat.length} ready`);
-  console.log(`${'ƒ"û‹÷?'} [useParseContent.ts](parseComments) comments:pagesDetected pagesCount=${pages.length} loaded`);
+  if (import.meta.env.DEV) {
+    console.log(`${flat.length ? 'ƒo.' : 'ƒ?O'} [useParseContent.ts](parseComments) comments:parse parsedCount=${flat.length} ready`);
+    console.log(`${'ƒ"û‹÷?'} [useParseContent.ts](parseComments) comments:pagesDetected pagesCount=${pages.length} loaded`);
+  }
 
   return { pages, flat };
 }
 
 // ---- UTIL PRINCIPAL ----
-export async function listingCore(): Promise<ListingParsed> {
-  const [core, host, bookings, medias, notes, comments] = await Promise.all([
-    loadCore(),
-    loadHost(),
-    loadBookings(),
-    loadMedias(),
-    loadNotes(),
-    loadComments(),
-  ]);
-
-  const parsedComments = parseComments(comments);
-  console.log(`${parsedComments.flat.length ? 'ƒo.' : 'ƒ?O'} [useParseContent.ts](listingCore) listingCore:load commentsCount=${parsedComments.flat.length} aggregated`);
-  console.log(`${'ƒ"û‹÷?'} [useParseContent.ts](listingCore) listingCore:commentsPages available=${parsedComments.pages.length} cached`);
+export function listingCore(raw: RawListingBundle): ListingParsed {
+  const parsedComments = parseComments(raw.comments);
+  // if (import.meta.env.DEV) {
+  //   console.log(`${parsedComments.flat.length ? 'ƒo.' : 'ƒ?O'} [useParseContent.ts](listingCore) listingCore:load commentsCount=${parsedComments.flat.length} aggregated`);
+  //   console.log(`${'ƒ"û‹÷?'} [useParseContent.ts](listingCore) listingCore:commentsPages available=${parsedComments.pages.length} cached`);
+  // }
 
   return {
-    title: parseTitle(core),
-    perks: parsePerks(core),
-    hostProfile: parseHost(host),
-    description: parseDescription(core),
-    map: parseMap(core),
-    amenities: parseAmenities(core),
-    rooms: parseRooms(core),
-    bookings: parseBookings(bookings),
-    medias: parseMedias(medias),
-    notes: parseNotes(notes),
+    title: parseTitle(raw.core),
+    perks: parsePerks(raw.core),
+    hostProfile: parseHost(raw.host),
+    description: parseDescription(raw.core),
+    map: parseMap(raw.core),
+    amenities: parseAmenities(raw.core),
+    rooms: parseRooms(raw.core),
+    bookings: parseBookings(raw.bookings),
+    medias: parseMedias(raw.medias),
+    notes: parseNotes(raw.notes),
     comments: parsedComments.flat,
     commentsPages: parsedComments.pages,
   };
 }
 
 // ---- EXEMPLE Dƒ?TUSAGE ----
-// const data = await listingCore();
+// const data = listingCore({ core, host, bookings, medias, notes, comments });
 // const bedroom = data.rooms.byType['bedroom']; // accÇùs direct demandÇ¸
 // console.log(bedroom.length, bedroom.beds, data.rooms.summary.capacityTotal);

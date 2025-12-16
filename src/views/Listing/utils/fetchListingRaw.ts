@@ -1,4 +1,4 @@
-// File: src/views/ListingView/utils/fetchListingRaw.ts
+// File: src/views/Listing/utils/fetchListingRaw.ts
 
 import coreJSON from '@/content/fr/ListingTest/core.json';
 import bookingsJSON from '@/content/fr/ListingTest/bookings.json';
@@ -9,7 +9,7 @@ import hostJSON from '@/content/fr/ListingTest/host.json';
 
 import clerkToken from '@/utils/clerkToken'
 
-// Typages "bruts" dÇ¸duits des JSON exemples
+// Typages "bruts" déduits des JSON exemples
 type RawCoreBase = typeof coreJSON;
 export type RawCore = RawCoreBase & { lat?: number; lng?: number; zoom?: number };
 export type RawBookings = typeof bookingsJSON;

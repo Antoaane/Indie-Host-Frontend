@@ -15,7 +15,6 @@ import CommentCard from './components/CommentCard/CommentCard.vue'
 
 // UTILS
 import { vp } from '@/utils/viewport'
-import { listingCore } from '@/views/ListingView/utils/useParseContent'
 import { formatICUMessage } from '@/utils/i18n'
 import { buildDistributionFromComments, computePercentage } from '@/views/ListingView/utils/formatters'
 
@@ -60,7 +59,15 @@ interface StaticContentRoot {
 
 const content = (staticLocale as StaticContentRoot).listing.commentsWidget
 
-const data = await listingCore()
+const props = withDefaults(
+  defineProps<{
+    notes?: NotesModel
+    comments?: CommentsModel
+  }>(),
+  {
+    comments: () => [],
+  },
+)
 // console.log(`${data?.comments?.length ? '✅' : '❌'} [ListingComments.vue](setup) listingCore:resolved commentsCount=${data.comments?.length ?? 0} fetched`)
 // console.log(`${'ℹ️'} [ListingComments.vue](setup) contentLoaded=commentsWidget ready for render`)
 
@@ -72,7 +79,7 @@ const overlayLimit = ref(overlayStep)
 const overlayScrollEl = ref<HTMLElement | null>(null)
 
 const comments = computed(() => {
-  const value = data.comments ?? []
+  const value = props.comments ?? []
   // console.log(`${value.length ? '✅' : '❌'} [ListingComments.vue](comments) comments:computed listLength=${value.length} prepared`)
   return value
 })
@@ -89,7 +96,7 @@ const countLabel = computed(() => {
 })
 
 const overallScore = computed(() => {
-  const overall = data.notes?.overall
+  const overall = props.notes?.overall
   if (typeof overall === 'number' && !Number.isNaN(overall)) {
     // console.log(`${'✅'} [ListingComments.vue](overallScore) overallScore:computed fromNotes=${overall} reused`)
     return overall
@@ -137,7 +144,7 @@ function resolveDistribution(notes: NotesModel | undefined, list: CommentsModel)
 }
 
 const distribution = computed(() => {
-  const resolved = resolveDistribution(data.notes, comments.value)
+  const resolved = resolveDistribution(props.notes, comments.value)
   // console.log(`${resolved.entries.length ? '✅' : '❌'} [ListingComments.vue](distribution) distribution:computed totalEntries=${resolved.total} readyForUI`)
   return resolved
 })

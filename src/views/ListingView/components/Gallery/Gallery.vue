@@ -14,12 +14,13 @@ import { vp } from '@/utils/viewport'
 import { fancyboxShow } from '@/views/ListingView/components/Gallery/utils/fancybox'
 import { orderByIndex } from '@/views/ListingView/components/Gallery/utils/order'
 import type { Item } from '@/views/ListingView/components/Gallery/utils/types'
-// CONTENT
-import { listingCore } from '@/views/ListingView/utils/useParseContent'
+import type { MediasModel } from '@/views/ListingView/types/listing'
 
-const { medias } = await listingCore()
+const props = defineProps<{
+  medias: MediasModel
+}>()
 
-const orderedImages = computed(() => orderByIndex(medias.images))
+const orderedImages = computed(() => orderByIndex(props.medias.images))
 
 const coverImage = computed(() => orderedImages.value.find((img) => (img.position ?? 0) === 0) ?? orderedImages.value[0])
 const mosaicImages = computed(() => orderedImages.value.filter((img) => img !== coverImage.value))
@@ -40,7 +41,6 @@ function openCoverLightbox() {
 }
 
 const slides = computed(() => orderedImages.value)
-console.log('slides', slides)
 
 const swiperParams = computed(
   () =>
