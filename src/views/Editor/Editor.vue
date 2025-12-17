@@ -184,23 +184,29 @@ watch(selectedListingId, (id) => {
         </div>
 
         <footer class="editor-stage__footer">
-          <button
+          <div
             v-if="stage === 'listings'"
             class="btn-primary__black__full"
-            :disabled="!canTogglePreview"
-            type="button"
-            @click="showPreview"
           >
-            Afficher l'éditeur
-          </button>
-          <button
+            <button
+              :disabled="!canTogglePreview"
+              type="button"
+              @click="showPreview"
+            >
+              Afficher l'éditeur
+            </button>
+          </div>
+          <div
             v-else
             class="btn-primary__black__full"
-            type="button"
-            @click="showListings"
           >
-            Retourner aux annonces
-          </button>
+            <button
+              type="button"
+              @click="showListings"
+            >
+              Retourner aux annonces
+            </button>
+          </div>
         </footer>
       </section>
     </div>

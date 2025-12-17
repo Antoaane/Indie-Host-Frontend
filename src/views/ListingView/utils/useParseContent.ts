@@ -164,9 +164,9 @@ function parseMap(core: Maybe<Partial<RawCore>>): MapModel {
 
 function parseAmenities(core: Maybe<Partial<RawCore>>): AmenitiesModel {
   return (core?.amenities ?? []).map((a) => ({
+    id: a.id,
     name: a.name,
     description: a.description,
-    icon: a.icon,
     category: a.category,
     relevance: a.relevance,
     pinned: Boolean(a.pinned),

@@ -1,4 +1,4 @@
-<!-- File: src/views/Editor/components/EditorPanels/panels/GalleryPanel.vue -->
+<!-- File: src/views/Editor/components/EditorSidebar/panels/ListingPanels/GalleryPanel.vue -->
 
 <script setup lang="ts">
 import { computed } from 'vue'
@@ -22,7 +22,9 @@ function setImages(next: DraftImage[]) {
 }
 
 function addImage() {
-  const next = [...images.value]
+  const next = [
+    ...images.value,
+  ]
   next.push({
     src: '',
     alt: '',
@@ -39,41 +41,46 @@ function removeImage(position: number) {
 
 <template>
   <section class="editor-panel">
-    <header class="editor-panel__header">
+    <div class="editor-panel__header">
       <h3>Galerie de photo</h3>
       <p>Montrez votre logement sous son plus beau jour</p>
-    </header>
+    </div>
 
     <div class="editor-panel__body">
       <div class="editor-gallery">
-        <button
+        <div
           v-for="img in images"
           :key="img.position"
           class="editor-gallery__tile"
-          type="button"
-          @click="removeImage(img.position)"
         >
-          <img
-            v-if="img.src"
-            :src="img.src"
-            :alt="img.alt || ''"
-            loading="lazy"
-          />
-          <div
-            v-else
-            class="editor-gallery__placeholder"
-          />
-        </button>
+          <button
+            type="button"
+            @click="removeImage(img.position)"
+          >
+            <img
+              v-if="img.src"
+              :src="img.src"
+              :alt="img.alt || ''"
+              loading="lazy"
+            />
+            <div
+              v-else
+              class="editor-gallery__placeholder"
+            />
+          </button>
+        </div>
 
-        <button
+        <div
           class="editor-gallery__tile editor-gallery__add"
-          type="button"
-          @click="addImage"
         >
-          +
-        </button>
+          <button
+            type="button"
+            @click="addImage"
+          >
+            +
+          </button>
+        </div>
       </div>
     </div>
   </section>
 </template>
-

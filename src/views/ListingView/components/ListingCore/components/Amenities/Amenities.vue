@@ -3,10 +3,10 @@
 <script setup lang="ts">
 // DEPS
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import * as LucideIcons from 'lucide-vue-next'
 
 // TYPES
 import type { AmenitiesModel } from '@/views/ListingView/types/listing'
+import { resolveAmenityIconComponent, resolveLucideComponent } from '@/utils/amenitiesIcons'
 
 interface StaticContent {
   title: string
@@ -15,9 +15,9 @@ interface StaticContent {
 }
 
 interface AmenityWithIndex {
+  id: string
   name: string
   description?: string
-  icon: string
   category: string
   relevance: number
   pinned: boolean
@@ -32,18 +32,6 @@ const props = defineProps<{
 }>()
 
 const isOverlayOpen = ref(false)
-
-function toPascalCase(name: string): string {
-  return name
-    .split(/[-_]/g)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-    .join('')
-}
-
-function resolveIcon(name: string) {
-  const key = toPascalCase(name)
-  return (LucideIcons as Record<string, any>)[key] ?? null
-}
 
 const amenities = computed(() => props.data ?? [])
 
@@ -126,10 +114,11 @@ onBeforeUnmount(() => {
     >
       <li
         v-for="amenity in previewAmenities"
-        :key="amenity.name + amenity.icon"
+        :key="amenity.id"
       >
         <component
-          :is="resolveIcon(amenity.icon)"
+          v-if="resolveAmenityIconComponent(amenity.id)"
+          :is="resolveAmenityIconComponent(amenity.id)"
           class="amenity-icon"
           aria-hidden="true"
         />
@@ -167,7 +156,7 @@ onBeforeUnmount(() => {
                 @click="closeOverlay"
               >
                 <component
-                  :is="resolveIcon('x')"
+                  :is="resolveLucideComponent('x')"
                   :size="20"
                   aria-hidden="true"
                 />
@@ -185,10 +174,11 @@ onBeforeUnmount(() => {
               <ul>
                 <li
                   v-for="amenity in category.items"
-                  :key="`${category.name}-${amenity.name}`"
+                  :key="`${category.name}-${amenity.id}`"
                 >
                   <component
-                    :is="resolveIcon(amenity.icon)"
+                    v-if="resolveAmenityIconComponent(amenity.id)"
+                    :is="resolveAmenityIconComponent(amenity.id)"
                     class="amenity-icon"
                     aria-hidden="true"
                   />

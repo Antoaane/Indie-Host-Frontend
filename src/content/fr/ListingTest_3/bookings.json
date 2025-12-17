@@ -1,0 +1,14 @@
+{
+  "price": 579,
+  "fees": [
+    { "name": "Frais de ménage", "amount": 160 },
+    { "name": "Chauffage piscine", "amount": 25 }
+  ],
+  "booked-days": [
+    { "start": "2025-04-12", "end": "2025-04-19" },
+    { "start": "2025-06-28", "end": "2025-07-05" },
+    { "start": "2025-08-09", "end": "2025-08-16" },
+    { "start": "2025-10-18", "end": "2025-10-25" }
+  ]
+}
+

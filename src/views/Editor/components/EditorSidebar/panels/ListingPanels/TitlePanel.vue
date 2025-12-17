@@ -1,4 +1,4 @@
-<!-- File: src/views/Editor/components/EditorPanels/panels/TitlePanel.vue -->
+<!-- File: src/views/Editor/components/EditorSidebar/panels/ListingPanels/TitlePanel.vue -->
 
 <script setup lang="ts">
 import { computed } from 'vue'
@@ -23,10 +23,10 @@ const title = computed({
 
 <template>
   <section class="editor-panel">
-    <header class="editor-panel__header">
+    <div class="editor-panel__header">
       <h3>Titre de l’annonce</h3>
       <p>Donnez un nom original à votre lieu</p>
-    </header>
+    </div>
 
     <div class="editor-panel__body">
       <input
@@ -38,4 +38,3 @@ const title = computed({
     </div>
   </section>
 </template>
-

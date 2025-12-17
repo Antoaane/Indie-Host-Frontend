@@ -1,0 +1,60 @@
+{
+  "comments": [
+    [
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/9.jpg",
+        "name": "Laurent",
+        "note": 5,
+        "comment": "Vue incroyable au réveil, poêle très agréable après le ski. Local à skis hyper pratique.",
+        "stay-dates": { "start": "2025-02-22", "end": "2025-02-26" }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/33.jpg",
+        "name": "Marion",
+        "note": 4,
+        "comment": "Chalet cosy et bien équipé. Un peu de route en montagne mais navette facile pour aller en ville.",
+        "stay-dates": { "start": "2025-01-18", "end": "2025-01-21" }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/27.jpg",
+        "name": "Nicolas",
+        "note": 5,
+        "comment": "Séjour parfait entre amis : grande table, raclette et soirées au coin du feu.",
+        "stay-dates": { "start": "2024-12-05", "end": "2024-12-08" }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/58.jpg",
+        "name": "Ana",
+        "note": 4,
+        "comment": "Très bon rapport qualité/prix pour Chamonix. Literie confortable, logement propre.",
+        "stay-dates": { "start": "2024-11-01", "end": "2024-11-03" }
+      }
+    ],
+    [
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/62.jpg",
+        "name": "Pauline",
+        "note": 5,
+        "comment": "Super pour des randos l’été, balcon au soleil en fin de journée. On reviendra.",
+        "stay-dates": { "start": "2024-08-12", "end": "2024-08-16" }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/32.jpg",
+        "name": "Jérémy",
+        "note": 4,
+        "comment": "Chalet conforme. On a apprécié le sèche-chaussures et le rangement ski.",
+        "stay-dates": { "start": "2024-03-22", "end": "2024-03-25" }
+      }
+    ],
+    [
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/66.jpg",
+        "name": "Hamza",
+        "note": 5,
+        "comment": "Poêle + vue montagne = combo parfait. Check-in autonome simple.",
+        "stay-dates": { "start": "2024-02-09", "end": "2024-02-11" }
+      }
+    ]
+  ]
+}
+

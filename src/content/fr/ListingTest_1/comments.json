@@ -1,0 +1,102 @@
+{
+  "comments": [
+    [
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/65.jpg",
+        "name": "Julie",
+        "note": 5,
+        "comment": "Emplacement parfait : canal, restos, métro… tout à pied. Loft très lumineux et super propre.",
+        "stay-dates": { "start": "2025-06-06", "end": "2025-06-09" }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/11.jpg",
+        "name": "Maxime",
+        "note": 5,
+        "comment": "Check-in autonome nickel, lit confortable, silence sur cour. On a pu bosser grâce à la fibre.",
+        "stay-dates": { "start": "2025-05-19", "end": "2025-05-22" }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/22.jpg",
+        "name": "Nina",
+        "note": 4,
+        "comment": "Très chouette logement, déco canon. Un peu vivant le soir en sortant, mais à l’intérieur c’est calme.",
+        "stay-dates": { "start": "2025-04-11", "end": "2025-04-14" }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/50.jpg",
+        "name": "Rachid",
+        "note": 5,
+        "comment": "Super adresse pour découvrir Paris sans se prendre la tête. Cuisine bien équipée.",
+        "stay-dates": { "start": "2025-03-01", "end": "2025-03-04" }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/7.jpg",
+        "name": "Clara",
+        "note": 5,
+        "comment": "On a adoré le quartier et les balades au bord du canal. Appartement fidèle aux photos.",
+        "stay-dates": { "start": "2025-02-21", "end": "2025-02-23" }
+      }
+    ],
+    [
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/78.jpg",
+        "name": "Gilles",
+        "note": 5,
+        "comment": "Top pour un déplacement pro : wifi rapide, bureau, et plein de restos pour dîner tard.",
+        "stay-dates": { "start": "2024-12-10", "end": "2024-12-12" }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/39.jpg",
+        "name": "Sabrina",
+        "note": 4,
+        "comment": "Très agréable et bien chauffé. On a apprécié les petites attentions (café, guides).",
+        "stay-dates": { "start": "2024-11-15", "end": "2024-11-17" }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/64.jpg",
+        "name": "Olivier",
+        "note": 5,
+        "comment": "Séjour parfait à deux, on a même pu inviter des amis pour un apéro. Super espace.",
+        "stay-dates": { "start": "2024-10-04", "end": "2024-10-06" }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/51.jpg",
+        "name": "Hélène",
+        "note": 5,
+        "comment": "Calme, lumineux, literie impeccable. Très bonne communication avec l’hôte.",
+        "stay-dates": { "start": "2024-09-20", "end": "2024-09-23" }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/23.jpg",
+        "name": "Bastien",
+        "note": 4,
+        "comment": "Rien à redire, juste prévoir un peu de temps pour se garer si vous venez en voiture.",
+        "stay-dates": { "start": "2024-08-30", "end": "2024-09-01" }
+      }
+    ],
+    [
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/16.jpg",
+        "name": "Émilie",
+        "note": 5,
+        "comment": "Le loft est hyper cosy et super bien placé. On reviendra pour un prochain week-end parisien.",
+        "stay-dates": { "start": "2024-06-21", "end": "2024-06-23" }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/6.jpg",
+        "name": "Victor",
+        "note": 5,
+        "comment": "Accès autonome simple, instructions claires. Quartier trop cool.",
+        "stay-dates": { "start": "2024-05-03", "end": "2024-05-06" }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/4.jpg",
+        "name": "Noémie",
+        "note": 4,
+        "comment": "Très bon séjour. Canapé-lit confortable, ce qui n’est pas si courant !",
+        "stay-dates": { "start": "2024-03-15", "end": "2024-03-17" }
+      }
+    ]
+  ]
+}
+

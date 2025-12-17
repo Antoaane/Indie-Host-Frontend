@@ -1,0 +1,148 @@
+{
+  "id": "736014540319508555",
+  "status": "draft",
+  "title": "Chalet cosy ★ Vue Mont-Blanc · Chamonix",
+  "type": "Chalet",
+  "description": "<span>Chalet chaleureux avec vue sur les sommets, à quelques minutes de Chamonix. Idéal pour un séjour ski, rando et raclette.</span><h3>Le logement</h3><span>Deux chambres, un salon avec poêle, une cuisine équipée et un balcon. Local à skis, sèche-chaussures et grande table pour les repas.</span><h3>Accès des voyageurs</h3><span>Parking privé devant le chalet. Arrivée autonome possible. Les navettes passent à proximité pour rejoindre les pistes.</span><h3>Autres remarques</h3><span>En hiver, pneus neige/chaînes fortement recommandés. Le chalet est sur une route de montagne, déneigée mais parfois glissante.</span>",
+  "guest_capacity": 6,
+  "city": "Chamonix-Mont-Blanc",
+  "region": "Auvergne-Rhône-Alpes",
+  "country": "France",
+  "latitude": 45.9237,
+  "longitude": 6.8694,
+  "rooms": [
+    {
+      "room-name": "Chambre 1",
+      "type": "bedroom",
+      "beds": [
+        { "type": "double", "capacity": 2, "quantity": 1 }
+      ]
+    },
+    {
+      "room-name": "Chambre 2",
+      "type": "bedroom",
+      "beds": [
+        { "type": "simple", "capacity": 1, "quantity": 2 }
+      ]
+    },
+    {
+      "room-name": "Salon",
+      "type": "livingroom",
+      "beds": [
+        { "type": "double", "capacity": 2, "quantity": 1 }
+      ]
+    },
+    {
+      "room-name": "Salle de bain",
+      "type": "bathroom"
+    }
+  ],
+  "perks": [
+    {
+      "name": "Annulation gratuite pendant 48h",
+      "description": "Si vous changez d'avis, votre réservation est annulable sans frais dans les 48 premières heures.",
+      "icon": "rotate-ccw"
+    },
+    {
+      "name": "Local à skis",
+      "description": "Rangement sécurisé + sèche-chaussures.",
+      "icon": "briefcase"
+    }
+  ],
+  "amenities": [
+    {
+      "id": "MONT_BLANC_VIEW",
+      "name": "Vue Mont‑Blanc",
+      "description": "Balcon avec panorama",
+      "category": "Vue & accès",
+      "relevance": 98,
+      "pinned": true
+    },
+    {
+      "id": "WOOD_STOVE",
+      "name": "Poêle à bois",
+      "description": "Ambiance chalet garantie",
+      "category": "Confort & travail",
+      "relevance": 90,
+      "pinned": true
+    },
+    {
+      "id": "SKI_STORAGE",
+      "name": "Local à skis",
+      "description": "Sèche-chaussures inclus",
+      "category": "Arrivée & mobilité",
+      "relevance": 88,
+      "pinned": true
+    },
+    {
+      "id": "PRIVATE_PARKING",
+      "name": "Parking privé",
+      "description": "1 place devant le chalet",
+      "category": "Arrivée & mobilité",
+      "relevance": 82,
+      "pinned": true
+    },
+    {
+      "id": "WIFI",
+      "name": "Wifi",
+      "description": "Stable pour télétravail",
+      "category": "Confort & travail",
+      "relevance": 80,
+      "pinned": false
+    },
+    {
+      "id": "EQUIPPED_KITCHEN",
+      "name": "Cuisine équipée",
+      "description": "Four, plaques, raclette",
+      "category": "Cuisine & boissons",
+      "relevance": 86,
+      "pinned": true
+    },
+    {
+      "id": "FILTER_COFFEE_MAKER",
+      "name": "Machine à café filtre",
+      "description": "Café moulu de bienvenue",
+      "category": "Cuisine & boissons",
+      "relevance": 66,
+      "pinned": false
+    },
+    {
+      "id": "LINENS_PROVIDED",
+      "name": "Linge de lit et de bain",
+      "description": "Draps et serviettes fournis",
+      "category": "Confort & travail",
+      "relevance": 74,
+      "pinned": false
+    },
+    {
+      "id": "BOARD_GAMES",
+      "name": "Jeux de société",
+      "description": "Pour les soirées neige",
+      "category": "Vie à bord",
+      "relevance": 58,
+      "pinned": false
+    },
+    {
+      "id": "SMOKE_ALARM",
+      "name": "Détecteur de fumée",
+      "description": "Dans le couloir",
+      "category": "Sécurité",
+      "relevance": 84,
+      "pinned": false
+    }
+  ],
+  "description_dep": [
+    {
+      "title": "Le logement",
+      "content": "Chalet pour 6 : deux chambres + canapé‑lit, salon avec poêle, cuisine équipée (dont appareil à raclette) et balcon avec vue."
+    },
+    {
+      "title": "Accès des voyageurs",
+      "content": "Parking privé. Navettes et arrêts à proximité pour accéder au centre et aux pistes. Arrivée autonome possible."
+    },
+    {
+      "title": "Autres remarques",
+      "content": "En hiver, pneus neige ou chaînes recommandés. La route est déneigée mais peut rester glissante tôt le matin."
+    }
+  ]
+}

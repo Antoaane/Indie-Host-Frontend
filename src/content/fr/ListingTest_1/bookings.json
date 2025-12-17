@@ -1,0 +1,14 @@
+{
+  "price": 219,
+  "fees": [
+    { "name": "Frais de ménage", "amount": 45 },
+    { "name": "Frais de linge", "amount": 12 }
+  ],
+  "booked-days": [
+    { "start": "2025-02-07", "end": "2025-02-10" },
+    { "start": "2025-03-14", "end": "2025-03-17" },
+    { "start": "2025-05-08", "end": "2025-05-12" },
+    { "start": "2025-10-24", "end": "2025-10-27" }
+  ]
+}
+

@@ -1,11 +1,11 @@
 // File: src/views/Editor/utils/listingApi.ts
 
-import coreJSON from '@/content/fr/ListingTest/core.json'
-import mediasJSON from '@/content/fr/ListingTest/medias.json'
-import bookingsJSON from '@/content/fr/ListingTest/bookings.json'
-import notesJSON from '@/content/fr/ListingTest/notes.json'
-import commentsJSON from '@/content/fr/ListingTest/comments.json'
-import hostJSON from '@/content/fr/ListingTest/host.json'
+import coreJSON from '@/content/fr/ListingTest_0/core.json'
+import mediasJSON from '@/content/fr/ListingTest_0/medias.json'
+import bookingsJSON from '@/content/fr/ListingTest_0/bookings.json'
+import notesJSON from '@/content/fr/ListingTest_0/notes.json'
+import commentsJSON from '@/content/fr/ListingTest_0/comments.json'
+import hostJSON from '@/content/fr/ListingTest_0/host.json'
 
 import clerkToken from '@/utils/clerkToken'
 

@@ -48,9 +48,9 @@ export type MapModel = {
 
 // -------- ÉQUIPEMENTS --------
 export type AmenityItem = {
+  id: string;
   name: string;
   description?: string;
-  icon: string;
   category: string;
   relevance: number;
   pinned: boolean;

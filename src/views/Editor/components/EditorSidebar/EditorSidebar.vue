@@ -1,9 +1,12 @@
 <!-- File: src/views/Editor/components/EditorSidebar/EditorSidebar.vue -->
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
-import EditorPanels from '@/views/Editor/components/EditorPanels/EditorPanels.vue'
+import EditorSidebarNav from '@/views/Editor/components/EditorSidebar/EditorSidebarNav.vue'
+import ListingPanels from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/ListingPanels.vue'
+import PricingPanels from '@/views/Editor/components/EditorSidebar/panels/PricingPanels/PricingPanels.vue'
+import ArrivalPanels from '@/views/Editor/components/EditorSidebar/panels/ArrivalPanels/ArrivalPanels.vue'
 import type { RawListingBundle } from '@/views/ListingView/utils/useParseContent'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { persistListingDraft } from '@/views/Editor/utils/persistListingDraft'
@@ -32,6 +35,13 @@ const canInteract = computed(() => !props.isLoading && !isSaving.value && !isPub
 function handlePatch(patch: DraftPatch) {
   emit('patch', patch)
 }
+
+watch(
+  () => props.listingId,
+  () => {
+    tab.value = 'listing'
+  },
+)
 
 async function saveDraft() {
   if (!canInteract.value) return
@@ -64,50 +74,26 @@ async function publishDraft() {
 
 <template>
   <aside class="editor-sidebar">
-    <header class="editor-sidebar__header">
-      <nav class="editor-sidebar__tabs">
-        <button
-          class="editor-sidebar__tab"
-          :class="{ 'is-active': tab === 'listing' }"
-          type="button"
-          @click="tab = 'listing'"
-        >
-          Annonce
-        </button>
-        <button
-          class="editor-sidebar__tab"
-          :class="{ 'is-active': tab === 'pricing' }"
-          type="button"
-          @click="tab = 'pricing'"
-        >
-          Tarification
-        </button>
-        <button
-          class="editor-sidebar__tab"
-          :class="{ 'is-active': tab === 'arrival' }"
-          type="button"
-          @click="tab = 'arrival'"
-        >
-          Arrivée
-        </button>
-      </nav>
-    </header>
-
-    <div class="editor-sidebar__body">
-      <EditorPanels
-        v-if="tab === 'listing'"
-        :draft="props.draft"
-        @patch="handlePatch"
-      />
-      <div
-        v-else
-        class="editor-sidebar__placeholder"
-      >
-        Section en cours de construction.
-      </div>
+    <div class="editor-sidebar__header">
+      <EditorSidebarNav v-model="tab" />
     </div>
 
-    <footer class="editor-sidebar__footer">
+    <div class="editor-sidebar__body">
+      <Transition
+        name="editor-sidebar-panels"
+        mode="out-in"
+      >
+        <ListingPanels
+          v-if="tab === 'listing'"
+          :draft="props.draft"
+          @patch="handlePatch"
+        />
+        <PricingPanels v-else-if="tab === 'pricing'" />
+        <ArrivalPanels v-else />
+      </Transition>
+    </div>
+
+    <div class="editor-sidebar__footer">
       <p
         v-if="error"
         class="editor-sidebar__error"
@@ -115,23 +101,25 @@ async function publishDraft() {
         {{ error }}
       </p>
       <div class="editor-sidebar__actions">
-        <button
-          class="btn-primary__black"
-          type="button"
-          :disabled="!canInteract"
-          @click="saveDraft"
-        >
-          Sauvegarder
-        </button>
-        <button
-          class="btn-primary__white"
-          type="button"
-          :disabled="!canInteract"
-          @click="publishDraft"
-        >
-          Appliquer
-        </button>
+        <div class="btn-primary__black__full">
+          <button
+            type="button"
+            :disabled="!canInteract"
+            @click="saveDraft"
+          >
+            Sauvegarder
+          </button>
+        </div>
+        <div class="btn-primary__white__full">
+          <button
+            type="button"
+            :disabled="!canInteract"
+            @click="publishDraft"
+          >
+            Appliquer
+          </button>
+        </div>
       </div>
-    </footer>
+    </div>
   </aside>
 </template>

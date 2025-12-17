@@ -1,0 +1,14 @@
+{
+  "price": 329,
+  "fees": [
+    { "name": "Frais de ménage", "amount": 85 },
+    { "name": "Bois (option)", "amount": 15 }
+  ],
+  "booked-days": [
+    { "start": "2024-12-28", "end": "2025-01-04" },
+    { "start": "2025-02-15", "end": "2025-02-22" },
+    { "start": "2025-03-08", "end": "2025-03-12" },
+    { "start": "2025-07-19", "end": "2025-07-26" }
+  ]
+}
+
