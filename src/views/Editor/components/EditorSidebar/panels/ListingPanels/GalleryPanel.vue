@@ -84,3 +84,7 @@ function removeImage(position: number) {
     </div>
   </section>
 </template>
+
+<style lang="scss">
+@use '@/views/Editor/components/EditorSidebar/panels/ListingPanels/gallery-panel.scss';
+</style>

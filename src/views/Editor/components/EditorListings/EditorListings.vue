@@ -59,6 +59,8 @@ function ratingPercent(rating?: number) {
   const clamped = Math.max(0, Math.min(5, rating))
   return `${(clamped / 5) * 100}%`
 }
+
+// const DRAFT_STORAGE_PREFIX = 'indiehost:listing-draft:'
 </script>
 
 <template>
@@ -82,6 +84,8 @@ function ratingPercent(rating?: number) {
         class="editor-listing-card"
         :class="{ 'is-selected': listing.listingId === props.selectedListingId }"
       >
+        <!-- <pre>{{ listing.listingId }}</pre>
+        <pre>{{ `${DRAFT_STORAGE_PREFIX}${listing.listingId}` }}</pre> -->
         <div class="editor-listing-card__select">
           <button
             type="button"
@@ -205,3 +209,7 @@ function ratingPercent(rating?: number) {
     </div>
   </section>
 </template>
+
+<style lang="scss">
+@use '@/views/Editor/components/EditorListings/editor-listings.scss';
+</style>

@@ -1,0 +1,23 @@
+/* File: src/views/Editor/components/EditorPreview/editor-preview.scss */
+
+@use '@/styles/variables/globals' as *;
+
+.editor-preview {
+  height: 100%;
+  min-height: 0;
+
+  &__content {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  &__empty {
+    height: 100%;
+    display: grid;
+    place-items: center;
+    padding: var(--gutter-spacing-md);
+    color: rgba($secondary, 0.7);
+  }
+}
+

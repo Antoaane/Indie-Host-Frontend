@@ -61,3 +61,6 @@ const emit = defineEmits<{
   </div>
 </template>
 
+<style lang="scss">
+@use '@/views/Editor/components/EditorSidebar/panels/ListingPanels/listing-panels.scss';
+</style>

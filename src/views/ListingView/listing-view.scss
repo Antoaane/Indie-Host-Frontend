@@ -12,7 +12,7 @@
 
   @include min-width(lg) {
     flex-direction: row;
-    gap: calc(var(--gutter-spacing) / 3 * 2);
+    gap: var(--gutter-spacing-md);
     @include gutters(padding, inline);
     @include gutters(padding, bottom);
   }

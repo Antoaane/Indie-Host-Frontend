@@ -30,3 +30,6 @@ const props = defineProps<{
   </section>
 </template>
 
+<style lang="scss">
+@use '@/views/Editor/components/EditorPreview/editor-preview.scss';
+</style>

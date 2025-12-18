@@ -310,3 +310,7 @@ const catalogByCategory = computed(() => {
     </Transition>
   </section>
 </template>
+
+<style lang="scss">
+@use '@/views/Editor/components/EditorSidebar/panels/ListingPanels/amenities-panel.scss';
+</style>

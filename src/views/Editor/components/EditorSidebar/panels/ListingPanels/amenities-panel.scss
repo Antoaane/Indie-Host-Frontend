@@ -1,0 +1,188 @@
+/* File: src/views/Editor/components/EditorSidebar/panels/ListingPanels/amenities-panel.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/components/buttons' as buttons;
+
+.editor-amenities {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gutter-spacing-xs);
+
+  &__row {
+    display: grid;
+    grid-template-columns: 60px 1fr 40px 40px;
+    gap: var(--gutter-spacing-xs);
+    align-items: center;
+  }
+
+  &__icon {
+    text-align: center;
+
+    .lucide {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  &__label {
+    display: grid;
+    gap: 2px;
+  }
+
+  &__name {
+    margin: 0;
+    font-weight: 600;
+  }
+
+  &__meta {
+    margin: 0;
+    font-size: 0.9rem;
+    opacity: 0.7;
+  }
+
+  &__pin,
+  &__remove {
+    @include buttons.primary($theme: light, $padding: false);
+    width: 40px;
+    height: 40px;
+
+    & > * {
+      height: 100%;
+      padding: 0;
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+  }
+
+  &__pin.is-active {
+    @include buttons.primary($theme: black, $padding: false);
+    width: 40px;
+    height: 40px;
+  }
+}
+
+.editor-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: var(--gutter-spacing-md);
+  background: rgba(0, 0, 0, 0.6);
+
+  &__panel {
+    width: min(720px, 100%);
+    max-height: min(80vh, 720px);
+    overflow: hidden;
+    background: #fff;
+    border-radius: borders.$rounded-lg;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+    display: grid;
+    grid-template-rows: auto 1fr;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--gutter-spacing-sm);
+    padding: var(--gutter-spacing-sm) var(--gutter-spacing-md);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+
+    h3 {
+      margin: 0;
+    }
+  }
+
+  &__close {
+    @include buttons.primary($theme: light, $padding: false);
+    width: 40px;
+    height: 40px;
+
+    & > * {
+      height: 100%;
+      padding: 0;
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+  }
+
+  &__body {
+    overflow: auto;
+    padding: var(--gutter-spacing-sm) var(--gutter-spacing-md);
+    display: grid;
+    gap: var(--gutter-spacing-md);
+  }
+
+  &__category {
+    h4 {
+      margin: 0 0 var(--gutter-spacing-xs) 0;
+    }
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--gutter-spacing-xs);
+  }
+
+  &__item-btn {
+    @include buttons.primary($theme: light, $fullwidth: true);
+    width: 100%;
+
+    & > * {
+      text-align: left;
+    }
+  }
+
+  &__item-content {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 40px 1fr auto;
+    align-items: center;
+    gap: var(--gutter-spacing-sm);
+  }
+
+  &__item-icon {
+    display: grid;
+    place-items: center;
+
+    .lucide {
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  &__item-texts {
+    display: grid;
+    gap: 2px;
+  }
+
+  &__item-title {
+    font-weight: 600;
+  }
+
+  &__item-desc {
+    font-size: 0.9rem;
+    opacity: 0.75;
+  }
+
+  &__item-state {
+    font-size: 0.85rem;
+    opacity: 0.75;
+  }
+}
+
+.editor-amenities-overlay-enter-active,
+.editor-amenities-overlay-leave-active {
+  transition: opacity 150ms ease;
+}
+
+.editor-amenities-overlay-enter-from,
+.editor-amenities-overlay-leave-to {
+  opacity: 0;
+}
+

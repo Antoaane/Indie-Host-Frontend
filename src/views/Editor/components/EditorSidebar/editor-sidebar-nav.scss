@@ -1,0 +1,37 @@
+/* File: src/views/Editor/components/EditorSidebar/editor-sidebar-nav.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/components/buttons' as buttons;
+
+.editor-sidebar__tabs {
+  width: 100%;
+  padding: 0.5rem;
+
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--gutter-spacing-xs);
+
+  border-radius: borders.$rounded-xl;
+  background-color: $accent;
+
+  .editor-sidebar__tab {
+
+
+    button {
+      width: 100%;
+      padding: 0.4rem 1rem 0.5rem 1rem;
+
+      font-family: 'Outfit', sans-serif;
+      font-weight: 500;
+      font-size: 1rem;
+
+      border: none;
+      background: transparent;
+    }
+
+    // &.is-active {
+
+    // }
+  }
+}

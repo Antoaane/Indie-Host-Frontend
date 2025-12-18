@@ -1,0 +1,70 @@
+/* File: src/views/Editor/components/EditorSidebar/panels/ListingPanels/rooms-panel.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/components/buttons' as buttons;
+
+.editor-rooms {
+  &__row {
+    display: flex;
+    gap: var(--gutter-spacing-xs);
+    align-items: center;
+  }
+
+  &__select {
+    flex: 1;
+  }
+
+  &__trash {
+    @include buttons.primary($theme: light, $padding: false);
+    width: 44px;
+    height: 44px;
+
+    & > * {
+      height: 100%;
+      padding: 0;
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+  }
+
+  &__editor {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gutter-spacing-sm);
+  }
+}
+
+.editor-beds {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gutter-spacing-xs);
+
+  &__row {
+    display: grid;
+    grid-template-columns: 1fr 90px 180px 44px;
+    gap: var(--gutter-spacing-xs);
+    align-items: center;
+  }
+
+  &__cap {
+    text-align: center;
+  }
+
+  &__qty {
+    justify-content: flex-start;
+  }
+
+  &__remove {
+    @include buttons.primary($theme: light, $padding: false);
+    width: 44px;
+    height: 44px;
+
+    & > * {
+      height: 100%;
+      padding: 0;
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+  }
+}
+

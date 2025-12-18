@@ -123,3 +123,7 @@ async function publishDraft() {
     </div>
   </aside>
 </template>
+
+<style lang="scss">
+@use '@/views/Editor/components/EditorSidebar/editor-sidebar.scss';
+</style>

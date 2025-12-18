@@ -244,3 +244,7 @@ function removeBed(index: number) {
     </div>
   </section>
 </template>
+
+<style lang="scss">
+@use '@/views/Editor/components/EditorSidebar/panels/ListingPanels/rooms-panel.scss';
+</style>

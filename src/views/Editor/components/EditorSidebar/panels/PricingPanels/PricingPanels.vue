@@ -6,3 +6,6 @@
   </div>
 </template>
 
+<style lang="scss">
+@use '@/views/Editor/components/EditorSidebar/panels/sidebar-placeholder.scss';
+</style>

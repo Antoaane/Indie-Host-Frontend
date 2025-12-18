@@ -53,3 +53,14 @@ const bookingUrl = ref('')
     </div>
   </section>
 </template>
+
+<style lang="scss">
+.editor-import {
+  &__row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--gutter-spacing-xs);
+    align-items: center;
+  }
+}
+</style>

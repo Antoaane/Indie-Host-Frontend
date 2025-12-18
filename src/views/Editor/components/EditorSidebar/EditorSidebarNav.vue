@@ -49,3 +49,7 @@ const emit = defineEmits<{
     </div>
   </nav>
 </template>
+
+<style lang="scss">
+@use '@/views/Editor/components/EditorSidebar/editor-sidebar-nav.scss';
+</style>
