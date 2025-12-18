@@ -1,3 +1,5 @@
+<!-- File: src/views/ListingView/components/Checkout/components/CheckoutSummary.vue -->
+
 <script setup lang="ts">
 const props = defineProps<{
   expanded: boolean
@@ -11,17 +13,17 @@ const props = defineProps<{
   <transition name="summary-toggle">
     <div
       v-show="props.expanded"
-      class="checkout-card__summary"
+      class="listing-checkout-summary"
     >
       <div
         v-for="line in props.priceBreakdown"
         :key="line.label"
-        class="checkout-card__line"
+        class="line"
       >
         <p>{{ line.label }}</p>
         <span>{{ line.amount }}</span>
       </div>
-      <div class="checkout-card__line checkout-card__line--total">
+      <div class="line is-total">
         <p>Total</p>
         <span>{{ props.currency.format(props.total) }}</span>
       </div>

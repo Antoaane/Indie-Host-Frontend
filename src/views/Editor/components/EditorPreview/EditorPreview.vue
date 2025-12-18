@@ -14,14 +14,14 @@ const props = defineProps<{
   <section class="editor-preview">
     <div
       v-if="props.rawListing"
-      class="editor-preview__content"
+      class="content"
     >
       <ListingView :rawListing="props.rawListing" />
     </div>
 
     <div
       v-else
-      class="editor-preview__empty"
+      class="empty"
     >
       <div class="skeleton">
         {{ props.isLoading ? 'Chargement…' : 'Sélectionne une annonce pour afficher la preview.' }}
@@ -31,5 +31,26 @@ const props = defineProps<{
 </template>
 
 <style lang="scss">
-@use '@/views/Editor/components/EditorPreview/editor-preview.scss';
+/* File: src/views/Editor/components/EditorPreview/editor-preview.scss */
+
+@use '@/styles/variables/globals' as *;
+
+.editor-preview {
+  height: 100%;
+  min-height: 0;
+
+  > .content {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  > .empty {
+    height: 100%;
+    display: grid;
+    place-items: center;
+    padding: var(--spacing-md);
+    color: rgba($secondary, 0.7);
+  }
+}
 </style>

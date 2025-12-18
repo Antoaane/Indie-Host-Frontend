@@ -37,14 +37,14 @@ function setVisibility(next: ReviewsVisibility) {
 </script>
 
 <template>
-  <section class="editor-panel">
-    <div class="editor-panel__header">
+  <section class="editor-reviews-panel">
+    <div class="header">
       <h3>Avis</h3>
       <p>Modifiez les avis que vous souhaitez afficher (cela n’impactera pas la note globale)</p>
     </div>
 
-    <div class="editor-panel__body editor-reviews">
-      <label class="editor-toggle">
+    <div class="body">
+      <label class="toggle">
         <input
           type="checkbox"
           :checked="visibility.indiehost"
@@ -52,7 +52,7 @@ function setVisibility(next: ReviewsVisibility) {
         />
         <span>Avis Indie Host</span>
       </label>
-      <label class="editor-toggle">
+      <label class="toggle">
         <input
           type="checkbox"
           :checked="visibility.airbnb"
@@ -60,7 +60,7 @@ function setVisibility(next: ReviewsVisibility) {
         />
         <span>Avis Airbnb</span>
       </label>
-      <label class="editor-toggle">
+      <label class="toggle">
         <input
           type="checkbox"
           :checked="visibility.booking"
@@ -71,3 +71,48 @@ function setVisibility(next: ReviewsVisibility) {
     </div>
   </section>
 </template>
+
+<style lang="scss">
+/* File: src/views/Editor/components/EditorSidebar/panels/ListingPanels/reviews-panel.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/components/buttons' as buttons;
+
+.editor-reviews-panel {
+  padding: var(--spacing-sm);
+  border-radius: borders.$rounded-md;
+  background: $accent;
+  border: 1px solid rgba($secondary, 0.06);
+
+  > .header {
+    margin-bottom: var(--spacing-sm);
+
+    > h3 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 700;
+      color: $secondary;
+    }
+
+    > p {
+      margin: 0.25rem 0 0 0;
+      font-size: 0.875rem;
+      font-weight: 300;
+      color: rgba($secondary, 0.75);
+    }
+  }
+
+  > .body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+
+    > .toggle {
+      @include buttons.checkbox-label(white);
+      border: 1px solid rgba($secondary, 0.06);
+    }
+  }
+}
+
+</style>

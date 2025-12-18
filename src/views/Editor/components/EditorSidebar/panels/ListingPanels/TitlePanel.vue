@@ -22,19 +22,64 @@ const title = computed({
 </script>
 
 <template>
-  <section class="editor-panel">
-    <div class="editor-panel__header">
+  <section class="editor-title-panel">
+    <div class="header">
       <h3>Titre de l’annonce</h3>
       <p>Donnez un nom original à votre lieu</p>
     </div>
 
-    <div class="editor-panel__body">
+    <div class="body">
       <input
         v-model="title"
-        class="editor-input"
+        class="input"
         type="text"
         placeholder="Maison flottante / Houseboat - …"
       />
     </div>
   </section>
 </template>
+
+<style lang="scss">
+/* File: src/views/Editor/components/EditorSidebar/panels/ListingPanels/title-panel.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/components/inputs' as inputs;
+
+.editor-title-panel {
+  padding: var(--spacing-sm);
+  border-radius: borders.$rounded-md;
+  background: $accent;
+  border: 1px solid rgba($secondary, 0.06);
+
+  > .header {
+    margin-bottom: var(--spacing-sm);
+
+    > h3 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 700;
+      color: $secondary;
+    }
+
+    > p {
+      margin: 0.25rem 0 0 0;
+      font-size: 0.875rem;
+      font-weight: 300;
+      color: rgba($secondary, 0.75);
+    }
+  }
+
+  > .body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+
+    > .input {
+      @include inputs.text($tertiary, borders.$rounded-md);
+      width: 100%;
+    }
+  }
+}
+
+</style>

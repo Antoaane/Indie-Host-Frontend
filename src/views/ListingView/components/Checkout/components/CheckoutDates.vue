@@ -31,13 +31,13 @@ onClickOutside(calendarLayer, () => emit('close'))
 <template>
   <div
     ref="calendarLayer"
-    class="checkout-card__dates"
+    class="listing-checkout-dates"
   >
-    <div class="checkout-card__field-group checkout-card__field-group--single">
+    <div class="group is-single">
       <div class="btn-primary__white__full">
         <button
           type="button"
-          class="checkout-card__field checkout-card__field--full"
+          class="field is-full"
           @click="emit('open')"
           v-html="rangeLabel"
         />
@@ -47,7 +47,7 @@ onClickOutside(calendarLayer, () => emit('close'))
     <transition name="fade">
       <div
         v-if="open"
-        class="checkout-card__calendar"
+        class="calendar"
       >
         <DatePicker
           v-model:model-value="selection"

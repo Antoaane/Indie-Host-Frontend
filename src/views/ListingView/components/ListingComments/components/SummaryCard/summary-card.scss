@@ -1,0 +1,51 @@
+/* File: src/views/ListingView/components/ListingComments/components/SummaryCard/summary-card.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+
+.summary-card {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+
+  > strong {
+    margin-bottom: 0 !important;
+    @include h3-title($colorful: false);
+  }
+
+  > div {
+    display: flex;
+    gap: var(--spacing-2xs);
+
+    > h3 {
+      margin: 0 !important;
+
+      font-family: 'Fustat', sans-serif;
+      font-weight: 700;
+      font-size: 28px;
+      line-height: 28px;
+
+      background: -webkit-linear-gradient(top, rgba($secondary_text_gradiant_first, 1) 0%, rgba($secondary_text_gradiant_second, 0.75) 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+
+      @include min-width(lg) {
+        font-size: 32px;
+        line-height: 30px;
+      }
+    }
+
+    .lucide-star-icon {
+      fill: url(#star-gradient);
+      // stroke: url(#star-gradient);
+      stroke: transparent;
+
+      // background: linear-gradient(top, rgba($secondary_text_gradiant_first, 1) 0%, rgba($secondary_text_gradiant_second, 0.75) 100%);
+      // stroke: linear-gradient(top, rgba($secondary_text_gradiant_first, 1) 0%, rgba($secondary_text_gradiant_second, 0.75) 100%);
+      // background-clip: content-box;
+    }
+  }
+}
+

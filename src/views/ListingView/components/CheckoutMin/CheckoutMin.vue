@@ -89,9 +89,9 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="checkout-min">
+  <div class="listing-checkout-min">
     <div
-      class="checkout-min__bar"
+      class="bar"
       role="button"
       tabindex="0"
       ref="triggerEl"
@@ -102,21 +102,21 @@ onBeforeUnmount(() => {
       @keydown.enter.prevent="openOverlay"
       @keydown.space.prevent="openOverlay"
     >
-      <div class="checkout-min__info">
-        <div class="checkout-min__price">
-          <span class="checkout-min__price-amount">{{ pricePerNightLabel }}</span>
+      <div class="info">
+        <div class="price">
+          <span class="amount">{{ pricePerNightLabel }}</span>
           <small>Prix indicatif</small>
         </div>
 
-        <!-- <div class="checkout-min__dates">
-          <span class="checkout-min__dates-label">{{ rangeLabel }}</span>
+        <!-- <div class="dates">
+          <span class="label">{{ rangeLabel }}</span>
         </div> -->
       </div>
 
-      <div class="checkout-min__cta-container">
+      <div class="cta">
         <button
           type="button"
-          class="checkout-min__cta"
+          class="button"
           @click.stop="openOverlay"
         >
           Réserver
@@ -128,26 +128,26 @@ onBeforeUnmount(() => {
       <Transition name="checkout-min-overlay">
         <div
           v-if="overlayOpen"
-          class="checkout-min__overlay"
+          class="overlay"
           id="checkout-min-dialog"
           role="dialog"
           aria-modal="true"
           @click.self="closeOverlay"
         >
-          <div class="checkout-min__panel">
+          <div class="panel">
             <button
               ref="closeButtonEl"
               type="button"
-              class="checkout-min__close"
+              class="close"
               aria-label="Fermer"
               @click="closeOverlay"
             >
               ✕
             </button>
 
-            <div class="checkout-min__content">
+            <div class="content">
               <slot>
-                <p class="checkout-min__placeholder"> Les détails du checkout arriveront ici. </p>
+                <p class="placeholder"> Les détails du checkout arriveront ici. </p>
               </slot>
             </div>
           </div>

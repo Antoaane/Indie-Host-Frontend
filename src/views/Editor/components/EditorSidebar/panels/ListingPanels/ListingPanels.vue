@@ -24,7 +24,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="editor-panels">
+  <div class="editor-listing-panels">
     <ImportPanel />
     <TitlePanel
       :core="props.draft.core"
@@ -62,5 +62,13 @@ const emit = defineEmits<{
 </template>
 
 <style lang="scss">
-@use '@/views/Editor/components/EditorSidebar/panels/ListingPanels/listing-panels.scss';
+/* File: src/views/Editor/components/EditorSidebar/panels/ListingPanels/listing-panels.scss */
+
+@use '@/styles/variables/globals' as *;
+
+.editor-listing-panels {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
 </style>

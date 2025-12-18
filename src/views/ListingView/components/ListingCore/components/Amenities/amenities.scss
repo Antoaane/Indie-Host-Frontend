@@ -5,17 +5,19 @@
 @use '@/styles/components/buttons' as buttons;
 @use '@/styles/components/overlays' as overlays;
 
-.amenities-listing__comp {
+.listing-amenities {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
 
-  h2 {
-    margin-bottom: 0 !important;
-    @include h2-title($gradiant: true);
+  > .header {
+    > h2 {
+      margin-bottom: 0 !important;
+      @include h2-title($gradiant: true);
+    }
   }
 
-  .amenities-listing__preview {
+  > .preview {
     display: grid;
     grid-template-columns: repeat(1, 1fr);
     gap: var(--spacing-sm);
@@ -32,7 +34,7 @@
     //   grid-template-columns: repeat(4, 1fr);
     // }
 
-    li {
+    > .item {
       display: flex;
       align-items: center;
       gap: var(--spacing-sm);
@@ -44,20 +46,20 @@
 
       background-color: rgba($accent, 0.75);
 
-      .amenity-icon {
+      > .icon {
         height: 1.5rem;
         width: 1.5rem;
         stroke: $secondary;
         flex-shrink: 0;
       }
 
-      .amenity-name {
+      > .name {
         @include base-text($thin: false);
       }
     }
   }
 
-  .amenities-listing__cta {
+  > .cta {
     @include buttons.primary($theme: white, $fullwidth: true);
   }
 }
@@ -65,29 +67,29 @@
 .amenities-overlay {
   @extend %overlay-backdrop;
 
-  .amenities-overlay__panel {
+  > .panel {
     @extend %overlay-panel;
     padding-bottom: var(--spacing-md) !important;
     gap: var(--spacing);
 
-    .amenities-overlay__header {
+    > .header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: var(--spacing-md);
 
-      .amenities-overlay__title {
-        h2 {
+      > .title {
+        > h2 {
           @include h2-title;
         }
       }
 
-      .amenities-overlay__close {
+      > .close {
         @include buttons.primary($theme: white, $padding: false);
       }
     }
 
-    .amenities-overlay__body {
+    > .body {
       overflow-y: auto;
       display: flex;
       flex-direction: column;
@@ -96,16 +98,16 @@
       scrollbar-width: thin;
       scrollbar-color: rgba($secondary, 0.25) $translucent;
 
-      .amenities-overlay__category {
+      > .category {
         display: flex;
         flex-direction: column;
         gap: var(--spacing-sm);
 
-        h3 {
+        > h3 {
           @include base-text($bigger: true, $thin: false);
         }
 
-        ul {
+        > ul {
           display: grid;
           gap: var(--spacing-sm);
           grid-template-columns: repeat(1, 1fr);
@@ -114,7 +116,7 @@
             grid-template-columns: repeat(2, 1fr);
           }
 
-          li {
+          > .item {
             display: flex;
             gap: var(--spacing-sm);
             align-items: flex-start;
@@ -124,23 +126,23 @@
             border: solid 1px $quaternary;
             border-radius: borders.$rounded-lg;
 
-            .amenity-icon {
+            > .icon {
               height: 1.5rem;
               width: 1.5rem;
               stroke: $secondary;
               flex-shrink: 0;
             }
 
-            .amenity-texts {
+            > .texts {
               display: flex;
               flex-direction: column;
               gap: var(--spacing-3xs);
 
-              .amenity-name {
+              > .name {
                 @include base-text($bigger: true, $thin: false);
               }
 
-              .amenity-description {
+              > .description {
                 opacity: 0.75;
                 @include little-text($thin: false);
               }

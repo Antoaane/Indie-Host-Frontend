@@ -83,27 +83,27 @@ function handleReadMoreClick() {
 </script>
 
 <template>
-  <div class="listing-comments__comment">
-    <div>
-      <div class="listing-comments__comment-meta">
+  <div class="comment-card">
+    <div class="header">
+      <div class="meta">
         <img
           v-if="comment.avatar"
           :src="comment.avatar"
           :alt="comment.name"
-          class="listing-comments__comment-avatar"
+          class="avatar"
         />
         <span
           v-else
           aria-hidden="true"
-          class="listing-comments__comment-avatar"
+          class="avatar"
           v-html="fallbackInitials"
         ></span>
 
-        <div>
+        <div class="info">
           <h4 v-html="comment.name"></h4>
           <div
             v-if="vp.lg.value"
-            class="listing-comments__comment-note"
+            class="note"
           >
             <p
               v-if="stayLabel"
@@ -120,7 +120,7 @@ function handleReadMoreClick() {
       </div>
       <div
         v-if="!vp.lg.value"
-        class="listing-comments__comment-note"
+        class="note"
       >
         <p
           v-if="stayLabel"
@@ -137,7 +137,7 @@ function handleReadMoreClick() {
     <blockquote v-html="comment.comment"></blockquote>
     <span
       v-if="!vp.lg.value && props.seeMore"
-      class="see-more"
+      class="more"
     >
       <button
         type="button"
@@ -150,130 +150,5 @@ function handleReadMoreClick() {
 </template>
 
 <style lang="scss">
-@use '@/styles/variables/globals' as *;
-@use '@/styles/variables/borders' as borders;
-@use '@/styles/components/buttons' as buttons;
-
-.swiper-slide:last-of-type {
-  .listing-comments__comment::after {
-    display: none;
-  }
-}
-
-.listing-comments__comment {
-  padding-right: calc(var(--spacing-3xl) * 2);
-  padding-left: 1rem;
-  height: 100%;
-
-  &::after {
-    content: '';
-    height: 75%;
-    width: 0.5px;
-
-    position: absolute;
-    right: var(--spacing-3xl);
-    top: 50%;
-    transform: translateY(-50%);
-
-    background-color: rgba($secondary, 0.5);
-  }
-
-  @include min-width(lg) {
-    height: auto;
-    padding-right: 0;
-    margin-bottom: var(--spacing-xl);
-
-    &::after {
-      display: none;
-    }
-  }
-
-  .listing-comments__comment-meta {
-    margin-bottom: var(--spacing-sm);
-
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-md);
-
-    .listing-comments__comment-avatar {
-      width: 3rem;
-      height: 3rem;
-
-      display: flex;
-      align-items: center;
-      justify-content: center;
-
-      font-weight: bold;
-      font-size: 1.25rem;
-      color: $secondary;
-
-      border-radius: borders.$rounded;
-      background-color: $quaternary;
-    }
-
-    & > div {
-      display: flex;
-      flex-direction: column;
-
-      h4 {
-        margin: 0 !important;
-        font-weight: 500 !important;
-
-        @include base-text($bigger: true);
-      }
-    }
-  }
-
-  .listing-comments__comment-note {
-    margin-bottom: 0.5rem;
-
-    display: flex;
-    align-items: end;
-    gap: var(--spacing-sm);
-
-    @include min-width(lg) {
-      margin-bottom: 0;
-    }
-
-    p {
-      @include little-text($thin: false);
-    }
-
-    & > div {
-      margin-bottom: 2px;
-
-      display: flex;
-      gap: 1px;
-
-      .lucide-star-icon {
-        fill: $secondary;
-        stroke: $secondary;
-      }
-    }
-  }
-
-  blockquote {
-    min-height: 80px;
-    margin: 0 !important;
-    @include base-text($thin: false);
-
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 4;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-
-    @include min-width(lg) {
-      min-height: none;
-      display: inline;
-      text-overflow: unset;
-      overflow: visible;
-    }
-  }
-
-  .see-more {
-    margin-top: 0.5rem;
-    @include buttons.secondary($padding: false);
-  }
-}
+@use '@/views/ListingView/components/ListingComments/components/CommentCard/comment-card.scss';
 </style>

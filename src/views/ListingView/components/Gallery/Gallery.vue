@@ -4,13 +4,12 @@
 // DEPS
 import { computed } from 'vue'
 import type { SwiperOptions } from 'swiper/types'
-import type { SwiperModule } from 'swiper/types'
 import { Swiper, SwiperSlide } from 'swiper/vue'
-import { Autoplay, Pagination } from 'swiper/modules'
 // COMPONENTS
 import Mosaic from './components/Mosaic/Mosaic.vue'
 // UTILS
 import { vp } from '@/utils/viewport'
+import { createListingMediaSwiperParams } from '@/utils/swiper/listingMedia'
 import { fancyboxShow } from '@/views/ListingView/components/Gallery/utils/fancybox'
 import { orderByIndex } from '@/views/ListingView/components/Gallery/utils/order'
 import type { Item } from '@/views/ListingView/components/Gallery/utils/types'
@@ -44,28 +43,14 @@ const slides = computed(() => orderedImages.value)
 
 const swiperParams = computed(
   () =>
-    ({
-      modules: [
-        Autoplay as SwiperModule,
-        Pagination as SwiperModule,
-      ],
-
-      direction: 'horizontal',
-
+    createListingMediaSwiperParams({
+      autoplay: false,
       slidesPerView: 1,
       spaceBetween: 0,
-
-      // autoplay: {
-      //   delay: 3000,
-      //   disableOnInteraction: true,
-      // },
-
+      centeredSlides: true,
       pagination: {
         clickable: true,
       },
-
-      // loop: true,
-      centeredSlides: true,
       navigation: false,
     }) satisfies SwiperOptions,
 )
@@ -74,11 +59,11 @@ const swiperParams = computed(
 <template>
   <section
     v-if="vp.lg.value"
-    class="gallery"
+    class="listing-gallery"
   >
     <div
       v-if="coverImage"
-      class="cover-image"
+      class="cover"
       role="button"
       tabindex="0"
       @click="openCoverLightbox"
@@ -103,7 +88,7 @@ const swiperParams = computed(
 
   <section
     v-if="!vp.lg.value"
-    class="gallery"
+    class="listing-gallery"
   >
     <Swiper
       ref="swiperWrapper"

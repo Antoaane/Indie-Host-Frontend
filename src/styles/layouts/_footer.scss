@@ -3,7 +3,7 @@
 @use "@/styles/variables/globals" as *;
 @use "@/styles/variables/borders" as borders;
 
-footer {
+.layout-footer {
   display: flex;
   justify-content: center;
 
@@ -11,10 +11,14 @@ footer {
 
   @include spacings(padding, inline, 2);
 
-  p {
+  > p {
     margin: 0.5rem 0 !important;
 
     font-weight: 500 !important;
     @include little-text($secondary);
   }
+}
+
+footer {
+  @extend .layout-footer;
 }

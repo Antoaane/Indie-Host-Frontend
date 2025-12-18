@@ -45,7 +45,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <header>
+  <header class="layout-header">
     <Nav
       v-if="isLanding"
       :items="[

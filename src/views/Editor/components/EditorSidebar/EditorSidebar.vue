@@ -74,11 +74,11 @@ async function publishDraft() {
 
 <template>
   <aside class="editor-sidebar">
-    <div class="editor-sidebar__header">
+    <div class="header">
       <EditorSidebarNav v-model="tab" />
     </div>
 
-    <div class="editor-sidebar__body">
+    <div class="body">
       <Transition
         name="editor-sidebar-panels"
         mode="out-in"
@@ -93,14 +93,14 @@ async function publishDraft() {
       </Transition>
     </div>
 
-    <div class="editor-sidebar__footer">
+    <div class="footer">
       <p
         v-if="error"
-        class="editor-sidebar__error"
+        class="error"
       >
         {{ error }}
       </p>
-      <div class="editor-sidebar__actions">
+      <div class="actions">
         <div class="btn-primary__black__full">
           <button
             type="button"
@@ -125,5 +125,73 @@ async function publishDraft() {
 </template>
 
 <style lang="scss">
-@use '@/views/Editor/components/EditorSidebar/editor-sidebar.scss';
+/* File: src/views/Editor/components/EditorSidebar/editor-sidebar.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/effects' as effects;
+
+.editor-sidebar {
+  flex: 0 0 auto;
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  @include effects.big-shadow();
+
+  @include min-width(lg) {
+    width: 420px;
+  }
+
+  > .header {
+    padding-bottom: var(--spacing-md);
+  }
+
+  > .body {
+    // margin: var(--spacing-sm) 0;
+    min-height: 0;
+
+    flex: 1 1 auto;
+    overflow: auto;
+    scrollbar-width: none;
+
+    border-radius: borders.$rounded-xl;
+  }
+
+  > .footer {
+    flex: 0 0 auto;
+    padding: var(--spacing-sm) 0;
+    background: rgba($secondary, 0.04);
+    border-top: 1px solid rgba($secondary, 0.08);
+
+    > .actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--spacing-sm);
+    }
+
+    > .error {
+      margin: 0 0 var(--spacing-sm) 0;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: rgba($bad, 0.95);
+    }
+  }
+}
+
+.editor-sidebar-panels-enter-active,
+.editor-sidebar-panels-leave-active {
+  transition: opacity 160ms ease;
+}
+
+.editor-sidebar-panels-enter-from,
+.editor-sidebar-panels-leave-to {
+  opacity: 0;
+}
+
+.editor-sidebar-panels-enter-to,
+.editor-sidebar-panels-leave-from {
+  opacity: 1;
+}
 </style>

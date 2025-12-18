@@ -4,184 +4,219 @@
 @use '@/styles/variables/borders' as borders;
 @use '@/styles/components/buttons' as buttons;
 
-.editor-amenities {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-xs);
+.editor-amenities-panel {
+  padding: var(--spacing-sm);
+  border-radius: borders.$rounded-md;
+  background: $accent;
+  border: 1px solid rgba($secondary, 0.06);
 
-  &__row {
-    display: grid;
-    grid-template-columns: 60px 1fr 40px 40px;
-    gap: var(--spacing-xs);
-    align-items: center;
-  }
+  > .header {
+    margin-bottom: var(--spacing-sm);
 
-  &__icon {
-    text-align: center;
-
-    .lucide {
-      width: 20px;
-      height: 20px;
-    }
-  }
-
-  &__label {
-    display: grid;
-    gap: 2px;
-  }
-
-  &__name {
-    margin: 0;
-    font-weight: 600;
-  }
-
-  &__meta {
-    margin: 0;
-    font-size: 0.9rem;
-    opacity: 0.7;
-  }
-
-  &__pin,
-  &__remove {
-    @include buttons.primary($theme: light, $padding: false);
-    width: 40px;
-    height: 40px;
-
-    &>* {
-      height: 100%;
-      padding: 0;
-      font-size: 1.1rem;
-      font-weight: 700;
-    }
-  }
-
-  &__pin.is-active {
-    @include buttons.primary($theme: black, $padding: false);
-    width: 40px;
-    height: 40px;
-  }
-}
-
-.editor-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: grid;
-  place-items: center;
-  padding: var(--spacing-md);
-  background: rgba(0, 0, 0, 0.6);
-
-  &__panel {
-    width: min(720px, 100%);
-    max-height: min(80vh, 720px);
-    overflow: hidden;
-    background: #fff;
-    border-radius: borders.$rounded-lg;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
-    display: grid;
-    grid-template-rows: auto 1fr;
-  }
-
-  &__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-sm) var(--spacing-md);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-
-    h3 {
+    > h3 {
       margin: 0;
-    }
-  }
-
-  &__close {
-    @include buttons.primary($theme: light, $padding: false);
-    width: 40px;
-    height: 40px;
-
-    &>* {
-      height: 100%;
-      padding: 0;
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: 700;
+      color: $secondary;
+    }
+
+    > p {
+      margin: 0.25rem 0 0 0;
+      font-size: 0.875rem;
+      font-weight: 300;
+      color: rgba($secondary, 0.75);
     }
   }
 
-  &__body {
-    overflow: auto;
-    padding: var(--spacing-sm) var(--spacing-md);
-    display: grid;
-    gap: var(--spacing-md);
-  }
-
-  &__category {
-    h4 {
-      margin: 0 0 var(--spacing-xs) 0;
-    }
-  }
-
-  &__list {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    gap: var(--spacing-xs);
-  }
-
-  &__item-btn {
-    @include buttons.primary($theme: light, $fullwidth: true);
-    width: 100%;
-
-    &>* {
-      text-align: left;
-    }
-  }
-
-  &__item-content {
-    width: 100%;
-    display: grid;
-    grid-template-columns: 40px 1fr auto;
-    align-items: center;
+  > .body {
+    display: flex;
+    flex-direction: column;
     gap: var(--spacing-sm);
+
+    > .amenities {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-xs);
+
+      > .row {
+        display: grid;
+        grid-template-columns: 60px 1fr 40px 40px;
+        gap: var(--spacing-xs);
+        align-items: center;
+
+        > .icon {
+          text-align: center;
+
+          > .lucide {
+            width: 20px;
+            height: 20px;
+          }
+        }
+
+        > .label {
+          display: grid;
+          gap: 2px;
+
+          > .name {
+            margin: 0;
+            font-weight: 600;
+          }
+
+          > .meta {
+            margin: 0;
+            font-size: 0.9rem;
+            opacity: 0.7;
+          }
+        }
+
+        > .pin,
+        > .remove {
+          @include buttons.primary($theme: light, $padding: false);
+          width: 40px;
+          height: 40px;
+
+          > * {
+            height: 100%;
+            padding: 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+          }
+        }
+
+        > .pin {
+          &.is-active {
+            @include buttons.primary($theme: black, $padding: false);
+            width: 40px;
+            height: 40px;
+          }
+        }
+      }
+    }
   }
 
-  &__item-icon {
+  > .overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
     display: grid;
     place-items: center;
+    padding: var(--spacing-md);
+    background: rgba(0, 0, 0, 0.6);
 
-    .lucide {
-      width: 18px;
-      height: 18px;
+    &.amenities-overlay-enter-active,
+    &.amenities-overlay-leave-active {
+      transition: opacity 150ms ease;
+    }
+
+    &.amenities-overlay-enter-from,
+    &.amenities-overlay-leave-to {
+      opacity: 0;
+    }
+
+    > .panel {
+      width: min(720px, 100%);
+      max-height: min(80vh, 720px);
+      overflow: hidden;
+      background: #fff;
+      border-radius: borders.$rounded-lg;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+      display: grid;
+      grid-template-rows: auto 1fr;
+
+      > .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--spacing-sm);
+        padding: var(--spacing-sm) var(--spacing-md);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+
+        > h3 {
+          margin: 0;
+        }
+
+        > .close {
+          @include buttons.primary($theme: light, $padding: false);
+          width: 40px;
+          height: 40px;
+
+          > * {
+            height: 100%;
+            padding: 0;
+            font-size: 1.1rem;
+            font-weight: 700;
+          }
+        }
+      }
+
+      > .body {
+        overflow: auto;
+        padding: var(--spacing-sm) var(--spacing-md);
+        display: grid;
+        gap: var(--spacing-md);
+
+        > .category {
+          > h4 {
+            margin: 0 0 var(--spacing-xs) 0;
+          }
+
+          > .list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: grid;
+            gap: var(--spacing-xs);
+
+            > .item {
+              > .item-btn {
+                @include buttons.primary($theme: light, $fullwidth: true);
+                width: 100%;
+
+                > * {
+                  text-align: left;
+
+                  > .item-content {
+                    width: 100%;
+                    display: grid;
+                    grid-template-columns: 40px 1fr auto;
+                    align-items: center;
+                    gap: var(--spacing-sm);
+
+                    > .item-icon {
+                      display: grid;
+                      place-items: center;
+
+                      > .lucide {
+                        width: 18px;
+                        height: 18px;
+                      }
+                    }
+
+                    > .item-texts {
+                      display: grid;
+                      gap: 2px;
+
+                      > .item-title {
+                        font-weight: 600;
+                      }
+
+                      > .item-desc {
+                        font-size: 0.9rem;
+                        opacity: 0.75;
+                      }
+                    }
+
+                    > .item-state {
+                      font-size: 0.85rem;
+                      opacity: 0.75;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
-
-  &__item-texts {
-    display: grid;
-    gap: 2px;
-  }
-
-  &__item-title {
-    font-weight: 600;
-  }
-
-  &__item-desc {
-    font-size: 0.9rem;
-    opacity: 0.75;
-  }
-
-  &__item-state {
-    font-size: 0.85rem;
-    opacity: 0.75;
-  }
-}
-
-.editor-amenities-overlay-enter-active,
-.editor-amenities-overlay-leave-active {
-  transition: opacity 150ms ease;
-}
-
-.editor-amenities-overlay-enter-from,
-.editor-amenities-overlay-leave-to {
-  opacity: 0;
 }

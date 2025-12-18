@@ -28,7 +28,7 @@ const bathroomsLabel = computed(() => formatICUMessage(props.staticContent.bathr
 </script>
 
 <template>
-  <div class="title-listing__comp">
+  <div class="listing-title">
     <h1 v-html="data.title" />
     <h2 v-html="`${data.type} — ${data.location.city}, ${data.location.country}`" />
     <ul>
@@ -49,30 +49,27 @@ const bathroomsLabel = computed(() => formatICUMessage(props.staticContent.bathr
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
 
-.title-listing__comp {
-  h1 {
+.listing-title {
+  > h1 {
     @include h1-title($gradiant: true);
   }
 
-  h2 {
+  > h2 {
     @include h2-title;
-  }
-
-  h2 {
     font-weight: 400;
   }
 
-  ul {
+  > ul {
     display: flex;
     align-items: center;
 
     opacity: 0.65;
 
-    li {
+    > li {
       display: inline-flex;
       align-items: center;
 
-      span {
+      > span {
         height: 5px;
         width: 5px;
         margin-inline: 0.5rem;

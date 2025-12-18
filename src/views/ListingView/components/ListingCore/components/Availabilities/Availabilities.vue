@@ -33,7 +33,7 @@ const disabledDates = computed<RangeISO[]>(() => (props.data?.bookedDays ?? []).
 </script>
 
 <template>
-  <div class="availabilities-listing__comp">
+  <section class="listing-availabilities">
     <h2>
       {{ staticContent.availability }}
     </h2>
@@ -42,9 +42,24 @@ const disabledDates = computed<RangeISO[]>(() => (props.data?.bookedDays ?? []).
       :disabled-dates="disabledDates"
       :numberOfMonths="vp.lg ? 3 : 2"
     />
-  </div>
+  </section>
 </template>
 
 <style lang="scss">
-@use '@/views/ListingView/components/ListingCore/components/Availabilities/availabilities.scss';
+/* File: src/views/ListingView/components/ListingCore/components/Availabilities/availabilities.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+
+.listing-availabilities {
+  > h2 {
+    margin-bottom: var(--spacing-md) !important;
+    @include h2-title($gradiant: true);
+  }
+
+  > .date-picker {
+    width: 100%;
+    max-width: none !important;
+  }
+}
 </style>

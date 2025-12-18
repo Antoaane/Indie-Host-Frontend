@@ -234,7 +234,7 @@ function openLightbox(startIndexReal: number) {
 <template>
   <div
     v-if="slots.length > 0"
-    class="mosaic-container"
+    class="listing-gallery-mosaic"
     ref="container"
   >
     <Tile
@@ -249,4 +249,22 @@ function openLightbox(startIndexReal: number) {
   </div>
 </template>
 
-<style lang="scss" src="@/views/ListingView/components/Gallery/components/Mosaic/mosaic.scss"></style>
+<style lang="scss">
+/* File: src/views/ListingView/components/Gallery/components/Mosaic/mosaic.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+
+.listing-gallery-mosaic {
+  flex: 1 1 auto;
+  min-height: 0;
+  position: relative;
+  width: 100%;
+  // height: 100%;
+  overflow: hidden;
+  border-bottom-left-radius: borders.$rounded-lg;
+  border-bottom-right-radius: borders.$rounded-lg;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+}
+</style>

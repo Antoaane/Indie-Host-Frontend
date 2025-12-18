@@ -24,6 +24,12 @@ export type UserListingCard = {
   title?: string
   status?: string
   coverSrc?: string
+  images?: Array<{
+    src: string
+    alt?: string
+    position?: number
+    index?: number
+  }>
   guestCapacity?: number
   pricePerNight?: number
   rating?: number
@@ -185,6 +191,7 @@ export async function fetchUserListings(userId: string): Promise<UserListingCard
         title: coreJSON.title,
         status: coreJSON.status,
         coverSrc: mediasJSON.images?.[0]?.src,
+        images: mediasJSON.images as UserListingCard['images'],
         guestCapacity: coreJSON.guest_capacity,
         pricePerNight: bookingsJSON.price,
         rating: notesJSON.note?.note,
@@ -196,6 +203,32 @@ export async function fetchUserListings(userId: string): Promise<UserListingCard
   const raw = await fetchRemote<unknown>(url)
 
   if (!Array.isArray(raw)) return []
+
+  const parseImages = (value: unknown): UserListingCard['images'] => {
+    if (!Array.isArray(value)) return undefined
+
+    const items = value
+      .map((entry, index) => {
+        if (typeof entry === 'string') {
+          return { src: entry, alt: '', index } satisfies NonNullable<UserListingCard['images']>[number]
+        }
+
+        if (!entry || typeof entry !== 'object') return null
+        const record = entry as Record<string, unknown>
+        const src = record['src'] as string | undefined
+        if (!src) return null
+
+        return {
+          src,
+          alt: (record['alt'] as string | undefined) ?? '',
+          position: typeof record['position'] === 'number' ? record['position'] : undefined,
+          index: typeof record['index'] === 'number' ? record['index'] : index,
+        } satisfies NonNullable<UserListingCard['images']>[number]
+      })
+      .filter((img): img is NonNullable<UserListingCard['images']>[number] => Boolean(img))
+
+    return items.length ? items : undefined
+  }
 
   return raw
     .map((item) => {
@@ -217,6 +250,10 @@ export async function fetchUserListings(userId: string): Promise<UserListingCard
           (record.coverSrc as string | undefined) ??
           (record.cover as string | undefined) ??
           (record['cover-src'] as string | undefined),
+        images:
+          parseImages(record.images) ??
+          parseImages((record.medias as Record<string, unknown> | undefined)?.images) ??
+          parseImages((record['medias'] as Record<string, unknown> | undefined)?.['images']),
         guestCapacity: typeof record.guest_capacity === 'number' ? record.guest_capacity : undefined,
         pricePerNight: typeof record.price === 'number' ? record.price : undefined,
         rating: typeof record.rating === 'number' ? record.rating : undefined,
@@ -244,4 +281,3 @@ export async function publishListingDraft(listingId: string, draft: RawListingBu
 
   await Promise.all(requests)
 }
-

@@ -26,9 +26,18 @@ const source = computed<EditorSource>(() => {
 </script>
 
 <template>
-  <Editor
-    :mode="mode"
-    :source="source"
-  />
+  <div class="editor-route">
+    <Editor
+      :mode="mode"
+      :source="source"
+    />
+  </div>
 </template>
 
+<style lang="scss">
+/* File: src/views/Editor/editor-route.scss */
+
+.editor-route {
+  display: contents;
+}
+</style>

@@ -33,7 +33,7 @@ const scoreLabel = computed(() =>
 </script>
 
 <template>
-  <section class="listing-comments__summary">
+  <section class="summary-card">
     <!-- <h3>{{ overallLabel }}</h3> -->
     <div>
       <h3 v-html="scoreLabel"></h3>
@@ -74,25 +74,26 @@ const scoreLabel = computed(() =>
 </template>
 
 <style lang="scss">
+/* File: src/views/ListingView/components/ListingComments/components/SummaryCard/summary-card.scss */
+
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
 
-.listing-comments__summary {
+.summary-card {
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
 
-  strong {
+  > strong {
     margin-bottom: 0 !important;
-
     @include h3-title($colorful: false);
   }
 
-  div {
+  > div {
     display: flex;
     gap: var(--spacing-2xs);
 
-    h3 {
+    > h3 {
       margin: 0 !important;
 
       font-family: 'Fustat', sans-serif;
@@ -123,4 +124,5 @@ const scoreLabel = computed(() =>
     }
   }
 }
+
 </style>

@@ -38,17 +38,17 @@ const isActive = (id: string) => activeHash.value === `#${id}`
       v-for="item in navItems"
       :key="item.id"
       :to="`${LISTING_PATH}#${item.id}`"
-      class="bottom-nav__item"
-      :class="{ active: isActive(item.id) }"
+      class="item"
+      :class="{ 'is-active': isActive(item.id) }"
     >
       <component
         :is="item.icon"
-        class="bottom-nav__icon"
+        class="icon"
         :size="22"
         :stroke-width="2.5"
         aria-hidden="true"
       />
-      <span class="bottom-nav__label">
+      <span class="label">
         {{ item.label }}
       </span>
     </RouterLink>
@@ -56,5 +56,66 @@ const isActive = (id: string) => activeHash.value === `#${id}`
 </template>
 
 <style lang="scss">
-@use '@/components/navs/BottomNav/bottom-nav.scss';
+/* File: src/components/navs/BottomNav/bottom-nav.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 0.5rem 0.75rem calc(0.5rem + env(safe-area-inset-bottom));
+
+  display: flex;
+  gap: 0.5rem;
+
+  background-color: $accent;
+  border-top: 1px solid rgba($secondary, 0.08);
+  box-shadow: 0 -6px 18px rgba($secondary, 0.1);
+
+  z-index: 50;
+
+  > .item {
+    flex: 1;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+
+    padding: 0.65rem 0.5rem;
+
+    text-decoration: none;
+    color: rgba($secondary, 0.7);
+    font-weight: 600;
+    font-size: 0.9rem;
+
+    border-radius: borders.$rounded-lg;
+
+    @include animations.transition(0.18s, ease);
+
+    &:active {
+      transform: translateY(-1px);
+    }
+
+    &.is-active {
+      color: $secondary;
+      background-color: rgba($secondary, 0.06);
+      box-shadow: inset 0 0 0 1px rgba($secondary, 0.08);
+    }
+
+    > .icon {
+      width: 22px;
+      height: 22px;
+    }
+
+    > .label {
+      line-height: 1;
+    }
+  }
+}
 </style>

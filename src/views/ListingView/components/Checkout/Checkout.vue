@@ -191,21 +191,24 @@ function reserve() {
 </script>
 
 <template>
-  <section id="checkout">
-    <div class="checkout-card">
-      <div class="checkout-card__header">
+  <section
+    id="checkout"
+    class="listing-checkout"
+  >
+    <div class="card">
+      <div class="header">
         <h2>Vous réservez</h2>
         <transition name="price-toggle">
           <span
             v-if="!expanded"
-            class="checkout-card__price"
+            class="price"
           >
             {{ pricePerNightLabel }}
           </span>
         </transition>
       </div>
 
-      <div class="checkout-card__fields">
+      <div class="fields">
         <CheckoutDates
           v-model:model-value="selection"
           :booked-ranges="bookedRanges"

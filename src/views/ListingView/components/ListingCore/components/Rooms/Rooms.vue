@@ -59,7 +59,7 @@ function getRoomDisplayName(roomName: string, index: number) {
 </script>
 
 <template>
-  <div class="rooms-listing__comp">
+  <section class="listing-rooms">
     <h2 v-html="staticContent.title" />
     <ul>
       <template
@@ -69,7 +69,7 @@ function getRoomDisplayName(roomName: string, index: number) {
         <li v-if="room.beds">
           <div>
             <h3 v-html="getRoomDisplayName(room.name, index)" />
-            <div class="bed-icon__container">
+            <div class="icons">
               <template
                 v-for="(bed, bIndex) in room.beds"
                 :key="bIndex"
@@ -84,7 +84,7 @@ function getRoomDisplayName(roomName: string, index: number) {
             </div>
           </div>
 
-          <div class="bed-type__container">
+          <div class="types">
             <ul>
               <li
                 v-for="bed in room.beds"
@@ -96,20 +96,22 @@ function getRoomDisplayName(roomName: string, index: number) {
         </li>
       </template>
     </ul>
-  </div>
+  </section>
 </template>
 
 <style lang="scss">
+/* File: src/views/ListingView/components/ListingCore/components/Rooms/rooms.scss */
+
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
 
-.rooms-listing__comp {
-  h2 {
+.listing-rooms {
+  > h2 {
     margin-bottom: var(--spacing-md) !important;
     @include h2-title($gradiant: true);
   }
 
-  & > ul {
+  > ul {
     display: grid;
     gap: var(--spacing-md);
 
@@ -127,7 +129,7 @@ function getRoomDisplayName(roomName: string, index: number) {
       grid-template-columns: repeat(3, 1fr);
     }
 
-    & > li {
+    > li {
       padding: var(--spacing-md);
 
       flex-grow: 1;
@@ -140,15 +142,15 @@ function getRoomDisplayName(roomName: string, index: number) {
       border: solid 1px $quaternary;
       border-radius: borders.$rounded-lg;
 
-      & > div {
+      > div {
         display: flex;
         justify-content: space-between;
 
-        h3 {
+        > h3 {
           @include base-text($bigger: true, $bold: true);
         }
 
-        .bed-icon__container {
+        > .icons {
           margin-left: var(--spacing-sm);
 
           display: flex;
@@ -156,7 +158,7 @@ function getRoomDisplayName(roomName: string, index: number) {
           flex-wrap: wrap;
           gap: var(--spacing-xs);
 
-          .lucide {
+          > .lucide {
             height: 1.5rem;
             width: max-content;
 
@@ -167,13 +169,9 @@ function getRoomDisplayName(roomName: string, index: number) {
             }
           }
         }
-
-        .bed-type__container {
-          display: flex;
-          flex-direction: column;
-        }
       }
     }
   }
 }
+
 </style>

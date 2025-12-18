@@ -3,8 +3,13 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { Camera, ChevronLeft, ChevronRight, Eye, Search } from 'lucide-vue-next'
+import type { Swiper as SwiperInstance } from 'swiper/types'
+import type { SwiperOptions } from 'swiper/types'
+import { Swiper, SwiperSlide } from 'swiper/vue'
 
 import type { UserListingCard } from '@/views/Editor/utils/listingApi'
+import { orderByIndex } from '@/utils/medias/order'
+import { createListingMediaSwiperParams } from '@/utils/swiper/listingMedia'
 
 const props = defineProps<{
   listings: UserListingCard[]
@@ -24,6 +29,97 @@ const filtered = computed(() => {
   if (!q) return props.listings
   return props.listings.filter((item) => (item.title ?? '').toLowerCase().includes(q))
 })
+
+type ListingSlide = {
+  src: string
+  alt: string
+  position?: number
+  index?: number
+}
+
+function getListingSlides(listing: UserListingCard): ListingSlide[] {
+  const title = (listing.title ?? '').trim()
+
+  const images = (listing.images ?? [])
+    .filter((img) => Boolean(img?.src))
+    .map((img, index) => ({
+      src: img.src,
+      alt: (img.alt ?? title) || 'Photo du logement',
+      position: typeof img.position === 'number' ? img.position : undefined,
+      index: typeof img.index === 'number' ? img.index : index,
+    }))
+
+  const ordered = orderByIndex(images)
+  const coverSrc = (listing.coverSrc ?? '').trim()
+
+  if (coverSrc && !ordered.some((img) => img.src === coverSrc)) {
+    ordered.unshift({
+      src: coverSrc,
+      alt: title || 'Photo du logement',
+      position: 0,
+      index: -1,
+    })
+  }
+
+  if (!ordered.length && coverSrc) {
+    return [
+      { src: coverSrc, alt: title || 'Photo du logement', position: 0, index: 0 },
+    ]
+  }
+
+  return ordered
+}
+
+const slidesByListingId = computed<Record<string, ListingSlide[]>>(() => {
+  const map: Record<string, ListingSlide[]> = {}
+  for (const listing of filtered.value) {
+    map[listing.listingId] = getListingSlides(listing)
+  }
+  return map
+})
+
+function slidesFor(listingId: string): ListingSlide[] {
+  return slidesByListingId.value[listingId] ?? []
+}
+
+const cardSwiperBaseParams = createListingMediaSwiperParams({
+  autoplay: false,
+  slidesPerView: 1,
+  spaceBetween: 0,
+  centeredSlides: true,
+  withNavigationModule: true,
+  withPaginationModule: true,
+  navigation: false,
+  pagination: false,
+}) satisfies SwiperOptions
+
+const swiperByListingId = new Map<string, SwiperInstance>()
+const activeIndexByListingId = ref<Record<string, number>>({})
+
+function activeIndexFor(listingId: string): number {
+  return activeIndexByListingId.value[listingId] ?? 0
+}
+
+function registerSwiper(swiper: SwiperInstance, listingId: string) {
+  swiperByListingId.set(listingId, swiper)
+  activeIndexByListingId.value[listingId] = swiper.realIndex ?? swiper.activeIndex ?? 0
+}
+
+function syncActiveIndex(swiper: SwiperInstance, listingId: string) {
+  activeIndexByListingId.value[listingId] = swiper.realIndex ?? swiper.activeIndex ?? 0
+}
+
+function slidePrev(listingId: string) {
+  swiperByListingId.get(listingId)?.slidePrev()
+}
+
+function slideNext(listingId: string) {
+  swiperByListingId.get(listingId)?.slideNext()
+}
+
+function slideTo(listingId: string, index: number) {
+  swiperByListingId.get(listingId)?.slideTo(index)
+}
 
 function handleSelect(listingId: string) {
   emit('select', listingId)
@@ -60,150 +156,206 @@ function ratingPercent(rating?: number) {
   return `${(clamped / 5) * 100}%`
 }
 
+console.log('props:', props)
+
 // const DRAFT_STORAGE_PREFIX = 'indiehost:listing-draft:'
 </script>
 
 <template>
   <section class="editor-listings">
-    <div class="editor-listings__toolbar">
-      <div class="editor-listings__search">
-        <Search class="editor-listings__search-icon" />
+    <div class="toolbar">
+      <div class="search">
+        <Search class="icon" />
         <input
           v-model="query"
-          class="editor-listings__search-input"
+          class="input"
           type="search"
           placeholder="Rechercher une annonce"
         />
       </div>
     </div>
 
-    <div class="editor-listings__grid">
-      <article
-        v-for="listing in filtered"
-        :key="listing.listingId"
-        class="editor-listing-card"
-        :class="{ 'is-selected': listing.listingId === props.selectedListingId }"
-      >
-        <!-- <pre>{{ listing.listingId }}</pre>
-        <pre>{{ `${DRAFT_STORAGE_PREFIX}${listing.listingId}` }}</pre> -->
-        <div class="editor-listing-card__select">
-          <button
+    <div class="scroll-container">
+      <div class="grid">
+        <article
+          v-for="listing in filtered"
+          :key="listing.listingId"
+          class="card"
+          :class="{ 'is-selected': listing.listingId === props.selectedListingId }"
+        >
+          <!-- <pre>{{ listing.listingId }}</pre>
+          <pre>{{ `${DRAFT_STORAGE_PREFIX}${listing.listingId}` }}</pre> -->
+          <div
+            class="select"
             type="button"
             @click="handleSelect(listing.listingId)"
           >
-            <div class="editor-listing-card__content">
-              <div class="editor-listing-card__media">
-                <img
-                  v-if="listing.coverSrc"
-                  :src="listing.coverSrc"
-                  :alt="listing.title ?? ''"
-                  loading="lazy"
-                />
-                <div
-                  v-else
-                  class="editor-listing-card__placeholder"
+            <!-- <div class="content"> -->
+            <div class="media">
+              <template v-if="slidesFor(listing.listingId).length">
+                <Swiper
+                  class="swiper"
+                  v-bind="cardSwiperBaseParams"
+                  @swiper="(swiper) => registerSwiper(swiper as SwiperInstance, listing.listingId)"
+                  @slideChange="(swiper) => syncActiveIndex(swiper as SwiperInstance, listing.listingId)"
+                  @click.stop
+                  @pointerdown.stop
                 >
-                  <Camera
-                    class="editor-listing-card__placeholder-icon"
-                    :size="54"
-                  />
-                </div>
+                  <SwiperSlide
+                    v-for="(slide, idx) in slidesFor(listing.listingId)"
+                    :key="`${listing.listingId}-${slide.src}-${idx}`"
+                  >
+                    <img
+                      loading="lazy"
+                      :src="slide.src"
+                      :alt="slide.alt"
+                    />
+                  </SwiperSlide>
+                </Swiper>
 
-                <span
-                  v-if="listing.status"
-                  class="editor-listing-card__status"
-                  :class="statusVariant(listing.status)"
-                >
-                  {{ statusLabel(listing.status) }}
-                </span>
-
-                <div
-                  class="editor-listing-card__carousel"
-                  aria-hidden="true"
-                >
-                  <span class="editor-listing-card__nav is-prev">
+                <div class="carousel">
+                  <button
+                    class="nav is-prev"
+                    type="button"
+                    aria-label="Image précédente"
+                    @click.stop="slidePrev(listing.listingId)"
+                    @pointerdown.stop
+                  >
                     <ChevronLeft :size="18" />
-                  </span>
-                  <span class="editor-listing-card__nav is-next">
+                  </button>
+                  <button
+                    class="nav is-next"
+                    type="button"
+                    aria-label="Image suivante"
+                    @click.stop="slideNext(listing.listingId)"
+                    @pointerdown.stop
+                  >
                     <ChevronRight :size="18" />
-                  </span>
-                  <div class="editor-listing-card__dots">
-                    <span
-                      v-for="dot in 6"
-                      :key="dot"
-                      class="editor-listing-card__dot"
-                      :class="{ 'is-active': dot === 1 }"
+                  </button>
+                  <div
+                    class="dots"
+                    aria-label="Pagination du carrousel"
+                    @click.stop
+                    @pointerdown.stop
+                  >
+                    <button
+                      v-for="(dot, index) in slidesFor(listing.listingId)"
+                      :key="`${listing.listingId}-dot-${index}`"
+                      class="dot"
+                      :class="{ 'is-active': activeIndexFor(listing.listingId) === index }"
+                      type="button"
+                      :aria-label="`Aller à l’image ${index + 1}`"
+                      @click.stop="slideTo(listing.listingId, index)"
+                      @pointerdown.stop
                     />
                   </div>
                 </div>
+              </template>
+
+              <div
+                v-else
+                class="placeholder"
+              >
+                <Camera
+                  class="icon"
+                  :size="54"
+                />
               </div>
 
-              <div class="editor-listing-card__body">
-                <p class="editor-listing-card__title">
+              <span
+                v-if="listing.status"
+                class="status"
+                :class="statusVariant(listing.status)"
+              >
+                {{ statusLabel(listing.status) }}
+              </span>
+
+              <div class="preview">
+                <div>
+                  <RouterLink
+                    :to="{ name: 'listing', params: { id: listing.listingId } }"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Prévisualiser l’annonce"
+                    @click.stop
+                  >
+                    <Eye :size="18" />
+                  </RouterLink>
+                </div>
+              </div>
+            </div>
+
+            <div class="body">
+              <div class="main">
+                <p class="title">
                   {{ listing.title || 'Annonce sans titre' }}
                 </p>
                 <p
                   v-if="listing.guestCapacity"
-                  class="editor-listing-card__meta"
+                  class="meta"
                 >
                   {{ listing.guestCapacity }} voyageurs
                 </p>
-                <div class="editor-listing-card__footer">
-                  <span
-                    v-if="typeof listing.pricePerNight === 'number'"
-                    class="editor-listing-card__price"
-                  >
-                    {{ listing.pricePerNight }} € <span class="editor-listing-card__price-suffix">par nuit</span>
-                  </span>
-                  <span
-                    v-if="typeof listing.rating === 'number'"
-                    class="editor-listing-card__rating"
-                    :style="{ '--rating-percent': ratingPercent(listing.rating) }"
-                    :title="`${listing.rating.toFixed(2)} / 5`"
-                    :aria-label="`${listing.rating.toFixed(2)} sur 5`"
-                    role="img"
-                  />
-                </div>
               </div>
+
+              <div class="footer">
+                <span
+                  v-if="typeof listing.pricePerNight === 'number'"
+                  class="price"
+                >
+                  {{ listing.pricePerNight }} € <span class="suffix">par nuit</span>
+                </span>
+                <span
+                  v-if="typeof listing.rating === 'number'"
+                  class="rating"
+                  :style="{ '--rating-percent': ratingPercent(listing.rating) }"
+                  :title="`${listing.rating.toFixed(2)} / 5`"
+                  :aria-label="`${listing.rating.toFixed(2)} sur 5`"
+                  role="img"
+                />
+              </div>
+            </div>
+            <!-- </div> -->
+          </div>
+
+          <!-- <div class="preview">
+            <div>
+              <RouterLink
+                :to="{ name: 'listing', params: { id: listing.listingId } }"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Prévisualiser l’annonce"
+                @click.stop
+              >
+                <Eye :size="18" />
+              </RouterLink>
+            </div>
+          </div> -->
+        </article>
+
+        <div class="new-card">
+          <button
+            type="button"
+            disabled
+          >
+            <div class="content">
+              <span>+ Nouvelle annonce</span>
+              <small>3 / 6 restantes</small>
             </div>
           </button>
         </div>
-
-        <div class="editor-listing-card__preview">
-          <RouterLink
-            :to="{ name: 'listing', params: { id: listing.listingId } }"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Prévisualiser l’annonce"
-            @click.stop
-          >
-            <Eye :size="18" />
-          </RouterLink>
-        </div>
-      </article>
-
-      <div class="editor-listing-card--new">
-        <button
-          type="button"
-          disabled
-        >
-          <div class="editor-listing-card--new__content">
-            <span>+ Nouvelle annonce</span>
-            <small>3 / 6 restantes</small>
-          </div>
-        </button>
       </div>
     </div>
 
     <div
       v-if="props.isLoading"
-      class="editor-listings__state"
+      class="state"
     >
       Chargement…
     </div>
     <div
       v-else-if="props.error"
-      class="editor-listings__state"
+      class="state"
     >
       Impossible de charger les annonces.
     </div>

@@ -5,10 +5,10 @@
 @use '@/styles/variables/animations' as animations;
 @use '@/styles/components/buttons' as buttons;
 
-.cal-root {
+.date-picker {
   max-width: 36rem;
 
-  .cal-header {
+  > .header {
     // @include buttons.primary();
 
     button {
@@ -50,26 +50,26 @@
       }
     }
 
-    .cal-heading {}
+    > .heading {}
   }
 
-  .cal-body {
+  > .body {
     border-radius: borders.$rounded-lg;
 
     @include spacings(padding, all, 0.75);
     @include big-shadow();
 
-    table.cal-grid {
+    > table.grid {
 
-      thead {
-        tr.cal-gridWeekDaysRow {
+      > thead {
+        > tr.weekdays-row {
           padding-bottom: 0.25rem;
           margin-bottom: 0.25rem;
           gap: calc(var(--spacing) / 4);
 
           border-bottom: 1px solid rgba($secondary, 0.1);
 
-          th.cal-headCell {
+          > th.head-cell {
             width: 100%;
             height: auto;
             aspect-ratio: 1 / 1;
@@ -87,9 +87,9 @@
         }
       }
 
-      tbody.cal-gridBody {
-        tr.cal-gridRow {
-          td.cal-cell {
+      > tbody.grid-body {
+        > tr.grid-row {
+          > td.cell {
             width: 100%;
             height: auto;
             aspect-ratio: 1 / 1;
@@ -111,12 +111,12 @@
               color: $secondary;
             }
 
-            &:has(.cal-cellTrigger[data-highlighted]) {
+            &:has(.cell-trigger[data-highlighted]) {
               background-color: rgba($secondary, 0.1);
               border-radius: 0;
             }
 
-            &:has(.cal-cellTrigger[data-highlighted-end="true"]) {
+            &:has(.cell-trigger[data-highlighted-end="true"]) {
               border-top-right-radius: borders.$rounded-md;
               border-bottom-right-radius: borders.$rounded-md;
               border-top-left-radius: 0;
@@ -125,12 +125,12 @@
               background-color: rgba($secondary, 0.1);
             }
 
-            &:has(.cal-cellTrigger[data-selected="true"]) {
+            &:has(.cell-trigger[data-selected="true"]) {
               background-color: rgba($secondary, 0.1);
               border-radius: 0;
             }
 
-            &:has(.cal-cellTrigger[data-selection-start="true"]) {
+            &:has(.cell-trigger[data-selection-start="true"]) {
               border-top-left-radius: borders.$rounded-md;
               border-bottom-left-radius: borders.$rounded-md;
               border-top-right-radius: 0;
@@ -139,7 +139,7 @@
               background-color: rgba($secondary, 0.1);
             }
 
-            &:has(.cal-cellTrigger[data-selection-end="true"]) {
+            &:has(.cell-trigger[data-selection-end="true"]) {
               border-top-right-radius: borders.$rounded-md;
               border-bottom-right-radius: borders.$rounded-md;
               border-top-left-radius: 0;
@@ -148,17 +148,17 @@
               background-color: rgba($secondary, 0.1);
             }
 
-            &:has(.cal-cellTrigger[data-outside-view]) {
+            &:has(.cell-trigger[data-outside-view]) {
               opacity: 0;
               pointer-events: none;
             }
 
-            &:has(.cal-cellTrigger[data-outside-visible-view]) {
+            &:has(.cell-trigger[data-outside-visible-view]) {
               opacity: 0.25;
               pointer-events: none;
             }
 
-            .cal-cellTrigger {
+            > .cell-trigger {
               width: 100%;
               height: 100%;
 

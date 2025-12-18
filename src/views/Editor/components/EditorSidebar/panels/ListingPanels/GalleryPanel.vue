@@ -40,45 +40,41 @@ function removeImage(position: number) {
 </script>
 
 <template>
-  <section class="editor-panel">
-    <div class="editor-panel__header">
+  <section class="editor-gallery-panel">
+    <div class="header">
       <h3>Galerie de photo</h3>
       <p>Montrez votre logement sous son plus beau jour</p>
     </div>
 
-    <div class="editor-panel__body">
-      <div class="editor-gallery">
+    <div class="body">
+      <div class="gallery">
         <div
           v-for="img in images"
           :key="img.position"
-          class="editor-gallery__tile"
+          class="tile"
+          @click="removeImage(img.position)"
         >
-          <button
-            type="button"
-            @click="removeImage(img.position)"
-          >
-            <img
-              v-if="img.src"
-              :src="img.src"
-              :alt="img.alt || ''"
-              loading="lazy"
-            />
-            <div
-              v-else
-              class="editor-gallery__placeholder"
-            />
-          </button>
+          <img
+            v-if="img.src"
+            :src="img.src"
+            :alt="img.alt || ''"
+            loading="lazy"
+          />
+          <div
+            v-else
+            class="placeholder"
+          />
         </div>
 
-        <div
-          class="editor-gallery__tile editor-gallery__add"
-        >
-          <button
-            type="button"
-            @click="addImage"
-          >
-            +
-          </button>
+        <div class="add">
+          <div class="button">
+            <button
+              type="button"
+              @click="addImage"
+            >
+              +
+            </button>
+          </div>
         </div>
       </div>
     </div>

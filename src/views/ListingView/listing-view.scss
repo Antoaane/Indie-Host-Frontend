@@ -17,7 +17,7 @@
     @include spacings(padding, bottom);
   }
 
-  &>.gallery-container {
+  > .gallery {
     flex-grow: 0;
     flex-basis: 25vw;
     flex-shrink: 0;
@@ -25,13 +25,13 @@
     min-height: 0;
   }
 
-  &>.core-container {
+  > .core {
     flex: 1;
     height: 100%;
     min-height: 0;
   }
 
-  &>.stay-container {
+  > .stay {
     max-height: calc(100vh - $nav-height);
     min-height: 0;
 
@@ -43,30 +43,79 @@
     display: flex;
     flex-direction: column;
   }
-}
 
-.listing_main {
-  height: 100%;
-  overflow: hidden;
-  overflow-y: scroll;
-  scrollbar-width: none;
+  > .main {
+    height: 100%;
+    overflow: hidden;
+    overflow-y: scroll;
+    scrollbar-width: none;
 
-  .core-container {
-    @include spacings(padding, inline, 0.5);
+    > .core {
+      @include spacings(padding, inline, 0.5);
 
-    &>div {
-      background-color: $accent;
-      border-radius: borders.$rounded-xl;
+      > .panel {
+        background-color: $accent;
+        border-radius: borders.$rounded-xl;
 
-      #listing-core {
-        background-color: $translucent !important;
-        @include spacings(padding, all, 1.5, $important: true);
+        > #listing-core {
+          background-color: $translucent !important;
+          @include spacings(padding, all, 1.5, $important: true);
+        }
+
+        > #listing-comments {
+          background-color: $translucent !important;
+          @include spacings(padding, inline, 1.5, $important: true);
+          @include spacings(padding, top, 1.5, $important: true);
+        }
+      }
+    }
+  }
+
+  > .footer {
+    background: $secondary;
+    padding-top: var(--spacing-sm);
+    padding-bottom: var(--spacing);
+
+    display: flex;
+    justify-content: center;
+
+    position: relative;
+
+    @include spacings(padding, inline);
+
+    > .shape-container {
+      width: borders.$rounded-xl;
+      height: borders.$rounded-xl;
+
+      position: absolute;
+      z-index: 5;
+      top: 1px;
+      transform: translateY(-100%);
+
+      display: block;
+
+      > .shape {
+        width: 100%;
+        height: 100%;
+
+        position: relative;
+        display: block;
+
+        > path {
+          fill: $secondary;
+        }
       }
 
-      #listing-comments {
-        background-color: $translucent !important;
-        @include spacings(padding, inline, 1.5, $important: true);
-        @include spacings(padding, top, 1.5, $important: true);
+      &.is-right {
+        right: calc(var(--spacing-sm) - 0.5px);
+      }
+
+      &.is-left {
+        left: calc(var(--spacing-sm) - 0.5px);
+
+        > .shape {
+          transform: scaleX(-1);
+        }
       }
     }
   }

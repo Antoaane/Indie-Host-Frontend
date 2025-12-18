@@ -2,7 +2,7 @@
 
 @use "@/styles/variables/globals" as *;
 
-header {
+.layout-header {
   width: 100%;
   padding-bottom: var(--spacing-md);
 
@@ -40,4 +40,8 @@ header {
   &:has(.bottom-nav) {
     bottom: 0;
   }
+}
+
+header {
+  @extend .layout-header;
 }

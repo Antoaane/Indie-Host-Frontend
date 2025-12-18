@@ -94,7 +94,10 @@ const descriptionStatic = {
 </script>
 
 <template>
-  <section id="listing-core">
+  <section
+    id="listing-core"
+    class="listing-core"
+  >
     <Title
       :data="props.data.title"
       :staticContent="staticContent.listing.title"
@@ -133,5 +136,71 @@ const descriptionStatic = {
 </template>
 
 <style lang="scss">
-@use '@/views/ListingView/components/ListingCore/listing-core.scss';
+/* File: src/views/ListingView/components/ListingCore/listing-core.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+
+html:has(#listing-core) {
+  overflow: hidden;
+}
+
+.listing-core#listing-core {
+  height: 100%;
+
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing-2xl) * 2);
+
+  background-color: $accent;
+  border-radius: borders.$rounded-xxl;
+
+  // overflow-y: scroll;
+  scrollbar-width: thin;
+  /* auto | thin | none */
+  scrollbar-color: rgba($secondary, 0.25) $translucent;
+  /* thumb | track */
+
+  @include spacings(padding, all);
+
+  @include min-width(lg) {
+    overflow: hidden;
+    overflow-y: scroll;
+    border-radius: borders.$rounded-lg;
+    gap: var(--spacing-2xl);
+  }
+
+  /* Cible la scrollbar entière */
+  ::-webkit-scrollbar {
+    width: thin;
+    /* largeur verticale */
+  }
+
+  /* La "piste" (fond) */
+  ::-webkit-scrollbar-track {
+    background: $translucent;
+    /* couleur du fond */
+    border-radius: 6px;
+  }
+
+  /* Le "thumb" (curseur qu’on déplace) */
+  ::-webkit-scrollbar-thumb {
+    background: rgba($secondary, 0.6);
+    border-radius: borders.$rounded;
+    border: 2px solid $translucent;
+    /* crée un effet d’espace autour */
+  }
+
+  /* Changement au survol */
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba($secondary, 0.8);
+  }
+
+  /* Optionnel : boutons de défilement */
+  ::-webkit-scrollbar-button {
+    background: none;
+    display: none;
+    /* souvent on les cache */
+  }
+}
 </style>

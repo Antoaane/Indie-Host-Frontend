@@ -103,33 +103,34 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section class="amenities-listing__comp">
-    <div class="amenities-listing__header">
+  <section class="listing-amenities">
+    <div class="header">
       <h2 v-html="staticContent.title"></h2>
     </div>
 
     <ul
       v-if="previewAmenities.length"
-      class="amenities-listing__preview"
+      class="preview"
     >
       <li
         v-for="amenity in previewAmenities"
         :key="amenity.id"
+        class="item"
       >
         <component
           v-if="resolveAmenityIconComponent(amenity.id)"
           :is="resolveAmenityIconComponent(amenity.id)"
-          class="amenity-icon"
+          class="icon"
           aria-hidden="true"
         />
         <span
-          class="amenity-name"
+          class="name"
           v-html="amenity.name"
         ></span>
       </li>
     </ul>
 
-    <div class="amenities-listing__cta">
+    <div class="cta">
       <button
         type="button"
         @click="openOverlay"
@@ -145,12 +146,12 @@ onBeforeUnmount(() => {
         aria-modal="true"
         @click.self="closeOverlay"
       >
-        <div class="amenities-overlay__panel">
-          <div class="amenities-overlay__header">
-            <div class="amenities-overlay__title">
+        <div class="panel">
+          <div class="header">
+            <div class="title">
               <h2 v-html="staticContent.overlayTitle || staticContent.title"></h2>
             </div>
-            <div class="amenities-overlay__close">
+            <div class="close">
               <button
                 type="button"
                 @click="closeOverlay"
@@ -164,32 +165,33 @@ onBeforeUnmount(() => {
             </div>
           </div>
 
-          <div class="amenities-overlay__body">
+          <div class="body">
             <div
               v-for="category in categorizedAmenities"
               :key="category.name"
-              class="amenities-overlay__category"
+              class="category"
             >
               <h3 v-html="category.name"></h3>
               <ul>
                 <li
                   v-for="amenity in category.items"
                   :key="`${category.name}-${amenity.id}`"
+                  class="item"
                 >
                   <component
                     v-if="resolveAmenityIconComponent(amenity.id)"
                     :is="resolveAmenityIconComponent(amenity.id)"
-                    class="amenity-icon"
+                    class="icon"
                     aria-hidden="true"
                   />
-                  <div class="amenity-texts">
+                  <div class="texts">
                     <p
-                      class="amenity-name"
+                      class="name"
                       v-html="amenity.name"
                     />
                     <p
                       v-if="amenity.description"
-                      class="amenity-description"
+                      class="description"
                       v-html="amenity.description"
                     />
                   </div>

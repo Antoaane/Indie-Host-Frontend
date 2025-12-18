@@ -60,7 +60,7 @@ const isLanding = computed(() => route.path === '/')
     <button
       v-if="isLanding"
       data-target="#hero-section"
-      class="navbar__logo"
+      class="logo"
       @click="scrollToTarget($event, false)"
       aria-label="IndieHost - Revenir en haut de page"
     >
@@ -74,7 +74,7 @@ const isLanding = computed(() => route.path === '/')
     <a
       v-else
       href="/"
-      class="navbar__logo"
+      class="logo"
       aria-label="IndieHost - Aller à l'accueil"
     >
       <component
@@ -87,7 +87,7 @@ const isLanding = computed(() => route.path === '/')
 
     <div
       v-if="searchBar"
-      class="navbar__search"
+      class="search"
     >
       <input
         type="search"
@@ -98,7 +98,7 @@ const isLanding = computed(() => route.path === '/')
 
     <!-- Desktop Menu -->
     <ul
-      class="navbar__links"
+      class="links"
       v-if="vp.lg.value"
     >
       <template v-if="itemsUndefined">
@@ -147,23 +147,24 @@ const isLanding = computed(() => route.path === '/')
 
     <!-- Mobile Menu Button -->
     <div
-      :class="{ 'navbar__mobile-toggle': true, active: isMobileMenuOpen }"
+      class="mobile-toggle"
+      :class="{ 'is-active': isMobileMenuOpen }"
       v-if="!vp.lg.value"
       @click="toggleMobileMenu"
       aria-label="Ouvrir/fermer le menu"
       role="button"
     >
-      <span class="cheese" />
-      <span class="steak" />
+      <span class="line is-top" />
+      <span class="line is-bottom" />
     </div>
 
     <!-- Mobile Menu -->
     <transition name="fade-slide">
       <div
-        class="navbar__mobile-menu"
+        class="mobile-menu"
         v-if="!vp.lg.value && isMobileMenuOpen"
       >
-        <ul class="navbar__mobile-links">
+        <ul class="mobile-links">
           <template v-if="itemsUndefined">
             <li>
               <button @click="goBack">Retour</button>
@@ -201,7 +202,7 @@ const isLanding = computed(() => route.path === '/')
           <!-- Barre de recherche (mobile) -->
           <div
             v-if="searchBar"
-            class="navbar__search"
+            class="search"
           >
             <input
               type="search"
@@ -217,17 +218,4 @@ const isLanding = computed(() => route.path === '/')
 
 <style lang="scss">
 @use '@/components/navs/Nav/nav.scss';
-
-.fade-slide-enter-active,
-.fade-slide-leave-active {
-  transition:
-    opacity 0.3s ease,
-    transform 0.3s ease;
-}
-
-.fade-slide-enter-from,
-.fade-slide-leave-to {
-  opacity: 0;
-  transform: translateY(-10px);
-}
 </style>

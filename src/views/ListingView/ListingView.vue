@@ -32,7 +32,7 @@ const bookingRange = ref<RangeISO | null>(null)
 <template>
   <template v-if="vp.lg.value">
     <div class="listing-view">
-      <div class="gallery-container">
+      <div class="gallery">
         <Gallery
           v-if="listingData"
           :medias="listingData.medias"
@@ -40,7 +40,7 @@ const bookingRange = ref<RangeISO | null>(null)
         <template v-else><div class="skeleton">Chargement…</div></template>
       </div>
 
-      <div class="core-container">
+      <div class="core">
         <ListingCore
           v-if="listingData"
           v-model:model-value="bookingRange"
@@ -49,7 +49,7 @@ const bookingRange = ref<RangeISO | null>(null)
         <template v-else><div class="skeleton">Chargement…</div></template>
       </div>
 
-      <div class="stay-container">
+      <div class="stay">
         <Checkout
           v-if="listingData"
           v-model:model-value="bookingRange"
@@ -73,8 +73,8 @@ const bookingRange = ref<RangeISO | null>(null)
 
   <template v-else>
     <div class="listing-view">
-      <div class="listing_main">
-        <div class="gallery-container">
+      <div class="main">
+        <div class="gallery">
           <Gallery
             v-if="listingData"
             :medias="listingData.medias"
@@ -82,8 +82,8 @@ const bookingRange = ref<RangeISO | null>(null)
           <template v-else><div class="skeleton">Chargement…</div></template>
         </div>
 
-        <div class="core-container">
-          <div>
+        <div class="core">
+          <div class="panel">
             <ListingCore
               v-if="listingData"
               v-model:model-value="bookingRange"
@@ -101,8 +101,8 @@ const bookingRange = ref<RangeISO | null>(null)
         </div>
       </div>
 
-      <footer>
-        <span class="shape-container-r">
+      <footer class="footer">
+        <span class="shape-container is-right">
           <svg
             class="shape"
             width="300"
@@ -112,7 +112,7 @@ const bookingRange = ref<RangeISO | null>(null)
             <path d="M 300 0 A 300 300 0 0 1 0 300 L 300 300 Z" />
           </svg>
         </span>
-        <span class="shape-container-l">
+        <span class="shape-container is-left">
           <svg
             class="shape"
             width="300"

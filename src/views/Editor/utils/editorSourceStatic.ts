@@ -60,6 +60,7 @@ function buildStaticCard(dataset: StaticListingDataset): UserListingCard {
     title: dataset.core.title,
     status: dataset.core.status,
     coverSrc,
+    images: dataset.medias.images as UserListingCard['images'],
     guestCapacity: dataset.core.guest_capacity,
     pricePerNight: dataset.bookings.price,
     rating: dataset.notes.note?.note,

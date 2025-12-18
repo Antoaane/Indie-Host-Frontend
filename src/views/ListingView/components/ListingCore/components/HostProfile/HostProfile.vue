@@ -23,29 +23,41 @@ const seniorityText = computed(() => {
 </script>
 
 <template>
-  <div class="hostprofile-listing__comp">
+  <section class="listing-host-profile">
     <img
       :src="data.avatar"
       :alt="data.name"
+      class="avatar"
     />
-    <div>
-      <h2 v-html="data.name" />
-      <ul>
-        <li v-html="data.status" />
-        <li v-if="data.seniority > 1">
+    <div class="body">
+      <h2
+        class="name"
+        v-html="data.name"
+      />
+      <ul class="meta">
+        <li
+          class="item"
+          v-html="data.status"
+        />
+        <li
+          v-if="data.seniority > 1"
+          class="item"
+        >
           <span>&nbsp;—&nbsp;</span>
           {{ seniorityText }}
         </li>
       </ul>
     </div>
-  </div>
+  </section>
 </template>
 
 <style lang="scss">
+/* File: src/views/ListingView/components/ListingCore/components/HostProfile/host-profile.scss */
+
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
 
-.hostprofile-listing__comp {
+.listing-host-profile {
   padding: var(--spacing-sm);
 
   display: flex;
@@ -56,7 +68,7 @@ const seniorityText = computed(() => {
 
   @include big-shadow();
 
-  img {
+  > .avatar {
     width: 3.5rem;
     height: 3.5rem;
     object-fit: cover;
@@ -64,29 +76,30 @@ const seniorityText = computed(() => {
     border-radius: borders.$rounded;
   }
 
-  div {
+  > .body {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;
 
-    h2 {
+    > .name {
       margin-bottom: var(--spacing-xs) !important;
       font-weight: 500 !important;
       @include base-text($bigger: true);
     }
 
-    ul {
+    > .meta {
       display: flex;
       align-items: center;
 
       opacity: 0.65;
 
-      li {
+      > .item {
         display: inline-flex;
         @include little-text($thin: false);
       }
     }
   }
 }
+
 </style>

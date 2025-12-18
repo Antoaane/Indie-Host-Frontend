@@ -1,3 +1,5 @@
+<!-- File: src/views/ListingView/components/Checkout/components/CheckoutCta.vue -->
+
 <script setup lang="ts">
 import { CalendarCheck, UsersRound } from 'lucide-vue-next'
 
@@ -11,7 +13,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="checkout-card__cta">
+  <div class="listing-checkout-cta">
     <div class="btn-primary__full">
       <button
         type="button"
@@ -22,7 +24,7 @@ const emit = defineEmits<{
         Réserver
       </button>
     </div>
-    <p class="checkout-card__hint">
+    <p class="hint">
       <UsersRound :size="12" />
       Confirmation immédiate et paiement sécurisé
     </p>

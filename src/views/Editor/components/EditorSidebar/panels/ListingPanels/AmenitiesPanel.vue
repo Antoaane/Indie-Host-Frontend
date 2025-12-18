@@ -173,20 +173,20 @@ const catalogByCategory = computed(() => {
 </script>
 
 <template>
-  <section class="editor-panel">
-    <div class="editor-panel__header">
+  <section class="editor-amenities-panel">
+    <div class="header">
       <h3>Équipements</h3>
       <p>Ajoutez/retirez des équipements depuis le catalogue (seul “pinned” est modifiable).</p>
     </div>
 
-    <div class="editor-panel__body">
-      <div class="editor-amenities">
+    <div class="body">
+      <div class="amenities">
         <div
           v-for="item in selectedAmenities"
           :key="item.resolvedId || item.amenity.name || String(item.rawIndex)"
-          class="editor-amenities__row"
+          class="row"
         >
-          <div class="editor-amenities__icon">
+          <div class="icon">
             <component
               v-if="item.icon"
               :is="item.icon"
@@ -194,17 +194,17 @@ const catalogByCategory = computed(() => {
             />
           </div>
 
-          <div class="editor-amenities__label">
-            <p class="editor-amenities__name">
+          <div class="label">
+            <p class="name">
               {{ item.amenity.name }}
             </p>
-            <p class="editor-amenities__meta">
+            <p class="meta">
               {{ item.amenity.category }}
             </p>
           </div>
 
           <div
-            class="editor-amenities__pin"
+            class="pin"
             :class="{ 'is-active': Boolean(item.amenity.pinned) }"
           >
             <button
@@ -214,7 +214,7 @@ const catalogByCategory = computed(() => {
               ★
             </button>
           </div>
-          <div class="editor-amenities__remove">
+          <div class="remove">
             <button
               type="button"
               @click="removeAmenityAt(item.rawIndex)"
@@ -235,18 +235,18 @@ const catalogByCategory = computed(() => {
       </div>
     </div>
 
-    <Transition name="editor-amenities-overlay">
+    <Transition name="amenities-overlay">
       <div
         v-if="isOverlayOpen"
-        class="editor-overlay"
+        class="overlay"
         role="dialog"
         aria-modal="true"
         @click.self="closeOverlay"
       >
-        <div class="editor-overlay__panel">
-          <div class="editor-overlay__header">
+        <div class="panel">
+          <div class="header">
             <h3>Catalogue des équipements</h3>
-            <div class="editor-overlay__close">
+            <div class="close">
               <button
                 type="button"
                 @click="closeOverlay"
@@ -256,45 +256,45 @@ const catalogByCategory = computed(() => {
             </div>
           </div>
 
-          <div class="editor-overlay__body">
+          <div class="body">
             <div
               v-for="group in catalogByCategory"
               :key="group.category"
-              class="editor-overlay__category"
+              class="category"
             >
               <h4>{{ group.category }}</h4>
-              <ul class="editor-overlay__list">
+              <ul class="list">
                 <li
                   v-for="item in group.items"
                   :key="item.id"
-                  class="editor-overlay__item"
+                  class="item"
                 >
-                  <div class="editor-overlay__item-btn">
+                  <div class="item-btn">
                     <button
                       type="button"
                       :disabled="isAmenitySelected(item.id)"
                       @click="addAmenityFromCatalog(item)"
                     >
-                      <div class="editor-overlay__item-content">
-                        <span class="editor-overlay__item-icon">
+                      <div class="item-content">
+                        <span class="item-icon">
                           <component
                             v-if="resolveAmenityIconComponent(item.id)"
                             :is="resolveAmenityIconComponent(item.id)"
                             aria-hidden="true"
                           />
                         </span>
-                        <span class="editor-overlay__item-texts">
-                          <span class="editor-overlay__item-title">{{ item.name }}</span>
+                        <span class="item-texts">
+                          <span class="item-title">{{ item.name }}</span>
                           <span
                             v-if="item.description"
-                            class="editor-overlay__item-desc"
+                            class="item-desc"
                           >
                             {{ item.description }}
                           </span>
                         </span>
                         <span
                           v-if="isAmenitySelected(item.id)"
-                          class="editor-overlay__item-state"
+                          class="item-state"
                         >
                           Ajouté
                         </span>

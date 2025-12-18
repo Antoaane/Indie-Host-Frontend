@@ -1,3 +1,5 @@
+<!-- File: src/views/ListingView/components/Checkout/components/CheckoutGuests.vue -->
+
 <script setup lang="ts">
 import { ref } from 'vue'
 import { onClickOutside } from '@vueuse/core'
@@ -24,12 +26,12 @@ onClickOutside(guestsLayer, () => emit('close'))
 <template>
   <div
     ref="guestsLayer"
-    class="checkout-card__guests"
+    class="listing-checkout-guests"
   >
     <div class="btn-primary__white__full">
       <button
         type="button"
-        class="checkout-card__field checkout-card__field--full"
+        class="field is-full"
         @click="emit('toggle')"
       >
         <span>pour</span>
@@ -40,14 +42,14 @@ onClickOutside(guestsLayer, () => emit('close'))
     <transition name="fade">
       <div
         v-if="open"
-        class="checkout-card__dropdown"
+        class="dropdown"
       >
-        <div class="checkout-card__dropdown-item">
+        <div class="item">
           <div>
             <p>Adultes</p>
             <small>13 ans et plus</small>
           </div>
-          <div class="checkout-card__counter">
+          <div class="counter">
             <button
               type="button"
               aria-label="Retirer un adulte"
@@ -67,12 +69,12 @@ onClickOutside(guestsLayer, () => emit('close'))
           </div>
         </div>
 
-        <div class="checkout-card__dropdown-item">
+        <div class="item">
           <div>
             <p>Enfants</p>
             <small>2 à 12 ans</small>
           </div>
-          <div class="checkout-card__counter">
+          <div class="counter">
             <button
               type="button"
               aria-label="Retirer un enfant"
@@ -92,12 +94,12 @@ onClickOutside(guestsLayer, () => emit('close'))
           </div>
         </div>
 
-        <div class="checkout-card__dropdown-item">
+        <div class="item">
           <div>
             <p>Bébés</p>
             <small>Moins de 2 ans</small>
           </div>
-          <div class="checkout-card__counter">
+          <div class="counter">
             <button
               type="button"
               aria-label="Retirer un bébé"
@@ -117,12 +119,12 @@ onClickOutside(guestsLayer, () => emit('close'))
           </div>
         </div>
 
-        <div class="checkout-card__dropdown-item">
+        <div class="item">
           <div>
             <p>Animaux</p>
             <small>Chien, chat...</small>
           </div>
-          <div class="checkout-card__counter">
+          <div class="counter">
             <button
               type="button"
               aria-label="Retirer un animal"
@@ -142,12 +144,12 @@ onClickOutside(guestsLayer, () => emit('close'))
           </div>
         </div>
 
-        <div class="checkout-card__dropdown-item">
+        <div class="item">
           <div>
             <p>Personnes PMR</p>
             <small>Besoin d'aménagement</small>
           </div>
-          <div class="checkout-card__counter">
+          <div class="counter">
             <button
               type="button"
               aria-label="Retirer une personne PMR"

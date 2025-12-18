@@ -23,20 +23,41 @@ const heading = computed(() => props.staticContent.map || props.staticContent.fe
 </script>
 
 <template>
-  <div class="map-listing__comp">
+  <section class="listing-map">
     <h2>
       {{ heading }}
     </h2>
     <iframe
-      class="map-frame"
+      class="frame"
       :src="mapSrc"
       loading="lazy"
       referrerpolicy="no-referrer-when-downgrade"
     >
     </iframe>
-  </div>
+  </section>
 </template>
 
 <style lang="scss">
-@use '@/views/ListingView/components/ListingCore/components/Map/map.scss';
+/* File: src/views/ListingView/components/ListingCore/components/Map/map.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+
+.listing-map {
+
+  > h2 {
+    margin-bottom: var(--spacing-md) !important;
+    @include h2-title($gradiant: true);
+  }
+
+  > .frame {
+    width: 100%;
+    max-width: 100%;
+    height: 20vh;
+    border: 0;
+    border-radius: 12px;
+    // overflow: hidden;
+  }
+}
+
 </style>

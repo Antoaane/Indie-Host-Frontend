@@ -50,7 +50,10 @@ watch(listingKey, () => {
 </script>
 
 <template>
-  <main id="listing-page">
+  <main
+    id="listing-page"
+    class="listing"
+  >
     <div class="sub-container">
       <ListingView
         v-if="rawListing"
@@ -67,5 +70,25 @@ watch(listingKey, () => {
 </template>
 
 <style lang="scss">
-@use '@/views/Listing/listing.scss';
+/* File: src/views/Listing/listing.scss */
+
+@use '@/styles/variables/globals' as *;
+
+.listing#listing-page {
+  height: 100vh;
+
+  @include min-width(lg) {
+    padding-top: $nav-height;
+    height: calc(100vh - $nav-height);
+    overflow: hidden;
+  }
+
+  > .sub-container {
+    height: 100vh;
+
+    @include min-width(lg) {
+      height: calc(100vh - $nav-height);
+    }
+  }
+}
 </style>

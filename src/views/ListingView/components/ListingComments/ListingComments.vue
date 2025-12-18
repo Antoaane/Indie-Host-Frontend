@@ -290,9 +290,12 @@ const swiperParams = computed(
 </script>
 
 <template>
-  <section id="listing-comments">
-    <div>
-      <div class="listing-comments__header">
+  <section
+    id="listing-comments"
+    class="listing-comments"
+  >
+    <div class="top">
+      <div class="header">
         <h2
           v-if="!vp.lg.value"
           v-html="`${content.title} — ${countLabel}`"
@@ -308,10 +311,10 @@ const swiperParams = computed(
       </div>
     </div>
 
-    <div class="listing-comments__scroll-container">
+    <div class="scroll">
       <div
         v-if="previewComments.length"
-        class="listing-comments__list"
+        class="list"
       >
         <CommentCard
           v-if="vp.lg.value"
@@ -343,7 +346,7 @@ const swiperParams = computed(
       </div>
     </div>
 
-    <div class="listing-comments__more">
+    <div class="more">
       <div>
         <button
           type="button"
@@ -358,14 +361,14 @@ const swiperParams = computed(
     <Transition name="listing-comments-overlay">
       <div
         v-if="isOverlayOpen"
-        class="listing-comments__overlay"
+        class="overlay"
         role="dialog"
         aria-modal="true"
         @click.self="closeOverlay"
       >
-        <div class="listing-comments__overlay-panel">
-          <div class="listing-comments__overlay-header">
-            <div class="listing-comments__overlay-close">
+        <div class="panel">
+          <div class="header">
+            <div class="close">
               <button
                 type="button"
                 @click="closeOverlay"
@@ -375,9 +378,9 @@ const swiperParams = computed(
             </div>
           </div>
 
-          <div class="listing-comments__overlay-body">
-            <div class="listing-comments__overlay-summary">
-              <div class="summary_container">
+          <div class="body">
+            <div class="summary">
+              <div class="summary-container">
                 <h2 v-html="`${content.title} — ${countLabel}`" />
                 <SummaryCard
                   v-if="hasData"
@@ -398,7 +401,7 @@ const swiperParams = computed(
 
             <div
               ref="overlayScrollEl"
-              class="listing-comments__overlay-list"
+              class="list"
               @scroll="handleOverlayScroll"
             >
               <CommentCard

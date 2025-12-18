@@ -148,8 +148,11 @@ watch(selectedListingId, (id) => {
 </script>
 
 <template>
-  <main id="editor-page">
-    <div class="editor-layout">
+  <main
+    id="editor-page"
+    class="editor"
+  >
+    <div class="layout">
       <Transition name="editor-sidebar">
         <EditorSidebar
           v-if="selectedListingId && draft"
@@ -161,8 +164,8 @@ watch(selectedListingId, (id) => {
         />
       </Transition>
 
-      <section class="editor-stage">
-        <div class="editor-stage__content">
+      <section class="stage">
+        <div class="content">
           <Transition name="editor-stage">
             <EditorListings
               v-show="stage === 'listings'"
@@ -183,7 +186,7 @@ watch(selectedListingId, (id) => {
           </Transition>
         </div>
 
-        <footer class="editor-stage__footer">
+        <footer class="footer">
           <div
             v-if="stage === 'listings'"
             class="btn-primary__black__full"

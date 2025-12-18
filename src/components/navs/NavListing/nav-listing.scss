@@ -35,7 +35,7 @@
     @include soft-shadow();
   }
 
-  .navbar__logo {
+  > .logo {
     width: min-content;
     height: 100%;
 
@@ -47,7 +47,7 @@
 
     cursor: pointer;
 
-    &>svg {
+    > svg {
       height: 2.75rem;
 
       @include min-width(lg) {
@@ -56,11 +56,11 @@
     }
   }
 
-  .navbar__links {
+  > .links {
     display: flex;
     gap: 1.5rem;
 
-    li {
+    > li {
       @include buttons.secondary;
 
       &:first-child {
@@ -69,7 +69,7 @@
     }
   }
 
-  .navbar__mobile-toggle {
+  > .mobile-toggle {
     width: 2rem;
     height: 2rem;
 
@@ -122,7 +122,7 @@
     }
   }
 
-  .navbar__mobile-menu {
+  > .mobile-menu {
     right: 0;
     width: 100%;
 
@@ -139,7 +139,7 @@
       @include spacings(padding, top, 2);
     }
 
-    .navbar__mobile-links {
+    > .mobile-links {
       margin: 0;
       padding: 1rem 0;
 
@@ -155,7 +155,7 @@
         border-radius: borders.$rounded-lg;
       }
 
-      li {
+      > li {
         @include buttons.secondary;
 
         &:first-child {
@@ -164,4 +164,17 @@
       }
     }
   }
+}
+
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }

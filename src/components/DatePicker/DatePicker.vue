@@ -84,17 +84,17 @@ const today = todayCalendarDate()
     range
     locale="fr"
     :ui="{
-      root: 'cal-root',
-      header: 'cal-header',
-      heading: 'cal-heading',
-      body: 'cal-body',
-      grid: 'cal-grid',
-      gridRow: 'cal-gridRow',
-      gridWeekDaysRow: 'cal-gridWeekDaysRow',
-      gridBody: 'cal-gridBody',
-      headCell: 'cal-headCell',
-      cell: 'cal-cell',
-      cellTrigger: 'cal-cellTrigger',
+      root: 'date-picker',
+      header: 'header',
+      heading: 'heading',
+      body: 'body',
+      grid: 'grid',
+      gridRow: 'grid-row',
+      gridWeekDaysRow: 'weekdays-row',
+      gridBody: 'grid-body',
+      headCell: 'head-cell',
+      cell: 'cell',
+      cellTrigger: 'cell-trigger',
     }"
   />
 </template>

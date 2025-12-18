@@ -26,29 +26,41 @@ function resolveIcon(name: string) {
 </script>
 
 <template>
-  <div class="perks-listing__comp">
-    <ul>
-      <li v-for="perk in data">
+  <section class="listing-perks">
+    <ul class="list">
+      <li
+        v-for="perk in data"
+        :key="perk.name"
+        class="item"
+      >
         <component
           :is="resolveIcon(perk.icon)"
-          class="perk-icon"
+          class="icon"
           aria-hidden="true"
         />
-        <div>
-          <h3 v-html="perk.name" />
-          <p v-html="perk.description" />
+        <div class="body">
+          <h3
+            class="title"
+            v-html="perk.name"
+          />
+          <p
+            class="description"
+            v-html="perk.description"
+          />
         </div>
       </li>
     </ul>
-  </div>
+  </section>
 </template>
 
 <style lang="scss">
+/* File: src/views/ListingView/components/ListingCore/components/Perks/perks.scss */
+
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
 
-.perks-listing__comp {
-  ul {
+.listing-perks {
+  > .list {
     display: grid;
     grid-template-columns: repeat(1, 1fr);
     gap: var(--spacing-md);
@@ -57,11 +69,8 @@ function resolveIcon(name: string) {
       grid-template-columns: repeat(2, 1fr);
     }
 
-    li {
+    > .item {
       padding: var(--spacing-md);
-
-      // flex-grow: 1;
-      // flex-basis: 50%;
 
       display: flex;
       gap: var(--spacing-md);
@@ -69,7 +78,7 @@ function resolveIcon(name: string) {
       border: solid 1px $quaternary;
       border-radius: borders.$rounded-lg;
 
-      .lucide {
+      > .icon {
         margin-top: var(--spacing-xs);
 
         flex-shrink: 0;
@@ -83,16 +92,16 @@ function resolveIcon(name: string) {
         }
       }
 
-      div {
+      > .body {
         flex-shrink: 1;
 
-        h3 {
+        > .title {
           margin-bottom: var(--spacing-2xs) !important;
           font-weight: 500 !important;
           @include base-text($bigger: true);
         }
 
-        p {
+        > .description {
           opacity: 0.65;
           @include little-text($thin: false);
         }
@@ -100,4 +109,5 @@ function resolveIcon(name: string) {
     }
   }
 }
+
 </style>

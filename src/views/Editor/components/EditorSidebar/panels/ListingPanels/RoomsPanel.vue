@@ -99,16 +99,16 @@ function removeBed(index: number) {
 </script>
 
 <template>
-  <section class="editor-panel">
-    <div class="editor-panel__header">
+  <section class="editor-rooms-panel">
+    <div class="header">
       <h3>Couchages</h3>
       <p>Indiquez le nombre de couchage par pièce</p>
     </div>
 
-    <div class="editor-panel__body editor-rooms">
-      <div class="editor-rooms__row">
+    <div class="body rooms">
+      <div class="row">
         <select
-          class="editor-input editor-rooms__select"
+          class="input select"
           :value="selectedIndex"
           :disabled="!rooms.length"
           @change="selectedIndex = Number(($event.target as HTMLSelectElement).value)"
@@ -122,7 +122,7 @@ function removeBed(index: number) {
           </option>
         </select>
         <div
-          class="editor-rooms__trash"
+          class="trash"
         >
           <button
             type="button"
@@ -136,18 +136,18 @@ function removeBed(index: number) {
 
       <div
         v-if="selectedRoom"
-        class="editor-rooms__editor"
+        class="details"
       >
-        <div class="editor-rooms__row">
+        <div class="row">
           <input
-            class="editor-input"
+            class="input"
             :value="selectedRoom['room-name']"
             type="text"
             placeholder="Nom de la pièce"
             @input="updateRoom({ 'room-name': ($event.target as HTMLInputElement).value } as any)"
           />
           <select
-            class="editor-input"
+            class="input"
             :value="selectedRoom.type"
             @change="updateRoom({ type: ($event.target as HTMLSelectElement).value } as any)"
           >
@@ -159,14 +159,14 @@ function removeBed(index: number) {
           </select>
         </div>
 
-        <div class="editor-beds">
+        <div class="beds">
           <div
             v-for="(bed, idx) in selectedRoom.beds ?? []"
             :key="idx"
-            class="editor-beds__row"
+            class="row"
           >
             <select
-              class="editor-input"
+              class="input"
               :value="bed.type"
               @change="updateBed(idx, { type: ($event.target as HTMLSelectElement).value } as any)"
             >
@@ -175,15 +175,15 @@ function removeBed(index: number) {
               <option value="bunk"> Lit superposés </option>
             </select>
             <input
-              class="editor-input editor-beds__cap"
+              class="input cap"
               type="number"
               min="0"
               :value="bed.capacity"
               @input="updateBed(idx, { capacity: Number(($event.target as HTMLInputElement).value) } as any)"
             />
-            <div class="editor-stepper editor-beds__qty">
+            <div class="stepper qty">
               <div
-                class="editor-stepper__btn"
+                class="btn"
               >
                 <button
                   type="button"
@@ -193,14 +193,14 @@ function removeBed(index: number) {
                 </button>
               </div>
               <input
-                class="editor-stepper__value"
+                class="value"
                 type="number"
                 min="0"
                 :value="bed.quantity ?? 0"
                 @input="updateBed(idx, { quantity: Number(($event.target as HTMLInputElement).value) } as any)"
               />
               <div
-                class="editor-stepper__btn"
+                class="btn"
               >
                 <button
                   type="button"
@@ -211,7 +211,7 @@ function removeBed(index: number) {
               </div>
             </div>
             <div
-              class="editor-beds__remove"
+              class="remove"
             >
               <button
                 type="button"
