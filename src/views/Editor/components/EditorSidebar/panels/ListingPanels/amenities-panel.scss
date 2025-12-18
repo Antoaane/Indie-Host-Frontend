@@ -7,12 +7,12 @@
 .editor-amenities {
   display: flex;
   flex-direction: column;
-  gap: var(--gutter-spacing-xs);
+  gap: var(--spacing-xs);
 
   &__row {
     display: grid;
     grid-template-columns: 60px 1fr 40px 40px;
-    gap: var(--gutter-spacing-xs);
+    gap: var(--spacing-xs);
     align-items: center;
   }
 
@@ -47,7 +47,7 @@
     width: 40px;
     height: 40px;
 
-    & > * {
+    &>* {
       height: 100%;
       padding: 0;
       font-size: 1.1rem;
@@ -68,7 +68,7 @@
   z-index: 1000;
   display: grid;
   place-items: center;
-  padding: var(--gutter-spacing-md);
+  padding: var(--spacing-md);
   background: rgba(0, 0, 0, 0.6);
 
   &__panel {
@@ -86,8 +86,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--gutter-spacing-sm);
-    padding: var(--gutter-spacing-sm) var(--gutter-spacing-md);
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
     border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 
     h3 {
@@ -100,7 +100,7 @@
     width: 40px;
     height: 40px;
 
-    & > * {
+    &>* {
       height: 100%;
       padding: 0;
       font-size: 1.1rem;
@@ -110,14 +110,14 @@
 
   &__body {
     overflow: auto;
-    padding: var(--gutter-spacing-sm) var(--gutter-spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
     display: grid;
-    gap: var(--gutter-spacing-md);
+    gap: var(--spacing-md);
   }
 
   &__category {
     h4 {
-      margin: 0 0 var(--gutter-spacing-xs) 0;
+      margin: 0 0 var(--spacing-xs) 0;
     }
   }
 
@@ -126,14 +126,14 @@
     margin: 0;
     padding: 0;
     display: grid;
-    gap: var(--gutter-spacing-xs);
+    gap: var(--spacing-xs);
   }
 
   &__item-btn {
     @include buttons.primary($theme: light, $fullwidth: true);
     width: 100%;
 
-    & > * {
+    &>* {
       text-align: left;
     }
   }
@@ -143,7 +143,7 @@
     display: grid;
     grid-template-columns: 40px 1fr auto;
     align-items: center;
-    gap: var(--gutter-spacing-sm);
+    gap: var(--spacing-sm);
   }
 
   &__item-icon {
@@ -185,4 +185,3 @@
 .editor-amenities-overlay-leave-to {
   opacity: 0;
 }
-

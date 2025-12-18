@@ -80,7 +80,7 @@ const scoreLabel = computed(() =>
 .listing-comments__summary {
   display: flex;
   align-items: center;
-  gap: var(--gutter-spacing-md);
+  gap: var(--spacing-md);
 
   strong {
     margin-bottom: 0 !important;
@@ -90,7 +90,7 @@ const scoreLabel = computed(() =>
 
   div {
     display: flex;
-    gap: var(--gutter-spacing-2xs);
+    gap: var(--spacing-2xs);
 
     h3 {
       margin: 0 !important;

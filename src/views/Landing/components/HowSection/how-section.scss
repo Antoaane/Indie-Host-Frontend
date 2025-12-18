@@ -10,12 +10,12 @@
 
   justify-content: flex-start !important; //temp
 
-  @include gutters(padding, top, 5);
-  // @include gutters(padding, bottom, 3);
+  @include spacings(padding, top, 5);
+  // @include spacings(padding, bottom, 3);
 
   @include min-width(lg) {
-    @include gutters(padding, top, 7.5);
-    // @include gutters(padding, bottom, 5);
+    @include spacings(padding, top, 7.5);
+    // @include spacings(padding, bottom, 5);
   }
 
   // @include min-width(lg) {
@@ -40,10 +40,10 @@
     z-index: -1;
 
     transform-origin: top center;
-    transform: translate(-50%, var(--gutter-spacing-sm)) scaleX(-1) scaleY(1.5) rotate(3.5deg);
+    transform: translate(-50%, var(--spacing-sm)) scaleX(-1) scaleY(1.5) rotate(3.5deg);
 
     @include min-width(lg) {
-      transform: translate(-50%, calc(var(--gutter-spacing) * 5)) scaleX(-1) scaleY(0.6) rotate(10deg);
+      transform: translate(-50%, calc(var(--spacing) * 5)) scaleX(-1) scaleY(0.6) rotate(10deg);
     }
   }
 
@@ -53,7 +53,7 @@
     align-items: center;
     gap: 2rem;
 
-    @include gutters(padding, inline, 2);
+    @include spacings(padding, inline, 2);
 
     @include min-width(lg) {
       flex-direction: row;
@@ -115,7 +115,7 @@
           @include lp-h2-title($accent, false, true, false);
 
           @include min-width(lg) {
-            @include gutters(padding, inline);
+            @include spacings(padding, inline);
           }
         }
 
@@ -129,7 +129,7 @@
           .customization-image {
             width: 100%;
             max-height: 80vh;
-            padding: var(--gutter-spacing-4xl) 0;
+            padding: var(--spacing-4xl) 0;
             object-fit: contain;
 
             @include halo(lg, true, black, 0.5);
@@ -143,7 +143,7 @@
 
           @include min-width(lg) {
             text-align: left;
-            @include gutters(padding, inline);
+            @include spacings(padding, inline);
           }
         }
       }
@@ -154,7 +154,7 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      gap: var(--gutter-spacing-md);
+      gap: var(--spacing-md);
 
       padding-top: 2rem;
       padding-bottom: 2rem;

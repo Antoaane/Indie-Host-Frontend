@@ -12,7 +12,7 @@ html:has(#listing-core) {
 
   display: flex;
   flex-direction: column;
-  gap: calc(var(--gutter-spacing-2xl) * 2);
+  gap: calc(var(--spacing-2xl) * 2);
 
   background-color: $accent;
   border-radius: borders.$rounded-xxl;
@@ -23,13 +23,13 @@ html:has(#listing-core) {
   scrollbar-color: rgba($secondary, 0.25) $translucent;
   /* thumb | track */
 
-  @include gutters(padding, all);
+  @include spacings(padding, all);
 
   @include min-width(lg) {
     overflow: hidden;
     overflow-y: scroll;
     border-radius: borders.$rounded-lg;
-    gap: var(--gutter-spacing-2xl);
+    gap: var(--spacing-2xl);
   }
 
   /* Cible la scrollbar entière */

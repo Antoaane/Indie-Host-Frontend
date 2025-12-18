@@ -14,6 +14,7 @@ const emit = defineEmits<{
 
 <template>
   <nav class="editor-sidebar__tabs">
+    <span id="bg-selected" />
     <div
       class="editor-sidebar__tab"
       :class="{ 'is-active': props.modelValue === 'listing' }"

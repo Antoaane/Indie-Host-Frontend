@@ -8,7 +8,7 @@
 .editor-gallery {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--gutter-spacing-xs);
+  gap: var(--spacing-xs);
 
   &__tile {
     @include buttons.primary($theme: light, $padding: false);
@@ -17,7 +17,7 @@
     aspect-ratio: 1 / 1;
     overflow: hidden;
 
-    & > * {
+    &>* {
       height: 100%;
       padding: 0;
       border-radius: inherit;
@@ -44,7 +44,7 @@
   }
 
   &__add {
-    & > * {
+    &>* {
       display: grid;
       place-items: center;
       font-size: 1.5rem;

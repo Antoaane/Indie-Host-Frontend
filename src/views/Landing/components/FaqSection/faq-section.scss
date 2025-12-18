@@ -9,7 +9,7 @@
   h2 {
     text-align: center;
     @include lp-h2-title($accent, false);
-    @include gutters(margin, bottom, 3);
+    @include spacings(margin, bottom, 3);
   }
 
   .faq-search {
@@ -30,7 +30,7 @@
     background-color: rgba($accent, 0.1);
 
     transform: translateY(-0.5rem);
-    @include gutters(padding, bottom, 0.25);
+    @include spacings(padding, bottom, 0.25);
 
     li {
       padding: 0.5rem 0.75rem;

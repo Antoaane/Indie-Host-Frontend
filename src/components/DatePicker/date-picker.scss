@@ -56,7 +56,7 @@
   .cal-body {
     border-radius: borders.$rounded-lg;
 
-    @include gutters(padding, all, 0.75);
+    @include spacings(padding, all, 0.75);
     @include big-shadow();
 
     table.cal-grid {
@@ -65,7 +65,7 @@
         tr.cal-gridWeekDaysRow {
           padding-bottom: 0.25rem;
           margin-bottom: 0.25rem;
-          gap: calc(var(--gutter-spacing) / 4);
+          gap: calc(var(--spacing) / 4);
 
           border-bottom: 1px solid rgba($secondary, 0.1);
 

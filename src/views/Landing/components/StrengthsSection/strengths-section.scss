@@ -6,10 +6,10 @@
 #strengths-section {
   position: relative;
 
-  @include gutters(padding, top, 4);
+  @include spacings(padding, top, 4);
 
   @include min-width(lg) {
-    @include gutters(padding, top, 6.5);
+    @include spacings(padding, top, 6.5);
   }
 
   .shapes-bg-circle {
@@ -33,7 +33,7 @@
 
     gap: 2.5rem;
 
-    @include gutters(padding, inline, 1.25);
+    @include spacings(padding, inline, 1.25);
 
     @include min-width(lg) {
       gap: 5rem;

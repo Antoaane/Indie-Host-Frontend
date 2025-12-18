@@ -64,7 +64,7 @@ function patchCore(patch: Partial<RawCore>) {
   &__row {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--gutter-spacing-xs);
+    gap: var(--spacing-xs);
   }
 }
 </style>

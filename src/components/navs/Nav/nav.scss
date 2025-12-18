@@ -19,8 +19,8 @@
   // background-color: lighten($quinary, 10%);
   background-color: $accent;
 
-  @include gutters(padding, left, 1);
-  @include gutters(padding, right, 1.5);
+  @include spacings(padding, left, 1);
+  @include spacings(padding, right, 1.5);
 
   @include halo();
 
@@ -152,16 +152,16 @@
     width: 100%;
 
     position: absolute;
-    top: calc((var(--gutter-spacing-md) * 2) + 60px);
+    top: calc((var(--spacing-md) * 2) + 60px);
 
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 
     // @include container;
-    @include gutters(padding, inline, 0.75);
+    @include spacings(padding, inline, 0.75);
 
     @include min-width(lg) {
       @include container;
-      @include gutters(padding, top, 2);
+      @include spacings(padding, top, 2);
     }
 
     .navbar__mobile-links {

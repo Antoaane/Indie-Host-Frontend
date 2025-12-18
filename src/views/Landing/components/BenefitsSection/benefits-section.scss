@@ -5,7 +5,7 @@
 #benefits-section {
   min-height: 0 !important;
   height: 35vw !important;
-  // padding-top: calc(var(--gutter-spacing) + 55px);
+  // padding-top: calc(var(--spacing) + 55px);
   padding: 0 !important;
 
   display: flex;
@@ -13,12 +13,12 @@
   align-items: center;
   gap: 1rem;
 
-  // @include gutters(padding, bottom, 3);
+  // @include spacings(padding, bottom, 3);
 
   @include min-width(lg) {
-    // padding-top: calc(var(--gutter-spacing) + 70px);
-    @include gutters(margin, top, 3);
-    @include gutters(margin, bottom, 6);
+    // padding-top: calc(var(--spacing) + 70px);
+    @include spacings(margin, top, 3);
+    @include spacings(margin, bottom, 6);
   }
 
   .wrapper {

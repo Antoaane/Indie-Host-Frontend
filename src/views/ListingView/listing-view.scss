@@ -12,9 +12,9 @@
 
   @include min-width(lg) {
     flex-direction: row;
-    gap: var(--gutter-spacing-md);
-    @include gutters(padding, inline);
-    @include gutters(padding, bottom);
+    gap: var(--spacing-md);
+    @include spacings(padding, inline);
+    @include spacings(padding, bottom);
   }
 
   &>.gallery-container {
@@ -38,7 +38,7 @@
     flex-grow: 0;
     flex-basis: 25vw;
     flex-shrink: 0;
-    gap: var(--gutter-spacing-md);
+    gap: var(--spacing-md);
 
     display: flex;
     flex-direction: column;
@@ -52,7 +52,7 @@
   scrollbar-width: none;
 
   .core-container {
-    @include gutters(padding, inline, 0.5);
+    @include spacings(padding, inline, 0.5);
 
     &>div {
       background-color: $accent;
@@ -60,13 +60,13 @@
 
       #listing-core {
         background-color: $translucent !important;
-        @include gutters(padding, all, 1.5, $important: true);
+        @include spacings(padding, all, 1.5, $important: true);
       }
 
       #listing-comments {
         background-color: $translucent !important;
-        @include gutters(padding, inline, 1.5, $important: true);
-        @include gutters(padding, top, 1.5, $important: true);
+        @include spacings(padding, inline, 1.5, $important: true);
+        @include spacings(padding, top, 1.5, $important: true);
       }
     }
   }

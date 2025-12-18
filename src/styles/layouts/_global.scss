@@ -61,7 +61,7 @@ ul {
   margin-inline: auto;
 
   // d'abord toutes les déclarations, ensuite les mixins à @media
-  @include gutters();
+  @include spacings();
   @include container(); // toujours après les déclarations
 }
 
@@ -82,13 +82,13 @@ ul {
   justify-content: center;
   align-items: center;
 
-  @include gutters(padding, vertical, 4);
+  @include spacings(padding, vertical, 4);
 
   @include min-width(lg) {
     min-height: 100vh;
     margin-bottom: 0;
-    padding-top: calc(var(--gutter-spacing) + 70px);
-    @include gutters(padding, bottom, 2);
+    padding-top: calc(var(--spacing) + 70px);
+    @include spacings(padding, bottom, 2);
   }
 }
 

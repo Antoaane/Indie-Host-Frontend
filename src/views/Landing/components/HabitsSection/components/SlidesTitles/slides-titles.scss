@@ -16,7 +16,7 @@
     position: relative;
     z-index: 1;
 
-    @include gutters(padding, inline, 2);
+    @include spacings(padding, inline, 2);
 
     @include min-width(lg) {
       width: 50%;

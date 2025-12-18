@@ -52,7 +52,7 @@ $breakpoints: (
   }
 }
 
-@function get-gutter($multiple: 1) {
+@function get-spacing($multiple: 1) {
   // @return (base: (calc(0.75rem * #{$multiple})),
   //   md: (calc(1rem * #{$multiple})),
   //   lg: (calc(1.25rem * #{$multiple})),
@@ -64,27 +64,27 @@ $breakpoints: (
     xxl: (calc(1.5rem * #{$multiple})));
 }
 
-$gutter: get-gutter();
+$spacing: get-spacing();
 
-$gter-xxs-mltpler : 0.15;
-$gter-xs-mltpler : 0.25;
-$gter-sm-mltpler : 0.5;
-$gter-md-mltpler : 0.75;
-$gter-xl-mltpler : 1.25;
-$gter-2xl-mltpler : 1.5;
-$gter-3xl-mltpler : 1.75;
-$gter-4xl-mltpler : 2;
+$spc-xxs-mltpler : 0.15;
+$spc-xs-mltpler : 0.25;
+$spc-sm-mltpler : 0.5;
+$spc-md-mltpler : 0.75;
+$spc-xl-mltpler : 1.25;
+$spc-2xl-mltpler : 1.5;
+$spc-3xl-mltpler : 1.75;
+$spc-4xl-mltpler : 2;
 
 :root {
-  --gutter-spacing-2xs: calc(#{map.get($gutter, base)} * #{$gter-xxs-mltpler});
-  --gutter-spacing-xs: calc(#{map.get($gutter, base)} * #{$gter-xs-mltpler});
-  --gutter-spacing-sm: calc(#{map.get($gutter, base)} * #{$gter-sm-mltpler});
-  --gutter-spacing-md: calc(#{map.get($gutter, base)} * #{$gter-md-mltpler});
-  --gutter-spacing: #{map.get($gutter, base)};
-  --gutter-spacing-xl: calc(#{map.get($gutter, base)} * #{$gter-xl-mltpler});
-  --gutter-spacing-2xl: calc(#{map.get($gutter, base)} * #{$gter-2xl-mltpler});
-  --gutter-spacing-3xl: calc(#{map.get($gutter, base)} * #{$gter-3xl-mltpler});
-  --gutter-spacing-4xl: calc(#{map.get($gutter, base)} * #{$gter-4xl-mltpler});
+  --spacing-2xs: calc(#{map.get($spacing, base)} * #{$spc-xxs-mltpler});
+  --spacing-xs: calc(#{map.get($spacing, base)} * #{$spc-xs-mltpler});
+  --spacing-sm: calc(#{map.get($spacing, base)} * #{$spc-sm-mltpler});
+  --spacing-md: calc(#{map.get($spacing, base)} * #{$spc-md-mltpler});
+  --spacing: #{map.get($spacing, base)};
+  --spacing-xl: calc(#{map.get($spacing, base)} * #{$spc-xl-mltpler});
+  --spacing-2xl: calc(#{map.get($spacing, base)} * #{$spc-2xl-mltpler});
+  --spacing-3xl: calc(#{map.get($spacing, base)} * #{$spc-3xl-mltpler});
+  --spacing-4xl: calc(#{map.get($spacing, base)} * #{$spc-4xl-mltpler});
   --container-size: #{map.get($max-widths, xxs)};
 }
 
@@ -109,30 +109,30 @@ $gter-4xl-mltpler : 2;
 @include min-width(md) {
   :root {
     --container-size: #{map.get($max-widths, md)};
-    --gutter-spacing-2xs: calc(#{map.get($gutter, md)} * #{$gter-xxs-mltpler});
-    --gutter-spacing-xs: calc(#{map.get($gutter, md)} * #{$gter-xs-mltpler});
-    --gutter-spacing-sm: calc(#{map.get($gutter, md)} * #{$gter-sm-mltpler});
-    --gutter-spacing-md: calc(#{map.get($gutter, md)} * #{$gter-md-mltpler});
-    --gutter-spacing: #{map.get($gutter, md)};
-    --gutter-spacing-xl: calc(#{map.get($gutter, md)} * #{$gter-xl-mltpler});
-    --gutter-spacing-2xl: calc(#{map.get($gutter, md)} * #{$gter-2xl-mltpler});
-    --gutter-spacing-3xl: calc(#{map.get($gutter, md)} * #{$gter-3xl-mltpler});
-    --gutter-spacing-4xl: calc(#{map.get($gutter, md)} * #{$gter-4xl-mltpler});
+    --spacing-2xs: calc(#{map.get($spacing, md)} * #{$spc-xxs-mltpler});
+    --spacing-xs: calc(#{map.get($spacing, md)} * #{$spc-xs-mltpler});
+    --spacing-sm: calc(#{map.get($spacing, md)} * #{$spc-sm-mltpler});
+    --spacing-md: calc(#{map.get($spacing, md)} * #{$spc-md-mltpler});
+    --spacing: #{map.get($spacing, md)};
+    --spacing-xl: calc(#{map.get($spacing, md)} * #{$spc-xl-mltpler});
+    --spacing-2xl: calc(#{map.get($spacing, md)} * #{$spc-2xl-mltpler});
+    --spacing-3xl: calc(#{map.get($spacing, md)} * #{$spc-3xl-mltpler});
+    --spacing-4xl: calc(#{map.get($spacing, md)} * #{$spc-4xl-mltpler});
   }
 }
 
 @include min-width(lg) {
   :root {
     --container-size: #{map.get($max-widths, lg)};
-    --gutter-spacing-2xs: calc(#{map.get($gutter, lg)} * #{$gter-xxs-mltpler});
-    --gutter-spacing-xs: calc(#{map.get($gutter, lg)} * #{$gter-xs-mltpler});
-    --gutter-spacing-sm: calc(#{map.get($gutter, lg)} * #{$gter-sm-mltpler});
-    --gutter-spacing-md: calc(#{map.get($gutter, lg)} * #{$gter-md-mltpler});
-    --gutter-spacing: #{map.get($gutter, lg)};
-    --gutter-spacing-xl: calc(#{map.get($gutter, lg)} * #{$gter-xl-mltpler});
-    --gutter-spacing-2xl: calc(#{map.get($gutter, lg)} * #{$gter-2xl-mltpler});
-    --gutter-spacing-3xl: calc(#{map.get($gutter, lg)} * #{$gter-3xl-mltpler});
-    --gutter-spacing-4xl: calc(#{map.get($gutter, lg)} * #{$gter-4xl-mltpler});
+    --spacing-2xs: calc(#{map.get($spacing, lg)} * #{$spc-xxs-mltpler});
+    --spacing-xs: calc(#{map.get($spacing, lg)} * #{$spc-xs-mltpler});
+    --spacing-sm: calc(#{map.get($spacing, lg)} * #{$spc-sm-mltpler});
+    --spacing-md: calc(#{map.get($spacing, lg)} * #{$spc-md-mltpler});
+    --spacing: #{map.get($spacing, lg)};
+    --spacing-xl: calc(#{map.get($spacing, lg)} * #{$spc-xl-mltpler});
+    --spacing-2xl: calc(#{map.get($spacing, lg)} * #{$spc-2xl-mltpler});
+    --spacing-3xl: calc(#{map.get($spacing, lg)} * #{$spc-3xl-mltpler});
+    --spacing-4xl: calc(#{map.get($spacing, lg)} * #{$spc-4xl-mltpler});
   }
 }
 
@@ -145,22 +145,22 @@ $gter-4xl-mltpler : 2;
 @include min-width(xxl) {
   :root {
     --container-size: #{map.get($max-widths, xxl)};
-    --gutter-spacing-2xs: calc(#{map.get($gutter, xxl)} * #{$gter-xxs-mltpler});
-    --gutter-spacing-xs: calc(#{map.get($gutter, xxl)} * #{$gter-xs-mltpler});
-    --gutter-spacing-sm: calc(#{map.get($gutter, xxl)} * #{$gter-sm-mltpler});
-    --gutter-spacing-md: calc(#{map.get($gutter, xxl)} * #{$gter-md-mltpler});
-    --gutter-spacing: #{map.get($gutter, xxl)};
-    --gutter-spacing-xl: calc(#{map.get($gutter, xxl)} * #{$gter-xl-mltpler});
-    --gutter-spacing-2xl: calc(#{map.get($gutter, xxl)} * #{$gter-2xl-mltpler});
-    --gutter-spacing-3xl: calc(#{map.get($gutter, xxl)} * #{$gter-3xl-mltpler});
-    --gutter-spacing-4xl: calc(#{map.get($gutter, xxl)} * #{$gter-4xl-mltpler});
+    --spacing-2xs: calc(#{map.get($spacing, xxl)} * #{$spc-xxs-mltpler});
+    --spacing-xs: calc(#{map.get($spacing, xxl)} * #{$spc-xs-mltpler});
+    --spacing-sm: calc(#{map.get($spacing, xxl)} * #{$spc-sm-mltpler});
+    --spacing-md: calc(#{map.get($spacing, xxl)} * #{$spc-md-mltpler});
+    --spacing: #{map.get($spacing, xxl)};
+    --spacing-xl: calc(#{map.get($spacing, xxl)} * #{$spc-xl-mltpler});
+    --spacing-2xl: calc(#{map.get($spacing, xxl)} * #{$spc-2xl-mltpler});
+    --spacing-3xl: calc(#{map.get($spacing, xxl)} * #{$spc-3xl-mltpler});
+    --spacing-4xl: calc(#{map.get($spacing, xxl)} * #{$spc-4xl-mltpler});
   }
 }
 
-$nav-height: calc(70px + (var(--gutter-spacing) + (var(--gutter-spacing) * 0.667)));
+$nav-height: calc(70px + (var(--spacing) + (var(--spacing) * 0.667)));
 
-@mixin gutters($type: padding, $sides: inline, $multiple: 1, $important: false) {
-  $gutter-values: get-gutter($multiple);
+@mixin spacings($type: padding, $sides: inline, $multiple: 1, $important: false) {
+  $spacing-values: get-spacing($multiple);
 
   $side-map: (
     inline: (-left, -right),
@@ -176,25 +176,25 @@ $selected-sides: map.get($side-map, $sides);
 
 // Mobile First
 @each $side in $selected-sides {
-  #{$type}#{$side}: map.get($gutter-values, base) #{if($important, ' !important', '')};
+  #{$type}#{$side}: map.get($spacing-values, base) #{if($important, ' !important', '')};
 }
 
 // Media Queries
 @include min-width(md) {
   @each $side in $selected-sides {
-    #{$type}#{$side}: map.get($gutter-values, md) #{if($important, ' !important', '')};
+    #{$type}#{$side}: map.get($spacing-values, md) #{if($important, ' !important', '')};
   }
 }
 
 @include min-width(lg) {
   @each $side in $selected-sides {
-    #{$type}#{$side}: map.get($gutter-values, lg) #{if($important, ' !important', '')};
+    #{$type}#{$side}: map.get($spacing-values, lg) #{if($important, ' !important', '')};
   }
 }
 
 @include min-width(xxl) {
   @each $side in $selected-sides {
-    #{$type}#{$side}: map.get($gutter-values, xxl) #{if($important, ' !important', '')};
+    #{$type}#{$side}: map.get($spacing-values, xxl) #{if($important, ' !important', '')};
   }
 }
 }

@@ -8,16 +8,16 @@
 
 #checkout {
   // position: sticky;
-  // top: calc($nav-height + var(--gutter-spacing));
+  // top: calc($nav-height + var(--spacing));
   flex: 0 0 auto;
 }
 
 .checkout-card {
   display: flex;
   flex-direction: column;
-  gap: var(--gutter-spacing-md);
+  gap: var(--spacing-md);
 
-  padding: var(--gutter-spacing-md);
+  padding: var(--spacing-md);
 
   background: $accent;
   border-radius: borders.$rounded-xl;
@@ -28,7 +28,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: calc(var(--gutter-spacing-xs) / 2);
+  gap: calc(var(--spacing-xs) / 2);
   padding-right: 6rem;
 
   h2 {
@@ -76,12 +76,12 @@
 .checkout-card__fields {
   display: flex;
   flex-direction: column;
-  gap: var(--gutter-spacing-sm);
+  gap: var(--spacing-sm);
 
   .checkout-card__field-group {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: var(--gutter-spacing-sm);
+    gap: var(--spacing-sm);
 
     &--single {
       grid-template-columns: 1fr;
@@ -152,7 +152,7 @@
   transform: translateY(2.5rem);
 
   width: 30rem;
-  @include gutters(padding, all, 0.5);
+  @include spacings(padding, all, 0.5);
 
   background: rgba($accent, 0.5);
   backdrop-filter: blur(12px);
@@ -176,9 +176,9 @@
 
   display: flex;
   flex-direction: column;
-  gap: var(--gutter-spacing-sm);
+  gap: var(--spacing-sm);
 
-  padding: var(--gutter-spacing-sm);
+  padding: var(--spacing-sm);
   background: $accent;
   border-radius: borders.$rounded-lg;
   @include big-shadow();
@@ -188,7 +188,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--gutter-spacing-sm);
+  gap: var(--spacing-sm);
 
   p {
     margin: 0;
@@ -204,7 +204,7 @@
 .checkout-card__counter {
   display: inline-flex;
   align-items: center;
-  gap: var(--gutter-spacing-xs);
+  gap: var(--spacing-xs);
 
   button {
     width: 2rem;
@@ -242,9 +242,9 @@
 .checkout-card__summary {
   display: flex;
   flex-direction: column;
-  gap: var(--gutter-spacing-xs);
+  gap: var(--spacing-xs);
 
-  padding-top: var(--gutter-spacing-xs);
+  padding-top: var(--spacing-xs);
   border-top: 1px solid rgba($secondary, 0.08);
   overflow: hidden;
 }
@@ -266,7 +266,7 @@
 }
 
 .checkout-card__line--total {
-  margin-top: var(--gutter-spacing-sm);
+  margin-top: var(--spacing-sm);
 
   p,
   span {
@@ -278,7 +278,7 @@
 .checkout-card__cta {
   display: flex;
   flex-direction: column;
-  gap: var(--gutter-spacing-2xs);
+  gap: var(--spacing-2xs);
 
   .btn-primary__full {
     @include buttons.primary($cta: true, $fullwidth: true);
@@ -287,7 +287,7 @@
       // padding-block: 0.85rem;
       // font-weight: 600;
       // font-size: 1rem;
-      // gap: var(--gutter-spacing-xs);
+      // gap: var(--spacing-xs);
 
       &:disabled {
         opacity: 0.6;
@@ -305,7 +305,7 @@
     gap: 0.35rem;
 
     position: relative;
-    top: var(--gutter-spacing-xs);
+    top: var(--spacing-xs);
     color: rgba($secondary, 0.65);
 
     font-size: 0.75rem;
@@ -365,6 +365,6 @@
 
 @include min-width(md) {
   .checkout-card {
-    padding: var(--gutter-spacing);
+    padding: var(--spacing);
   }
 }

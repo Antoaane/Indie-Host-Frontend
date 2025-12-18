@@ -10,7 +10,7 @@
 
     text-align: center;
     @include lp-h3-title($accent);
-    @include gutters(padding, inline, 1);
+    @include spacings(padding, inline, 1);
   }
 
   p {

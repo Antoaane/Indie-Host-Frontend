@@ -46,10 +46,10 @@ const seniorityText = computed(() => {
 @use '@/styles/variables/borders' as borders;
 
 .hostprofile-listing__comp {
-  padding: var(--gutter-spacing-sm);
+  padding: var(--spacing-sm);
 
   display: flex;
-  gap: var(--gutter-spacing-md);
+  gap: var(--spacing-md);
 
   border-radius: borders.$rounded-lg;
   background-color: $accent;
@@ -71,7 +71,7 @@ const seniorityText = computed(() => {
     justify-content: center;
 
     h2 {
-      margin-bottom: var(--gutter-spacing-xs) !important;
+      margin-bottom: var(--spacing-xs) !important;
       font-weight: 500 !important;
       @include base-text($bigger: true);
     }

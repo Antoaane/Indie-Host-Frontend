@@ -8,17 +8,17 @@
 .editor-panels {
   display: flex;
   flex-direction: column;
-  gap: var(--gutter-spacing-sm);
+  gap: var(--spacing-sm);
 }
 
 .editor-panel {
-  padding: var(--gutter-spacing-sm);
+  padding: var(--spacing-sm);
   border-radius: borders.$rounded-md;
   background: $accent;
   border: 1px solid rgba($secondary, 0.06);
 
   &__header {
-    margin-bottom: var(--gutter-spacing-sm);
+    margin-bottom: var(--spacing-sm);
 
     h3 {
       margin: 0;
@@ -38,7 +38,7 @@
   &__body {
     display: flex;
     flex-direction: column;
-    gap: var(--gutter-spacing-sm);
+    gap: var(--spacing-sm);
   }
 }
 
@@ -57,7 +57,7 @@
 .editor-stepper {
   display: inline-flex;
   align-items: center;
-  gap: var(--gutter-spacing-xs);
+  gap: var(--spacing-xs);
 
   &__btn {
     @include buttons.primary($theme: black, $padding: false);

@@ -4,7 +4,7 @@
 @use '@/styles/components/buttons' as buttons;
 
 #hero-section {
-  padding-top: calc(((var(--gutter-spacing-md) * 2) + 60px) + 5vh);
+  padding-top: calc(((var(--spacing-md) * 2) + 60px) + 5vh);
   display: flex;
   position: relative;
 
@@ -17,7 +17,7 @@
     display: flex;
     flex-direction: column;
 
-    @include gutters(padding, inline, 2);
+    @include spacings(padding, inline, 2);
 
     @include min-width(lg) {
       flex-direction: row;

@@ -6,7 +6,7 @@
 .editor-rooms {
   &__row {
     display: flex;
-    gap: var(--gutter-spacing-xs);
+    gap: var(--spacing-xs);
     align-items: center;
   }
 
@@ -19,7 +19,7 @@
     width: 44px;
     height: 44px;
 
-    & > * {
+    &>* {
       height: 100%;
       padding: 0;
       font-size: 1.1rem;
@@ -30,19 +30,19 @@
   &__editor {
     display: flex;
     flex-direction: column;
-    gap: var(--gutter-spacing-sm);
+    gap: var(--spacing-sm);
   }
 }
 
 .editor-beds {
   display: flex;
   flex-direction: column;
-  gap: var(--gutter-spacing-xs);
+  gap: var(--spacing-xs);
 
   &__row {
     display: grid;
     grid-template-columns: 1fr 90px 180px 44px;
-    gap: var(--gutter-spacing-xs);
+    gap: var(--spacing-xs);
     align-items: center;
   }
 
@@ -59,7 +59,7 @@
     width: 44px;
     height: 44px;
 
-    & > * {
+    &>* {
       height: 100%;
       padding: 0;
       font-size: 1.1rem;
@@ -67,4 +67,3 @@
     }
   }
 }
-

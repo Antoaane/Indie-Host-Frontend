@@ -10,14 +10,14 @@
   background-color: $secondary;
   color: $accent;
 
-  @include gutters(padding, bottom, 2);
+  @include spacings(padding, bottom, 2);
 }
 
 .donation-page__title {
   text-align: center;
 
-  @include gutters(padding, top, 2);
-  @include gutters(padding, bottom, 1);
+  @include spacings(padding, top, 2);
+  @include spacings(padding, bottom, 1);
   @include main-title($accent, true, false);
 }
 
@@ -31,7 +31,7 @@
   gap: 0.75rem;
 
   @include container(xl);
-  @include gutters(padding, inline, 2);
+  @include spacings(padding, inline, 2);
 
   .donation-page__subtitle {
     margin: 0;
@@ -41,7 +41,7 @@
 }
 
 .donation-page__section {
-  @include gutters(padding, bottom, 4);
+  @include spacings(padding, bottom, 4);
 }
 
 .donation-page__content {
@@ -54,8 +54,8 @@
   color: $secondary;
   box-shadow: 0 32px 60px rgba(0, 0, 0, 0.25);
 
-  @include gutters(padding, all, 3);
-  @include gutters(margin, top, 3);
+  @include spacings(padding, all, 3);
+  @include spacings(margin, top, 3);
 }
 
 .donation-page__grid {

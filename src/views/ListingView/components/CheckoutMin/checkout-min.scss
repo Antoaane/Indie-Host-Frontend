@@ -8,15 +8,15 @@
 
 .listing-view footer {
   background: $secondary;
-  padding-top: var(--gutter-spacing-sm);
-  padding-bottom: var(--gutter-spacing);
+  padding-top: var(--spacing-sm);
+  padding-bottom: var(--spacing);
 
   display: flex;
   justify-content: center;
 
   position: relative;
 
-  @include gutters(padding, inline);
+  @include spacings(padding, inline);
 
   .checkout-min {
     width: 100%;
@@ -27,9 +27,9 @@
       display: grid;
       grid-template-columns: 1fr auto;
       align-items: center;
-      gap: var(--gutter-spacing-md);
+      gap: var(--spacing-md);
 
-      padding: var(--gutter-spacing-md);
+      padding: var(--spacing-md);
       background: $accent;
       border: 1px solid rgba($secondary, 0.08);
       border-radius: borders.$rounded-xl;
@@ -53,7 +53,7 @@
       min-width: 0;
       display: flex;
       align-items: center;
-      gap: var(--gutter-spacing-sm);
+      gap: var(--spacing-sm);
     }
 
     &__price {
@@ -85,7 +85,7 @@
 
       display: flex;
       align-items: center;
-      gap: var(--gutter-spacing-2xs);
+      gap: var(--spacing-2xs);
 
       color: rgba($secondary, 0.7);
       background: rgba($secondary, 0.02);
@@ -115,8 +115,8 @@
 
     &__close {
       position: absolute;
-      top: var(--gutter-spacing-md);
-      right: var(--gutter-spacing-md);
+      top: var(--spacing-md);
+      right: var(--spacing-md);
 
       border: none;
       background: $translucent;
@@ -127,7 +127,7 @@
     }
 
     &__content {
-      margin-top: var(--gutter-spacing-xs);
+      margin-top: var(--spacing-xs);
       overflow-y: auto;
       scrollbar-width: thin;
       scrollbar-color: rgba($secondary, 0.25) $translucent;
@@ -137,7 +137,7 @@
       @include little-text($color: rgba($secondary, 0.65));
       text-align: center;
 
-      padding: var(--gutter-spacing);
+      padding: var(--spacing);
       border: 1px dashed rgba($secondary, 0.15);
       border-radius: borders.$rounded-lg;
     }
@@ -170,13 +170,13 @@
   .shape-container-r {
     @extend .shape-container;
 
-    right: calc(var(--gutter-spacing-sm) - 0.5px);
+    right: calc(var(--spacing-sm) - 0.5px);
   }
 
   .shape-container-l {
     @extend .shape-container;
 
-    left: calc(var(--gutter-spacing-sm) - 0.5px);
+    left: calc(var(--spacing-sm) - 0.5px);
 
     .shape {
       transform: scaleX(-1);

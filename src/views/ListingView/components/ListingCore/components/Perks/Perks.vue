@@ -51,26 +51,26 @@ function resolveIcon(name: string) {
   ul {
     display: grid;
     grid-template-columns: repeat(1, 1fr);
-    gap: var(--gutter-spacing-md);
+    gap: var(--spacing-md);
 
     @include min-width(lg) {
       grid-template-columns: repeat(2, 1fr);
     }
 
     li {
-      padding: var(--gutter-spacing-md);
+      padding: var(--spacing-md);
 
       // flex-grow: 1;
       // flex-basis: 50%;
 
       display: flex;
-      gap: var(--gutter-spacing-md);
+      gap: var(--spacing-md);
 
       border: solid 1px $quaternary;
       border-radius: borders.$rounded-lg;
 
       .lucide {
-        margin-top: var(--gutter-spacing-xs);
+        margin-top: var(--spacing-xs);
 
         flex-shrink: 0;
         flex-basis: 2rem;
@@ -87,7 +87,7 @@ function resolveIcon(name: string) {
         flex-shrink: 1;
 
         h3 {
-          margin-bottom: var(--gutter-spacing-2xs) !important;
+          margin-bottom: var(--spacing-2xs) !important;
           font-weight: 500 !important;
           @include base-text($bigger: true);
         }

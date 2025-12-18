@@ -10,7 +10,7 @@
   }
 
   h2 {
-    margin-bottom: var(--gutter-spacing-md) !important;
+    margin-bottom: var(--spacing-md) !important;
     @include h2-title($gradiant: true);
   }
 

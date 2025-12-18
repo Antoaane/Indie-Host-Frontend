@@ -8,7 +8,7 @@
 .description-listing__comp {
 
   h2 {
-    margin-bottom: var(--gutter-spacing-md) !important;
+    margin-bottom: var(--spacing-md) !important;
     @include h2-title($gradiant: true);
   }
 
@@ -27,13 +27,13 @@
     }
 
     h3 {
-      margin-top: var(--gutter-spacing-md) !important;
+      margin-top: var(--spacing-md) !important;
       @include h4-title;
     }
   }
 
   .description__trigger {
-    margin-top: var(--gutter-spacing-sm);
+    margin-top: var(--spacing-sm);
     @include buttons.secondary($padding: false);
   }
 
@@ -44,27 +44,27 @@
 
     .display__description-blocks {
       @extend %overlay-panel;
-      @include gutters(padding, all, 2);
-      padding-bottom: calc(var(--gutter-spacing) * 2) !important;
+      @include spacings(padding, all, 2);
+      padding-bottom: calc(var(--spacing) * 2) !important;
 
       // .block {
       .display__description-full {
-        margin-bottom: var(--gutter-spacing);
+        margin-bottom: var(--spacing);
 
         h2 {
           @include h2-title;
         }
 
         h3 {
-          margin-top: var(--gutter-spacing-md) !important;
+          margin-top: var(--spacing-md) !important;
           @include h4-title;
         }
       }
 
       .close-container {
         position: absolute;
-        top: var(--gutter-spacing-md);
-        right: var(--gutter-spacing-md);
+        top: var(--spacing-md);
+        right: var(--spacing-md);
 
         .close-btn {
           @include buttons.primary($padding: false, $theme: white);

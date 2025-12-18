@@ -65,7 +65,7 @@ console.log(`${props.entries.length ? '✅' : '❌'} [DistributionList.vue](setu
   div {
     max-width: 16rem;
     display: flex;
-    gap: var(--gutter-spacing-md);
+    gap: var(--spacing-md);
 
     ul {
       display: flex;
@@ -78,7 +78,7 @@ console.log(`${props.entries.length ? '✅' : '❌'} [DistributionList.vue](setu
 
         display: flex;
         align-items: center;
-        gap: var(--gutter-spacing-sm);
+        gap: var(--spacing-sm);
 
         progress {
           width: 100%;
@@ -110,7 +110,7 @@ console.log(`${props.entries.length ? '✅' : '❌'} [DistributionList.vue](setu
           display: flex;
           align-items: center;
           justify-content: flex-end;
-          gap: var(--gutter-spacing-2xs);
+          gap: var(--spacing-2xs);
 
           @include little-text($thin: false);
 

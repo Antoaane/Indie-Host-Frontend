@@ -9,11 +9,11 @@
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
-    @include gutters(padding, vertical, 0.25);
+    @include spacings(padding, vertical, 0.25);
   }
 
   >.faq-collapse {
-    @include gutters(padding, vertical);
+    @include spacings(padding, vertical);
 
     .faq-summary {
       width: 100%;
@@ -59,7 +59,7 @@
 
   .faq-content {
     overflow: visible;
-    @include gutters(padding, inline, 1.5);
+    @include spacings(padding, inline, 1.5);
 
     ul {
       padding: 0;
@@ -74,11 +74,11 @@
         //   content: ' ';
         //   display: block;
         //   width: 0.75rem;
-        //   height: calc(50% + var(--gutter-spacing-xs));
+        //   height: calc(50% + var(--spacing-xs));
 
         //   position: absolute;
         //   left: -1.5rem;
-        //   top: calc(var(--gutter-spacing-xs) * (-1));
+        //   top: calc(var(--spacing-xs) * (-1));
 
         //   border-left: 1px solid $accent;
         //   border-bottom: 1px solid $accent;

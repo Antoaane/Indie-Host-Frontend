@@ -59,7 +59,7 @@ const bookingUrl = ref('')
   &__row {
     display: grid;
     grid-template-columns: 1fr auto;
-    gap: var(--gutter-spacing-xs);
+    gap: var(--spacing-xs);
     align-items: center;
   }
 }

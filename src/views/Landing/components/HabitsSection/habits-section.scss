@@ -6,7 +6,7 @@
 .habits-section-container {
 
   @include min-width(lg) {
-    padding-top: calc(100vh + (var(--gutter-spacing))) !important;
+    padding-top: calc(100vh + (var(--spacing))) !important;
     padding-bottom: 0 !important;
   }
 
@@ -67,7 +67,7 @@
         }
 
         @include container(xxl, 5rem);
-        @include gutters(padding, inline, 2);
+        @include spacings(padding, inline, 2);
       }
     }
 

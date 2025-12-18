@@ -9,7 +9,7 @@ footer {
 
   background-color: $accent;
 
-  @include gutters(padding, inline, 2);
+  @include spacings(padding, inline, 2);
 
   p {
     margin: 0.5rem 0 !important;

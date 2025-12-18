@@ -21,8 +21,8 @@
     flex-direction: column;
     align-items: center;
 
-    @include gutters(padding, inline, 2);
-    // @include gutters(margin, vertical, 1);
+    @include spacings(padding, inline, 2);
+    // @include spacings(margin, vertical, 1);
 
     @include min-width(lg) {
       gap: 1rem;
@@ -93,7 +93,7 @@
   }
 
   .join-section-container {
-    // @include gutters(padding, top, 2);
+    // @include spacings(padding, top, 2);
 
     box-sizing: content-box;
     overflow: hidden;
@@ -103,7 +103,7 @@
       flex-direction: column;
       align-items: center;
 
-      @include gutters(padding, inline, 2);
+      @include spacings(padding, inline, 2);
 
       @include min-width(lg) {
         gap: 4rem;
@@ -129,7 +129,7 @@
           align-items: center;
           justify-content: center;
 
-          @include gutters();
+          @include spacings();
 
           @include min-width(lg) {
             // grid-column: span 6 / span 6;
@@ -181,7 +181,7 @@
               }
 
               // @include container(xxl, 5rem);
-              // @include gutters(padding, inline, 2);
+              // @include spacings(padding, inline, 2);
             }
           }
         }

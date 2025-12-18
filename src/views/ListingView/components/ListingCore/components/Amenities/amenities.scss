@@ -8,7 +8,7 @@
 .amenities-listing__comp {
   display: flex;
   flex-direction: column;
-  gap: var(--gutter-spacing-md);
+  gap: var(--spacing-md);
 
   h2 {
     margin-bottom: 0 !important;
@@ -18,7 +18,7 @@
   .amenities-listing__preview {
     display: grid;
     grid-template-columns: repeat(1, 1fr);
-    gap: var(--gutter-spacing-sm);
+    gap: var(--spacing-sm);
 
     @include min-width(md) {
       grid-template-columns: repeat(2, 1fr);
@@ -35,9 +35,9 @@
     li {
       display: flex;
       align-items: center;
-      gap: var(--gutter-spacing-sm);
+      gap: var(--spacing-sm);
 
-      padding: var(--gutter-spacing-md);
+      padding: var(--spacing-md);
 
       border: solid 1px $quaternary;
       border-radius: borders.$rounded-lg;
@@ -67,14 +67,14 @@
 
   .amenities-overlay__panel {
     @extend %overlay-panel;
-    padding-bottom: var(--gutter-spacing-md) !important;
-    gap: var(--gutter-spacing);
+    padding-bottom: var(--spacing-md) !important;
+    gap: var(--spacing);
 
     .amenities-overlay__header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: var(--gutter-spacing-md);
+      gap: var(--spacing-md);
 
       .amenities-overlay__title {
         h2 {
@@ -91,7 +91,7 @@
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: var(--gutter-spacing);
+      gap: var(--spacing);
 
       scrollbar-width: thin;
       scrollbar-color: rgba($secondary, 0.25) $translucent;
@@ -99,7 +99,7 @@
       .amenities-overlay__category {
         display: flex;
         flex-direction: column;
-        gap: var(--gutter-spacing-sm);
+        gap: var(--spacing-sm);
 
         h3 {
           @include base-text($bigger: true, $thin: false);
@@ -107,7 +107,7 @@
 
         ul {
           display: grid;
-          gap: var(--gutter-spacing-sm);
+          gap: var(--spacing-sm);
           grid-template-columns: repeat(1, 1fr);
 
           @include min-width(md) {
@@ -116,10 +116,10 @@
 
           li {
             display: flex;
-            gap: var(--gutter-spacing-sm);
+            gap: var(--spacing-sm);
             align-items: flex-start;
 
-            padding: var(--gutter-spacing-md);
+            padding: var(--spacing-md);
 
             border: solid 1px $quaternary;
             border-radius: borders.$rounded-lg;
@@ -134,7 +134,7 @@
             .amenity-texts {
               display: flex;
               flex-direction: column;
-              gap: var(--gutter-spacing-3xs);
+              gap: var(--spacing-3xs);
 
               .amenity-name {
                 @include base-text($bigger: true, $thin: false);
