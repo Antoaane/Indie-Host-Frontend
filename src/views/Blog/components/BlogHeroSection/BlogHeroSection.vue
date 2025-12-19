@@ -3,61 +3,35 @@
 File: src/views/Blog/components/BlogHeroSection/BlogHeroSection.vue
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { getLatestPublishedArticle, PayloadApiError } from '@/services/payloadApi'
+import type { PayloadArticle, PayloadMedia } from '@/types/payload'
 
-// Interface pour l'article mis en avant
+// Interface pour l'article mis en avant (adapté à Payload)
 interface FeaturedArticle {
   id: string
   title: string
   slug: string
   excerpt?: string
-  publishedAt: string
-  image: {
+  publishedDate?: string
+  image?: {
     url: string
     alt: string
     width?: number
     height?: number
   }
-  category?: string
-  tags?: string[]
 }
 
-// Props
-interface Props {
-  article?: FeaturedArticle
-  loading?: boolean
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  loading: false,
-})
-
-// Données de démonstration (à remplacer par les vraies données de l'API)
-const defaultArticle: FeaturedArticle = {
-  id: '1',
-  title: 'Bienvenue sur le blog IndieHost',
-  slug: 'bienvenue-indiehost',
-  excerpt: 'Découvrez notre plateforme de gestion de locations saisonnières',
-  publishedAt: new Date().toISOString(),
-  image: {
-    url: 'https://placehold.co/1100x725/667eea/ffffff?text=IndieHost+Blog',
-    alt: 'Image par défaut du blog IndieHost',
-    width: 1100,
-    height: 725,
-  },
-  category: 'Actualités',
-  tags: [
-    'IndieHost',
-    'Blog',
-  ],
-}
-
-// Utiliser l'article fourni ou l'article par défaut
-const currentArticle = computed(() => props.article || defaultArticle)
+// État du composant
+const article = ref<FeaturedArticle | null>(null)
+const isLoading = ref(true)
+const error = ref<string | null>(null)
 
 // Formater la date
 const formattedDate = computed(() => {
-  const date = new Date(currentArticle.value.publishedAt)
+  if (!article.value?.publishedDate) return ''
+
+  const date = new Date(article.value.publishedDate)
   return date.toLocaleDateString('fr-FR', {
     year: 'numeric',
     month: 'long',
@@ -75,29 +49,149 @@ const handleMouseMove = (e: MouseEvent) => {
   const y = ((e.clientY - rect.top) / rect.height) * 100
   mousePosition.value = { x, y }
 }
+
+/**
+ * Transforme un article Payload en FeaturedArticle pour l'affichage
+ */
+function transformPayloadArticle(payloadArticle: PayloadArticle): FeaturedArticle {
+  // Extraire l'image si elle existe et est populée (objet, pas juste un ID)
+  let imageData: FeaturedArticle['image'] | undefined
+
+  if (
+    payloadArticle.featuredImage &&
+    typeof payloadArticle.featuredImage === 'object'
+  ) {
+    const media = payloadArticle.featuredImage as PayloadMedia
+    // Construire l'URL complète si l'URL est relative
+    let imageUrl = media.url
+    if (!imageUrl.startsWith('http')) {
+      // En développement, utilise le proxy Vite
+      // En production, utilise l'URL complète du CMS
+      imageUrl = import.meta.env.DEV
+        ? imageUrl
+        : `${import.meta.env.VITE_PAYLOAD_API_URL}${imageUrl}`
+    }
+
+    imageData = {
+      url: imageUrl,
+      alt: media.alt || payloadArticle.title,
+      width: media.width,
+      height: media.height,
+    }
+  }
+
+  return {
+    id: payloadArticle.id,
+    title: payloadArticle.title,
+    slug: payloadArticle.slug,
+    excerpt: payloadArticle.excerpt,
+    publishedDate: payloadArticle.publishedDate,
+    image: imageData,
+  }
+}
+
+/**
+ * Charge le dernier article publié depuis l'API Payload
+ */
+async function loadLatestArticle() {
+  isLoading.value = true
+  error.value = null
+
+  try {
+    const latestArticle = await getLatestPublishedArticle()
+
+    if (!latestArticle) {
+      error.value = 'Aucun article publié disponible pour le moment.'
+      article.value = null
+    } else {
+      article.value = transformPayloadArticle(latestArticle)
+    }
+  } catch (err) {
+    if (err instanceof PayloadApiError) {
+      error.value = `Erreur lors du chargement de l'article : ${err.message}`
+    } else {
+      error.value = 'Une erreur inattendue s\'est produite lors du chargement de l\'article.'
+    }
+    console.error('Erreur lors du chargement de l\'article:', err)
+    article.value = null
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// Charger l'article au montage du composant
+onMounted(() => {
+  loadLatestArticle()
+})
 </script>
 
 <template>
   <div class="blog-hero">
-    <article
-      class="blog-hero__article"
-      :data-post-id="currentArticle.id"
+    <!-- État de chargement - Skeleton loader -->
+    <div
+      v-if="isLoading"
+      class="blog-hero__skeleton"
+      aria-label="Chargement de l'article en cours"
     >
       <div class="blog-hero__inner">
         <div class="blog-hero__content">
-          <!-- Image -->
           <div class="blog-hero__image-wrap">
+            <div class="skeleton skeleton--image"></div>
+          </div>
+          <div class="blog-hero__text-wrap">
+            <div class="skeleton skeleton--title"></div>
+            <div class="skeleton skeleton--excerpt"></div>
+            <div class="skeleton skeleton--excerpt"></div>
+            <div class="skeleton skeleton--button"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- État d'erreur -->
+    <div
+      v-else-if="error"
+      class="blog-hero__error"
+      role="alert"
+    >
+      <div class="blog-hero__inner">
+        <div class="blog-hero__error-content">
+          <h2 class="blog-hero__error-title">Impossible de charger l'article</h2>
+          <p class="blog-hero__error-message">{{ error }}</p>
+          <button
+            class="blog-hero__retry-button btn btn--gradient"
+            @click="loadLatestArticle"
+          >
+            <span class="btn__text">Réessayer</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Article chargé avec succès -->
+    <article
+      v-else-if="article"
+      class="blog-hero__article"
+      :data-post-id="article.id"
+    >
+      <div class="blog-hero__inner">
+        <div class="blog-hero__content">
+          <!-- Image (affichée uniquement si présente) -->
+          <div
+            v-if="article.image"
+            class="blog-hero__image-wrap"
+          >
             <div class="blog-hero__image-container">
               <a
-                :href="`/blog/${currentArticle.slug}`"
+                :href="`/blog/${article.slug}`"
                 class="blog-hero__image-link"
                 tabindex="-1"
               >
                 <img
-                  :src="currentArticle.image.url"
-                  :alt="currentArticle.image.alt"
-                  :width="currentArticle.image.width"
-                  :height="currentArticle.image.height"
+                  :src="article.image.url"
+                  :alt="article.image.alt"
+                  :width="article.image.width"
+                  :height="article.image.height"
                   class="blog-hero__image"
                   loading="eager"
                 />
@@ -110,22 +204,32 @@ const handleMouseMove = (e: MouseEvent) => {
             <!-- Titre -->
             <h2 class="blog-hero__title">
               <a
-                :href="`/blog/${currentArticle.slug}`"
+                :href="`/blog/${article.slug}`"
                 class="blog-hero__title-link"
               >
-                {{ currentArticle.title }}
+                {{ article.title }}
               </a>
             </h2>
+
+            <!-- Date de publication -->
             <div
-              v-if="currentArticle.excerpt"
+              v-if="formattedDate"
+              class="blog-hero__date"
+            >
+              <time :datetime="article.publishedDate">{{ formattedDate }}</time>
+            </div>
+
+            <!-- Extrait -->
+            <div
+              v-if="article.excerpt"
               class="blog-hero__excerpt"
             >
-              <p>{{ currentArticle.excerpt }}</p>
+              <p>{{ article.excerpt }}</p>
             </div>
 
             <!-- Bouton CTA -->
             <a
-              :href="`/blog/${currentArticle.slug}`"
+              :href="`/blog/${article.slug}`"
               class="blog-hero__cta btn btn--gradient"
               @mousemove="handleMouseMove"
             >

@@ -177,9 +177,90 @@
       z-index: 2;
     }
   }
+
+  // État d'erreur
+  &__error {
+    width: 100%;
+    padding: 3rem 1rem;
+    text-align: center;
+  }
+
+  &__error-content {
+    max-width: 600px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: center;
+  }
+
+  &__error-title {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 700;
+    color: $tertiary;
+    margin: 0;
+  }
+
+  &__error-message {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: rgba($secondary, 0.8);
+    margin: 0;
+  }
+
+  &__retry-button {
+    margin-top: 1rem;
+  }
+
+  // Skeleton loader
+  &__skeleton {
+    width: 100%;
+  }
 }
 
-// Animations d'apparition
+// Styles pour les éléments skeleton
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba($secondary, 0.08) 0%,
+    rgba($secondary, 0.15) 50%,
+    rgba($secondary, 0.08) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+  border-radius: borders.$rounded;
+
+  &--image {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    border-radius: borders.$rounded-lg;
+  }
+
+  &--title {
+    height: 3rem;
+    width: 80%;
+    margin-bottom: 1rem;
+  }
+
+  &--excerpt {
+    height: 1.5rem;
+    width: 100%;
+    margin-bottom: 0.75rem;
+
+    &:last-of-type {
+      width: 60%;
+    }
+  }
+
+  &--button {
+    height: 3rem;
+    width: 150px;
+    margin-top: 1rem;
+    border-radius: borders.$rounded;
+  }
+}
+
+// Animations
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -189,6 +270,16 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
   }
 }
 

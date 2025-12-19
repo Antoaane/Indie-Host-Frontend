@@ -30,6 +30,13 @@ export default defineConfig({
   },
   server: {
     host: true,
-    port: 5179
+    port: 5179,
+    proxy: {
+      '/api': {
+        target: 'http://193.168.146.217:3000',
+        changeOrigin: true,
+        secure: false,
+      }
+    }
   },
 })
