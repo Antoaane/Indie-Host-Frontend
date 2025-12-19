@@ -162,3 +162,87 @@ export async function getPublishedArticles(
     )
   }
 }
+
+/**
+ * Récupère les articles épinglés et en sélectionne 4 aléatoirement
+ * Filtre uniquement les articles publiés avec isPinned=true
+ *
+ * @returns Un tableau de 4 articles épinglés sélectionnés aléatoirement (ou moins si pas assez disponibles)
+ * @throws {PayloadApiError} Si la requête échoue
+ */
+export async function getPinnedArticles(): Promise<PayloadArticle[]> {
+  if (!import.meta.env.DEV && !PAYLOAD_API_URL) {
+    throw new PayloadApiError(
+      'L\'URL de l\'API Payload n\'est pas configurée',
+      0,
+      'Configuration manquante'
+    )
+  }
+
+  try {
+    // Récupère tous les articles épinglés et publiés sans limite
+    // where[pinned][equals]=true : seulement les articles épinglés
+    // Note: On filtre uniquement sur pinned, pas sur _status car le 400 indique un problème avec ce filtre
+    const url = `${PAYLOAD_API_URL}/api/articles?where[pinned][equals]=true&limit=100`
+
+    console.log('🌐 [payloadApi] URL de la requête:', url)
+    console.log('🔧 [payloadApi] PAYLOAD_API_URL:', PAYLOAD_API_URL)
+    console.log('🔧 [payloadApi] DEV mode:', import.meta.env.DEV)
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    console.log('📡 [payloadApi] Réponse HTTP:', response.status, response.statusText)
+
+    if (!response.ok) {
+      throw new PayloadApiError(
+        `Erreur lors de la récupération des articles épinglés: ${response.statusText}`,
+        response.status,
+        response.statusText
+      )
+    }
+
+    const data: PayloadArticlesResponse = await response.json()
+
+    console.log('📦 [payloadApi] Données brutes reçues:', data)
+    console.log('📊 [payloadApi] Nombre total d\'articles épinglés:', data.docs?.length || 0)
+
+    if (data.docs && data.docs.length > 0) {
+      console.log('📋 [payloadApi] Premier article (exemple):', data.docs[0])
+    }
+
+    // Si aucun article épinglé, retourner un tableau vide
+    if (!data.docs || data.docs.length === 0) {
+      console.warn('⚠️ [payloadApi] Aucun article épinglé dans la réponse')
+      return []
+    }
+
+    // Sélectionner 4 articles aléatoirement (ou moins si pas assez disponibles)
+    const shuffled = [...data.docs].sort(() => Math.random() - 0.5)
+    const selected = shuffled.slice(0, 4)
+    console.log('🎲 [payloadApi] Articles sélectionnés aléatoirement:', selected.length, 'articles')
+    return selected
+  } catch (error) {
+    if (error instanceof PayloadApiError) {
+      throw error
+    }
+
+    if (error instanceof Error) {
+      throw new PayloadApiError(
+        `Erreur réseau lors de la récupération des articles épinglés: ${error.message}`,
+        0,
+        'Erreur réseau'
+      )
+    }
+
+    throw new PayloadApiError(
+      'Une erreur inconnue s\'est produite',
+      0,
+      'Erreur inconnue'
+    )
+  }
+}

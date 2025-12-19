@@ -1,3 +1,5 @@
+// File: src/types/payload.ts
+
 // Types pour l'API Payload CMS
 
 // Type pour la collection Media
@@ -46,7 +48,7 @@ export interface PayloadArticle {
   author?: PayloadAuthor | string // Peut être une relation populée ou juste un ID
   categories?: (PayloadCategory | string)[] // Peut être des relations populées ou juste des IDs
   publishedDate?: string
-  isPinned?: boolean
+  pinned?: boolean
   _status?: 'draft' | 'published'
   createdAt: string
   updatedAt: string

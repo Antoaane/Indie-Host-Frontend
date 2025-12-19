@@ -6,6 +6,7 @@ import { onMounted, onBeforeUnmount, ref } from 'vue'
 import { Search, X } from 'lucide-vue-next'
 // COMPONENTS
 import BlogHeroSection from './components/BlogHeroSection/BlogHeroSection.vue'
+import BlogPinnedSection from './components/BlogPinnedSection/BlogPinnedSection.vue'
 // UTILS
 import { sr } from '@/utils/scrollReveal'
 import detectOS from '@/utils/detectOs'
@@ -76,6 +77,8 @@ onBeforeUnmount(() => {
   >
     <div class="container__xl">
       <BlogHeroSection data-sr />
+
+      <BlogPinnedSection data-sr />
 
       <section class="blog-page__content"> </section>
     </div>
