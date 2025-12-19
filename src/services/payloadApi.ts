@@ -165,7 +165,8 @@ export async function getPublishedArticles(
 
 /**
  * Récupère les articles épinglés et en sélectionne 4 aléatoirement
- * Filtre uniquement les articles publiés avec isPinned=true
+ * Filtre uniquement les articles publiés avec pinned=true
+ * Exclut automatiquement le dernier article publié (affiché dans BlogHeroSection)
  *
  * @returns Un tableau de 4 articles épinglés sélectionnés aléatoirement (ou moins si pas assez disponibles)
  * @throws {PayloadApiError} Si la requête échoue
@@ -180,8 +181,13 @@ export async function getPinnedArticles(): Promise<PayloadArticle[]> {
   }
 
   try {
-    // TEMPORAIRE : Récupère TOUS les articles pour voir leur structure
-    // On filtrera côté client
+    // Récupérer d'abord le dernier article publié pour l'exclure
+    const latestArticle = await getLatestPublishedArticle()
+    const latestArticleId = latestArticle?.id
+
+    console.log('🔝 [payloadApi] Dernier article publié (à exclure):', latestArticleId)
+
+    // Récupère TOUS les articles pour filtrage côté client
     const url = `${PAYLOAD_API_URL}/api/articles?limit=100`
 
     console.log('🌐 [payloadApi] URL de la requête:', url)
@@ -221,20 +227,24 @@ export async function getPinnedArticles(): Promise<PayloadArticle[]> {
     }
 
     // Filtrer les articles épinglés ET publiés côté client
+    // IMPORTANT : Exclure le dernier article publié (affiché dans BlogHeroSection)
     const pinnedAndPublishedArticles = data.docs.filter(article => {
       const isPinned = article.pinned === true
       const isPublished = article.status === 'published'
+      const isNotLatestArticle = article.id !== latestArticleId
 
       console.log(`📄 Article "${article.title}":`, {
+        id: article.id,
         pinned: article.pinned,
         isPinned,
         status: article.status,
         isPublished,
-        willBeIncluded: isPinned && isPublished
+        isNotLatestArticle,
+        willBeIncluded: isPinned && isPublished && isNotLatestArticle
       })
 
-      // Filtrer sur pinned ET status='published'
-      return isPinned && isPublished
+      // Filtrer sur pinned ET status='published' ET pas le dernier article
+      return isPinned && isPublished && isNotLatestArticle
     })
 
     console.log('📋 [payloadApi] Articles épinglés ET publiés:', pinnedAndPublishedArticles.length, 'sur', data.docs.length)
