@@ -180,10 +180,9 @@ export async function getPinnedArticles(): Promise<PayloadArticle[]> {
   }
 
   try {
-    // Récupère tous les articles épinglés et publiés sans limite
-    // where[pinned][equals]=true : seulement les articles épinglés
-    // Note: On filtre uniquement sur pinned, pas sur _status car le 400 indique un problème avec ce filtre
-    const url = `${PAYLOAD_API_URL}/api/articles?where[pinned][equals]=true&limit=100`
+    // TEMPORAIRE : Récupère TOUS les articles pour voir leur structure
+    // On filtrera côté client
+    const url = `${PAYLOAD_API_URL}/api/articles?limit=100`
 
     console.log('🌐 [payloadApi] URL de la requête:', url)
     console.log('🔧 [payloadApi] PAYLOAD_API_URL:', PAYLOAD_API_URL)
@@ -215,14 +214,38 @@ export async function getPinnedArticles(): Promise<PayloadArticle[]> {
       console.log('📋 [payloadApi] Premier article (exemple):', data.docs[0])
     }
 
-    // Si aucun article épinglé, retourner un tableau vide
+    // Si aucun article, retourner un tableau vide
     if (!data.docs || data.docs.length === 0) {
-      console.warn('⚠️ [payloadApi] Aucun article épinglé dans la réponse')
+      console.warn('⚠️ [payloadApi] Aucun article dans la réponse')
+      return []
+    }
+
+    // Filtrer les articles épinglés ET publiés côté client
+    const pinnedAndPublishedArticles = data.docs.filter(article => {
+      const isPinned = article.pinned === true
+      const isPublished = article.status === 'published'
+
+      console.log(`📄 Article "${article.title}":`, {
+        pinned: article.pinned,
+        isPinned,
+        status: article.status,
+        isPublished,
+        willBeIncluded: isPinned && isPublished
+      })
+
+      // Filtrer sur pinned ET status='published'
+      return isPinned && isPublished
+    })
+
+    console.log('📋 [payloadApi] Articles épinglés ET publiés:', pinnedAndPublishedArticles.length, 'sur', data.docs.length)
+
+    if (pinnedAndPublishedArticles.length === 0) {
+      console.warn('⚠️ [payloadApi] Aucun article épinglé et publié trouvé')
       return []
     }
 
     // Sélectionner 4 articles aléatoirement (ou moins si pas assez disponibles)
-    const shuffled = [...data.docs].sort(() => Math.random() - 0.5)
+    const shuffled = [...pinnedAndPublishedArticles].sort(() => Math.random() - 0.5)
     const selected = shuffled.slice(0, 4)
     console.log('🎲 [payloadApi] Articles sélectionnés aléatoirement:', selected.length, 'articles')
     return selected

@@ -31,7 +31,7 @@
     margin: 0;
     font-size: clamp(1.5rem, 3vw, 2rem);
     font-weight: 600;
-    color: $tertiary;
+    color: $accent;
     // text-transform: uppercase;
     letter-spacing: 0.05em;
   }
@@ -110,7 +110,7 @@
     font-size: 1.125rem;
     font-weight: 600;
     line-height: 1.4;
-    color: $tertiary;
+    color: $accent;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     line-clamp: 2;
@@ -127,6 +127,7 @@
 
     time {
       display: inline-block;
+      color: $accent;
     }
   }
 

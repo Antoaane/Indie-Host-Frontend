@@ -49,7 +49,7 @@ export interface PayloadArticle {
   categories?: (PayloadCategory | string)[] // Peut être des relations populées ou juste des IDs
   publishedDate?: string
   pinned?: boolean
-  _status?: 'draft' | 'published'
+  status?: 'draft' | 'published'
   createdAt: string
   updatedAt: string
 }
