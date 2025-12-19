@@ -46,7 +46,7 @@ export interface PayloadArticle {
   content?: any // Lexical/Slate rich text - structure complexe
   featuredImage?: PayloadMedia | string // Peut être une relation populée ou juste un ID
   author?: PayloadAuthor | string // Peut être une relation populée ou juste un ID
-  categories?: (PayloadCategory | string)[] // Peut être des relations populées ou juste des IDs
+  category?: (PayloadCategory | string)[] // Peut être des relations populées ou juste des IDs
   publishedDate?: string
   pinned?: boolean
   status?: 'draft' | 'published'

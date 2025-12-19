@@ -45,9 +45,15 @@
     position: relative;
     overflow: hidden;
     border-radius: borders.$rounded-lg;
+    border: 2px solid rgba($accent, 0.35);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
     @include animations.transition;
 
+    &:hover {
+      border-color: $accent;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15),
+                  0 0 30px rgba($accent, 0.2);
+    }
   }
 
   &__image-link {
@@ -170,11 +176,13 @@
     overflow: hidden;
     cursor: pointer;
     @include animations.transition;
-    box-shadow: 0 4px 15px rgba($secondary, 0.3);
+    box-shadow: 0 4px 15px rgba($secondary, 0.3),
+                0 0 20px rgba($accent, 0.1);
 
     &:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba($secondary, 0.4);
+      box-shadow: 0 6px 20px rgba($secondary, 0.4),
+                  0 0 35px rgba($accent, 0.25);
     }
 
     &:active {

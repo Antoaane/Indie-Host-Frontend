@@ -123,7 +123,7 @@ export async function getPublishedArticles(
   }
 
   try {
-    const url = `${PAYLOAD_API_URL}/api/articles?sort=-createdAt&limit=${limit}&page=${page}&where[_status][equals]=published`
+    const url = `${PAYLOAD_API_URL}/api/articles?sort=-createdAt&limit=${limit}&page=${page}&where[status][equals]=published&depth=2`
 
     const response = await fetch(url, {
       method: 'GET',

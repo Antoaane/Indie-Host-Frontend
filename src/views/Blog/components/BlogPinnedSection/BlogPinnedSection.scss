@@ -58,12 +58,15 @@
     border-radius: borders.$rounded-lg;
     overflow: hidden;
     background-color: rgba($secondary, 0.03);
+    border: 2px solid rgba($accent, 0.35);
     @include animations.transition;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 
     &:hover {
+      border-color: $accent;
       transform: translateY(-4px);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1),
+                  0 0 30px rgba($accent, 0.2);
 
       .blog-pinned__card-image {
         transform: scale(1.05);

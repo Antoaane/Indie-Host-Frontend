@@ -7,6 +7,7 @@ import { Search, X } from 'lucide-vue-next'
 // COMPONENTS
 import BlogHeroSection from './components/BlogHeroSection/BlogHeroSection.vue'
 import BlogPinnedSection from './components/BlogPinnedSection/BlogPinnedSection.vue'
+import BlogFullSection from './components/BlogFullSection/BlogFullSection.vue'
 // UTILS
 import { sr } from '@/utils/scrollReveal'
 import detectOS from '@/utils/detectOs'
@@ -80,7 +81,7 @@ onBeforeUnmount(() => {
 
       <BlogPinnedSection data-sr />
 
-      <section class="blog-page__content"> </section>
+      <BlogFullSection data-sr />
     </div>
 
     <!-- Search Modal -->
