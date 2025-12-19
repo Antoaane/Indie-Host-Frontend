@@ -105,6 +105,15 @@
 
   &__date {
     display: inline-block;
+    margin: 0.75rem 0 1rem 0;
+    font-size: 0.875rem;
+    color: rgba($secondary, 0.7);
+    font-weight: 500;
+
+    time {
+      display: inline-block;
+      color: $tertiary;
+    }
   }
 
   &__category {
@@ -123,7 +132,7 @@
   &__title {
     margin: 0;
     font-size: clamp(1.75rem, 4vw, 3rem);
-    font-weight: 700;
+    font-weight: 550;
     line-height: 1.2;
     color: $tertiary;
   }
@@ -220,12 +229,10 @@
 
 // Styles pour les éléments skeleton
 .skeleton {
-  background: linear-gradient(
-    90deg,
-    rgba($secondary, 0.08) 0%,
-    rgba($secondary, 0.15) 50%,
-    rgba($secondary, 0.08) 100%
-  );
+  background: linear-gradient(90deg,
+      rgba($secondary, 0.08) 0%,
+      rgba($secondary, 0.15) 50%,
+      rgba($secondary, 0.08) 100%);
   background-size: 200% 100%;
   animation: skeleton-loading 1.5s ease-in-out infinite;
   border-radius: borders.$rounded;
