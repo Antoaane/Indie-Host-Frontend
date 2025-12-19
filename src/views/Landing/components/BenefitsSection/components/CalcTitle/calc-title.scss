@@ -10,7 +10,7 @@
 
     text-align: center;
     @include lp-h3-title($accent);
-    @include spacings(padding, inline, 1);
+    @include layout-gap(padding, inline, 1);
   }
 
   p {

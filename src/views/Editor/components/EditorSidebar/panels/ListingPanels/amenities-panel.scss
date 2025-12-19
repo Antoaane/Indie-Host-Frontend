@@ -3,210 +3,308 @@
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
 @use '@/styles/components/buttons' as buttons;
+@use '@/styles/components/overlays' as overlays;
+@use '@/views/Editor/components/EditorSidebar/panels/ListingPanels/listing-panels.scss' as *;
 
 .editor-amenities-panel {
-  padding: var(--spacing-sm);
-  border-radius: borders.$rounded-md;
-  background: $accent;
-  border: 1px solid rgba($secondary, 0.06);
+  @extend %panel;
 
-  > .header {
-    margin-bottom: var(--spacing-sm);
-
-    > h3 {
-      margin: 0;
-      font-size: 1rem;
-      font-weight: 700;
-      color: $secondary;
-    }
-
-    > p {
-      margin: 0.25rem 0 0 0;
-      font-size: 0.875rem;
-      font-weight: 300;
-      color: rgba($secondary, 0.75);
-    }
+  >.header {
+    @extend %panel-header;
   }
 
-  > .body {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
+  >.body {
+    @extend %panel-body;
 
-    > .amenities {
+    >.preview {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+
       display: flex;
       flex-direction: column;
-      gap: var(--spacing-xs);
+      gap: var(--layout-gap-xs);
 
-      > .row {
-        display: grid;
-        grid-template-columns: 60px 1fr 40px 40px;
-        gap: var(--spacing-xs);
+      >.item {
+        display: flex;
         align-items: center;
+        gap: var(--layout-gap-xs);
 
-        > .icon {
-          text-align: center;
+        padding: var(--layout-gap-xs);
 
-          > .lucide {
-            width: 20px;
-            height: 20px;
-          }
+        border: solid 1px rgba($secondary, 0.08);
+        border-radius: borders.$rounded-md;
+
+        >.icon {
+          width: 18px;
+          height: 18px;
+          stroke: $secondary;
+          flex-shrink: 0;
         }
 
-        > .label {
-          display: grid;
-          gap: 2px;
-
-          > .name {
-            margin: 0;
-            font-weight: 600;
-          }
-
-          > .meta {
-            margin: 0;
-            font-size: 0.9rem;
-            opacity: 0.7;
-          }
-        }
-
-        > .pin,
-        > .remove {
-          @include buttons.primary($theme: light, $padding: false);
-          width: 40px;
-          height: 40px;
-
-          > * {
-            height: 100%;
-            padding: 0;
-            font-size: 1.1rem;
-            font-weight: 700;
-          }
-        }
-
-        > .pin {
-          &.is-active {
-            @include buttons.primary($theme: black, $padding: false);
-            width: 40px;
-            height: 40px;
-          }
+        >.name {
+          @include little-text($thin: false);
         }
       }
     }
+
+    >.empty {
+      margin: 0;
+      opacity: 0.7;
+      @include little-text($thin: false);
+    }
   }
 
-  > .overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
-    display: grid;
-    place-items: center;
-    padding: var(--spacing-md);
-    background: rgba(0, 0, 0, 0.6);
+  >.editor-amenities-overlay {
+    @extend %overlay-backdrop;
 
-    &.amenities-overlay-enter-active,
-    &.amenities-overlay-leave-active {
-      transition: opacity 150ms ease;
-    }
+    >.panel {
+      @extend %overlay-panel;
+      padding-bottom: var(--layout-gap-md) !important;
+      gap: var(--layout-gap);
 
-    &.amenities-overlay-enter-from,
-    &.amenities-overlay-leave-to {
-      opacity: 0;
-    }
-
-    > .panel {
-      width: min(720px, 100%);
-      max-height: min(80vh, 720px);
-      overflow: hidden;
-      background: #fff;
-      border-radius: borders.$rounded-lg;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
-      display: grid;
-      grid-template-rows: auto 1fr;
-
-      > .header {
+      >.header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: var(--spacing-sm);
-        padding: var(--spacing-sm) var(--spacing-md);
-        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        gap: var(--layout-gap-md);
 
-        > h3 {
-          margin: 0;
+        >.back {
+          @include buttons.primary($theme: white, $padding: false);
+          flex: 0 0 auto;
         }
 
-        > .close {
-          @include buttons.primary($theme: light, $padding: false);
-          width: 40px;
-          height: 40px;
+        >.title {
+          flex: 1 1 auto;
+          min-width: 0;
 
-          > * {
-            height: 100%;
-            padding: 0;
-            font-size: 1.1rem;
-            font-weight: 700;
+          >h2 {
+            margin: 0;
+            @include h2-title;
           }
+        }
+
+        >.close {
+          @include buttons.primary($theme: white, $padding: false);
+          flex: 0 0 auto;
         }
       }
 
-      > .body {
-        overflow: auto;
-        padding: var(--spacing-sm) var(--spacing-md);
-        display: grid;
-        gap: var(--spacing-md);
+      >.body {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
 
-        > .category {
-          > h4 {
-            margin: 0 0 var(--spacing-xs) 0;
+        display: flex;
+        flex-direction: column;
+        gap: var(--layout-gap);
+
+        scrollbar-width: thin;
+        scrollbar-color: rgba($secondary, 0.25) $translucent;
+
+        >.search {
+          position: sticky;
+          top: 0;
+          z-index: 1;
+
+          padding: var(--layout-gap-xs);
+          border-radius: borders.$rounded-lg;
+
+          background: rgba($accent, 0.9);
+
+          >input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: var(--layout-gap-xs) var(--layout-gap-sm);
+
+            border: 1px solid rgba($secondary, 0.15);
+            border-radius: borders.$rounded-lg;
+
+            background: $accent;
+            color: $secondary;
+            outline: none;
           }
 
-          > .list {
+          >input:focus {
+            border-color: rgba($secondary, 0.4);
+          }
+        }
+
+        >.empty {
+          margin: 0;
+          opacity: 0.7;
+          @include little-text($thin: false);
+        }
+
+        >.category {
+          display: flex;
+          flex-direction: column;
+          gap: var(--layout-gap-sm);
+
+          >h3 {
+            margin: 0;
+            @include base-text($bigger: true, $thin: false);
+          }
+
+          >.category-trigger {
+            width: 100%;
+            cursor: pointer;
+
+            display: flex;
+            align-items: center;
+            gap: var(--layout-gap-xs);
+
+            padding: var(--layout-gap-sm) var(--layout-gap-md);
+
+            border: 1px solid rgba($secondary, 0.12);
+            border-radius: borders.$rounded-lg;
+
+            background: rgba($accent, 0.75);
+            color: $secondary;
+
+            >.category-title {
+              flex: 1 1 auto;
+              min-width: 0;
+              text-align: left;
+              @include base-text($thin: false);
+            }
+
+            >.category-meta {
+              opacity: 0.7;
+              @include little-text($thin: false);
+            }
+
+            >.chevron {
+              flex: 0 0 auto;
+              transition: transform 180ms ease;
+
+              &.is-open {
+                transform: rotate(180deg);
+              }
+            }
+          }
+
+          >ul:not(.list) {
+            display: grid;
+            gap: var(--layout-gap-sm);
+            grid-template-columns: repeat(1, 1fr);
+
+            @include min-width(md) {
+              grid-template-columns: repeat(2, 1fr);
+            }
+
+            >.item {
+              display: flex;
+              gap: var(--layout-gap-sm);
+              align-items: flex-start;
+
+              padding: var(--layout-gap-md);
+
+              border: solid 1px $quaternary;
+              border-radius: borders.$rounded-lg;
+
+              >.icon {
+                height: 1.5rem;
+                width: 1.5rem;
+                stroke: $secondary;
+                flex-shrink: 0;
+              }
+
+              >.texts {
+                display: flex;
+                flex-direction: column;
+                gap: var(--layout-gap-3xs);
+
+                >.name {
+                  margin: 0;
+                  @include base-text($bigger: true, $thin: false);
+                }
+
+                >.description {
+                  margin: 0;
+                  opacity: 0.75;
+                  @include little-text($thin: false);
+                }
+              }
+
+              >.actions {
+                margin-left: auto;
+                display: flex;
+                align-items: center;
+                gap: var(--layout-gap-xs);
+
+                >.pin,
+                >.remove {
+                  @include buttons.primary($theme: white, $padding: false);
+                }
+
+                >.pin {
+                  >button {
+                    font-weight: 700;
+                  }
+
+                  &.is-active {
+                    @include buttons.primary($theme: black, $padding: false);
+                  }
+                }
+
+                >.remove {
+                  .lucide {
+                    width: 18px;
+                    height: 18px;
+                  }
+                }
+              }
+            }
+          }
+
+          >.list {
             list-style: none;
             margin: 0;
             padding: 0;
             display: grid;
-            gap: var(--spacing-xs);
+            gap: var(--layout-gap-xs);
 
-            > .item {
-              > .item-btn {
+            >.item {
+              >.item-btn {
                 @include buttons.primary($theme: light, $fullwidth: true);
                 width: 100%;
 
-                > * {
+                >* {
                   text-align: left;
 
-                  > .item-content {
+                  >.item-content {
                     width: 100%;
                     display: grid;
                     grid-template-columns: 40px 1fr auto;
                     align-items: center;
-                    gap: var(--spacing-sm);
+                    gap: var(--layout-gap-sm);
 
-                    > .item-icon {
+                    >.item-icon {
                       display: grid;
                       place-items: center;
 
-                      > .lucide {
+                      >.lucide {
                         width: 18px;
                         height: 18px;
                       }
                     }
 
-                    > .item-texts {
+                    >.item-texts {
                       display: grid;
                       gap: 2px;
 
-                      > .item-title {
+                      >.item-title {
                         font-weight: 600;
                       }
 
-                      > .item-desc {
+                      >.item-desc {
                         font-size: 0.9rem;
                         opacity: 0.75;
                       }
                     }
 
-                    > .item-state {
+                    >.item-state {
                       font-size: 0.85rem;
                       opacity: 0.75;
                     }
@@ -216,7 +314,13 @@
             }
           }
         }
+
+        >.cta {
+          @include buttons.primary($theme: white, $fullwidth: true);
+        }
       }
     }
   }
 }
+
+@include overlays.transition('editor-amenities-overlay');

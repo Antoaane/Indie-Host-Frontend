@@ -5,7 +5,7 @@
 
 #features-section {
   @include min-width(lg) {
-    padding-top: calc(0vh + (var(--spacing))) !important;
+    padding-top: calc(0vh + (var(--layout-gap))) !important;
     padding-bottom: 0 !important;
   }
 

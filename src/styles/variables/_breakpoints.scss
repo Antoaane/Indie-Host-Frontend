@@ -52,7 +52,7 @@ $breakpoints: (
   }
 }
 
-@function get-spacing($multiple: 1) {
+@function get-layout-gap($multiple: 1) {
   // @return (base: (calc(0.75rem * #{$multiple})),
   //   md: (calc(1rem * #{$multiple})),
   //   lg: (calc(1.25rem * #{$multiple})),
@@ -64,7 +64,7 @@ $breakpoints: (
     xxl: (calc(1.5rem * #{$multiple})));
 }
 
-$spacing: get-spacing();
+$layout-gap: get-layout-gap();
 
 $spc-xxs-mltpler : 0.15;
 $spc-xs-mltpler : 0.25;
@@ -76,15 +76,15 @@ $spc-3xl-mltpler : 1.75;
 $spc-4xl-mltpler : 2;
 
 :root {
-  --spacing-2xs: calc(#{map.get($spacing, base)} * #{$spc-xxs-mltpler});
-  --spacing-xs: calc(#{map.get($spacing, base)} * #{$spc-xs-mltpler});
-  --spacing-sm: calc(#{map.get($spacing, base)} * #{$spc-sm-mltpler});
-  --spacing-md: calc(#{map.get($spacing, base)} * #{$spc-md-mltpler});
-  --spacing: #{map.get($spacing, base)};
-  --spacing-xl: calc(#{map.get($spacing, base)} * #{$spc-xl-mltpler});
-  --spacing-2xl: calc(#{map.get($spacing, base)} * #{$spc-2xl-mltpler});
-  --spacing-3xl: calc(#{map.get($spacing, base)} * #{$spc-3xl-mltpler});
-  --spacing-4xl: calc(#{map.get($spacing, base)} * #{$spc-4xl-mltpler});
+  --layout-gap-2xs: calc(#{map.get($layout-gap, base)} * #{$spc-xxs-mltpler});
+  --layout-gap-xs: calc(#{map.get($layout-gap, base)} * #{$spc-xs-mltpler});
+  --layout-gap-sm: calc(#{map.get($layout-gap, base)} * #{$spc-sm-mltpler});
+  --layout-gap-md: calc(#{map.get($layout-gap, base)} * #{$spc-md-mltpler});
+  --layout-gap: #{map.get($layout-gap, base)};
+  --layout-gap-xl: calc(#{map.get($layout-gap, base)} * #{$spc-xl-mltpler});
+  --layout-gap-2xl: calc(#{map.get($layout-gap, base)} * #{$spc-2xl-mltpler});
+  --layout-gap-3xl: calc(#{map.get($layout-gap, base)} * #{$spc-3xl-mltpler});
+  --layout-gap-4xl: calc(#{map.get($layout-gap, base)} * #{$spc-4xl-mltpler});
   --container-size: #{map.get($max-widths, xxs)};
 }
 
@@ -109,30 +109,30 @@ $spc-4xl-mltpler : 2;
 @include min-width(md) {
   :root {
     --container-size: #{map.get($max-widths, md)};
-    --spacing-2xs: calc(#{map.get($spacing, md)} * #{$spc-xxs-mltpler});
-    --spacing-xs: calc(#{map.get($spacing, md)} * #{$spc-xs-mltpler});
-    --spacing-sm: calc(#{map.get($spacing, md)} * #{$spc-sm-mltpler});
-    --spacing-md: calc(#{map.get($spacing, md)} * #{$spc-md-mltpler});
-    --spacing: #{map.get($spacing, md)};
-    --spacing-xl: calc(#{map.get($spacing, md)} * #{$spc-xl-mltpler});
-    --spacing-2xl: calc(#{map.get($spacing, md)} * #{$spc-2xl-mltpler});
-    --spacing-3xl: calc(#{map.get($spacing, md)} * #{$spc-3xl-mltpler});
-    --spacing-4xl: calc(#{map.get($spacing, md)} * #{$spc-4xl-mltpler});
+    --layout-gap-2xs: calc(#{map.get($layout-gap, md)} * #{$spc-xxs-mltpler});
+    --layout-gap-xs: calc(#{map.get($layout-gap, md)} * #{$spc-xs-mltpler});
+    --layout-gap-sm: calc(#{map.get($layout-gap, md)} * #{$spc-sm-mltpler});
+    --layout-gap-md: calc(#{map.get($layout-gap, md)} * #{$spc-md-mltpler});
+    --layout-gap: #{map.get($layout-gap, md)};
+    --layout-gap-xl: calc(#{map.get($layout-gap, md)} * #{$spc-xl-mltpler});
+    --layout-gap-2xl: calc(#{map.get($layout-gap, md)} * #{$spc-2xl-mltpler});
+    --layout-gap-3xl: calc(#{map.get($layout-gap, md)} * #{$spc-3xl-mltpler});
+    --layout-gap-4xl: calc(#{map.get($layout-gap, md)} * #{$spc-4xl-mltpler});
   }
 }
 
 @include min-width(lg) {
   :root {
     --container-size: #{map.get($max-widths, lg)};
-    --spacing-2xs: calc(#{map.get($spacing, lg)} * #{$spc-xxs-mltpler});
-    --spacing-xs: calc(#{map.get($spacing, lg)} * #{$spc-xs-mltpler});
-    --spacing-sm: calc(#{map.get($spacing, lg)} * #{$spc-sm-mltpler});
-    --spacing-md: calc(#{map.get($spacing, lg)} * #{$spc-md-mltpler});
-    --spacing: #{map.get($spacing, lg)};
-    --spacing-xl: calc(#{map.get($spacing, lg)} * #{$spc-xl-mltpler});
-    --spacing-2xl: calc(#{map.get($spacing, lg)} * #{$spc-2xl-mltpler});
-    --spacing-3xl: calc(#{map.get($spacing, lg)} * #{$spc-3xl-mltpler});
-    --spacing-4xl: calc(#{map.get($spacing, lg)} * #{$spc-4xl-mltpler});
+    --layout-gap-2xs: calc(#{map.get($layout-gap, lg)} * #{$spc-xxs-mltpler});
+    --layout-gap-xs: calc(#{map.get($layout-gap, lg)} * #{$spc-xs-mltpler});
+    --layout-gap-sm: calc(#{map.get($layout-gap, lg)} * #{$spc-sm-mltpler});
+    --layout-gap-md: calc(#{map.get($layout-gap, lg)} * #{$spc-md-mltpler});
+    --layout-gap: #{map.get($layout-gap, lg)};
+    --layout-gap-xl: calc(#{map.get($layout-gap, lg)} * #{$spc-xl-mltpler});
+    --layout-gap-2xl: calc(#{map.get($layout-gap, lg)} * #{$spc-2xl-mltpler});
+    --layout-gap-3xl: calc(#{map.get($layout-gap, lg)} * #{$spc-3xl-mltpler});
+    --layout-gap-4xl: calc(#{map.get($layout-gap, lg)} * #{$spc-4xl-mltpler});
   }
 }
 
@@ -145,22 +145,22 @@ $spc-4xl-mltpler : 2;
 @include min-width(xxl) {
   :root {
     --container-size: #{map.get($max-widths, xxl)};
-    --spacing-2xs: calc(#{map.get($spacing, xxl)} * #{$spc-xxs-mltpler});
-    --spacing-xs: calc(#{map.get($spacing, xxl)} * #{$spc-xs-mltpler});
-    --spacing-sm: calc(#{map.get($spacing, xxl)} * #{$spc-sm-mltpler});
-    --spacing-md: calc(#{map.get($spacing, xxl)} * #{$spc-md-mltpler});
-    --spacing: #{map.get($spacing, xxl)};
-    --spacing-xl: calc(#{map.get($spacing, xxl)} * #{$spc-xl-mltpler});
-    --spacing-2xl: calc(#{map.get($spacing, xxl)} * #{$spc-2xl-mltpler});
-    --spacing-3xl: calc(#{map.get($spacing, xxl)} * #{$spc-3xl-mltpler});
-    --spacing-4xl: calc(#{map.get($spacing, xxl)} * #{$spc-4xl-mltpler});
+    --layout-gap-2xs: calc(#{map.get($layout-gap, xxl)} * #{$spc-xxs-mltpler});
+    --layout-gap-xs: calc(#{map.get($layout-gap, xxl)} * #{$spc-xs-mltpler});
+    --layout-gap-sm: calc(#{map.get($layout-gap, xxl)} * #{$spc-sm-mltpler});
+    --layout-gap-md: calc(#{map.get($layout-gap, xxl)} * #{$spc-md-mltpler});
+    --layout-gap: #{map.get($layout-gap, xxl)};
+    --layout-gap-xl: calc(#{map.get($layout-gap, xxl)} * #{$spc-xl-mltpler});
+    --layout-gap-2xl: calc(#{map.get($layout-gap, xxl)} * #{$spc-2xl-mltpler});
+    --layout-gap-3xl: calc(#{map.get($layout-gap, xxl)} * #{$spc-3xl-mltpler});
+    --layout-gap-4xl: calc(#{map.get($layout-gap, xxl)} * #{$spc-4xl-mltpler});
   }
 }
 
-$nav-height: calc(70px + (var(--spacing) + (var(--spacing) * 0.667)));
+$nav-height: calc(70px + (var(--layout-gap) + (var(--layout-gap) * 0.667)));
 
-@mixin spacings($type: padding, $sides: inline, $multiple: 1, $important: false) {
-  $spacing-values: get-spacing($multiple);
+@mixin layout-gap($type: padding, $sides: inline, $multiple: 1, $important: false) {
+  $layout-gap-values: get-layout-gap($multiple);
 
   $side-map: (
     inline: (-left, -right),
@@ -176,25 +176,25 @@ $selected-sides: map.get($side-map, $sides);
 
 // Mobile First
 @each $side in $selected-sides {
-  #{$type}#{$side}: map.get($spacing-values, base) #{if($important, ' !important', '')};
+  #{$type}#{$side}: map.get($layout-gap-values, base) #{if($important, ' !important', '')};
 }
 
 // Media Queries
 @include min-width(md) {
   @each $side in $selected-sides {
-    #{$type}#{$side}: map.get($spacing-values, md) #{if($important, ' !important', '')};
+    #{$type}#{$side}: map.get($layout-gap-values, md) #{if($important, ' !important', '')};
   }
 }
 
 @include min-width(lg) {
   @each $side in $selected-sides {
-    #{$type}#{$side}: map.get($spacing-values, lg) #{if($important, ' !important', '')};
+    #{$type}#{$side}: map.get($layout-gap-values, lg) #{if($important, ' !important', '')};
   }
 }
 
 @include min-width(xxl) {
   @each $side in $selected-sides {
-    #{$type}#{$side}: map.get($spacing-values, xxl) #{if($important, ' !important', '')};
+    #{$type}#{$side}: map.get($layout-gap-values, xxl) #{if($important, ' !important', '')};
   }
 }
 }

@@ -10,12 +10,12 @@
 
   h3 {
     @include lp-h3-title($accent, true);
-    @include spacings(margin, bottom, 0.5);
+    @include layout-gap(margin, bottom, 0.5);
   }
 
   p {
     @include base-text($accent, $bold: false, $bigger: true);
-    @include spacings(margin, bottom, 2);
+    @include layout-gap(margin, bottom, 2);
     @include container(md);
 
     a {
@@ -30,7 +30,7 @@
     gap: 1.25rem;
     width: 100%;
 
-    @include spacings(padding, bottom);
+    @include layout-gap(padding, bottom);
 
     input[type="email"] {
       width: 100%;

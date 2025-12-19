@@ -62,13 +62,5 @@ const emit = defineEmits<{
 </template>
 
 <style lang="scss">
-/* File: src/views/Editor/components/EditorSidebar/panels/ListingPanels/listing-panels.scss */
-
-@use '@/styles/variables/globals' as *;
-
-.editor-listing-panels {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
-}
+@use '@/views/Editor/components/EditorSidebar/panels/ListingPanels/listing-panels.scss';
 </style>

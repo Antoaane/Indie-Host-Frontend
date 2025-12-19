@@ -82,7 +82,7 @@ const scoreLabel = computed(() =>
 .summary-card {
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
+  gap: var(--layout-gap-md);
 
   > strong {
     margin-bottom: 0 !important;
@@ -91,7 +91,7 @@ const scoreLabel = computed(() =>
 
   > div {
     display: flex;
-    gap: var(--spacing-2xs);
+    gap: var(--layout-gap-2xs);
 
     > h3 {
       margin: 0 !important;
@@ -124,5 +124,4 @@ const scoreLabel = computed(() =>
     }
   }
 }
-
 </style>

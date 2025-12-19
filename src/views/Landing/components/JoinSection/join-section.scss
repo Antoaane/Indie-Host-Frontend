@@ -21,8 +21,8 @@
     flex-direction: column;
     align-items: center;
 
-    @include spacings(padding, inline, 2);
-    // @include spacings(margin, vertical, 1);
+    @include layout-gap(padding, inline, 2);
+    // @include layout-gap(margin, vertical, 1);
 
     @include min-width(lg) {
       gap: 1rem;
@@ -93,7 +93,7 @@
   }
 
   .join-section-container {
-    // @include spacings(padding, top, 2);
+    // @include layout-gap(padding, top, 2);
 
     box-sizing: content-box;
     overflow: hidden;
@@ -103,7 +103,7 @@
       flex-direction: column;
       align-items: center;
 
-      @include spacings(padding, inline, 2);
+      @include layout-gap(padding, inline, 2);
 
       @include min-width(lg) {
         gap: 4rem;
@@ -129,7 +129,7 @@
           align-items: center;
           justify-content: center;
 
-          @include spacings();
+          @include layout-gap();
 
           @include min-width(lg) {
             // grid-column: span 6 / span 6;
@@ -181,7 +181,7 @@
               }
 
               // @include container(xxl, 5rem);
-              // @include spacings(padding, inline, 2);
+              // @include layout-gap(padding, inline, 2);
             }
           }
         }

@@ -53,7 +53,7 @@ const disabledDates = computed<RangeISO[]>(() => (props.data?.bookedDays ?? []).
 
 .listing-availabilities {
   > h2 {
-    margin-bottom: var(--spacing-md) !important;
+    margin-bottom: var(--layout-gap-md) !important;
     @include h2-title($gradiant: true);
   }
 

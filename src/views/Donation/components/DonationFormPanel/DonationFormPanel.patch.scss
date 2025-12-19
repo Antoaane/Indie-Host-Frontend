@@ -13,7 +13,7 @@
   position: relative;
   isolation: isolate;
 
-  @include spacings(padding, all, 2);
+  @include layout-gap(padding, all, 2);
 
   @include min-width(md) {
     position: sticky;

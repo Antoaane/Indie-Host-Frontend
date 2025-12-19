@@ -10,14 +10,14 @@
   width: 100%;
   max-width: 760px;
 
-  > .bar {
+  >.bar {
     width: 100%;
     display: grid;
     grid-template-columns: 1fr auto;
     align-items: center;
-    gap: var(--spacing-md);
+    gap: var(--layout-gap-md);
 
-    padding: var(--spacing-md);
+    padding: var(--layout-gap-md);
     background: $accent;
     border: 1px solid rgba($secondary, 0.08);
     border-radius: borders.$rounded-xl;
@@ -36,14 +36,14 @@
       outline-offset: 3px;
     }
 
-    > .info {
+    >.info {
       min-width: 0;
       display: flex;
       align-items: center;
-      gap: var(--spacing-sm);
+      gap: var(--layout-gap-sm);
     }
 
-    > .info > .price {
+    >.info>.price {
       flex-grow: 1;
       flex-shrink: 0;
       padding: 0.6rem 0.8rem;
@@ -54,36 +54,36 @@
       background: rgba($secondary, 0.04);
       border-radius: borders.$rounded-md;
 
-      > .amount {
+      >.amount {
         @include base-text($thin: false);
         font-weight: 800;
         white-space: nowrap;
       }
 
-      > small {
+      >small {
         @include little-text($color: rgba($secondary, 0.65));
       }
     }
 
-    > .cta {
+    >.cta {
       @include buttons.primary($cta: true, $fullwidth: true);
     }
   }
 }
 
 .listing-view {
-  > .footer {
-    > .overlay {
+  >.footer {
+    >.overlay {
       z-index: 9999;
       @extend %overlay-backdrop;
 
-      > .panel {
+      >.panel {
         @extend %overlay-panel;
 
-        > .close {
+        >.close {
           position: absolute;
-          top: var(--spacing-md);
-          right: var(--spacing-md);
+          top: var(--layout-gap-md);
+          right: var(--layout-gap-md);
 
           border: none;
           background: $translucent;
@@ -93,18 +93,18 @@
           padding: 0.5rem;
         }
 
-        > .content {
-          margin-top: var(--spacing-xs);
+        >.content {
+          margin-top: var(--layout-gap-xs);
           overflow-y: auto;
           scrollbar-width: thin;
           scrollbar-color: rgba($secondary, 0.25) $translucent;
         }
 
-        > .content > .placeholder {
+        >.content>.placeholder {
           @include little-text($color: rgba($secondary, 0.65));
           text-align: center;
 
-          padding: var(--spacing);
+          padding: var(--layout-gap);
           border: 1px dashed rgba($secondary, 0.15);
           border-radius: borders.$rounded-lg;
         }

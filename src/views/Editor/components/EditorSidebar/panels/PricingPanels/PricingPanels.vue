@@ -1,9 +1,7 @@
 <!-- File: src/views/Editor/components/EditorSidebar/panels/PricingPanels/PricingPanels.vue -->
 
 <template>
-  <div class="editor-pricing-panels">
-    Section en cours de construction.
-  </div>
+  <div class="editor-pricing-panels"> Section en cours de construction. </div>
 </template>
 
 <style lang="scss">
@@ -13,7 +11,7 @@
 @use '@/styles/variables/borders' as borders;
 
 .editor-pricing-panels {
-  padding: var(--spacing-md);
+  padding: var(--layout-gap-md);
   border-radius: borders.$rounded-xl;
   background: rgba($secondary, 0.04);
   color: rgba($secondary, 0.7);

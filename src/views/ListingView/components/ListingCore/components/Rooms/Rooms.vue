@@ -107,13 +107,13 @@ function getRoomDisplayName(roomName: string, index: number) {
 
 .listing-rooms {
   > h2 {
-    margin-bottom: var(--spacing-md) !important;
+    margin-bottom: var(--layout-gap-md) !important;
     @include h2-title($gradiant: true);
   }
 
   > ul {
     display: grid;
-    gap: var(--spacing-md);
+    gap: var(--layout-gap-md);
 
     grid-template-columns: repeat(1, 1fr);
 
@@ -130,14 +130,14 @@ function getRoomDisplayName(roomName: string, index: number) {
     }
 
     > li {
-      padding: var(--spacing-md);
+      padding: var(--layout-gap-md);
 
       flex-grow: 1;
       flex-basis: 50%;
 
       display: flex;
       flex-direction: column;
-      gap: var(--spacing-md);
+      gap: var(--layout-gap-md);
 
       border: solid 1px $quaternary;
       border-radius: borders.$rounded-lg;
@@ -151,12 +151,12 @@ function getRoomDisplayName(roomName: string, index: number) {
         }
 
         > .icons {
-          margin-left: var(--spacing-sm);
+          margin-left: var(--layout-gap-sm);
 
           display: flex;
           justify-content: flex-end;
           flex-wrap: wrap;
-          gap: var(--spacing-xs);
+          gap: var(--layout-gap-xs);
 
           > .lucide {
             height: 1.5rem;
@@ -173,5 +173,4 @@ function getRoomDisplayName(roomName: string, index: number) {
     }
   }
 }
-
 </style>

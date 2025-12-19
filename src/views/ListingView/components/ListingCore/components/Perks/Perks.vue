@@ -63,23 +63,23 @@ function resolveIcon(name: string) {
   > .list {
     display: grid;
     grid-template-columns: repeat(1, 1fr);
-    gap: var(--spacing-md);
+    gap: var(--layout-gap-md);
 
     @include min-width(lg) {
       grid-template-columns: repeat(2, 1fr);
     }
 
     > .item {
-      padding: var(--spacing-md);
+      padding: var(--layout-gap-md);
 
       display: flex;
-      gap: var(--spacing-md);
+      gap: var(--layout-gap-md);
 
       border: solid 1px $quaternary;
       border-radius: borders.$rounded-lg;
 
       > .icon {
-        margin-top: var(--spacing-xs);
+        margin-top: var(--layout-gap-xs);
 
         flex-shrink: 0;
         flex-basis: 2rem;
@@ -96,7 +96,7 @@ function resolveIcon(name: string) {
         flex-shrink: 1;
 
         > .title {
-          margin-bottom: var(--spacing-2xs) !important;
+          margin-bottom: var(--layout-gap-2xs) !important;
           font-weight: 500 !important;
           @include base-text($bigger: true);
         }
@@ -109,5 +109,4 @@ function resolveIcon(name: string) {
     }
   }
 }
-
 </style>

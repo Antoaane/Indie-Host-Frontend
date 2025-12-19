@@ -14,7 +14,11 @@ const emit = defineEmits<{
 }>()
 
 const activeIndex = computed(() => {
-  const order: SidebarTab[] = ['listing', 'pricing', 'arrival']
+  const order: SidebarTab[] = [
+    'listing',
+    'pricing',
+    'arrival',
+  ]
   const index = order.indexOf(props.modelValue)
   return index === -1 ? 0 : index
 })
@@ -81,7 +85,7 @@ const tabsStyle = computed(() => ({
 
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--spacing-xs);
+  gap: var(--layout-gap-xs);
 
   border-radius: borders.$rounded-xl;
   background-color: $accent;
@@ -111,7 +115,7 @@ const tabsStyle = computed(() => ({
 
   > .bg-active {
     height: calc(100% - 1.2rem);
-    width: calc((100% - 1.2rem - (var(--spacing-xs) * 2)) / 3);
+    width: calc((100% - 1.2rem - (var(--layout-gap-xs) * 2)) / 3);
 
     position: absolute;
     z-index: 0;
@@ -121,7 +125,7 @@ const tabsStyle = computed(() => ({
     background-color: $secondary;
     border-radius: borders.$rounded-md;
 
-    transform: translate3d(calc(var(--active-index, 0) * (100% + var(--spacing-xs))), 0, 0);
+    transform: translate3d(calc(var(--active-index, 0) * (100% + var(--layout-gap-xs))), 0, 0);
     transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
     will-change: transform;
     pointer-events: none;

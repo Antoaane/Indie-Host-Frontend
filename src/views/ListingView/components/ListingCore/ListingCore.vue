@@ -150,7 +150,7 @@ html:has(#listing-core) {
 
   display: flex;
   flex-direction: column;
-  gap: calc(var(--spacing-2xl) * 2);
+  gap: calc(var(--layout-gap-2xl) * 2);
 
   background-color: $accent;
   border-radius: borders.$rounded-xxl;
@@ -161,13 +161,13 @@ html:has(#listing-core) {
   scrollbar-color: rgba($secondary, 0.25) $translucent;
   /* thumb | track */
 
-  @include spacings(padding, all);
+  @include layout-gap(padding, all);
 
   @include min-width(lg) {
     overflow: hidden;
     overflow-y: scroll;
     border-radius: borders.$rounded-lg;
-    gap: var(--spacing-2xl);
+    gap: var(--layout-gap-2xl);
   }
 
   /* Cible la scrollbar entière */

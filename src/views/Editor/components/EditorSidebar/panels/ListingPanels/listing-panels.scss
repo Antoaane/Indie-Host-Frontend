@@ -1,0 +1,49 @@
+/* File: src/views/Editor/components/EditorSidebar/panels/ListingPanels/listing-panels.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+
+.editor-listing-panels {
+  display: flex;
+  flex-direction: column;
+  gap: var(--layout-gap-sm);
+}
+
+%panel {
+  padding: var(--layout-gap-xl) var(--layout-gap-md);
+  border-radius: borders.$rounded-md;
+  background: $accent;
+  border: 1px solid rgba($secondary, 0.06);
+}
+
+%panel-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: $secondary;
+}
+
+%panel-subtitle {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.875rem;
+  font-weight: 300;
+  color: rgba($secondary, 0.75);
+}
+
+%panel-header {
+  margin-bottom: var(--layout-gap-sm);
+
+  >h3 {
+    @extend %panel-title;
+  }
+
+  >p {
+    @extend %panel-subtitle;
+  }
+}
+
+%panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--layout-gap-sm);
+}

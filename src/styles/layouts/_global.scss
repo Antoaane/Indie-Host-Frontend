@@ -61,7 +61,7 @@ ul {
   margin-inline: auto;
 
   // d'abord toutes les déclarations, ensuite les mixins à @media
-  @include spacings();
+  @include layout-gap();
   @include container(); // toujours après les déclarations
 }
 
@@ -82,13 +82,13 @@ ul {
   justify-content: center;
   align-items: center;
 
-  @include spacings(padding, vertical, 4);
+  @include layout-gap(padding, vertical, 4);
 
   @include min-width(lg) {
     min-height: 100vh;
     margin-bottom: 0;
-    padding-top: calc(var(--spacing) + 70px);
-    @include spacings(padding, bottom, 2);
+    padding-top: calc(var(--layout-gap) + 70px);
+    @include layout-gap(padding, bottom, 2);
   }
 }
 

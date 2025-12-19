@@ -19,11 +19,11 @@
   background-color: $accent;
   border-radius: borders.$rounded-lg;
 
-  @include spacings(padding, all);
+  @include layout-gap(padding, all);
 
   @include min-width(lg) {
     height: auto;
-    padding-bottom: calc(2.125rem + var(--spacing)) !important;
+    padding-bottom: calc(2.125rem + var(--layout-gap)) !important;
   }
 
   &::before {
@@ -47,7 +47,7 @@
       width: 100%;
 
       left: 0;
-      top: calc(var(--spacing-md) + 2.125rem);
+      top: calc(var(--layout-gap-md) + 2.125rem);
       right: auto;
       bottom: auto;
       z-index: 0;
@@ -82,7 +82,7 @@
       left: 0;
       top: auto;
       right: auto;
-      bottom: var(--spacing);
+      bottom: var(--layout-gap);
       z-index: 0;
 
       background: linear-gradient(to bottom, rgba($accent, 0) 0%, $accent 45%, $accent 100%);
@@ -92,21 +92,21 @@
   }
 
 
-  > .top {
-    > .header {
+  >.top {
+    >.header {
       display: flex;
       flex-direction: column;
-      gap: var(--spacing-md);
+      gap: var(--layout-gap-md);
 
-      > h2 {
+      >h2 {
         @include h2-title;
       }
     }
   }
 
-  > .scroll {
-    padding-top: var(--spacing-md);
-    margin-bottom: var(--spacing-xl);
+  >.scroll {
+    padding-top: var(--layout-gap-md);
+    margin-bottom: var(--layout-gap-xl);
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
@@ -120,27 +120,27 @@
     }
   }
 
-  > .more {
+  >.more {
     width: 100%;
-    bottom: var(--spacing);
+    bottom: var(--layout-gap);
 
     @include min-width(lg) {
-      width: calc(100% - (var(--spacing) * 2));
+      width: calc(100% - (var(--layout-gap) * 2));
       position: absolute;
     }
 
-    > div {
+    >div {
       @include buttons.primary($fullwidth: true, $theme: white);
     }
   }
 
 
-  > .overlay {
+  >.overlay {
     width: 100vw;
     height: 100vh;
 
-    padding-top: var(--spacing);
-    @include spacings(padding, inline, 0.5);
+    padding-top: var(--layout-gap);
+    @include layout-gap(padding, inline, 0.5);
 
     display: flex;
     align-items: center;
@@ -155,13 +155,13 @@
     background-color: rgba($secondary, $alpha: 0.2);
 
     @include min-width(lg) {
-      padding-top: calc($nav-height + var(--spacing));
-      padding-bottom: calc(var(--spacing) * 2);
+      padding-top: calc($nav-height + var(--layout-gap));
+      padding-bottom: calc(var(--layout-gap) * 2);
       backdrop-filter: blur(1px);
-      @include spacings;
+      @include layout-gap;
     }
 
-    > .panel {
+    >.panel {
       height: max-content;
       max-height: 100%;
       padding-bottom: 0 !important;
@@ -177,88 +177,88 @@
 
 
       @include container($max: md);
-      @include spacings(padding, horizontal, 2);
-      @include spacings(padding, top, 2);
+      @include layout-gap(padding, horizontal, 2);
+      @include layout-gap(padding, top, 2);
 
       @include min-width(lg) {
         border-radius: borders.$rounded-lg;
       }
 
-      > .header {
+      >.header {
         // flex: 1 0 auto;
         // display: flex;
         // align-items: center;
         // justify-content: space-between;
-        // gap: var(--spacing-md);
+        // gap: var(--layout-gap-md);
 
         position: absolute;
-        right: var(--spacing-md);
-        top: var(--spacing-md);
+        right: var(--layout-gap-md);
+        top: var(--layout-gap-md);
 
-        > .close {
+        >.close {
           @include buttons.primary($padding: false, $theme: white);
         }
       }
 
-      > .body {
+      >.body {
         flex: 0 1 auto;
         height: 100%;
         display: flex;
         flex-direction: column;
-        gap: var(--spacing-lg);
+        gap: var(--layout-gap-lg);
         overflow: hidden;
 
 
-        > .summary {
+        >.summary {
           height: 100%;
 
           display: grid;
           grid-template-columns: repeat(1, 1fr);
-          gap: var(--spacing-2xl);
+          gap: var(--layout-gap-2xl);
 
           @include min-width(lg) {
             grid-template-columns: repeat(2, 1fr);
             gap: 0;
           }
 
-          > .summary-container {
+          >.summary-container {
             height: max-content;
 
             @include min-width(lg) {
               height: 75%;
             }
 
-            > h2 {
-              margin-bottom: var(--spacing) !important;
+            >h2 {
+              margin-bottom: var(--layout-gap) !important;
               @include h2-title;
             }
 
-            > .summary-card {
+            >.summary-card {
               width: 100%;
               height: 100%;
 
-              > div {
-                margin-left: var(--spacing-md);
+              >div {
+                margin-left: var(--layout-gap-md);
               }
             }
           }
         }
 
-        > .list {
+        >.list {
           padding-top: 0 !important;
           flex: 0 1 auto;
           overflow-y: scroll;
 
           display: flex;
           flex-direction: column;
-          gap: var(--spacing);
+          gap: var(--layout-gap);
 
           scrollbar-width: thin;
           scrollbar-color: rgba($secondary, 0.25) $translucent;
 
-          @include spacings(margin, top, 1.5);
+          @include layout-gap(margin, top, 1.5);
 
-          > .comment-card::after {
+          >.comment-card::after {
             display: none;
           }
         }

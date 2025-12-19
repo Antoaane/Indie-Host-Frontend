@@ -1,4 +1,4 @@
-<!-- File: src/components/svgs/images/HeroImage.vue -->
+<!-- File: src/components/svgs/HeroImage.vue -->
 
 <template>
   <svg
@@ -46,7 +46,7 @@
           font-family="Fustat"
           font-size="18.8201"
           font-weight="bold"
-          letter-spacing="0em"
+          letter-layout-gap="0em"
           style="white-space: pre"
         >
           <tspan
@@ -61,7 +61,7 @@
           fill="#111117"
           font-family="Outfit"
           font-size="12.5467"
-          letter-spacing="0em"
+          letter-layout-gap="0em"
           style="white-space: pre"
         >
           <tspan
@@ -82,7 +82,7 @@
           fill="#111117"
           font-family="Outfit"
           font-size="12.5467"
-          letter-spacing="0em"
+          letter-layout-gap="0em"
           style="white-space: pre"
         >
           <tspan
@@ -97,7 +97,7 @@
           fill="#111117"
           font-family="Outfit"
           font-size="12.5467"
-          letter-spacing="0em"
+          letter-layout-gap="0em"
           style="white-space: pre"
         >
           <tspan
@@ -112,7 +112,7 @@
           fill="#111117"
           font-family="Outfit"
           font-size="12.5467"
-          letter-spacing="0em"
+          letter-layout-gap="0em"
           style="white-space: pre"
         >
           <tspan
@@ -139,7 +139,7 @@
             font-family="Fustat"
             font-size="15.6834"
             font-weight="500"
-            letter-spacing="0em"
+            letter-layout-gap="0em"
             style="white-space: pre"
           >
             <tspan
@@ -177,7 +177,7 @@
               fill-opacity="0.3"
               font-family="Outfit"
               font-size="12.5467"
-              letter-spacing="0em"
+              letter-layout-gap="0em"
               style="white-space: pre"
             >
               <tspan
@@ -230,7 +230,7 @@
             fill="#FF5252"
             font-family="Outfit"
             font-size="12.5467"
-            letter-spacing="0em"
+            letter-layout-gap="0em"
             style="white-space: pre"
           >
             <tspan
@@ -272,7 +272,7 @@
               fill-opacity="0.3"
               font-family="Outfit"
               font-size="12.5467"
-              letter-spacing="0em"
+              letter-layout-gap="0em"
               style="white-space: pre"
             >
               <tspan
@@ -340,7 +340,7 @@
             fill="#273C7E"
             font-family="Outfit"
             font-size="12.5467"
-            letter-spacing="0em"
+            letter-layout-gap="0em"
             style="white-space: pre"
           >
             <tspan
@@ -356,7 +356,7 @@
             font-family="Fustat"
             font-size="15.6834"
             font-weight="500"
-            letter-spacing="0em"
+            letter-layout-gap="0em"
             style="white-space: pre"
           >
             <tspan
@@ -379,7 +379,7 @@
             fill="#111117"
             font-family="Outfit"
             font-size="12.5467"
-            letter-spacing="0em"
+            letter-layout-gap="0em"
             style="white-space: pre"
           >
             <tspan
@@ -418,7 +418,7 @@
             font-family="Fustat"
             font-size="15.6834"
             font-weight="500"
-            letter-spacing="0em"
+            letter-layout-gap="0em"
             style="white-space: pre"
           >
             <tspan
@@ -441,7 +441,7 @@
             fill="#111117"
             font-family="Outfit"
             font-size="12.5467"
-            letter-spacing="0em"
+            letter-layout-gap="0em"
             style="white-space: pre"
           >
             <tspan
@@ -478,7 +478,7 @@
             font-family="Fustat"
             font-size="15.6834"
             font-weight="500"
-            letter-spacing="0em"
+            letter-layout-gap="0em"
             style="white-space: pre"
           >
             <tspan
@@ -537,7 +537,7 @@
             fill="#111117"
             font-family="Outfit"
             font-size="12.5467"
-            letter-spacing="0em"
+            letter-layout-gap="0em"
             style="white-space: pre"
           >
             <tspan
@@ -603,7 +603,7 @@
             font-family="Fustat"
             font-size="15.6834"
             font-weight="500"
-            letter-spacing="0em"
+            letter-layout-gap="0em"
             style="white-space: pre"
           >
             <tspan
@@ -649,7 +649,7 @@
               font-family="Outfit"
               font-size="12.5467"
               font-weight="bold"
-              letter-spacing="0em"
+              letter-layout-gap="0em"
               style="white-space: pre"
             >
               <tspan
@@ -665,7 +665,7 @@
               font-family="Outfit"
               font-size="12.5467"
               font-weight="bold"
-              letter-spacing="0em"
+              letter-layout-gap="0em"
               style="white-space: pre"
             >
               <tspan
@@ -760,7 +760,7 @@
                 x="324.885"
                 y="889.907"
               >
-                6km de la maison). 
+                6km de la maison).
               </tspan>
               <tspan
                 x="324.885"
@@ -840,7 +840,7 @@
             font-family="Fustat"
             font-size="15.6834"
             font-weight="500"
-            letter-spacing="0em"
+            letter-layout-gap="0em"
             style="white-space: pre"
           >
             <tspan
@@ -1001,7 +1001,7 @@
             font-family="Fustat"
             font-size="15.6834"
             font-weight="500"
-            letter-spacing="0em"
+            letter-layout-gap="0em"
             style="white-space: pre"
           >
             <tspan
@@ -1104,7 +1104,7 @@
             fill="#111117"
             font-family="Outfit"
             font-size="12.5467"
-            letter-spacing="0em"
+            letter-layout-gap="0em"
             style="white-space: pre"
           >
             <tspan
@@ -1253,7 +1253,7 @@
             fill-opacity="0.3"
             font-family="Outfit"
             font-size="12.5467"
-            letter-spacing="0em"
+            letter-layout-gap="0em"
             style="white-space: pre"
           >
             <tspan
@@ -1330,7 +1330,7 @@
                 fill="#ECE8E8"
                 font-family="Outfit"
                 font-size="12.5467"
-                letter-spacing="0em"
+                letter-layout-gap="0em"
                 style="white-space: pre"
               >
                 <tspan
@@ -1463,7 +1463,7 @@
               font-family="Outfit"
               font-size="12.5467"
               font-weight="bold"
-              letter-spacing="0em"
+              letter-layout-gap="0em"
               style="white-space: pre"
             >
               <tspan
@@ -1478,7 +1478,7 @@
               fill="#111117"
               font-family="Outfit"
               font-size="12.5467"
-              letter-spacing="0em"
+              letter-layout-gap="0em"
               opacity="0.5"
               style="white-space: pre"
             >
@@ -1494,7 +1494,7 @@
               fill="#111117"
               font-family="Outfit"
               font-size="12.5467"
-              letter-spacing="0em"
+              letter-layout-gap="0em"
               style="white-space: pre"
             >
               <tspan
@@ -1510,7 +1510,7 @@
               font-family="Outfit"
               font-size="12.5467"
               font-weight="bold"
-              letter-spacing="0em"
+              letter-layout-gap="0em"
               style="white-space: pre"
             >
               <tspan
@@ -1618,7 +1618,7 @@
                 fill="#111117"
                 font-family="Outfit"
                 font-size="12.5467"
-                letter-spacing="0em"
+                letter-layout-gap="0em"
                 opacity="0.75"
                 style="white-space: pre"
               >
@@ -1751,7 +1751,7 @@
               font-family="Outfit"
               font-size="12.5467"
               font-weight="bold"
-              letter-spacing="0em"
+              letter-layout-gap="0em"
               style="white-space: pre"
             >
               <tspan
@@ -1766,7 +1766,7 @@
               fill="#111117"
               font-family="Outfit"
               font-size="12.5467"
-              letter-spacing="0em"
+              letter-layout-gap="0em"
               opacity="0.5"
               style="white-space: pre"
             >
@@ -1782,7 +1782,7 @@
               fill="#111117"
               font-family="Outfit"
               font-size="12.5467"
-              letter-spacing="0em"
+              letter-layout-gap="0em"
               style="white-space: pre"
             >
               <tspan
@@ -1798,7 +1798,7 @@
               font-family="Outfit"
               font-size="12.5467"
               font-weight="bold"
-              letter-spacing="0em"
+              letter-layout-gap="0em"
               style="white-space: pre"
             >
               <tspan
@@ -1889,7 +1889,7 @@
                 fill="#111117"
                 font-family="Outfit"
                 font-size="12.5467"
-                letter-spacing="0em"
+                letter-layout-gap="0em"
                 opacity="0.75"
                 style="white-space: pre"
               >
@@ -2022,7 +2022,7 @@
               font-family="Outfit"
               font-size="12.5467"
               font-weight="bold"
-              letter-spacing="0em"
+              letter-layout-gap="0em"
               style="white-space: pre"
             >
               <tspan
@@ -2037,7 +2037,7 @@
               fill="#111117"
               font-family="Outfit"
               font-size="12.5467"
-              letter-spacing="0em"
+              letter-layout-gap="0em"
               opacity="0.5"
               style="white-space: pre"
             >
@@ -2053,7 +2053,7 @@
               fill="#111117"
               font-family="Outfit"
               font-size="12.5467"
-              letter-spacing="0em"
+              letter-layout-gap="0em"
               style="white-space: pre"
             >
               <tspan
@@ -2069,7 +2069,7 @@
               font-family="Outfit"
               font-size="12.5467"
               font-weight="bold"
-              letter-spacing="0em"
+              letter-layout-gap="0em"
               style="white-space: pre"
             >
               <tspan
@@ -2163,7 +2163,7 @@
                 fill="#ECE8E8"
                 font-family="Outfit"
                 font-size="12.5467"
-                letter-spacing="0em"
+                letter-layout-gap="0em"
                 style="white-space: pre"
               >
                 <tspan
@@ -2296,7 +2296,7 @@
               font-family="Outfit"
               font-size="12.5467"
               font-weight="bold"
-              letter-spacing="0em"
+              letter-layout-gap="0em"
               style="white-space: pre"
             >
               <tspan
@@ -2311,7 +2311,7 @@
               fill="#111117"
               font-family="Outfit"
               font-size="12.5467"
-              letter-spacing="0em"
+              letter-layout-gap="0em"
               opacity="0.5"
               style="white-space: pre"
             >
@@ -2327,7 +2327,7 @@
               fill="#111117"
               font-family="Outfit"
               font-size="12.5467"
-              letter-spacing="0em"
+              letter-layout-gap="0em"
               style="white-space: pre"
             >
               <tspan
@@ -2343,7 +2343,7 @@
               font-family="Outfit"
               font-size="12.5467"
               font-weight="bold"
-              letter-spacing="0em"
+              letter-layout-gap="0em"
               style="white-space: pre"
             >
               <tspan
@@ -2434,7 +2434,7 @@
                 fill="#111117"
                 font-family="Outfit"
                 font-size="12.5467"
-                letter-spacing="0em"
+                letter-layout-gap="0em"
                 opacity="0.75"
                 style="white-space: pre"
               >
@@ -2567,7 +2567,7 @@
               font-family="Outfit"
               font-size="12.5467"
               font-weight="bold"
-              letter-spacing="0em"
+              letter-layout-gap="0em"
               style="white-space: pre"
             >
               <tspan
@@ -2582,7 +2582,7 @@
               fill="#111117"
               font-family="Outfit"
               font-size="12.5467"
-              letter-spacing="0em"
+              letter-layout-gap="0em"
               opacity="0.5"
               style="white-space: pre"
             >
@@ -2598,7 +2598,7 @@
               fill="#111117"
               font-family="Outfit"
               font-size="12.5467"
-              letter-spacing="0em"
+              letter-layout-gap="0em"
               style="white-space: pre"
             >
               <tspan
@@ -2614,7 +2614,7 @@
               font-family="Outfit"
               font-size="12.5467"
               font-weight="bold"
-              letter-spacing="0em"
+              letter-layout-gap="0em"
               style="white-space: pre"
             >
               <tspan
@@ -2735,7 +2735,7 @@
               fill="#FCFAFA"
               font-family="Outfit"
               font-size="12.5467"
-              letter-spacing="0em"
+              letter-layout-gap="0em"
               style="white-space: pre"
             >
               <tspan
@@ -2751,7 +2751,7 @@
             fill="black"
             font-family="Outfit"
             font-size="12.5467"
-            letter-spacing="0em"
+            letter-layout-gap="0em"
             opacity="0.5"
             style="white-space: pre"
           >
@@ -2815,7 +2815,7 @@
               fill="#FCFAFA"
               font-family="Outfit"
               font-size="12.5467"
-              letter-spacing="0em"
+              letter-layout-gap="0em"
               style="white-space: pre"
             >
               <tspan
@@ -2882,7 +2882,7 @@
         font-family="Fustat"
         font-size="24.2838"
         font-weight="bold"
-        letter-spacing="0em"
+        letter-layout-gap="0em"
         style="white-space: pre"
       >
         <tspan
@@ -2953,7 +2953,7 @@
               font-family="Fustat"
               font-size="32.3784"
               font-weight="bold"
-              letter-spacing="0em"
+              letter-layout-gap="0em"
               style="white-space: pre"
             >
               <tspan
@@ -2976,7 +2976,7 @@
             font-family="Fustat"
             font-size="24.2838"
             font-weight="600"
-            letter-spacing="0em"
+            letter-layout-gap="0em"
             style="white-space: pre"
           >
             <tspan
@@ -2991,7 +2991,7 @@
             fill="#111117"
             font-family="Outfit"
             font-size="16.1892"
-            letter-spacing="0em"
+            letter-layout-gap="0em"
             opacity="0.5"
             style="white-space: pre"
           >
@@ -3025,7 +3025,7 @@
               fill="#111117"
               font-family="Outfit"
               font-size="16.1892"
-              letter-spacing="0em"
+              letter-layout-gap="0em"
               style="white-space: pre"
             >
               <tspan
@@ -3040,7 +3040,7 @@
               fill="#111117"
               font-family="Outfit"
               font-size="16.1892"
-              letter-spacing="0em"
+              letter-layout-gap="0em"
               opacity="0.5"
               style="white-space: pre"
             >
@@ -3100,7 +3100,7 @@
             fill="#111117"
             font-family="Outfit"
             font-size="16.1892"
-            letter-spacing="0em"
+            letter-layout-gap="0em"
             style="white-space: pre"
           >
             <tspan
@@ -3119,7 +3119,7 @@
               x="102.331"
               y="686.078"
             >
-              amis. 
+              amis.
             </tspan>
             <tspan
               x="102.331"
@@ -3137,13 +3137,13 @@
               x="102.331"
               y="746.078"
             >
-              séduira par sa vue, son calme et son confort. 
+              séduira par sa vue, son calme et son confort.
             </tspan>
             <tspan
               x="102.331"
               y="766.078"
             >
-              Séjour unique, hors du temps garantit ! 
+              Séjour unique, hors du temps garantit !
             </tspan>
             <tspan
               x="102.331"
@@ -3157,7 +3157,7 @@
             fill="#111117"
             font-family="Outfit"
             font-size="16.1892"
-            letter-spacing="0em"
+            letter-layout-gap="0em"
             style="white-space: pre"
           >
             <tspan
@@ -3180,7 +3180,7 @@
               font-family="Fustat"
               font-size="24.2838"
               font-weight="600"
-              letter-spacing="0em"
+              letter-layout-gap="0em"
               style="white-space: pre"
             >
               <tspan
@@ -3215,7 +3215,7 @@
         font-family="Outfit"
         font-size="16.1899"
         font-weight="bold"
-        letter-spacing="0em"
+        letter-layout-gap="0em"
         style="white-space: pre"
       >
         <tspan
@@ -3231,7 +3231,7 @@
         font-family="Outfit"
         font-size="16.1896"
         font-weight="bold"
-        letter-spacing="0em"
+        letter-layout-gap="0em"
         style="white-space: pre"
       >
         <tspan
@@ -3246,7 +3246,7 @@
         fill="#111117"
         font-family="Outfit"
         font-size="12.1422"
-        letter-spacing="0em"
+        letter-layout-gap="0em"
         opacity="0.5"
         style="white-space: pre"
       >
@@ -3322,7 +3322,7 @@
           fill="#FCFAFA"
           font-family="Outfit"
           font-size="16.1892"
-          letter-spacing="0em"
+          letter-layout-gap="0em"
           style="white-space: pre"
         >
           <tspan

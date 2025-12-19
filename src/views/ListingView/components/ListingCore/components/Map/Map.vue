@@ -44,9 +44,8 @@ const heading = computed(() => props.staticContent.map || props.staticContent.fe
 @use '@/styles/variables/borders' as borders;
 
 .listing-map {
-
   > h2 {
-    margin-bottom: var(--spacing-md) !important;
+    margin-bottom: var(--layout-gap-md) !important;
     @include h2-title($gradiant: true);
   }
 
@@ -59,5 +58,4 @@ const heading = computed(() => props.staticContent.map || props.staticContent.fe
     // overflow: hidden;
   }
 }
-
 </style>

@@ -137,7 +137,7 @@ onBeforeUnmount(() => {
 
 .listing-description {
   > h2 {
-    margin-bottom: var(--spacing-md) !important;
+    margin-bottom: var(--layout-gap-md) !important;
     @include h2-title($gradiant: true);
   }
 
@@ -152,17 +152,16 @@ onBeforeUnmount(() => {
 
     > span {
       @include base-text($thin: false);
-
     }
 
     h3 {
-      margin-top: var(--spacing-md) !important;
+      margin-top: var(--layout-gap-md) !important;
       @include h4-title;
     }
   }
 
   > .trigger {
-    margin-top: var(--spacing-sm);
+    margin-top: var(--layout-gap-sm);
     @include buttons.secondary($padding: false);
   }
 
@@ -173,26 +172,26 @@ onBeforeUnmount(() => {
 
     > .panel {
       @extend %overlay-panel;
-      @include spacings(padding, all, 2);
-      padding-bottom: calc(var(--spacing) * 2) !important;
+      @include layout-gap(padding, all, 2);
+      padding-bottom: calc(var(--layout-gap) * 2) !important;
 
       > .content {
-        margin-bottom: var(--spacing);
+        margin-bottom: var(--layout-gap);
 
         h2 {
           @include h2-title;
         }
 
         h3 {
-          margin-top: var(--spacing-md) !important;
+          margin-top: var(--layout-gap-md) !important;
           @include h4-title;
         }
       }
 
       > .close {
         position: absolute;
-        top: var(--spacing-md);
-        right: var(--spacing-md);
+        top: var(--layout-gap-md);
+        right: var(--layout-gap-md);
 
         > .button {
           @include buttons.primary($padding: false, $theme: white);

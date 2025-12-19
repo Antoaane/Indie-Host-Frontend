@@ -8,10 +8,10 @@ div:has(> .step-section) {
     width: 100%;
     padding-top: 0 !important;
 
-    @include spacings(padding, bottom, 6);
+    @include layout-gap(padding, bottom, 6);
 
     @include min-width(lg) {
-      @include spacings(padding, bottom, 4);
+      @include layout-gap(padding, bottom, 4);
     }
 
     .wrapper {
@@ -24,7 +24,7 @@ div:has(> .step-section) {
         gap: 2.5rem;
       }
 
-      @include spacings(padding, inline, 2);
+      @include layout-gap(padding, inline, 2);
 
       @include min-width(lg) {
         height: 100vh;
@@ -57,7 +57,7 @@ div:has(> .step-section) {
           border-left: 1px solid;
           border-image: linear-gradient(to bottom, rgba($accent, 1) 20%, rgba($accent, 0) 40%, rgba($accent, 0) 60%, rgba($accent, 1) 80%) 1 round;
 
-          @include spacings(padding, inline, 2);
+          @include layout-gap(padding, inline, 2);
         }
 
         .step {
@@ -224,7 +224,7 @@ div:has(> .step-section) {
       @include base-text($accent, $bigger: false);
 
       // @include min-width(lg) {
-      //   @include spacings(padding, inline, 2);
+      //   @include layout-gap(padding, inline, 2);
       // }
     }
   }

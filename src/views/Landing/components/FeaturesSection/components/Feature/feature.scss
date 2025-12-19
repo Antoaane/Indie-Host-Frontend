@@ -19,23 +19,23 @@
     row-gap: 3rem;
 
     // border-radius: 130px;
-    @include spacings(padding, vertical, 3);
-    @include spacings(padding, inline, 2);
+    @include layout-gap(padding, vertical, 3);
+    @include layout-gap(padding, inline, 2);
 
     @include min-width(xxs) {
-      @include spacings(padding, inline, 3);
+      @include layout-gap(padding, inline, 3);
     }
 
     @include min-width(xs) {
-      @include spacings(padding, vertical, 3);
-      // @include spacings(padding, inline, 3);
+      @include layout-gap(padding, vertical, 3);
+      // @include layout-gap(padding, inline, 3);
     }
 
     @include min-width(lg) {
       gap: 2rem;
       // border-radius: 85px;
 
-      @include spacings(padding, vertical);
+      @include layout-gap(padding, vertical);
     }
 
     @include min-width(xl) {
@@ -53,20 +53,20 @@
 
       grid-column: 1 / -1;
 
-      // @include spacings(padding, inline);
+      // @include layout-gap(padding, inline);
 
       @include min-width(xxs) {
-        // @include spacings(padding, inline, 2);
+        // @include layout-gap(padding, inline, 2);
       }
 
       @include min-width(sm) {
-        @include spacings(padding, inline, 5);
+        @include layout-gap(padding, inline, 5);
       }
 
       @include min-width(lg) {
         grid-column: span 5 / span 5;
 
-        @include spacings(padding, inline, 0);
+        @include layout-gap(padding, inline, 0);
 
         &:has(+ .vtc) {
           grid-column: span 6 / span 6;
@@ -79,7 +79,7 @@
 
         display: flex;
         flex-direction: column;
-        gap: var(--spacing-md);
+        gap: var(--layout-gap-md);
 
         @include min-width(xl) {
           width: calc(var(--container-size) / 3);
@@ -100,14 +100,14 @@
     .media {
       height: auto;
 
-      // @include spacings(padding, inline, 1.5);
+      // @include layout-gap(padding, inline, 1.5);
 
       @include min-width(xs) {
-        @include spacings(padding, all, 0);
+        @include layout-gap(padding, all, 0);
       }
 
       @include min-width(lg) {
-        height: calc(90vh - (var(--spacing-4xl) + 70px));
+        height: calc(90vh - (var(--layout-gap-4xl) + 70px));
       }
 
       &.hzt {
@@ -153,12 +153,12 @@
         height: auto;
 
         @include min-width(xs) {
-          height: calc(70vh - (var(--spacing-4xl) + 70px));
+          height: calc(70vh - (var(--layout-gap-4xl) + 70px));
           width: auto;
         }
 
         @include min-width(lg) {
-          height: calc(90vh - (var(--spacing-4xl) + 70px));
+          height: calc(90vh - (var(--layout-gap-4xl) + 70px));
           width: auto;
         }
 

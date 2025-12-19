@@ -4,56 +4,38 @@
 @use '@/styles/variables/borders' as borders;
 @use '@/styles/components/buttons' as buttons;
 @use '@/styles/components/inputs' as inputs;
+@use '@/views/Editor/components/EditorSidebar/panels/ListingPanels/listing-panels.scss' as *;
 
 .editor-rooms-panel {
-  padding: var(--spacing-sm);
-  border-radius: borders.$rounded-md;
-  background: $accent;
-  border: 1px solid rgba($secondary, 0.06);
+  @extend %panel;
 
-  > .header {
-    margin-bottom: var(--spacing-sm);
-
-    > h3 {
-      margin: 0;
-      font-size: 1rem;
-      font-weight: 700;
-      color: $secondary;
-    }
-
-    > p {
-      margin: 0.25rem 0 0 0;
-      font-size: 0.875rem;
-      font-weight: 300;
-      color: rgba($secondary, 0.75);
-    }
+  >.header {
+    @extend %panel-header;
   }
 
-  > .body {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
+  >.body {
+    @extend %panel-body;
 
-    > .row {
+    >.row {
       display: flex;
-      gap: var(--spacing-xs);
+      gap: var(--layout-gap-xs);
       align-items: center;
 
-      > .input {
+      >.input {
         @include inputs.text($tertiary, borders.$rounded-md);
         width: 100%;
       }
 
-      > .select {
+      >.select {
         flex: 1;
       }
 
-      > .trash {
+      >.trash {
         @include buttons.primary($theme: light, $padding: false);
         width: 44px;
         height: 44px;
 
-        > * {
+        >* {
           height: 100%;
           padding: 0;
           font-size: 1.1rem;
@@ -62,57 +44,57 @@
       }
     }
 
-    > .details {
+    >.details {
       display: flex;
       flex-direction: column;
-      gap: var(--spacing-sm);
+      gap: var(--layout-gap-sm);
 
-      > .row {
+      >.row {
         display: flex;
-        gap: var(--spacing-xs);
+        gap: var(--layout-gap-xs);
         align-items: center;
 
-        > .input {
+        >.input {
           @include inputs.text($tertiary, borders.$rounded-md);
           width: 100%;
         }
       }
 
-      > .beds {
+      >.beds {
         display: flex;
         flex-direction: column;
-        gap: var(--spacing-xs);
+        gap: var(--layout-gap-xs);
 
-        > .row {
+        >.row {
           display: grid;
           grid-template-columns: 1fr 90px 180px 44px;
-          gap: var(--spacing-xs);
+          gap: var(--layout-gap-xs);
           align-items: center;
 
-          > .input {
+          >.input {
             @include inputs.text($tertiary, borders.$rounded-md);
             width: 100%;
           }
 
-          > .cap {
+          >.cap {
             text-align: center;
           }
 
-          > .stepper {
+          >.stepper {
             display: inline-flex;
             align-items: center;
-            gap: var(--spacing-xs);
+            gap: var(--layout-gap-xs);
 
             &.qty {
               justify-content: flex-start;
             }
 
-            > .btn {
+            >.btn {
               @include buttons.primary($theme: black, $padding: false);
               width: 36px;
               height: 36px;
 
-              > * {
+              >* {
                 height: 100%;
                 padding: 0;
                 font-size: 1.1rem;
@@ -120,19 +102,19 @@
               }
             }
 
-            > .value {
+            >.value {
               width: 56px;
               text-align: center;
               @include inputs.text($tertiary, borders.$rounded-md);
             }
           }
 
-          > .remove {
+          >.remove {
             @include buttons.primary($theme: light, $padding: false);
             width: 44px;
             height: 44px;
 
-            > * {
+            >* {
               height: 100%;
               padding: 0;
               font-size: 1.1rem;

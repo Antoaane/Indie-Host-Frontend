@@ -114,7 +114,7 @@
         fill="#111117"
         font-family="Outfit"
         font-size="19.4574"
-        letter-spacing="0em"
+        letter-layout-gap="0em"
         style="white-space: pre"
       >
         <tspan
@@ -130,7 +130,7 @@
         fill-opacity="0.3"
         font-family="Outfit"
         font-size="19.4574"
-        letter-spacing="0em"
+        letter-layout-gap="0em"
         style="white-space: pre"
       >
         <tspan

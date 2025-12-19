@@ -19,8 +19,8 @@
   // background-color: lighten($quinary, 10%);
   background-color: $accent;
 
-  @include spacings(padding, left, 1);
-  @include spacings(padding, right, 1.5);
+  @include layout-gap(padding, left, 1);
+  @include layout-gap(padding, right, 1.5);
 
   @include halo();
 
@@ -35,7 +35,7 @@
     @include soft-shadow();
   }
 
-  > .logo {
+  >.logo {
     width: min-content;
     height: 100%;
 
@@ -47,7 +47,7 @@
 
     cursor: pointer;
 
-    > svg {
+    >svg {
       height: 2.75rem;
 
       @include min-width(lg) {
@@ -56,11 +56,11 @@
     }
   }
 
-  > .links {
+  >.links {
     display: flex;
     gap: 1.5rem;
 
-    > li {
+    >li {
       @include buttons.secondary;
 
       &:first-child {
@@ -69,7 +69,7 @@
     }
   }
 
-  > .mobile-toggle {
+  >.mobile-toggle {
     width: 2rem;
     height: 2rem;
 
@@ -122,24 +122,24 @@
     }
   }
 
-  > .mobile-menu {
+  >.mobile-menu {
     right: 0;
     width: 100%;
 
     position: absolute;
-    top: calc((var(--spacing-md) * 2) + 60px);
+    top: calc((var(--layout-gap-md) * 2) + 60px);
 
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 
     // @include container;
-    @include spacings(padding, inline, 0.75);
+    @include layout-gap(padding, inline, 0.75);
 
     @include min-width(lg) {
       @include container;
-      @include spacings(padding, top, 2);
+      @include layout-gap(padding, top, 2);
     }
 
-    > .mobile-links {
+    >.mobile-links {
       margin: 0;
       padding: 1rem 0;
 
@@ -155,7 +155,7 @@
         border-radius: borders.$rounded-lg;
       }
 
-      > li {
+      >li {
         @include buttons.secondary;
 
         &:first-child {

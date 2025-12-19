@@ -5,7 +5,7 @@
 .donation-page {
   position: relative;
   isolation: isolate;
-  padding-top: calc($nav-height + var(--spacing));
+  padding-top: calc($nav-height + var(--layout-gap));
 }
 
 .donation-page__content {

@@ -6,18 +6,18 @@
 .summary-card {
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
+  gap: var(--layout-gap-md);
 
-  > strong {
+  >strong {
     margin-bottom: 0 !important;
     @include h3-title($colorful: false);
   }
 
-  > div {
+  >div {
     display: flex;
-    gap: var(--spacing-2xs);
+    gap: var(--layout-gap-2xs);
 
-    > h3 {
+    >h3 {
       margin: 0 !important;
 
       font-family: 'Fustat', sans-serif;
@@ -48,4 +48,3 @@
     }
   }
 }
-

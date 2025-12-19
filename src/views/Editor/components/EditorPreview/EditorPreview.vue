@@ -49,7 +49,7 @@ const props = defineProps<{
     height: 100%;
     display: grid;
     place-items: center;
-    padding: var(--spacing-md);
+    padding: var(--layout-gap-md);
     color: rgba($secondary, 0.7);
   }
 }

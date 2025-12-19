@@ -8,19 +8,19 @@
 .listing-amenities {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--layout-gap-md);
 
-  > .header {
-    > h2 {
+  >.header {
+    >h2 {
       margin-bottom: 0 !important;
       @include h2-title($gradiant: true);
     }
   }
 
-  > .preview {
+  >.preview {
     display: grid;
     grid-template-columns: repeat(1, 1fr);
-    gap: var(--spacing-sm);
+    gap: var(--layout-gap-sm);
 
     @include min-width(md) {
       grid-template-columns: repeat(2, 1fr);
@@ -34,32 +34,32 @@
     //   grid-template-columns: repeat(4, 1fr);
     // }
 
-    > .item {
+    >.item {
       display: flex;
       align-items: center;
-      gap: var(--spacing-sm);
+      gap: var(--layout-gap-sm);
 
-      padding: var(--spacing-md);
+      padding: var(--layout-gap-md);
 
       border: solid 1px $quaternary;
       border-radius: borders.$rounded-lg;
 
       background-color: rgba($accent, 0.75);
 
-      > .icon {
+      >.icon {
         height: 1.5rem;
         width: 1.5rem;
         stroke: $secondary;
         flex-shrink: 0;
       }
 
-      > .name {
+      >.name {
         @include base-text($thin: false);
       }
     }
   }
 
-  > .cta {
+  >.cta {
     @include buttons.primary($theme: white, $fullwidth: true);
   }
 }
@@ -67,82 +67,82 @@
 .amenities-overlay {
   @extend %overlay-backdrop;
 
-  > .panel {
+  >.panel {
     @extend %overlay-panel;
-    padding-bottom: var(--spacing-md) !important;
-    gap: var(--spacing);
+    padding-bottom: var(--layout-gap-md) !important;
+    gap: var(--layout-gap);
 
-    > .header {
+    >.header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: var(--spacing-md);
+      gap: var(--layout-gap-md);
 
-      > .title {
-        > h2 {
+      >.title {
+        >h2 {
           @include h2-title;
         }
       }
 
-      > .close {
+      >.close {
         @include buttons.primary($theme: white, $padding: false);
       }
     }
 
-    > .body {
+    >.body {
       overflow-y: auto;
       display: flex;
       flex-direction: column;
-      gap: var(--spacing);
+      gap: var(--layout-gap);
 
       scrollbar-width: thin;
       scrollbar-color: rgba($secondary, 0.25) $translucent;
 
-      > .category {
+      >.category {
         display: flex;
         flex-direction: column;
-        gap: var(--spacing-sm);
+        gap: var(--layout-gap-sm);
 
-        > h3 {
+        >h3 {
           @include base-text($bigger: true, $thin: false);
         }
 
-        > ul {
+        >ul {
           display: grid;
-          gap: var(--spacing-sm);
+          gap: var(--layout-gap-sm);
           grid-template-columns: repeat(1, 1fr);
 
           @include min-width(md) {
             grid-template-columns: repeat(2, 1fr);
           }
 
-          > .item {
+          >.item {
             display: flex;
-            gap: var(--spacing-sm);
+            gap: var(--layout-gap-sm);
             align-items: flex-start;
 
-            padding: var(--spacing-md);
+            padding: var(--layout-gap-md);
 
             border: solid 1px $quaternary;
             border-radius: borders.$rounded-lg;
 
-            > .icon {
+            >.icon {
               height: 1.5rem;
               width: 1.5rem;
               stroke: $secondary;
               flex-shrink: 0;
             }
 
-            > .texts {
+            >.texts {
               display: flex;
               flex-direction: column;
-              gap: var(--spacing-3xs);
+              gap: var(--layout-gap-3xs);
 
-              > .name {
+              >.name {
                 @include base-text($bigger: true, $thin: false);
               }
 
-              > .description {
+              >.description {
                 opacity: 0.75;
                 @include little-text($thin: false);
               }

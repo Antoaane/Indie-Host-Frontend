@@ -57,7 +57,7 @@ $button-themes: (
   ),
 );
 
-// Mixin bouton primaire dynamique
+// apply to `div > button`
 @mixin primary($cta: false, $theme: black, $padding: true, $fullwidth: false) {
   $colors: map.get($button-themes, $theme);
 
@@ -228,7 +228,7 @@ $button-themes: (
   }
 }
 
-// Bouton secondaire inchangé (peut aussi être refactoré avec map)
+// apply to `div > button > text/svg`
 @mixin secondary($theme: white, $padding: true) {
   $colors: map.get($button-themes, $theme);
 
@@ -278,6 +278,53 @@ $button-themes: (
   }
 }
 
+// apply to `button > text/svg`
+@mixin low-btn($color: $accent, $hover-color: $secondary, $fill: false, $stroke: true) {
+  padding: 0.4rem;
+
+  background: $color;
+  border: none;
+  border-radius: borders.$rounded-sm;
+
+  color: $hover-color;
+  font-size: 1rem;
+  text-decoration: none;
+
+  @include transition;
+
+  &>* {
+    color: $hover-color;
+
+    @if $stroke {
+      stroke: $hover-color;
+    }
+
+    @if $fill {
+      fill: $hover-color;
+    }
+
+    @include transition;
+  }
+
+  &:hover {
+    background: $hover-color;
+
+    &>* {
+      color: $color;
+
+      @if $stroke {
+        stroke: $color;
+      }
+
+      @if $fill {
+        fill: $color;
+      }
+    }
+
+    @include transition;
+  }
+}
+
 @mixin link($theme: white, $underline: true) {
   $colors: map.get($button-themes, $theme);
   $text-color: map.get($colors, hover-text-color);
@@ -291,6 +338,7 @@ $button-themes: (
   }
 
   @if $underline {
+
     &,
     &>* {
       text-decoration: underline;

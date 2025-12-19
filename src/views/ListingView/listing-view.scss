@@ -12,12 +12,12 @@
 
   @include min-width(lg) {
     flex-direction: row;
-    gap: var(--spacing-md);
-    @include spacings(padding, inline);
-    @include spacings(padding, bottom);
+    gap: var(--layout-gap-md);
+    @include layout-gap(padding, inline);
+    @include layout-gap(padding, bottom);
   }
 
-  > .gallery {
+  >.gallery {
     flex-grow: 0;
     flex-basis: 25vw;
     flex-shrink: 0;
@@ -25,65 +25,65 @@
     min-height: 0;
   }
 
-  > .core {
+  >.core {
     flex: 1;
     height: 100%;
     min-height: 0;
   }
 
-  > .stay {
+  >.stay {
     max-height: calc(100vh - $nav-height);
     min-height: 0;
 
     flex-grow: 0;
     flex-basis: 25vw;
     flex-shrink: 0;
-    gap: var(--spacing-md);
+    gap: var(--layout-gap-md);
 
     display: flex;
     flex-direction: column;
   }
 
-  > .main {
+  >.main {
     height: 100%;
     overflow: hidden;
     overflow-y: scroll;
     scrollbar-width: none;
 
-    > .core {
-      @include spacings(padding, inline, 0.5);
+    >.core {
+      @include layout-gap(padding, inline, 0.5);
 
-      > .panel {
+      >.panel {
         background-color: $accent;
         border-radius: borders.$rounded-xl;
 
-        > #listing-core {
+        >#listing-core {
           background-color: $translucent !important;
-          @include spacings(padding, all, 1.5, $important: true);
+          @include layout-gap(padding, all, 1.5, $important: true);
         }
 
-        > #listing-comments {
+        >#listing-comments {
           background-color: $translucent !important;
-          @include spacings(padding, inline, 1.5, $important: true);
-          @include spacings(padding, top, 1.5, $important: true);
+          @include layout-gap(padding, inline, 1.5, $important: true);
+          @include layout-gap(padding, top, 1.5, $important: true);
         }
       }
     }
   }
 
-  > .footer {
+  >.footer {
     background: $secondary;
-    padding-top: var(--spacing-sm);
-    padding-bottom: var(--spacing);
+    padding-top: var(--layout-gap-sm);
+    padding-bottom: var(--layout-gap);
 
     display: flex;
     justify-content: center;
 
     position: relative;
 
-    @include spacings(padding, inline);
+    @include layout-gap(padding, inline);
 
-    > .shape-container {
+    >.shape-container {
       width: borders.$rounded-xl;
       height: borders.$rounded-xl;
 
@@ -94,26 +94,26 @@
 
       display: block;
 
-      > .shape {
+      >.shape {
         width: 100%;
         height: 100%;
 
         position: relative;
         display: block;
 
-        > path {
+        >path {
           fill: $secondary;
         }
       }
 
       &.is-right {
-        right: calc(var(--spacing-sm) - 0.5px);
+        right: calc(var(--layout-gap-sm) - 0.5px);
       }
 
       &.is-left {
-        left: calc(var(--spacing-sm) - 0.5px);
+        left: calc(var(--layout-gap-sm) - 0.5px);
 
-        > .shape {
+        >.shape {
           transform: scaleX(-1);
         }
       }

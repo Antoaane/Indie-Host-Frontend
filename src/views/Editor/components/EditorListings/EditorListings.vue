@@ -193,25 +193,29 @@ console.log('props:', props)
             <!-- <div class="content"> -->
             <div class="media">
               <template v-if="slidesFor(listing.listingId).length">
-                <Swiper
-                  class="swiper"
-                  v-bind="cardSwiperBaseParams"
-                  @swiper="(swiper) => registerSwiper(swiper as SwiperInstance, listing.listingId)"
-                  @slideChange="(swiper) => syncActiveIndex(swiper as SwiperInstance, listing.listingId)"
+                <div
+                  class="swiper-hitbox"
                   @click.stop
                   @pointerdown.stop
                 >
-                  <SwiperSlide
-                    v-for="(slide, idx) in slidesFor(listing.listingId)"
-                    :key="`${listing.listingId}-${slide.src}-${idx}`"
+                  <Swiper
+                    class="swiper"
+                    v-bind="cardSwiperBaseParams"
+                    @swiper="(swiper) => registerSwiper(swiper as SwiperInstance, listing.listingId)"
+                    @slideChange="(swiper) => syncActiveIndex(swiper as SwiperInstance, listing.listingId)"
                   >
-                    <img
-                      loading="lazy"
-                      :src="slide.src"
-                      :alt="slide.alt"
-                    />
-                  </SwiperSlide>
-                </Swiper>
+                    <SwiperSlide
+                      v-for="(slide, idx) in slidesFor(listing.listingId)"
+                      :key="`${listing.listingId}-${slide.src}-${idx}`"
+                    >
+                      <img
+                        loading="lazy"
+                        :src="slide.src"
+                        :alt="slide.alt"
+                      />
+                    </SwiperSlide>
+                  </Swiper>
+                </div>
 
                 <div class="carousel">
                   <button

@@ -5,6 +5,13 @@ import { computed } from 'vue'
 import type { RawCore } from '@/views/Listing/utils/fetchListingRaw'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 
+import { ref, onMounted } from 'vue'
+import { QuillyEditor } from 'vue-quilly'
+import type { QuillOptions } from 'quill/core'
+import Quill from 'quill'
+import 'quill/dist/quill.bubble.css'
+import 'quill/dist/quill.snow.css'
+
 const props = defineProps<{
   core?: Partial<RawCore> | null
 }>()
@@ -16,6 +23,37 @@ const emit = defineEmits<{
 const description = computed({
   get: () => props.core?.description ?? '',
   set: (value: string) => emit('patch', { core: { description: value } }),
+})
+
+const editor = ref<InstanceType<typeof QuillyEditor>>()
+const content = ref('')
+let quill: Quill | undefined
+
+const options: QuillOptions = {
+  theme: 'snow',
+  placeholder: 'Start writing...',
+  readOnly: false,
+  modules: {
+    toolbar: [
+      [
+        {
+          header: [
+            2,
+            false,
+          ],
+        },
+      ],
+      [
+        'bold',
+        'italic',
+        'link',
+      ],
+    ],
+  },
+}
+
+onMounted(() => {
+  quill = editor.value?.initialize(Quill)
 })
 </script>
 
@@ -33,6 +71,11 @@ const description = computed({
         rows="6"
         placeholder="Décrivez votre logement…"
       />
+      <QuillyEditor
+        ref="editor"
+        :options="options"
+        v-model="content"
+      />
     </div>
   </section>
 </template>
@@ -43,35 +86,17 @@ const description = computed({
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
 @use '@/styles/components/inputs' as inputs;
+@use '@/views/Editor/components/EditorSidebar/panels/ListingPanels/listing-panels.scss' as *;
 
 .editor-description-panel {
-  padding: var(--spacing-sm);
-  border-radius: borders.$rounded-md;
-  background: $accent;
-  border: 1px solid rgba($secondary, 0.06);
+  @extend %panel;
 
   > .header {
-    margin-bottom: var(--spacing-sm);
-
-    > h3 {
-      margin: 0;
-      font-size: 1rem;
-      font-weight: 700;
-      color: $secondary;
-    }
-
-    > p {
-      margin: 0.25rem 0 0 0;
-      font-size: 0.875rem;
-      font-weight: 300;
-      color: rgba($secondary, 0.75);
-    }
+    @extend %panel-header;
   }
 
   > .body {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
+    @extend %panel-body;
 
     > .textarea {
       @include inputs.text($tertiary, borders.$rounded-md);
@@ -81,5 +106,4 @@ const description = computed({
     }
   }
 }
-
 </style>

@@ -138,7 +138,7 @@
   font-size: 1.75rem;
   line-height: 2.5rem;
 
-  @include spacings(padding, inline);
+  @include layout-gap(padding, inline);
 
   @include min-width(md) {
     font-size: 2rem;
@@ -185,7 +185,7 @@
   }
 }
 
-@mixin h1-title($color : $secondary, $bigger: true, $colorful: true, $spacings: false, $gradiant: false) {
+@mixin h1-title($color : $secondary, $bigger: true, $colorful: true, $layout-gap: false, $gradiant: false) {
   // margin-top: 0;
   // margin-bottom: 0.75rem;
 
@@ -207,8 +207,8 @@
   }
 
 
-  @if $spacings {
-    @include spacings(padding, inline);
+  @if $layout-gap {
+    @include layout-gap(padding, inline);
   }
 
   // @include min-width(lg) {
@@ -246,7 +246,7 @@
   }
 }
 
-@mixin h2-title($color : $secondary, $bigger: true, $colorful: true, $spacings: false, $gradiant: false) {
+@mixin h2-title($color : $secondary, $bigger: true, $colorful: true, $layout-gap: false, $gradiant: false) {
   // margin-top: 0;
   // margin-bottom: 0.75rem;
 
@@ -268,8 +268,8 @@
   }
 
 
-  @if $spacings {
-    @include spacings(padding, inline);
+  @if $layout-gap {
+    @include layout-gap(padding, inline);
   }
 
   // @include min-width(lg) {
@@ -307,7 +307,7 @@
   }
 }
 
-@mixin h3-title($color : $secondary, $bigger: true, $colorful: true, $spacings: false, $gradiant: false) {
+@mixin h3-title($color : $secondary, $bigger: true, $colorful: true, $layout-gap: false, $gradiant: false) {
   // margin-top: 0;
   // margin-bottom: 0.75rem;
 
@@ -329,8 +329,8 @@
   }
 
 
-  @if $spacings {
-    @include spacings(padding, inline);
+  @if $layout-gap {
+    @include layout-gap(padding, inline);
   }
 
   // @include min-width(lg) {
@@ -368,7 +368,7 @@
   }
 }
 
-@mixin h4-title($color : $secondary, $bigger: true, $colorful: true, $spacings: false, $gradiant: false) {
+@mixin h4-title($color : $secondary, $bigger: true, $colorful: true, $layout-gap: false, $gradiant: false) {
   // margin-top: 0;
   // margin-bottom: 0.75rem;
 
@@ -390,8 +390,8 @@
   }
 
 
-  @if $spacings {
-    @include spacings(padding, inline);
+  @if $layout-gap {
+    @include layout-gap(padding, inline);
   }
 
   // @include min-width(lg) {
@@ -430,7 +430,7 @@
 }
 
 
-@mixin lp-h2-title($color : $secondary, $bigger: true, $colorful: true, $spacings: true) {
+@mixin lp-h2-title($color : $secondary, $bigger: true, $colorful: true, $layout-gap: true) {
   margin-top: 0;
   margin-bottom: 0.75rem;
 
@@ -441,8 +441,8 @@
   font-size: 1.5rem;
   line-height: 2rem;
 
-  @if $spacings {
-    @include spacings(padding, inline);
+  @if $layout-gap {
+    @include layout-gap(padding, inline);
   }
 
   @include min-width(md) {

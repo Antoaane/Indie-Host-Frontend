@@ -141,15 +141,17 @@ async function publishDraft() {
   @include effects.big-shadow();
 
   @include min-width(lg) {
-    width: 420px;
+    min-width: 24rem;
+    max-width: 36rem;
+    width: 30vw;
   }
 
   > .header {
-    padding-bottom: var(--spacing-md);
+    padding-bottom: var(--layout-gap-md);
   }
 
   > .body {
-    // margin: var(--spacing-sm) 0;
+    // margin: var(--layout-gap-sm) 0;
     min-height: 0;
 
     flex: 1 1 auto;
@@ -161,18 +163,18 @@ async function publishDraft() {
 
   > .footer {
     flex: 0 0 auto;
-    padding: var(--spacing-sm) 0;
+    padding: var(--layout-gap-sm) 0;
     background: rgba($secondary, 0.04);
     border-top: 1px solid rgba($secondary, 0.08);
 
     > .actions {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: var(--spacing-sm);
+      gap: var(--layout-gap-sm);
     }
 
     > .error {
-      margin: 0 0 var(--spacing-sm) 0;
+      margin: 0 0 var(--layout-gap-sm) 0;
       font-size: 0.9rem;
       font-weight: 500;
       color: rgba($bad, 0.95);

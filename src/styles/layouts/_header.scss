@@ -4,7 +4,7 @@
 
 .layout-header {
   width: 100%;
-  padding-bottom: var(--spacing-md);
+  padding-bottom: var(--layout-gap-md);
 
   position: fixed;
   top: 0;
@@ -16,21 +16,21 @@
 
   transform: translateX(-50%);
 
-  // @include spacings(padding, all, 0.75);
+  // @include layout-gap(padding, all, 0.75);
 
-  // @include spacings(padding, inline, 0.75);
-  // @include spacings(padding, top, 0.75);
-  // @include spacings(padding, bottom, (0.75*0.667));
+  // @include layout-gap(padding, inline, 0.75);
+  // @include layout-gap(padding, top, 0.75);
+  // @include layout-gap(padding, bottom, (0.75*0.667));
 
-  @include spacings(padding, inline);
-  @include spacings(padding, top);
-  // @include spacings(padding, bottom, 0.667);
+  @include layout-gap(padding, inline);
+  @include layout-gap(padding, top);
+  // @include layout-gap(padding, bottom, 0.667);
 
   @include min-width(md) {
     // top: 0;
-    // @include spacings(padding, inline);
-    // @include spacings(padding, top);
-    // @include spacings(padding, bottom, 0.667);
+    // @include layout-gap(padding, inline);
+    // @include layout-gap(padding, top);
+    // @include layout-gap(padding, bottom, 0.667);
   }
 
   @include min-width(lg) {

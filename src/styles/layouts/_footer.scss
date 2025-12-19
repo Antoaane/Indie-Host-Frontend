@@ -9,9 +9,9 @@
 
   background-color: $accent;
 
-  @include spacings(padding, inline, 2);
+  @include layout-gap(padding, inline, 2);
 
-  > p {
+  >p {
     margin: 0.5rem 0 !important;
 
     font-weight: 500 !important;

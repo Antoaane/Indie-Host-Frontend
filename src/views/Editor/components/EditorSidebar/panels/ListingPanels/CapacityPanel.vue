@@ -29,9 +29,7 @@ function setCapacity(next: number) {
 
     <div class="body">
       <div class="stepper">
-        <div
-          class="btn"
-        >
+        <div class="btn">
           <button
             type="button"
             @click="setCapacity(capacity - 1)"
@@ -46,9 +44,7 @@ function setCapacity(next: number) {
           :value="capacity"
           @input="setCapacity(Number(($event.target as HTMLInputElement).value))"
         />
-        <div
-          class="btn"
-        >
+        <div class="btn">
           <button
             type="button"
             @click="setCapacity(capacity + 1)"
@@ -68,40 +64,22 @@ function setCapacity(next: number) {
 @use '@/styles/variables/borders' as borders;
 @use '@/styles/components/buttons' as buttons;
 @use '@/styles/components/inputs' as inputs;
+@use '@/views/Editor/components/EditorSidebar/panels/ListingPanels/listing-panels.scss' as *;
 
 .editor-capacity-panel {
-  padding: var(--spacing-sm);
-  border-radius: borders.$rounded-md;
-  background: $accent;
-  border: 1px solid rgba($secondary, 0.06);
+  @extend %panel;
 
   > .header {
-    margin-bottom: var(--spacing-sm);
-
-    > h3 {
-      margin: 0;
-      font-size: 1rem;
-      font-weight: 700;
-      color: $secondary;
-    }
-
-    > p {
-      margin: 0.25rem 0 0 0;
-      font-size: 0.875rem;
-      font-weight: 300;
-      color: rgba($secondary, 0.75);
-    }
+    @extend %panel-header;
   }
 
   > .body {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
+    @extend %panel-body;
 
     > .stepper {
       display: inline-flex;
       align-items: center;
-      gap: var(--spacing-xs);
+      gap: var(--layout-gap-xs);
 
       > .btn {
         @include buttons.primary($theme: black, $padding: false);
@@ -124,5 +102,4 @@ function setCapacity(next: number) {
     }
   }
 }
-
 </style>

@@ -8,32 +8,33 @@
 
 .listing-checkout#checkout {
   // position: sticky;
-  // top: calc($nav-height + var(--spacing));
+  // top: calc($nav-height + var(--layout-gap));
   flex: 0 0 auto;
-  > .card {
+
+  >.card {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-md);
+    gap: var(--layout-gap-md);
 
-    padding: var(--spacing-md);
+    padding: var(--layout-gap-md);
 
     background: $accent;
     border-radius: borders.$rounded-xl;
     @include big-shadow();
 
-    > .header {
+    >.header {
       position: relative;
       display: flex;
       flex-direction: column;
-      gap: calc(var(--spacing-xs) / 2);
+      gap: calc(var(--layout-gap-xs) / 2);
       padding-right: 6rem;
 
-      > h2 {
+      >h2 {
         margin: 0;
         @include h2-title($colorful: false, $bigger: true);
       }
 
-      > .range {
+      >.range {
         padding: 0;
         align-self: flex-start;
 
@@ -54,7 +55,7 @@
         }
       }
 
-      > .price {
+      >.price {
         position: absolute;
         top: 0.35rem;
         right: 0;
@@ -70,28 +71,28 @@
       }
     }
 
-    > .fields {
+    >.fields {
       display: flex;
       flex-direction: column;
-      gap: var(--spacing-sm);
+      gap: var(--layout-gap-sm);
 
-      > .listing-checkout-dates,
-      > .listing-checkout-guests {
+      >.listing-checkout-dates,
+      >.listing-checkout-guests {
         position: relative;
       }
 
-      > .listing-checkout-dates {
-        > .group {
+      >.listing-checkout-dates {
+        >.group {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
-          gap: var(--spacing-sm);
+          gap: var(--layout-gap-sm);
 
           &.is-single {
             grid-template-columns: 1fr;
           }
 
-          > .btn-primary__white__full {
-            > .field {
+          >.btn-primary__white__full {
+            >.field {
               width: 100%;
               text-align: left;
 
@@ -109,7 +110,7 @@
               //   display: flex;
               //   justify-content: space-evenly;
 
-              > span {
+              >span {
                 display: block !important;
 
                 &.line {
@@ -119,13 +120,13 @@
 
               // }
 
-              > span {
+              >span {
                 // font-size: 0.95rem;
                 // font-weight: 400;
                 // color: rgba($secondary, 0.7);
               }
 
-              > strong {
+              >strong {
                 // font-size: 1.1rem;
                 // font-weight: 700;
                 // color: $secondary;
@@ -142,7 +143,7 @@
           }
         }
 
-        > .calendar {
+        >.calendar {
           position: absolute;
           z-index: 99;
           top: 0;
@@ -150,7 +151,7 @@
           transform: translateY(2.5rem);
 
           width: 30rem;
-          @include spacings(padding, all, 0.5);
+          @include layout-gap(padding, all, 0.5);
 
           background: rgba($accent, 0.5);
           backdrop-filter: blur(12px);
@@ -160,8 +161,8 @@
           border-top-right-radius: borders.$rounded-xl;
           @include big-shadow($color: rgba(0, 0, 0, 0.25));
 
-          > .date-picker {
-            > .body {
+          >.date-picker {
+            >.body {
               margin-top: 0.5rem;
               background: rgba($accent, 0.75);
             }
@@ -169,9 +170,9 @@
         }
       }
 
-      > .listing-checkout-guests {
-        > .btn-primary__white__full {
-          > .field {
+      >.listing-checkout-guests {
+        >.btn-primary__white__full {
+          >.field {
             width: 100%;
             text-align: left;
 
@@ -189,7 +190,7 @@
             //   display: flex;
             //   justify-content: space-evenly;
 
-            > span {
+            >span {
               display: block !important;
 
               &.line {
@@ -199,13 +200,13 @@
 
             // }
 
-            > span {
+            >span {
               // font-size: 0.95rem;
               // font-weight: 400;
               // color: rgba($secondary, 0.7);
             }
 
-            > strong {
+            >strong {
               // font-size: 1.1rem;
               // font-weight: 700;
               // color: $secondary;
@@ -221,7 +222,7 @@
           }
         }
 
-        > .dropdown {
+        >.dropdown {
           position: absolute;
           z-index: 5;
           inset: auto 0 0 0;
@@ -229,37 +230,37 @@
 
           display: flex;
           flex-direction: column;
-          gap: var(--spacing-sm);
+          gap: var(--layout-gap-sm);
 
-          padding: var(--spacing-sm);
+          padding: var(--layout-gap-sm);
           background: $accent;
           border-radius: borders.$rounded-lg;
           @include big-shadow();
 
-          > .item {
+          >.item {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: var(--spacing-sm);
+            gap: var(--layout-gap-sm);
 
-            > div {
-              > p {
+            >div {
+              >p {
                 margin: 0;
                 font-weight: 600;
                 color: $secondary;
               }
 
-              > small {
+              >small {
                 color: rgba($secondary, 0.65);
               }
             }
 
-            > .counter {
+            >.counter {
               display: inline-flex;
               align-items: center;
-              gap: var(--spacing-xs);
+              gap: var(--layout-gap-xs);
 
-              > button {
+              >button {
                 width: 2rem;
                 height: 2rem;
 
@@ -284,7 +285,7 @@
                 }
               }
 
-              > span {
+              >span {
                 min-width: 1.5rem;
                 text-align: center;
                 font-weight: 600;
@@ -296,35 +297,35 @@
       }
     }
 
-    > .listing-checkout-summary {
+    >.listing-checkout-summary {
       display: flex;
       flex-direction: column;
-      gap: var(--spacing-xs);
+      gap: var(--layout-gap-xs);
 
-      padding-top: var(--spacing-xs);
+      padding-top: var(--layout-gap-xs);
       border-top: 1px solid rgba($secondary, 0.08);
       overflow: hidden;
 
-      > .line {
+      >.line {
         display: flex;
         align-items: center;
         justify-content: space-between;
 
-        > p {
+        >p {
           margin: 0;
           @include base-text($thin: false);
         }
 
-        > span {
+        >span {
           font-weight: 600;
           color: $secondary;
         }
 
         &.is-total {
-          margin-top: var(--spacing-sm);
+          margin-top: var(--layout-gap-sm);
 
-          > p,
-          > span {
+          >p,
+          >span {
             font-weight: 800;
             font-size: 1.05rem;
           }
@@ -332,19 +333,19 @@
       }
     }
 
-    > .listing-checkout-cta {
+    >.listing-checkout-cta {
       display: flex;
       flex-direction: column;
-      gap: var(--spacing-2xs);
+      gap: var(--layout-gap-2xs);
 
-      > .btn-primary__full {
+      >.btn-primary__full {
         @include buttons.primary($cta: true, $fullwidth: true);
 
-        > button {
+        >button {
           // padding-block: 0.85rem;
           // font-weight: 600;
           // font-size: 1rem;
-          // gap: var(--spacing-xs);
+          // gap: var(--layout-gap-xs);
 
           &:disabled {
             opacity: 0.6;
@@ -353,7 +354,7 @@
         }
       }
 
-      > .hint {
+      >.hint {
         margin: 0;
         height: 0.5rem;
 
@@ -362,7 +363,7 @@
         gap: 0.35rem;
 
         position: relative;
-        top: var(--spacing-xs);
+        top: var(--layout-gap-xs);
         color: rgba($secondary, 0.65);
 
         font-size: 0.75rem;
@@ -381,8 +382,8 @@
   }
 
   @include min-width(md) {
-    > .card {
-      padding: var(--spacing);
+    >.card {
+      padding: var(--layout-gap);
     }
   }
 }
