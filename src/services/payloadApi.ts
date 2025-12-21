@@ -50,7 +50,8 @@ export async function getLatestPublishedArticle(): Promise<PayloadArticle | null
     // where[status][equals]=published : seulement les articles publiés
     // sort=-publishedDate : tri décroissant par date de publication
     // limit=1 : un seul résultat
-    const url = `${PAYLOAD_API_URL}/api/articles?where[status][equals]=published&sort=-publishedDate&limit=1`
+    // depth=2 : populer les relations (author, categories, etc.)
+    const url = `${PAYLOAD_API_URL}/api/articles?where[status][equals]=published&sort=-publishedDate&limit=1&depth=2`
 
     const response = await fetch(url, {
       method: 'GET',
@@ -150,6 +151,138 @@ export async function getPublishedArticles(
     if (error instanceof Error) {
       throw new PayloadApiError(
         `Erreur réseau lors de la récupération des articles: ${error.message}`,
+        0,
+        'Erreur réseau'
+      )
+    }
+
+    throw new PayloadApiError(
+      'Une erreur inconnue s\'est produite',
+      0,
+      'Erreur inconnue'
+    )
+  }
+}
+
+/**
+ * Récupère un article par son slug
+ *
+ * @param slug Le slug de l'article à récupérer
+ * @returns L'article correspondant ou null si non trouvé
+ * @throws {PayloadApiError} Si la requête échoue
+ */
+export async function getArticleBySlug(slug: string): Promise<PayloadArticle | null> {
+  if (!import.meta.env.DEV && !PAYLOAD_API_URL) {
+    throw new PayloadApiError(
+      'L\'URL de l\'API Payload n\'est pas configurée',
+      0,
+      'Configuration manquante'
+    )
+  }
+
+  try {
+    const url = `${PAYLOAD_API_URL}/api/articles?where[slug][equals]=${slug}&where[status][equals]=published&depth=2&limit=1`
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      throw new PayloadApiError(
+        `Erreur lors de la récupération de l'article: ${response.statusText}`,
+        response.status,
+        response.statusText
+      )
+    }
+
+    const data: PayloadArticlesResponse = await response.json()
+
+    if (!data.docs || data.docs.length === 0) {
+      return null
+    }
+
+    return data.docs[0]
+  } catch (error) {
+    if (error instanceof PayloadApiError) {
+      throw error
+    }
+
+    if (error instanceof Error) {
+      throw new PayloadApiError(
+        `Erreur réseau lors de la récupération de l'article: ${error.message}`,
+        0,
+        'Erreur réseau'
+      )
+    }
+
+    throw new PayloadApiError(
+      'Une erreur inconnue s\'est produite',
+      0,
+      'Erreur inconnue'
+    )
+  }
+}
+
+/**
+ * Récupère les articles connexes basés sur les catégories partagées
+ *
+ * @param categoryIds Liste des IDs de catégories
+ * @param excludeSlug Slug de l'article à exclure
+ * @param limit Nombre d'articles à récupérer (par défaut 4)
+ * @returns Un tableau d'articles connexes
+ * @throws {PayloadApiError} Si la requête échoue
+ */
+export async function getRelatedArticles(
+  categoryIds: string[],
+  excludeSlug: string,
+  limit: number = 4
+): Promise<PayloadArticle[]> {
+  if (!import.meta.env.DEV && !PAYLOAD_API_URL) {
+    throw new PayloadApiError(
+      'L\'URL de l\'API Payload n\'est pas configurée',
+      0,
+      'Configuration manquante'
+    )
+  }
+
+  if (!categoryIds || categoryIds.length === 0) {
+    return []
+  }
+
+  try {
+    // Construire la requête pour récupérer les articles qui partagent au moins une catégorie
+    const categoryFilters = categoryIds.map(id => `where[category][in][]=${id}`).join('&')
+    const url = `${PAYLOAD_API_URL}/api/articles?${categoryFilters}&where[status][equals]=published&where[slug][not_equals]=${excludeSlug}&depth=2&limit=${limit}`
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      throw new PayloadApiError(
+        `Erreur lors de la récupération des articles connexes: ${response.statusText}`,
+        response.status,
+        response.statusText
+      )
+    }
+
+    const data: PayloadArticlesResponse = await response.json()
+
+    return data.docs || []
+  } catch (error) {
+    if (error instanceof PayloadApiError) {
+      throw error
+    }
+
+    if (error instanceof Error) {
+      throw new PayloadApiError(
+        `Erreur réseau lors de la récupération des articles connexes: ${error.message}`,
         0,
         'Erreur réseau'
       )

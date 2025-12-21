@@ -1,0 +1,18 @@
+/* File: src/views/Blog/components/PostImage/PostImage.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+
+.post-image {
+  width: 100%;
+  margin-bottom: 3rem;
+
+  &__img {
+    width: 75%;
+    height: auto;
+    display: block;
+    border-radius: borders.$rounded-lg;
+    border: 2px solid rgba($accent, 0.35);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  }
+}

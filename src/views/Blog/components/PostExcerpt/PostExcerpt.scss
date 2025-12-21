@@ -1,0 +1,16 @@
+/* File: src/views/Blog/components/PostExcerpt/PostExcerpt.scss */
+
+@use '@/styles/variables/globals' as *;
+
+.post-excerpt {
+  width: 100%;
+  margin-bottom: 3rem;
+
+  &__text {
+    margin: 0;
+    font-size: 1.25rem;
+    line-height: 1.7;
+    color: rgba($accent, 0.9);
+    font-style: italic;
+  }
+}

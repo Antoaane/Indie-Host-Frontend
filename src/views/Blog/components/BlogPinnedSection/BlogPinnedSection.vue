@@ -162,8 +162,8 @@ onMounted(() => {
         :key="article.id"
         class="blog-pinned__card"
       >
-        <a
-          :href="`/blog/${article.slug}`"
+        <router-link
+          :to="`/blog/${article.slug}`"
           class="blog-pinned__card-link"
         >
           <!-- Image de l'article -->
@@ -196,7 +196,7 @@ onMounted(() => {
               </time>
             </div>
           </div>
-        </a>
+        </router-link>
       </article>
     </div>
   </section>

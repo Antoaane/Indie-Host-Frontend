@@ -219,8 +219,8 @@ onMounted(() => {
         :key="article.id"
         class="blog-full__card"
       >
-        <a
-          :href="`/blog/${article.slug}`"
+        <router-link
+          :to="`/blog/${article.slug}`"
           class="blog-full__card-link"
         >
           <!-- Image -->
@@ -251,7 +251,7 @@ onMounted(() => {
               </time>
             </div>
           </div>
-        </a>
+        </router-link>
       </article>
     </div>
 

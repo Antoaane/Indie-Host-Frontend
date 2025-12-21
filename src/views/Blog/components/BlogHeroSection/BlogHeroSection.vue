@@ -182,8 +182,8 @@ onMounted(() => {
             class="blog-hero__image-wrap"
           >
             <div class="blog-hero__image-container">
-              <a
-                :href="`/blog/${article.slug}`"
+              <router-link
+                :to="`/blog/${article.slug}`"
                 class="blog-hero__image-link"
                 tabindex="-1"
               >
@@ -195,7 +195,7 @@ onMounted(() => {
                   class="blog-hero__image"
                   loading="eager"
                 />
-              </a>
+              </router-link>
             </div>
           </div>
 
@@ -203,12 +203,12 @@ onMounted(() => {
           <div class="blog-hero__text-wrap">
             <!-- Titre -->
             <h2 class="blog-hero__title">
-              <a
-                :href="`/blog/${article.slug}`"
+              <router-link
+                :to="`/blog/${article.slug}`"
                 class="blog-hero__title-link"
               >
                 {{ article.title }}
-              </a>
+              </router-link>
             </h2>
 
             <!-- Date de publication -->
@@ -228,13 +228,13 @@ onMounted(() => {
             </div>
 
             <!-- Bouton CTA -->
-            <a
-              :href="`/blog/${article.slug}`"
+            <router-link
+              :to="`/blog/${article.slug}`"
               class="blog-hero__cta btn btn--gradient"
               @mousemove="handleMouseMove"
             >
               <span class="btn__text">En savoir plus</span>
-            </a>
+            </router-link>
           </div>
         </div>
       </div>

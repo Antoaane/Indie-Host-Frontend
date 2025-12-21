@@ -7,6 +7,10 @@
   color: $secondary;
 }
 
+.post-content__body * {
+  color: $accent;
+}
+
 text[font-family="Fustat"] {
   font-family: 'Fustat', sans-serif;
 
