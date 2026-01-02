@@ -195,8 +195,8 @@ console.log('props:', props)
               <template v-if="slidesFor(listing.listingId).length">
                 <div
                   class="swiper-hitbox"
-                  @click.stop
-                  @pointerdown.stop
+                  @click.stop="handleSelect(listing.listingId)"
+                  @pointerdown.stop="handleSelect(listing.listingId)"
                 >
                   <Swiper
                     class="swiper"
@@ -222,8 +222,8 @@ console.log('props:', props)
                     class="nav is-prev"
                     type="button"
                     aria-label="Image précédente"
-                    @click.stop="slidePrev(listing.listingId)"
-                    @pointerdown.stop
+                    @click.stop="(event) => { handleSelect(listing.listingId); slidePrev(listing.listingId) }"
+                    @pointerdown.stop="handleSelect(listing.listingId)"
                   >
                     <ChevronLeft :size="18" />
                   </button>
@@ -231,16 +231,16 @@ console.log('props:', props)
                     class="nav is-next"
                     type="button"
                     aria-label="Image suivante"
-                    @click.stop="slideNext(listing.listingId)"
-                    @pointerdown.stop
+                    @click.stop="(event) => { handleSelect(listing.listingId); slideNext(listing.listingId) }"
+                    @pointerdown.stop="handleSelect(listing.listingId)"
                   >
                     <ChevronRight :size="18" />
                   </button>
                   <div
                     class="dots"
                     aria-label="Pagination du carrousel"
-                    @click.stop
-                    @pointerdown.stop
+                    @click.stop="handleSelect(listing.listingId)"
+                    @pointerdown.stop="handleSelect(listing.listingId)"
                   >
                     <button
                       v-for="(dot, index) in slidesFor(listing.listingId)"
@@ -249,8 +249,8 @@ console.log('props:', props)
                       :class="{ 'is-active': activeIndexFor(listing.listingId) === index }"
                       type="button"
                       :aria-label="`Aller à l’image ${index + 1}`"
-                      @click.stop="slideTo(listing.listingId, index)"
-                      @pointerdown.stop
+                      @click.stop="(event) => { handleSelect(listing.listingId); slideTo(listing.listingId, index) }"
+                      @pointerdown.stop="handleSelect(listing.listingId)"
                     />
                   </div>
                 </div>

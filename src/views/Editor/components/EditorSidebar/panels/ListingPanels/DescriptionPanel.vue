@@ -1,11 +1,10 @@
 <!-- File: src/views/Editor/components/EditorSidebar/panels/ListingPanels/DescriptionPanel.vue -->
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import type { RawCore } from '@/views/Listing/utils/fetchListingRaw'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 
-import { ref, onMounted } from 'vue'
 import { QuillyEditor } from 'vue-quilly'
 import type { QuillOptions } from 'quill/core'
 import Quill from 'quill'
@@ -26,8 +25,20 @@ const description = computed({
 })
 
 const editor = ref<InstanceType<typeof QuillyEditor>>()
-const content = ref('')
+const content = ref(description.value)
 let quill: Quill | undefined
+
+watch(description, (value) => {
+  if (value !== content.value) {
+    content.value = value
+  }
+})
+
+watch(content, (value) => {
+  if (value !== description.value) {
+    description.value = value
+  }
+})
 
 const options: QuillOptions = {
   theme: 'snow',
@@ -54,6 +65,7 @@ const options: QuillOptions = {
 
 onMounted(() => {
   quill = editor.value?.initialize(Quill)
+  console.log('Description content:', description.value)
 })
 </script>
 
@@ -65,12 +77,12 @@ onMounted(() => {
     </div>
 
     <div class="body">
-      <textarea
+      <!-- <textarea
         v-model="description"
         class="textarea"
         rows="6"
         placeholder="Décrivez votre logement…"
-      />
+      /> -->
       <QuillyEditor
         ref="editor"
         :options="options"
@@ -85,6 +97,7 @@ onMounted(() => {
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
 @use '@/styles/components/inputs' as inputs;
 @use '@/views/Editor/components/EditorSidebar/panels/ListingPanels/listing-panels.scss' as *;
 
@@ -103,6 +116,100 @@ onMounted(() => {
       width: 100%;
       resize: vertical;
       min-height: 9rem;
+    }
+
+    > .ql-toolbar {
+      border: 0.5px rgba($secondary, 0.1) solid;
+      border-radius: borders.$rounded-md;
+      background-color: $accent;
+
+      color: $secondary;
+
+      box-shadow: 0 0 0 0 rgba($accent, 0);
+
+      @include soft-shadow();
+
+      .ql-header {
+        .ql-picker-item::before {
+          content: 'Texte';
+        }
+
+        .ql-picker-item[data-value='2']::before {
+          content: 'Titre';
+        }
+
+        .ql-picker-label::before {
+          content: 'Texte';
+        }
+
+        .ql-picker-label[data-value='2']::before {
+          content: 'Titre';
+        }
+
+        * {
+          color: $secondary !important;
+          @include animations.transition($duration: 150ms);
+        }
+
+        svg {
+          * {
+            stroke: $secondary !important;
+
+            @include animations.transition($duration: 150ms);
+          }
+        }
+
+        &:hover {
+          * {
+            color: rgba($secondary, 0.8) !important;
+          }
+
+          svg {
+            * {
+              stroke: rgba($secondary, 0.8) !important;
+            }
+          }
+        }
+      }
+
+      button {
+        border-radius: borders.$rounded-md;
+
+        @include animations.transition($duration: 150ms);
+
+        svg {
+          * {
+            stroke: $secondary !important;
+
+            @include animations.transition($duration: 150ms);
+          }
+        }
+
+        &:hover {
+          background-color: rgba($secondary, 0.25);
+        }
+
+        &.ql-active {
+          background-color: $secondary;
+
+          svg {
+            * {
+              stroke: $accent !important;
+            }
+          }
+        }
+      }
+    }
+
+    > .ql-container {
+      border: none;
+
+      > .ql-editor {
+        width: 100%;
+        min-height: 9rem;
+
+        @include inputs.text($tertiary, borders.$rounded-md);
+      }
     }
   }
 }
