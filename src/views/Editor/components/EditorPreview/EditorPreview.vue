@@ -77,10 +77,17 @@ onBeforeUnmount(() => {
 /* File: src/views/Editor/components/EditorPreview/editor-preview.scss */
 
 @use '@/styles/variables/globals' as *;
+@use '@/styles/variables/effects' as effects;
+@use '@/styles/variables/borders' as borders;
 
 .editor-preview {
   height: 100%;
   min-height: 0;
+
+  background-color: $secondary;
+  border-radius: borders.$rounded-xl;
+
+  box-shadow: 0px 0px 20px 0px rgba($accent, 0.3);
 
   > .content {
     height: 100%;

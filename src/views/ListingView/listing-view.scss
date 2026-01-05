@@ -18,7 +18,7 @@
   }
 
   &.editor {
-    width: 100vw;
+    width: 90vw;
     height: auto;
     min-height: 0;
     display: flex;
@@ -34,7 +34,7 @@
 
   >.gallery {
     flex-grow: 0;
-    flex-basis: 25vw;
+    flex-basis: 25%;
     flex-shrink: 0;
     height: 100%;
     min-height: 0;
@@ -52,7 +52,7 @@
     min-height: 0;
 
     flex-grow: 0;
-    flex-basis: 25vw;
+    flex-basis: 25%;
     flex-shrink: 0;
     gap: var(--layout-gap-md);
 

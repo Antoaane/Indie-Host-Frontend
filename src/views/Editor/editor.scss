@@ -39,11 +39,7 @@
       display: flex;
       flex-direction: column;
 
-      background: $accent;
-      border-radius: borders.$rounded-xl;
-      @include effects.big-shadow();
-
-      overflow: hidden;
+      // overflow: hidden;
 
       >.content {
         flex: 1 1 auto;
@@ -53,7 +49,7 @@
 
       >.footer {
         flex: 0 0 auto;
-        padding: var(--layout-gap-sm);
+        padding: var(--layout-gap-sm) 3px;
         background: $secondary;
       }
     }
