@@ -131,13 +131,17 @@ function showListings() {
 
 const canTogglePreview = computed(() => Boolean(selectedListingId.value && draft.value))
 
-watch(() => props.source, () => {
-  selectedListingId.value = null
-  draft.value = null
-  stage.value = 'listings'
-  listings.value = []
-  void loadListings()
-}, { immediate: true })
+watch(
+  () => props.source,
+  () => {
+    selectedListingId.value = null
+    draft.value = null
+    stage.value = 'listings'
+    listings.value = []
+    void loadListings()
+  },
+  { immediate: true },
+)
 
 watch(selectedListingId, (id) => {
   if (!id) {
@@ -182,6 +186,7 @@ watch(selectedListingId, (id) => {
               v-show="stage === 'preview'"
               :rawListing="previewRawListing"
               :isLoading="draftStatus.isLoading"
+              :isShowed="stage === 'preview'"
             />
           </Transition>
         </div>

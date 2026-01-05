@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 // DEPS
-import { computed, ref } from 'vue'
+import { computed, ref, watch, nextTick } from 'vue'
 
 // UTILS
 import { vp } from '@/utils/viewport'
@@ -16,22 +16,103 @@ import ListingComments from '@/views/ListingView/components/ListingComments/List
 import Checkout from '@/views/ListingView/components/Checkout/Checkout.vue'
 import CheckoutMin from '@/views/ListingView/components/CheckoutMin/CheckoutMin.vue'
 
+// TYPES
 import type { ListingParsed } from '@/views/ListingView/types/listing'
+import type { StyleValue } from 'vue'
 
 const props = defineProps<{
   rawListing?: RawListingBundle | null
+  aspect?: {
+    width: number
+    height: number
+  }
 }>()
 
 const listingData = computed<ListingParsed | null>(() => {
   if (!props.rawListing) return null
   return listingCore(props.rawListing)
 })
+
 const bookingRange = ref<RangeISO | null>(null)
+
+const pvWidth = ref<number | undefined>(0)
+const pvHeight = ref<number | undefined>(0)
+
+const listingView = ref<HTMLElement | null>(null)
+const lvWidth = ref<number | null>(0)
+const lvHeight = ref<number | null>(0)
+
+const scaleDiff = ref<number | null>(0)
+// const wDiff = ref<number | null>(0)
+// const hDiff = ref<number | null>(0)
+
+// const aspectStyles = {
+//   aspectRatio: `${pvWidth}/${pvHeight}`,
+//   transform: scaleDiff ? `scale(${scaleDiff})` : 'none',
+//   top: hDiff ? `-${hDiff / 4.75}px` : '0px',
+//   left: wDiff ? `-${wDiff / 2}px` : '0px',
+// }
+
+const aspectStyles = computed<StyleValue>(() => {
+  if (!props.aspect) {
+    return {}
+  }
+
+  return {
+    aspectRatio: `${pvWidth.value} / ${pvHeight.value}`,
+    transform: `scale(${scaleDiff.value})`,
+    transformOrigin: 'top left',
+    position: 'relative',
+    // top: hDiff.value ? `-${hDiff.value / 4.75}px` : '0px',
+    // left: wDiff.value ? `-${wDiff.value / 2}px` : '0px',
+  }
+})
+
+function setAspect() {
+  pvWidth.value = props.aspect?.width
+  pvHeight.value = props.aspect?.height
+
+  const container = listingView.value
+  if (container) {
+    lvWidth.value = container.clientWidth
+    lvHeight.value = container.clientHeight
+  }
+
+  if (lvWidth.value && pvWidth.value && lvHeight.value && pvHeight.value) {
+    scaleDiff.value = pvWidth.value / lvWidth.value
+    // wDiff.value = lvWidth.value - pvWidth.value
+    // hDiff.value = lvHeight.value - pvHeight.value
+  }
+
+  console.log('ListingView setAspect :', {
+    pvWidth: pvWidth.value,
+    pvHeight: pvHeight.value,
+    lvWidth: lvWidth.value,
+    lvHeight: lvHeight.value,
+    diff: scaleDiff.value,
+    // wDiff: wDiff.value,
+    // hDiff: hDiff.value,
+  })
+}
+
+watch(
+  () => props.aspect,
+  async (value) => {
+    if (!value) return
+    await nextTick()
+    setAspect()
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
   <template v-if="vp.lg.value">
-    <div class="listing-view">
+    <div
+      :class="{ 'listing-view': true, editor: props.aspect }"
+      ref="listingView"
+      :style="aspectStyles"
+    >
       <div class="gallery">
         <Gallery
           v-if="listingData"

@@ -1,13 +1,51 @@
 <!-- File: src/views/Editor/components/EditorPreview/EditorPreview.vue -->
 
 <script setup lang="ts">
+import { onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue'
 import ListingView from '@/views/ListingView/ListingView.vue'
 import type { RawListingBundle } from '@/views/ListingView/utils/useParseContent'
 
 const props = defineProps<{
   rawListing: RawListingBundle | null
+  isShowed: boolean
   isLoading?: boolean
 }>()
+
+const wrapper = ref<HTMLElement | null>(null)
+const aspectRatio = ref<{ width: number; height: number } | null>(null)
+
+function updateScale() {
+  const container = wrapper.value
+
+  console.log('EditorPreview mounted :', wrapper.value)
+
+  if (container) {
+    aspectRatio.value = {
+      width: container?.clientWidth,
+      height: container?.clientHeight,
+    }
+
+    console.log('EditorPreview mounted with size:', aspectRatio.value)
+  }
+}
+
+watch(
+  () => props.isShowed,
+  async (value) => {
+    if (!value) return
+    await nextTick()
+    updateScale()
+  },
+  { immediate: true },
+)
+
+onMounted(() => {
+  window.addEventListener('resize', updateScale)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', updateScale)
+})
 </script>
 
 <template>
@@ -15,8 +53,13 @@ const props = defineProps<{
     <div
       v-if="props.rawListing"
       class="content"
+      ref="wrapper"
     >
-      <ListingView :rawListing="props.rawListing" />
+      <ListingView
+        v-if="aspectRatio"
+        :aspect="aspectRatio"
+        :rawListing="props.rawListing"
+      />
     </div>
 
     <div
@@ -43,6 +86,7 @@ const props = defineProps<{
     height: 100%;
     min-height: 0;
     overflow: hidden;
+    position: relative;
   }
 
   > .empty {

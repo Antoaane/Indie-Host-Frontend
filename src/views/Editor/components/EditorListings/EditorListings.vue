@@ -168,7 +168,6 @@ console.log('props:', props)
         <Search class="icon" />
         <input
           v-model="query"
-          class="input"
           type="search"
           placeholder="Rechercher une annonce"
         />

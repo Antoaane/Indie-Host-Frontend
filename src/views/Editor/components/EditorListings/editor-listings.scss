@@ -5,6 +5,7 @@
 @use '@/styles/variables/animations' as animations;
 @use '@/styles/variables/effects' as effects;
 @use '@/styles/components/buttons' as buttons;
+@use '@/styles/components/inputs' as inputs;
 
 .editor-listings {
   height: 100%;
@@ -18,30 +19,7 @@
     border-bottom: 1px solid rgba($secondary, 0.08);
 
     >.search {
-      display: flex;
-      align-items: center;
-      gap: var(--layout-gap-xs);
-
-      padding: 0.35rem 0.75rem;
-      border-radius: borders.$rounded-xl;
-      background: rgba($secondary, 0.04);
-      border: 1px solid rgba($secondary, 0.06);
-
-      >.icon {
-        width: 18px;
-        height: 18px;
-        color: rgba($secondary, 0.7);
-      }
-
-      >.input {
-        width: 100%;
-        border: none;
-        background: transparent;
-        outline: none;
-        font-family: 'Outfit', sans-serif;
-        font-weight: 400;
-        color: $secondary;
-      }
+      @include inputs.search($theme: accent);
     }
   }
 
