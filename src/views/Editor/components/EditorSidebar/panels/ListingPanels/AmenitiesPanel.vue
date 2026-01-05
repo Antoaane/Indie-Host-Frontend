@@ -1,11 +1,19 @@
 <!-- File: src/views/Editor/components/EditorSidebar/panels/ListingPanels/AmenitiesPanel.vue -->
 
 <script setup lang="ts">
+// DEPS
 import { computed, onBeforeUnmount, onMounted, ref, watch, watchEffect } from 'vue'
-import type { RawCore } from '@/views/Listing/utils/fetchListingRaw'
-import type { DraftPatch } from '@/views/Editor/utils/listingApi'
+
+// UTILS
 import { resolveAmenityIconComponent, resolveLucideComponent } from '@/utils/amenitiesIcons'
 import { mockAmenitiesCatalog, type AmenityCatalogItem } from '@/views/Editor/mocks/amenitiesCatalog'
+
+// TYPES
+import type { RawCore } from '@/views/Listing/utils/fetchListingRaw'
+import type { DraftPatch } from '@/views/Editor/utils/listingApi'
+
+// ASSETS
+import { Pin, PinOff } from 'lucide-vue-next'
 
 type AmenityDraft = NonNullable<RawCore['amenities']>[number]
 type OverlayView = 'list' | 'catalog'
@@ -217,11 +225,7 @@ const categorizedSelectedAmenities = computed(() => {
 })
 
 function tokenizeSearch(value: string): string[] {
-  return value
-    .trim()
-    .toLowerCase()
-    .split(/\s+/)
-    .filter(Boolean)
+  return value.trim().toLowerCase().split(/\s+/).filter(Boolean)
 }
 
 const catalogSearchTokens = computed(() => tokenizeSearch(catalogSearch.value))
@@ -252,10 +256,15 @@ const catalogGroups = computed(() => {
   }
 
   const ordered = Array.from(groups.entries())
-    .map(([category, items]) => {
-      items.sort((a, b) => (b.relevance ?? 0) - (a.relevance ?? 0) || a.name.localeCompare(b.name))
-      return { category, items }
-    })
+    .map(
+      ([
+        category,
+        items,
+      ]) => {
+        items.sort((a, b) => (b.relevance ?? 0) - (a.relevance ?? 0) || a.name.localeCompare(b.name))
+        return { category, items }
+      },
+    )
     .sort((a, b) => a.category.localeCompare(b.category))
 
   return ordered
@@ -281,7 +290,7 @@ watch(
     catalogGroups.value.forEach((group) => {
       catalogOpenCategories.value[group.category] = true
     })
-  }
+  },
 )
 
 watchEffect(() => {
@@ -381,8 +390,8 @@ watchEffect(() => {
             </div>
           </div>
 
-          <div class="body">
-            <template v-if="overlayView === 'list'">
+          <template v-if="overlayView === 'list'">
+            <div class="body">
               <div
                 v-for="category in categorizedSelectedAmenities"
                 :key="category.name"
@@ -421,7 +430,14 @@ watchEffect(() => {
                           type="button"
                           @click="togglePinnedAt(item.rawIndex)"
                         >
-                          ★
+                          <PinOff
+                            v-if="Boolean((item.amenity as any)?.pinned)"
+                            :size="18"
+                          />
+                          <Pin
+                            v-else
+                            :size="18"
+                          />
                         </button>
                       </div>
                       <div class="remove">
@@ -440,18 +456,20 @@ watchEffect(() => {
                   </li>
                 </ul>
               </div>
+            </div>
 
-              <div class="cta">
-                <button
-                  type="button"
-                  @click="overlayView = 'catalog'"
-                >
-                  + Ajouter un équipement
-                </button>
-              </div>
-            </template>
+            <div class="cta">
+              <button
+                type="button"
+                @click="overlayView = 'catalog'"
+              >
+                + Ajouter un équipement
+              </button>
+            </div>
+          </template>
 
-            <template v-else>
+          <template v-else>
+            <div class="body">
               <div class="search">
                 <input
                   v-model="catalogSearch"
@@ -533,8 +551,8 @@ watchEffect(() => {
               >
                 Aucun résultat.
               </p>
-            </template>
-          </div>
+            </div>
+          </template>
         </div>
       </div>
     </Transition>

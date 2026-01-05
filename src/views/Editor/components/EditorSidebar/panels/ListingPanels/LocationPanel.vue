@@ -25,36 +25,40 @@ function patchCore(patch: Partial<RawCore>) {
     </div>
 
     <div class="body">
-      <input
-        class="input"
-        :value="props.core?.type ?? ''"
-        type="text"
-        placeholder="Type (ex: Péniche)"
-        @input="patchCore({ type: ($event.target as HTMLInputElement).value } as any)"
-      />
-      <div class="row">
+      <div class="input">
         <input
-          class="input"
-          :value="props.core?.city ?? ''"
+          :value="props.core?.type ?? ''"
           type="text"
-          placeholder="Ville"
-          @input="patchCore({ city: ($event.target as HTMLInputElement).value } as any)"
-        />
-        <input
-          class="input"
-          :value="props.core?.country ?? ''"
-          type="text"
-          placeholder="Pays"
-          @input="patchCore({ country: ($event.target as HTMLInputElement).value } as any)"
+          placeholder="Type (ex: Péniche)"
+          @input="patchCore({ type: ($event.target as HTMLInputElement).value } as any)"
         />
       </div>
-      <input
-        class="input"
-        :value="props.core?.region ?? ''"
-        type="text"
-        placeholder="Région"
-        @input="patchCore({ region: ($event.target as HTMLInputElement).value } as any)"
-      />
+      <div class="row">
+        <div class="input">
+          <input
+            :value="props.core?.city ?? ''"
+            type="text"
+            placeholder="Ville"
+            @input="patchCore({ city: ($event.target as HTMLInputElement).value } as any)"
+          />
+        </div>
+        <div class="input">
+          <input
+            :value="props.core?.country ?? ''"
+            type="text"
+            placeholder="Pays"
+            @input="patchCore({ country: ($event.target as HTMLInputElement).value } as any)"
+          />
+        </div>
+      </div>
+      <div class="input">
+        <input
+          :value="props.core?.region ?? ''"
+          type="text"
+          placeholder="Région"
+          @input="patchCore({ region: ($event.target as HTMLInputElement).value } as any)"
+        />
+      </div>
     </div>
   </section>
 </template>
@@ -63,7 +67,6 @@ function patchCore(patch: Partial<RawCore>) {
 /* File: src/views/Editor/components/EditorSidebar/panels/ListingPanels/location-panel.scss */
 
 @use '@/styles/variables/globals' as *;
-@use '@/styles/variables/borders' as borders;
 @use '@/styles/components/inputs' as inputs;
 @use '@/views/Editor/components/EditorSidebar/panels/ListingPanels/listing-panels.scss' as *;
 
@@ -78,8 +81,7 @@ function patchCore(patch: Partial<RawCore>) {
     @extend %panel-body;
 
     > .input {
-      @include inputs.text($tertiary, borders.$rounded-md);
-      width: 100%;
+      @include inputs.field($theme: base);
     }
 
     > .row {
@@ -88,8 +90,7 @@ function patchCore(patch: Partial<RawCore>) {
       gap: var(--layout-gap-xs);
 
       > .input {
-        @include inputs.text($tertiary, borders.$rounded-md);
-        width: 100%;
+        @include inputs.field($theme: base);
       }
     }
   }

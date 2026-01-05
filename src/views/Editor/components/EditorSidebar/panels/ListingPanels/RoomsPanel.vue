@@ -107,20 +107,21 @@ function removeBed(index: number) {
 
     <div class="body rooms">
       <div class="row">
-        <select
-          class="input select"
-          :value="selectedIndex"
-          :disabled="!rooms.length"
-          @change="selectedIndex = Number(($event.target as HTMLSelectElement).value)"
-        >
-          <option
-            v-for="(room, idx) in rooms"
-            :key="idx"
-            :value="idx"
+        <div class="input select">
+          <select
+            :value="selectedIndex"
+            :disabled="!rooms.length"
+            @change="selectedIndex = Number(($event.target as HTMLSelectElement).value)"
           >
-            {{ room['room-name'] || `Pièce ${idx + 1}` }}
-          </option>
-        </select>
+            <option
+              v-for="(room, idx) in rooms"
+              :key="idx"
+              :value="idx"
+            >
+              {{ room['room-name'] || `Pièce ${idx + 1}` }}
+            </option>
+          </select>
+        </div>
         <div
           class="trash"
         >
@@ -139,24 +140,26 @@ function removeBed(index: number) {
         class="details"
       >
         <div class="row">
-          <input
-            class="input"
-            :value="selectedRoom['room-name']"
-            type="text"
-            placeholder="Nom de la pièce"
-            @input="updateRoom({ 'room-name': ($event.target as HTMLInputElement).value } as any)"
-          />
-          <select
-            class="input"
-            :value="selectedRoom.type"
-            @change="updateRoom({ type: ($event.target as HTMLSelectElement).value } as any)"
-          >
-            <option value="bedroom"> Chambre </option>
-            <option value="livingroom"> Salon </option>
-            <option value="bathroom"> Salle de bain </option>
-            <option value="kitchen"> Cuisine </option>
-            <option value="other"> Autre </option>
-          </select>
+          <div class="input">
+            <input
+              :value="selectedRoom['room-name']"
+              type="text"
+              placeholder="Nom de la pièce"
+              @input="updateRoom({ 'room-name': ($event.target as HTMLInputElement).value } as any)"
+            />
+          </div>
+          <div class="input select">
+            <select
+              :value="selectedRoom.type"
+              @change="updateRoom({ type: ($event.target as HTMLSelectElement).value } as any)"
+            >
+              <option value="bedroom"> Chambre </option>
+              <option value="livingroom"> Salon </option>
+              <option value="bathroom"> Salle de bain </option>
+              <option value="kitchen"> Cuisine </option>
+              <option value="other"> Autre </option>
+            </select>
+          </div>
         </div>
 
         <div class="beds">
@@ -165,22 +168,24 @@ function removeBed(index: number) {
             :key="idx"
             class="row"
           >
-            <select
-              class="input"
-              :value="bed.type"
-              @change="updateBed(idx, { type: ($event.target as HTMLSelectElement).value } as any)"
-            >
-              <option value="simple"> Lit simple </option>
-              <option value="double"> Lit double </option>
-              <option value="bunk"> Lit superposés </option>
-            </select>
-            <input
-              class="input cap"
-              type="number"
-              min="0"
-              :value="bed.capacity"
-              @input="updateBed(idx, { capacity: Number(($event.target as HTMLInputElement).value) } as any)"
-            />
+            <div class="input select">
+              <select
+                :value="bed.type"
+                @change="updateBed(idx, { type: ($event.target as HTMLSelectElement).value } as any)"
+              >
+                <option value="simple"> Lit simple </option>
+                <option value="double"> Lit double </option>
+                <option value="bunk"> Lit superposés </option>
+              </select>
+            </div>
+            <div class="input cap">
+              <input
+                type="number"
+                min="0"
+                :value="bed.capacity"
+                @input="updateBed(idx, { capacity: Number(($event.target as HTMLInputElement).value) } as any)"
+              />
+            </div>
             <div class="stepper qty">
               <div
                 class="btn"

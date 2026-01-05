@@ -20,14 +20,15 @@ const { filteredData, suggestions, search, selectSuggestion } = useFaq(props.con
       <h2 v-html="props.content.title" />
 
       <!-- Input de recherche -->
-      <input
-        v-model="search"
-        type="search"
-        :placeholder="props.content.searchPlaceholder"
-        :aria-label="props.content.searchLabel"
-        class="faq-search"
-        autocomplete="off"
-      />
+      <div class="faq-search">
+        <input
+          v-model="search"
+          type="search"
+          :placeholder="props.content.searchPlaceholder"
+          :aria-label="props.content.searchLabel"
+          autocomplete="off"
+        />
+      </div>
 
       <!-- Dropdown de suggestions -->
       <ul

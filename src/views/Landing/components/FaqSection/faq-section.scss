@@ -13,10 +13,7 @@
   }
 
   .faq-search {
-    display: block;
-    width: 100%;
-
-    @include inputs.text($accent);
+    @include inputs.search($theme: accent);
   }
 
   .autocomplete {

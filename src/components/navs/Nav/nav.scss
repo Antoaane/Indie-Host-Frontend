@@ -4,6 +4,7 @@
 @use '@/styles/variables/borders' as borders;
 @use '@/styles/variables/animations' as animations;
 @use '@/styles/components/buttons' as buttons;
+@use '@/styles/components/inputs' as inputs;
 
 .navbar {
   width: 100%;
@@ -61,16 +62,10 @@
   }
 
   >.search {
-    display: flex;
-    align-items: center;
-
-    >input[type='search'] {
-      min-width: 220px;
-      padding: 0.5rem 0.75rem;
-      border-radius: 999px;
-      border: 1px solid rgba(0, 0, 0, 0.1);
-      outline: none;
-    }
+    @include inputs.search($theme: accent, $compact: true);
+    min-width: 220px;
+    width: 220px;
+    flex: 0 0 auto;
   }
 
   >.links {
@@ -188,16 +183,10 @@
       }
 
       >.search {
-        display: flex;
-        align-items: center;
-
-        >input[type='search'] {
-          min-width: 220px;
-          padding: 0.5rem 0.75rem;
-          border-radius: 999px;
-          border: 1px solid rgba(0, 0, 0, 0.1);
-          outline: none;
-        }
+        @include inputs.search($theme: accent, $compact: true);
+        min-width: 220px;
+        width: 220px;
+        flex: 0 0 auto;
       }
     }
   }

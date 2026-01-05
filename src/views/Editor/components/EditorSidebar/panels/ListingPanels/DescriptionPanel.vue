@@ -77,12 +77,15 @@ onMounted(() => {
     </div>
 
     <div class="body">
-      <!-- <textarea
-        v-model="description"
-        class="textarea"
-        rows="6"
-        placeholder="Décrivez votre logement…"
-      /> -->
+      <!--
+      <div class="textarea">
+        <textarea
+          v-model="description"
+          rows="6"
+          placeholder="Décrivez votre logement…"
+        />
+      </div>
+      -->
       <QuillyEditor
         ref="editor"
         :options="options"
@@ -112,10 +115,7 @@ onMounted(() => {
     @extend %panel-body;
 
     > .textarea {
-      @include inputs.text($tertiary, borders.$rounded-md);
-      width: 100%;
-      resize: vertical;
-      min-height: 9rem;
+      @include inputs.textarea($theme: base);
     }
 
     > .ql-toolbar {
@@ -202,14 +202,7 @@ onMounted(() => {
     }
 
     > .ql-container {
-      border: none;
-
-      > .ql-editor {
-        width: 100%;
-        min-height: 9rem;
-
-        @include inputs.text($tertiary, borders.$rounded-md);
-      }
+      @include inputs.richtext($theme: base);
     }
   }
 }

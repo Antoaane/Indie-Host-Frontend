@@ -1,6 +1,7 @@
 /* File: src/views/Landing/components/BenefitsSection/components/CalcTitle/calc-title.scss */
 
 @use '@/styles/variables/globals' as *;
+@use '@/styles/components/inputs' as inputs;
 
 .wrapper:has(.second-title) {
   .second-title {
@@ -26,34 +27,25 @@
       text-decoration: underline !important;
       text-underline-offset: 0.3rem;
       @include base-text($accent, $bigger: true);
+    }
 
-      input {
-        width: 115%;
-        height: 100%;
+    .calc-input {
+      @include inputs.inline($theme: accent);
+      position: relative;
+      text-decoration: none !important;
 
+      > .value {
+        color: $secondary;
+        font-weight: 600;
+        text-decoration: none;
+      }
+
+      > input {
         position: absolute;
-        z-index: 9999;
-        top: 50%;
-        left: 50%;
-
-        transform: translate(-50%, -50%);
-
-        font-size: 1.125rem;
-        color: #00000000;
-
-        background-color: #00000000;
-        border: none;
-
-        // hide arrow
-        &::-webkit-inner-spin-button,
-        &::-webkit-outer-spin-button {
-          -webkit-appearance: none;
-          margin: 0;
-        }
-
-        &:focus {
-          color: $accent;
-        }
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
       }
     }
   }

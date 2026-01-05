@@ -51,16 +51,19 @@ const iconMap: Record<string, any> = { SendIcon }
     method="POST"
   >
     <!-- Champs simples -->
-    <input
+    <div
       v-for="f in data.fields"
       :key="f.name"
-      class="email-input"
-      :type="f.type"
-      :name="f.name"
-      :placeholder="f.placeholder"
-      :required="f.required"
-      autocomplete="email"
-    />
+      class="input"
+    >
+      <input
+        :type="f.type"
+        :name="f.name"
+        :placeholder="f.placeholder"
+        :required="f.required"
+        autocomplete="email"
+      />
+    </div>
 
     <!-- Groupes de checkbox (mêmes name pour collecter plusieurs valeurs) -->
     <fieldset

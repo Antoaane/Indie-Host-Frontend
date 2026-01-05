@@ -1,8 +1,8 @@
 /* File: src/views/Landing/components/JoinSection/components/FormComp/form-comp.scss */
 
 @use "@/styles/variables/globals" as *;
-@use "@/styles/variables/borders" as borders;
 @use "@/styles/components/buttons" as buttons;
+@use "@/styles/components/inputs" as inputs;
 
 .form-container {
   width: 100%;
@@ -32,16 +32,8 @@
 
     @include layout-gap(padding, bottom);
 
-    input[type="email"] {
-      width: 100%;
-      padding: 0.75rem 1rem;
-
-      font-size: 1rem;
-      font-family: 'outfit', sans-serif;
-
-      border-radius: borders.$rounded-md;
-      border: none;
-      background-color: $accent;
+    > .input {
+      @include inputs.field($theme: accent);
     }
 
     fieldset {

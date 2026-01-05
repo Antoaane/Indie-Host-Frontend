@@ -1,29 +1,374 @@
 /* File: src/styles/components/_inputs.scss */
 
+@use "sass:map";
 @use "@/styles/variables/globals" as *;
 @use "@/styles/variables/borders" as borders;
-@use '@/styles/variables/animations' as *;
+@use "@/styles/variables/animations" as animations;
 @use "@/styles/components/buttons" as buttons;
 
-@mixin text($color : $tertiary, $radius : borders.$rounded-sm) {
-  padding: 0.5rem 0.75rem;
+$input-themes: (
+  base: (
+    bg: $tertiary,
+    text: $secondary,
+    placeholder: rgba($secondary, 0.45),
+    border: rgba($secondary, 0.1),
+    hover: rgba($secondary, 0.18),
+    focus: rgba($secondary, 0.35),
+    icon: rgba($secondary, 0.6),
+    shadow: rgba($secondary, 0.08),
+  ),
+  accent: (
+    bg: $accent,
+    text: $secondary,
+    placeholder: rgba($secondary, 0.45),
+    border: rgba($secondary, 0.08),
+    hover: rgba($secondary, 0.16),
+    focus: rgba($secondary, 0.3),
+    icon: rgba($secondary, 0.55),
+    shadow: rgba($secondary, 0.06),
+  ),
+);
 
+$input-sizes: (
+  default: (
+    min-height: 2.75rem,
+    padding-x: 0.9rem,
+    padding-y: 0.55rem,
+    gap: 0.5rem,
+  ),
+  compact: (
+    min-height: 2.4rem,
+    padding-x: 0.75rem,
+    padding-y: 0.45rem,
+    gap: 0.4rem,
+  ),
+);
+
+@function input-token($theme, $token) {
+  @return map.get(map.get($input-themes, $theme), $token);
+}
+
+@function input-size($compact, $token) {
+  $key: if($compact, compact, default);
+  @return map.get(map.get($input-sizes, $key), $token);
+}
+
+%input-shell {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  background: transparent;
+  @include animations.transition(200ms);
+}
+
+%input-control {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
   border: none;
-  border-radius: $radius;
-  background-color: $color;
+  background: transparent;
+  outline: none;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1rem;
+  line-height: 1.2;
+  box-sizing: border-box;
+}
 
-  color: $secondary;
+%input-icon {
+  > .icon,
+  > svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    flex: 0 0 auto;
+  }
+}
 
-  box-shadow: 0 0 0 0 rgba($accent, 0);
-  @include transition;
+@mixin field($theme: base, $compact: false) {
+  @extend %input-shell;
+  gap: input-size($compact, gap);
+  min-height: input-size($compact, min-height);
+  border-radius: borders.$rounded-md;
+  border-color: input-token($theme, border);
+  background-color: input-token($theme, bg);
+  color: input-token($theme, text);
+  box-shadow: 0 2px 6px input-token($theme, shadow);
 
-  &:focus {
-    // reset
-    outline: none;
-    border: none;
-    box-shadow: none;
-    background-color: $color;
+  &:hover {
+    border-color: input-token($theme, hover);
+  }
 
-    @include halo(sm, false, $accent, 0.5);
+  &:focus-within {
+    border-color: input-token($theme, focus);
+    @include halo(xs, false, input-token($theme, focus), 0.35);
+  }
+
+  > input,
+  > textarea,
+  > select {
+    @extend %input-control;
+    padding: input-size($compact, padding-y) input-size($compact, padding-x);
+    color: input-token($theme, text);
+
+    &::placeholder {
+      color: input-token($theme, placeholder);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      color: rgba(input-token($theme, text), 0.5);
+    }
+
+    &[type='number'] {
+      -moz-appearance: textfield;
+
+      &::-webkit-outer-spin-button,
+      &::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+    }
+  }
+}
+
+@mixin search($theme: base, $compact: false) {
+  @extend %input-shell;
+  @extend %input-icon;
+  gap: input-size($compact, gap);
+  min-height: input-size($compact, min-height);
+  border-radius: borders.$rounded;
+  border-color: input-token($theme, border);
+  background-color: input-token($theme, bg);
+  color: input-token($theme, text);
+  box-shadow: 0 2px 6px input-token($theme, shadow);
+
+  &:hover {
+    border-color: input-token($theme, hover);
+  }
+
+  &:focus-within {
+    border-color: input-token($theme, focus);
+    @include halo(xs, false, input-token($theme, focus), 0.35);
+  }
+
+  > input[type='search'],
+  > input {
+    @extend %input-control;
+    padding: input-size($compact, padding-y) input-size($compact, padding-x);
+    color: input-token($theme, text);
+
+    &::placeholder {
+      color: input-token($theme, placeholder);
+    }
+  }
+
+  > .icon,
+  > svg {
+    color: input-token($theme, icon);
+    stroke: input-token($theme, icon);
+    margin-left: input-size($compact, padding-x);
+  }
+}
+
+@mixin select($theme: base, $compact: false) {
+  @extend %input-shell;
+  position: relative;
+  gap: input-size($compact, gap);
+  min-height: input-size($compact, min-height);
+  border-radius: borders.$rounded-md;
+  border-color: input-token($theme, border);
+  background-color: input-token($theme, bg);
+  color: input-token($theme, text);
+  box-shadow: 0 2px 6px input-token($theme, shadow);
+
+  &:hover {
+    border-color: input-token($theme, hover);
+  }
+
+  &:focus-within {
+    border-color: input-token($theme, focus);
+    @include halo(xs, false, input-token($theme, focus), 0.35);
+  }
+
+  > select {
+    @extend %input-control;
+    appearance: none;
+    cursor: pointer;
+    padding: input-size($compact, padding-y) calc(input-size($compact, padding-x) + 1.35rem)
+      input-size($compact, padding-y) input-size($compact, padding-x);
+    color: input-token($theme, text);
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    right: input-size($compact, padding-x);
+    top: 50%;
+    width: 0.55rem;
+    height: 0.55rem;
+    border-right: 2px solid input-token($theme, icon);
+    border-bottom: 2px solid input-token($theme, icon);
+    transform: translateY(-60%) rotate(45deg);
+    pointer-events: none;
+  }
+}
+
+@mixin textarea($theme: base, $compact: false) {
+  @extend %input-shell;
+  align-items: stretch;
+  gap: input-size($compact, gap);
+  min-height: 9rem;
+  border-radius: borders.$rounded-md;
+  border-color: input-token($theme, border);
+  background-color: input-token($theme, bg);
+  color: input-token($theme, text);
+  box-shadow: 0 2px 6px input-token($theme, shadow);
+
+  &:hover {
+    border-color: input-token($theme, hover);
+  }
+
+  &:focus-within {
+    border-color: input-token($theme, focus);
+    @include halo(xs, false, input-token($theme, focus), 0.35);
+  }
+
+  > textarea {
+    @extend %input-control;
+    min-height: 9rem;
+    resize: vertical;
+    line-height: 1.4;
+    padding: input-size($compact, padding-y) input-size($compact, padding-x);
+    color: input-token($theme, text);
+
+    &::placeholder {
+      color: input-token($theme, placeholder);
+    }
+  }
+}
+
+@mixin action($theme: base, $action-theme: black, $compact: false) {
+  @extend %input-shell;
+  gap: input-size($compact, gap);
+  min-height: input-size($compact, min-height);
+  border-radius: borders.$rounded-md;
+  border-color: input-token($theme, border);
+  background-color: input-token($theme, bg);
+  color: input-token($theme, text);
+  box-shadow: 0 2px 6px input-token($theme, shadow);
+
+  &:hover {
+    border-color: input-token($theme, hover);
+  }
+
+  &:focus-within {
+    border-color: input-token($theme, focus);
+    @include halo(xs, false, input-token($theme, focus), 0.35);
+  }
+
+  > input {
+    @extend %input-control;
+    padding: input-size($compact, padding-y) input-size($compact, padding-x);
+    color: input-token($theme, text);
+
+    &::placeholder {
+      color: input-token($theme, placeholder);
+    }
+  }
+
+  > .action {
+    @include buttons.primary($theme: $action-theme, $padding: false);
+    width: 42px;
+    height: 42px;
+    flex: 0 0 auto;
+    align-self: center;
+
+    > * {
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+  }
+}
+
+@mixin stepper($theme: base, $compact: false) {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--layout-gap-xs);
+
+  > .btn {
+    @include buttons.primary($theme: black, $padding: false);
+    width: 36px;
+    height: 36px;
+
+    > * {
+      height: 100%;
+      padding: 0;
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+  }
+
+  > .value {
+    @extend %input-control;
+    width: 3.5rem;
+    flex: 0 0 auto;
+    height: 36px;
+    text-align: center;
+    border: 1px solid input-token($theme, border);
+    border-radius: borders.$rounded-md;
+    background-color: input-token($theme, bg);
+    box-shadow: 0 1px 3px input-token($theme, shadow);
+    padding: input-size($compact, padding-y) input-size($compact, padding-x);
+    color: input-token($theme, text);
+  }
+}
+
+@mixin inline($theme: base, $compact: false) {
+  @extend %input-shell;
+  display: inline-flex;
+  width: auto;
+  gap: input-size($compact, gap);
+  min-height: auto;
+  border-radius: borders.$rounded-sm;
+  border-color: input-token($theme, border);
+  background-color: input-token($theme, bg);
+  color: input-token($theme, text);
+
+  > input {
+    @extend %input-control;
+    padding: 0.2rem 0.45rem;
+    font-weight: 600;
+    color: input-token($theme, text);
+  }
+}
+
+@mixin richtext($theme: base) {
+  @extend %input-shell;
+  align-items: stretch;
+  min-height: 9rem;
+  border-radius: borders.$rounded-md;
+  border-color: input-token($theme, border);
+  background-color: input-token($theme, bg);
+  color: input-token($theme, text);
+  box-shadow: 0 2px 6px input-token($theme, shadow);
+
+  &:hover {
+    border-color: input-token($theme, hover);
+  }
+
+  &:focus-within {
+    border-color: input-token($theme, focus);
+    @include halo(xs, false, input-token($theme, focus), 0.35);
+  }
+
+  > .ql-editor {
+    @extend %input-control;
+    min-height: 9rem;
+    padding: input-size(false, padding-y) input-size(false, padding-x);
+    color: input-token($theme, text);
   }
 }

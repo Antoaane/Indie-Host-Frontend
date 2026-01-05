@@ -58,7 +58,7 @@ $button-themes: (
 );
 
 // apply to `div > button`
-@mixin primary($cta: false, $theme: black, $padding: true, $fullwidth: false) {
+@mixin primary($cta: false, $theme: black, $padding: true, $fullwidth: false, $deep: false) {
   $colors: map.get($button-themes, $theme);
 
   @if $fullwidth {
@@ -110,6 +110,14 @@ $button-themes: (
       color: map.get($colors, icon-color);
       stroke: map.get($colors, icon-color);
       @include transition;
+    }
+
+    @if $deep {
+      * {
+        color: map.get($colors, icon-color);
+        stroke: map.get($colors, icon-color);
+        @include transition;
+      }
     }
 
     strong {
@@ -190,6 +198,13 @@ $button-themes: (
       &>* {
         color: map.get($button-themes, $theme, hover-icon-color);
         stroke: map.get($button-themes, $theme, hover-icon-color);
+      }
+
+      @if $deep {
+        * {
+          color: map.get($button-themes, $theme, hover-icon-color) !important;
+          stroke: map.get($button-themes, $theme, hover-icon-color) !important;
+        }
       }
 
       strong {

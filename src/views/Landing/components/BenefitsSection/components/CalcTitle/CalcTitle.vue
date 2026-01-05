@@ -19,16 +19,16 @@ defineProps<{
       Votre logement pourrait vous rapporter <strong>{{ commissions }} €</strong> de <strong>plus</strong>
     </h2>
     <p>
-      <span>
-        {{ nights }}
+      <span class="calc-input">
+        <span class="value">{{ nights }}</span>
         <input
           type="number"
           v-model="nights"
         />
       </span>
       nuits |
-      <span>
-        {{ price }}
+      <span class="calc-input">
+        <span class="value">{{ price }}</span>
         <input
           type="number"
           v-model="price"

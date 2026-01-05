@@ -1,7 +1,6 @@
 /* File: src/views/Editor/components/EditorSidebar/panels/ListingPanels/rooms-panel.scss */
 
 @use '@/styles/variables/globals' as *;
-@use '@/styles/variables/borders' as borders;
 @use '@/styles/components/buttons' as buttons;
 @use '@/styles/components/inputs' as inputs;
 @use '@/views/Editor/components/EditorSidebar/panels/ListingPanels/listing-panels.scss' as *;
@@ -21,13 +20,13 @@
       gap: var(--layout-gap-xs);
       align-items: center;
 
-      >.input {
-        @include inputs.text($tertiary, borders.$rounded-md);
-        width: 100%;
+      >.input:not(.select) {
+        @include inputs.field($theme: base);
+        flex: 1;
       }
 
-      >.select {
-        flex: 1;
+      >.input.select {
+        @include inputs.select($theme: base);
       }
 
       >.trash {
@@ -54,9 +53,13 @@
         gap: var(--layout-gap-xs);
         align-items: center;
 
-        >.input {
-          @include inputs.text($tertiary, borders.$rounded-md);
-          width: 100%;
+        >.input:not(.select) {
+          @include inputs.field($theme: base);
+          flex: 1;
+        }
+
+        >.input.select {
+          @include inputs.select($theme: base);
         }
       }
 
@@ -71,41 +74,25 @@
           gap: var(--layout-gap-xs);
           align-items: center;
 
-          >.input {
-            @include inputs.text($tertiary, borders.$rounded-md);
-            width: 100%;
+          >.input:not(.select) {
+            @include inputs.field($theme: base);
+          }
+
+          >.input.select {
+            @include inputs.select($theme: base);
           }
 
           >.cap {
-            text-align: center;
+            > input {
+              text-align: center;
+            }
           }
 
           >.stepper {
-            display: inline-flex;
-            align-items: center;
-            gap: var(--layout-gap-xs);
+            @include inputs.stepper($theme: base);
 
             &.qty {
               justify-content: flex-start;
-            }
-
-            >.btn {
-              @include buttons.primary($theme: black, $padding: false);
-              width: 36px;
-              height: 36px;
-
-              >* {
-                height: 100%;
-                padding: 0;
-                font-size: 1.1rem;
-                font-weight: 700;
-              }
-            }
-
-            >.value {
-              width: 56px;
-              text-align: center;
-              @include inputs.text($tertiary, borders.$rounded-md);
             }
           }
 

@@ -62,7 +62,6 @@ function setCapacity(next: number) {
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
-@use '@/styles/components/buttons' as buttons;
 @use '@/styles/components/inputs' as inputs;
 @use '@/views/Editor/components/EditorSidebar/panels/ListingPanels/listing-panels.scss' as *;
 
@@ -77,28 +76,7 @@ function setCapacity(next: number) {
     @extend %panel-body;
 
     > .stepper {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--layout-gap-xs);
-
-      > .btn {
-        @include buttons.primary($theme: black, $padding: false);
-        width: 36px;
-        height: 36px;
-
-        > * {
-          height: 100%;
-          padding: 0;
-          font-size: 1.1rem;
-          font-weight: 700;
-        }
-      }
-
-      > .value {
-        width: 56px;
-        text-align: center;
-        @include inputs.text($tertiary, borders.$rounded-md);
-      }
+      @include inputs.stepper($theme: base);
     }
   }
 }

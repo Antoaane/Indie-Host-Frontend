@@ -16,38 +16,40 @@ const bookingUrl = ref('')
 
     <div class="body">
       <div class="row">
-        <input
-          v-model="airbnbUrl"
-          class="input"
-          placeholder="https://www.airbnb.fr/rooms/…"
-          type="text"
-          disabled
-        />
-        <div class="btn-primary__white">
-          <button
-            type="button"
+        <div class="input action">
+          <input
+            v-model="airbnbUrl"
+            placeholder="https://www.airbnb.fr/rooms/…"
+            type="text"
             disabled
-          >
-            Importer
-          </button>
+          />
+          <div class="action">
+            <button
+              type="button"
+              disabled
+            >
+              Importer
+            </button>
+          </div>
         </div>
       </div>
 
       <div class="row">
-        <input
-          v-model="bookingUrl"
-          class="input"
-          placeholder="https://www.booking.com/hotel/…"
-          type="text"
-          disabled
-        />
-        <div class="btn-primary__white">
-          <button
-            type="button"
+        <div class="input action">
+          <input
+            v-model="bookingUrl"
+            placeholder="https://www.booking.com/hotel/…"
+            type="text"
             disabled
-          >
-            Importer
-          </button>
+          />
+          <div class="action">
+            <button
+              type="button"
+              disabled
+            >
+              Importer
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -58,7 +60,6 @@ const bookingUrl = ref('')
 /* File: src/views/Editor/components/EditorSidebar/panels/ListingPanels/import-panel.scss */
 
 @use '@/styles/variables/globals' as *;
-@use '@/styles/variables/borders' as borders;
 @use '@/styles/components/inputs' as inputs;
 @use '@/views/Editor/components/EditorSidebar/panels/ListingPanels/listing-panels.scss' as *;
 
@@ -73,14 +74,8 @@ const bookingUrl = ref('')
     @extend %panel-body;
 
     > .row {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: var(--layout-gap-xs);
-      align-items: center;
-
       > .input {
-        @include inputs.text($tertiary, borders.$rounded-md);
-        width: 100%;
+        @include inputs.action($theme: base, $action-theme: white);
       }
     }
   }

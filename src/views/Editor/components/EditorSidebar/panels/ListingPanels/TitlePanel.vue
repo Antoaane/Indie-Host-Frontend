@@ -29,12 +29,13 @@ const title = computed({
     </div>
 
     <div class="body">
-      <input
-        v-model="title"
-        class="input"
-        type="text"
-        placeholder="Maison flottante / Houseboat - …"
-      />
+      <div class="input">
+        <input
+          v-model="title"
+          type="text"
+          placeholder="Maison flottante / Houseboat - …"
+        />
+      </div>
     </div>
   </section>
 </template>
@@ -43,7 +44,6 @@ const title = computed({
 /* File: src/views/Editor/components/EditorSidebar/panels/ListingPanels/title-panel.scss */
 
 @use '@/styles/variables/globals' as *;
-@use '@/styles/variables/borders' as borders;
 @use '@/styles/components/inputs' as inputs;
 @use '@/views/Editor/components/EditorSidebar/panels/ListingPanels/listing-panels.scss' as *;
 
@@ -58,8 +58,7 @@ const title = computed({
     @extend %panel-body;
 
     > .input {
-      @include inputs.text($tertiary, borders.$rounded-md);
-      width: 100%;
+      @include inputs.field($theme: base);
     }
   }
 }
