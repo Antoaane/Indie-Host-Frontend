@@ -5,7 +5,7 @@
 @use '@/styles/components/buttons' as buttons;
 @use '@/styles/components/inputs' as inputs;
 @use '@/styles/components/overlays' as overlays;
-@use '@/views/Editor/components/EditorSidebar/panels/ListingPanels/listing-panels.scss' as *;
+@use '@/views/Editor/components/EditorSidebar/panels/panel.scss' as *;
 
 .editor-amenities-panel {
   @extend %panel;
@@ -71,7 +71,7 @@
         gap: var(--layout-gap-md);
 
         >.back {
-          @include buttons.primary($theme: white, $padding: false);
+          @include buttons.primary($theme: white, $icon-only: true);
           flex: 0 0 auto;
         }
 
@@ -86,7 +86,7 @@
         }
 
         >.close {
-          @include buttons.primary($theme: white, $padding: false);
+          @include buttons.primary($theme: white, $icon-only: true);
           flex: 0 0 auto;
         }
       }
@@ -216,21 +216,16 @@
 
                 >.pin,
                 >.remove {
-                  @include buttons.primary($theme: white, $padding: false);
+                  @include buttons.primary($theme: white, $icon-only: true);
                 }
 
                 >.pin {
-
                   >button {
                     font-weight: 700;
-                    aspect-ratio: 1 / 1 !important;
-                    width: auto !important;
-                    height: auto !important;
-                    display: flex !important;
                   }
 
                   &.is-active {
-                    @include buttons.primary($theme: black, $padding: false);
+                    @include buttons.primary($theme: black, $icon-only: true);
                   }
                 }
 

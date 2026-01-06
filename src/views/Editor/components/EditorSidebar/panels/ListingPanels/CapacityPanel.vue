@@ -4,6 +4,7 @@
 import { computed } from 'vue'
 import type { RawCore } from '@/views/Listing/utils/fetchListingRaw'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
+import { editorStatic } from '@/views/Editor/utils/editorContent'
 
 const props = defineProps<{
   core?: Partial<RawCore> | null
@@ -14,6 +15,7 @@ const emit = defineEmits<{
 }>()
 
 const capacity = computed(() => Number(props.core?.guest_capacity ?? 0))
+const panelContent = editorStatic.panels.listing.capacity
 
 function setCapacity(next: number) {
   emit('patch', { core: { guest_capacity: Math.max(0, next) } })
@@ -23,8 +25,8 @@ function setCapacity(next: number) {
 <template>
   <section class="editor-capacity-panel">
     <div class="header">
-      <h3>Capacité d’accueil</h3>
-      <p>Combien de voyageurs pouvez vous accueillir</p>
+      <h3>{{ panelContent.title }}</h3>
+      <p>{{ panelContent.subtitle }}</p>
     </div>
 
     <div class="body">
@@ -63,7 +65,7 @@ function setCapacity(next: number) {
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
 @use '@/styles/components/inputs' as inputs;
-@use '@/views/Editor/components/EditorSidebar/panels/ListingPanels/listing-panels.scss' as *;
+@use '@/views/Editor/components/EditorSidebar/panels/panel.scss' as *;
 
 .editor-capacity-panel {
   @extend %panel;

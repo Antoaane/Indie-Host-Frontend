@@ -4,6 +4,7 @@
 import { computed, ref, watch } from 'vue'
 import type { RawCore } from '@/views/Listing/utils/fetchListingRaw'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
+import { editorStatic } from '@/views/Editor/utils/editorContent'
 
 type RoomDraft = NonNullable<RawCore['rooms']>[number]
 type BedDraft = NonNullable<NonNullable<RoomDraft['beds']>[number]>
@@ -17,20 +18,36 @@ const emit = defineEmits<{
 }>()
 
 const rooms = computed<RoomDraft[]>(() => (props.core?.rooms as RoomDraft[] | undefined) ?? [])
-const selectedIndex = ref(0)
+
+const panelContent = editorStatic.panels.listing.rooms
+const roomTypeOptions = panelContent.types
+const bedTypeOptions = panelContent.bedTypes
+
+const roomTypeLabels = Object.fromEntries(
+  roomTypeOptions.map((option) => [option.value, option.label]),
+) as Record<string, string>
+const bedTypeCapacities = Object.fromEntries(
+  bedTypeOptions.map((option) => [option.value, option.capacity]),
+) as Record<string, number>
+
+const collapsedRooms = ref<boolean[]>([])
 
 watch(
   () => rooms.value.length,
   (len) => {
-    if (!len) {
-      selectedIndex.value = 0
+    if (collapsedRooms.value.length < len) {
+      collapsedRooms.value = [
+        ...collapsedRooms.value,
+        ...Array(len - collapsedRooms.value.length).fill(true),
+      ]
       return
     }
-    if (selectedIndex.value > len - 1) selectedIndex.value = len - 1
+    if (collapsedRooms.value.length > len) {
+      collapsedRooms.value = collapsedRooms.value.slice(0, len)
+    }
   },
+  { immediate: true },
 )
-
-const selectedRoom = computed<RoomDraft | null>(() => rooms.value[selectedIndex.value] ?? null)
 
 function setRooms(next: RoomDraft[]) {
   emit('patch', { core: { rooms: next } })
@@ -40,201 +57,242 @@ function addRoom() {
   const next = [
     ...rooms.value,
   ]
+  const defaultType = roomTypeOptions[0]?.value ?? 'bedroom'
   next.push({
-    'room-name': 'Chambre',
-    type: 'bedroom',
+    'room-name': roomTypeLabels[defaultType] ?? panelContent.roomLabelGeneric,
+    type: defaultType,
     beds: [],
   } as RoomDraft)
   setRooms(next)
-  selectedIndex.value = next.length - 1
+  collapsedRooms.value = [...collapsedRooms.value, true]
 }
 
 function removeRoom(index: number) {
   const next = rooms.value.filter((_, idx) => idx !== index)
   setRooms(next)
-  selectedIndex.value = Math.max(0, selectedIndex.value - 1)
+  collapsedRooms.value = collapsedRooms.value.filter((_, idx) => idx !== index)
 }
 
-function updateRoom(patch: Partial<RoomDraft>) {
-  if (!selectedRoom.value) return
+function updateRoom(index: number, patch: Partial<RoomDraft>) {
   const next = [
     ...rooms.value,
   ]
-  next[selectedIndex.value] = { ...next[selectedIndex.value], ...patch }
+  if (!next[index]) return
+  next[index] = { ...next[index], ...patch }
   setRooms(next)
 }
 
-function setBeds(nextBeds: BedDraft[]) {
-  if (!selectedRoom.value) return
+function setBeds(index: number, nextBeds: BedDraft[]) {
   const next = [
     ...rooms.value,
   ]
-  next[selectedIndex.value] = {
-    ...next[selectedIndex.value],
+  if (!next[index]) return
+  next[index] = {
+    ...next[index],
     beds: nextBeds,
   }
   setRooms(next)
 }
 
-function addBed() {
+function addBed(roomIndex: number) {
   const next = [
-    ...(selectedRoom.value?.beds ?? []),
+    ...(rooms.value[roomIndex]?.beds ?? []),
   ] as BedDraft[]
   next.push({ type: 'simple', capacity: 1, quantity: 1 } as BedDraft)
-  setBeds(next)
+  setBeds(roomIndex, next)
 }
 
-function updateBed(index: number, patch: Partial<BedDraft>) {
+function updateBed(roomIndex: number, index: number, patch: Partial<BedDraft>) {
   const next = [
-    ...(selectedRoom.value?.beds ?? []),
+    ...(rooms.value[roomIndex]?.beds ?? []),
   ] as BedDraft[]
   next[index] = { ...next[index], ...patch }
-  setBeds(next)
+  setBeds(roomIndex, next)
 }
 
-function removeBed(index: number) {
-  const next = (selectedRoom.value?.beds ?? []).filter((_, idx) => idx !== index) as BedDraft[]
-  setBeds(next)
+function removeBed(roomIndex: number, index: number) {
+  const next = (rooms.value[roomIndex]?.beds ?? []).filter((_, idx) => idx !== index) as BedDraft[]
+  setBeds(roomIndex, next)
+}
+
+function setRoomType(index: number, nextType: string) {
+  const nextLabel = roomTypeLabels[nextType] ?? panelContent.roomLabelGeneric
+  updateRoom(index, { type: nextType, 'room-name': nextLabel })
+}
+
+function setBedType(roomIndex: number, bedIndex: number, nextType: string) {
+  const nextCapacity = bedTypeCapacities[nextType] ?? 1
+  updateBed(roomIndex, bedIndex, { type: nextType, capacity: nextCapacity })
+}
+
+function isRoomCollapsed(index: number) {
+  return collapsedRooms.value[index] ?? true
+}
+
+function toggleRoomCollapse(index: number, force?: boolean) {
+  const next = [...collapsedRooms.value]
+  const current = next[index] ?? true
+  next[index] = typeof force === 'boolean' ? force : !current
+  collapsedRooms.value = next
+}
+
+function roomLabel(room: RoomDraft, index: number) {
+  const label = (room['room-name'] ?? '').trim()
+  return label
+    || roomTypeLabels[room.type ?? '']
+    || panelContent.roomLabelFallback.replace('{index}', String(index + 1))
 }
 </script>
 
 <template>
   <section class="editor-rooms-panel">
     <div class="header">
-      <h3>Couchages</h3>
-      <p>Indiquez le nombre de couchage par pièce</p>
+      <h3>{{ panelContent.title }}</h3>
+      <p>{{ panelContent.subtitle }}</p>
     </div>
 
     <div class="body rooms">
-      <div class="row">
-        <div class="input select">
-          <select
-            :value="selectedIndex"
-            :disabled="!rooms.length"
-            @change="selectedIndex = Number(($event.target as HTMLSelectElement).value)"
-          >
-            <option
-              v-for="(room, idx) in rooms"
-              :key="idx"
-              :value="idx"
-            >
-              {{ room['room-name'] || `Pièce ${idx + 1}` }}
-            </option>
-          </select>
-        </div>
+      <div class="rooms-list">
         <div
-          class="trash"
+          v-for="(room, roomIndex) in rooms"
+          :key="roomIndex"
+          class="room-card"
+          :class="{ 'is-collapsed': isRoomCollapsed(roomIndex) }"
         >
-          <button
-            type="button"
-            :disabled="!rooms.length"
-            @click="removeRoom(selectedIndex)"
-          >
-            🗑
-          </button>
-        </div>
-      </div>
-
-      <div
-        v-if="selectedRoom"
-        class="details"
-      >
-        <div class="row">
-          <div class="input">
-            <input
-              :value="selectedRoom['room-name']"
-              type="text"
-              placeholder="Nom de la pièce"
-              @input="updateRoom({ 'room-name': ($event.target as HTMLInputElement).value } as any)"
-            />
-          </div>
-          <div class="input select">
-            <select
-              :value="selectedRoom.type"
-              @change="updateRoom({ type: ($event.target as HTMLSelectElement).value } as any)"
-            >
-              <option value="bedroom"> Chambre </option>
-              <option value="livingroom"> Salon </option>
-              <option value="bathroom"> Salle de bain </option>
-              <option value="kitchen"> Cuisine </option>
-              <option value="other"> Autre </option>
-            </select>
-          </div>
-        </div>
-
-        <div class="beds">
           <div
-            v-for="(bed, idx) in selectedRoom.beds ?? []"
-            :key="idx"
-            class="row"
+            class="room-header"
+            :class="{ 'is-collapsed': isRoomCollapsed(roomIndex) }"
           >
-            <div class="input select">
-              <select
-                :value="bed.type"
-                @change="updateBed(idx, { type: ($event.target as HTMLSelectElement).value } as any)"
-              >
-                <option value="simple"> Lit simple </option>
-                <option value="double"> Lit double </option>
-                <option value="bunk"> Lit superposés </option>
-              </select>
-            </div>
-            <div class="input cap">
-              <input
-                type="number"
-                min="0"
-                :value="bed.capacity"
-                @input="updateBed(idx, { capacity: Number(($event.target as HTMLInputElement).value) } as any)"
-              />
-            </div>
-            <div class="stepper qty">
-              <div
-                class="btn"
-              >
+            <template v-if="isRoomCollapsed(roomIndex)">
+              <p class="room-name">
+                {{ roomLabel(room, roomIndex) }}
+              </p>
+              <div class="room-actions">
+                <div class="room-remove">
+                  <button
+                    type="button"
+                    @click="removeRoom(roomIndex)"
+                  >
+                    🗑
+                  </button>
+                </div>
+                <div class="room-toggle">
+                  <button
+                    type="button"
+                    @click="toggleRoomCollapse(roomIndex, false)"
+                  >
+                    ✎
+                  </button>
+                </div>
+              </div>
+            </template>
+            <template v-else>
+              <div class="room-remove">
                 <button
                   type="button"
-                  @click="updateBed(idx, { quantity: Math.max(0, (bed.quantity ?? 0) - 1) } as any)"
+                  @click="removeRoom(roomIndex)"
                 >
-                  −
+                  ✕
                 </button>
               </div>
-              <input
-                class="value"
-                type="number"
-                min="0"
-                :value="bed.quantity ?? 0"
-                @input="updateBed(idx, { quantity: Number(($event.target as HTMLInputElement).value) } as any)"
-              />
-              <div
-                class="btn"
-              >
+              <div class="input select room-select">
+                <select
+                  :value="room.type || 'other'"
+                  @change="setRoomType(roomIndex, ($event.target as HTMLSelectElement).value)"
+                >
+                  <option
+                    v-for="option in roomTypeOptions"
+                    :key="option.value"
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </option>
+                </select>
+              </div>
+              <div class="room-toggle">
                 <button
                   type="button"
-                  @click="updateBed(idx, { quantity: (bed.quantity ?? 0) + 1 } as any)"
+                  @click="toggleRoomCollapse(roomIndex, true)"
                 >
-                  +
+                  ▲
                 </button>
               </div>
-            </div>
-            <div
-              class="remove"
-            >
-              <button
-                type="button"
-                @click="removeBed(idx)"
-              >
-                ✕
-              </button>
-            </div>
+            </template>
           </div>
-        </div>
 
-        <div class="btn-primary__black__full">
-          <button
-            type="button"
-            @click="addBed"
-          >
-            + Ajouter un lit
-          </button>
+          <Transition name="room-collapse">
+            <div
+              v-if="!isRoomCollapsed(roomIndex)"
+              class="room-body"
+            >
+              <div class="room-beds">
+                <div
+                  v-for="(bed, bedIndex) in room.beds ?? []"
+                  :key="bedIndex"
+                  class="bed-row"
+                >
+                  <div class="stepper qty">
+                    <div class="btn">
+                      <button
+                        type="button"
+                        @click="updateBed(roomIndex, bedIndex, { quantity: (bed.quantity ?? 0) + 1 })"
+                      >
+                        +
+                      </button>
+                    </div>
+                    <input
+                      class="value"
+                      type="number"
+                      min="0"
+                      :value="bed.quantity ?? 0"
+                      @input="updateBed(roomIndex, bedIndex, { quantity: Number(($event.target as HTMLInputElement).value) })"
+                    />
+                    <div class="btn">
+                      <button
+                        type="button"
+                        @click="updateBed(roomIndex, bedIndex, { quantity: Math.max(0, (bed.quantity ?? 0) - 1) })"
+                      >
+                        −
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="input select">
+                    <select
+                      :value="bed.type"
+                      @change="setBedType(roomIndex, bedIndex, ($event.target as HTMLSelectElement).value)"
+                    >
+                      <option
+                        v-for="option in bedTypeOptions"
+                        :key="option.value"
+                        :value="option.value"
+                      >
+                        {{ option.label }}
+                      </option>
+                    </select>
+                  </div>
+
+                  <div class="remove">
+                    <button
+                      type="button"
+                      @click="removeBed(roomIndex, bedIndex)"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="btn-primary__black__full room-add-bed">
+                <button
+                  type="button"
+                  @click="addBed(roomIndex)"
+                >
+                  {{ panelContent.addBed }}
+                </button>
+              </div>
+            </div>
+          </Transition>
         </div>
       </div>
 
@@ -243,7 +301,7 @@ function removeBed(index: number) {
           type="button"
           @click="addRoom"
         >
-          + Ajouter une pièce
+          {{ panelContent.addRoom }}
         </button>
       </div>
     </div>

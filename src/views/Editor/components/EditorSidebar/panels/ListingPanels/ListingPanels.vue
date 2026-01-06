@@ -62,5 +62,9 @@ const emit = defineEmits<{
 </template>
 
 <style lang="scss">
-@use '@/views/Editor/components/EditorSidebar/panels/ListingPanels/listing-panels.scss';
+@use '@/views/Editor/components/EditorSidebar/panels/panel.scss' as *;
+
+.editor-listing-panels {
+  @extend %panels-stack;
+}
 </style>

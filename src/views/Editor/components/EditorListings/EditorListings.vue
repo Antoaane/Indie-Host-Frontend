@@ -10,6 +10,8 @@ import { Swiper, SwiperSlide } from 'swiper/vue'
 import type { UserListingCard } from '@/views/Editor/utils/listingApi'
 import { orderByIndex } from '@/utils/medias/order'
 import { createListingMediaSwiperParams } from '@/utils/swiper/listingMedia'
+import { editorStatic } from '@/views/Editor/utils/editorContent'
+import { formatICUMessage } from '@/utils/i18n'
 
 const props = defineProps<{
   listings: UserListingCard[]
@@ -23,6 +25,12 @@ const emit = defineEmits<{
 }>()
 
 const query = ref('')
+const listingContent = editorStatic.listings
+const newListingRemaining = computed(() => (
+  listingContent.newListing.remaining
+    .replace('{count}', '3')
+    .replace('{max}', '6')
+))
 
 const filtered = computed(() => {
   const q = query.value.trim().toLowerCase()
@@ -44,7 +52,7 @@ function getListingSlides(listing: UserListingCard): ListingSlide[] {
     .filter((img) => Boolean(img?.src))
     .map((img, index) => ({
       src: img.src,
-      alt: (img.alt ?? title) || 'Photo du logement',
+      alt: (img.alt ?? title) || listingContent.media.defaultAlt,
       position: typeof img.position === 'number' ? img.position : undefined,
       index: typeof img.index === 'number' ? img.index : index,
     }))
@@ -55,7 +63,7 @@ function getListingSlides(listing: UserListingCard): ListingSlide[] {
   if (coverSrc && !ordered.some((img) => img.src === coverSrc)) {
     ordered.unshift({
       src: coverSrc,
-      alt: title || 'Photo du logement',
+      alt: title || listingContent.media.defaultAlt,
       position: 0,
       index: -1,
     })
@@ -63,7 +71,7 @@ function getListingSlides(listing: UserListingCard): ListingSlide[] {
 
   if (!ordered.length && coverSrc) {
     return [
-      { src: coverSrc, alt: title || 'Photo du logement', position: 0, index: 0 },
+      { src: coverSrc, alt: title || listingContent.media.defaultAlt, position: 0, index: 0 },
     ]
   }
 
@@ -131,11 +139,11 @@ function statusLabel(status?: string) {
 
   switch (normalized) {
     case 'published':
-      return 'Publiée'
+      return listingContent.status.published
     case 'draft':
-      return 'Brouillon'
+      return listingContent.status.draft
     case 'archived':
-      return 'Archivée'
+      return listingContent.status.archived
     default:
       return status ?? ''
   }
@@ -156,6 +164,24 @@ function ratingPercent(rating?: number) {
   return `${(clamped / 5) * 100}%`
 }
 
+function guestLabel(count: number) {
+  return formatICUMessage(listingContent.guests, { count })
+}
+
+function ratingTitle(value: number) {
+  const formatted = value.toFixed(2)
+  return listingContent.ratingTitle.replace('{rating}', formatted)
+}
+
+function ratingAria(value: number) {
+  const formatted = value.toFixed(2)
+  return listingContent.ratingAria.replace('{rating}', formatted)
+}
+
+function goToImageLabel(index: number) {
+  return listingContent.carousel.goTo.replace('{index}', String(index))
+}
+
 console.log('props:', props)
 
 // const DRAFT_STORAGE_PREFIX = 'indiehost:listing-draft:'
@@ -169,7 +195,7 @@ console.log('props:', props)
         <input
           v-model="query"
           type="search"
-          placeholder="Rechercher une annonce"
+          :placeholder="listingContent.searchPlaceholder"
         />
       </div>
     </div>
@@ -220,7 +246,7 @@ console.log('props:', props)
                   <button
                     class="nav is-prev"
                     type="button"
-                    aria-label="Image précédente"
+                    :aria-label="listingContent.carousel.prev"
                     @click.stop="(event) => { handleSelect(listing.listingId); slidePrev(listing.listingId) }"
                     @pointerdown.stop="handleSelect(listing.listingId)"
                   >
@@ -229,7 +255,7 @@ console.log('props:', props)
                   <button
                     class="nav is-next"
                     type="button"
-                    aria-label="Image suivante"
+                    :aria-label="listingContent.carousel.next"
                     @click.stop="(event) => { handleSelect(listing.listingId); slideNext(listing.listingId) }"
                     @pointerdown.stop="handleSelect(listing.listingId)"
                   >
@@ -237,7 +263,7 @@ console.log('props:', props)
                   </button>
                   <div
                     class="dots"
-                    aria-label="Pagination du carrousel"
+                    :aria-label="listingContent.carousel.pagination"
                     @click.stop="handleSelect(listing.listingId)"
                     @pointerdown.stop="handleSelect(listing.listingId)"
                   >
@@ -247,7 +273,7 @@ console.log('props:', props)
                       class="dot"
                       :class="{ 'is-active': activeIndexFor(listing.listingId) === index }"
                       type="button"
-                      :aria-label="`Aller à l’image ${index + 1}`"
+                      :aria-label="goToImageLabel(index + 1)"
                       @click.stop="(event) => { handleSelect(listing.listingId); slideTo(listing.listingId, index) }"
                       @pointerdown.stop="handleSelect(listing.listingId)"
                     />
@@ -279,7 +305,7 @@ console.log('props:', props)
                     :to="{ name: 'listing', params: { id: listing.listingId } }"
                     target="_blank"
                     rel="noopener noreferrer"
-                    aria-label="Prévisualiser l’annonce"
+                    :aria-label="listingContent.previewLink"
                     @click.stop
                   >
                     <Eye :size="18" />
@@ -291,13 +317,13 @@ console.log('props:', props)
             <div class="body">
               <div class="main">
                 <p class="title">
-                  {{ listing.title || 'Annonce sans titre' }}
+                  {{ listing.title || listingContent.untitled }}
                 </p>
                 <p
                   v-if="listing.guestCapacity"
                   class="meta"
                 >
-                  {{ listing.guestCapacity }} voyageurs
+                  {{ listing.guestCapacity }} {{ guestLabel(listing.guestCapacity) }}
                 </p>
               </div>
 
@@ -306,14 +332,14 @@ console.log('props:', props)
                   v-if="typeof listing.pricePerNight === 'number'"
                   class="price"
                 >
-                  {{ listing.pricePerNight }} € <span class="suffix">par nuit</span>
+                  {{ listing.pricePerNight }} € <span class="suffix">{{ listingContent.priceSuffix }}</span>
                 </span>
                 <span
                   v-if="typeof listing.rating === 'number'"
                   class="rating"
                   :style="{ '--rating-percent': ratingPercent(listing.rating) }"
-                  :title="`${listing.rating.toFixed(2)} / 5`"
-                  :aria-label="`${listing.rating.toFixed(2)} sur 5`"
+                  :title="ratingTitle(listing.rating)"
+                  :aria-label="ratingAria(listing.rating)"
                   role="img"
                 />
               </div>
@@ -327,7 +353,7 @@ console.log('props:', props)
                 :to="{ name: 'listing', params: { id: listing.listingId } }"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Prévisualiser l’annonce"
+                :aria-label="listingContent.previewLink"
                 @click.stop
               >
                 <Eye :size="18" />
@@ -342,8 +368,8 @@ console.log('props:', props)
             disabled
           >
             <div class="content">
-              <span>+ Nouvelle annonce</span>
-              <small>3 / 6 restantes</small>
+              <span>{{ listingContent.newListing.title }}</span>
+              <small>{{ newListingRemaining }}</small>
             </div>
           </button>
         </div>
@@ -354,13 +380,13 @@ console.log('props:', props)
       v-if="props.isLoading"
       class="state"
     >
-      Chargement…
+      {{ editorStatic.states.loading }}
     </div>
     <div
       v-else-if="props.error"
       class="state"
     >
-      Impossible de charger les annonces.
+      {{ editorStatic.states.listingsLoadError }}
     </div>
   </section>
 </template>

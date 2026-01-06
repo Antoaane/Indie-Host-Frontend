@@ -3,6 +3,7 @@
 <script setup lang="ts">
 import type { RawCore } from '@/views/Listing/utils/fetchListingRaw'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
+import { editorStatic } from '@/views/Editor/utils/editorContent'
 
 const props = defineProps<{
   core?: Partial<RawCore> | null
@@ -15,13 +16,15 @@ const emit = defineEmits<{
 function patchCore(patch: Partial<RawCore>) {
   emit('patch', { core: patch })
 }
+
+const panelContent = editorStatic.panels.listing.location
 </script>
 
 <template>
   <section class="editor-location-panel">
     <div class="header">
-      <h3>Adresse</h3>
-      <p>Seule une localisation approximative sera affichée sur l’annonce</p>
+      <h3>{{ panelContent.title }}</h3>
+      <p>{{ panelContent.subtitle }}</p>
     </div>
 
     <div class="body">
@@ -29,7 +32,7 @@ function patchCore(patch: Partial<RawCore>) {
         <input
           :value="props.core?.type ?? ''"
           type="text"
-          placeholder="Type (ex: Péniche)"
+          :placeholder="panelContent.placeholders.type"
           @input="patchCore({ type: ($event.target as HTMLInputElement).value } as any)"
         />
       </div>
@@ -38,7 +41,7 @@ function patchCore(patch: Partial<RawCore>) {
           <input
             :value="props.core?.city ?? ''"
             type="text"
-            placeholder="Ville"
+            :placeholder="panelContent.placeholders.city"
             @input="patchCore({ city: ($event.target as HTMLInputElement).value } as any)"
           />
         </div>
@@ -46,7 +49,7 @@ function patchCore(patch: Partial<RawCore>) {
           <input
             :value="props.core?.country ?? ''"
             type="text"
-            placeholder="Pays"
+            :placeholder="panelContent.placeholders.country"
             @input="patchCore({ country: ($event.target as HTMLInputElement).value } as any)"
           />
         </div>
@@ -55,7 +58,7 @@ function patchCore(patch: Partial<RawCore>) {
         <input
           :value="props.core?.region ?? ''"
           type="text"
-          placeholder="Région"
+          :placeholder="panelContent.placeholders.region"
           @input="patchCore({ region: ($event.target as HTMLInputElement).value } as any)"
         />
       </div>
@@ -68,7 +71,7 @@ function patchCore(patch: Partial<RawCore>) {
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/components/inputs' as inputs;
-@use '@/views/Editor/components/EditorSidebar/panels/ListingPanels/listing-panels.scss' as *;
+@use '@/views/Editor/components/EditorSidebar/panels/panel.scss' as *;
 
 .editor-location-panel {
   @extend %panel;

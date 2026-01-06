@@ -10,6 +10,7 @@ import ArrivalPanels from '@/views/Editor/components/EditorSidebar/panels/Arriva
 import type { RawListingBundle } from '@/views/ListingView/utils/useParseContent'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { persistListingDraft } from '@/views/Editor/utils/persistListingDraft'
+import { editorStatic } from '@/views/Editor/utils/editorContent'
 
 type SidebarTab = 'listing' | 'pricing' | 'arrival'
 
@@ -29,6 +30,7 @@ const tab = ref<SidebarTab>('listing')
 const isSaving = ref(false)
 const isPublishing = ref(false)
 const error = ref<string | null>(null)
+const sidebarContent = editorStatic.sidebar
 
 const canInteract = computed(() => !props.isLoading && !isSaving.value && !isPublishing.value)
 
@@ -51,7 +53,7 @@ async function saveDraft() {
   try {
     persistListingDraft(props.listingId, props.draft)
   } catch (err: any) {
-    error.value = err?.message ?? 'Erreur lors de la sauvegarde.'
+    error.value = err?.message ?? sidebarContent.errors.save
   } finally {
     isSaving.value = false
   }
@@ -65,7 +67,7 @@ async function publishDraft() {
   try {
     await props.publish(props.listingId, props.draft)
   } catch (err: any) {
-    error.value = err?.message ?? 'Erreur lors de la publication.'
+    error.value = err?.message ?? sidebarContent.errors.publish
   } finally {
     isPublishing.value = false
   }
@@ -88,7 +90,11 @@ async function publishDraft() {
           :draft="props.draft"
           @patch="handlePatch"
         />
-        <PricingPanels v-else-if="tab === 'pricing'" />
+        <PricingPanels
+          v-else-if="tab === 'pricing'"
+          :draft="props.draft"
+          @patch="handlePatch"
+        />
         <ArrivalPanels v-else />
       </Transition>
     </div>
@@ -107,7 +113,7 @@ async function publishDraft() {
             :disabled="!canInteract"
             @click="saveDraft"
           >
-            Sauvegarder
+            {{ sidebarContent.actions.save }}
           </button>
         </div>
         <div class="btn-primary__white__full">
@@ -116,7 +122,7 @@ async function publishDraft() {
             :disabled="!canInteract"
             @click="publishDraft"
           >
-            Appliquer
+            {{ sidebarContent.actions.apply }}
           </button>
         </div>
       </div>

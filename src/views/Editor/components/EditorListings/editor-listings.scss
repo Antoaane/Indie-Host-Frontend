@@ -238,18 +238,8 @@
               z-index: 4;
 
               >div {
-
-                // width: 38px;
-                // height: 38px;
-
-                // border-radius: borders.$rounded-md;
-                @include buttons.primary($theme: light, $padding: false);
-
-                >* {
-                  // height: 100%;
-                  // padding: 0;
-                  // border-radius: inherit;
-                }
+                --button-icon-size: 38px;
+                @include buttons.primary($theme: light, $icon-only: true);
               }
             }
 

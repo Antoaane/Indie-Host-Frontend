@@ -2,16 +2,18 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { editorStatic } from '@/views/Editor/utils/editorContent'
 
 const airbnbUrl = ref('')
 const bookingUrl = ref('')
+const panelContent = editorStatic.panels.listing.import
 </script>
 
 <template>
   <section class="editor-import-panel">
     <div class="header">
-      <h3>Importez votre annonce</h3>
-      <p>Vous pouvez récupérer les informations d’un logement existant sur l’une de ces plateformes</p>
+      <h3>{{ panelContent.title }}</h3>
+      <p>{{ panelContent.subtitle }}</p>
     </div>
 
     <div class="body">
@@ -19,7 +21,7 @@ const bookingUrl = ref('')
         <div class="input action">
           <input
             v-model="airbnbUrl"
-            placeholder="https://www.airbnb.fr/rooms/…"
+            :placeholder="panelContent.airbnbPlaceholder"
             type="text"
             disabled
           />
@@ -28,7 +30,7 @@ const bookingUrl = ref('')
               type="button"
               disabled
             >
-              Importer
+              {{ panelContent.cta }}
             </button>
           </div>
         </div>
@@ -38,7 +40,7 @@ const bookingUrl = ref('')
         <div class="input action">
           <input
             v-model="bookingUrl"
-            placeholder="https://www.booking.com/hotel/…"
+            :placeholder="panelContent.bookingPlaceholder"
             type="text"
             disabled
           />
@@ -47,7 +49,7 @@ const bookingUrl = ref('')
               type="button"
               disabled
             >
-              Importer
+              {{ panelContent.cta }}
             </button>
           </div>
         </div>
@@ -61,7 +63,7 @@ const bookingUrl = ref('')
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/components/inputs' as inputs;
-@use '@/views/Editor/components/EditorSidebar/panels/ListingPanels/listing-panels.scss' as *;
+@use '@/views/Editor/components/EditorSidebar/panels/panel.scss' as *;
 
 .editor-import-panel {
   @extend %panel;

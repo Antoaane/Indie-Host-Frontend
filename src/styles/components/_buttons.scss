@@ -58,7 +58,7 @@ $button-themes: (
 );
 
 // apply to `div > button`
-@mixin primary($cta: false, $theme: black, $padding: true, $fullwidth: false, $deep: false) {
+@mixin primary($cta: false, $theme: black, $padding: true, $fullwidth: false, $deep: false, $icon-only: false) {
   $colors: map.get($button-themes, $theme);
 
   @if $fullwidth {
@@ -82,7 +82,11 @@ $button-themes: (
     cursor: pointer;
     @include transition;
 
-    @if $padding {
+    @if $icon-only {
+      padding: 0;
+    }
+
+    @else if $padding {
       padding: 0.4rem 1rem 0.5rem 1rem;
     }
 
@@ -94,6 +98,13 @@ $button-themes: (
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
+
+    @if $icon-only {
+      gap: 0;
+      width: var(--button-icon-size, 2.75rem);
+      height: var(--button-icon-size, 2.75rem);
+      aspect-ratio: 1 / 1;
+    }
 
     font-size: 1rem;
     text-decoration: none;

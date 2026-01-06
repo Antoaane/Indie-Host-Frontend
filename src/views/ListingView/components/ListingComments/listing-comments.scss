@@ -196,7 +196,7 @@
         top: var(--layout-gap-md);
 
         >.close {
-          @include buttons.primary($padding: false, $theme: white);
+          @include buttons.primary($theme: white, $icon-only: true);
         }
       }
 

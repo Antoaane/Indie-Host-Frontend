@@ -4,6 +4,7 @@
 import { computed } from 'vue'
 import type { RawMedias } from '@/views/Listing/utils/fetchListingRaw'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
+import { editorStatic } from '@/views/Editor/utils/editorContent'
 
 type DraftImage = NonNullable<RawMedias['images']>[number]
 
@@ -16,6 +17,7 @@ const emit = defineEmits<{
 }>()
 
 const images = computed<DraftImage[]>(() => (props.medias?.images as DraftImage[] | undefined) ?? [])
+const panelContent = editorStatic.panels.listing.gallery
 
 function setImages(next: DraftImage[]) {
   emit('patch', { medias: { images: next } })
@@ -42,8 +44,8 @@ function removeImage(position: number) {
 <template>
   <section class="editor-gallery-panel">
     <div class="header">
-      <h3>Galerie de photo</h3>
-      <p>Montrez votre logement sous son plus beau jour</p>
+      <h3>{{ panelContent.title }}</h3>
+      <p>{{ panelContent.subtitle }}</p>
     </div>
 
     <div class="body">
@@ -70,6 +72,7 @@ function removeImage(position: number) {
           <div class="button">
             <button
               type="button"
+              :aria-label="panelContent.addLabel"
               @click="addImage"
             >
               +

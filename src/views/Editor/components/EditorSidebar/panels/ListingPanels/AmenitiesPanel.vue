@@ -11,6 +11,7 @@ import { mockAmenitiesCatalog, type AmenityCatalogItem } from '@/views/Editor/mo
 // TYPES
 import type { RawCore } from '@/views/Listing/utils/fetchListingRaw'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
+import { editorStatic } from '@/views/Editor/utils/editorContent'
 
 // ASSETS
 import { Pin, PinOff } from 'lucide-vue-next'
@@ -34,6 +35,7 @@ const previewLimit = 6
 const catalogSearch = ref('')
 const catalogOpenCategories = ref<Record<string, boolean>>({})
 const defaultCatalogOpenLimit = 10
+const panelContent = editorStatic.panels.listing.amenities
 
 function setAmenities(next: AmenityDraft[]) {
   emit('patch', { core: { amenities: next } })
@@ -307,8 +309,8 @@ watchEffect(() => {
 <template>
   <section class="editor-amenities-panel">
     <div class="header">
-      <h3>Équipements</h3>
-      <p>Aperçu des équipements visibles côté voyageurs.</p>
+      <h3>{{ panelContent.title }}</h3>
+      <p>{{ panelContent.subtitle }}</p>
     </div>
 
     <div class="body">
@@ -335,7 +337,7 @@ watchEffect(() => {
         v-else
         class="empty"
       >
-        Aucun équipement renseigné.
+        {{ panelContent.empty }}
       </p>
 
       <div class="btn-primary__black__full">
@@ -343,7 +345,7 @@ watchEffect(() => {
           type="button"
           @click="openOverlay"
         >
-          Gérer les équipements
+          {{ panelContent.manageCta }}
         </button>
       </div>
     </div>
@@ -374,7 +376,7 @@ watchEffect(() => {
               </button>
             </div>
             <div class="title">
-              <h2>{{ overlayView === 'catalog' ? 'Ajouter un équipement' : 'Équipements' }}</h2>
+              <h2>{{ overlayView === 'catalog' ? panelContent.overlay.titleCatalog : panelContent.overlay.titleList }}</h2>
             </div>
             <div class="close">
               <button
@@ -463,7 +465,7 @@ watchEffect(() => {
                 type="button"
                 @click="overlayView = 'catalog'"
               >
-                + Ajouter un équipement
+                {{ panelContent.overlay.addCta }}
               </button>
             </div>
           </template>
@@ -474,7 +476,7 @@ watchEffect(() => {
                 <input
                   v-model="catalogSearch"
                   type="search"
-                  placeholder="Rechercher un équipement..."
+                  :placeholder="panelContent.overlay.searchPlaceholder"
                 />
               </div>
 
@@ -535,7 +537,7 @@ watchEffect(() => {
                               v-if="isAmenitySelected(item.id)"
                               class="item-state"
                             >
-                              Ajouté
+                              {{ panelContent.overlay.added }}
                             </span>
                           </div>
                         </button>
@@ -549,7 +551,7 @@ watchEffect(() => {
                 v-else
                 class="empty"
               >
-                Aucun résultat.
+                {{ panelContent.overlay.empty }}
               </p>
             </div>
           </template>

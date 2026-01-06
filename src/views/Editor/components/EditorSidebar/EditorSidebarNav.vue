@@ -2,6 +2,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { editorStatic } from '@/views/Editor/utils/editorContent'
 
 type SidebarTab = 'listing' | 'pricing' | 'arrival'
 
@@ -26,6 +27,8 @@ const activeIndex = computed(() => {
 const tabsStyle = computed(() => ({
   '--active-index': String(activeIndex.value),
 }))
+
+const tabsContent = editorStatic.sidebar.tabs
 </script>
 
 <template>
@@ -42,7 +45,7 @@ const tabsStyle = computed(() => ({
         type="button"
         @click="emit('update:modelValue', 'listing')"
       >
-        Annonce
+        {{ tabsContent.listing }}
       </button>
     </div>
     <div
@@ -53,7 +56,7 @@ const tabsStyle = computed(() => ({
         type="button"
         @click="emit('update:modelValue', 'pricing')"
       >
-        Tarification
+        {{ tabsContent.pricing }}
       </button>
     </div>
     <div
@@ -64,7 +67,7 @@ const tabsStyle = computed(() => ({
         type="button"
         @click="emit('update:modelValue', 'arrival')"
       >
-        Arrivée
+        {{ tabsContent.arrival }}
       </button>
     </div>
   </nav>

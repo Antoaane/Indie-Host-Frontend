@@ -4,6 +4,7 @@
 import { computed } from 'vue'
 import type { RawCore } from '@/views/Listing/utils/fetchListingRaw'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
+import { editorStatic } from '@/views/Editor/utils/editorContent'
 
 type ReviewsVisibility = {
   indiehost: boolean
@@ -34,13 +35,15 @@ const visibility = computed<ReviewsVisibility>(() => {
 function setVisibility(next: ReviewsVisibility) {
   emit('patch', { core: { ['reviews-display']: next } as any })
 }
+
+const panelContent = editorStatic.panels.listing.reviews
 </script>
 
 <template>
   <section class="editor-reviews-panel">
     <div class="header">
-      <h3>Avis</h3>
-      <p>Modifiez les avis que vous souhaitez afficher (cela n’impactera pas la note globale)</p>
+      <h3>{{ panelContent.title }}</h3>
+      <p>{{ panelContent.subtitle }}</p>
     </div>
 
     <div class="body">
@@ -50,7 +53,7 @@ function setVisibility(next: ReviewsVisibility) {
           :checked="visibility.indiehost"
           @change="setVisibility({ ...visibility, indiehost: ($event.target as HTMLInputElement).checked })"
         />
-        <span>Avis Indie Host</span>
+        <span>{{ panelContent.toggle.indiehost }}</span>
       </label>
       <label class="toggle">
         <input
@@ -58,7 +61,7 @@ function setVisibility(next: ReviewsVisibility) {
           :checked="visibility.airbnb"
           @change="setVisibility({ ...visibility, airbnb: ($event.target as HTMLInputElement).checked })"
         />
-        <span>Avis Airbnb</span>
+        <span>{{ panelContent.toggle.airbnb }}</span>
       </label>
       <label class="toggle">
         <input
@@ -66,7 +69,7 @@ function setVisibility(next: ReviewsVisibility) {
           :checked="visibility.booking"
           @change="setVisibility({ ...visibility, booking: ($event.target as HTMLInputElement).checked })"
         />
-        <span>Avis Booking.com</span>
+        <span>{{ panelContent.toggle.booking }}</span>
       </label>
     </div>
   </section>
@@ -77,7 +80,7 @@ function setVisibility(next: ReviewsVisibility) {
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/components/buttons' as buttons;
-@use '@/views/Editor/components/EditorSidebar/panels/ListingPanels/listing-panels.scss' as *;
+@use '@/views/Editor/components/EditorSidebar/panels/panel.scss' as *;
 
 .editor-reviews-panel {
   @extend %panel;

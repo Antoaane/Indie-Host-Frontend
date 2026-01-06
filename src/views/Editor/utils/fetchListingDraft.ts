@@ -27,6 +27,7 @@ export function fetchListingDraft(listingId: string): RawListingBundle | null {
 
     return {
       core: (parsed.core as RawListingBundle['core']) ?? null,
+      bookings: (parsed.bookings as RawListingBundle['bookings']) ?? null,
       medias: (parsed.medias as RawListingBundle['medias']) ?? null,
     }
   } catch {
@@ -40,4 +41,3 @@ export function clearListingDraft(listingId: string) {
 
   localStorage.removeItem(getListingDraftStorageKey(listingId))
 }
-

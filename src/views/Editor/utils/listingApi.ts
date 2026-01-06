@@ -14,6 +14,7 @@ import type { RawListingBundle } from '@/views/ListingView/utils/useParseContent
 
 export type DraftPatch = {
   core?: Partial<RawCore> | null
+  bookings?: Partial<RawBookings> | null
   medias?: Partial<RawMedias> | null
 }
 
@@ -126,12 +127,14 @@ function fallbackEditableBundle(listingId: string): RawListingBundle {
   if (listingId === coreJSON.id) {
     return {
       core: coreJSON as unknown as RawListingBundle['core'],
+      bookings: bookingsJSON as unknown as RawListingBundle['bookings'],
       medias: mediasJSON as unknown as RawListingBundle['medias'],
     }
   }
 
   return {
     core: { id: listingId },
+    bookings: { price: 0, fees: [], 'booked-days': [] },
     medias: { images: [], videos: [] },
   }
 }
@@ -153,12 +156,13 @@ export async function fetchEditableListingBundle(listingId: string): Promise<Raw
   if (!BASE_API_URL) return fallbackEditableBundle(listingId)
 
   try {
-    const [core, medias] = await Promise.all([
+    const [core, bookings, medias] = await Promise.all([
       fetchRemote<RawCore>(resolveUrl(buildListingUrl('core', listingId))),
+      fetchRemote<RawBookings>(resolveUrl(buildListingUrl('bookings', listingId))),
       fetchRemote<RawMedias>(resolveUrl(buildListingUrl('medias', listingId))),
     ])
 
-    return { core, medias }
+    return { core, bookings, medias }
   } catch (err) {
     console.warn('[Editor][listingApi] fetchEditableListingBundle fallback', err)
     return fallbackEditableBundle(listingId)
@@ -270,6 +274,12 @@ export async function publishListingDraft(listingId: string, draft: RawListingBu
   if (draft.core) {
     requests.push(
       patchRemote(resolveUrl(buildListingUrl('core', listingId)), draft.core),
+    )
+  }
+
+  if (draft.bookings) {
+    requests.push(
+      patchRemote(resolveUrl(buildListingUrl('bookings', listingId)), draft.bookings),
     )
   }
 

@@ -6,6 +6,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import EditorListings from '@/views/Editor/components/EditorListings/EditorListings.vue'
 import EditorSidebar from '@/views/Editor/components/EditorSidebar/EditorSidebar.vue'
 import EditorPreview from '@/views/Editor/components/EditorPreview/EditorPreview.vue'
+import { editorStatic } from '@/views/Editor/utils/editorContent'
 
 import type { RawListingBundle } from '@/views/ListingView/utils/useParseContent'
 import { fetchListingDraft } from '@/views/Editor/utils/fetchListingDraft'
@@ -57,6 +58,12 @@ function applyDraftPatch(patch: DraftPatch) {
     draft.value.core = {
       ...(draft.value.core ?? {}),
       ...patch.core,
+    }
+  }
+  if (patch.bookings) {
+    draft.value.bookings = {
+      ...(draft.value.bookings ?? {}),
+      ...patch.bookings,
     }
   }
   if (patch.medias) {
@@ -130,6 +137,7 @@ function showListings() {
 }
 
 const canTogglePreview = computed(() => Boolean(selectedListingId.value && draft.value))
+const staticContent = editorStatic
 
 watch(
   () => props.source,
@@ -201,7 +209,7 @@ watch(selectedListingId, (id) => {
               type="button"
               @click="showPreview"
             >
-              Afficher l'éditeur
+              {{ staticContent.actions.showEditor }}
             </button>
           </div>
           <div
@@ -212,7 +220,7 @@ watch(selectedListingId, (id) => {
               type="button"
               @click="showListings"
             >
-              Retourner aux annonces
+              {{ staticContent.actions.backToListings }}
             </button>
           </div>
         </footer>

@@ -4,6 +4,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import type { RawCore } from '@/views/Listing/utils/fetchListingRaw'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
+import { editorStatic } from '@/views/Editor/utils/editorContent'
 
 import { QuillyEditor } from 'vue-quilly'
 import type { QuillOptions } from 'quill/core'
@@ -42,7 +43,7 @@ watch(content, (value) => {
 
 const options: QuillOptions = {
   theme: 'snow',
-  placeholder: 'Start writing...',
+  placeholder: editorStatic.panels.listing.description.quillPlaceholder,
   readOnly: false,
   modules: {
     toolbar: [
@@ -63,6 +64,12 @@ const options: QuillOptions = {
   },
 }
 
+const panelContent = editorStatic.panels.listing.description
+const toolbarLabels = computed(() => ({
+  '--editor-ql-text': `'${panelContent.toolbar.text}'`,
+  '--editor-ql-title': `'${panelContent.toolbar.title}'`,
+}))
+
 onMounted(() => {
   quill = editor.value?.initialize(Quill)
   console.log('Description content:', description.value)
@@ -72,17 +79,20 @@ onMounted(() => {
 <template>
   <section class="editor-description-panel">
     <div class="header">
-      <h3>Présentation</h3>
-      <p>Donnez une description unique à votre logement</p>
+      <h3>{{ panelContent.title }}</h3>
+      <p>{{ panelContent.subtitle }}</p>
     </div>
 
-    <div class="body">
+    <div
+      class="body"
+      :style="toolbarLabels"
+    >
       <!--
       <div class="textarea">
         <textarea
           v-model="description"
           rows="6"
-          placeholder="Décrivez votre logement…"
+          :placeholder="panelContent.placeholder"
         />
       </div>
       -->
@@ -102,7 +112,7 @@ onMounted(() => {
 @use '@/styles/variables/borders' as borders;
 @use '@/styles/variables/animations' as animations;
 @use '@/styles/components/inputs' as inputs;
-@use '@/views/Editor/components/EditorSidebar/panels/ListingPanels/listing-panels.scss' as *;
+@use '@/views/Editor/components/EditorSidebar/panels/panel.scss' as *;
 
 .editor-description-panel {
   @extend %panel;
@@ -131,19 +141,19 @@ onMounted(() => {
 
       .ql-header {
         .ql-picker-item::before {
-          content: 'Texte';
+          content: var(--editor-ql-text);
         }
 
         .ql-picker-item[data-value='2']::before {
-          content: 'Titre';
+          content: var(--editor-ql-title);
         }
 
         .ql-picker-label::before {
-          content: 'Texte';
+          content: var(--editor-ql-text);
         }
 
         .ql-picker-label[data-value='2']::before {
-          content: 'Titre';
+          content: var(--editor-ql-title);
         }
 
         * {

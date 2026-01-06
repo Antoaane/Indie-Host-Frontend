@@ -1,7 +1,15 @@
 <!-- File: src/views/Editor/components/EditorSidebar/panels/ArrivalPanels/ArrivalPanels.vue -->
 
+<script setup lang="ts">
+import { editorStatic } from '@/views/Editor/utils/editorContent'
+
+const arrivalContent = editorStatic.panels.arrival
+</script>
+
 <template>
-  <div class="editor-arrival-panels"> Section en cours de construction. </div>
+  <div class="editor-arrival-panels">
+    {{ arrivalContent.placeholder }}
+  </div>
 </template>
 
 <style lang="scss">

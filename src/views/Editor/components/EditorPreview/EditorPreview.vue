@@ -4,6 +4,7 @@
 import { onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue'
 import ListingView from '@/views/ListingView/ListingView.vue'
 import type { RawListingBundle } from '@/views/ListingView/utils/useParseContent'
+import { editorStatic } from '@/views/Editor/utils/editorContent'
 
 const props = defineProps<{
   rawListing: RawListingBundle | null
@@ -13,6 +14,7 @@ const props = defineProps<{
 
 const wrapper = ref<HTMLElement | null>(null)
 const aspectRatio = ref<{ width: number; height: number } | null>(null)
+const previewContent = editorStatic.preview
 
 function updateScale() {
   const container = wrapper.value
@@ -67,7 +69,7 @@ onBeforeUnmount(() => {
       class="empty"
     >
       <div class="skeleton">
-        {{ props.isLoading ? 'Chargement…' : 'Sélectionne une annonce pour afficher la preview.' }}
+        {{ props.isLoading ? previewContent.loading : previewContent.empty }}
       </div>
     </div>
   </section>

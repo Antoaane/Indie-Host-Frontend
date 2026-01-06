@@ -10,9 +10,9 @@ export function persistListingDraft(listingId: string, draft: RawListingBundle) 
 
   const payload: RawListingBundle = {
     core: draft.core ?? null,
+    bookings: draft.bookings ?? null,
     medias: draft.medias ?? null,
   }
 
   localStorage.setItem(getListingDraftStorageKey(listingId), JSON.stringify(payload))
 }
-

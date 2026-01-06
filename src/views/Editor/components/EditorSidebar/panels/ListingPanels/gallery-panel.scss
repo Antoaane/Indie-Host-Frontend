@@ -4,7 +4,7 @@
 @use '@/styles/variables/borders' as borders;
 @use '@/styles/variables/effects' as effects;
 @use '@/styles/components/buttons' as buttons;
-@use '@/views/Editor/components/EditorSidebar/panels/ListingPanels/listing-panels.scss' as *;
+@use '@/views/Editor/components/EditorSidebar/panels/panel.scss' as *;
 
 .editor-gallery-panel {
   @extend %panel;
@@ -62,12 +62,10 @@
         >.button {
           width: 50% !important;
           aspect-ratio: 1 / 1;
-          @include buttons.primary($theme: white, $padding: false);
+          --button-icon-size: 100%;
+          @include buttons.primary($theme: white, $icon-only: true);
 
           >* {
-            height: 100% !important;
-            // display: grid;
-            place-items: center;
             font-size: 1.5rem;
             font-weight: 500;
           }

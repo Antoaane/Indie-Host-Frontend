@@ -1,0 +1,264 @@
+{
+  "editor": {
+    "actions": {
+      "showEditor": "Afficher l'éditeur",
+      "backToListings": "Retourner aux annonces"
+    },
+    "states": {
+      "loading": "Chargement…",
+      "listingsLoadError": "Impossible de charger les annonces.",
+      "previewSelect": "Sélectionne une annonce pour afficher la preview."
+    },
+    "listings": {
+      "searchPlaceholder": "Rechercher une annonce",
+      "media": {
+        "defaultAlt": "Photo du logement"
+      },
+      "carousel": {
+        "prev": "Image précédente",
+        "next": "Image suivante",
+        "pagination": "Pagination du carrousel",
+        "goTo": "Aller à l’image {index}"
+      },
+      "previewLink": "Prévisualiser l’annonce",
+      "status": {
+        "published": "Publiée",
+        "draft": "Brouillon",
+        "archived": "Archivée"
+      },
+      "untitled": "Annonce sans titre",
+      "guests": "{count, plural, one {# voyageur} other {# voyageurs}}",
+      "priceSuffix": "par nuit",
+      "ratingTitle": "{rating} / 5",
+      "ratingAria": "{rating} sur 5",
+      "newListing": {
+        "title": "+ Nouvelle annonce",
+        "remaining": "{count} / {max} restantes"
+      }
+    },
+    "sidebar": {
+      "tabs": {
+        "listing": "Annonce",
+        "pricing": "Tarification",
+        "arrival": "Arrivée"
+      },
+      "actions": {
+        "save": "Sauvegarder",
+        "apply": "Appliquer"
+      },
+      "errors": {
+        "save": "Erreur lors de la sauvegarde.",
+        "publish": "Erreur lors de la publication."
+      }
+    },
+    "preview": {
+      "loading": "Chargement…",
+      "empty": "Sélectionne une annonce pour afficher la preview."
+    },
+    "panels": {
+      "listing": {
+        "import": {
+          "title": "Importez votre annonce",
+          "subtitle": "Vous pouvez récupérer les informations d’un logement existant sur l’une de ces plateformes",
+          "airbnbPlaceholder": "https://www.airbnb.fr/rooms/…",
+          "bookingPlaceholder": "https://www.booking.com/hotel/…",
+          "cta": "Importer"
+        },
+        "title": {
+          "title": "Titre de l’annonce",
+          "subtitle": "Donnez un nom original à votre lieu",
+          "placeholder": "Maison flottante / Houseboat - …"
+        },
+        "gallery": {
+          "title": "Galerie de photo",
+          "subtitle": "Montrez votre logement sous son plus beau jour",
+          "addLabel": "Ajouter une photo"
+        },
+        "description": {
+          "title": "Présentation",
+          "subtitle": "Donnez une description unique à votre logement",
+          "placeholder": "Décrivez votre logement…",
+          "quillPlaceholder": "Décrivez votre logement…",
+          "toolbar": {
+            "text": "Texte",
+            "title": "Titre"
+          }
+        },
+        "amenities": {
+          "title": "Équipements",
+          "subtitle": "Aperçu des équipements visibles côté voyageurs.",
+          "empty": "Aucun équipement renseigné.",
+          "manageCta": "Gérer les équipements",
+          "overlay": {
+            "titleCatalog": "Ajouter un équipement",
+            "titleList": "Équipements",
+            "addCta": "+ Ajouter un équipement",
+            "searchPlaceholder": "Rechercher un équipement...",
+            "added": "Ajouté",
+            "empty": "Aucun résultat."
+          }
+        },
+        "capacity": {
+          "title": "Capacité d’accueil",
+          "subtitle": "Combien de voyageurs pouvez vous accueillir"
+        },
+        "location": {
+          "title": "Adresse",
+          "subtitle": "Seule une localisation approximative sera affichée sur l’annonce",
+          "placeholders": {
+            "type": "Type (ex: Péniche)",
+            "city": "Ville",
+            "country": "Pays",
+            "region": "Région"
+          }
+        },
+        "rooms": {
+          "title": "Couchages",
+          "subtitle": "Indiquez le nombre de couchage par pièce",
+          "addBed": "+ Ajouter un lit",
+          "addRoom": "+ Ajouter une pièce",
+          "roomLabelGeneric": "Pièce",
+          "roomLabelFallback": "Pièce {index}",
+          "types": [
+            { "value": "bedroom", "label": "Chambre" },
+            { "value": "livingroom", "label": "Salon" },
+            { "value": "bathroom", "label": "Salle de bain" },
+            { "value": "kitchen", "label": "Cuisine" },
+            { "value": "other", "label": "Autre" }
+          ],
+          "bedTypes": [
+            { "value": "simple", "label": "Lit simple", "capacity": 1 },
+            { "value": "double", "label": "Lit double", "capacity": 2 },
+            { "value": "bunk", "label": "Lit superposés", "capacity": 2 }
+          ]
+        },
+        "reviews": {
+          "title": "Avis",
+          "subtitle": "Modifiez les avis que vous souhaitez afficher (cela n’impactera pas la note globale)",
+          "toggle": {
+            "indiehost": "Avis Indie Host",
+            "airbnb": "Avis Airbnb",
+            "booking": "Avis Booking.com"
+          }
+        }
+      },
+      "pricing": {
+        "base": {
+          "title": "Prix de base",
+          "subtitle": "Définissez votre tarif principal et vos options d’ajustement",
+          "pricePerNightLabel": "Prix par nuit",
+          "pricePerNightSuffix": "€ / nuit",
+          "weekendToggle": "Prix week-end (vendredi / samedi)",
+          "weekendPriceLabel": "Tarif week-end",
+          "weekendPriceSuffix": "€ / nuit",
+          "extraGuestsLabel": "Voyageurs supplémentaires",
+          "extraGuestsSuffix": "€ / personne / nuit",
+          "extraGuestsPlaceholder": "Seuil inclus"
+        },
+        "stay": {
+          "title": "Durée de séjour",
+          "subtitle": "Fixez vos règles de durée et vos réductions longues durées",
+          "minNights": "Séjour minimum",
+          "maxNights": "Séjour maximum (optionnel)",
+          "nightsUnit": "nuits",
+          "weeklyDiscount": "Réduction hebdomadaire",
+          "weeklySuffix": "% dès 7 nuits",
+          "monthlyDiscount": "Réduction mensuelle",
+          "monthlySuffix": "% dès 28 nuits",
+          "maxPlaceholder": "—"
+        },
+        "fees": {
+          "title": "Frais additionnels",
+          "subtitle": "Ajoutez les frais fixes appliqués à chaque séjour",
+          "cleaning": "Frais de ménage",
+          "linen": "Frais de linge",
+          "perStaySuffix": "€ / séjour",
+          "customTitle": "Autres frais personnalisés",
+          "addCustom": "Ajouter un frais",
+          "customPlaceholder": "Libellé"
+        },
+        "taxes": {
+          "title": "Taxes & obligations légales",
+          "subtitle": "Configurez la taxe de séjour et son affichage",
+          "enabled": "Taxe de séjour activée",
+          "modeLabel": "Mode de calcul",
+          "modeOptions": {
+            "per-person-night": "Montant fixe / nuit / personne",
+            "per-night": "Montant fixe / nuit"
+          },
+          "amountLabel": "Montant",
+          "currencySymbol": "€",
+          "displayLabel": "Affichage",
+          "displayOptions": {
+            "included": "Incluse dans le prix",
+            "added": "Ajoutée au moment du paiement"
+          }
+        },
+        "payment": {
+          "title": "Paiement",
+          "subtitle": "Définissez les moyens acceptés et les conditions de règlement",
+          "methodsLabel": "Moyens de paiement acceptés",
+          "methods": {
+            "card": "Carte bancaire (Stripe)",
+            "sepa": "Virement / SEPA",
+            "cash": "Espèces"
+          },
+          "conditionsLabel": "Conditions de paiement",
+          "full": "Paiement intégral à la réservation",
+          "deposit": "Acompte",
+          "depositLabel": "Acompte",
+          "balanceLabel": "Solde",
+          "balanceOptions": {
+            "arrival": "À l’arrivée",
+            "before": "X jours avant l’arrivée"
+          },
+          "daysPlaceholder": "Jours"
+        },
+        "deposit": {
+          "title": "Caution / dépôt de garantie",
+          "subtitle": "Définissez le montant et le mode de caution",
+          "amountLabel": "Montant",
+          "currencySymbol": "€",
+          "typeLabel": "Type de caution",
+          "types": {
+            "info": "Information uniquement",
+            "card": "Empreinte carte bancaire",
+            "cash": "Espèces",
+            "check": "Chèque"
+          }
+        },
+        "cancellation": {
+          "title": "Conditions d’annulation",
+          "subtitle": "Choisissez une politique et personnalisez si besoin",
+          "policyLabel": "Politique",
+          "policies": {
+            "flexible": "Flexible",
+            "moderate": "Modérée",
+            "strict": "Stricte",
+            "custom": "Personnalisée"
+          },
+          "daysBefore": "Jours avant arrivée",
+          "feePercent": "% retenu après délai"
+        },
+        "summary": {
+          "title": "Récapitulatif dynamique",
+          "subtitle": "Lecture seule, calculée automatiquement",
+          "pricePerNight": "Prix par nuit : {price} €",
+          "total": "Total estimé pour {nights} {nightsLabel} / {guests} {guestsLabel} : {total} €",
+          "nightsLabel": "{count, plural, one {nuit} other {nuits}}",
+          "guestsLabel": "{count, plural, one {voyageur} other {voyageurs}}",
+          "feesNone": "Aucun frais additionnel",
+          "feesLabel": "Frais additionnels : {amount} €",
+          "taxNone": "Taxe de séjour non appliquée",
+          "taxLabel": "Taxe de séjour : {amount} € ({suffix})",
+          "taxIncluded": "incluse",
+          "taxAdded": "ajoutée au paiement",
+          "message": "Réservation directe sans commission."
+        }
+      },
+      "arrival": {
+        "placeholder": "Section en cours de construction."
+      }
+    }
+  }
+}

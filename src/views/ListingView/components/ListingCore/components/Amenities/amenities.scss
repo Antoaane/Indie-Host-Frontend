@@ -85,7 +85,7 @@
       }
 
       >.close {
-        @include buttons.primary($theme: white, $padding: false);
+        @include buttons.primary($theme: white, $icon-only: true);
       }
     }
 

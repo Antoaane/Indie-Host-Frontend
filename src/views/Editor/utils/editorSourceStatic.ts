@@ -76,12 +76,14 @@ export function createStaticEditorSource(): EditorSource {
       if (!dataset) {
         return {
           core: { id: listingId },
+          bookings: { price: 0, fees: [], 'booked-days': [] },
           medias: { images: [], videos: [] },
         }
       }
 
       return {
         core: dataset.core as any,
+        bookings: dataset.bookings as any,
         medias: dataset.medias as any,
       }
     },
