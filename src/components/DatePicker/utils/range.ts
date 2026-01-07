@@ -1,4 +1,4 @@
-// File: src/views/ListingView/components/ListingCore/components/DatePicker/utils/range.ts
+// File: src/views/ListingView/components/Core/components/DatePicker/utils/range.ts
 
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
 import { parseISO, toNum, todayCalendarDate } from '@/components/DatePicker/helpers/date'

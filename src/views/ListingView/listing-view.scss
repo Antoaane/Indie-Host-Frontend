@@ -73,12 +73,12 @@
         background-color: $accent;
         border-radius: borders.$rounded-xl;
 
-        >#listing-core {
+        >#core {
           background-color: $translucent !important;
           @include layout-gap(padding, all, 1.5, $important: true);
         }
 
-        >#listing-comments {
+        >#comments {
           background-color: $translucent !important;
           @include layout-gap(padding, inline, 1.5, $important: true);
           @include layout-gap(padding, top, 1.5, $important: true);

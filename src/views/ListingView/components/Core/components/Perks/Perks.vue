@@ -1,4 +1,4 @@
-<!-- File: src/views/ListingView/components/ListingCore/components/Perks/Perks.vue -->
+<!-- File: src/views/ListingView/components/Core/components/Perks/Perks.vue -->
 
 <script setup lang="ts">
 // DEPS
@@ -54,7 +54,7 @@ function resolveIcon(name: string) {
 </template>
 
 <style lang="scss">
-/* File: src/views/ListingView/components/ListingCore/components/Perks/perks.scss */
+/* File: src/views/ListingView/components/Core/components/Perks/perks.scss */
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;

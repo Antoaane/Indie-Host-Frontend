@@ -6,13 +6,13 @@ import { computed, ref, watch, nextTick } from 'vue'
 
 // UTILS
 import { vp } from '@/utils/viewport'
-import { listingCore, type RawListingBundle } from '@/views/ListingView/utils/useParseContent'
+import { core, type RawListingBundle } from '@/views/ListingView/utils/useParseContent'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
 
 // COMPONENTS
 import Gallery from '@/views/ListingView/components/Gallery/Gallery.vue'
-import ListingCore from '@/views/ListingView/components/Core/Core.vue'
-import ListingComments from '@/views/ListingView/components/Comments/Comments.vue'
+import Core from '@/views/ListingView/components/Core/Core.vue'
+import Comments from '@/views/ListingView/components/Comments/Comments.vue'
 import Checkout from '@/views/ListingView/components/Checkout/Checkout.vue'
 import CheckoutMin from '@/views/ListingView/components/CheckoutMin/CheckoutMin.vue'
 
@@ -30,7 +30,7 @@ const props = defineProps<{
 
 const listingData = computed<ListingParsed | null>(() => {
   if (!props.rawListing) return null
-  return listingCore(props.rawListing)
+  return core(props.rawListing)
 })
 
 const bookingRange = ref<RangeISO | null>(null)
@@ -122,7 +122,7 @@ watch(
       </div>
 
       <div class="core">
-        <ListingCore
+        <Core
           v-if="listingData"
           v-model:model-value="bookingRange"
           :data="listingData"
@@ -142,7 +142,7 @@ watch(
           <div class="skeleton">Chargement…</div>
         </template>
 
-        <ListingComments
+        <Comments
           v-if="listingData"
           :notes="listingData.notes"
           :comments="listingData.comments"
@@ -165,14 +165,14 @@ watch(
 
         <div class="core">
           <div class="panel">
-            <ListingCore
+            <Core
               v-if="listingData"
               v-model:model-value="bookingRange"
               :data="listingData"
             />
             <template v-else><div class="skeleton">Chargement…</div></template>
 
-            <ListingComments
+            <Comments
               v-if="listingData"
               :notes="listingData.notes"
               :comments="listingData.comments"

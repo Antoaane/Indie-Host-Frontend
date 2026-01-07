@@ -1,4 +1,4 @@
-<!-- File: src/views/ListingView/components/ListingCore/components/HostProfile/HostProfile.vue -->
+<!-- File: src/views/ListingView/components/Core/components/HostProfile/HostProfile.vue -->
 
 <script setup lang="ts">
 // TYPES
@@ -52,7 +52,7 @@ const seniorityText = computed(() => {
 </template>
 
 <style lang="scss">
-/* File: src/views/ListingView/components/ListingCore/components/HostProfile/host-profile.scss */
+/* File: src/views/ListingView/components/Core/components/HostProfile/host-profile.scss */
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;

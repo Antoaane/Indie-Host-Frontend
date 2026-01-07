@@ -1,4 +1,4 @@
-<!-- File: src/views/ListingView/components/ListingComments/components/DistributionList/DistributionList.vue -->
+<!-- File: src/views/ListingView/components/Comments/components/DistributionList/DistributionList.vue -->
 
 <script setup lang="ts">
 import { formatICUMessage } from '@/utils/i18n'
@@ -52,5 +52,5 @@ console.log(`${props.entries.length ? '✅' : '❌'} [DistributionList.vue](setu
 </template>
 
 <style lang="scss">
-@use '@/views/ListingView/components/ListingComments/components/DistributionList/distribution-list.scss';
+@use '@/views/ListingView/components/Comments/components/DistributionList/distribution-list.scss';
 </style>

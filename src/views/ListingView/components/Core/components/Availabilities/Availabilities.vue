@@ -1,4 +1,4 @@
-<!-- File: src/views/ListingView/components/ListingCore/components/Availabilities/Availabilities.vue -->
+<!-- File: src/views/ListingView/components/Core/components/Availabilities/Availabilities.vue -->
 
 <script lang="ts" setup>
 import { computed } from 'vue'
@@ -46,7 +46,7 @@ const disabledDates = computed<RangeISO[]>(() => (props.data?.bookedDays ?? []).
 </template>
 
 <style lang="scss">
-/* File: src/views/ListingView/components/ListingCore/components/Availabilities/availabilities.scss */
+/* File: src/views/ListingView/components/Core/components/Availabilities/availabilities.scss */
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;

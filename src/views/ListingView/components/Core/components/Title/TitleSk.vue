@@ -1,4 +1,4 @@
-<!-- File: src/views/ListingView/components/ListingCore/components/Title/TitleSk.vue -->
+<!-- File: src/views/ListingView/components/Core/components/Title/TitleSk.vue -->
 
 <script setup lang="ts"></script>
 
@@ -11,5 +11,5 @@
 </template>
 
 <style lang="scss">
-@use '@/views/ListingView/components/ListingCore/components/Title/title.scss';
+@use '@/views/ListingView/components/Core/components/Title/title.scss';
 </style>

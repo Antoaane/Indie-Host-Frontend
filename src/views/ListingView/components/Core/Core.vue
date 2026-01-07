@@ -1,4 +1,4 @@
-<!-- File: src/views/ListingView/components/ListingCore/ListingCore.vue -->
+<!-- File: src/views/ListingView/components/Core/Core.vue -->
 
 <script setup lang="ts">
 // DEPS
@@ -11,15 +11,15 @@ import type { RangeISO } from '@/components/DatePicker/helpers/date'
 import type { ListingParsed } from '@/views/ListingView/types/listing'
 
 // COMPONENTS
-import Title from '@/views/ListingView/components/ListingCore/components/Title/Title.vue'
-import Perks from '@/views/ListingView/components/ListingCore/components/Perks/Perks.vue'
-import HostProfile from '@/views/ListingView/components/ListingCore/components/HostProfile/HostProfile.vue'
-import Description from '@/views/ListingView/components/ListingCore/components/Description/Description.vue'
-import Amenities from '@/views/ListingView/components/ListingCore/components/Amenities/Amenities.vue'
-import Rooms from '@/views/ListingView/components/ListingCore/components/Rooms/Rooms.vue'
-import Availabilities from '@/views/ListingView/components/ListingCore/components/Availabilities/Availabilities.vue'
+import Title from '@/views/ListingView/components/Core/components/Title/Title.vue'
+import Perks from '@/views/ListingView/components/Core/components/Perks/Perks.vue'
+import HostProfile from '@/views/ListingView/components/Core/components/HostProfile/HostProfile.vue'
+import Description from '@/views/ListingView/components/Core/components/Description/Description.vue'
+import Amenities from '@/views/ListingView/components/Core/components/Amenities/Amenities.vue'
+import Rooms from '@/views/ListingView/components/Core/components/Rooms/Rooms.vue'
+import Availabilities from '@/views/ListingView/components/Core/components/Availabilities/Availabilities.vue'
 
-import Map from '@/views/ListingView/components/ListingCore/components/Map/Map.vue'
+import Map from '@/views/ListingView/components/Core/components/Map/Map.vue'
 
 //CONTENT
 const props = withDefaults(
@@ -95,8 +95,8 @@ const descriptionStatic = {
 
 <template>
   <section
-    id="listing-core"
-    class="listing-core"
+    id="core"
+    class="core"
   >
     <Title
       :data="props.data.title"
@@ -136,16 +136,16 @@ const descriptionStatic = {
 </template>
 
 <style lang="scss">
-/* File: src/views/ListingView/components/ListingCore/listing-core.scss */
+/* File: src/views/ListingView/components/Core/core.scss */
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
 
-html:has(#listing-core) {
+html:has(#core) {
   overflow: hidden;
 }
 
-.listing-core#listing-core {
+.core#core {
   height: 100%;
 
   display: flex;

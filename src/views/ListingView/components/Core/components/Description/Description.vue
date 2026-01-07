@@ -1,4 +1,4 @@
-<!-- File: src/views/ListingView/components/ListingCore/components/Description/Description.vue -->
+<!-- File: src/views/ListingView/components/Core/components/Description/Description.vue -->
 
 <script setup lang="ts">
 // ASSETS
@@ -128,7 +128,7 @@ onBeforeUnmount(() => {
 </template>
 
 <style lang="scss">
-/* File: src/views/ListingView/components/ListingCore/components/Description/description.scss */
+/* File: src/views/ListingView/components/Core/components/Description/description.scss */
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;

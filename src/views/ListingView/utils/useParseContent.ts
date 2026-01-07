@@ -238,11 +238,11 @@ function parseComments(raw: Maybe<Partial<RawComments>>): { pages: CommentsPages
 }
 
 // ---- UTIL PRINCIPAL ----
-export function listingCore(raw: RawListingBundle): ListingParsed {
+export function core(raw: RawListingBundle): ListingParsed {
   const parsedComments = parseComments(raw.comments);
   // if (import.meta.env.DEV) {
-  //   console.log(`${parsedComments.flat.length ? 'ƒo.' : 'ƒ?O'} [useParseContent.ts](listingCore) listingCore:load commentsCount=${parsedComments.flat.length} aggregated`);
-  //   console.log(`${'ƒ"û‹÷?'} [useParseContent.ts](listingCore) listingCore:commentsPages available=${parsedComments.pages.length} cached`);
+  //   console.log(`${parsedComments.flat.length ? 'ƒo.' : 'ƒ?O'} [useParseContent.ts](core) core:load commentsCount=${parsedComments.flat.length} aggregated`);
+  //   console.log(`${'ƒ"û‹÷?'} [useParseContent.ts](core) core:commentsPages available=${parsedComments.pages.length} cached`);
   // }
 
   return {
@@ -262,6 +262,6 @@ export function listingCore(raw: RawListingBundle): ListingParsed {
 }
 
 // ---- EXEMPLE Dƒ?TUSAGE ----
-// const data = listingCore({ core, host, bookings, medias, notes, comments });
+// const data = core({ core, host, bookings, medias, notes, comments });
 // const bedroom = data.rooms.byType['bedroom']; // accÇùs direct demandÇ¸
 // console.log(bedroom.length, bedroom.beds, data.rooms.summary.capacityTotal);

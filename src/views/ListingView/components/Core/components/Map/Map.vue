@@ -1,4 +1,4 @@
-<!-- File: src/views/ListingView/components/ListingCore/components/Map/Map.vue -->
+<!-- File: src/views/ListingView/components/Core/components/Map/Map.vue -->
 
 <script setup lang="ts">
 import { computed } from 'vue'
@@ -38,7 +38,7 @@ const heading = computed(() => props.staticContent.map || props.staticContent.fe
 </template>
 
 <style lang="scss">
-/* File: src/views/ListingView/components/ListingCore/components/Map/map.scss */
+/* File: src/views/ListingView/components/Core/components/Map/map.scss */
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;

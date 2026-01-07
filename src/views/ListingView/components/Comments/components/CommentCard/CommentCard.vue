@@ -1,4 +1,4 @@
-<!-- File: src/views/ListingView/components/ListingComments/components/CommentCard/CommentCard.vue -->
+<!-- File: src/views/ListingView/components/Comments/components/CommentCard/CommentCard.vue -->
 
 <script setup lang="ts">
 // DEPS
@@ -150,5 +150,5 @@ function handleReadMoreClick() {
 </template>
 
 <style lang="scss">
-@use '@/views/ListingView/components/ListingComments/components/CommentCard/comment-card.scss';
+@use '@/views/ListingView/components/Comments/components/CommentCard/comment-card.scss';
 </style>

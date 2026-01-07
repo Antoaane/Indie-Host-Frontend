@@ -1,4 +1,4 @@
-<!-- File: src/views/ListingView/components/ListingCore/components/Title/Title.vue -->
+<!-- File: src/views/ListingView/components/Core/components/Title/Title.vue -->
 
 <script setup lang="ts">
 // TYPES

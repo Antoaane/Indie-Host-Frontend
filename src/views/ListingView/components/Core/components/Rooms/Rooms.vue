@@ -1,4 +1,4 @@
-<!-- File: src/views/ListingView/components/ListingCore/components/Rooms/Rooms.vue -->
+<!-- File: src/views/ListingView/components/Core/components/Rooms/Rooms.vue -->
 
 <script setup lang="ts">
 // DEPS
@@ -100,7 +100,7 @@ function getRoomDisplayName(roomName: string, index: number) {
 </template>
 
 <style lang="scss">
-/* File: src/views/ListingView/components/ListingCore/components/Rooms/rooms.scss */
+/* File: src/views/ListingView/components/Core/components/Rooms/rooms.scss */
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;

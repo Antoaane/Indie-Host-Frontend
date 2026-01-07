@@ -1,4 +1,4 @@
-<!-- File: src/views/ListingView/components/ListingComments/ListingComments.vue -->
+<!-- File: src/views/ListingView/components/Comments/Comments.vue -->
 
 <script setup lang="ts">
 // DEPS
@@ -68,8 +68,8 @@ const props = withDefaults(
     comments: () => [],
   },
 )
-// console.log(`${data?.comments?.length ? '✅' : '❌'} [ListingComments.vue](setup) listingCore:resolved commentsCount=${data.comments?.length ?? 0} fetched`)
-// console.log(`${'ℹ️'} [ListingComments.vue](setup) contentLoaded=commentsWidget ready for render`)
+// console.log(`${data?.comments?.length ? '✅' : '❌'} [Comments.vue](setup) core:resolved commentsCount=${data.comments?.length ?? 0} fetched`)
+// console.log(`${'ℹ️'} [Comments.vue](setup) contentLoaded=commentsWidget ready for render`)
 
 const previewLimit = content.preview?.maxItems ?? 5
 
@@ -80,36 +80,36 @@ const overlayScrollEl = ref<HTMLElement | null>(null)
 
 const comments = computed(() => {
   const value = props.comments ?? []
-  // console.log(`${value.length ? '✅' : '❌'} [ListingComments.vue](comments) comments:computed listLength=${value.length} prepared`)
+  // console.log(`${value.length ? '✅' : '❌'} [Comments.vue](comments) comments:computed listLength=${value.length} prepared`)
   return value
 })
 const commentsCount = computed(() => {
   const count = comments.value.length
-  // console.log(`${count ? '✅' : '❌'} [ListingComments.vue](commentsCount) commentsCount:computed total=${count} ready`)
+  // console.log(`${count ? '✅' : '❌'} [Comments.vue](commentsCount) commentsCount:computed total=${count} ready`)
   return count
 })
 
 const countLabel = computed(() => {
   const label = formatICUMessage(content.summary.countLabel, { count: commentsCount.value })
-  // console.log(`${'ℹ️'} [ListingComments.vue](countLabel) countLabel:computed formatted=${label} applied`)
+  // console.log(`${'ℹ️'} [Comments.vue](countLabel) countLabel:computed formatted=${label} applied`)
   return label
 })
 
 const overallScore = computed(() => {
   const overall = props.notes?.overall
   if (typeof overall === 'number' && !Number.isNaN(overall)) {
-    // console.log(`${'✅'} [ListingComments.vue](overallScore) overallScore:computed fromNotes=${overall} reused`)
+    // console.log(`${'✅'} [Comments.vue](overallScore) overallScore:computed fromNotes=${overall} reused`)
     return overall
   }
 
   if (!commentsCount.value) {
-    // console.log(`${'❌'} [ListingComments.vue](overallScore) overallScore:computed unavailable=null noComments`)
+    // console.log(`${'❌'} [Comments.vue](overallScore) overallScore:computed unavailable=null noComments`)
     return null
   }
 
   const sum = comments.value.reduce((acc, comment) => acc + comment.note, 0)
   const value = commentsCount.value ? sum / commentsCount.value : null
-  // console.log(`${typeof value === 'number' ? '✅' : '❌'} [ListingComments.vue](overallScore) overallScore:computed averaged=${value} calculated`)
+  // console.log(`${typeof value === 'number' ? '✅' : '❌'} [Comments.vue](overallScore) overallScore:computed averaged=${value} calculated`)
   return value
 })
 
@@ -137,27 +137,27 @@ function resolveDistribution(notes: NotesModel | undefined, list: CommentsModel)
     })),
   }
 
-  // console.log(`${resolved.entries.length ? '✅' : '❌'} [ListingComments.vue](resolveDistribution) distribution:resolved totalEntries=${resolved.total} compiled`)
-  // console.log(`${'ℹ️'} [ListingComments.vue](resolveDistribution) distribution:sourceNotes used=${Boolean(notes?.distribution)} validated`)
+  // console.log(`${resolved.entries.length ? '✅' : '❌'} [Comments.vue](resolveDistribution) distribution:resolved totalEntries=${resolved.total} compiled`)
+  // console.log(`${'ℹ️'} [Comments.vue](resolveDistribution) distribution:sourceNotes used=${Boolean(notes?.distribution)} validated`)
 
   return resolved
 }
 
 const distribution = computed(() => {
   const resolved = resolveDistribution(props.notes, comments.value)
-  // console.log(`${resolved.entries.length ? '✅' : '❌'} [ListingComments.vue](distribution) distribution:computed totalEntries=${resolved.total} readyForUI`)
+  // console.log(`${resolved.entries.length ? '✅' : '❌'} [Comments.vue](distribution) distribution:computed totalEntries=${resolved.total} readyForUI`)
   return resolved
 })
 
 const previewComments = computed(() => {
   const preview = comments.value.slice(0, previewLimit)
-  // console.log(`${preview.length ? '✅' : '❌'} [ListingComments.vue](previewComments) preview:computed items=${preview.length} trimmed`)
+  // console.log(`${preview.length ? '✅' : '❌'} [Comments.vue](previewComments) preview:computed items=${preview.length} trimmed`)
   return preview
 })
 
 const overlayComments = computed(() => {
   const overlayList = comments.value.slice(0, overlayLimit.value)
-  // console.log(`${overlayList.length ? '✅' : '❌'} [ListingComments.vue](overlayComments) overlay:computed items=${overlayList.length} limit=${overlayLimit.value}`)
+  // console.log(`${overlayList.length ? '✅' : '❌'} [Comments.vue](overlayComments) overlay:computed items=${overlayList.length} limit=${overlayLimit.value}`)
   return overlayList
 })
 
@@ -196,7 +196,7 @@ function openOverlay(targetIndex?: number) {
   overlayLimit.value = typeof targetIndex === 'number' ? computeOverlayLimitForIndex(targetIndex) : overlayStep
 
   isOverlayOpen.value = true
-  // console.log(`${'ℹ️'} [ListingComments.vue](openOverlay) overlay:state open=${isOverlayOpen.value} limit=${overlayLimit.value}`)
+  // console.log(`${'ℹ️'} [Comments.vue](openOverlay) overlay:state open=${isOverlayOpen.value} limit=${overlayLimit.value}`)
 
   nextTick(() => {
     if (!overlayScrollEl.value) {
@@ -215,7 +215,7 @@ function openOverlay(targetIndex?: number) {
 function closeOverlay() {
   isOverlayOpen.value = false
   unlockScroll()
-  // console.log(`${'ℹ️'} [ListingComments.vue](closeOverlay) overlay:state open=${isOverlayOpen.value}`)
+  // console.log(`${'ℹ️'} [Comments.vue](closeOverlay) overlay:state open=${isOverlayOpen.value}`)
 }
 
 function loadMoreOverlay() {
@@ -224,7 +224,7 @@ function loadMoreOverlay() {
   }
   const nextLimit = Math.min(overlayLimit.value + overlayStep, comments.value.length)
   overlayLimit.value = nextLimit
-  // console.log(`${'ℹ️'} [ListingComments.vue](loadMoreOverlay) overlay:paginate limit=${overlayLimit.value} total=${comments.value.length}`)
+  // console.log(`${'ℹ️'} [Comments.vue](loadMoreOverlay) overlay:paginate limit=${overlayLimit.value} total=${comments.value.length}`)
 }
 
 function handleOverlayScroll(event: Event) {
@@ -241,7 +241,7 @@ function handleOverlayScroll(event: Event) {
 
 const hasData = computed(() => {
   const value = typeof overallScore.value === 'number' || commentsCount.value > 0 || distribution.value.entries.length > 0
-  // console.log(`${value ? '✅' : '❌'} [ListingComments.vue](hasData) hasData:computed ready=${value} gating`)
+  // console.log(`${value ? '✅' : '❌'} [Comments.vue](hasData) hasData:computed ready=${value} gating`)
   return value
 })
 
@@ -291,8 +291,8 @@ const swiperParams = computed(
 
 <template>
   <section
-    id="listing-comments"
-    class="listing-comments"
+    id="comments"
+    class="comments"
   >
     <div class="top">
       <div class="header">
@@ -358,7 +358,7 @@ const swiperParams = computed(
       </div>
     </div>
 
-    <Transition name="listing-comments-overlay">
+    <Transition name="comments-overlay">
       <div
         v-if="isOverlayOpen"
         class="overlay"
@@ -422,5 +422,5 @@ const swiperParams = computed(
 </template>
 
 <style lang="scss">
-@use '@/views/ListingView/components/ListingComments/listing-comments.scss';
+@use '@/views/ListingView/components/Comments/comments.scss';
 </style>

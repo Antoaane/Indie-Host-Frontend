@@ -1,11 +1,11 @@
-/* File: src/views/ListingView/components/ListingComments/listing-comments.scss */
+/* File: src/views/ListingView/components/Comments/comments.scss */
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
 @use '@/styles/components/buttons' as buttons;
 @use '@/styles/components/overlays' as overlays;
 
-.listing-comments#listing-comments {
+.comments#comments {
   min-height: 0;
   height: max-content;
   flex: 1 1 auto;
@@ -266,5 +266,5 @@
     }
   }
 
-  @include overlays.transition('listing-comments-overlay');
+  @include overlays.transition('comments-overlay');
 }

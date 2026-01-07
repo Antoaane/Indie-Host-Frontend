@@ -1,4 +1,4 @@
-<!-- File: src/views/ListingView/components/ListingComments/components/SummaryCard/SummaryCard.vue -->
+<!-- File: src/views/ListingView/components/Comments/components/SummaryCard/SummaryCard.vue -->
 
 <script setup lang="ts">
 // DEPS
@@ -74,7 +74,7 @@ const scoreLabel = computed(() =>
 </template>
 
 <style lang="scss">
-/* File: src/views/ListingView/components/ListingComments/components/SummaryCard/summary-card.scss */
+/* File: src/views/ListingView/components/Comments/components/SummaryCard/summary-card.scss */
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;

@@ -1,4 +1,4 @@
-<!-- File: src/views/ListingView/components/ListingCore/components/Amenities/Amenities.vue -->
+<!-- File: src/views/ListingView/components/Core/components/Amenities/Amenities.vue -->
 
 <script setup lang="ts">
 // DEPS
@@ -206,5 +206,5 @@ onBeforeUnmount(() => {
 </template>
 
 <style lang="scss">
-@use '@/views/ListingView/components/ListingCore/components/Amenities/amenities.scss';
+@use '@/views/ListingView/components/Core/components/Amenities/amenities.scss';
 </style>
