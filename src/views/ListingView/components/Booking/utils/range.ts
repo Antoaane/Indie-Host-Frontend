@@ -1,4 +1,4 @@
-// File: src/views/ListingView/components/Checkout/utils/range.ts
+// File: src/views/ListingView/components/Booking/utils/range.ts
 
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
 import { parseISO, todayCalendarDate, toISO } from '@/components/DatePicker/helpers/date'

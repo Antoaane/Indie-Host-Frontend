@@ -1,8 +1,8 @@
-<!-- File: src/views/ListingView/components/CheckoutMin/CheckoutMin.vue -->
+<!-- File: src/views/ListingView/components/BookingMin/BookingMin.vue -->
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
-import { formatDateLabel } from '@/views/ListingView/components/Checkout/utils/labels'
+import { formatDateLabel } from '@/views/ListingView/components/Booking/utils/labels'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
 import type { BookedRange, FeeItem } from '@/views/ListingView/types/listing'
 
@@ -89,7 +89,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="listing-checkout-min">
+  <div class="listing-booking-min">
     <div
       class="bar"
       role="button"
@@ -97,7 +97,7 @@ onBeforeUnmount(() => {
       ref="triggerEl"
       aria-haspopup="dialog"
       :aria-expanded="overlayOpen"
-      :aria-controls="'checkout-min-dialog'"
+      :aria-controls="'booking-min-dialog'"
       @click="openOverlay"
       @keydown.enter.prevent="openOverlay"
       @keydown.space.prevent="openOverlay"
@@ -125,11 +125,11 @@ onBeforeUnmount(() => {
     </div>
 
     <Teleport to="footer">
-      <Transition name="checkout-min-overlay">
+      <Transition name="booking-min-overlay">
         <div
           v-if="overlayOpen"
           class="overlay"
-          id="checkout-min-dialog"
+          id="booking-min-dialog"
           role="dialog"
           aria-modal="true"
           @click.self="closeOverlay"
@@ -147,7 +147,7 @@ onBeforeUnmount(() => {
 
             <div class="content">
               <slot>
-                <p class="placeholder"> Les détails du checkout arriveront ici. </p>
+                <p class="placeholder"> Les détails du booking arriveront ici. </p>
               </slot>
             </div>
           </div>
@@ -158,5 +158,5 @@ onBeforeUnmount(() => {
 </template>
 
 <style lang="scss">
-@use '@/views/ListingView/components/CheckoutMin/checkout-min.scss';
+@use '@/views/ListingView/components/BookingMin/booking-min.scss';
 </style>

@@ -1,4 +1,4 @@
-/* File: src/views/ListingView/components/Checkout/checkout.scss */
+/* File: src/views/ListingView/components/Booking/booking.scss */
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
@@ -6,7 +6,7 @@
 @use '@/styles/components/buttons' as buttons;
 @use '@/styles/components/inputs' as inputs;
 
-.listing-checkout#checkout {
+.listing-booking#booking {
   // position: sticky;
   // top: calc($nav-height + var(--layout-gap));
   flex: 0 0 auto;
@@ -76,12 +76,12 @@
       flex-direction: column;
       gap: var(--layout-gap-sm);
 
-      >.listing-checkout-dates,
-      >.listing-checkout-guests {
+      >.listing-booking-dates,
+      >.listing-booking-guests {
         position: relative;
       }
 
-      >.listing-checkout-dates {
+      >.listing-booking-dates {
         >.group {
           display: grid;
           grid-template-columns: repeat(2, 1fr);
@@ -170,7 +170,7 @@
         }
       }
 
-      >.listing-checkout-guests {
+      >.listing-booking-guests {
         >.btn-primary__white__full {
           >.field {
             width: 100%;
@@ -297,7 +297,7 @@
       }
     }
 
-    >.listing-checkout-summary {
+    >.listing-booking-summary {
       display: flex;
       flex-direction: column;
       gap: var(--layout-gap-xs);
@@ -333,7 +333,7 @@
       }
     }
 
-    >.listing-checkout-cta {
+    >.listing-booking-cta {
       display: flex;
       flex-direction: column;
       gap: var(--layout-gap-2xs);

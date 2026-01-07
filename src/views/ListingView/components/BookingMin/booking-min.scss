@@ -1,4 +1,4 @@
-/* File: src/views/ListingView/components/CheckoutMin/checkout-min.scss */
+/* File: src/views/ListingView/components/BookingMin/booking-min.scss */
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
@@ -6,7 +6,7 @@
 @use '@/styles/components/buttons' as buttons;
 @use '@/styles/components/overlays' as overlays;
 
-.listing-checkout-min {
+.listing-booking-min {
   width: 100%;
   max-width: 760px;
 
@@ -111,6 +111,6 @@
       }
     }
 
-    @include overlays.transition('checkout-min-overlay');
+    @include overlays.transition('booking-min-overlay');
   }
 }

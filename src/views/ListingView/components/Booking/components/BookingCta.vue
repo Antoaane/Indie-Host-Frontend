@@ -1,4 +1,4 @@
-<!-- File: src/views/ListingView/components/Checkout/components/CheckoutCta.vue -->
+<!-- File: src/views/ListingView/components/Booking/components/BookingCta.vue -->
 
 <script setup lang="ts">
 import { CalendarCheck, UsersRound } from 'lucide-vue-next'
@@ -13,7 +13,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="listing-checkout-cta">
+  <div class="listing-booking-cta">
     <div class="btn-primary__full">
       <button
         type="button"

@@ -1,4 +1,4 @@
-<!-- File: src/views/ListingView/components/Checkout/components/CheckoutDates.vue -->
+<!-- File: src/views/ListingView/components/Booking/components/BookingDates.vue -->
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
@@ -31,7 +31,7 @@ onClickOutside(calendarLayer, () => emit('close'))
 <template>
   <div
     ref="calendarLayer"
-    class="listing-checkout-dates"
+    class="listing-booking-dates"
   >
     <div class="group is-single">
       <div class="btn-primary__white__full">

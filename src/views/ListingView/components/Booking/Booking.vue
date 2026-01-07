@@ -1,19 +1,16 @@
-<!-- File: src/views/ListingView/components/Checkout/Checkout.vue -->
+<!-- File: src/views/ListingView/components/Booking/Booking.vue -->
 
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
 import { makeIsDateDisabled } from '@/components/DatePicker/utils/range'
 
-import CheckoutCta from '@/views/ListingView/components/Checkout/components/CheckoutCta.vue'
-import CheckoutDates from '@/views/ListingView/components/Checkout/components/CheckoutDates.vue'
-import CheckoutGuests from '@/views/ListingView/components/Checkout/components/CheckoutGuests.vue'
-import CheckoutSummary from '@/views/ListingView/components/Checkout/components/CheckoutSummary.vue'
-import { buildOccupantLabel, buildRangeLabel, type OccupantCounts } from '@/views/ListingView/components/Checkout/utils/labels'
-import {
-  findNextRange as findNextAvailableRange,
-  isSelectedRangeValid as isSelectedRangeValidUtil,
-} from '@/views/ListingView/components/Checkout/utils/range'
+import BookingCta from '@/views/ListingView/components/Booking/components/BookingCta.vue'
+import BookingDates from '@/views/ListingView/components/Booking/components/BookingDates.vue'
+import BookingGuests from '@/views/ListingView/components/Booking/components/BookingGuests.vue'
+import BookingSummary from '@/views/ListingView/components/Booking/components/BookingSummary.vue'
+import { buildOccupantLabel, buildRangeLabel, type OccupantCounts } from '@/views/ListingView/components/Booking/utils/labels'
+import { findNextRange as findNextAvailableRange, isSelectedRangeValid as isSelectedRangeValidUtil } from '@/views/ListingView/components/Booking/utils/range'
 import type { BookedRange, FeeItem } from '@/views/ListingView/types/listing'
 
 type OccupantKey = keyof OccupantCounts
@@ -192,8 +189,8 @@ function reserve() {
 
 <template>
   <section
-    id="checkout"
-    class="listing-checkout"
+    id="booking"
+    class="listing-booking"
   >
     <div class="card">
       <div class="header">
@@ -209,7 +206,7 @@ function reserve() {
       </div>
 
       <div class="fields">
-        <CheckoutDates
+        <BookingDates
           v-model:model-value="selection"
           :booked-ranges="bookedRanges"
           :open="calendarOpen"
@@ -218,7 +215,7 @@ function reserve() {
           @open="openCalendar"
         />
 
-        <CheckoutGuests
+        <BookingGuests
           :occupant-label="occupantLabel"
           :occupants="occupants"
           :open="guestsOpen"
@@ -228,14 +225,14 @@ function reserve() {
         />
       </div>
 
-      <CheckoutSummary
+      <BookingSummary
         :currency="currency"
         :expanded="expanded"
         :price-breakdown="priceBreakdown"
         :total="total"
       />
 
-      <CheckoutCta
+      <BookingCta
         :nights="nights"
         @reserve="reserve"
       />
@@ -244,5 +241,5 @@ function reserve() {
 </template>
 
 <style lang="scss">
-@use '@/views/ListingView/components/Checkout/checkout.scss';
+@use '@/views/ListingView/components/Booking/booking.scss';
 </style>

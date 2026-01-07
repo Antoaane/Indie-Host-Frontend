@@ -1,4 +1,4 @@
-<!-- File: src/views/ListingView/components/Checkout/components/CheckoutGuests.vue -->
+<!-- File: src/views/ListingView/components/Booking/components/BookingGuests.vue -->
 
 <script setup lang="ts">
 import { ref } from 'vue'
@@ -26,7 +26,7 @@ onClickOutside(guestsLayer, () => emit('close'))
 <template>
   <div
     ref="guestsLayer"
-    class="listing-checkout-guests"
+    class="listing-booking-guests"
   >
     <div class="btn-primary__white__full">
       <button

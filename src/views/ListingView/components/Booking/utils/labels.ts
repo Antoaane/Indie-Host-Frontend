@@ -1,4 +1,4 @@
-// File: src/views/ListingView/components/Checkout/utils/labels.ts
+// File: src/views/ListingView/components/Booking/utils/labels.ts
 
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
 

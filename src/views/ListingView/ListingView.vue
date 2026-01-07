@@ -13,8 +13,8 @@ import type { RangeISO } from '@/components/DatePicker/helpers/date'
 import Gallery from '@/views/ListingView/components/Gallery/Gallery.vue'
 import Core from '@/views/ListingView/components/Core/Core.vue'
 import Comments from '@/views/ListingView/components/Comments/Comments.vue'
-import Checkout from '@/views/ListingView/components/Checkout/Checkout.vue'
-import CheckoutMin from '@/views/ListingView/components/CheckoutMin/CheckoutMin.vue'
+import Booking from '@/views/ListingView/components/Booking/Booking.vue'
+import BookingMin from '@/views/ListingView/components/BookingMin/BookingMin.vue'
 
 // TYPES
 import type { ListingParsed } from '@/views/ListingView/types/listing'
@@ -131,7 +131,7 @@ watch(
       </div>
 
       <div class="stay">
-        <Checkout
+        <Booking
           v-if="listingData"
           v-model:model-value="bookingRange"
           :price-per-night="listingData.bookings.price"
@@ -204,7 +204,7 @@ watch(
           </svg>
         </span>
 
-        <CheckoutMin
+        <BookingMin
           v-if="listingData"
           v-model:model-value="bookingRange"
           :price-per-night="listingData.bookings.price"

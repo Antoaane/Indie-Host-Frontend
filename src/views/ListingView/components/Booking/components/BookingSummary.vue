@@ -1,4 +1,4 @@
-<!-- File: src/views/ListingView/components/Checkout/components/CheckoutSummary.vue -->
+<!-- File: src/views/ListingView/components/Booking/components/BookingSummary.vue -->
 
 <script setup lang="ts">
 const props = defineProps<{
@@ -13,7 +13,7 @@ const props = defineProps<{
   <transition name="summary-toggle">
     <div
       v-show="props.expanded"
-      class="listing-checkout-summary"
+      class="listing-booking-summary"
     >
       <div
         v-for="line in props.priceBreakdown"
