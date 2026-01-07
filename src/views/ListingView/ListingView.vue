@@ -11,8 +11,8 @@ import type { RangeISO } from '@/components/DatePicker/helpers/date'
 
 // COMPONENTS
 import Gallery from '@/views/ListingView/components/Gallery/Gallery.vue'
-import ListingCore from '@/views/ListingView/components/ListingCore/ListingCore.vue'
-import ListingComments from '@/views/ListingView/components/ListingComments/ListingComments.vue'
+import ListingCore from '@/views/ListingView/components/Core/Core.vue'
+import ListingComments from '@/views/ListingView/components/Comments/Comments.vue'
 import Checkout from '@/views/ListingView/components/Checkout/Checkout.vue'
 import CheckoutMin from '@/views/ListingView/components/CheckoutMin/CheckoutMin.vue'
 
