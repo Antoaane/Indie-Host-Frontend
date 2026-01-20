@@ -124,7 +124,7 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <Teleport to="footer">
+    <Teleport to=".footer">
       <Transition name="booking-min-overlay">
         <div
           v-if="overlayOpen"

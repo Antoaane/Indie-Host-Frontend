@@ -15,10 +15,12 @@ import Core from '@/views/ListingView/components/Core/Core.vue'
 import Comments from '@/views/ListingView/components/Comments/Comments.vue'
 import Booking from '@/views/ListingView/components/Booking/Booking.vue'
 import BookingMin from '@/views/ListingView/components/BookingMin/BookingMin.vue'
+import Checkout from '@/views/ListingView/components/Checkout/Checkout.vue'
 
 // TYPES
 import type { ListingParsed } from '@/views/ListingView/types/listing'
 import type { StyleValue } from 'vue'
+import type { ReservationPayload } from '@/views/ListingView/types/reservation'
 
 const props = defineProps<{
   rawListing?: RawListingBundle | null
@@ -34,6 +36,8 @@ const listingData = computed<ListingParsed | null>(() => {
 })
 
 const bookingRange = ref<RangeISO | null>(null)
+const checkoutPayload = ref<ReservationPayload | null>(null)
+const isCheckout = computed(() => Boolean(checkoutPayload.value))
 
 const pvWidth = ref<number | undefined>(0)
 const pvHeight = ref<number | undefined>(0)
@@ -43,15 +47,6 @@ const lvWidth = ref<number | null>(0)
 const lvHeight = ref<number | null>(0)
 
 const scaleDiff = ref<number | null>(0)
-// const wDiff = ref<number | null>(0)
-// const hDiff = ref<number | null>(0)
-
-// const aspectStyles = {
-//   aspectRatio: `${pvWidth}/${pvHeight}`,
-//   transform: scaleDiff ? `scale(${scaleDiff})` : 'none',
-//   top: hDiff ? `-${hDiff / 4.75}px` : '0px',
-//   left: wDiff ? `-${wDiff / 2}px` : '0px',
-// }
 
 const aspectStyles = computed<StyleValue>(() => {
   if (!props.aspect) {
@@ -63,8 +58,6 @@ const aspectStyles = computed<StyleValue>(() => {
     transform: `scale(${scaleDiff.value})`,
     transformOrigin: 'top left',
     position: 'relative',
-    // top: hDiff.value ? `-${hDiff.value / 4.75}px` : '0px',
-    // left: wDiff.value ? `-${wDiff.value / 2}px` : '0px',
   }
 })
 
@@ -80,8 +73,6 @@ function setAspect() {
 
   if (lvWidth.value && pvWidth.value && lvHeight.value && pvHeight.value) {
     scaleDiff.value = pvWidth.value / lvWidth.value
-    // wDiff.value = lvWidth.value - pvWidth.value
-    // hDiff.value = lvHeight.value - pvHeight.value
   }
 
   console.log('ListingView setAspect :', {
@@ -90,8 +81,6 @@ function setAspect() {
     lvWidth: lvWidth.value,
     lvHeight: lvHeight.value,
     diff: scaleDiff.value,
-    // wDiff: wDiff.value,
-    // hDiff: hDiff.value,
   })
 }
 
@@ -104,30 +93,62 @@ watch(
   },
   { immediate: true },
 )
+
+function onReserve(payload: ReservationPayload) {
+  checkoutPayload.value = payload
+}
+
+function cancelCheckout() {
+  checkoutPayload.value = null
+}
 </script>
 
 <template>
   <template v-if="vp.lg.value">
     <div
-      :class="{ 'listing-view': true, editor: props.aspect }"
+      :class="{ 'listing-view': true, editor: props.aspect, 'is-checkout': isCheckout }"
       ref="listingView"
       :style="aspectStyles"
     >
-      <div class="gallery">
-        <Gallery
-          v-if="listingData"
-          :medias="listingData.medias"
-        />
-        <template v-else><div class="skeleton">Chargement…</div></template>
-      </div>
+      <Transition name="listing-fade">
+        <div
+          v-if="!isCheckout"
+          class="gallery"
+        >
+          <Gallery
+            v-if="listingData"
+            :medias="listingData.medias"
+          />
+          <template v-else><div class="skeleton">Chargement…</div></template>
+        </div>
+      </Transition>
 
       <div class="core">
-        <Core
-          v-if="listingData"
-          v-model:model-value="bookingRange"
-          :data="listingData"
-        />
-        <template v-else><div class="skeleton">Chargement…</div></template>
+        <Transition
+          name="listing-swap"
+          mode="out-in"
+        >
+          <Core
+            v-if="listingData && !isCheckout"
+            key="core"
+            v-model:model-value="bookingRange"
+            :data="listingData"
+          />
+          <Checkout
+            v-else-if="listingData && checkoutPayload"
+            key="checkout"
+            :listing="listingData"
+            :reservation="checkoutPayload!"
+            @cancel="cancelCheckout"
+          />
+          <div
+            v-else
+            key="core-skeleton"
+            class="skeleton"
+          >
+            Chargement…
+          </div>
+        </Transition>
       </div>
 
       <div class="stay">
@@ -137,41 +158,14 @@ watch(
           :price-per-night="listingData.bookings.price"
           :fees="listingData.bookings.fees"
           :booked-days="listingData.bookings.bookedDays"
+          @reserve="onReserve"
         />
         <template v-else>
           <div class="skeleton">Chargement…</div>
         </template>
 
-        <Comments
-          v-if="listingData"
-          :notes="listingData.notes"
-          :comments="listingData.comments"
-        />
-        <template v-else><div class="skeleton">Chargement…</div></template>
-      </div>
-    </div>
-  </template>
-
-  <template v-else>
-    <div class="listing-view">
-      <div class="main">
-        <div class="gallery">
-          <Gallery
-            v-if="listingData"
-            :medias="listingData.medias"
-          />
-          <template v-else><div class="skeleton">Chargement…</div></template>
-        </div>
-
-        <div class="core">
-          <div class="panel">
-            <Core
-              v-if="listingData"
-              v-model:model-value="bookingRange"
-              :data="listingData"
-            />
-            <template v-else><div class="skeleton">Chargement…</div></template>
-
+        <Transition name="listing-fade">
+          <div v-if="!isCheckout">
             <Comments
               v-if="listingData"
               :notes="listingData.notes"
@@ -179,10 +173,80 @@ watch(
             />
             <template v-else><div class="skeleton">Chargement…</div></template>
           </div>
+        </Transition>
+      </div>
+    </div>
+  </template>
+
+  <template v-else>
+    <div :class="{ 'listing-view': true, 'is-checkout': isCheckout }">
+      <div class="main">
+        <Transition name="listing-fade">
+          <div
+            v-if="!isCheckout"
+            class="gallery"
+          >
+            <Gallery
+              v-if="listingData"
+              :medias="listingData.medias"
+            />
+            <template v-else><div class="skeleton">Chargement…</div></template>
+          </div>
+        </Transition>
+
+        <div class="core">
+          <div :class="{ panel: true, 'is-checkout': isCheckout }">
+            <Transition
+              name="listing-swap"
+              mode="out-in"
+            >
+              <div
+                v-if="listingData && !isCheckout"
+                key="core"
+              >
+                <Core
+                  v-model:model-value="bookingRange"
+                  :data="listingData"
+                />
+                <Comments
+                  :notes="listingData.notes"
+                  :comments="listingData.comments"
+                />
+              </div>
+              <div
+                v-else-if="listingData && checkoutPayload"
+                key="checkout"
+                class="checkout-stack"
+              >
+                <Checkout
+                  :listing="listingData"
+                  :reservation="checkoutPayload!"
+                  @cancel="cancelCheckout"
+                />
+                <Booking
+                  v-model:model-value="bookingRange"
+                  :price-per-night="listingData.bookings.price"
+                  :fees="listingData.bookings.fees"
+                  :booked-days="listingData.bookings.bookedDays"
+                  @reserve="onReserve"
+                />
+              </div>
+              <div
+                v-else
+                key="core-skeleton"
+                class="skeleton"
+              >
+                Chargement…
+              </div>
+            </Transition>
+          </div>
         </div>
       </div>
 
-      <footer class="footer">
+      <div
+        v-if="!isCheckout"
+        class="footer"
+      >
         <span class="shape-container is-right">
           <svg
             class="shape"
@@ -214,7 +278,7 @@ watch(
         <template v-else>
           <div class="skeleton">Chargement…</div>
         </template>
-      </footer>
+      </div>
     </div>
   </template>
 </template>

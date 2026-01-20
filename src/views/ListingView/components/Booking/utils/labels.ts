@@ -1,8 +1,9 @@
 // File: src/views/ListingView/components/Booking/utils/labels.ts
 
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
+import type { OccupantCounts } from '@/views/ListingView/types/reservation'
 
-export type OccupantCounts = Record<'adults' | 'children' | 'babies' | 'animals' | 'pmr', number>
+export type { OccupantCounts }
 
 export function buildOccupantLabel(occupants: OccupantCounts, travelerCount: number) {
   const parts: string[] = []
@@ -19,6 +20,13 @@ export function formatDateLabel(iso?: string | null) {
   const date = new Date(iso)
   if (Number.isNaN(date.getTime())) return 'Ajouter une date'
   return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date)
+}
+
+export function formatShortDateLabel(iso?: string | null) {
+  if (!iso) return 'Ajouter une date'
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return 'Ajouter une date'
+  return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' }).format(date)
 }
 
 export function buildRangeLabel(selection: RangeISO | null, nights: number) {
