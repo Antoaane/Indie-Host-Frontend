@@ -60,7 +60,7 @@ onMounted(async () => {
     <Nav
       v-if="vp.lg.value && !isLanding"
       :items="[
-        { id: 'messagery', name: 'Messagerie', link: '', target: true },
+        { id: 'messagery', name: 'Messagerie', link: '/messagerie' },
         { id: 'reservations', name: 'Réservations', link: '', target: true },
         { id: 'become-host', name: 'Devenir hôte', link: '', target: true, cta: true },
       ]"

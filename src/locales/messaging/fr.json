@@ -1,0 +1,380 @@
+{
+  "messaging": {
+    "title": "Messagerie",
+    "searchPlaceholder": "Rechercher une conversation",
+    "labels": {
+      "listing": "Annonce",
+      "reservation": "Réservation",
+      "guests": "voyageurs",
+      "nights": "nuits",
+      "status": "Statut",
+      "host": "Hôte",
+      "guest": "Voyageur",
+      "unread": "Non lus",
+      "typing": "Rédige…"
+    },
+    "composer": {
+      "placeholder": "Écrire un message…",
+      "send": "Envoyer",
+      "hint": "Entrée pour envoyer"
+    },
+    "emptyState": {
+      "title": "Aucune conversation sélectionnée",
+      "subtitle": "Choisissez une discussion pour afficher le fil des messages."
+    },
+    "conversationStates": {
+      "active": "En cours",
+      "pending": "En attente",
+      "archived": "Archivée"
+    },
+    "deliveryStates": {
+      "sent": "Envoyé",
+      "delivered": "Distribué",
+      "read": "Lu"
+    },
+    "conversations": [
+      {
+        "id": "conv-1001",
+        "status": "active",
+        "isPinned": true,
+        "unreadCount": 2,
+        "updatedAtLabel": "10:24",
+        "listing": {
+          "id": "listing-boat-01",
+          "title": "Maison flottante - Baurechinsolite",
+          "location": "Bordeaux",
+          "cover": ""
+        },
+        "reservation": {
+          "id": "res-5842",
+          "code": "IH-5842",
+          "status": "confirmée",
+          "startDate": "12 avr. 2026",
+          "endDate": "15 avr. 2026",
+          "nights": 3,
+          "guests": 4,
+          "total": "690",
+          "currency": "€",
+          "source": "IndieHost"
+        },
+        "participants": {
+          "host": {
+            "id": "host-01",
+            "name": "Camille R.",
+            "initials": "CR",
+            "tone": "sunset"
+          },
+          "guest": {
+            "id": "guest-01",
+            "name": "Bastien P.",
+            "initials": "BP",
+            "tone": "lagoon"
+          }
+        },
+        "lastMessage": {
+          "author": "guest",
+          "preview": "Votre piscine est-elle chauffée ?",
+          "sentAtLabel": "10:21"
+        },
+        "messages": [
+          {
+            "id": "msg-1001",
+            "authorId": "guest-01",
+            "direction": "incoming",
+            "body": "Bonjour ! Merci pour votre retour, ça me va. Est-ce qu'il y a une place de parking ?",
+            "sentAtLabel": "10:05",
+            "state": "read"
+          },
+          {
+            "id": "msg-1002",
+            "authorId": "host-01",
+            "direction": "outgoing",
+            "body": "Oui, vous avez une place en face du logement et une autre dans la rue si besoin.",
+            "sentAtLabel": "10:07",
+            "state": "read"
+          },
+          {
+            "id": "msg-1003",
+            "authorId": "guest-01",
+            "direction": "incoming",
+            "body": "Top ! Est-ce qu'on peut venir vers 13h ?",
+            "sentAtLabel": "10:10",
+            "state": "read"
+          },
+          {
+            "id": "msg-1004",
+            "authorId": "host-01",
+            "direction": "outgoing",
+            "body": "Le ménage doit être fini vers 12h30, je vous propose une arrivée pour 13h30 si ça vous va.",
+            "sentAtLabel": "10:12",
+            "state": "read"
+          },
+          {
+            "id": "msg-1005",
+            "authorId": "guest-01",
+            "direction": "incoming",
+            "body": "Parfait, merci ! J'ai oublié : est-ce que le logement est équipé d'un lave-linge ?",
+            "sentAtLabel": "10:18",
+            "state": "delivered"
+          },
+          {
+            "id": "msg-1006",
+            "authorId": "host-01",
+            "direction": "outgoing",
+            "body": "Oui, il y en a un dans la salle de bain + un fer à repasser si besoin.",
+            "sentAtLabel": "10:19",
+            "state": "delivered"
+          },
+          {
+            "id": "msg-1007",
+            "authorId": "guest-01",
+            "direction": "incoming",
+            "body": "Génial ! Vous avez des recommandations de restos ou d'activités dans le coin ?",
+            "sentAtLabel": "10:21",
+            "state": "delivered"
+          }
+        ]
+      },
+      {
+        "id": "conv-1002",
+        "status": "active",
+        "isPinned": false,
+        "unreadCount": 1,
+        "updatedAtLabel": "09:02",
+        "listing": {
+          "id": "listing-river-02",
+          "title": "Au bord de l'eau - Grande Maison",
+          "location": "Annecy",
+          "cover": ""
+        },
+        "reservation": {
+          "id": "res-6003",
+          "code": "IH-6003",
+          "status": "pré-réservation",
+          "startDate": "28 mai 2026",
+          "endDate": "31 mai 2026",
+          "nights": 3,
+          "guests": 2,
+          "total": "525",
+          "currency": "€",
+          "source": "Booking"
+        },
+        "participants": {
+          "host": {
+            "id": "host-01",
+            "name": "Camille R.",
+            "initials": "CR",
+            "tone": "sunset"
+          },
+          "guest": {
+            "id": "guest-02",
+            "name": "Emma D.",
+            "initials": "ED",
+            "tone": "ocean"
+          }
+        },
+        "lastMessage": {
+          "author": "guest",
+          "preview": "Nous avons 10 valises, est-ce qu'il y a un ascenseur ?",
+          "sentAtLabel": "09:02"
+        },
+        "messages": [
+          {
+            "id": "msg-2001",
+            "authorId": "guest-02",
+            "direction": "incoming",
+            "body": "Bonjour ! Nous avons 10 valises, est-ce qu'il y a un ascenseur ?",
+            "sentAtLabel": "09:02",
+            "state": "delivered"
+          }
+        ]
+      },
+      {
+        "id": "conv-1003",
+        "status": "pending",
+        "isPinned": false,
+        "unreadCount": 0,
+        "updatedAtLabel": "Hier",
+        "listing": {
+          "id": "listing-boat-01",
+          "title": "Maison flottante - Baurechinsolite",
+          "location": "Bordeaux",
+          "cover": ""
+        },
+        "reservation": {
+          "id": "res-5789",
+          "code": "IH-5789",
+          "status": "demande",
+          "startDate": "4 juin 2026",
+          "endDate": "7 juin 2026",
+          "nights": 3,
+          "guests": 5,
+          "total": "780",
+          "currency": "€",
+          "source": "IndieHost"
+        },
+        "participants": {
+          "host": {
+            "id": "host-01",
+            "name": "Camille R.",
+            "initials": "CR",
+            "tone": "sunset"
+          },
+          "guest": {
+            "id": "guest-03",
+            "name": "Hugo L.",
+            "initials": "HL",
+            "tone": "forest"
+          }
+        },
+        "lastMessage": {
+          "author": "host",
+          "preview": "Je vous envoie la liste des équipements dès que possible.",
+          "sentAtLabel": "Hier"
+        },
+        "messages": [
+          {
+            "id": "msg-3001",
+            "authorId": "guest-03",
+            "direction": "incoming",
+            "body": "Bonjour, pouvez-vous me partager la liste des équipements ?",
+            "sentAtLabel": "Hier 18:02",
+            "state": "read"
+          },
+          {
+            "id": "msg-3002",
+            "authorId": "host-01",
+            "direction": "outgoing",
+            "body": "Bien sûr ! Je vous envoie la liste complète dès que possible.",
+            "sentAtLabel": "Hier 18:25",
+            "state": "read"
+          }
+        ]
+      },
+      {
+        "id": "conv-1004",
+        "status": "active",
+        "isPinned": false,
+        "unreadCount": 0,
+        "updatedAtLabel": "Lun",
+        "listing": {
+          "id": "listing-boat-01",
+          "title": "Maison flottante - Baurechinsolite",
+          "location": "Bordeaux",
+          "cover": ""
+        },
+        "reservation": {
+          "id": "res-6108",
+          "code": "IH-6108",
+          "status": "confirmée",
+          "startDate": "15 juin 2026",
+          "endDate": "20 juin 2026",
+          "nights": 5,
+          "guests": 2,
+          "total": "1 050",
+          "currency": "€",
+          "source": "Airbnb"
+        },
+        "participants": {
+          "host": {
+            "id": "host-01",
+            "name": "Camille R.",
+            "initials": "CR",
+            "tone": "sunset"
+          },
+          "guest": {
+            "id": "guest-04",
+            "name": "Lucas M.",
+            "initials": "LM",
+            "tone": "dune"
+          }
+        },
+        "lastMessage": {
+          "author": "guest",
+          "preview": "Je ne viendrai plus avec mes deux chiens finalement.",
+          "sentAtLabel": "Lun"
+        },
+        "messages": [
+          {
+            "id": "msg-4001",
+            "authorId": "guest-04",
+            "direction": "incoming",
+            "body": "Je ne viendrai plus avec mes deux chiens finalement.",
+            "sentAtLabel": "Lun 14:08",
+            "state": "read"
+          },
+          {
+            "id": "msg-4002",
+            "authorId": "host-01",
+            "direction": "outgoing",
+            "body": "Merci pour l'info ! Je mets à jour la réservation de mon côté.",
+            "sentAtLabel": "Lun 14:15",
+            "state": "read"
+          }
+        ]
+      },
+      {
+        "id": "conv-1005",
+        "status": "archived",
+        "isPinned": false,
+        "unreadCount": 0,
+        "updatedAtLabel": "19 jan",
+        "listing": {
+          "id": "listing-forest-03",
+          "title": "Cabane claire - Forêt des Landes",
+          "location": "Arcachon",
+          "cover": ""
+        },
+        "reservation": {
+          "id": "res-5012",
+          "code": "IH-5012",
+          "status": "terminée",
+          "startDate": "10 jan 2026",
+          "endDate": "13 jan 2026",
+          "nights": 3,
+          "guests": 2,
+          "total": "420",
+          "currency": "€",
+          "source": "IndieHost"
+        },
+        "participants": {
+          "host": {
+            "id": "host-01",
+            "name": "Camille R.",
+            "initials": "CR",
+            "tone": "sunset"
+          },
+          "guest": {
+            "id": "guest-05",
+            "name": "Simon E.",
+            "initials": "SE",
+            "tone": "iris"
+          }
+        },
+        "lastMessage": {
+          "author": "host",
+          "preview": "Merci encore, n'hésitez pas à laisser un avis.",
+          "sentAtLabel": "19 jan"
+        },
+        "messages": [
+          {
+            "id": "msg-5001",
+            "authorId": "guest-05",
+            "direction": "incoming",
+            "body": "Tout était parfait, merci !",
+            "sentAtLabel": "13 jan 10:03",
+            "state": "read"
+          },
+          {
+            "id": "msg-5002",
+            "authorId": "host-01",
+            "direction": "outgoing",
+            "body": "Merci encore, n'hésitez pas à laisser un avis.",
+            "sentAtLabel": "13 jan 10:06",
+            "state": "read"
+          }
+        ]
+      }
+    ]
+  }
+}

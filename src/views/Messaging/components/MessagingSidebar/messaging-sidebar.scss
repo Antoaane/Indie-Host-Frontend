@@ -1,0 +1,235 @@
+/* File: src/views/Messaging/components/MessagingSidebar/messaging-sidebar.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/effects' as effects;
+@use '@/styles/components/inputs' as inputs;
+
+.messaging-sidebar {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: $accent;
+  border-radius: borders.$rounded-xl;
+  overflow: hidden;
+
+  @include min-width(lg) {
+    flex: 0 0 340px;
+    max-width: 380px;
+  }
+
+  > .toolbar {
+    padding: var(--layout-gap-sm);
+    border-bottom: 1px solid rgba($secondary, 0.08);
+
+    > .search {
+      @include inputs.search($theme: accent);
+
+      > input {
+        line-height: 1.2;
+      }
+    }
+  }
+
+  > .scroll-container {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    overflow-y: auto;
+
+    > .conversation-list {
+      list-style: none;
+      margin: 0;
+      padding: var(--layout-gap-sm);
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-sm);
+
+      > li {
+        > .conversation-card {
+          width: 100%;
+          border: 1px solid rgba($secondary, 0.08);
+          background: rgba($accent, 0.95);
+          border-radius: borders.$rounded-lg;
+          padding: var(--layout-gap-sm);
+          display: flex;
+          gap: var(--layout-gap-sm);
+          align-items: center;
+          text-align: left;
+          cursor: pointer;
+          outline: 2px solid transparent;
+          outline-offset: 2px;
+          transition: transform 160ms ease, border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+          @include effects.big-shadow;
+
+          &:hover {
+            transform: translateY(-1px);
+            border-color: rgba($secondary, 0.18);
+          }
+
+          &:focus-visible {
+            @include halo(xs, false, $secondary, 0.25);
+            outline-color: rgba($secondary, 0.35);
+          }
+
+          &.is-active {
+            border-color: rgba($secondary, 0.4);
+            background: $secondary;
+            color: $accent;
+
+            .line-top > h3,
+            .line-middle > .listing,
+            .line-middle > .status,
+            .line-bottom > p,
+            .line-top > .time {
+              color: $accent;
+            }
+
+            .line-top > .time,
+            .line-middle > .status {
+              color: rgba($accent, 0.7);
+            }
+
+            .badge {
+              background: $accent;
+              color: $secondary;
+            }
+          }
+
+          &.is-unread .line-bottom > p {
+            font-weight: 500;
+          }
+
+          > .avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: borders.$rounded;
+            display: grid;
+            place-items: center;
+            color: $accent;
+            font-weight: 600;
+            font-size: 0.95rem;
+            flex: 0 0 auto;
+          }
+
+          > .content {
+            flex: 1 1 auto;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+
+            > .line-top {
+              display: flex;
+              justify-content: space-between;
+              align-items: baseline;
+              gap: 0.5rem;
+
+              > h3 {
+                @include base-text($bold: true, $thin: false);
+                font-size: 0.98rem;
+                line-height: 1.2;
+                margin: 0;
+              }
+
+              > .time {
+                @include little-text($thin: false);
+                color: rgba($secondary, 0.5);
+                font-size: 0.75rem;
+              }
+            }
+
+            > .line-middle {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              gap: 0.5rem;
+              font-size: 0.8rem;
+
+              > .listing {
+                color: rgba($secondary, 0.75);
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+              }
+
+              > .status {
+                color: rgba($secondary, 0.45);
+                text-transform: capitalize;
+              }
+            }
+
+              > .line-bottom {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 0.5rem;
+
+              > p {
+                @include little-text($thin: true);
+                color: rgba($secondary, 0.7);
+                margin: 0;
+                display: -webkit-box;
+                -webkit-line-clamp: 1;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+              }
+
+              > .badge {
+                min-width: 22px;
+                height: 22px;
+                border-radius: 999px;
+                background: $secondary;
+                color: $accent;
+                font-size: 0.75rem;
+                font-weight: 600;
+                display: grid;
+                place-items: center;
+                padding: 0 0.4rem;
+              }
+            }
+          }
+
+          &.is-active {
+            .content {
+              .line-top > h3,
+              .line-middle > .listing,
+              .line-bottom > p {
+                color: $accent;
+              }
+
+              .line-top > .time,
+              .line-middle > .status {
+                color: rgba($accent, 0.7);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+.messaging-sidebar .avatar[data-tone='sunset'] {
+  background: linear-gradient(135deg, rgba(255, 165, 118, 1), rgba(255, 104, 129, 1));
+}
+
+.messaging-sidebar .avatar[data-tone='lagoon'] {
+  background: linear-gradient(135deg, rgba(79, 201, 255, 1), rgba(88, 117, 255, 1));
+}
+
+.messaging-sidebar .avatar[data-tone='ocean'] {
+  background: linear-gradient(135deg, rgba(68, 193, 255, 1), rgba(51, 125, 255, 1));
+}
+
+.messaging-sidebar .avatar[data-tone='forest'] {
+  background: linear-gradient(135deg, rgba(44, 184, 132, 1), rgba(31, 117, 96, 1));
+}
+
+.messaging-sidebar .avatar[data-tone='dune'] {
+  background: linear-gradient(135deg, rgba(245, 186, 104, 1), rgba(200, 120, 52, 1));
+}
+
+.messaging-sidebar .avatar[data-tone='iris'] {
+  background: linear-gradient(135deg, rgba(160, 120, 255, 1), rgba(94, 76, 202, 1));
+}

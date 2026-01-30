@@ -24,6 +24,10 @@ html:has(#checkout) {
   scrollbar-width: thin;
   scrollbar-color: rgba($secondary, 0.25) $translucent;
 
+  > * {
+    flex-shrink: 0;
+  }
+
   @include min-width(lg) {
     border-radius: borders.$rounded-lg;
   }
@@ -143,6 +147,10 @@ html:has(#checkout) {
     display: flex;
     flex-direction: column;
     gap: var(--layout-gap-sm);
+    min-height: 0;
+    padding: 0;
+    align-items: stretch;
+    justify-content: flex-start;
 
     > h3 {
       margin: 0;
@@ -157,6 +165,10 @@ html:has(#checkout) {
       @include base-text($thin: false);
       line-height: 1.55;
     }
+  }
+
+  > .checkout-section + .checkout-section {
+    margin-top: var(--layout-gap-sm);
   }
 
   .preference-card {

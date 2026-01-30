@@ -5,6 +5,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 const LandingPage = () => import('@/views/Landing/_LandingPage.vue')
 const Listing = () => import('@/views/Listing/_Listing.vue')
 const EditorRoute = () => import('@/views/Editor/EditorRoute.vue')
+const MessagingView = () => import('@/views/Messaging/MessagingView.vue')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -38,6 +39,11 @@ const router = createRouter({
       path: '/editor/:userId',
       name: 'editor-user',
       component: EditorRoute,
+    },
+    {
+      path: '/messagerie',
+      name: 'messaging',
+      component: MessagingView,
     },
   ],
 })

@@ -122,6 +122,11 @@ function cancelCheckout() {
           <template v-else><div class="skeleton">Chargement…</div></template>
         </div>
       </Transition>
+      <div
+        v-if="isCheckout"
+        class="gallery is-placeholder"
+        aria-hidden="true"
+      />
 
       <div class="core">
         <Transition

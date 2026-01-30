@@ -40,6 +40,11 @@
     min-height: 0;
   }
 
+  >.gallery.is-placeholder {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
   >.core {
     flex: 1;
     height: 100%;

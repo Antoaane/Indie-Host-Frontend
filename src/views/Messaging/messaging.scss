@@ -1,0 +1,32 @@
+/* File: src/views/Messaging/messaging.scss */
+
+@use '@/styles/variables/globals' as *;
+
+.messaging#messaging-page {
+  height: 100vh;
+
+  @include min-width(lg) {
+    padding-top: $nav-height;
+    height: calc(100vh - $nav-height);
+    overflow: hidden;
+  }
+
+  > .layout {
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-md);
+
+    @include layout-gap(padding, inline, 0.75);
+    @include layout-gap(padding, bottom, 0.75);
+
+    @include min-width(lg) {
+      flex-direction: row;
+      align-items: stretch;
+
+      @include layout-gap(padding, inline, 1);
+      @include layout-gap(padding, bottom, 1);
+    }
+  }
+}
