@@ -9,7 +9,7 @@ import { resolveAmenityIconComponent, resolveLucideComponent } from '@/utils/ame
 import { mockAmenitiesCatalog, type AmenityCatalogItem } from '@/views/Editor/mocks/amenitiesCatalog'
 
 // TYPES
-import type { RawCore } from '@/views/Listing/utils/fetchListingRaw'
+import type { RawCore } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 

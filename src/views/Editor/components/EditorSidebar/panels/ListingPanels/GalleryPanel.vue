@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import type { RawMedias } from '@/views/Listing/utils/fetchListingRaw'
+import type { RawMedias } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 
@@ -37,22 +37,42 @@ function normalizePositions(next: DraftImage[]) {
 }
 
 function openFilePicker() {
-  fileInput.value?.click()
+  const input = fileInput.value
+  if (!input) return
+  if (typeof input.showPicker === 'function') {
+    input.showPicker()
+  } else {
+    input.click()
+  }
 }
 
-function onFilePicked(event: Event) {
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result ?? ''))
+    reader.onerror = () => reject(reader.error ?? new Error('Failed to read file'))
+    reader.readAsDataURL(file)
+  })
+}
+
+async function onFilePicked(event: Event) {
   const input = event.target as HTMLInputElement | null
   const file = input?.files?.[0]
   if (input) input.value = ''
   if (!file) return
 
-  const src = URL.createObjectURL(file)
-  const alt = file.name.replace(/\.[^/.]+$/, '')
-  const next = normalizePositions([
-    ...orderedImages.value,
-    { src, alt, position: images.value.length } as DraftImage,
-  ])
-  setImages(next)
+  console.log('[Editor][Gallery] file picked', { name: file.name, size: file.size })
+  try {
+    const src = await readFileAsDataUrl(file)
+    const alt = file.name.replace(/\.[^/.]+$/, '')
+    const next = normalizePositions([
+      ...orderedImages.value,
+      { src, alt, position: images.value.length } as DraftImage,
+    ])
+    setImages(next)
+  } catch (err) {
+    console.log('[Editor][Gallery] failed to read file', err)
+  }
 }
 
 function removeImageAt(index: number) {

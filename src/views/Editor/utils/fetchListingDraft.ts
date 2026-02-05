@@ -1,6 +1,6 @@
 // File: src/views/Editor/utils/fetchListingDraft.ts
 
-import type { RawListingBundle } from '@/views/ListingView/utils/useParseContent'
+import type { RawListingBundle } from '@/domain/listings/types'
 
 const DRAFT_STORAGE_PREFIX = 'indiehost:listing-draft:'
 

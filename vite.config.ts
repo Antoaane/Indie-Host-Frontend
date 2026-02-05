@@ -7,6 +7,7 @@ import ui from '@nuxt/ui/vite'
 import svgLoader from 'vite-svg-loader'
 import svgToVuePlugin from './plugins/svg-to-vue/vite-plugin-svg-to-vue';
 import fileCommentInjector from './plugins/file-path-comment/vite-plugin-file-comment'
+import localJsonDataPlugin from './plugins/local-json-data/vite-plugin-local-json-data';
 
 type ParsedEndpoint = {
   origin?: string
@@ -76,6 +77,7 @@ export default defineConfig(({ mode }) => {
       ViteRestart({
         restart: ['src/assets/media/**/*.svg'], // Restart vite si des SVG changent
       }),
+      localJsonDataPlugin(),
       vue(),
       ui(),
       vueDevTools(),

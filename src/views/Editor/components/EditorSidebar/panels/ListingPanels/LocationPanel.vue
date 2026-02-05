@@ -1,7 +1,7 @@
 <!-- File: src/views/Editor/components/EditorSidebar/panels/ListingPanels/LocationPanel.vue -->
 
 <script setup lang="ts">
-import type { RawCore } from '@/views/Listing/utils/fetchListingRaw'
+import type { RawCore } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 

@@ -1,6 +1,6 @@
 // File: src/views/Editor/utils/persistListingDraft.ts
 
-import type { RawListingBundle } from '@/views/ListingView/utils/useParseContent'
+import type { RawListingBundle } from '@/domain/listings/types'
 
 import { getListingDraftStorageKey } from '@/views/Editor/utils/fetchListingDraft'
 
@@ -14,5 +14,6 @@ export function persistListingDraft(listingId: string, draft: RawListingBundle) 
     medias: draft.medias ?? null,
   }
 
+  console.log('[Editor][draft] persistListingDraft', { listingId })
   localStorage.setItem(getListingDraftStorageKey(listingId), JSON.stringify(payload))
 }

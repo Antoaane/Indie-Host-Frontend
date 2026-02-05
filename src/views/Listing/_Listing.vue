@@ -6,7 +6,7 @@ import { useRoute } from 'vue-router'
 // COMOOENENTS
 import ListingView from '@/views/ListingView/_ListingView.vue'
 import { loadBookings, loadComments, loadCore, loadHost, loadMedias, loadNotes } from '@/views/Listing/utils/fetchListingRaw'
-import type { RawListingBundle } from '@/views/ListingView/utils/useParseContent'
+import type { RawListingBundle } from '@/domain/listings/types'
 
 const route = useRoute()
 const listingKey = computed(() => {
@@ -30,12 +30,12 @@ async function fetchRawListing() {
       notes,
       comments,
     ] = await Promise.all([
-      loadCore(),
-      loadHost(),
-      loadBookings(),
-      loadMedias(),
-      loadNotes(),
-      loadComments(),
+      loadCore(listingKey.value),
+      loadHost(listingKey.value),
+      loadBookings(listingKey.value),
+      loadMedias(listingKey.value),
+      loadNotes(listingKey.value),
+      loadComments(listingKey.value),
     ])
     rawListing.value = { core, host, bookings, medias, notes, comments }
   } finally {

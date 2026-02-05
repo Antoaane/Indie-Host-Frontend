@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import type { RawCore } from '@/views/Listing/utils/fetchListingRaw'
+import type { RawCore } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 

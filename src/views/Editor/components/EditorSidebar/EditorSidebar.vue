@@ -7,7 +7,7 @@ import EditorSidebarNav from '@/views/Editor/components/EditorSidebar/EditorSide
 import ListingPanels from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/ListingPanels.vue'
 import PricingPanels from '@/views/Editor/components/EditorSidebar/panels/PricingPanels/PricingPanels.vue'
 import ArrivalPanels from '@/views/Editor/components/EditorSidebar/panels/ArrivalPanels/ArrivalPanels.vue'
-import type { RawListingBundle } from '@/views/ListingView/utils/useParseContent'
+import type { RawListingBundle } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { persistListingDraft } from '@/views/Editor/utils/persistListingDraft'
 import { editorStatic } from '@/views/Editor/utils/editorContent'

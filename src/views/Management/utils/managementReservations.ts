@@ -1,7 +1,7 @@
 // File: src/views/Management/utils/managementReservations.ts
 
 import type { UserListingCard } from '@/views/Editor/utils/listingApi'
-import type { RawBookings, RawComments } from '@/views/Listing/utils/fetchListingRaw'
+import type { RawBookings, RawComments } from '@/domain/listings/types'
 
 export type ReservationGuests = {
   adults: number

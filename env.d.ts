@@ -7,3 +7,13 @@ declare module '*.vue' {
   const component: DefineComponent<{}, {}, any>
   export default component
 }
+
+interface ImportMetaEnv {
+  readonly VITE_LISTINGS_DATA_MODE?: 'local-json' | 'api' | string
+  readonly VITE_API_BASE_URL?: string
+  readonly VITE_API_PROXY_TARGET?: string
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv
+}

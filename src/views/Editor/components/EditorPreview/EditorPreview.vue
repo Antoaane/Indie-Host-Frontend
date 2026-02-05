@@ -3,7 +3,7 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue'
 import ListingView from '@/views/ListingView/_ListingView.vue'
-import type { RawListingBundle } from '@/views/ListingView/utils/useParseContent'
+import type { RawListingBundle } from '@/domain/listings/types'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 
 const props = defineProps<{

@@ -1,7 +1,7 @@
 <!-- File: src/views/Editor/components/EditorSidebar/panels/PricingPanels/PricingPanels.vue -->
 
 <script setup lang="ts">
-import type { RawListingBundle } from '@/views/ListingView/utils/useParseContent'
+import type { RawListingBundle } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 
 import BasePricingPanel from '@/views/Editor/components/EditorSidebar/panels/PricingPanels/BasePricingPanel.vue'

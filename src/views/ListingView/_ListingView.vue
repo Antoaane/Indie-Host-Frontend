@@ -1,4 +1,4 @@
-<!-- File: src/views/ListingView/ListingView.vue -->
+<!-- File: src/views/ListingView/_ListingView.vue -->
 
 <script setup lang="ts">
 // DEPS
@@ -6,7 +6,8 @@ import { computed, ref, watch, nextTick } from 'vue'
 
 // UTILS
 import { vp } from '@/utils/viewport'
-import { core, type RawListingBundle } from '@/views/ListingView/utils/useParseContent'
+import { core } from '@/views/ListingView/utils/useParseContent'
+import type { RawListingBundle } from '@/domain/listings/types'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
 
 // COMPONENTS

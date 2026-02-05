@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { RawBookings, RawCore } from '@/views/Listing/utils/fetchListingRaw'
+import type { RawBookings, RawCore } from '@/domain/listings/types'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 import { formatICUMessage } from '@/utils/i18n'
 

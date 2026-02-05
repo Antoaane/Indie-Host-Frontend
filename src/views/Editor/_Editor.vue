@@ -1,14 +1,14 @@
-<!-- File: src/views/Editor/Editor.vue -->
+<!-- File: src/views/Editor/_Editor.vue -->
 
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 
 import EditorListings from '@/views/Editor/components/EditorListings/EditorListings.vue'
 import EditorSidebar from '@/views/Editor/components/EditorSidebar/EditorSidebar.vue'
 import EditorPreview from '@/views/Editor/components/EditorPreview/EditorPreview.vue'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 
-import type { RawListingBundle } from '@/views/ListingView/utils/useParseContent'
+import type { RawListingBundle } from '@/domain/listings/types'
 import { fetchListingDraft } from '@/views/Editor/utils/fetchListingDraft'
 import type { DraftPatch, VolatileBundle, UserListingCard } from '@/views/Editor/utils/listingApi'
 import { persistListingDraft } from '@/views/Editor/utils/persistListingDraft'
@@ -37,6 +37,11 @@ const listingsStatus = reactive({
 })
 
 const volatileCache = reactive<Record<string, VolatileBundle>>({})
+const patchQueue = ref<DraftPatch | null>(null)
+const patchTimer = ref<number | null>(null)
+const patchListingId = ref<string | null>(null)
+const selectionToken = ref(0)
+const loadToken = ref(0)
 
 const volatileForSelection = computed<VolatileBundle | null>(() => {
   if (!selectedListingId.value) return null
@@ -51,6 +56,91 @@ const previewRawListing = computed<RawListingBundle | null>(() => {
     ...draft.value,
   }
 })
+
+function mergeDraftPatch(base: DraftPatch | null, patch: DraftPatch): DraftPatch {
+  const next: DraftPatch = { ...(base ?? {}) }
+
+  if (patch.core) {
+    next.core = { ...(next.core ?? {}), ...patch.core }
+  }
+
+  if (patch.bookings) {
+    next.bookings = { ...(next.bookings ?? {}), ...patch.bookings }
+  }
+
+  if (patch.medias) {
+    next.medias = { ...(next.medias ?? {}), ...patch.medias }
+  }
+
+  return next
+}
+
+function applyPatchToListingCard(listingId: string, patch: DraftPatch) {
+  const index = listings.value.findIndex((item) => item.listingId === listingId)
+  if (index < 0) return
+
+  const current = listings.value[index]
+  const next = { ...current }
+
+  if (patch.core) {
+    if (typeof patch.core.title === 'string') next.title = patch.core.title
+    if (typeof patch.core.status === 'string') next.status = patch.core.status
+    if (typeof patch.core.guest_capacity === 'number') next.guestCapacity = patch.core.guest_capacity
+  }
+
+  if (patch.bookings) {
+    if (typeof patch.bookings.price === 'number') next.pricePerNight = patch.bookings.price
+  }
+
+  if (patch.medias?.images) {
+    next.images = patch.medias.images as UserListingCard['images']
+    next.coverSrc = patch.medias.images?.[0]?.src
+  }
+
+  listings.value.splice(index, 1, next)
+}
+
+async function flushPatchQueue() {
+  const queued = patchQueue.value
+  const listingId = patchListingId.value
+
+  patchQueue.value = null
+  patchListingId.value = null
+
+  if (patchTimer.value) {
+    window.clearTimeout(patchTimer.value)
+    patchTimer.value = null
+  }
+
+  if (!queued || !listingId) return
+
+  console.log('[Editor] persist draft patch', { listingId, patch: queued })
+  try {
+    await props.source.patchListingDraft(listingId, queued)
+    if (draft.value && selectedListingId.value === listingId) {
+      persistListingDraft(listingId, draft.value)
+    }
+  } catch (err) {
+    console.log('[Editor] patch persistence error', err)
+  }
+}
+
+function queuePatchPersistence(listingId: string, patch: DraftPatch) {
+  if (patchListingId.value && patchListingId.value !== listingId) {
+    void flushPatchQueue()
+  }
+
+  patchListingId.value = listingId
+  patchQueue.value = mergeDraftPatch(patchQueue.value, patch)
+
+  if (patchTimer.value) {
+    window.clearTimeout(patchTimer.value)
+  }
+
+  patchTimer.value = window.setTimeout(() => {
+    void flushPatchQueue()
+  }, 350)
+}
 
 function applyDraftPatch(patch: DraftPatch) {
   if (!draft.value) draft.value = {}
@@ -72,19 +162,41 @@ function applyDraftPatch(patch: DraftPatch) {
       ...patch.medias,
     }
   }
+
+  if (selectedListingId.value) {
+    console.log('[Editor] apply patch', { listingId: selectedListingId.value, patch })
+    queuePatchPersistence(selectedListingId.value, patch)
+    applyPatchToListingCard(selectedListingId.value, patch)
+  }
+}
+
+function resetVolatileCache() {
+  Object.keys(volatileCache).forEach((key) => {
+    delete volatileCache[key]
+  })
 }
 
 async function loadListings() {
   listingsStatus.isLoading = true
   listingsStatus.error = null
 
+  const token = ++loadToken.value
+  console.log('[Editor] loadListings start', { token })
+
   try {
-    listings.value = await props.source.fetchListings()
+    const nextListings = await props.source.fetchListings()
+    if (token !== loadToken.value) return
+    listings.value = nextListings
+    console.log('[Editor] loadListings success', { count: nextListings.length })
   } catch (err) {
+    if (token !== loadToken.value) return
     listingsStatus.error = err
     listings.value = []
+    console.log('[Editor] loadListings error', err)
   } finally {
-    listingsStatus.isLoading = false
+    if (token === loadToken.value) {
+      listingsStatus.isLoading = false
+    }
   }
 }
 
@@ -93,16 +205,18 @@ async function ensureDraft(listingId: string) {
   draftStatus.error = null
 
   try {
+    const fetched = await props.source.fetchEditableListingBundle(listingId)
+    if (selectedListingId.value === listingId) {
+      draft.value = fetched
+      persistListingDraft(listingId, fetched)
+    }
+  } catch (err) {
     const localDraft = fetchListingDraft(listingId)
-    if (localDraft) {
+    if (localDraft && selectedListingId.value === listingId) {
       draft.value = localDraft
+      console.log('[Editor] fallback to local draft', { listingId })
       return
     }
-
-    const fetched = await props.source.fetchEditableListingBundle(listingId)
-    draft.value = fetched
-    persistListingDraft(listingId, fetched)
-  } catch (err) {
     draftStatus.error = err
     throw err
   } finally {
@@ -111,20 +225,50 @@ async function ensureDraft(listingId: string) {
 }
 
 async function ensureVolatile(listingId: string) {
+  console.log('[Editor] ensureVolatile', { listingId })
   volatileCache[listingId] = await props.source.fetchVolatileListingBundle(listingId)
 }
 
-async function handleSelectListing(listingId: string) {
+async function handleSelectListing(listingId: string, options?: { force?: boolean }) {
   if (!listingId.trim()) return
 
+  if (!options?.force && listingId === selectedListingId.value && draft.value) {
+    console.log('[Editor] handleSelectListing skip (already selected)', { listingId })
+    return
+  }
+
+  const token = ++selectionToken.value
   selectedListingId.value = listingId
   stage.value = 'listings'
+  console.log('[Editor] handleSelectListing', { listingId, token })
 
   draft.value = null
   await Promise.all([
     ensureDraft(listingId),
     ensureVolatile(listingId),
   ])
+
+  if (token !== selectionToken.value) {
+    console.log('[Editor] handleSelectListing stale', { listingId, token })
+  }
+}
+
+async function initializeEditorState() {
+  console.log('[Editor] initializeEditorState')
+  await loadListings()
+
+  if (!listings.value.length) {
+    selectedListingId.value = null
+    return
+  }
+
+  const current = selectedListingId.value
+  const hasCurrent = current ? listings.value.some((item) => item.listingId === current) : false
+  const nextId = hasCurrent ? current : (listings.value[0]?.listingId ?? null)
+
+  if (nextId) {
+    await handleSelectListing(nextId, { force: true })
+  }
 }
 
 function showPreview() {
@@ -142,11 +286,19 @@ const staticContent = editorStatic
 watch(
   () => props.source,
   () => {
+    console.log('[Editor] source changed, reset state')
     selectedListingId.value = null
     draft.value = null
     stage.value = 'listings'
     listings.value = []
-    void loadListings()
+    resetVolatileCache()
+    patchQueue.value = null
+    patchListingId.value = null
+    if (patchTimer.value) {
+      window.clearTimeout(patchTimer.value)
+      patchTimer.value = null
+    }
+    void initializeEditorState()
   },
   { immediate: true },
 )
@@ -156,6 +308,10 @@ watch(selectedListingId, (id) => {
     draft.value = null
     stage.value = 'listings'
   }
+})
+
+onBeforeUnmount(() => {
+  void flushPatchQueue()
 })
 </script>
 

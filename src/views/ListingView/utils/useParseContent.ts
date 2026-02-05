@@ -7,7 +7,8 @@ import type {
   RawNotes,
   RawComments,
   RawHost,
-} from '@/views/Listing/utils/fetchListingRaw';
+  RawListingBundle,
+} from '@/domain/listings/types';
 
 // ---- TYPES ----
 import type {
@@ -28,14 +29,7 @@ import type {
   MapModel,
 } from '@/views/ListingView/types/listing';
 
-export type RawListingBundle = {
-  core?: Partial<RawCore> | null;
-  bookings?: Partial<RawBookings> | null;
-  medias?: Partial<RawMedias> | null;
-  notes?: Partial<RawNotes> | null;
-  comments?: Partial<RawComments> | null;
-  host?: Partial<RawHost> | null;
-};
+export type { RawListingBundle };
 
 type Maybe<T> = T | null | undefined;
 
