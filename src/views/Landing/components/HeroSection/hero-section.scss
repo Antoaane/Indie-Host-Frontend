@@ -10,7 +10,7 @@
 
   @include min-width(lg) {
     padding-top: calc(70px + 1.5rem);
-    height: 100vh;
+    height: 100vh !important;
   }
 
   .wrapper {

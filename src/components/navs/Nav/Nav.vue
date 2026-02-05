@@ -3,6 +3,7 @@
 <script setup lang="ts">
 // DEPS
 import { computed } from 'vue'
+import type { Ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/vue'
 
@@ -25,6 +26,9 @@ type NavItem = {
    * Si false (default) → lien standard (href)
    */
   target?: boolean
+  action?: (event?: MouseEvent) => void
+  attrs?: Record<string, string | number | boolean>
+  ref?: Ref<HTMLElement | null> | ((el: HTMLElement | null) => void)
 }
 
 const props = withDefaults(
@@ -113,11 +117,23 @@ const isLanding = computed(() => route.path === '/')
           :key="item.index || i"
         >
           <li :class="{ cta: !!item.cta }">
+            <button
+              v-if="item.action"
+              type="button"
+              :ref="item.ref"
+              v-bind="item.attrs"
+              @click="(event) => item.action?.(event)"
+            >
+              {{ item.name }}
+            </button>
+
             <!-- Cas 1 : ancre interne (scroll vers section) -->
             <a
-              v-if="item.target"
+              v-else-if="item.target"
               :href="item.link"
               :data-target="item.link"
+              v-bind="item.attrs"
+              :ref="item.ref"
               @click.prevent="scrollToTarget"
             >
               {{ item.name }}
@@ -127,6 +143,8 @@ const isLanding = computed(() => route.path === '/')
             <a
               v-else
               :href="item.link"
+              v-bind="item.attrs"
+              :ref="item.ref"
             >
               {{ item.name }}
             </a>
@@ -177,11 +195,21 @@ const isLanding = computed(() => route.path === '/')
               :key="item.index || i"
             >
               <li :class="{ cta: !!item.cta }">
+                <button
+                  v-if="item.action"
+                  type="button"
+                  v-bind="item.attrs"
+                  @click="(event) => { item.action?.(event); toggleMobileMenu() }"
+                >
+                  {{ item.name }}
+                </button>
+
                 <!-- Cas 1 : ancre interne -->
                 <a
-                  v-if="item.target"
+                  v-else-if="item.target"
                   :href="item.link"
                   :data-target="item.link"
+                  v-bind="item.attrs"
                   @click.prevent="scrollToTarget"
                 >
                   {{ item.name }}
@@ -191,6 +219,7 @@ const isLanding = computed(() => route.path === '/')
                 <a
                   v-else
                   :href="item.link"
+                  v-bind="item.attrs"
                   @click="toggleMobileMenu"
                 >
                   {{ item.name }}

@@ -1,0 +1,118 @@
+/* File: src/views/Management/components/management-listings.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/effects' as effects;
+@use '@/styles/components/inputs' as inputs;
+
+.management-listings {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: $accent;
+  border-radius: borders.$rounded-xl;
+  overflow: hidden;
+
+  >.toolbar {
+    padding: var(--layout-gap-sm);
+    border-bottom: 1px solid rgba($secondary, 0.08);
+
+    >.search {
+      @include inputs.search($theme: accent);
+    }
+  }
+
+  >.scroll-container {
+    flex: 1 1 auto;
+    overflow: auto;
+    scrollbar-width: none;
+
+    >.list {
+      padding: var(--layout-gap-md);
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-sm);
+    }
+  }
+
+  .listing-card {
+    border: 1px solid rgba($secondary, 0.08);
+    background: $accent;
+    border-radius: borders.$rounded-lg;
+    padding: 0.6rem 0.75rem;
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--layout-gap-sm);
+    cursor: pointer;
+    text-align: left;
+    transition: transform 180ms ease, box-shadow 180ms ease, outline 180ms ease;
+
+    @include effects.big-shadow(rgba(0, 0, 0, 0.08), 16px, -6px);
+
+    &:hover {
+      transform: translateY(-1px);
+    }
+
+    &.is-selected {
+      outline: 2px solid rgba($secondary, 0.85);
+    }
+
+    >.thumb {
+      width: 64px;
+      height: 64px;
+      border-radius: borders.$rounded-md;
+      overflow: hidden;
+      background: rgba($secondary, 0.06);
+
+      >img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      >.placeholder {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(160deg, rgba($secondary, 0.08), rgba($secondary, 0.02));
+      }
+    }
+
+    >.content {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+
+      >.title {
+        margin: 0;
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: rgba($secondary, 0.95);
+        line-height: 1.2;
+      }
+
+      >.meta {
+        margin: 0;
+        font-size: 0.75rem;
+        color: rgba($secondary, 0.55);
+      }
+    }
+
+    >.price {
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: rgba($secondary, 0.8);
+      white-space: nowrap;
+    }
+  }
+
+  >.state {
+    padding: var(--layout-gap-sm);
+    text-align: center;
+    font-weight: 400;
+    color: rgba($secondary, 0.6);
+  }
+}

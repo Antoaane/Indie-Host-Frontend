@@ -1,7 +1,7 @@
 /* File: src/styles/variables/_texts.scss */
 
 @use "@/styles/variables/colors" as *;
-@use "@/styles/variables/breakpoints" as *;
+@use "@/styles/variables/layouts" as *;
 
 @mixin base-text($color : $secondary, $bold: false, $underline: false, $italic: false, $thin: true, $bigger: false) {
   margin: 0;

@@ -7,6 +7,10 @@
 @use '@/styles/components/buttons' as buttons;
 
 
+* {
+  @extend .scrollbar;
+}
+
 html {
   // scroll-behavior: auto;
   scroll-behavior: smooth;
@@ -73,22 +77,25 @@ ul {
   }
 }
 
-[id*="-section"],
-[class$="-section"] {
-  height: max-content;
+#landing-page {
 
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  [id*="-section"],
+  [class$="-section"] {
+    height: max-content;
 
-  @include layout-gap(padding, vertical, 4);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 
-  @include min-width(lg) {
-    min-height: 100vh;
-    margin-bottom: 0;
-    padding-top: calc(var(--layout-gap) + 70px);
-    @include layout-gap(padding, bottom, 2);
+    @include layout-gap(padding, vertical, 4);
+
+    @include min-width(lg) {
+      min-height: 100vh;
+      margin-bottom: 0;
+      padding-top: calc(var(--layout-gap) + 70px);
+      @include layout-gap(padding, bottom, 2);
+    }
   }
 }
 
@@ -114,6 +121,8 @@ ul {
 .fallback-warning {
   color: rgb(152, 124, 0) !important;
 }
+
+
 
 
 

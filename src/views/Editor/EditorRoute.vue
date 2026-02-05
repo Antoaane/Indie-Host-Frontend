@@ -4,7 +4,7 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
-import Editor from '@/views/Editor/Editor.vue'
+import Editor from '@/views/Editor/_Editor.vue'
 import type { EditorMode, EditorSource } from '@/views/Editor/types/editor'
 import { createStaticEditorSource } from '@/views/Editor/utils/editorSourceStatic'
 import { createUserEditorSource } from '@/views/Editor/utils/editorSourceUser'

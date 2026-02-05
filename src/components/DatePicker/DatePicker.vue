@@ -12,11 +12,15 @@ const props = withDefaults(
     numberOfMonths?: number
     disabledDates?: RangeISO[]
     modelValue?: RangeISO | null
+    readOnly?: boolean
+    restrictToFuture?: boolean
   }>(),
   {
     numberOfMonths: 2,
     disabledDates: () => [],
     modelValue: null,
+    readOnly: false,
+    restrictToFuture: true,
   },
 )
 
@@ -25,7 +29,7 @@ const emit = defineEmits<{
 }>()
 
 /* ---------- disabled ---------- */
-const isDateDisabled = computed(() => makeIsDateDisabled(props.disabledDates))
+const isDateDisabled = computed(() => makeIsDateDisabled(props.disabledDates, { allowPast: !props.restrictToFuture }))
 
 /* ---------- selection (v-model) ---------- */
 const internal = shallowRef<{ start?: CalendarDate; end?: CalendarDate } | undefined>()
@@ -58,6 +62,7 @@ watch(
 watch(
   internal,
   (val) => {
+    if (props.readOnly) return
     if (val?.start && val?.end) {
       emit('update:modelValue', {
         start: toISO(val.start),
@@ -72,15 +77,17 @@ watch(
 
 /* min-value pour interdire la sélection avant aujourd'hui */
 const today = todayCalendarDate()
+const minValue = computed(() => (props.restrictToFuture ? today : undefined))
 </script>
 
 <template>
   <UCalendar
     v-model="internal"
     :is-date-disabled="isDateDisabled"
-    :min-value="today"
+    :min-value="minValue"
     :number-of-months="numberOfMonths"
     :year-controls="false"
+    :class="{ 'is-readonly': props.readOnly }"
     range
     locale="fr"
     :ui="{

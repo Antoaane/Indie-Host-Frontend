@@ -1,0 +1,373 @@
+/* File: src/views/Management/management.scss */
+
+@use '@/views/Editor/editor.scss';
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/effects' as effects;
+@use '@/styles/components/buttons' as buttons;
+
+.management#management-page {
+  height: 100vh;
+
+  @include min-width(lg) {
+    padding-top: $nav-height;
+    height: calc(100vh - $nav-height);
+    overflow: hidden;
+  }
+
+  >.layout {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-md);
+
+    @include layout-gap(padding, inline, 0.75);
+    @include layout-gap(padding, bottom, 0.75);
+
+    @include min-width(lg) {
+      flex-direction: row;
+      align-items: stretch;
+
+      @include layout-gap(padding, inline, 1);
+      @include layout-gap(padding, bottom, 1);
+    }
+  }
+
+  .panel-left {
+    flex: 0 0 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+
+    @include min-width(lg) {
+      width: 24rem;
+      max-width: 32rem;
+    }
+
+    >.management-listings {
+      flex: 1 1 auto;
+    }
+  }
+
+  .stage {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+
+    >.content {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      @include effects.big-shadow();
+    }
+  }
+
+  .reservation-toolbar {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--layout-gap-sm);
+
+    padding-bottom: var(--layout-gap-sm);
+    border-bottom: 1px solid rgba($secondary, 0.08);
+
+    @include layout-gap(padding, inline, 0.5);
+  }
+
+  .icon-btn {
+    --button-icon-size: 40px;
+    @include buttons.primary($theme: white, $icon-only: true, $deep: true);
+
+    &.is-active {
+      >button {
+        background: $secondary;
+        color: $accent;
+        outline-color: rgba($secondary, 0.9);
+
+        >svg {
+          color: $accent;
+          stroke: $accent;
+        }
+      }
+    }
+  }
+
+  .reservation-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    background: $accent;
+    border-radius: borders.$rounded-xl;
+  }
+
+  .reservation-panel {
+    height: 100%;
+    overflow: auto;
+    padding: var(--layout-gap);
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap);
+  }
+
+  .reservation-heading {
+    display: flex;
+    align-items: center;
+    gap: var(--layout-gap-sm);
+
+    >.avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      overflow: hidden;
+      background: rgba($secondary, 0.08);
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      color: rgba($secondary, 0.7);
+
+      >img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+    }
+
+    >.title {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+
+      >h2 {
+        margin: 0;
+        font-size: 1.6rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: rgba($secondary, 0.95);
+      }
+
+      >p {
+        margin: 0;
+        font-size: 0.85rem;
+        color: rgba($secondary, 0.6);
+      }
+    }
+  }
+
+  .message-card {
+    padding: var(--layout-gap-md);
+    border-radius: borders.$rounded-lg;
+    border: 1px solid rgba($secondary, 0.08);
+    background: rgba($secondary, 0.02);
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-sm);
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--layout-gap-sm);
+
+      >h3 {
+        margin: 0;
+        font-size: 1.1rem;
+      }
+
+      >.reply {
+        background: none;
+        border: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        color: rgba($secondary, 0.8);
+        font-weight: 600;
+        cursor: pointer;
+      }
+    }
+
+    .message {
+      margin: 0;
+      font-size: 0.95rem;
+      color: rgba($secondary, 0.8);
+      line-height: 1.5;
+    }
+  }
+
+  .stay-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-sm);
+
+    >h3 {
+      margin: 0;
+      font-size: 1.1rem;
+    }
+
+    .stay-container {
+      display: flex;
+      gap: var(--layout-gap-md);
+      align-items: start;
+
+    }
+
+    .stay-calendar {
+      flex: 0 0 24rem;
+
+      >.date-picker {
+        width: 100%;
+        max-width: none !important;
+      }
+    }
+
+    .stay-cards {
+      flex: 1 1 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--layout-gap-md);
+
+      &>div {
+        width: 100%;
+        padding: var(--layout-gap);
+        border-radius: borders.$rounded-lg;
+        border: 1px solid rgba($secondary, 0.08);
+        background: $accent;
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        @include effects.soft-shadow(rgba(0, 0, 0, 0.08), 12px, -4px);
+
+        .value {
+          font-size: 2rem;
+          font-weight: 700;
+        }
+
+        .label {
+          font-size: 0.85rem;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          color: rgba($secondary, 0.55);
+        }
+
+        .meta {
+          font-size: 0.85rem;
+          color: rgba($secondary, 0.75);
+        }
+
+        .guest-list {
+          margin: 0.35rem 0 0;
+          padding: 0;
+          list-style: none;
+          display: flex;
+          flex-direction: column;
+          gap: 0.15rem;
+          font-size: 0.85rem;
+          color: rgba($secondary, 0.75);
+        }
+      }
+    }
+  }
+
+  .schedule-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-sm);
+
+    >h3 {
+      margin: 0;
+      font-size: 1.1rem;
+    }
+
+    >.subtitle {
+      margin: 0;
+      font-size: 0.85rem;
+      color: rgba($secondary, 0.6);
+    }
+
+    .schedule-card {
+      padding: var(--layout-gap-md);
+      border-radius: borders.$rounded-lg;
+      border: 1px solid rgba($secondary, 0.08);
+      background: $accent;
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-sm);
+      @include effects.soft-shadow(rgba(0, 0, 0, 0.08), 12px, -4px);
+
+      .summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--layout-gap-sm);
+
+        .label {
+          margin: 0;
+          font-size: 0.85rem;
+          color: rgba($secondary, 0.6);
+        }
+
+        .value {
+          margin: 0.2rem 0 0;
+          font-size: 1.4rem;
+          font-weight: 700;
+        }
+
+        .status {
+          padding: 0.35rem 0.75rem;
+          border-radius: borders.$rounded;
+          font-size: 0.75rem;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          border: 1px solid transparent;
+
+          &.is-paid {
+            background: rgba($good, 0.12);
+            color: rgba($good, 0.9);
+            border-color: rgba($good, 0.4);
+          }
+
+          &.is-pending {
+            background: rgba($progressing, 0.12);
+            color: rgba($progressing, 0.9);
+            border-color: rgba($progressing, 0.4);
+          }
+        }
+      }
+
+      .rows {
+        display: grid;
+        gap: 0.35rem;
+
+        .row {
+          display: flex;
+          justify-content: space-between;
+          font-size: 0.85rem;
+          color: rgba($secondary, 0.75);
+
+          strong {
+            color: rgba($secondary, 0.95);
+            font-weight: 600;
+          }
+        }
+      }
+    }
+  }
+
+  .reservation-empty {
+    padding: var(--layout-gap-md);
+    text-align: center;
+    color: rgba($secondary, 0.6);
+  }
+
+  .calendar-panel {
+    flex: 1 1 auto;
+    min-height: 100%;
+  }
+}

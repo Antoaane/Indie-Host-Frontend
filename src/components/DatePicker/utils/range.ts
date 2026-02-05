@@ -1,4 +1,4 @@
-// File: src/views/ListingView/components/Core/components/DatePicker/utils/range.ts
+
 
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
 import { parseISO, toNum, todayCalendarDate } from '@/components/DatePicker/helpers/date'
@@ -15,13 +15,13 @@ export const buildNumericRanges = (ranges: RangeISO[]) =>
  *  - désactive les ranges fournis
  *  - interdit toute date < aujourd'hui (inclus)
  */
-export const makeIsDateDisabled = (ranges: RangeISO[]) => {
+export const makeIsDateDisabled = (ranges: RangeISO[], options?: { allowPast?: boolean }) => {
   const numeric = buildNumericRanges(ranges)
   const todayNum = toNum(todayCalendarDate())
 
   return (date: { year: number; month: number; day: number }) => {
     const n = toNum(date)
-    if (n < todayNum) return true                // 🔒 avant aujourd'hui
+    if (!options?.allowPast && n < todayNum) return true
     return numeric.some(r => n >= r.start && n <= r.end)
   }
 }

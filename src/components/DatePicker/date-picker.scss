@@ -8,6 +8,10 @@
 .date-picker {
   max-width: 36rem;
 
+  &.is-readonly {
+    pointer-events: none;
+  }
+
   >.header {
     // @include buttons.primary();
 

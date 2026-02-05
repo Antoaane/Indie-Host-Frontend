@@ -4,15 +4,8 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 // COMOOENENTS
-import ListingView from '@/views/ListingView/ListingView.vue'
-import {
-  loadBookings,
-  loadComments,
-  loadCore,
-  loadHost,
-  loadMedias,
-  loadNotes,
-} from '@/views/Listing/utils/fetchListingRaw'
+import ListingView from '@/views/ListingView/_ListingView.vue'
+import { loadBookings, loadComments, loadCore, loadHost, loadMedias, loadNotes } from '@/views/Listing/utils/fetchListingRaw'
 import type { RawListingBundle } from '@/views/ListingView/utils/useParseContent'
 
 const route = useRoute()
@@ -29,7 +22,14 @@ const isLoading = ref(false)
 async function fetchRawListing() {
   isLoading.value = true
   try {
-    const [core, host, bookings, medias, notes, comments] = await Promise.all([
+    const [
+      core,
+      host,
+      bookings,
+      medias,
+      notes,
+      comments,
+    ] = await Promise.all([
       loadCore(),
       loadHost(),
       loadBookings(),
@@ -43,10 +43,14 @@ async function fetchRawListing() {
   }
 }
 
-watch(listingKey, () => {
-  rawListing.value = null
-  void fetchRawListing()
-}, { immediate: true })
+watch(
+  listingKey,
+  () => {
+    rawListing.value = null
+    void fetchRawListing()
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
