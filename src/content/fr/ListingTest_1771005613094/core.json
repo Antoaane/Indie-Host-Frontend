@@ -1,0 +1,184 @@
+{
+  "id": "listing-1771005613094",
+  "status": "draft",
+  "pause_message": "",
+  "title": "Teste d'annonce",
+  "type": "Péniche",
+  "city": "Limoge",
+  "country": "France",
+  "region": "Nouvelle-Aquitaine",
+  "guest_capacity": 6,
+  "rooms": [
+    {
+      "room-name": "Chambre",
+      "type": "bedroom",
+      "beds": [
+        {
+          "type": "simple",
+          "capacity": 1,
+          "quantity": 3
+        },
+        {
+          "type": "double",
+          "capacity": 2,
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "room-name": "Salle de bain",
+      "type": "bathroom",
+      "beds": []
+    },
+    {
+      "room-name": "Salon",
+      "type": "livingroom",
+      "beds": [
+        {
+          "type": "double",
+          "capacity": 2,
+          "quantity": 2
+        }
+      ]
+    }
+  ],
+  "amenities": [
+    {
+      "id": "EASY_METRO_ACCESS",
+      "name": "Accès facile métro",
+      "description": "Station à proximité",
+      "category": "Arrivée & mobilité",
+      "relevance": 70,
+      "pinned": false
+    },
+    {
+      "id": "PARKING_FOR_TWO_CARS",
+      "name": "Parking 2 voitures",
+      "description": "Sur la propriété",
+      "category": "Arrivée & mobilité",
+      "relevance": 70,
+      "pinned": false
+    },
+    {
+      "id": "ELEVATOR",
+      "name": "Ascenseur",
+      "description": "Accès pratique",
+      "category": "Arrivée & mobilité",
+      "relevance": 55,
+      "pinned": false
+    },
+    {
+      "id": "WIFI",
+      "name": "Wifi",
+      "description": "Connexion internet",
+      "category": "Confort & travail",
+      "relevance": 95,
+      "pinned": false
+    },
+    {
+      "id": "REVERSIBLE_AIR_CONDITIONING",
+      "name": "Climatisation réversible",
+      "description": "Chaud / froid",
+      "category": "Confort & travail",
+      "relevance": 80,
+      "pinned": false
+    },
+    {
+      "id": "SPACE_HEATER",
+      "name": "Chauffage d'appoint",
+      "description": "Convecteurs électriques",
+      "category": "Confort & travail",
+      "relevance": 60,
+      "pinned": false
+    },
+    {
+      "id": "EQUIPPED_KITCHEN",
+      "name": "Cuisine équipée",
+      "description": "Plaques, four, vaisselle…",
+      "category": "Cuisine & boissons",
+      "relevance": 85,
+      "pinned": false
+    },
+    {
+      "id": "FILTER_COFFEE_MAKER",
+      "name": "Machine à café filtre",
+      "description": "Café moulu de bienvenue",
+      "category": "Cuisine & boissons",
+      "relevance": 60,
+      "pinned": false
+    },
+    {
+      "id": "WOOD_TERRACE",
+      "name": "Terrasse",
+      "description": "Espace extérieur aménagé",
+      "category": "Extérieur & détente",
+      "relevance": 70,
+      "pinned": false
+    },
+    {
+      "id": "HEATED_POOL",
+      "name": "Piscine chauffée",
+      "description": "En saison",
+      "category": "Extérieur & détente",
+      "relevance": 90,
+      "pinned": false
+    },
+    {
+      "id": "SUN_LOUNGERS",
+      "name": "Chaises longues",
+      "description": "Pour se détendre",
+      "category": "Extérieur & détente",
+      "relevance": 60,
+      "pinned": false
+    },
+    {
+      "id": "OUTDOOR_SHOWER",
+      "name": "Douche extérieure",
+      "description": "Retour de plage",
+      "category": "Extérieur & détente",
+      "relevance": 55,
+      "pinned": false
+    },
+    {
+      "id": "SMART_LOCK",
+      "name": "Serrure connectée",
+      "description": "Entrée autonome",
+      "category": "Sécurité",
+      "relevance": 65,
+      "pinned": false
+    },
+    {
+      "id": "FIRST_AID_KIT",
+      "name": "Kit de secours",
+      "description": "Premiers soins",
+      "category": "Sécurité",
+      "relevance": 60,
+      "pinned": false
+    },
+    {
+      "id": "BLUETOOTH_SPEAKER",
+      "name": "Enceinte Bluetooth",
+      "description": "Pour la musique",
+      "category": "Vie à bord",
+      "relevance": 55,
+      "pinned": false
+    },
+    {
+      "id": "WALK_TO_BEACH",
+      "name": "Plage à pied",
+      "description": "Accès rapide",
+      "category": "Vue & accès",
+      "relevance": 85,
+      "pinned": false
+    },
+    {
+      "id": "MONT_BLANC_VIEW",
+      "name": "Vue Mont-Blanc",
+      "description": "Panorama montagnes",
+      "category": "Vue & accès",
+      "relevance": 85,
+      "pinned": false
+    }
+  ],
+  "description": "<p>Madame, Monsieur,</p><p>Mon dossier DSE apparaît comme <strong>validé de manière conditionnelle</strong>, avec une notification indiquant que la validation définitive dépend de la confirmation de mon inscription par l’établissement.</p><p>Or, je précise que :</p><ol><li data-list=\"bullet\"><span class=\"ql-ui\" contenteditable=\"false\"></span>je suis <strong>déjà inscrit définitivement</strong> dans mon établissement ;</li><li data-list=\"bullet\"><span class=\"ql-ui\" contenteditable=\"false\"></span>j’ai <strong>déjà réglé la CVEC</strong> ;</li><li data-list=\"bullet\"><span class=\"ql-ui\" contenteditable=\"false\"></span>j’ai également <strong>déjà payé les frais d’inscription</strong>.</li></ol><p>Je souhaiterais donc savoir :</p><ol><li data-list=\"ordered\"><span class=\"ql-ui\" contenteditable=\"false\"></span>si mon inscription n’a pas encore été transmise ou prise en compte par vos services ;</li><li data-list=\"ordered\"><span class=\"ql-ui\" contenteditable=\"false\"></span>s’il y a une action à effectuer de ma part pour permettre la validation définitive de mon dossier ;</li><li data-list=\"ordered\"><span class=\"ql-ui\" contenteditable=\"false\"></span>dans quels délais la <strong>notification définitive</strong> et le <strong>déclenchement du versement de la bourse</strong> sont prévus.</li></ol><p>Si nécessaire, je peux fournir tout justificatif attestant de mon inscription définitive.</p>"
+}

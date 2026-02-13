@@ -1,12 +1,31 @@
 /* File: src/styles/variables/_colors.scss */
 
+@use "sass:color";
+
 // MAIN
-$accent: rgb(252, 250, 250);
-$secondary: rgb(17, 17, 23);
-$tertiary: rgb(236, 232, 232);
-$quaternary: rgb(226, 222, 222);
-$quinary: rgb(52, 51, 57);
+$accent: #fcfafa;
+$secondary: #111117;
+$tertiary: #ece8e8;
+$quaternary: #e2dede;
+$quinary: #343339;
 $translucent: rgba(255, 255, 255, 0);
+
+// SURFACES (derived from main colors)
+$accent-surface-0: lighten($tertiary, 2.5%);
+$accent-surface-1: $tertiary;
+$accent-surface-2: darken($tertiary, 2.5%);
+$accent-surface-3: darken($tertiary, 7.5%);
+$accent-surface-4: darken($tertiary, 15%);
+
+$secondary-surface-0: lighten($secondary, 90%);
+$secondary-surface-1: lighten($secondary, 85%);
+$secondary-surface-2: lighten($secondary, 80%);
+$secondary-surface-3: lighten($secondary, 70%);
+
+$translucent-surface-0: rgba($secondary, 0.1);
+$translucent-surface-1: rgba($secondary, 0.15);
+$translucent-surface-2: rgba($secondary, 0.2);
+$translucent-surface-3: rgba($secondary, 0.3);
 
 // GRADIENTS
 $primary_gradiant_first: rgb(163, 153, 255);

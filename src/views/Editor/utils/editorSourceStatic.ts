@@ -27,5 +27,9 @@ export function createStaticEditorSource(): EditorSource {
       console.log('[Editor][source][static] publishListingDraft', { listingId })
       return controller.publishListingDraft(listingId, draft)
     },
+    createListing: async (payload) => {
+      console.log('[Editor][source][static] createListing', { payload })
+      return controller.createListing(payload)
+    },
   }
 }

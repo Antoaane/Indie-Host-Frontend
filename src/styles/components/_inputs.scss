@@ -7,8 +7,7 @@
 @use "@/styles/components/buttons" as buttons;
 
 $input-themes: (
-  base: (
-    bg: $tertiary,
+  base: (bg: $tertiary,
     text: $secondary,
     placeholder: rgba($secondary, 0.45),
     border: rgba($secondary, 0.1),
@@ -17,8 +16,7 @@ $input-themes: (
     icon: rgba($secondary, 0.6),
     shadow: rgba($secondary, 0.08),
   ),
-  accent: (
-    bg: $accent,
+  accent: (bg: $accent,
     text: $secondary,
     placeholder: rgba($secondary, 0.45),
     border: rgba($secondary, 0.08),
@@ -30,14 +28,12 @@ $input-themes: (
 );
 
 $input-sizes: (
-  default: (
-    min-height: 2.75rem,
+  default: (min-height: 2.75rem,
     padding-x: 0.9rem,
     padding-y: 0.55rem,
     gap: 0.5rem,
   ),
-  compact: (
-    min-height: 2.4rem,
+  compact: (min-height: 2.4rem,
     padding-x: 0.75rem,
     padding-y: 0.45rem,
     gap: 0.4rem,
@@ -77,8 +73,9 @@ $input-sizes: (
 }
 
 %input-icon {
-  > .icon,
-  > svg {
+
+  >.icon,
+  >svg {
     width: 1.1rem;
     height: 1.1rem;
     flex: 0 0 auto;
@@ -86,9 +83,11 @@ $input-sizes: (
 }
 
 @mixin field($theme: base, $compact: false) {
+  $field-padding-y: if($compact, 0.5rem, 0.65rem);
+
   @extend %input-shell;
   gap: input-size($compact, gap);
-  min-height: input-size($compact, min-height);
+  padding-block: $field-padding-y;
   border-radius: borders.$rounded-md;
   border-color: input-token($theme, border);
   background-color: input-token($theme, bg);
@@ -104,11 +103,11 @@ $input-sizes: (
     @include halo(xs, false, input-token($theme, focus), 0.35);
   }
 
-  > input,
-  > textarea,
-  > select {
+  >input,
+  >textarea,
+  >select {
     @extend %input-control;
-    padding: input-size($compact, padding-y) input-size($compact, padding-x);
+    padding: 0 input-size($compact, padding-x);
     color: input-token($theme, text);
 
     &::placeholder {
@@ -152,8 +151,8 @@ $input-sizes: (
     @include halo(xs, false, input-token($theme, focus), 0.35);
   }
 
-  > input[type='search'],
-  > input {
+  >input[type='search'],
+  >input {
     @extend %input-control;
     padding: input-size($compact, padding-y) input-size($compact, padding-x);
     color: input-token($theme, text);
@@ -163,8 +162,8 @@ $input-sizes: (
     }
   }
 
-  > .icon,
-  > svg {
+  >.icon,
+  >svg {
     color: input-token($theme, icon);
     stroke: input-token($theme, icon);
     margin-left: input-size($compact, padding-x);
@@ -191,12 +190,11 @@ $input-sizes: (
     @include halo(xs, false, input-token($theme, focus), 0.35);
   }
 
-  > select {
+  >select {
     @extend %input-control;
     appearance: none;
     cursor: pointer;
-    padding: input-size($compact, padding-y) calc(input-size($compact, padding-x) + 1.35rem)
-      input-size($compact, padding-y) input-size($compact, padding-x);
+    padding: input-size($compact, padding-y) calc(input-size($compact, padding-x) + 1.35rem) input-size($compact, padding-y) input-size($compact, padding-x);
     color: input-token($theme, text);
   }
 
@@ -234,7 +232,7 @@ $input-sizes: (
     @include halo(xs, false, input-token($theme, focus), 0.35);
   }
 
-  > textarea {
+  >textarea {
     @extend %input-control;
     min-height: 9rem;
     resize: vertical;
@@ -267,7 +265,7 @@ $input-sizes: (
     @include halo(xs, false, input-token($theme, focus), 0.35);
   }
 
-  > input {
+  >input {
     @extend %input-control;
     padding: input-size($compact, padding-y) input-size($compact, padding-x);
     color: input-token($theme, text);
@@ -277,13 +275,14 @@ $input-sizes: (
     }
   }
 
-  > .action {
-    --button-icon-size: 42px;
+  >.action {
     @include buttons.primary($theme: $action-theme, $icon-only: true);
     flex: 0 0 auto;
     align-self: center;
 
-    > * {
+    >* {
+      width: 42px;
+      height: 42px;
       font-size: 0.95rem;
       font-weight: 600;
     }
@@ -295,17 +294,18 @@ $input-sizes: (
   align-items: center;
   gap: var(--layout-gap-xs);
 
-  > .btn {
-    --button-icon-size: 36px;
+  >.btn {
     @include buttons.primary($theme: black, $icon-only: true);
 
-    > * {
+    >* {
+      width: 36px;
+      height: 36px;
       font-size: 1.1rem;
       font-weight: 700;
     }
   }
 
-  > .value {
+  >.value {
     @extend %input-control;
     width: 3.5rem;
     flex: 0 0 auto;
@@ -331,7 +331,7 @@ $input-sizes: (
   background-color: input-token($theme, bg);
   color: input-token($theme, text);
 
-  > input {
+  >input {
     @extend %input-control;
     padding: 0.2rem 0.45rem;
     font-weight: 600;
@@ -358,7 +358,7 @@ $input-sizes: (
     @include halo(xs, false, input-token($theme, focus), 0.35);
   }
 
-  > .ql-editor {
+  >.ql-editor {
     @extend %input-control;
     min-height: 9rem;
     padding: input-size(false, padding-y) input-size(false, padding-x);

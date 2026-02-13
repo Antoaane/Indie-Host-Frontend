@@ -2,6 +2,7 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { ArrowUpRight, Calendar, Plus } from 'lucide-vue-next'
 
 import DatePicker from '@/components/DatePicker/DatePicker.vue'
@@ -14,17 +15,13 @@ import type { RawBookings } from '@/domain/listings/types'
 import type { Reservation } from '@/views/Management/utils/managementReservations'
 import ManagementListings from '@/views/Management/components/ManagementListings.vue'
 import ManagementReservationSlider from '@/views/Management/components/ManagementReservationSlider.vue'
-import {
-  buildReservationsForListing,
-  findClosestReservation,
-  findClosestReservationForListing,
-  findLatestReservationForListing,
-} from '@/views/Management/utils/managementReservations'
+import { buildReservationsForListing, findClosestReservation, findClosestReservationForListing, findLatestReservationForListing } from '@/views/Management/utils/managementReservations'
 
 const props = defineProps<{
   mode: EditorMode
   source: EditorSource
 }>()
+const route = useRoute()
 
 type ManagementStage = 'reservations' | 'calendar'
 
@@ -105,6 +102,61 @@ function resetReservationsMap() {
   }
 }
 
+function normalizeQueryParam(value: unknown): string | null {
+  if (Array.isArray(value)) return normalizeQueryParam(value[0])
+  if (typeof value === 'string' && value.trim()) return value.trim()
+  return null
+}
+
+function hasReservation(listingId: string, reservationId: string): boolean {
+  return (reservationsByListingId[listingId] ?? []).some((reservation) => reservation.id === reservationId)
+}
+
+function findListingIdByReservation(reservationId: string): string | null {
+  for (const [
+    listingId,
+    reservations,
+  ] of Object.entries(reservationsByListingId)) {
+    if (reservations.some((reservation) => reservation.id === reservationId)) {
+      return listingId
+    }
+  }
+  return null
+}
+
+function applyRouteSelection() {
+  const listingIdFromQuery = normalizeQueryParam(route.query.listingId)
+  const reservationIdFromQuery = normalizeQueryParam(route.query.reservationId)
+  if (!listingIdFromQuery && !reservationIdFromQuery) return
+
+  let nextListingId = listingIdFromQuery
+  let nextReservationId = reservationIdFromQuery
+
+  if (nextReservationId && nextListingId && !hasReservation(nextListingId, nextReservationId)) {
+    nextListingId = null
+  }
+
+  if (nextReservationId && !nextListingId) {
+    nextListingId = findListingIdByReservation(nextReservationId)
+  }
+
+  if (!nextListingId && listingIdFromQuery && reservationsByListingId[listingIdFromQuery]) {
+    nextListingId = listingIdFromQuery
+  }
+
+  if (!nextListingId) return
+
+  selectedListingId.value = nextListingId
+
+  if (!nextReservationId || !hasReservation(nextListingId, nextReservationId)) {
+    nextReservationId = findClosestReservationForListing(reservationsByListingId[nextListingId] ?? [])?.id ?? reservationsByListingId[nextListingId]?.[0]?.id ?? null
+  }
+
+  selectedReservationId.value = nextReservationId
+  stage.value = 'reservations'
+  isDeleteOverlayOpen.value = false
+}
+
 async function loadListings() {
   listingsStatus.isLoading = true
   listingsStatus.error = null
@@ -153,9 +205,7 @@ function selectDefaultReservation() {
 
   if (listings.value.length) {
     selectedListingId.value = listings.value[0].listingId
-    const closestForListing = findClosestReservationForListing(
-      reservationsByListingId[selectedListingId.value] ?? [],
-    )
+    const closestForListing = findClosestReservationForListing(reservationsByListingId[selectedListingId.value] ?? [])
     selectedReservationId.value = closestForListing?.id ?? reservationsByListingId[selectedListingId.value]?.[0]?.id ?? null
     stage.value = 'reservations'
   }
@@ -166,15 +216,14 @@ async function bootstrap() {
   resetReservationsMap()
   await loadReservations(listings.value)
   selectDefaultReservation()
+  applyRouteSelection()
 }
 
 function handleSelectListing(listingId: string) {
   if (!listingId.trim()) return
   isDeleteOverlayOpen.value = false
   selectedListingId.value = listingId
-  const fallback = findClosestReservationForListing(reservationsByListingId[listingId] ?? [])
-    ?? reservationsByListingId[listingId]?.[0]
-    ?? null
+  const fallback = findClosestReservationForListing(reservationsByListingId[listingId] ?? []) ?? reservationsByListingId[listingId]?.[0] ?? null
   selectedReservationId.value = fallback?.id ?? null
   stage.value = 'reservations'
 }
@@ -229,15 +278,15 @@ async function confirmDeleteReservation() {
     const nextBookedDays = existingReservations.length
       ? deriveBookedDaysFromReservations(nextReservations)
       : (() => {
-        let removed = false
-        return normalizeBookedDays(currentBookings?.['booked-days']).filter((item) => {
-          if (!removed && item.start === reservation.start && item.end === reservation.end) {
-            removed = true
-            return false
-          }
-          return true
-        })
-      })()
+          let removed = false
+          return normalizeBookedDays(currentBookings?.['booked-days']).filter((item) => {
+            if (!removed && item.start === reservation.start && item.end === reservation.end) {
+              removed = true
+              return false
+            }
+            return true
+          })
+        })()
 
     await props.source.patchListingDraft(listingId, {
       bookings: {
@@ -247,12 +296,9 @@ async function confirmDeleteReservation() {
       },
     })
 
-    reservationsByListingId[listingId] = reservationsByListingId[listingId]
-      .filter((item) => item.id !== reservation.id)
+    reservationsByListingId[listingId] = reservationsByListingId[listingId].filter((item) => item.id !== reservation.id)
 
-    selectedReservationId.value = findClosestReservationForListing(reservationsByListingId[listingId] ?? [])?.id
-      ?? reservationsByListingId[listingId]?.[0]?.id
-      ?? null
+    selectedReservationId.value = findClosestReservationForListing(reservationsByListingId[listingId] ?? [])?.id ?? reservationsByListingId[listingId]?.[0]?.id ?? null
 
     isDeleteOverlayOpen.value = false
   } catch (error) {
@@ -288,6 +334,19 @@ watch(reservationsForListing, (items) => {
     selectedReservationId.value = findClosestReservationForListing(items)?.id ?? items[0].id
   }
 })
+
+watch(
+  () => [
+    route.query.listingId,
+    route.query.reservationId,
+    listings.value.length,
+    reservationsStatus.isLoading,
+  ],
+  () => {
+    if (reservationsStatus.isLoading) return
+    applyRouteSelection()
+  },
+)
 
 function formatCurrency(value?: number) {
   if (typeof value !== 'number' || !Number.isFinite(value)) return ''
@@ -386,7 +445,7 @@ const paymentStatusClass = computed(() => {
                 aria-label="Basculer vers le calendrier"
                 @click="toggleCalendarMode"
               >
-                <Calendar :size="18" />
+                <Calendar :size="20" />
               </button>
             </div>
 
@@ -401,7 +460,7 @@ const paymentStatusClass = computed(() => {
                 type="button"
                 aria-label="Ajouter une r&eacute;servation"
               >
-                <Plus :size="18" />
+                <Plus :size="20" />
               </button>
             </div>
           </div>
@@ -437,7 +496,7 @@ const paymentStatusClass = computed(() => {
                         class="reply"
                       >
                         R&eacute;pondre
-                        <ArrowUpRight :size="16" />
+                        <ArrowUpRight :size="20" />
                       </button>
                     </div>
                     <p class="message">{{ selectedReservation.message }}</p>

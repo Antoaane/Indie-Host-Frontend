@@ -1,7 +1,9 @@
 // File: src/views/Messaging/types/messaging.ts
 
+import type { RawReservationMessageState } from '@/domain/listings/types'
+
 export type MessageDirection = 'incoming' | 'outgoing'
-export type MessageState = 'sent' | 'delivered' | 'read'
+export type MessageState = RawReservationMessageState
 export type ConversationStatus = 'active' | 'pending' | 'archived'
 
 export type MessagingParticipant = {
@@ -13,19 +15,24 @@ export type MessagingParticipant = {
 
 export type MessagingMessage = {
   id: string
-  authorId: string
+  author: 'host' | 'guest'
   direction: MessageDirection
   body: string
+  sentAt: string
   sentAtLabel: string
   state: MessageState
 }
 
 export type MessagingConversation = {
   id: string
+  listingId: string
+  reservationId: string
   status: ConversationStatus
   isPinned: boolean
   unreadCount: number
+  updatedAt: string
   updatedAtLabel: string
+  searchIndex: string
   listing: {
     id: string
     title: string
@@ -36,6 +43,8 @@ export type MessagingConversation = {
     id: string
     code: string
     status: string
+    startISO: string
+    endISO: string
     startDate: string
     endDate: string
     nights: number
@@ -43,6 +52,7 @@ export type MessagingConversation = {
     total: string
     currency: string
     source: string
+    paymentStatus: string
   }
   participants: {
     host: MessagingParticipant
@@ -51,7 +61,9 @@ export type MessagingConversation = {
   lastMessage: {
     author: 'host' | 'guest'
     preview: string
+    sentAt: string
     sentAtLabel: string
+    state: MessageState
   }
   messages: MessagingMessage[]
 }

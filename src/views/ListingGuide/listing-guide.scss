@@ -12,7 +12,7 @@
   flex-direction: column;
   position: relative;
 
-  > .guide-desktop {
+  >.guide-desktop {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -22,16 +22,16 @@
     text-align: center;
     @include layout-gap(padding, all, 1.5);
 
-    > h1 {
+    >h1 {
       @include h1-title($color: $secondary, $layout-gap: false, $gradiant: true);
     }
 
-    > p {
+    >p {
       @include base-text($color: rgba($secondary, 0.7));
     }
   }
 
-  > .guide-hero {
+  >.guide-hero {
     background: $secondary;
     color: $accent;
     position: relative;
@@ -39,20 +39,20 @@
     padding: calc(var(--layout-gap) * 2) var(--layout-gap);
     padding-bottom: calc(var(--layout-gap) * 2.5);
 
-    > .hero-content {
+    >.hero-content {
       position: relative;
       z-index: 2;
       display: flex;
       flex-direction: column;
       gap: var(--layout-gap-xs);
 
-      > .hero-eyebrow {
+      >.hero-eyebrow {
         @include little-text($color: rgba($accent, 0.8), $bold: true, $thin: false);
         letter-spacing: 0.08rem;
         text-transform: uppercase;
       }
 
-      > .hero-title {
+      >.hero-title {
         font-family: 'Fustat', sans-serif;
         font-weight: 700;
         font-size: 2.1rem;
@@ -61,17 +61,17 @@
         @include effects.text-shadow(rgba(0, 0, 0, 0.35));
       }
 
-      > .hero-tagline {
+      >.hero-tagline {
         @include little-text($color: rgba($accent, 0.7));
       }
     }
 
-    > .hero-shapes {
+    >.hero-shapes {
       position: absolute;
       inset: 0;
       pointer-events: none;
 
-      > span {
+      >span {
         position: absolute;
         border: 1px solid rgba($accent, 0.15);
         border-radius: 50%;
@@ -80,12 +80,12 @@
         transform: rotate(25deg);
       }
 
-      > span:nth-child(1) {
+      >span:nth-child(1) {
         top: -120px;
         right: -80px;
       }
 
-      > span:nth-child(2) {
+      >span:nth-child(2) {
         bottom: -140px;
         left: -90px;
         width: 320px;
@@ -94,7 +94,7 @@
     }
   }
 
-  > .guide-body {
+  >.guide-body {
     display: flex;
     flex-direction: column;
     gap: var(--layout-gap-md);
@@ -112,12 +112,12 @@
     flex-direction: column;
     gap: var(--layout-gap-2xs);
 
-    > h2 {
+    >h2 {
       @include h2-title($color: $secondary, $layout-gap: false, $gradiant: false);
       margin: 0;
     }
 
-    > p {
+    >p {
       @include base-text($color: rgba($secondary, 0.65));
     }
 
@@ -154,22 +154,22 @@
     align-items: flex-start;
     gap: var(--layout-gap-xs);
 
-    > .panel-emoji {
+    >.panel-emoji {
       font-size: 1.4rem;
       line-height: 1;
     }
 
-    > div {
+    >div {
       display: flex;
       flex-direction: column;
       gap: 0.25rem;
 
-      > h3 {
+      >h3 {
         @include h3-title($color: $secondary, $layout-gap: false);
         margin: 0;
       }
 
-      > p {
+      >p {
         @include little-text($color: rgba($secondary, 0.7));
       }
     }
@@ -182,7 +182,7 @@
     display: grid;
     gap: var(--layout-gap-xs);
 
-    > li {
+    >li {
       display: flex;
       flex-direction: column;
       gap: 0.2rem;
@@ -194,13 +194,13 @@
         padding-bottom: 0;
       }
 
-      > .item-label {
+      >.item-label {
         @include little-text($color: rgba($secondary, 0.8), $bold: true, $thin: false);
         text-transform: uppercase;
         letter-spacing: 0.05rem;
       }
 
-      > .item-value {
+      >.item-value {
         @include base-text($color: $secondary);
 
         &.is-empty {

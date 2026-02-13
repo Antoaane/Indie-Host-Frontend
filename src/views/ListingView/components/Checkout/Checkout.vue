@@ -2,16 +2,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import {
-  CalendarDays,
-  ChevronLeft,
-  CreditCard,
-  Globe,
-  Lock,
-  MapPin,
-  Star,
-  User,
-} from 'lucide-vue-next'
+import { CalendarDays, ChevronLeft, CreditCard, Globe, Lock, MapPin, Star, User } from 'lucide-vue-next'
 
 import type { ListingParsed } from '@/views/ListingView/types/listing'
 import type { ReservationPayload } from '@/views/ListingView/types/reservation'
@@ -47,7 +38,7 @@ const cashLaterLabel = computed(() => currency.format(cashLater.value))
 
 const dueDateLabel = computed(() => {
   const base = props.reservation.startISO ? new Date(props.reservation.startISO) : null
-  if (!base || Number.isNaN(base.getTime())) return 'le jour d\'arrivée'
+  if (!base || Number.isNaN(base.getTime())) return "le jour d'arrivée"
   return new Intl.DateTimeFormat('fr-FR', {
     day: 'numeric',
     month: 'long',
@@ -69,7 +60,9 @@ const listingRating = computed(() => props.listing.notes?.overall ?? props.listi
 const listingImage = computed(() => {
   const images = props.listing.medias?.images ?? []
   if (!images.length) return ''
-  const sorted = [...images].sort((a, b) => a.position - b.position)
+  const sorted = [
+    ...images,
+  ].sort((a, b) => a.position - b.position)
   return sorted[0]?.src ?? ''
 })
 </script>
@@ -86,7 +79,7 @@ const listingImage = computed(() => {
         class="cancel"
         @click="emit('cancel')"
       >
-        <ChevronLeft :size="16" />
+        <ChevronLeft :size="20" />
         Annuler
       </button>
     </div>
@@ -344,9 +337,7 @@ const listingImage = computed(() => {
         >
           Règles de base pour les voyageurs
         </button>
-        , Politique Airbnb de remplacement d'hébergement et de remboursement et je donne mon accord pour
-        qu'Airbnb débite mon mode de paiement si je suis responsable de dommages. Conditions de paiement entre vous et
-        Airbnb Payments Luxembourg S.A.
+        , Politique Airbnb de remplacement d'hébergement et de remboursement et je donne mon accord pour qu'Airbnb débite mon mode de paiement si je suis responsable de dommages. Conditions de paiement entre vous et Airbnb Payments Luxembourg S.A.
       </p>
       <p class="section-text">
         J'accepte également les

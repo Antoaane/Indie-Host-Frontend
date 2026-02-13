@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
-import { Grip, RefreshCw, Trash2 } from 'lucide-vue-next'
+import { Grip, Plus, RefreshCw, Trash2 } from 'lucide-vue-next'
 import type { RawMedias } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
@@ -212,9 +212,7 @@ function updateOverIndex() {
   const centerX = draggedRect ? pointerX - dragState.offsetX + draggedRect.width / 2 : pointerX
   const centerY = draggedRect ? pointerY - dragState.offsetY + draggedRect.height / 2 : pointerY
 
-  const directIndex = positions.findIndex((rect) =>
-    centerX >= rect.left && centerX <= rect.right && centerY >= rect.top && centerY <= rect.bottom,
-  )
+  const directIndex = positions.findIndex((rect) => centerX >= rect.left && centerX <= rect.right && centerY >= rect.top && centerY <= rect.bottom)
 
   if (directIndex >= 0) {
     dragState.overIndex = directIndex
@@ -253,9 +251,7 @@ function updateOverIndex() {
 function applyReorder(order: number[]) {
   if (!order.length) return
   const nextImages = order.map((idx) => orderedImages.value[idx]).filter(Boolean)
-  const selectionSnapshot = selectedIndices.value
-    .map((idx) => orderedImages.value[idx])
-    .filter(Boolean)
+  const selectionSnapshot = selectedIndices.value.map((idx) => orderedImages.value[idx]).filter(Boolean)
 
   setImages(normalizePositions(nextImages))
 
@@ -394,7 +390,7 @@ onBeforeUnmount(() => {
               aria-label="Remplacer les images sélectionnées"
               @click="openReplacePicker"
             >
-              <RefreshCw :size="16" />
+              <RefreshCw :size="20" />
             </button>
           </div>
           <div>
@@ -405,7 +401,7 @@ onBeforeUnmount(() => {
               aria-label="Supprimer les images sélectionnées"
               @click="deleteSelected"
             >
-              <Trash2 :size="16" />
+              <Trash2 :size="20" />
             </button>
           </div>
         </div>
@@ -453,7 +449,7 @@ onBeforeUnmount(() => {
               @pointerdown.stop.prevent="startDrag(index, $event)"
               @click.stop.prevent
             >
-              <Grip :size="32" />
+              <Grip :size="20" />
             </button>
           </div>
         </div>
@@ -465,7 +461,7 @@ onBeforeUnmount(() => {
               :aria-label="panelContent.addLabel"
               @click="openFilePicker"
             >
-              +
+              <Plus :size="20" />
             </button>
           </div>
           <input

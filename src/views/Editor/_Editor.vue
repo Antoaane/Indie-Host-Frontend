@@ -2,6 +2,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 
 import EditorListings from '@/views/Editor/components/EditorListings/EditorListings.vue'
 import EditorSidebar from '@/views/Editor/components/EditorSidebar/EditorSidebar.vue'
@@ -21,6 +22,7 @@ const props = defineProps<{
   mode: EditorMode
   source: EditorSource
 }>()
+const route = useRoute()
 
 const stage = ref<EditorStage>('listings')
 const selectedListingId = ref<string | null>(null)
@@ -66,16 +68,21 @@ function mergeDraftPatch(base: DraftPatch | null, patch: DraftPatch): DraftPatch
     if (Array.isArray(source)) return source
     if (typeof source !== 'object') return source
 
-    const baseValue = (target && typeof target === 'object' && !Array.isArray(target)) ? target : {}
+    const baseValue = target && typeof target === 'object' && !Array.isArray(target) ? target : {}
     const merged: Record<string, any> = { ...baseValue }
 
-    Object.entries(source as Record<string, any>).forEach(([key, value]) => {
-      if (Array.isArray(value) || value === null || typeof value !== 'object') {
-        merged[key] = value
-      } else {
-        merged[key] = mergeDeep(baseValue[key], value)
-      }
-    })
+    Object.entries(source as Record<string, any>).forEach(
+      ([
+        key,
+        value,
+      ]) => {
+        if (Array.isArray(value) || value === null || typeof value !== 'object') {
+          merged[key] = value
+        } else {
+          merged[key] = mergeDeep(baseValue[key], value)
+        }
+      },
+    )
 
     return merged
   }
@@ -213,16 +220,21 @@ function applyDraftPatch(patch: DraftPatch) {
       if (Array.isArray(source)) return source
       if (typeof source !== 'object') return source
 
-      const baseValue = (target && typeof target === 'object' && !Array.isArray(target)) ? target : {}
+      const baseValue = target && typeof target === 'object' && !Array.isArray(target) ? target : {}
       const merged: Record<string, any> = { ...baseValue }
 
-      Object.entries(source as Record<string, any>).forEach(([key, value]) => {
-        if (Array.isArray(value) || value === null || typeof value !== 'object') {
-          merged[key] = value
-        } else {
-          merged[key] = mergeDeep(baseValue[key], value)
-        }
-      })
+      Object.entries(source as Record<string, any>).forEach(
+        ([
+          key,
+          value,
+        ]) => {
+          if (Array.isArray(value) || value === null || typeof value !== 'object') {
+            merged[key] = value
+          } else {
+            merged[key] = mergeDeep(baseValue[key], value)
+          }
+        },
+      )
 
       return merged
     }
@@ -245,6 +257,12 @@ function resetVolatileCache() {
   Object.keys(volatileCache).forEach((key) => {
     delete volatileCache[key]
   })
+}
+
+function normalizeQueryParam(value: unknown): string | null {
+  if (Array.isArray(value)) return normalizeQueryParam(value[0])
+  if (typeof value === 'string' && value.trim()) return value.trim()
+  return null
 }
 
 async function loadListings() {
@@ -335,7 +353,9 @@ async function initializeEditorState() {
 
   const current = selectedListingId.value
   const hasCurrent = current ? listings.value.some((item) => item.listingId === current) : false
-  const nextId = hasCurrent ? current : (listings.value[0]?.listingId ?? null)
+  const routeListingId = normalizeQueryParam(route.query.listingId)
+  const hasRouteListing = routeListingId ? listings.value.some((item) => item.listingId === routeListingId) : false
+  const nextId = hasRouteListing ? routeListingId : hasCurrent ? current : (listings.value[0]?.listingId ?? null)
 
   if (nextId) {
     await handleSelectListing(nextId, { force: true })
@@ -380,6 +400,17 @@ watch(selectedListingId, (id) => {
     stage.value = 'listings'
   }
 })
+
+watch(
+  () => route.query.listingId,
+  (value) => {
+    const listingId = normalizeQueryParam(value)
+    if (!listingId) return
+    if (!listings.value.some((item) => item.listingId === listingId)) return
+    if (listingId === selectedListingId.value && draft.value) return
+    void handleSelectListing(listingId)
+  },
+)
 
 onBeforeUnmount(() => {
   void flushPatchQueue()

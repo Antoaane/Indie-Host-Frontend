@@ -9,14 +9,7 @@ import { makeIsDateDisabled } from '@/components/DatePicker/utils/range'
 import DatePicker from '@/components/DatePicker/DatePicker.vue'
 import RelativeOverlay from '@/components/overlays/RelativeOverlay.vue'
 import { getListingsController } from '@/domain/listings/controller'
-import {
-  deriveBookedDaysFromReservations,
-  getSynchronizedBookedDays,
-  nightsBetween,
-  normalizeBookedDay,
-  normalizeBookedDays,
-  normalizeReservations,
-} from '@/domain/listings/bookings'
+import { deriveBookedDaysFromReservations, getSynchronizedBookedDays, nightsBetween, normalizeBookedDay, normalizeBookedDays, normalizeReservations } from '@/domain/listings/bookings'
 import type { RawBookingReservation, RawBookings, UserListingCard } from '@/domain/listings/types'
 
 import { type OccupantCounts } from '@/views/ListingView/components/Booking/utils/labels'
@@ -179,9 +172,7 @@ function sanitizeIdPart(value: string) {
 
 function createReservationId(listingId: string, start: string, end: string) {
   const base = sanitizeIdPart(listingId.trim() || 'listing')
-  const suffix = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-    ? crypto.randomUUID().slice(0, 8)
-    : Date.now().toString(36)
+  const suffix = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID().slice(0, 8) : Date.now().toString(36)
   return `reservation-${base}-${start}-${end}-${suffix}`
 }
 
@@ -219,11 +210,7 @@ function resolveDepositAmount(total: number, bookings?: Partial<RawBookings> | n
   return Math.round(total * 0.3)
 }
 
-function buildLegacyReservationFromRange(
-  listingId: string,
-  range: RangeISO,
-  bookings?: Partial<RawBookings> | null,
-) {
+function buildLegacyReservationFromRange(listingId: string, range: RangeISO, bookings?: Partial<RawBookings> | null) {
   const stayNights = Math.max(1, nightsBetween(range.start, range.end))
   const total = Math.max(0, Math.round((Number(bookings?.price ?? 0) || 0) * stayNights + sumFees(bookings)))
   const deposit = resolveDepositAmount(total, bookings)
@@ -255,14 +242,13 @@ function buildLegacyReservationFromRange(
   ])[0]
 }
 
-function mergeReservationsWithBookedDays(
-  listingId: string,
-  bookings?: Partial<RawBookings> | null,
-) {
+function mergeReservationsWithBookedDays(listingId: string, bookings?: Partial<RawBookings> | null) {
   const reservations = normalizeReservations(bookings?.reservations)
   const ranges = normalizeBookedDays(bookings?.['booked-days'])
   const knownRanges = new Set(reservations.map((reservation) => `${reservation.start}__${reservation.end}`))
-  const merged = [...reservations]
+  const merged = [
+    ...reservations,
+  ]
 
   for (const range of ranges) {
     const key = `${range.start}__${range.end}`
@@ -276,11 +262,7 @@ function mergeReservationsWithBookedDays(
   return normalizeReservations(merged)
 }
 
-function buildReservationFromForm(
-  listingId: string,
-  range: RangeISO,
-  bookings?: Partial<RawBookings> | null,
-): RawBookingReservation {
+function buildReservationFromForm(listingId: string, range: RangeISO, bookings?: Partial<RawBookings> | null): RawBookingReservation {
   const stayNights = Math.max(1, nightsBetween(range.start, range.end))
   const total = Math.max(0, Math.round((Number(bookings?.price ?? 0) || 0) * stayNights + sumFees(bookings)))
   const deposit = resolveDepositAmount(total, bookings)
@@ -297,7 +279,9 @@ function buildReservationFromForm(
     ...(email ? { email } : {}),
   }
 
-  const [reservation] = normalizeReservations([
+  const [
+    reservation,
+  ] = normalizeReservations([
     {
       id: createReservationId(listingId, range.start, range.end),
       start: range.start,
@@ -373,7 +357,10 @@ async function submit() {
     }
 
     const createdReservation = buildReservationFromForm(listingId, normalizedSelection, currentBookings)
-    const nextReservations = normalizeReservations([...currentReservations, createdReservation])
+    const nextReservations = normalizeReservations([
+      ...currentReservations,
+      createdReservation,
+    ])
     const nextBookedDays = deriveBookedDaysFromReservations(nextReservations)
 
     const bookingsPatch: Partial<RawBookings> = {
@@ -493,249 +480,249 @@ onMounted(() => {
     @close="emit('close')"
   >
     <div class="panel">
-          <div class="header">
-            <h3>Nouvelle r&eacute;servation</h3>
-            <button
-              type="button"
-              class="close"
-              aria-label="Fermer"
-              @click="emit('close')"
+      <div class="header">
+        <h3>Nouvelle r&eacute;servation</h3>
+        <button
+          type="button"
+          class="close"
+          aria-label="Fermer"
+          @click="emit('close')"
+        >
+          <X :size="20" />
+        </button>
+      </div>
+
+      <div class="fields">
+        <label class="field">
+          <select
+            v-model="selectedListingId"
+            :disabled="listingsStatus.isLoading || !listings.length"
+            aria-label="Annonce"
+          >
+            <option
+              value=""
+              disabled
             >
-              <X :size="16" />
-            </button>
-          </div>
+              Choisir une annonce
+            </option>
+            <option
+              v-for="listing in listings"
+              :key="listing.listingId"
+              :value="listing.listingId"
+            >
+              {{ listing.title }}
+            </option>
+          </select>
+        </label>
+        <label class="field">
+          <input
+            v-model="form.firstName"
+            type="text"
+            placeholder="Pr&eacute;nom"
+            autocomplete="given-name"
+            v-bind="passwordManagerIgnoreAttrs"
+          />
+        </label>
+        <label class="field">
+          <input
+            v-model="form.lastName"
+            type="text"
+            placeholder="Nom"
+            autocomplete="family-name"
+            v-bind="passwordManagerIgnoreAttrs"
+          />
+        </label>
+        <label class="field">
+          <input
+            v-model="form.phone"
+            type="tel"
+            placeholder="Num&eacute;ro de t&eacute;l"
+            autocomplete="tel"
+            v-bind="passwordManagerIgnoreAttrs"
+          />
+        </label>
+        <label class="field">
+          <input
+            v-model="form.email"
+            type="email"
+            placeholder="Adresse e-mail"
+            autocomplete="email"
+            v-bind="passwordManagerIgnoreAttrs"
+          />
+        </label>
+        <label class="field">
+          <textarea
+            v-model="form.notes"
+            rows="3"
+            placeholder="Informations additionnelles"
+            v-bind="passwordManagerIgnoreAttrs"
+          />
+        </label>
+      </div>
 
-          <div class="fields">
-            <label class="field">
-              <select
-                v-model="selectedListingId"
-                :disabled="listingsStatus.isLoading || !listings.length"
-                aria-label="Annonce"
-              >
-                <option
-                  value=""
-                  disabled
-                >
-                  Choisir une annonce
-                </option>
-                <option
-                  v-for="listing in listings"
-                  :key="listing.listingId"
-                  :value="listing.listingId"
-                >
-                  {{ listing.title }}
-                </option>
-              </select>
-            </label>
-            <label class="field">
-              <input
-                v-model="form.firstName"
-                type="text"
-                placeholder="Pr&eacute;nom"
-                autocomplete="given-name"
-                v-bind="passwordManagerIgnoreAttrs"
-              />
-            </label>
-            <label class="field">
-              <input
-                v-model="form.lastName"
-                type="text"
-                placeholder="Nom"
-                autocomplete="family-name"
-                v-bind="passwordManagerIgnoreAttrs"
-              />
-            </label>
-            <label class="field">
-              <input
-                v-model="form.phone"
-                type="tel"
-                placeholder="Num&eacute;ro de t&eacute;l"
-                autocomplete="tel"
-                v-bind="passwordManagerIgnoreAttrs"
-              />
-            </label>
-            <label class="field">
-              <input
-                v-model="form.email"
-                type="email"
-                placeholder="Adresse e-mail"
-                autocomplete="email"
-                v-bind="passwordManagerIgnoreAttrs"
-              />
-            </label>
-            <label class="field">
-              <textarea
-                v-model="form.notes"
-                rows="3"
-                placeholder="Informations additionnelles"
-                v-bind="passwordManagerIgnoreAttrs"
-              />
-            </label>
+      <section class="section">
+        <h4>Dur&eacute;e du s&eacute;jour</h4>
+        <div class="listing-checkout-dates is-inline">
+          <div class="calendar">
+            <DatePicker
+              v-model:model-value="selection"
+              :disabled-dates="bookedRanges"
+              :numberOfMonths="2"
+            />
           </div>
+        </div>
+      </section>
 
-          <section class="section">
-            <h4>Dur&eacute;e du s&eacute;jour</h4>
-            <div class="listing-checkout-dates is-inline">
-              <div class="calendar">
-                <DatePicker
-                  v-model:model-value="selection"
-                  :disabled-dates="bookedRanges"
-                  :numberOfMonths="2"
-                />
+      <section class="section">
+        <h4>Nombre de voyageurs</h4>
+        <div class="listing-checkout-guests is-inline">
+          <div class="dropdown">
+            <div class="item">
+              <div>
+                <p>Adultes</p>
+                <small>13 ans et plus</small>
+              </div>
+              <div class="counter">
+                <button
+                  type="button"
+                  aria-label="Retirer un adulte"
+                  :disabled="occupants.adults <= 1"
+                  @click="updateCount('adults', -1)"
+                >
+                  <Minus :size="20" />
+                </button>
+                <span>{{ occupants.adults }}</span>
+                <button
+                  type="button"
+                  aria-label="Ajouter un adulte"
+                  @click="updateCount('adults', 1)"
+                >
+                  <Plus :size="20" />
+                </button>
               </div>
             </div>
-          </section>
 
-          <section class="section">
-            <h4>Nombre de voyageurs</h4>
-            <div class="listing-checkout-guests is-inline">
-              <div class="dropdown">
-                <div class="item">
-                  <div>
-                    <p>Adultes</p>
-                    <small>13 ans et plus</small>
-                  </div>
-                  <div class="counter">
-                    <button
-                      type="button"
-                      aria-label="Retirer un adulte"
-                      :disabled="occupants.adults <= 1"
-                      @click="updateCount('adults', -1)"
-                    >
-                      <Minus :size="16" />
-                    </button>
-                    <span>{{ occupants.adults }}</span>
-                    <button
-                      type="button"
-                      aria-label="Ajouter un adulte"
-                      @click="updateCount('adults', 1)"
-                    >
-                      <Plus :size="16" />
-                    </button>
-                  </div>
-                </div>
-
-                <div class="item">
-                  <div>
-                    <p>Enfants</p>
-                    <small>2 &agrave; 12 ans</small>
-                  </div>
-                  <div class="counter">
-                    <button
-                      type="button"
-                      aria-label="Retirer un enfant"
-                      :disabled="occupants.children <= 0"
-                      @click="updateCount('children', -1)"
-                    >
-                      <Minus :size="16" />
-                    </button>
-                    <span>{{ occupants.children }}</span>
-                    <button
-                      type="button"
-                      aria-label="Ajouter un enfant"
-                      @click="updateCount('children', 1)"
-                    >
-                      <Plus :size="16" />
-                    </button>
-                  </div>
-                </div>
-
-                <div class="item">
-                  <div>
-                    <p>B&eacute;b&eacute;s</p>
-                    <small>Moins de 2 ans</small>
-                  </div>
-                  <div class="counter">
-                    <button
-                      type="button"
-                      aria-label="Retirer un b&eacute;b&eacute;"
-                      :disabled="occupants.babies <= 0"
-                      @click="updateCount('babies', -1)"
-                    >
-                      <Minus :size="16" />
-                    </button>
-                    <span>{{ occupants.babies }}</span>
-                    <button
-                      type="button"
-                      aria-label="Ajouter un b&eacute;b&eacute;"
-                      @click="updateCount('babies', 1)"
-                    >
-                      <Plus :size="16" />
-                    </button>
-                  </div>
-                </div>
-
-                <div class="item">
-                  <div>
-                    <p>Animaux</p>
-                    <small>Chien, chat...</small>
-                  </div>
-                  <div class="counter">
-                    <button
-                      type="button"
-                      aria-label="Retirer un animal"
-                      :disabled="occupants.animals <= 0"
-                      @click="updateCount('animals', -1)"
-                    >
-                      <Minus :size="16" />
-                    </button>
-                    <span>{{ occupants.animals }}</span>
-                    <button
-                      type="button"
-                      aria-label="Ajouter un animal"
-                      @click="updateCount('animals', 1)"
-                    >
-                      <Plus :size="16" />
-                    </button>
-                  </div>
-                </div>
-
-                <div class="item">
-                  <div>
-                    <p>Personnes PMR</p>
-                    <small>Besoin d'am&eacute;nagement</small>
-                  </div>
-                  <div class="counter">
-                    <button
-                      type="button"
-                      aria-label="Retirer une personne PMR"
-                      :disabled="occupants.pmr <= 0"
-                      @click="updateCount('pmr', -1)"
-                    >
-                      <Minus :size="16" />
-                    </button>
-                    <span>{{ occupants.pmr }}</span>
-                    <button
-                      type="button"
-                      aria-label="Ajouter une personne PMR"
-                      @click="updateCount('pmr', 1)"
-                    >
-                      <Plus :size="16" />
-                    </button>
-                  </div>
-                </div>
+            <div class="item">
+              <div>
+                <p>Enfants</p>
+                <small>2 &agrave; 12 ans</small>
+              </div>
+              <div class="counter">
+                <button
+                  type="button"
+                  aria-label="Retirer un enfant"
+                  :disabled="occupants.children <= 0"
+                  @click="updateCount('children', -1)"
+                >
+                  <Minus :size="20" />
+                </button>
+                <span>{{ occupants.children }}</span>
+                <button
+                  type="button"
+                  aria-label="Ajouter un enfant"
+                  @click="updateCount('children', 1)"
+                >
+                  <Plus :size="20" />
+                </button>
               </div>
             </div>
-          </section>
 
-          <div class="actions">
-            <p
-              v-if="submitStatus.error"
-              class="status error"
-            >
-              {{ submitStatus.error }}
-            </p>
-            <div class="btn-primary__black__full">
-              <button
-                type="button"
-                :disabled="!canSubmit"
-                @click="submit"
-              >
-                {{ submitStatus.isSaving ? 'Ajout en cours...' : 'Ajouter une r&eacute;servation' }}
-              </button>
+            <div class="item">
+              <div>
+                <p>B&eacute;b&eacute;s</p>
+                <small>Moins de 2 ans</small>
+              </div>
+              <div class="counter">
+                <button
+                  type="button"
+                  aria-label="Retirer un b&eacute;b&eacute;"
+                  :disabled="occupants.babies <= 0"
+                  @click="updateCount('babies', -1)"
+                >
+                  <Minus :size="20" />
+                </button>
+                <span>{{ occupants.babies }}</span>
+                <button
+                  type="button"
+                  aria-label="Ajouter un b&eacute;b&eacute;"
+                  @click="updateCount('babies', 1)"
+                >
+                  <Plus :size="20" />
+                </button>
+              </div>
+            </div>
+
+            <div class="item">
+              <div>
+                <p>Animaux</p>
+                <small>Chien, chat...</small>
+              </div>
+              <div class="counter">
+                <button
+                  type="button"
+                  aria-label="Retirer un animal"
+                  :disabled="occupants.animals <= 0"
+                  @click="updateCount('animals', -1)"
+                >
+                  <Minus :size="20" />
+                </button>
+                <span>{{ occupants.animals }}</span>
+                <button
+                  type="button"
+                  aria-label="Ajouter un animal"
+                  @click="updateCount('animals', 1)"
+                >
+                  <Plus :size="20" />
+                </button>
+              </div>
+            </div>
+
+            <div class="item">
+              <div>
+                <p>Personnes PMR</p>
+                <small>Besoin d'am&eacute;nagement</small>
+              </div>
+              <div class="counter">
+                <button
+                  type="button"
+                  aria-label="Retirer une personne PMR"
+                  :disabled="occupants.pmr <= 0"
+                  @click="updateCount('pmr', -1)"
+                >
+                  <Minus :size="20" />
+                </button>
+                <span>{{ occupants.pmr }}</span>
+                <button
+                  type="button"
+                  aria-label="Ajouter une personne PMR"
+                  @click="updateCount('pmr', 1)"
+                >
+                  <Plus :size="20" />
+                </button>
+              </div>
             </div>
           </div>
         </div>
+      </section>
+
+      <div class="actions">
+        <p
+          v-if="submitStatus.error"
+          class="status error"
+        >
+          {{ submitStatus.error }}
+        </p>
+        <div class="btn-primary__black__full">
+          <button
+            type="button"
+            :disabled="!canSubmit"
+            @click="submit"
+          >
+            {{ submitStatus.isSaving ? 'Ajout en cours...' : 'Ajouter une r&eacute;servation' }}
+          </button>
+        </div>
+      </div>
+    </div>
   </RelativeOverlay>
 </template>
 

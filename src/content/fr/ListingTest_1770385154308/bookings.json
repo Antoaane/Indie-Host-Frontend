@@ -596,7 +596,26 @@
         "phone": "+33 6 42 10 20 30",
         "email": "romain.rousset20@example.com"
       },
-      "createdAt": "2026-01-16T09:30:00Z"
+      "createdAt": "2026-01-16T09:30:00Z",
+      "messaging": {
+        "conversationId": "default-listing::reservation-listingtest_1770385154308-2026-01",
+        "messages": [
+          {
+            "id": "seed-reservation-listingtest_1770385154308-2026-01",
+            "author": "guest",
+            "body": "Week-end entre amis, logement ideal pour nous. Hote reactive, merci.",
+            "sentAt": "2026-01-16T09:30:00.000Z",
+            "state": "read"
+          },
+          {
+            "id": "message-reservation-listingtest_1770385154308-2026-01-3a4ee49e",
+            "author": "host",
+            "body": "pas de soucis !",
+            "sentAt": "2026-02-13T16:36:19.438Z",
+            "state": "sent"
+          }
+        ]
+      }
     },
     {
       "id": "reservation-listingtest_1770385154308-2026-past-03",

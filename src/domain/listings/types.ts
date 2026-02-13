@@ -29,6 +29,19 @@ export type RawReservationPayment = {
   status: 'paid' | 'pending'
   method: string
 }
+export type RawReservationMessageState = 'sent' | 'delivered' | 'read'
+export type RawReservationMessageAuthor = 'host' | 'guest'
+export type RawReservationMessage = {
+  id: string
+  author: RawReservationMessageAuthor
+  body: string
+  sentAt: string
+  state: RawReservationMessageState
+}
+export type RawReservationMessaging = {
+  conversationId?: string
+  messages: RawReservationMessage[]
+}
 export type RawBookingReservation = {
   id: string
   start: string
@@ -46,6 +59,7 @@ export type RawBookingReservation = {
     email?: string
   }
   createdAt?: string
+  messaging?: RawReservationMessaging
 }
 export type RawBookings = Omit<RawBookingsBase, 'booked-days' | 'reservations'> & {
   'booked-days': RawBookedDay[]

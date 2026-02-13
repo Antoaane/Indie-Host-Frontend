@@ -104,7 +104,7 @@ const isActive = (id: string) => activeHash.value === `#${id}`
 
     &.is-active {
       color: $secondary;
-      background-color: rgba($secondary, 0.06);
+      background-color: $accent-surface-2;
       box-shadow: inset 0 0 0 1px rgba($secondary, 0.08);
     }
 

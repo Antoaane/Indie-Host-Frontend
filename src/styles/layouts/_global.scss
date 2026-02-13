@@ -147,7 +147,7 @@ ul {
 
 //   /* Le "thumb" (curseur qu’on déplace) */
 //   ::-webkit-scrollbar-thumb {
-//     background: rgba($secondary, 0.6);
+//     background: $accent-surface-4;
 //     border-radius: borders.$rounded;
 //     border: 2px solid $translucent;
 //     /* crée un effet d’espace autour */
@@ -155,7 +155,7 @@ ul {
 
 //   /* Changement au survol */
 //   ::-webkit-scrollbar-thumb:hover {
-//     background: rgba($secondary, 0.8);
+//     background: $accent-surface-5;
 //   }
 
 //   /* Optionnel : boutons de défilement */

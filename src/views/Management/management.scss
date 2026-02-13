@@ -79,8 +79,12 @@
   }
 
   .icon-btn {
-    --button-icon-size: 40px;
     @include buttons.primary($theme: white, $icon-only: true, $deep: true);
+
+    >* {
+      width: 40px;
+      height: 40px;
+    }
 
     &.is-active {
       >button {
@@ -123,7 +127,7 @@
       height: 52px;
       border-radius: 50%;
       overflow: hidden;
-      background: rgba($secondary, 0.08);
+      background: $accent-surface-2;
       display: grid;
       place-items: center;
       font-weight: 700;
@@ -162,7 +166,7 @@
     padding: var(--layout-gap-md);
     border-radius: borders.$rounded-lg;
     border: 1px solid rgba($secondary, 0.08);
-    background: rgba($secondary, 0.02);
+    background: $accent-surface-0;
     display: flex;
     flex-direction: column;
     gap: var(--layout-gap-sm);

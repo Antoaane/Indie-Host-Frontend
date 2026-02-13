@@ -1,12 +1,6 @@
 // File: src/domain/listings/bookings.ts
 
-import type {
-  RawBookedDay,
-  RawBookingReservation,
-  RawBookings,
-  RawReservationGuests,
-  RawReservationPayment,
-} from '@/domain/listings/types'
+import type { RawBookedDay, RawBookingReservation, RawBookings, RawReservationMessage, RawReservationMessageAuthor, RawReservationMessaging, RawReservationMessageState, RawReservationGuests, RawReservationPayment } from '@/domain/listings/types'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -24,9 +18,20 @@ function isNonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0
 }
 
+function toIsoDateTime(value: unknown): string | null {
+  if (!isNonEmptyString(value)) return null
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return null
+  return date.toISOString()
+}
+
 export function toUtcDay(iso?: string): number | null {
   if (!isNonEmptyString(iso)) return null
-  const [year, month, day] = iso.split('-').map(Number)
+  const [
+    year,
+    month,
+    day,
+  ] = iso.split('-').map(Number)
   if (!year || !month || !day) return null
   return Date.UTC(year, month - 1, day)
 }
@@ -81,10 +86,7 @@ function normalizeGuests(input: Partial<RawReservationGuests> | null | undefined
   }
 }
 
-function normalizePayment(
-  input: Partial<RawReservationPayment> | null | undefined,
-  fallbackTotal: number,
-): RawReservationPayment {
+function normalizePayment(input: Partial<RawReservationPayment> | null | undefined, fallbackTotal: number): RawReservationPayment {
   const total = Math.max(0, Number.isFinite(Number(input?.total)) ? Number(input?.total) : fallbackTotal)
   const fallbackDeposit = Math.round(total * 0.3)
   const rawDeposit = Number.isFinite(Number(input?.deposit)) ? Number(input?.deposit) : fallbackDeposit
@@ -103,10 +105,59 @@ function normalizePayment(
   }
 }
 
-export function normalizeReservation(
-  input: Partial<RawBookingReservation> | null | undefined,
-  index = 0,
-): RawBookingReservation | null {
+function normalizeMessageAuthor(value: unknown): RawReservationMessageAuthor {
+  return value === 'guest' ? 'guest' : 'host'
+}
+
+function normalizeMessageState(value: unknown): RawReservationMessageState {
+  if (value === 'read') return 'read'
+  if (value === 'delivered') return 'delivered'
+  return 'sent'
+}
+
+function normalizeMessage(input: Partial<RawReservationMessage> | null | undefined, index: number, fallbackSentAt?: string): RawReservationMessage | null {
+  if (!input || typeof input !== 'object') return null
+  const body = isNonEmptyString(input.body) ? input.body.trim() : ''
+  if (!body) return null
+
+  const sentAt = toIsoDateTime(input.sentAt) ?? toIsoDateTime(fallbackSentAt) ?? null
+  if (!sentAt) return null
+
+  const id = isNonEmptyString(input.id) ? input.id.trim() : `message-${index + 1}-${sentAt}`
+
+  return {
+    id,
+    author: normalizeMessageAuthor(input.author),
+    body,
+    sentAt,
+    state: normalizeMessageState(input.state),
+  }
+}
+
+function normalizeMessaging(input: Partial<RawReservationMessaging> | null | undefined, createdAt?: string): RawReservationMessaging | undefined {
+  if (!input || typeof input !== 'object') return undefined
+  const fallbackSentAt = toIsoDateTime(createdAt) ?? undefined
+  const rawMessages = Array.isArray(input.messages) ? input.messages : []
+  const messages = rawMessages
+    .map((item, index) => normalizeMessage(item as Partial<RawReservationMessage>, index, fallbackSentAt))
+    .filter((item): item is RawReservationMessage => item !== null)
+    .sort((a, b) => {
+      const aMs = Date.parse(a.sentAt)
+      const bMs = Date.parse(b.sentAt)
+      return aMs - bMs
+    })
+
+  const conversationId = isNonEmptyString(input.conversationId) ? input.conversationId.trim() : undefined
+
+  if (!messages.length && !conversationId) return undefined
+
+  return {
+    ...(conversationId ? { conversationId } : {}),
+    messages,
+  }
+}
+
+export function normalizeReservation(input: Partial<RawBookingReservation> | null | undefined, index = 0): RawBookingReservation | null {
   if (!input || typeof input !== 'object') return null
 
   const range = normalizeBookedDay({
@@ -123,19 +174,19 @@ export function normalizeReservation(
   const message = isNonEmptyString(input.message) ? input.message.trim() : ''
   const guests = normalizeGuests(input.guests)
   const payment = normalizePayment(input.payment, 0)
-  const id = isNonEmptyString(input.id)
-    ? input.id.trim()
-    : `reservation-${range.start}-${range.end}-${index + 1}`
+  const id = isNonEmptyString(input.id) ? input.id.trim() : `reservation-${range.start}-${range.end}-${index + 1}`
   const createdAt = isNonEmptyString(input.createdAt) ? input.createdAt.trim() : undefined
+  const messaging = normalizeMessaging(input.messaging, createdAt)
 
-  const contact = input.contact && typeof input.contact === 'object'
-    ? {
-      firstName: isNonEmptyString(input.contact.firstName) ? input.contact.firstName.trim() : undefined,
-      lastName: isNonEmptyString(input.contact.lastName) ? input.contact.lastName.trim() : undefined,
-      phone: isNonEmptyString(input.contact.phone) ? input.contact.phone.trim() : undefined,
-      email: isNonEmptyString(input.contact.email) ? input.contact.email.trim() : undefined,
-    }
-    : undefined
+  const contact =
+    input.contact && typeof input.contact === 'object'
+      ? {
+          firstName: isNonEmptyString(input.contact.firstName) ? input.contact.firstName.trim() : undefined,
+          lastName: isNonEmptyString(input.contact.lastName) ? input.contact.lastName.trim() : undefined,
+          phone: isNonEmptyString(input.contact.phone) ? input.contact.phone.trim() : undefined,
+          email: isNonEmptyString(input.contact.email) ? input.contact.email.trim() : undefined,
+        }
+      : undefined
 
   return {
     id,
@@ -149,6 +200,7 @@ export function normalizeReservation(
     payment,
     ...(contact ? { contact } : {}),
     ...(createdAt ? { createdAt } : {}),
+    ...(messaging ? { messaging } : {}),
   }
 }
 
@@ -187,5 +239,8 @@ export function getSynchronizedBookedDays(bookings?: Partial<RawBookings> | null
   const fromBookedDays = normalizeBookedDays(bookings?.['booked-days'])
   if (!normalizedReservations.length) return fromBookedDays
   const fromReservations = deriveBookedDaysFromReservations(normalizedReservations)
-  return normalizeBookedDays([...fromReservations, ...fromBookedDays])
+  return normalizeBookedDays([
+    ...fromReservations,
+    ...fromBookedDays,
+  ])
 }

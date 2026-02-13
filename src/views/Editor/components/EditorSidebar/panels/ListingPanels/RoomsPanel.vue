@@ -2,6 +2,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { ChevronUp, Minus, Pencil, Plus, Trash2, X } from 'lucide-vue-next'
 import type { RawCore } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
@@ -24,10 +25,16 @@ const roomTypeOptions = panelContent.types
 const bedTypeOptions = panelContent.bedTypes
 
 const roomTypeLabels = Object.fromEntries(
-  roomTypeOptions.map((option) => [option.value, option.label]),
+  roomTypeOptions.map((option) => [
+    option.value,
+    option.label,
+  ]),
 ) as Record<string, string>
 const bedTypeCapacities = Object.fromEntries(
-  bedTypeOptions.map((option) => [option.value, option.capacity]),
+  bedTypeOptions.map((option) => [
+    option.value,
+    option.capacity,
+  ]),
 ) as Record<string, number>
 
 const collapsedRooms = ref<boolean[]>([])
@@ -64,7 +71,10 @@ function addRoom() {
     beds: [],
   } as RoomDraft)
   setRooms(next)
-  collapsedRooms.value = [...collapsedRooms.value, true]
+  collapsedRooms.value = [
+    ...collapsedRooms.value,
+    true,
+  ]
 }
 
 function removeRoom(index: number) {
@@ -130,7 +140,9 @@ function isRoomCollapsed(index: number) {
 }
 
 function toggleRoomCollapse(index: number, force?: boolean) {
-  const next = [...collapsedRooms.value]
+  const next = [
+    ...collapsedRooms.value,
+  ]
   const current = next[index] ?? true
   next[index] = typeof force === 'boolean' ? force : !current
   collapsedRooms.value = next
@@ -138,9 +150,7 @@ function toggleRoomCollapse(index: number, force?: boolean) {
 
 function roomLabel(room: RoomDraft, index: number) {
   const label = (room['room-name'] ?? '').trim()
-  return label
-    || roomTypeLabels[room.type ?? '']
-    || panelContent.roomLabelFallback.replace('{index}', String(index + 1))
+  return label || roomTypeLabels[room.type ?? ''] || panelContent.roomLabelFallback.replace('{index}', String(index + 1))
 }
 </script>
 
@@ -171,17 +181,19 @@ function roomLabel(room: RoomDraft, index: number) {
                 <div class="room-remove">
                   <button
                     type="button"
+                    aria-label="Supprimer la pièce"
                     @click="removeRoom(roomIndex)"
                   >
-                    🗑
+                    <Trash2 :size="20" />
                   </button>
                 </div>
                 <div class="room-toggle">
                   <button
                     type="button"
+                    aria-label="Modifier la pièce"
                     @click="toggleRoomCollapse(roomIndex, false)"
                   >
-                    ✎
+                    <Pencil :size="20" />
                   </button>
                 </div>
               </div>
@@ -190,9 +202,10 @@ function roomLabel(room: RoomDraft, index: number) {
               <div class="room-remove">
                 <button
                   type="button"
+                  aria-label="Supprimer la pièce"
                   @click="removeRoom(roomIndex)"
                 >
-                  ✕
+                  <X :size="20" />
                 </button>
               </div>
               <div class="input select room-select">
@@ -212,9 +225,10 @@ function roomLabel(room: RoomDraft, index: number) {
               <div class="room-toggle">
                 <button
                   type="button"
+                  aria-label="Replier la pièce"
                   @click="toggleRoomCollapse(roomIndex, true)"
                 >
-                  ▲
+                  <ChevronUp :size="20" />
                 </button>
               </div>
             </template>
@@ -235,9 +249,10 @@ function roomLabel(room: RoomDraft, index: number) {
                     <div class="btn">
                       <button
                         type="button"
+                        aria-label="Augmenter la quantité"
                         @click="updateBed(roomIndex, bedIndex, { quantity: (bed.quantity ?? 0) + 1 })"
                       >
-                        +
+                        <Plus :size="20" />
                       </button>
                     </div>
                     <input
@@ -250,9 +265,10 @@ function roomLabel(room: RoomDraft, index: number) {
                     <div class="btn">
                       <button
                         type="button"
+                        aria-label="Diminuer la quantité"
                         @click="updateBed(roomIndex, bedIndex, { quantity: Math.max(0, (bed.quantity ?? 0) - 1) })"
                       >
-                        −
+                        <Minus :size="20" />
                       </button>
                     </div>
                   </div>
@@ -275,9 +291,10 @@ function roomLabel(room: RoomDraft, index: number) {
                   <div class="remove">
                     <button
                       type="button"
+                      aria-label="Supprimer le lit"
                       @click="removeBed(roomIndex, bedIndex)"
                     >
-                      ✕
+                      <X :size="20" />
                     </button>
                   </div>
                 </div>

@@ -1,0 +1,192 @@
+/* File: src/views/CreateListing/create-listing.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/effects' as effects;
+
+.create-listing#create-listing-page {
+  height: 100vh;
+  background: linear-gradient(180deg, $accent-surface-2 0%, $accent-surface-1 100%);
+
+  @include min-width(lg) {
+    padding-top: $nav-height;
+    height: calc(100vh - $nav-height);
+  }
+
+  > .layout {
+    height: 100%;
+    max-width: 88rem;
+    margin: 0 auto;
+
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-sm);
+
+    @include layout-gap(padding, all, 1);
+
+    > .header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--layout-gap-sm);
+
+      > .step-title {
+        > p {
+          margin: 0;
+          color: rgba($secondary, 0.6);
+          @include little-text($thin: false);
+        }
+
+        > h1 {
+          margin: 0.15rem 0 0 0;
+          @include h2-title();
+        }
+
+        > small {
+          margin: 0.25rem 0 0 0;
+          display: block;
+          color: rgba($secondary, 0.75);
+          @include little-text($thin: false);
+        }
+      }
+    }
+
+    > .progress {
+      height: 0.4rem;
+      border-radius: borders.$rounded;
+      background: rgba($secondary, 0.12);
+      overflow: hidden;
+
+      > .bar {
+        height: 100%;
+        border-radius: borders.$rounded;
+        background: $secondary;
+        transition: width 220ms ease;
+      }
+    }
+
+    > .steps {
+      display: flex;
+      align-items: center;
+      gap: var(--layout-gap-xs);
+      overflow: auto;
+      scrollbar-width: none;
+      padding-bottom: 0.15rem;
+
+      > .step {
+        flex: 0 0 auto;
+        border: 1px solid rgba($secondary, 0.15);
+        border-radius: borders.$rounded;
+        background: $accent;
+        cursor: pointer;
+        padding: 0.4rem 0.75rem;
+        min-height: 2.35rem;
+
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        transition: 180ms ease;
+
+        > span {
+          width: 1.2rem;
+          height: 1.2rem;
+          border-radius: borders.$rounded;
+          display: grid;
+          place-items: center;
+          font-size: 0.75rem;
+          font-weight: 600;
+          background: rgba($secondary, 0.08);
+          color: rgba($secondary, 0.85);
+        }
+
+        > small {
+          font-size: 0.8rem;
+          font-weight: 500;
+          color: rgba($secondary, 0.75);
+        }
+
+        &.is-done {
+          border-color: rgba($secondary, 0.22);
+
+          > span {
+            background: rgba($secondary, 0.9);
+            color: $accent;
+          }
+        }
+
+        &.is-active {
+          border-color: rgba($secondary, 0.7);
+          background: $secondary;
+
+          > span {
+            background: rgba($accent, 0.95);
+            color: $secondary;
+          }
+
+          > small {
+            color: rgba($accent, 0.95);
+          }
+        }
+
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+      }
+    }
+
+    > .stage {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: hidden;
+      border-radius: borders.$rounded-xl;
+      background: rgba($accent, 0.55);
+      border: 1px solid rgba($secondary, 0.08);
+      @include effects.big-shadow();
+
+      > .slide {
+        height: 100%;
+        overflow: auto;
+        padding: var(--layout-gap-sm);
+
+        > * {
+          width: 100%;
+          max-width: 72rem;
+          margin: 0 auto;
+        }
+      }
+    }
+
+    > .error {
+      margin: 0;
+      color: rgba($bad, 0.95);
+      @include little-text($thin: false);
+    }
+
+    > .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--layout-gap-sm);
+      padding-bottom: var(--layout-gap-xs);
+    }
+  }
+}
+
+.create-slide-enter-active,
+.create-slide-leave-active {
+  transition:
+    opacity 180ms ease,
+    transform 220ms ease;
+}
+
+.create-slide-enter-from {
+  opacity: 0;
+  transform: translateX(24px);
+}
+
+.create-slide-leave-to {
+  opacity: 0;
+  transform: translateX(-24px);
+}

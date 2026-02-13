@@ -1,7 +1,7 @@
 // File: src/views/Management/utils/managementReservations.ts
 
 import { getSynchronizedBookedDays, normalizeReservations, nightsBetween } from '@/domain/listings/bookings'
-import type { RawBookingReservation, RawBookings, UserListingCard } from '@/domain/listings/types'
+import type { RawBookingReservation, RawBookings, RawReservationMessaging, UserListingCard } from '@/domain/listings/types'
 
 export type ReservationGuests = {
   adults: number
@@ -32,21 +32,22 @@ export type Reservation = {
   payment: ReservationPayment
   contact?: RawBookingReservation['contact']
   createdAt?: string
+  messaging?: RawReservationMessaging
 }
 
 function toDateMs(iso?: string): number {
   if (!iso) return 0
-  const [year, month, day] = iso.split('-').map(Number)
+  const [
+    year,
+    month,
+    day,
+  ] = iso.split('-').map(Number)
   if (!year || !month || !day) return 0
   return Date.UTC(year, month - 1, day)
 }
 
 function toUtcTodayMs(referenceDate = new Date()) {
-  return Date.UTC(
-    referenceDate.getUTCFullYear(),
-    referenceDate.getUTCMonth(),
-    referenceDate.getUTCDate(),
-  )
+  return Date.UTC(referenceDate.getUTCFullYear(), referenceDate.getUTCMonth(), referenceDate.getUTCDate())
 }
 
 function reservationDistanceToReference(reservation: Reservation, referenceMs: number) {
@@ -99,10 +100,7 @@ function normalizeGuests(input: Partial<ReservationGuests> | undefined): Reserva
   }
 }
 
-function normalizePayment(
-  input: Partial<ReservationPayment> | undefined,
-  fallbackTotal: number,
-): ReservationPayment {
+function normalizePayment(input: Partial<ReservationPayment> | undefined, fallbackTotal: number): ReservationPayment {
   const totalCandidate = Number(input?.total)
   const total = Math.max(0, Number.isFinite(totalCandidate) && totalCandidate > 0 ? totalCandidate : fallbackTotal)
 
@@ -123,13 +121,7 @@ function normalizePayment(
   }
 }
 
-function mapReservation(
-  reservation: RawBookingReservation,
-  listingId: string,
-  pricePerNight: number,
-  feesTotal: number,
-  fallbackIndex = 0,
-): Reservation {
+function mapReservation(reservation: RawBookingReservation, listingId: string, pricePerNight: number, feesTotal: number, fallbackIndex = 0): Reservation {
   const safeNights = Math.max(1, toNonNegativeInt(reservation.nights, nightsBetween(reservation.start, reservation.end) || 1))
   const fallbackTotal = Math.max(0, Math.round(pricePerNight * safeNights + feesTotal))
 
@@ -146,13 +138,11 @@ function mapReservation(
     payment: normalizePayment(reservation.payment, fallbackTotal),
     contact: reservation.contact,
     createdAt: reservation.createdAt,
+    messaging: reservation.messaging,
   }
 }
 
-function buildFallbackReservationsFromBookedDays(
-  listingId: string,
-  bookings?: Partial<RawBookings> | null,
-): Reservation[] {
+function buildFallbackReservationsFromBookedDays(listingId: string, bookings?: Partial<RawBookings> | null): Reservation[] {
   const bookedDays = getSynchronizedBookedDays(bookings)
   const pricePerNight = Number(bookings?.price ?? 0) || 0
   const feesTotal = sumFees(bookings)
@@ -181,24 +171,17 @@ function buildFallbackReservationsFromBookedDays(
 }
 
 export function sortReservationsByDate(reservations: Reservation[]): Reservation[] {
-  return [...reservations].sort((a, b) => toDateMs(b.end) - toDateMs(a.end))
+  return [
+    ...reservations,
+  ].sort((a, b) => toDateMs(b.end) - toDateMs(a.end))
 }
 
-export function buildReservationsForListing({
-  listing,
-  bookings,
-}: {
-  listing: UserListingCard
-  bookings?: Partial<RawBookings> | null
-}): Reservation[] {
+export function buildReservationsForListing({ listing, bookings }: { listing: UserListingCard; bookings?: Partial<RawBookings> | null }): Reservation[] {
   const normalized = normalizeReservations(bookings?.reservations)
   const pricePerNight = Number(bookings?.price ?? listing.pricePerNight ?? 0) || 0
   const feesTotal = sumFees(bookings)
 
-  const reservations = normalized.length
-    ? normalized.map((reservation, index) =>
-      mapReservation(reservation, listing.listingId, pricePerNight, feesTotal, index))
-    : buildFallbackReservationsFromBookedDays(listing.listingId, bookings)
+  const reservations = normalized.length ? normalized.map((reservation, index) => mapReservation(reservation, listing.listingId, pricePerNight, feesTotal, index)) : buildFallbackReservationsFromBookedDays(listing.listingId, bookings)
 
   return sortReservationsByDate(reservations)
 }
@@ -209,7 +192,10 @@ export function findLatestReservation(reservationsByListing: Record<string, Rese
 } | null {
   let latest: { listingId: string; reservation: Reservation } | null = null
 
-  for (const [listingId, reservations] of Object.entries(reservationsByListing)) {
+  for (const [
+    listingId,
+    reservations,
+  ] of Object.entries(reservationsByListing)) {
     for (const reservation of reservations) {
       if (!latest) {
         latest = { listingId, reservation }
@@ -231,10 +217,7 @@ export function findLatestReservationForListing(reservations: Reservation[]): Re
   return sorted[0] ?? null
 }
 
-export function findClosestReservationForListing(
-  reservations: Reservation[],
-  referenceDate = new Date(),
-): Reservation | null {
+export function findClosestReservationForListing(reservations: Reservation[], referenceDate = new Date()): Reservation | null {
   if (!reservations.length) return null
   const referenceMs = toUtcTodayMs(referenceDate)
 
@@ -254,7 +237,10 @@ export function findClosestReservation(
   const referenceMs = toUtcTodayMs(referenceDate)
   let closest: { listingId: string; reservation: Reservation } | null = null
 
-  for (const [listingId, reservations] of Object.entries(reservationsByListing)) {
+  for (const [
+    listingId,
+    reservations,
+  ] of Object.entries(reservationsByListing)) {
     for (const reservation of reservations) {
       if (!closest) {
         closest = { listingId, reservation }

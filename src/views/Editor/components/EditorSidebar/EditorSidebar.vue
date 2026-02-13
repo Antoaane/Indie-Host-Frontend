@@ -174,7 +174,6 @@ async function publishDraft() {
   > .footer {
     flex: 0 0 auto;
     padding: var(--layout-gap-sm) 0;
-    background: rgba($secondary, 0.04);
     border-top: 1px solid rgba($secondary, 0.08);
 
     > .actions {

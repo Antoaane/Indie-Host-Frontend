@@ -118,7 +118,7 @@
     padding: 0.5rem 0.75rem;
     border-radius: borders.$rounded-sm;
     border: 1px dashed rgba($secondary, 0.35);
-    background-color: rgba($secondary, 0.05);
+    background-color: $accent-surface-2;
     @include little-text($secondary, true);
 
     code {

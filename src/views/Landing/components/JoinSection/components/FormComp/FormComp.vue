@@ -133,7 +133,7 @@ const iconMap: Record<string, any> = { SendIcon }
           v-if="data.submit?.icon && iconMap[data.submit.icon]"
           :is="iconMap[data.submit.icon]"
           class="send-icon"
-          :size="16"
+          :size="20"
         />
       </button>
     </div>

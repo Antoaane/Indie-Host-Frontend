@@ -53,8 +53,6 @@
         }
       }
     }
-
-    >.heading {}
   }
 
   >.body {
@@ -109,14 +107,14 @@
             @include animations.transition;
 
             &:hover {
-              background-color: rgba($secondary, 0.3);
+              background-color: $translucent-surface-1;
               // border-radius: borders.$rounded-md;
 
               color: $secondary;
             }
 
             &:has(.cell-trigger[data-highlighted]) {
-              background-color: rgba($secondary, 0.1);
+              background-color: $translucent-surface-0;
               border-radius: 0;
             }
 
@@ -126,11 +124,11 @@
               border-top-left-radius: 0;
               border-bottom-left-radius: 0;
 
-              background-color: rgba($secondary, 0.1);
+              background-color: $translucent-surface-0;
             }
 
             &:has(.cell-trigger[data-selected="true"]) {
-              background-color: rgba($secondary, 0.1);
+              background-color: $translucent-surface-0;
               border-radius: 0;
             }
 
@@ -140,7 +138,7 @@
               border-top-right-radius: 0;
               border-bottom-right-radius: 0;
 
-              background-color: rgba($secondary, 0.1);
+              background-color: $translucent-surface-0;
             }
 
             &:has(.cell-trigger[data-selection-end="true"]) {
@@ -149,7 +147,7 @@
               border-top-left-radius: 0;
               border-bottom-left-radius: 0;
 
-              background-color: rgba($secondary, 0.1);
+              background-color: $translucent-surface-0;
             }
 
             &:has(.cell-trigger[data-outside-view]) {
@@ -173,14 +171,14 @@
               border-radius: 0;
 
               &[data-selection-start="true"] {
-                background-color: rgba($secondary, 1);
+                background-color: $secondary;
                 border-radius: borders.$rounded-md;
 
                 color: $accent;
               }
 
               &[data-selection-end="true"] {
-                background-color: rgba($secondary, 1);
+                background-color: $secondary;
                 border-radius: borders.$rounded-md;
 
                 color: $accent;

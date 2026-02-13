@@ -6,7 +6,8 @@ const LandingPage = () => import('@/views/Landing/_LandingPage.vue')
 const Listing = () => import('@/views/Listing/_Listing.vue')
 const ListingGuide = () => import('@/views/ListingGuide/_ListingGuide.vue')
 const EditorRoute = () => import('@/views/Editor/EditorRoute.vue')
-const MessagingView = () => import('@/views/Messaging/MessagingView.vue')
+const CreateListingRoute = () => import('@/views/CreateListing/CreateListingRoute.vue')
+const MessagingRoute = () => import('@/views/Messaging/MessagingRoute.vue')
 const ManagementRoute = () => import('@/views/Management/ManagementRoute.vue')
 
 const router = createRouter({
@@ -22,6 +23,7 @@ const router = createRouter({
       path: '/sign-in/:step(.*)*',
       name: 'sign-in',
       component: SignInView,
+      meta: { navVariant: 'public' },
     },
     {
       path: '/listing/:id?',
@@ -48,6 +50,18 @@ const router = createRouter({
       meta: { navVariant: 'host' },
     },
     {
+      path: '/editor/create',
+      name: 'create-listing',
+      component: CreateListingRoute,
+      meta: { navVariant: 'host' },
+    },
+    {
+      path: '/editor/:userId/create',
+      name: 'create-listing-user',
+      component: CreateListingRoute,
+      meta: { navVariant: 'host' },
+    },
+    {
       path: '/editor/:userId',
       name: 'editor-user',
       component: EditorRoute,
@@ -68,7 +82,14 @@ const router = createRouter({
     {
       path: '/messagerie',
       name: 'messaging',
-      component: MessagingView,
+      component: MessagingRoute,
+      meta: { navVariant: 'host' },
+    },
+    {
+      path: '/messagerie/:userId',
+      name: 'messaging-user',
+      component: MessagingRoute,
+      meta: { navVariant: 'host' },
     },
   ],
 })

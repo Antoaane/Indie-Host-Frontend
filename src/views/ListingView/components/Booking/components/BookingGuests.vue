@@ -61,7 +61,7 @@ const guestsLayer = ref<HTMLElement | null>(null)
               :disabled="occupants.adults <= 1"
               @click="props.updateCount('adults', -1)"
             >
-              <Minus :size="16" />
+              <Minus :size="20" />
             </button>
             <span>{{ occupants.adults }}</span>
             <button
@@ -69,7 +69,7 @@ const guestsLayer = ref<HTMLElement | null>(null)
               aria-label="Ajouter un adulte"
               @click="props.updateCount('adults', 1)"
             >
-              <Plus :size="16" />
+              <Plus :size="20" />
             </button>
           </div>
         </div>
@@ -86,7 +86,7 @@ const guestsLayer = ref<HTMLElement | null>(null)
               :disabled="occupants.children <= 0"
               @click="props.updateCount('children', -1)"
             >
-              <Minus :size="16" />
+              <Minus :size="20" />
             </button>
             <span>{{ occupants.children }}</span>
             <button
@@ -94,7 +94,7 @@ const guestsLayer = ref<HTMLElement | null>(null)
               aria-label="Ajouter un enfant"
               @click="props.updateCount('children', 1)"
             >
-              <Plus :size="16" />
+              <Plus :size="20" />
             </button>
           </div>
         </div>
@@ -111,7 +111,7 @@ const guestsLayer = ref<HTMLElement | null>(null)
               :disabled="occupants.babies <= 0"
               @click="props.updateCount('babies', -1)"
             >
-              <Minus :size="16" />
+              <Minus :size="20" />
             </button>
             <span>{{ occupants.babies }}</span>
             <button
@@ -119,7 +119,7 @@ const guestsLayer = ref<HTMLElement | null>(null)
               aria-label="Ajouter un bébé"
               @click="props.updateCount('babies', 1)"
             >
-              <Plus :size="16" />
+              <Plus :size="20" />
             </button>
           </div>
         </div>
@@ -136,7 +136,7 @@ const guestsLayer = ref<HTMLElement | null>(null)
               :disabled="occupants.animals <= 0"
               @click="props.updateCount('animals', -1)"
             >
-              <Minus :size="16" />
+              <Minus :size="20" />
             </button>
             <span>{{ occupants.animals }}</span>
             <button
@@ -144,7 +144,7 @@ const guestsLayer = ref<HTMLElement | null>(null)
               aria-label="Ajouter un animal"
               @click="props.updateCount('animals', 1)"
             >
-              <Plus :size="16" />
+              <Plus :size="20" />
             </button>
           </div>
         </div>
@@ -161,7 +161,7 @@ const guestsLayer = ref<HTMLElement | null>(null)
               :disabled="occupants.pmr <= 0"
               @click="props.updateCount('pmr', -1)"
             >
-              <Minus :size="16" />
+              <Minus :size="20" />
             </button>
             <span>{{ occupants.pmr }}</span>
             <button
@@ -169,7 +169,7 @@ const guestsLayer = ref<HTMLElement | null>(null)
               aria-label="Ajouter une personne PMR"
               @click="props.updateCount('pmr', 1)"
             >
-              <Plus :size="16" />
+              <Plus :size="20" />
             </button>
           </div>
         </div>

@@ -63,7 +63,7 @@
       display: flex;
       justify-content: space-between;
 
-      background: rgba($secondary, 0.04);
+      background: $accent-surface-1;
       border-radius: borders.$rounded-md;
 
       >.amount {

@@ -2,6 +2,7 @@
   "messaging": {
     "title": "Messagerie",
     "searchPlaceholder": "Rechercher une conversation",
+    "searchEmpty": "Aucune conversation ne correspond à votre recherche.",
     "labels": {
       "listing": "Annonce",
       "reservation": "Réservation",
@@ -21,6 +22,17 @@
     "emptyState": {
       "title": "Aucune conversation sélectionnée",
       "subtitle": "Choisissez une discussion pour afficher le fil des messages."
+    },
+    "options": {
+      "title": "Actions de conversation",
+      "openReservation": "Ouvrir la réservation",
+      "markRead": "Marquer comme lu",
+      "markUnread": "Marquer comme non lu"
+    },
+    "errors": {
+      "load": "Impossible de charger les conversations.",
+      "send": "Impossible d'envoyer le message.",
+      "update": "Impossible de mettre à jour la conversation."
     },
     "conversationStates": {
       "active": "En cours",

@@ -196,7 +196,7 @@ onMounted(() => {
         }
 
         &:hover {
-          background-color: rgba($secondary, 0.25);
+          background-color: $accent-surface-3;
         }
 
         &.ql-active {

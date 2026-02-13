@@ -81,7 +81,7 @@ onMounted(() => {
             >
               <p> Voir plus </p>
               <ChevronDown
-                :size="16"
+                :size="20"
                 class="chevron-down"
               />
             </div>

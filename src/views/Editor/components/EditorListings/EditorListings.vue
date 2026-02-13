@@ -2,6 +2,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useRoute } from 'vue-router'
 import { Camera, ChevronLeft, ChevronRight, Eye, Search } from 'lucide-vue-next'
 import type { Swiper as SwiperInstance } from 'swiper/types'
 import type { SwiperOptions } from 'swiper/types'
@@ -26,12 +27,20 @@ const emit = defineEmits<{
 }>()
 
 const query = ref('')
+const route = useRoute()
 const listingContent = editorStatic.listings
-const newListingRemaining = computed(() => (
-  listingContent.newListing.remaining
-    .replace('{count}', '3')
-    .replace('{max}', '6')
-))
+const newListingRemaining = computed(() => listingContent.newListing.remaining.replace('{count}', '3').replace('{max}', '6'))
+const createListingRoute = computed(() => {
+  const userId = route.params.userId
+  if (typeof userId === 'string' && userId.trim()) {
+    return {
+      name: 'create-listing-user',
+      params: { userId: userId.trim() },
+    }
+  }
+
+  return { name: 'create-listing' }
+})
 
 const filtered = computed(() => {
   const q = query.value.trim().toLowerCase()
@@ -192,8 +201,6 @@ function goToImageLabel(index: number) {
   return listingContent.carousel.goTo.replace('{index}', String(index))
 }
 
-console.log('props:', props)
-
 // const DRAFT_STORAGE_PREFIX = 'indiehost:listing-draft:'
 </script>
 
@@ -201,7 +208,10 @@ console.log('props:', props)
   <section class="editor-listings">
     <div class="toolbar">
       <div class="search">
-        <Search class="icon" />
+        <Search
+          class="icon"
+          :size="20"
+        />
         <input
           v-model="query"
           type="search"
@@ -257,19 +267,29 @@ console.log('props:', props)
                     class="nav is-prev"
                     type="button"
                     :aria-label="listingContent.carousel.prev"
-                    @click.stop="(event) => { handleSelect(listing.listingId); slidePrev(listing.listingId) }"
+                    @click.stop="
+                      (event) => {
+                        handleSelect(listing.listingId)
+                        slidePrev(listing.listingId)
+                      }
+                    "
                     @pointerdown.stop="handleSelect(listing.listingId)"
                   >
-                    <ChevronLeft :size="18" />
+                    <ChevronLeft :size="20" />
                   </button>
                   <button
                     class="nav is-next"
                     type="button"
                     :aria-label="listingContent.carousel.next"
-                    @click.stop="(event) => { handleSelect(listing.listingId); slideNext(listing.listingId) }"
+                    @click.stop="
+                      (event) => {
+                        handleSelect(listing.listingId)
+                        slideNext(listing.listingId)
+                      }
+                    "
                     @pointerdown.stop="handleSelect(listing.listingId)"
                   >
-                    <ChevronRight :size="18" />
+                    <ChevronRight :size="20" />
                   </button>
                   <div
                     class="dots"
@@ -284,7 +304,12 @@ console.log('props:', props)
                       :class="{ 'is-active': activeIndexFor(listing.listingId) === index }"
                       type="button"
                       :aria-label="goToImageLabel(index + 1)"
-                      @click.stop="(event) => { handleSelect(listing.listingId); slideTo(listing.listingId, index) }"
+                      @click.stop="
+                        (event) => {
+                          handleSelect(listing.listingId)
+                          slideTo(listing.listingId, index)
+                        }
+                      "
                       @pointerdown.stop="handleSelect(listing.listingId)"
                     />
                   </div>
@@ -297,7 +322,7 @@ console.log('props:', props)
               >
                 <Camera
                   class="icon"
-                  :size="54"
+                  :size="20"
                 />
               </div>
 
@@ -318,7 +343,7 @@ console.log('props:', props)
                     :aria-label="listingContent.previewLink"
                     @click.stop
                   >
-                    <Eye :size="18" />
+                    <Eye :size="20" />
                   </RouterLink>
                 </div>
               </div>
@@ -366,22 +391,19 @@ console.log('props:', props)
                 :aria-label="listingContent.previewLink"
                 @click.stop
               >
-                <Eye :size="18" />
+                <Eye :size="20" />
               </RouterLink>
             </div>
           </div> -->
         </article>
 
         <div class="new-card">
-          <button
-            type="button"
-            disabled
-          >
+          <RouterLink :to="createListingRoute">
             <div class="content">
               <span>{{ listingContent.newListing.title }}</span>
               <small>{{ newListingRemaining }}</small>
             </div>
-          </button>
+          </RouterLink>
         </div>
       </div>
     </div>

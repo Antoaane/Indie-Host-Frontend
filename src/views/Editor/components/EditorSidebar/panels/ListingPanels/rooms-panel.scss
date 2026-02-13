@@ -67,11 +67,9 @@
 
       .room-remove,
       .room-toggle {
-        --button-icon-size: 44px;
-
         >* {
-          font-size: 1.05rem;
-          font-weight: 700;
+          width: 44px;
+          height: 44px;
         }
       }
 
@@ -106,12 +104,11 @@
       }
 
       >.remove {
-        --button-icon-size: 40px;
         @include buttons.primary($theme: light, $icon-only: true);
 
         >* {
-          font-size: 1.05rem;
-          font-weight: 700;
+          width: 40px;
+          height: 40px;
         }
       }
     }

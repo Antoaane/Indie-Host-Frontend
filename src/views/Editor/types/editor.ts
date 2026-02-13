@@ -11,4 +11,5 @@ export type EditorSource = {
   fetchVolatileListingBundle: (listingId: string) => Promise<VolatileBundle>
   patchListingDraft: (listingId: string, patch: DraftPatch) => Promise<void>
   publishListingDraft: (listingId: string, draft: RawListingBundle) => Promise<void>
+  createListing: (payload?: Partial<RawListingBundle>) => Promise<{ listingId: string }>
 }

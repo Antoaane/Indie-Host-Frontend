@@ -231,7 +231,9 @@ onBeforeUnmount(() => {
 
 .absolute-overlay-enter-active,
 .absolute-overlay-leave-active {
-  transition: opacity 0.25s ease, transform 0.25s ease;
+  transition:
+    opacity 0.25s ease,
+    transform 0.25s ease;
   will-change: opacity, transform;
 }
 

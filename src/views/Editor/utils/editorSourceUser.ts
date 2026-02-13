@@ -27,5 +27,9 @@ export function createUserEditorSource(userId: string): EditorSource {
       console.log('[Editor][source][user] publishListingDraft', { listingId })
       return controller.publishListingDraft(listingId, draft)
     },
+    createListing: async (payload) => {
+      console.log('[Editor][source][user] createListing', { userId, payload })
+      return controller.createListing(payload)
+    },
   }
 }

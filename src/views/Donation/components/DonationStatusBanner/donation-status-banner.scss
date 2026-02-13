@@ -1,4 +1,4 @@
-/* File: src/views/Donation/components/DonationStatusBanner/DonationStatusBanner.scss */
+/* File: src/views/Donation/components/DonationStatusBanner/donation-status-banner.scss */
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
@@ -7,7 +7,7 @@
   padding: 1rem 1.5rem;
   border-radius: borders.$rounded-md;
   border: 1px solid rgba($secondary, 0.12);
-  background: rgba($secondary, 0.05);
+  background: $accent-surface-2;
   display: grid;
   gap: 0.25rem;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
@@ -32,7 +32,7 @@
 
   &--neutral {
     border-color: rgba($secondary, 0.12);
-    background: rgba($secondary, 0.05);
+    background: $accent-surface-2;
   }
 }
 
