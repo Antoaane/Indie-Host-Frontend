@@ -13,6 +13,7 @@ export type ListingsDataMode = 'local-json' | 'api'
 
 export type FetchListingsOptions = {
   userId?: string | null
+  includeDeleted?: boolean
 }
 
 export type ListingsController = {

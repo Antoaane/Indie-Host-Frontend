@@ -32,12 +32,18 @@ const props = withDefaults(
     fees?: FeeItem[]
     bookedDays?: BookedRange[]
     modelValue?: RangeISO | null
+    disabled?: boolean
+    disabledLabel?: string
+    disabledHint?: string
   }>(),
   {
     pricePerNight: 0,
     fees: () => [],
     bookedDays: () => [],
     modelValue: null,
+    disabled: false,
+    disabledLabel: undefined,
+    disabledHint: undefined,
   },
 )
 
@@ -170,6 +176,7 @@ function updateCount(key: OccupantKey, delta: number) {
 }
 
 function reserve() {
+  if (props.disabled) return
   if (!selection.value?.start || !selection.value?.end || !nights.value) {
     calendarOpen.value = true
     return
@@ -234,6 +241,9 @@ function reserve() {
 
       <BookingCta
         :nights="nights"
+        :disabled="props.disabled"
+        :disabled-label="props.disabledLabel"
+        :disabled-hint="props.disabledHint"
         @reserve="reserve"
       />
     </div>

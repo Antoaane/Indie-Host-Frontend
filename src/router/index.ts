@@ -4,6 +4,7 @@ import SignInView from '@/views/SignInView.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 const LandingPage = () => import('@/views/Landing/_LandingPage.vue')
 const Listing = () => import('@/views/Listing/_Listing.vue')
+const ListingGuide = () => import('@/views/ListingGuide/_ListingGuide.vue')
 const EditorRoute = () => import('@/views/Editor/EditorRoute.vue')
 const MessagingView = () => import('@/views/Messaging/MessagingView.vue')
 const ManagementRoute = () => import('@/views/Management/ManagementRoute.vue')
@@ -26,6 +27,13 @@ const router = createRouter({
       path: '/listing/:id?',
       name: 'listing',
       component: Listing,
+      meta: { hideNav: true },
+    },
+    {
+      path: '/listing/guide/:id',
+      name: 'listing-guide',
+      component: ListingGuide,
+      meta: { hideNav: true },
     },
     {
       path: '/donation',

@@ -1,0 +1,289 @@
+/* File: src/views/ListingGuide/listing-guide.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/effects' as effects;
+
+.listing-guide {
+  min-height: 100vh;
+  background: $accent;
+  color: $secondary;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+
+  > .guide-desktop {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--layout-gap-sm);
+    text-align: center;
+    @include layout-gap(padding, all, 1.5);
+
+    > h1 {
+      @include h1-title($color: $secondary, $layout-gap: false, $gradiant: true);
+    }
+
+    > p {
+      @include base-text($color: rgba($secondary, 0.7));
+    }
+  }
+
+  > .guide-hero {
+    background: $secondary;
+    color: $accent;
+    position: relative;
+    overflow: hidden;
+    padding: calc(var(--layout-gap) * 2) var(--layout-gap);
+    padding-bottom: calc(var(--layout-gap) * 2.5);
+
+    > .hero-content {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-xs);
+
+      > .hero-eyebrow {
+        @include little-text($color: rgba($accent, 0.8), $bold: true, $thin: false);
+        letter-spacing: 0.08rem;
+        text-transform: uppercase;
+      }
+
+      > .hero-title {
+        font-family: 'Fustat', sans-serif;
+        font-weight: 700;
+        font-size: 2.1rem;
+        line-height: 2.6rem;
+        margin: 0;
+        @include effects.text-shadow(rgba(0, 0, 0, 0.35));
+      }
+
+      > .hero-tagline {
+        @include little-text($color: rgba($accent, 0.7));
+      }
+    }
+
+    > .hero-shapes {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+
+      > span {
+        position: absolute;
+        border: 1px solid rgba($accent, 0.15);
+        border-radius: 50%;
+        width: 240px;
+        height: 240px;
+        transform: rotate(25deg);
+      }
+
+      > span:nth-child(1) {
+        top: -120px;
+        right: -80px;
+      }
+
+      > span:nth-child(2) {
+        bottom: -140px;
+        left: -90px;
+        width: 320px;
+        height: 320px;
+      }
+    }
+  }
+
+  > .guide-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-md);
+    @include layout-gap(padding, all, 1.2);
+    background: $accent;
+    margin-top: -2rem;
+    border-top-left-radius: borders.$rounded-xl;
+    border-top-right-radius: borders.$rounded-xl;
+    position: relative;
+    z-index: 2;
+  }
+
+  .section-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-2xs);
+
+    > h2 {
+      @include h2-title($color: $secondary, $layout-gap: false, $gradiant: false);
+      margin: 0;
+    }
+
+    > p {
+      @include base-text($color: rgba($secondary, 0.65));
+    }
+
+    &.is-local {
+      margin-top: var(--layout-gap-sm);
+    }
+  }
+
+  .section-grid {
+    display: grid;
+    gap: var(--layout-gap-sm);
+  }
+
+  .guide-panel {
+    background: $accent;
+    border-radius: borders.$rounded-lg;
+    border: 1px solid rgba($secondary, 0.08);
+    padding: var(--layout-gap-sm);
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-sm);
+    @include effects.soft-shadow(rgba(0, 0, 0, 0.08));
+
+    &--editorial {
+      background: $secondary;
+      color: $accent;
+      border: none;
+      @include effects.big-shadow(rgba(0, 0, 0, 0.25));
+    }
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--layout-gap-xs);
+
+    > .panel-emoji {
+      font-size: 1.4rem;
+      line-height: 1;
+    }
+
+    > div {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+
+      > h3 {
+        @include h3-title($color: $secondary, $layout-gap: false);
+        margin: 0;
+      }
+
+      > p {
+        @include little-text($color: rgba($secondary, 0.7));
+      }
+    }
+  }
+
+  .panel-items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--layout-gap-xs);
+
+    > li {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      padding-bottom: var(--layout-gap-2xs);
+      border-bottom: 1px solid rgba($secondary, 0.08);
+
+      &:last-child {
+        border-bottom: none;
+        padding-bottom: 0;
+      }
+
+      > .item-label {
+        @include little-text($color: rgba($secondary, 0.8), $bold: true, $thin: false);
+        text-transform: uppercase;
+        letter-spacing: 0.05rem;
+      }
+
+      > .item-value {
+        @include base-text($color: $secondary);
+
+        &.is-empty {
+          @include little-text($color: rgba($secondary, 0.5));
+          font-style: italic;
+        }
+      }
+    }
+  }
+
+  .panel-html {
+    @include base-text($color: $secondary);
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-2xs);
+
+    ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 0.5rem;
+    }
+
+    li {
+      @include base-text($color: $secondary);
+    }
+
+    strong {
+      color: $secondary;
+    }
+  }
+
+  .panel-text {
+    @include base-text($color: $secondary);
+    margin: 0;
+
+    &.is-empty {
+      @include little-text($color: rgba($secondary, 0.5));
+      font-style: italic;
+    }
+  }
+
+  .guide-panel--editorial {
+    .panel-editorial {
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-sm);
+      @include base-text($color: rgba($accent, 0.85));
+
+      h3 {
+        @include h3-title($color: $accent, $layout-gap: false);
+        margin: 0 0 0.25rem 0;
+      }
+
+      ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 0.5rem;
+      }
+
+      li {
+        @include base-text($color: rgba($accent, 0.85));
+      }
+
+      strong {
+        color: $accent;
+      }
+    }
+  }
+
+  .guide-loading {
+    position: fixed;
+    bottom: var(--layout-gap-sm);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba($secondary, 0.85);
+    color: $accent;
+    border-radius: 999px;
+    padding: 0.5rem 1rem;
+    @include little-text($color: $accent, $thin: false);
+    @include effects.soft-shadow(rgba(0, 0, 0, 0.2));
+  }
+}

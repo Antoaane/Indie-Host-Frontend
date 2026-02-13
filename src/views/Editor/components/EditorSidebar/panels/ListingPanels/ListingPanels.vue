@@ -6,6 +6,7 @@ import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 
 import ImportPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/ImportPanel.vue'
 import TitlePanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/TitlePanel.vue'
+import VisibilityPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/VisibilityPanel.vue'
 import GalleryPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/GalleryPanel.vue'
 import DescriptionPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/DescriptionPanel.vue'
 import AmenitiesPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/AmenitiesPanel.vue'
@@ -55,6 +56,10 @@ const emit = defineEmits<{
       @patch="emit('patch', $event)"
     />
     <ReviewsPanel
+      :core="props.draft.core"
+      @patch="emit('patch', $event)"
+    />
+    <VisibilityPanel
       :core="props.draft.core"
       @patch="emit('patch', $event)"
     />

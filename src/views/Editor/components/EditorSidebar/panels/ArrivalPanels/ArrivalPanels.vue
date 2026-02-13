@@ -1,28 +1,85 @@
 <!-- File: src/views/Editor/components/EditorSidebar/panels/ArrivalPanels/ArrivalPanels.vue -->
 
 <script setup lang="ts">
+import type { RawArrival } from '@/domain/listings/types'
+import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 
-const arrivalContent = editorStatic.panels.arrival
+import ArrivalIntroPanel from '@/views/Editor/components/EditorSidebar/panels/ArrivalPanels/ArrivalIntroPanel.vue'
+import ArrivalSectionPanel from '@/views/Editor/components/EditorSidebar/panels/ArrivalPanels/ArrivalSectionPanel.vue'
+import ArrivalHtmlPanel from '@/views/Editor/components/EditorSidebar/panels/ArrivalPanels/ArrivalHtmlPanel.vue'
+import ArrivalGuidePanel from '@/views/Editor/components/EditorSidebar/panels/ArrivalPanels/ArrivalGuidePanel.vue'
+
+const props = defineProps<{
+  arrival?: Partial<RawArrival> | null
+}>()
+
+const emit = defineEmits<{
+  (e: 'patch', patch: DraftPatch): void
+}>()
+
+const panelContent = editorStatic.panels.arrival
 </script>
 
 <template>
   <div class="editor-arrival-panels">
-    {{ arrivalContent.placeholder }}
+    <ArrivalIntroPanel
+      :arrival="props.arrival"
+      @patch="emit('patch', $event)"
+    />
+    <ArrivalSectionPanel
+      section-key="savings"
+      :title="panelContent.practical.savings.title"
+      :subtitle="panelContent.practical.savings.subtitle"
+      :fields="panelContent.practical.savings.fields"
+      :values="props.arrival?.practical?.savings"
+      @patch="emit('patch', $event)"
+    />
+    <ArrivalSectionPanel
+      section-key="access"
+      :title="panelContent.practical.access.title"
+      :subtitle="panelContent.practical.access.subtitle"
+      :fields="panelContent.practical.access.fields"
+      :values="props.arrival?.practical?.access"
+      @patch="emit('patch', $event)"
+    />
+    <ArrivalSectionPanel
+      section-key="services"
+      :title="panelContent.practical.services.title"
+      :subtitle="panelContent.practical.services.subtitle"
+      :fields="panelContent.practical.services.fields"
+      :values="props.arrival?.practical?.services"
+      @patch="emit('patch', $event)"
+    />
+    <ArrivalHtmlPanel
+      section-key="rules"
+      :title="panelContent.practical.rules.title"
+      :subtitle="panelContent.practical.rules.subtitle"
+      :label="panelContent.practical.rules.label"
+      :placeholder="panelContent.practical.rules.placeholder"
+      :value="props.arrival?.practical?.rules"
+      @patch="emit('patch', $event)"
+    />
+    <ArrivalHtmlPanel
+      section-key="shops"
+      :title="panelContent.practical.shops.title"
+      :subtitle="panelContent.practical.shops.subtitle"
+      :label="panelContent.practical.shops.label"
+      :placeholder="panelContent.practical.shops.placeholder"
+      :value="props.arrival?.practical?.shops"
+      @patch="emit('patch', $event)"
+    />
+    <ArrivalGuidePanel
+      :arrival="props.arrival"
+      @patch="emit('patch', $event)"
+    />
   </div>
 </template>
 
 <style lang="scss">
-/* File: src/views/Editor/components/EditorSidebar/panels/arrival-panels.scss */
-
-@use '@/styles/variables/globals' as *;
-@use '@/styles/variables/borders' as borders;
+@use '@/views/Editor/components/EditorSidebar/panels/panel.scss' as *;
 
 .editor-arrival-panels {
-  padding: var(--layout-gap-md);
-  border-radius: borders.$rounded-xl;
-  background: rgba($secondary, 0.04);
-  color: rgba($secondary, 0.7);
-  font-weight: 400;
+  @extend %panels-stack;
 }
 </style>

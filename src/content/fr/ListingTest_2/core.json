@@ -15,21 +15,33 @@
       "room-name": "Chambre 1",
       "type": "bedroom",
       "beds": [
-        { "type": "double", "capacity": 2, "quantity": 1 }
+        {
+          "type": "double",
+          "capacity": 2,
+          "quantity": 1
+        }
       ]
     },
     {
       "room-name": "Chambre 2",
       "type": "bedroom",
       "beds": [
-        { "type": "simple", "capacity": 1, "quantity": 2 }
+        {
+          "type": "simple",
+          "capacity": 1,
+          "quantity": 2
+        }
       ]
     },
     {
       "room-name": "Salon",
       "type": "livingroom",
       "beds": [
-        { "type": "double", "capacity": 2, "quantity": 1 }
+        {
+          "type": "double",
+          "capacity": 2,
+          "quantity": 1
+        }
       ]
     },
     {
@@ -144,5 +156,6 @@
       "title": "Autres remarques",
       "content": "En hiver, pneus neige ou chaînes recommandés. La route est déneigée mais peut rester glissante tôt le matin."
     }
-  ]
+  ],
+  "pause_message": ""
 }

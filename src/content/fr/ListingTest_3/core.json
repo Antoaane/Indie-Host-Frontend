@@ -15,28 +15,44 @@
       "room-name": "Chambre 1",
       "type": "bedroom",
       "beds": [
-        { "type": "double", "capacity": 2, "quantity": 1 }
+        {
+          "type": "double",
+          "capacity": 2,
+          "quantity": 1
+        }
       ]
     },
     {
       "room-name": "Chambre 2",
       "type": "bedroom",
       "beds": [
-        { "type": "double", "capacity": 2, "quantity": 1 }
+        {
+          "type": "double",
+          "capacity": 2,
+          "quantity": 1
+        }
       ]
     },
     {
       "room-name": "Chambre 3",
       "type": "bedroom",
       "beds": [
-        { "type": "simple", "capacity": 1, "quantity": 2 }
+        {
+          "type": "simple",
+          "capacity": 1,
+          "quantity": 2
+        }
       ]
     },
     {
       "room-name": "Chambre 4",
       "type": "bedroom",
       "beds": [
-        { "type": "simple", "capacity": 1, "quantity": 2 }
+        {
+          "type": "simple",
+          "capacity": 1,
+          "quantity": 2
+        }
       ]
     },
     {
@@ -156,5 +172,6 @@
       "title": "Autres remarques",
       "content": "Piscine chauffée d’avril à octobre (selon météo). Dépôt de garantie possible sur les longs séjours."
     }
-  ]
+  ],
+  "pause_message": ""
 }

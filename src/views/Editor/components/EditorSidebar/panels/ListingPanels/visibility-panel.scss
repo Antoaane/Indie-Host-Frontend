@@ -1,0 +1,142 @@
+/* File: src/views/Editor/components/EditorSidebar/panels/ListingPanels/visibility-panel.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/components/buttons' as buttons;
+@use '@/styles/components/inputs' as inputs;
+@use '@/styles/components/overlays' as overlays;
+@use '@/views/Editor/components/EditorSidebar/panels/panel.scss' as *;
+
+.editor-visibility-panel {
+  @extend %panel;
+
+  >.header {
+    @extend %panel-header;
+  }
+
+  >.body {
+    @extend %panel-body;
+    display: grid;
+    gap: var(--layout-gap);
+
+    .label {
+      @include little-text($thin: false);
+      margin: 0 0 0.25rem 0;
+    }
+
+    .hint {
+      margin: 0 0 var(--layout-gap-xs) 0;
+      color: rgba($secondary, 0.6);
+      font-size: 0.9rem;
+    }
+
+    >.status {
+      display: grid;
+      gap: var(--layout-gap-sm);
+
+      >.options {
+        display: grid;
+        gap: var(--layout-gap-xs);
+
+        >.option {
+          display: grid;
+          grid-template-columns: 20px 1fr;
+          align-items: start;
+          gap: var(--layout-gap-xs);
+          padding: var(--layout-gap-xs);
+          border: 1px solid rgba($secondary, 0.08);
+          border-radius: borders.$rounded-md;
+          cursor: pointer;
+
+          input {
+            margin-top: 4px;
+          }
+
+          .title {
+            display: block;
+            font-weight: 600;
+          }
+
+          .desc {
+            display: block;
+            font-size: 0.9rem;
+            color: rgba($secondary, 0.65);
+          }
+        }
+      }
+    }
+
+    >.pause-message {
+      display: grid;
+      gap: var(--layout-gap-xs);
+
+      textarea {
+        min-height: 120px;
+        padding: 5px 10px;
+        resize: vertical;
+        @include inputs.textarea($theme: base);
+      }
+    }
+
+    >.delete {
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-xs);
+      padding: var(--layout-gap-sm);
+
+      >.danger {
+        margin-top: 5rem;
+        @include buttons.primary($theme: dark, $fullwidth: true);
+
+        &:hover {
+
+          &>* {
+            color: $accent !important;
+            background-color: $bad !important;
+            outline: 3px solid rgba($accent, 0.75) !important;
+
+            &>* {
+              color: $accent !important;
+              stroke: $accent !important;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  >.editor-visibility-overlay {
+    @extend %overlay-backdrop;
+
+    >.panel {
+      @extend %overlay-panel;
+      gap: var(--layout-gap-sm);
+
+      >.header h2 {
+        margin: 0;
+        @include h2-title;
+      }
+
+      >.body p {
+        margin: 0;
+        @include base-text;
+      }
+
+      >.footer {
+        display: flex;
+        gap: var(--layout-gap-sm);
+        justify-content: flex-end;
+
+        >.ghost {
+          @include buttons.primary($theme: white);
+        }
+
+        >.danger {
+          @include buttons.primary($theme: dark);
+        }
+      }
+    }
+  }
+
+  @include overlays.transition('editor-visibility-overlay');
+}

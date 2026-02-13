@@ -6,19 +6,62 @@ import mediasJSON from '@/content/fr/ListingTest_0/medias.json'
 import notesJSON from '@/content/fr/ListingTest_0/notes.json'
 import commentsJSON from '@/content/fr/ListingTest_0/comments.json'
 import hostJSON from '@/content/fr/ListingTest_0/host.json'
+import arrivalJSON from '@/content/fr/ListingTest_0/arrival.json'
 
 export type RawCoreBase = typeof coreJSON
 export type RawCore = RawCoreBase & { lat?: number; lng?: number; zoom?: number }
-export type RawBookings = typeof bookingsJSON
+type RawBookingsBase = typeof bookingsJSON
+export type RawBookedDay = {
+  start: string
+  end: string
+}
+export type RawReservationGuests = {
+  adults: number
+  children: number
+  infants: number
+  pets: number
+  pmr?: number
+}
+export type RawReservationPayment = {
+  total: number
+  deposit: number
+  balance: number
+  status: 'paid' | 'pending'
+  method: string
+}
+export type RawBookingReservation = {
+  id: string
+  start: string
+  end: string
+  nights: number
+  guestName: string
+  guestAvatar?: string
+  message: string
+  guests: RawReservationGuests
+  payment: RawReservationPayment
+  contact?: {
+    firstName?: string
+    lastName?: string
+    phone?: string
+    email?: string
+  }
+  createdAt?: string
+}
+export type RawBookings = Omit<RawBookingsBase, 'booked-days' | 'reservations'> & {
+  'booked-days': RawBookedDay[]
+  reservations?: RawBookingReservation[]
+}
 export type RawMedias = typeof mediasJSON
 export type RawNotes = typeof notesJSON
 export type RawComments = typeof commentsJSON
 export type RawHost = typeof hostJSON
+export type RawArrival = typeof arrivalJSON
 
 export type RawListingBundle = {
   core?: Partial<RawCore> | null
   bookings?: Partial<RawBookings> | null
   medias?: Partial<RawMedias> | null
+  arrival?: Partial<RawArrival> | null
   notes?: Partial<RawNotes> | null
   comments?: Partial<RawComments> | null
   host?: Partial<RawHost> | null
@@ -28,6 +71,7 @@ export type DraftPatch = {
   core?: Partial<RawCore> | null
   bookings?: Partial<RawBookings> | null
   medias?: Partial<RawMedias> | null
+  arrival?: Partial<RawArrival> | null
 }
 
 export type VolatileBundle = Pick<RawListingBundle, 'bookings' | 'notes' | 'comments' | 'host'>
@@ -48,4 +92,4 @@ export type UserListingCard = {
   rating?: number
 }
 
-export type ListingResourceKey = 'core' | 'medias' | 'bookings' | 'notes' | 'comments' | 'host'
+export type ListingResourceKey = 'core' | 'medias' | 'bookings' | 'arrival' | 'notes' | 'comments' | 'host'

@@ -91,6 +91,9 @@ export default defineConfig(({ mode }) => {
     server: {
       host: true,
       port: 5179,
+      watch: {
+        ignored: ['**/src/content/**'],
+      },
       proxy:
         apiProxyPath && apiTargetOrigin
           ? {

@@ -229,6 +229,36 @@
                   background: rgba($bad, 1);
                 }
               }
+
+              &.is-blocked {
+                border-color: rgba($secondary, 0.25);
+                background: rgba($secondary, 0.65);
+                color: rgba($accent, 1);
+
+                &::after {
+                  background: rgba($progressing, 1);
+                }
+              }
+
+              &.is-paused {
+                border-color: rgba($secondary, 0.35);
+                background: rgba($secondary, 0.9);
+                color: rgba($accent, 1);
+
+                &::after {
+                  background: rgba($bad, 1);
+                }
+              }
+
+              &.is-deleted {
+                border-color: rgba($secondary, 0.25);
+                background: rgba($secondary, 0.15);
+                color: rgba($secondary, 0.6);
+
+                &::after {
+                  background: rgba($secondary, 0.5);
+                }
+              }
             }
 
             >.preview {

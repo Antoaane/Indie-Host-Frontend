@@ -29,6 +29,7 @@ export function fetchListingDraft(listingId: string): RawListingBundle | null {
       core: (parsed.core as RawListingBundle['core']) ?? null,
       bookings: (parsed.bookings as RawListingBundle['bookings']) ?? null,
       medias: (parsed.medias as RawListingBundle['medias']) ?? null,
+      arrival: (parsed.arrival as RawListingBundle['arrival']) ?? null,
     }
   } catch {
     return null

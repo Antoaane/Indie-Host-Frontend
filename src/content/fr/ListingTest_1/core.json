@@ -15,14 +15,22 @@
       "room-name": "Chambre",
       "type": "bedroom",
       "beds": [
-        { "type": "double", "capacity": 2, "quantity": 1 }
+        {
+          "type": "double",
+          "capacity": 2,
+          "quantity": 1
+        }
       ]
     },
     {
       "room-name": "Salon",
       "type": "livingroom",
       "beds": [
-        { "type": "double", "capacity": 2, "quantity": 1 }
+        {
+          "type": "double",
+          "capacity": 2,
+          "quantity": 1
+        }
       ]
     },
     {
@@ -185,5 +193,6 @@
       "title": "Autres remarques",
       "content": "Le quartier est très vivant : restaurants et bars à proximité. Quelques bruits en soirée le week‑end, double vitrage et rideaux occultants."
     }
-  ]
+  ],
+  "pause_message": ""
 }

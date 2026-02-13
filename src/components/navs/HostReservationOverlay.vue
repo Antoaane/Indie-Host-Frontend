@@ -2,15 +2,24 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { Minus, Plus, X } from 'lucide-vue-next'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
 import { makeIsDateDisabled } from '@/components/DatePicker/utils/range'
 import DatePicker from '@/components/DatePicker/DatePicker.vue'
+import { getListingsController } from '@/domain/listings/controller'
+import {
+  deriveBookedDaysFromReservations,
+  getSynchronizedBookedDays,
+  nightsBetween,
+  normalizeBookedDay,
+  normalizeBookedDays,
+  normalizeReservations,
+} from '@/domain/listings/bookings'
+import type { RawBookingReservation, RawBookings, UserListingCard } from '@/domain/listings/types'
 
 import { type OccupantCounts } from '@/views/ListingView/components/Booking/utils/labels'
 import { findNextRange, isSelectedRangeValid } from '@/views/ListingView/components/Booking/utils/range'
-import { createStaticEditorSource } from '@/views/Editor/utils/editorSourceStatic'
-import type { UserListingCard } from '@/views/Editor/utils/listingApi'
 
 const props = withDefaults(
   defineProps<{
@@ -27,6 +36,9 @@ const emit = defineEmits<{
   (e: 'close'): void
   (e: 'submit', payload: ReservationDraft): void
 }>()
+
+const route = useRoute()
+const controller = getListingsController()
 
 type OccupantKey = keyof OccupantCounts
 
@@ -46,6 +58,7 @@ type ReservationDraft = {
 }
 
 const overlayRef = ref<HTMLElement | null>(null)
+const panelRef = ref<HTMLElement | null>(null)
 const position = reactive({ top: 0, left: 0 })
 const anchorEl = computed<HTMLElement | null>(() => {
   const anchor = props.anchor
@@ -54,6 +67,15 @@ const anchorEl = computed<HTMLElement | null>(() => {
 })
 const listings = ref<UserListingCard[]>([])
 const selectedListingId = ref<string | null>(null)
+const bookingsByListingId = reactive<Record<string, RangeISO[]>>({})
+const listingsStatus = reactive({
+  isLoading: false,
+  error: null as string | null,
+})
+const submitStatus = reactive({
+  isSaving: false,
+  error: null as string | null,
+})
 
 const form = reactive({
   firstName: '',
@@ -62,6 +84,13 @@ const form = reactive({
   email: '',
   notes: '',
 })
+
+const passwordManagerIgnoreAttrs = {
+  'data-lpignore': 'true',
+  'data-1p-ignore': 'true',
+  'data-bwignore': 'true',
+  'data-np-ignore': 'true',
+} as const
 
 const selection = ref<RangeISO | null>(null)
 
@@ -73,15 +102,24 @@ const occupants = reactive<OccupantCounts>({
   pmr: 0,
 })
 
-const bookedRanges = computed<RangeISO[]>(() => props.bookedRanges ?? [])
+const activeUserId = computed(() => {
+  const value = route.params.userId
+  if (typeof value === 'string' && value.trim()) return value.trim()
+  return null
+})
+
+const bookedRanges = computed<RangeISO[]>(() => {
+  const listingId = selectedListingId.value
+  if (listingId && Object.prototype.hasOwnProperty.call(bookingsByListingId, listingId)) {
+    return bookingsByListingId[listingId] ?? []
+  }
+  return props.bookedRanges ?? []
+})
 const isDateDisabled = computed(() => makeIsDateDisabled(bookedRanges.value))
 
 const nights = computed(() => {
   if (!selection.value?.start || !selection.value?.end) return 0
-  const start = new Date(selection.value.start)
-  const end = new Date(selection.value.end)
-  const diff = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
-  return diff > 0 ? Math.round(diff) : 0
+  return nightsBetween(selection.value.start, selection.value.end)
 })
 
 const overlayStyle = computed(() => ({
@@ -90,6 +128,22 @@ const overlayStyle = computed(() => ({
 }))
 
 const MIN_NIGHTS = 2
+const MIN_NIGHTS_ERROR = `Le sejour doit etre d'au moins ${MIN_NIGHTS} nuits.`
+
+const canSubmit = computed(() => {
+  if (submitStatus.isSaving) return false
+  if (!selectedListingId.value) return false
+  if (!selection.value?.start || !selection.value?.end) return false
+  if (nights.value < MIN_NIGHTS) return false
+  return isSelectedRangeValid(selection.value, nights.value, isDateDisabled.value)
+})
+
+function normalizeRange(range: RangeISO | null): RangeISO | null {
+  if (!range?.start || !range?.end) return null
+  const normalized = normalizeBookedDay(range)
+  if (!normalized) return null
+  return { start: normalized.start, end: normalized.end }
+}
 
 function setSelection(range: RangeISO | null) {
   if (range?.start === selection.value?.start && range?.end === selection.value?.end) return
@@ -126,35 +180,284 @@ function updateCount(key: OccupantKey, delta: number) {
   occupants[key] = Math.max(min, next)
 }
 
-function submit() {
-  if (!selectedListingId.value) return
-  if (!selection.value?.start || !selection.value?.end || !nights.value) return
+function sumFees(bookings?: Partial<RawBookings> | null) {
+  const fees = bookings?.fees ?? []
+  return fees.reduce((acc, fee) => acc + (Number(fee.amount ?? 0) || 0), 0)
+}
 
-  const payload: ReservationDraft = {
-    listingId: selectedListingId.value,
-    startISO: selection.value?.start ?? null,
-    endISO: selection.value?.end ?? null,
-    nights: nights.value,
-    occupants: { ...occupants },
-    notes: form.notes,
-    contact: {
-      firstName: form.firstName,
-      lastName: form.lastName,
-      phone: form.phone,
-      email: form.email,
-    },
+function sanitizeIdPart(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9-]/g, '-')
+}
+
+function createReservationId(listingId: string, start: string, end: string) {
+  const base = sanitizeIdPart(listingId.trim() || 'listing')
+  const suffix = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID().slice(0, 8)
+    : Date.now().toString(36)
+  return `reservation-${base}-${start}-${end}-${suffix}`
+}
+
+function normalizeText(value: string) {
+  return value.trim()
+}
+
+function buildGuestName() {
+  const firstName = normalizeText(form.firstName)
+  const lastName = normalizeText(form.lastName)
+  const fullName = `${firstName} ${lastName}`.trim()
+  if (fullName) return fullName
+
+  const email = normalizeText(form.email)
+  if (email.includes('@')) return email.split('@')[0] || 'Voyageur'
+  if (email) return email
+
+  return 'Voyageur'
+}
+
+function resolveDepositAmount(total: number, bookings?: Partial<RawBookings> | null) {
+  const rawType = bookings?.pricing?.deposit?.type
+  const type = typeof rawType === 'string' ? rawType.toLowerCase() : ''
+  const rawAmount = Number(bookings?.pricing?.deposit?.amount)
+
+  if (Number.isFinite(rawAmount) && rawAmount >= 0) {
+    if (type.includes('percent') || type.includes('pourcent') || type.includes('%')) {
+      const percent = Math.max(0, Math.min(100, rawAmount))
+      return Math.round((total * percent) / 100)
+    }
+
+    return Math.round(Math.max(0, Math.min(total, rawAmount)))
   }
 
-  emit('submit', payload)
-  emit('close')
+  return Math.round(total * 0.3)
+}
+
+function buildLegacyReservationFromRange(
+  listingId: string,
+  range: RangeISO,
+  bookings?: Partial<RawBookings> | null,
+) {
+  const stayNights = Math.max(1, nightsBetween(range.start, range.end))
+  const total = Math.max(0, Math.round((Number(bookings?.price ?? 0) || 0) * stayNights + sumFees(bookings)))
+  const deposit = resolveDepositAmount(total, bookings)
+  const balance = Math.max(0, total - deposit)
+
+  return normalizeReservations([
+    {
+      id: `legacy-${sanitizeIdPart(listingId)}-${range.start}-${range.end}`,
+      start: range.start,
+      end: range.end,
+      nights: stayNights,
+      guestName: 'Voyageur',
+      message: '',
+      guests: {
+        adults: 1,
+        children: 0,
+        infants: 0,
+        pets: 0,
+        pmr: 0,
+      },
+      payment: {
+        total,
+        deposit,
+        balance,
+        status: 'pending',
+        method: 'Carte',
+      },
+    },
+  ])[0]
+}
+
+function mergeReservationsWithBookedDays(
+  listingId: string,
+  bookings?: Partial<RawBookings> | null,
+) {
+  const reservations = normalizeReservations(bookings?.reservations)
+  const ranges = normalizeBookedDays(bookings?.['booked-days'])
+  const knownRanges = new Set(reservations.map((reservation) => `${reservation.start}__${reservation.end}`))
+  const merged = [...reservations]
+
+  for (const range of ranges) {
+    const key = `${range.start}__${range.end}`
+    if (knownRanges.has(key)) continue
+    const legacyReservation = buildLegacyReservationFromRange(listingId, range, bookings)
+    if (!legacyReservation) continue
+    merged.push(legacyReservation)
+    knownRanges.add(key)
+  }
+
+  return normalizeReservations(merged)
+}
+
+function buildReservationFromForm(
+  listingId: string,
+  range: RangeISO,
+  bookings?: Partial<RawBookings> | null,
+): RawBookingReservation {
+  const stayNights = Math.max(1, nightsBetween(range.start, range.end))
+  const total = Math.max(0, Math.round((Number(bookings?.price ?? 0) || 0) * stayNights + sumFees(bookings)))
+  const deposit = resolveDepositAmount(total, bookings)
+  const balance = Math.max(0, total - deposit)
+
+  const firstName = normalizeText(form.firstName)
+  const lastName = normalizeText(form.lastName)
+  const phone = normalizeText(form.phone)
+  const email = normalizeText(form.email)
+  const contact = {
+    ...(firstName ? { firstName } : {}),
+    ...(lastName ? { lastName } : {}),
+    ...(phone ? { phone } : {}),
+    ...(email ? { email } : {}),
+  }
+
+  const [reservation] = normalizeReservations([
+    {
+      id: createReservationId(listingId, range.start, range.end),
+      start: range.start,
+      end: range.end,
+      nights: stayNights,
+      guestName: buildGuestName(),
+      message: normalizeText(form.notes),
+      guests: {
+        adults: occupants.adults,
+        children: occupants.children,
+        infants: occupants.babies,
+        pets: occupants.animals,
+        pmr: occupants.pmr,
+      },
+      payment: {
+        total,
+        deposit,
+        balance,
+        status: 'pending',
+        method: 'Carte',
+      },
+      ...(Object.keys(contact).length ? { contact } : {}),
+      createdAt: new Date().toISOString(),
+    },
+  ])
+
+  if (!reservation) {
+    throw new Error('Reservation payload normalization failed')
+  }
+
+  return reservation
+}
+
+async function submit() {
+  const listingId = selectedListingId.value
+  const normalizedSelection = normalizeRange(selection.value)
+  submitStatus.error = null
+
+  if (!listingId) {
+    submitStatus.error = 'Selectionnez une annonce.'
+    return
+  }
+
+  if (!normalizedSelection || nights.value <= 0) {
+    submitStatus.error = 'Selection de dates invalide.'
+    return
+  }
+
+  if (nights.value < MIN_NIGHTS) {
+    submitStatus.error = MIN_NIGHTS_ERROR
+    return
+  }
+
+  if (!isSelectedRangeValid(normalizedSelection, nights.value, isDateDisabled.value)) {
+    submitStatus.error = 'Cette periode est deja indisponible.'
+    return
+  }
+
+  submitStatus.isSaving = true
+
+  try {
+    const editable = await controller.fetchEditableListingBundle(listingId)
+    const currentBookings = (editable.bookings ?? null) as Partial<RawBookings> | null
+    const currentReservations = mergeReservationsWithBookedDays(listingId, currentBookings)
+    const currentBookedDays = deriveBookedDaysFromReservations(currentReservations)
+    const isDateDisabledFresh = makeIsDateDisabled(currentBookedDays)
+
+    if (!isSelectedRangeValid(normalizedSelection, nights.value, isDateDisabledFresh)) {
+      bookingsByListingId[listingId] = currentBookedDays
+      setSelection(findNextRange(MIN_NIGHTS, isDateDisabledFresh))
+      submitStatus.error = 'Cette periode vient d etre reservee.'
+      return
+    }
+
+    const createdReservation = buildReservationFromForm(listingId, normalizedSelection, currentBookings)
+    const nextReservations = normalizeReservations([...currentReservations, createdReservation])
+    const nextBookedDays = deriveBookedDaysFromReservations(nextReservations)
+
+    const bookingsPatch: Partial<RawBookings> = {
+      ...(currentBookings ?? {}),
+      reservations: nextReservations,
+      'booked-days': nextBookedDays,
+    }
+
+    await controller.patchListingDraft(listingId, { bookings: bookingsPatch })
+    bookingsByListingId[listingId] = nextBookedDays
+
+    const payload: ReservationDraft = {
+      listingId,
+      startISO: normalizedSelection.start,
+      endISO: normalizedSelection.end,
+      nights: nights.value,
+      occupants: { ...occupants },
+      notes: form.notes,
+      contact: {
+        firstName: form.firstName,
+        lastName: form.lastName,
+        phone: form.phone,
+        email: form.email,
+      },
+    }
+
+    emit('submit', payload)
+    emit('close')
+  } catch (error) {
+    console.error('[HostReservationOverlay] create reservation failed', error)
+    submitStatus.error = 'Impossible de creer la reservation.'
+  } finally {
+    submitStatus.isSaving = false
+  }
+}
+
+async function refreshBookedRangesForListing(listingId: string) {
+  if (!listingId.trim()) return
+
+  const editable = await controller.fetchEditableListingBundle(listingId)
+  const nextBookedDays = getSynchronizedBookedDays((editable.bookings ?? null) as Partial<RawBookings> | null)
+  bookingsByListingId[listingId] = nextBookedDays
 }
 
 async function loadListings() {
-  if (listings.value.length) return
-  const source = createStaticEditorSource()
-  listings.value = await source.fetchListings()
-  if (!selectedListingId.value) {
-    selectedListingId.value = listings.value[0]?.listingId ?? null
+  listingsStatus.isLoading = true
+  listingsStatus.error = null
+
+  try {
+    const options = activeUserId.value ? { userId: activeUserId.value } : undefined
+    let fetched = await controller.fetchListings(options)
+
+    if (!fetched.length && options?.userId) {
+      fetched = await controller.fetchListings()
+    }
+
+    listings.value = fetched
+
+    if (!selectedListingId.value || !fetched.some((listing) => listing.listingId === selectedListingId.value)) {
+      selectedListingId.value = fetched[0]?.listingId ?? null
+    }
+
+    if (selectedListingId.value) {
+      await refreshBookedRangesForListing(selectedListingId.value)
+    }
+  } catch (error) {
+    console.error('[HostReservationOverlay] load listings failed', error)
+    listingsStatus.error = 'Impossible de charger les annonces.'
+    listings.value = []
+    selectedListingId.value = null
+  } finally {
+    listingsStatus.isLoading = false
   }
 }
 
@@ -186,10 +489,28 @@ function handleKey(event: KeyboardEvent) {
   if (event.key === 'Escape') emit('close')
 }
 
+function handleGlobalWheel(event: WheelEvent) {
+  if (!props.open || !panelRef.value || !overlayRef.value) return
+
+  const target = event.target as Node | null
+  const targetInOverlay = !!target && overlayRef.value.contains(target)
+  const activeInOverlay = !!document.activeElement && overlayRef.value.contains(document.activeElement)
+
+  if (!targetInOverlay && !activeInOverlay) return
+
+  panelRef.value.scrollTop += event.deltaY
+  event.preventDefault()
+}
+
 watch(
   () => props.open,
   async (open) => {
-    if (!open) return
+    if (!open) {
+      submitStatus.error = null
+      return
+    }
+
+    await loadListings()
     await nextTick()
     updatePosition()
   },
@@ -204,10 +525,22 @@ watch(
   },
 )
 
+watch(activeUserId, () => {
+  void loadListings()
+})
+
+watch(selectedListingId, (listingId) => {
+  submitStatus.error = null
+  if (!listingId?.trim()) return
+  if (Object.prototype.hasOwnProperty.call(bookingsByListingId, listingId)) return
+  void refreshBookedRangesForListing(listingId)
+})
+
 onMounted(() => {
-  loadListings()
+  void loadListings()
   window.addEventListener('resize', updatePosition)
   window.addEventListener('scroll', updatePosition, { passive: true })
+  window.addEventListener('wheel', handleGlobalWheel, { passive: false, capture: true })
   window.addEventListener('pointerdown', handlePointer)
   window.addEventListener('keydown', handleKey)
 })
@@ -215,6 +548,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('resize', updatePosition)
   window.removeEventListener('scroll', updatePosition)
+  window.removeEventListener('wheel', handleGlobalWheel, true)
   window.removeEventListener('pointerdown', handlePointer)
   window.removeEventListener('keydown', handleKey)
 })
@@ -232,7 +566,10 @@ onBeforeUnmount(() => {
         role="dialog"
         aria-label="Nouvelle r&eacute;servation"
       >
-        <div class="panel">
+        <div
+          ref="panelRef"
+          class="panel"
+        >
           <div class="header">
             <h3>Nouvelle r&eacute;servation</h3>
             <button
@@ -249,7 +586,7 @@ onBeforeUnmount(() => {
             <label class="field">
               <select
                 v-model="selectedListingId"
-                :disabled="!listings.length"
+                :disabled="listingsStatus.isLoading || !listings.length"
                 aria-label="Annonce"
               >
                 <option
@@ -273,6 +610,7 @@ onBeforeUnmount(() => {
                 type="text"
                 placeholder="Pr&eacute;nom"
                 autocomplete="given-name"
+                v-bind="passwordManagerIgnoreAttrs"
               />
             </label>
             <label class="field">
@@ -281,6 +619,7 @@ onBeforeUnmount(() => {
                 type="text"
                 placeholder="Nom"
                 autocomplete="family-name"
+                v-bind="passwordManagerIgnoreAttrs"
               />
             </label>
             <label class="field">
@@ -289,6 +628,7 @@ onBeforeUnmount(() => {
                 type="tel"
                 placeholder="Num&eacute;ro de t&eacute;l"
                 autocomplete="tel"
+                v-bind="passwordManagerIgnoreAttrs"
               />
             </label>
             <label class="field">
@@ -297,6 +637,7 @@ onBeforeUnmount(() => {
                 type="email"
                 placeholder="Adresse e-mail"
                 autocomplete="email"
+                v-bind="passwordManagerIgnoreAttrs"
               />
             </label>
             <label class="field">
@@ -304,6 +645,7 @@ onBeforeUnmount(() => {
                 v-model="form.notes"
                 rows="3"
                 placeholder="Informations additionnelles"
+                v-bind="passwordManagerIgnoreAttrs"
               />
             </label>
           </div>
@@ -454,13 +796,19 @@ onBeforeUnmount(() => {
           </section>
 
           <div class="actions">
+            <p
+              v-if="submitStatus.error"
+              class="status error"
+            >
+              {{ submitStatus.error }}
+            </p>
             <div class="btn-primary__black__full">
               <button
                 type="button"
-                :disabled="!nights"
+                :disabled="!canSubmit"
                 @click="submit"
               >
-                Ajouter une r&eacute;servation
+                {{ submitStatus.isSaving ? 'Ajout en cours...' : 'Ajouter une r&eacute;servation' }}
               </button>
             </div>
           </div>

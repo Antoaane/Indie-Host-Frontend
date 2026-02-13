@@ -1,0 +1,616 @@
+{
+  "comments": [
+    [
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/12.jpg",
+        "name": "Camille",
+        "note": 5,
+        "comment": "Séjour magique sur le lac : hyper calme, terrasse au top et couchers de soleil de dingue. Arrivée autonome très pratique.",
+        "stay-dates": {
+          "start": "2025-06-14",
+          "end": "2025-06-16"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/34.jpg",
+        "name": "Hugo",
+        "note": 5,
+        "comment": "Parfait pour une parenthèse nature près de Bordeaux. Propreté nickel, lit très confortable, on a adoré voir les cygnes depuis la terrasse !",
+        "stay-dates": {
+          "start": "2025-05-02",
+          "end": "2025-05-05"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/8.jpg",
+        "name": "Sonia",
+        "note": 4,
+        "comment": "Très bel endroit, bien équipé. Wifi OK. Accès voiture recommandé car les commerces sont un peu loin.",
+        "stay-dates": {
+          "start": "2025-04-10",
+          "end": "2025-04-17"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/27.jpg",
+        "name": "Mathilde",
+        "note": 5,
+        "comment": "Un petit coin de paradis ! On a adoré prendre le petit dej sur la terrasse avec la brume du matin. Déco super cosy.",
+        "stay-dates": {
+          "start": "2025-03-21",
+          "end": "2025-03-23"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/55.jpg",
+        "name": "Alexandre",
+        "note": 5,
+        "comment": "Expérience incroyable ! On a vraiment déconnecté. Hôte réactive et tout est bien expliqué dans le guide d’arrivée.",
+        "stay-dates": {
+          "start": "2025-02-15",
+          "end": "2025-02-16"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/76.jpg",
+        "name": "Léa",
+        "note": 4,
+        "comment": "Endroit original et paisible, parfait pour se ressourcer. Un peu frais le soir sur l’eau, mais chauffage efficace.",
+        "stay-dates": {
+          "start": "2024-11-08",
+          "end": "2024-11-11"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/21.jpg",
+        "name": "Thomas",
+        "note": 5,
+        "comment": "Super séjour en amoureux ! La péniche est très bien pensée, propre et bien décorée. On reviendra cet été pour profiter du paddle.",
+        "stay-dates": {
+          "start": "2024-08-03",
+          "end": "2024-08-06"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/44.jpg",
+        "name": "Inès",
+        "note": 5,
+        "comment": "J’ai adoré le calme et la vue sur le lac. Le lieu est vraiment unique, on entend juste les oiseaux et l’eau qui bouge doucement.",
+        "stay-dates": {
+          "start": "2024-07-19",
+          "end": "2024-07-23"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/62.jpg",
+        "name": "Benoît",
+        "note": 5,
+        "comment": "Tout était parfait : accueil simple, logement impeccable, cadre sublime. Un grand merci pour cette parenthèse apaisante !",
+        "stay-dates": {
+          "start": "2024-05-10",
+          "end": "2024-05-11"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/5.jpg",
+        "name": "Élodie",
+        "note": 4,
+        "comment": "Séjour très agréable, literie confortable et petit-déjeuner laissé dans le frigo. On a eu un petit souci de cafetière vite réglé par l’hôte.",
+        "stay-dates": {
+          "start": "2024-04-05",
+          "end": "2024-04-07"
+        }
+      }
+    ],
+    [
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/88.jpg",
+        "name": "Gaël",
+        "note": 5,
+        "comment": "Vue panoramique incroyable sur le lever du soleil. Kayak dispo, super balade matinale.",
+        "stay-dates": {
+          "start": "2024-03-15",
+          "end": "2024-03-16"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/19.jpg",
+        "name": "Mélanie",
+        "note": 5,
+        "comment": "Week-end de détente totale. Le poêle chauffe très bien et le lit est ultra moelleux.",
+        "stay-dates": {
+          "start": "2024-02-02",
+          "end": "2024-02-05"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/73.jpg",
+        "name": "Romain",
+        "note": 4,
+        "comment": "Super séjour entre potes. On a apprécié le système audio bluetooth et les jeux de société à dispo.",
+        "stay-dates": {
+          "start": "2024-01-12",
+          "end": "2024-01-15"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/14.jpg",
+        "name": "Julie",
+        "note": 5,
+        "comment": "Cadre féérique sous la neige ! Les guirlandes lumineuses rendent l’ambiance magique.",
+        "stay-dates": {
+          "start": "2023-12-22",
+          "end": "2023-12-25"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/91.jpg",
+        "name": "Patricia",
+        "note": 5,
+        "comment": "Hôtes adorables, arrivée flexible, tout était parfaitement propre. Literie de grande qualité.",
+        "stay-dates": {
+          "start": "2023-11-03",
+          "end": "2023-11-04"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/2.jpg",
+        "name": "Nicolas",
+        "note": 4,
+        "comment": "Très calme, idéal pour écrire et se ressourcer. Un peu de condensation le matin mais géré avec l’aération.",
+        "stay-dates": {
+          "start": "2023-10-18",
+          "end": "2023-10-20"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/67.jpg",
+        "name": "Oriane",
+        "note": 5,
+        "comment": "Soirées au coin du feu mémorables. Petit panier gourmand offert à notre arrivée, adorable attention.",
+        "stay-dates": {
+          "start": "2023-09-08",
+          "end": "2023-09-09"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/48.jpg",
+        "name": "Clément",
+        "note": 5,
+        "comment": "Spot idéal pour observer les étoiles, ciel dégagé toute la nuit. Hôte disponible par message.",
+        "stay-dates": {
+          "start": "2023-08-25",
+          "end": "2023-08-28"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/30.jpg",
+        "name": "Sébastien",
+        "note": 4,
+        "comment": "On a profité des vélos pour faire le tour du lac. Peut-être ajouter une moustiquaire dans la chambre.",
+        "stay-dates": {
+          "start": "2023-07-14",
+          "end": "2023-07-18"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/25.jpg",
+        "name": "Marion",
+        "note": 5,
+        "comment": "Cadeau d’anniversaire parfait. Petit mot personnalisé et bouteille de vin offertes, merci !",
+        "stay-dates": {
+          "start": "2023-06-09",
+          "end": "2023-06-15"
+        }
+      }
+    ],
+    [
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/7.jpg",
+        "name": "Luc",
+        "note": 4,
+        "comment": "Environnement très reposant, idéal pour méditer. Pensez à prendre une petite veste pour le soir.",
+        "stay-dates": {
+          "start": "2023-05-19",
+          "end": "2023-05-20"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/31.jpg",
+        "name": "Amandine",
+        "note": 5,
+        "comment": "Super accueil de la part de l’hôte qui nous a donné plein de bonnes adresses locales.",
+        "stay-dates": {
+          "start": "2023-04-14",
+          "end": "2023-04-15"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/53.jpg",
+        "name": "Yanis",
+        "note": 5,
+        "comment": "Séjour romantique réussi, ambiance tamisée, baignoire avec vue sur le lac. On recommande !",
+        "stay-dates": {
+          "start": "2023-03-10",
+          "end": "2023-03-18"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/64.jpg",
+        "name": "Carole",
+        "note": 4,
+        "comment": "Cuisine bien équipée, on a pu préparer tout notre brunch. Quelques marches à descendre pour accéder à la péniche.",
+        "stay-dates": {
+          "start": "2023-02-03",
+          "end": "2023-02-07"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/16.jpg",
+        "name": "Damien",
+        "note": 5,
+        "comment": "Séminaire d’équipe atypique ! Salle de réunion improvisée sur la terrasse, tout le monde a adoré.",
+        "stay-dates": {
+          "start": "2023-01-20",
+          "end": "2023-01-22"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/81.jpg",
+        "name": "Lola",
+        "note": 5,
+        "comment": "Gros coup de cœur pour la déco marine. Les enfants ont adoré dormir dans les cabines.",
+        "stay-dates": {
+          "start": "2022-12-27",
+          "end": "2022-12-29"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/9.jpg",
+        "name": "Adrien",
+        "note": 4,
+        "comment": "Bon wifi pour télétravailler, chaise confortable. Juste un manque de prises près du lit.",
+        "stay-dates": {
+          "start": "2022-11-18",
+          "end": "2022-11-20"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/39.jpg",
+        "name": "Sabrina",
+        "note": 5,
+        "comment": "Massages sur la terrasse au coucher du soleil, quelle expérience ! Merci pour l’adresse du spa partenaire.",
+        "stay-dates": {
+          "start": "2022-10-14",
+          "end": "2022-10-17"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/97.jpg",
+        "name": "Basile",
+        "note": 3,
+        "comment": "Cadre superbe mais la météo était capricieuse, beaucoup de vent. Heureusement, intérieur bien isolé.",
+        "stay-dates": {
+          "start": "2022-09-09",
+          "end": "2022-09-10"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/58.jpg",
+        "name": "Naomi",
+        "note": 5,
+        "comment": "Weekend yoga inoubliable, tapis fournis et terrasse assez grande pour pratiquer à 4.",
+        "stay-dates": {
+          "start": "2022-08-19",
+          "end": "2022-08-20"
+        }
+      }
+    ],
+    [
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/40.jpg",
+        "name": "Julien",
+        "note": 5,
+        "comment": "Accueil chaleureux et check-in autonome clair. La playlist fournie met direct dans l’ambiance.",
+        "stay-dates": {
+          "start": "2022-07-08",
+          "end": "2022-07-10"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/24.jpg",
+        "name": "Maëlys",
+        "note": 4,
+        "comment": "On a adoré les planches apéro livrées sur demande. Peut-être prévoir plus de coussins sur la banquette extérieure.",
+        "stay-dates": {
+          "start": "2022-06-17",
+          "end": "2022-06-18"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/46.jpg",
+        "name": "Lionel",
+        "note": 5,
+        "comment": "Séjour pêche au top ! Barque fournie, gilets de sauvetage disponibles, on a ramené trois belles prises.",
+        "stay-dates": {
+          "start": "2022-05-13",
+          "end": "2022-05-15"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/11.jpg",
+        "name": "Pauline",
+        "note": 5,
+        "comment": "Très beaux couchers de soleil depuis la chambre. Petit déjeuner maison délicieux.",
+        "stay-dates": {
+          "start": "2022-04-22",
+          "end": "2022-04-25"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/79.jpg",
+        "name": "Ismaël",
+        "note": 4,
+        "comment": "On a apprécié les nombreux jeux de société. Quelques marches glissantes sous la pluie, attention.",
+        "stay-dates": {
+          "start": "2022-03-11",
+          "end": "2022-03-15"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/6.jpg",
+        "name": "Clara",
+        "note": 5,
+        "comment": "Séance photo de fiançailles réussie grâce à la lumière incroyable sur l’eau. Merci pour les conseils de spots.",
+        "stay-dates": {
+          "start": "2022-02-18",
+          "end": "2022-02-23"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/95.jpg",
+        "name": "Antoine",
+        "note": 5,
+        "comment": "Week-end surprise pour ma compagne, elle a adoré. Les petites attentions personnalisées font la différence.",
+        "stay-dates": {
+          "start": "2022-01-21",
+          "end": "2022-01-22"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/28.jpg",
+        "name": "Mina",
+        "note": 4,
+        "comment": "Très bon équipement cuisine, on a pu cuisiner un repas gastronomique. Prévoir des glaçons supplémentaires l’été.",
+        "stay-dates": {
+          "start": "2021-12-10",
+          "end": "2021-12-11"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/33.jpg",
+        "name": "Quentin",
+        "note": 5,
+        "comment": "Séjour incentive avec l’équipe commerciale, tout le monde a adoré le cadre et la salle de bain avec vue.",
+        "stay-dates": {
+          "start": "2021-11-19",
+          "end": "2021-11-20"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/15.jpg",
+        "name": "Céline",
+        "note": 5,
+        "comment": "On a dormi fenêtres ouvertes pour profiter des sons du lac, un vrai bonheur. Linge de lit très doux.",
+        "stay-dates": {
+          "start": "2021-10-15",
+          "end": "2021-10-16"
+        }
+      }
+    ],
+    [
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/4.jpg",
+        "name": "Éric",
+        "note": 4,
+        "comment": "Belle découverte pour un week-end anniversaire. Les lanternes solaires créent une ambiance top la nuit.",
+        "stay-dates": {
+          "start": "2021-09-24",
+          "end": "2021-09-25"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/23.jpg",
+        "name": "Soline",
+        "note": 5,
+        "comment": "Nous sommes repartis totalement reposés. Mention spéciale pour les oreillers, je veux les mêmes !",
+        "stay-dates": {
+          "start": "2021-08-13",
+          "end": "2021-08-17"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/17.jpg",
+        "name": "Karim",
+        "note": 5,
+        "comment": "Weekend père-fils réussi. On a pêché, joué aux cartes et profité du calme. Merci pour les conseils resto.",
+        "stay-dates": {
+          "start": "2021-07-02",
+          "end": "2021-07-08"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/74.jpg",
+        "name": "Sophie",
+        "note": 5,
+        "comment": "Escapade solo pour écrire mon roman. Cadre inspirant, wifi stable pour mes envois aux éditeurs.",
+        "stay-dates": {
+          "start": "2021-06-18",
+          "end": "2021-06-20"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/69.jpg",
+        "name": "Valentin",
+        "note": 4,
+        "comment": "Petit bémol sur la route d’accès un peu cabossée, mais une fois arrivé, quel havre de paix !",
+        "stay-dates": {
+          "start": "2021-05-07",
+          "end": "2021-05-08"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/20.jpg",
+        "name": "Aurélie",
+        "note": 5,
+        "comment": "Brunch livré sur le ponton, moment incroyable. Merci pour la réactivité quand on a demandé des draps supplémentaires.",
+        "stay-dates": {
+          "start": "2021-04-16",
+          "end": "2021-04-20"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/1.jpg",
+        "name": "Théo",
+        "note": 4,
+        "comment": "Très bon spot photo pour Insta ! Prévoyez une batterie externe pour les tournages, il y a déjà deux prises au salon.",
+        "stay-dates": {
+          "start": "2021-03-12",
+          "end": "2021-03-14"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/63.jpg",
+        "name": "Anaïs",
+        "note": 5,
+        "comment": "Organisation parfaite pour notre demande en mariage surprise. Merci pour la déco romantique.",
+        "stay-dates": {
+          "start": "2021-02-19",
+          "end": "2021-02-21"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/92.jpg",
+        "name": "Gaspard",
+        "note": 4,
+        "comment": "Très bon séjour, literie impeccable. Prévoir des bouchons d’oreilles si vous êtes sensibles aux petits bruits de l’eau.",
+        "stay-dates": {
+          "start": "2021-01-22",
+          "end": "2021-01-23"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/52.jpg",
+        "name": "Nora",
+        "note": 5,
+        "comment": "Expérience hivernale incroyable, sauna privatif à disposition, on a adoré !",
+        "stay-dates": {
+          "start": "2020-12-11",
+          "end": "2020-12-13"
+        }
+      }
+    ],
+    [
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/13.jpg",
+        "name": "Clémentine",
+        "note": 5,
+        "comment": "Lieu parfait pour un atelier d’écriture. Les grandes baies vitrées inspirent vraiment.",
+        "stay-dates": {
+          "start": "2020-11-06",
+          "end": "2020-11-09"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/43.jpg",
+        "name": "Samir",
+        "note": 4,
+        "comment": "Séjour professionnel très agréable, bon bureau et chaise confortable. Merci pour le wifi dédié.",
+        "stay-dates": {
+          "start": "2020-10-09",
+          "end": "2020-10-12"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/57.jpg",
+        "name": "Morgane",
+        "note": 5,
+        "comment": "Week-end mère-fille parfait, lecture et papote avec vue sur le lac. On reviendra !",
+        "stay-dates": {
+          "start": "2020-09-18",
+          "end": "2020-09-19"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/29.jpg",
+        "name": "Kylian",
+        "note": 4,
+        "comment": "Belle escapade sportive. Paddle, footing autour du lac, tout est à dispo.",
+        "stay-dates": {
+          "start": "2020-08-14",
+          "end": "2020-08-17"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/18.jpg",
+        "name": "Emilie",
+        "note": 5,
+        "comment": "Brunch de mariage en petit comité, super logistique avec les hôtes. Merci pour les fleurs fraîches.",
+        "stay-dates": {
+          "start": "2020-07-10",
+          "end": "2020-07-14"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/54.jpg",
+        "name": "Pascal",
+        "note": 4,
+        "comment": "Cadre paisible pour peindre. L’atelier mobile sur la terrasse était parfait.",
+        "stay-dates": {
+          "start": "2020-06-05",
+          "end": "2020-06-07"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/41.jpg",
+        "name": "Yasmine",
+        "note": 5,
+        "comment": "Séjour detox digital, aucun écran pendant 3 jours. Merci pour les jeux en bois et les livres.",
+        "stay-dates": {
+          "start": "2020-05-15",
+          "end": "2020-05-17"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/86.jpg",
+        "name": "Loïc",
+        "note": 4,
+        "comment": "Bon séjour entre amis. Canoë disponible, gilets en bon état. Peut-être ajouter une enceinte bluetooth extérieure.",
+        "stay-dates": {
+          "start": "2020-04-17",
+          "end": "2020-04-19"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/women/45.jpg",
+        "name": "Aurore",
+        "note": 5,
+        "comment": "On a célébré notre pacs ici, c’était magique. Décoration romantique et champagne frais à notre arrivée.",
+        "stay-dates": {
+          "start": "2020-03-13",
+          "end": "2020-03-15"
+        }
+      },
+      {
+        "profile-pic": "https://randomuser.me/api/portraits/men/10.jpg",
+        "name": "Fabrice",
+        "note": 4,
+        "comment": "Séjour photo animalière, beaucoup d’oiseaux à observer tôt le matin. Pensez aux jumelles.",
+        "stay-dates": {
+          "start": "2020-02-07",
+          "end": "2020-02-11"
+        }
+      }
+    ]
+  ]
+}

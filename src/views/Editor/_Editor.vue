@@ -13,6 +13,7 @@ import { fetchListingDraft } from '@/views/Editor/utils/fetchListingDraft'
 import type { DraftPatch, VolatileBundle, UserListingCard } from '@/views/Editor/utils/listingApi'
 import { persistListingDraft } from '@/views/Editor/utils/persistListingDraft'
 import type { EditorMode, EditorSource } from '@/views/Editor/types/editor'
+import { normalizeListingStatus } from '@/domain/listings/status'
 
 type EditorStage = 'listings' | 'preview'
 
@@ -60,6 +61,25 @@ const previewRawListing = computed<RawListingBundle | null>(() => {
 function mergeDraftPatch(base: DraftPatch | null, patch: DraftPatch): DraftPatch {
   const next: DraftPatch = { ...(base ?? {}) }
 
+  const mergeDeep = (target: any, source: any): any => {
+    if (source === null || source === undefined) return source
+    if (Array.isArray(source)) return source
+    if (typeof source !== 'object') return source
+
+    const baseValue = (target && typeof target === 'object' && !Array.isArray(target)) ? target : {}
+    const merged: Record<string, any> = { ...baseValue }
+
+    Object.entries(source as Record<string, any>).forEach(([key, value]) => {
+      if (Array.isArray(value) || value === null || typeof value !== 'object') {
+        merged[key] = value
+      } else {
+        merged[key] = mergeDeep(baseValue[key], value)
+      }
+    })
+
+    return merged
+  }
+
   if (patch.core) {
     next.core = { ...(next.core ?? {}), ...patch.core }
   }
@@ -70,6 +90,10 @@ function mergeDraftPatch(base: DraftPatch | null, patch: DraftPatch): DraftPatch
 
   if (patch.medias) {
     next.medias = { ...(next.medias ?? {}), ...patch.medias }
+  }
+
+  if (patch.arrival) {
+    next.arrival = mergeDeep(next.arrival, patch.arrival)
   }
 
   return next
@@ -98,6 +122,27 @@ function applyPatchToListingCard(listingId: string, patch: DraftPatch) {
   }
 
   listings.value.splice(index, 1, next)
+}
+
+function removeListingFromList(listingId: string) {
+  const index = listings.value.findIndex((item) => item.listingId === listingId)
+  if (index >= 0) {
+    listings.value.splice(index, 1)
+  }
+}
+
+function handleDeletedListing(listingId: string) {
+  console.log('[Editor] listing deleted', { listingId })
+  removeListingFromList(listingId)
+
+  if (selectedListingId.value === listingId) {
+    selectedListingId.value = null
+    draft.value = null
+    stage.value = 'listings'
+    if (listings.value.length) {
+      void handleSelectListing(listings.value[0].listingId, { force: true })
+    }
+  }
 }
 
 async function flushPatchQueue() {
@@ -162,11 +207,37 @@ function applyDraftPatch(patch: DraftPatch) {
       ...patch.medias,
     }
   }
+  if (patch.arrival) {
+    const mergeDeep = (target: any, source: any): any => {
+      if (source === null || source === undefined) return source
+      if (Array.isArray(source)) return source
+      if (typeof source !== 'object') return source
+
+      const baseValue = (target && typeof target === 'object' && !Array.isArray(target)) ? target : {}
+      const merged: Record<string, any> = { ...baseValue }
+
+      Object.entries(source as Record<string, any>).forEach(([key, value]) => {
+        if (Array.isArray(value) || value === null || typeof value !== 'object') {
+          merged[key] = value
+        } else {
+          merged[key] = mergeDeep(baseValue[key], value)
+        }
+      })
+
+      return merged
+    }
+
+    draft.value.arrival = mergeDeep(draft.value.arrival, patch.arrival)
+  }
 
   if (selectedListingId.value) {
     console.log('[Editor] apply patch', { listingId: selectedListingId.value, patch })
     queuePatchPersistence(selectedListingId.value, patch)
     applyPatchToListingCard(selectedListingId.value, patch)
+
+    if (patch.core?.status && normalizeListingStatus(patch.core.status) === 'deleted') {
+      handleDeletedListing(selectedListingId.value)
+    }
   }
 }
 

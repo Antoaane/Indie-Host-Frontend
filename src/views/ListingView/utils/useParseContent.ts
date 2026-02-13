@@ -9,6 +9,7 @@ import type {
   RawHost,
   RawListingBundle,
 } from '@/domain/listings/types';
+import { getSynchronizedBookedDays } from '@/domain/listings/bookings';
 
 // ---- TYPES ----
 import type {
@@ -180,9 +181,10 @@ function parseRooms(core: Maybe<Partial<RawCore>>): RoomsModel {
 }
 
 function parseBookings(bookings: Maybe<Partial<RawBookings>>): BookingsModel {
+  const bookedDays = getSynchronizedBookedDays(bookings ?? null)
   return {
     price: bookings?.price ?? 0,
-    bookedDays: (bookings?.['booked-days'] ?? []).map(d => ({ start: d.start, end: d.end })),
+    bookedDays: bookedDays.map(d => ({ start: d.start, end: d.end })),
     fees: (bookings?.fees ?? []).map(fee => ({ name: fee.name, amount: fee.amount })),
   };
 }

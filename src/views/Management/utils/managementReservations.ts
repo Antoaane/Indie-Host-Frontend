@@ -1,13 +1,14 @@
 // File: src/views/Management/utils/managementReservations.ts
 
-import type { UserListingCard } from '@/views/Editor/utils/listingApi'
-import type { RawBookings, RawComments } from '@/domain/listings/types'
+import { getSynchronizedBookedDays, normalizeReservations, nightsBetween } from '@/domain/listings/bookings'
+import type { RawBookingReservation, RawBookings, UserListingCard } from '@/domain/listings/types'
 
 export type ReservationGuests = {
   adults: number
   children: number
   infants: number
   pets: number
+  pmr: number
 }
 
 export type ReservationPayment = {
@@ -29,41 +30,9 @@ export type Reservation = {
   message: string
   guests: ReservationGuests
   payment: ReservationPayment
+  contact?: RawBookingReservation['contact']
+  createdAt?: string
 }
-
-type GuestProfile = {
-  name: string
-  avatar?: string
-  message?: string
-}
-
-const FALLBACK_GUESTS: GuestProfile[] = [
-  { name: 'Chlo\u00e9 Lambert', avatar: 'https://randomuser.me/api/portraits/women/44.jpg' },
-  { name: 'Arthur Rousseau', avatar: 'https://randomuser.me/api/portraits/men/32.jpg' },
-  { name: 'Louis Girard', avatar: 'https://randomuser.me/api/portraits/men/19.jpg' },
-  { name: 'Mila Blanc', avatar: 'https://randomuser.me/api/portraits/women/33.jpg' },
-  { name: 'Chlo\u00e9 Goulet', avatar: 'https://randomuser.me/api/portraits/women/27.jpg' },
-  { name: 'Magali Jaquet', avatar: 'https://randomuser.me/api/portraits/women/12.jpg' },
-]
-
-const FALLBACK_MESSAGES = [
-  'Bonjour ! Merci pour votre message. Nous serons deux adultes pour un s\u00e9jour calme et reposant. \u00c0 tr\u00e8s vite.',
-  'Hello, merci pour les infos. Nous voyageons en couple, sans animaux, et arriverons en fin d\'apr\u00e8s-midi.',
-  'Bonjour, s\u00e9jour pr\u00e9vu pour 3 personnes. Besoin d\'un lit b\u00e9b\u00e9 si possible. Merci !',
-  'Bonsoir, nous venons pour un week-end d\u00e9tente. On adore votre logement, h\u00e2te d\'y \u00eatre.',
-]
-
-const GUEST_COMPOSITIONS: ReservationGuests[] = [
-  { adults: 2, children: 0, infants: 0, pets: 0 },
-  { adults: 2, children: 1, infants: 0, pets: 0 },
-  { adults: 3, children: 0, infants: 0, pets: 1 },
-  { adults: 2, children: 2, infants: 1, pets: 0 },
-  { adults: 1, children: 0, infants: 0, pets: 0 },
-]
-
-const PAYMENT_METHODS = ['Carte', 'Esp\u00e8ce', 'Virement', 'Apple Pay']
-
-const dayMs = 24 * 60 * 60 * 1000
 
 function toDateMs(iso?: string): number {
   if (!iso) return 0
@@ -72,10 +41,41 @@ function toDateMs(iso?: string): number {
   return Date.UTC(year, month - 1, day)
 }
 
-function nightsBetween(start: string, end: string): number {
-  const diff = (toDateMs(end) - toDateMs(start)) / dayMs
-  if (!Number.isFinite(diff)) return 0
-  return Math.max(1, Math.round(diff))
+function toUtcTodayMs(referenceDate = new Date()) {
+  return Date.UTC(
+    referenceDate.getUTCFullYear(),
+    referenceDate.getUTCMonth(),
+    referenceDate.getUTCDate(),
+  )
+}
+
+function reservationDistanceToReference(reservation: Reservation, referenceMs: number) {
+  const start = toDateMs(reservation.start)
+  const end = toDateMs(reservation.end)
+  if (!start || !end || end < start) return Number.POSITIVE_INFINITY
+
+  if (referenceMs < start) return start - referenceMs
+  if (referenceMs > end) return referenceMs - end
+  return 0
+}
+
+function compareReservationRelevance(a: Reservation, b: Reservation, referenceMs: number) {
+  const distanceA = reservationDistanceToReference(a, referenceMs)
+  const distanceB = reservationDistanceToReference(b, referenceMs)
+  if (distanceA !== distanceB) return distanceA - distanceB
+
+  const aStart = toDateMs(a.start)
+  const aEnd = toDateMs(a.end)
+  const bStart = toDateMs(b.start)
+  const bEnd = toDateMs(b.end)
+
+  const aFuture = aStart > referenceMs
+  const bFuture = bStart > referenceMs
+  if (aFuture !== bFuture) return aFuture ? -1 : 1
+
+  if (aEnd !== bEnd) return bEnd - aEnd
+  if (aStart !== bStart) return bStart - aStart
+  return 0
 }
 
 function sumFees(bookings?: Partial<RawBookings> | null): number {
@@ -83,41 +83,101 @@ function sumFees(bookings?: Partial<RawBookings> | null): number {
   return fees.reduce((acc, fee) => acc + (Number(fee.amount ?? 0) || 0), 0)
 }
 
-function flattenGuests(comments?: RawComments | null): GuestProfile[] {
-  const pages = comments?.comments ?? []
-  const flattened: GuestProfile[] = []
+function toNonNegativeInt(value: unknown, fallback = 0) {
+  const next = Number(value)
+  if (!Number.isFinite(next)) return fallback
+  return Math.max(0, Math.trunc(next))
+}
 
-  for (const page of pages) {
-    if (!Array.isArray(page)) continue
-    for (const entry of page) {
-      if (!entry) continue
-      flattened.push({
-        name: entry.name,
-        avatar: entry['profile-pic'],
-        message: entry.comment,
-      })
-    }
+function normalizeGuests(input: Partial<ReservationGuests> | undefined): ReservationGuests {
+  return {
+    adults: Math.max(1, toNonNegativeInt(input?.adults, 1)),
+    children: toNonNegativeInt(input?.children),
+    infants: toNonNegativeInt(input?.infants),
+    pets: toNonNegativeInt(input?.pets),
+    pmr: toNonNegativeInt(input?.pmr),
   }
-
-  return flattened
 }
 
-function pickGuest(index: number, guests: GuestProfile[]): GuestProfile {
-  if (guests.length) return guests[index % guests.length]
-  return FALLBACK_GUESTS[index % FALLBACK_GUESTS.length]
+function normalizePayment(
+  input: Partial<ReservationPayment> | undefined,
+  fallbackTotal: number,
+): ReservationPayment {
+  const totalCandidate = Number(input?.total)
+  const total = Math.max(0, Number.isFinite(totalCandidate) && totalCandidate > 0 ? totalCandidate : fallbackTotal)
+
+  const fallbackDeposit = Math.round(total * 0.3)
+  const depositCandidate = Number(input?.deposit)
+  const deposit = Math.max(0, Math.min(total, Number.isFinite(depositCandidate) ? depositCandidate : fallbackDeposit))
+
+  const balanceCandidate = Number(input?.balance)
+  const fallbackBalance = Math.max(0, total - deposit)
+  const balance = Math.max(0, Number.isFinite(balanceCandidate) ? balanceCandidate : fallbackBalance)
+
+  return {
+    total: Math.round(total),
+    deposit: Math.round(deposit),
+    balance: Math.round(balance),
+    status: input?.status === 'paid' ? 'paid' : 'pending',
+    method: typeof input?.method === 'string' && input.method.trim() ? input.method.trim() : 'Carte',
+  }
 }
 
-function pickMessage(index: number, guest?: GuestProfile): string {
-  if (guest?.message) return guest.message
-  return FALLBACK_MESSAGES[index % FALLBACK_MESSAGES.length]
+function mapReservation(
+  reservation: RawBookingReservation,
+  listingId: string,
+  pricePerNight: number,
+  feesTotal: number,
+  fallbackIndex = 0,
+): Reservation {
+  const safeNights = Math.max(1, toNonNegativeInt(reservation.nights, nightsBetween(reservation.start, reservation.end) || 1))
+  const fallbackTotal = Math.max(0, Math.round(pricePerNight * safeNights + feesTotal))
+
+  return {
+    id: reservation.id || `${listingId}-${reservation.start}-${reservation.end}-${fallbackIndex}`,
+    listingId,
+    start: reservation.start,
+    end: reservation.end,
+    nights: safeNights,
+    guestName: reservation.guestName?.trim() || `Voyageur ${fallbackIndex + 1}`,
+    guestAvatar: reservation.guestAvatar,
+    message: reservation.message ?? '',
+    guests: normalizeGuests(reservation.guests),
+    payment: normalizePayment(reservation.payment, fallbackTotal),
+    contact: reservation.contact,
+    createdAt: reservation.createdAt,
+  }
 }
 
-function pickGuestsComposition(index: number): ReservationGuests {
-  return GUEST_COMPOSITIONS[index % GUEST_COMPOSITIONS.length]
-}
+function buildFallbackReservationsFromBookedDays(
+  listingId: string,
+  bookings?: Partial<RawBookings> | null,
+): Reservation[] {
+  const bookedDays = getSynchronizedBookedDays(bookings)
+  const pricePerNight = Number(bookings?.price ?? 0) || 0
+  const feesTotal = sumFees(bookings)
 
-function pickPaymentMethod(index: number): string {
-  return PAYMENT_METHODS[index % PAYMENT_METHODS.length]
+  return bookedDays.map((range, index) => {
+    const nights = Math.max(1, nightsBetween(range.start, range.end))
+    const fallbackTotal = Math.max(0, Math.round(pricePerNight * nights + feesTotal))
+    return {
+      id: `${listingId}-${range.start}-${range.end}-${index}`,
+      listingId,
+      start: range.start,
+      end: range.end,
+      nights,
+      guestName: `Voyageur ${index + 1}`,
+      message: '',
+      guests: {
+        adults: 1,
+        children: 0,
+        infants: 0,
+        pets: 0,
+        pmr: 0,
+      },
+      payment: normalizePayment(undefined, fallbackTotal),
+    }
+  })
 }
 
 export function sortReservationsByDate(reservations: Reservation[]): Reservation[] {
@@ -127,43 +187,18 @@ export function sortReservationsByDate(reservations: Reservation[]): Reservation
 export function buildReservationsForListing({
   listing,
   bookings,
-  comments,
 }: {
   listing: UserListingCard
   bookings?: Partial<RawBookings> | null
-  comments?: RawComments | null
 }): Reservation[] {
-  const bookedDays = bookings?.['booked-days'] ?? []
-  const guestsPool = flattenGuests(comments)
+  const normalized = normalizeReservations(bookings?.reservations)
   const pricePerNight = Number(bookings?.price ?? listing.pricePerNight ?? 0) || 0
   const feesTotal = sumFees(bookings)
 
-  const reservations = bookedDays.map((range, index) => {
-    const guest = pickGuest(index, guestsPool)
-    const nights = nightsBetween(range.start, range.end)
-    const total = Math.max(0, Math.round(pricePerNight * nights + feesTotal))
-    const deposit = Math.round(total * 0.3)
-    const balance = Math.max(0, total - deposit)
-
-    return {
-      id: `${listing.listingId}-${range.start}-${range.end}-${index}`,
-      listingId: listing.listingId,
-      start: range.start,
-      end: range.end,
-      nights,
-      guestName: guest.name || `Voyageur ${index + 1}`,
-      guestAvatar: guest.avatar,
-      message: pickMessage(index, guest),
-      guests: pickGuestsComposition(index),
-      payment: {
-        total,
-        deposit,
-        balance,
-        status: index % 3 === 0 ? 'pending' : 'paid',
-        method: pickPaymentMethod(index),
-      },
-    }
-  })
+  const reservations = normalized.length
+    ? normalized.map((reservation, index) =>
+      mapReservation(reservation, listing.listingId, pricePerNight, feesTotal, index))
+    : buildFallbackReservationsFromBookedDays(listing.listingId, bookings)
 
   return sortReservationsByDate(reservations)
 }
@@ -194,4 +229,43 @@ export function findLatestReservationForListing(reservations: Reservation[]): Re
   if (!reservations.length) return null
   const sorted = sortReservationsByDate(reservations)
   return sorted[0] ?? null
+}
+
+export function findClosestReservationForListing(
+  reservations: Reservation[],
+  referenceDate = new Date(),
+): Reservation | null {
+  if (!reservations.length) return null
+  const referenceMs = toUtcTodayMs(referenceDate)
+
+  return reservations.reduce<Reservation | null>((closest, current) => {
+    if (!closest) return current
+    return compareReservationRelevance(current, closest, referenceMs) < 0 ? current : closest
+  }, null)
+}
+
+export function findClosestReservation(
+  reservationsByListing: Record<string, Reservation[]>,
+  referenceDate = new Date(),
+): {
+  listingId: string
+  reservation: Reservation
+} | null {
+  const referenceMs = toUtcTodayMs(referenceDate)
+  let closest: { listingId: string; reservation: Reservation } | null = null
+
+  for (const [listingId, reservations] of Object.entries(reservationsByListing)) {
+    for (const reservation of reservations) {
+      if (!closest) {
+        closest = { listingId, reservation }
+        continue
+      }
+
+      if (compareReservationRelevance(reservation, closest.reservation, referenceMs) < 0) {
+        closest = { listingId, reservation }
+      }
+    }
+  }
+
+  return closest
 }

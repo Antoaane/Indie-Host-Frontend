@@ -24,7 +24,10 @@
       "status": {
         "published": "Publiée",
         "draft": "Brouillon",
-        "archived": "Archivée"
+        "archived": "Archivée",
+        "blocked": "Réservations bloquées",
+        "paused": "En pause",
+        "deleted": "Supprimée"
       },
       "untitled": "Annonce sans titre",
       "guests": "{count, plural, one {# voyageur} other {# voyageurs}}",
@@ -120,16 +123,43 @@
           "roomLabelGeneric": "Pièce",
           "roomLabelFallback": "Pièce {index}",
           "types": [
-            { "value": "bedroom", "label": "Chambre" },
-            { "value": "livingroom", "label": "Salon" },
-            { "value": "bathroom", "label": "Salle de bain" },
-            { "value": "kitchen", "label": "Cuisine" },
-            { "value": "other", "label": "Autre" }
+            {
+              "value": "bedroom",
+              "label": "Chambre"
+            },
+            {
+              "value": "livingroom",
+              "label": "Salon"
+            },
+            {
+              "value": "bathroom",
+              "label": "Salle de bain"
+            },
+            {
+              "value": "kitchen",
+              "label": "Cuisine"
+            },
+            {
+              "value": "other",
+              "label": "Autre"
+            }
           ],
           "bedTypes": [
-            { "value": "simple", "label": "Lit simple", "capacity": 1 },
-            { "value": "double", "label": "Lit double", "capacity": 2 },
-            { "value": "bunk", "label": "Lit superposés", "capacity": 2 }
+            {
+              "value": "simple",
+              "label": "Lit simple",
+              "capacity": 1
+            },
+            {
+              "value": "double",
+              "label": "Lit double",
+              "capacity": 2
+            },
+            {
+              "value": "bunk",
+              "label": "Lit superposés",
+              "capacity": 2
+            }
           ]
         },
         "reviews": {
@@ -139,6 +169,41 @@
             "indiehost": "Avis Indie Host",
             "airbnb": "Avis Airbnb",
             "booking": "Avis Booking.com"
+          }
+        },
+        "visibility": {
+          "title": "Visibilité et disponibilité",
+          "subtitle": "Contrôlez l’accès public et les réservations de votre annonce.",
+          "statusLabel": "Statut public",
+          "statusHint": "Ces réglages impactent immédiatement l’affichage côté voyageurs.",
+          "options": {
+            "active": {
+              "title": "Annonce en ligne",
+              "description": "Visible et réservable normalement."
+            },
+            "blocked": {
+              "title": "Réservations bloquées",
+              "description": "Visible, mais aucune réservation possible."
+            },
+            "paused": {
+              "title": "Annonce en pause",
+              "description": "Invisible, remplacée par une page d’information."
+            }
+          },
+          "pauseMessage": {
+            "label": "Message affiché pendant la pause",
+            "hint": "Ce texte s’affiche uniquement quand l’annonce est en pause.",
+            "placeholder": "Ex : Nous revenons très vite avec de nouvelles disponibilités."
+          },
+          "delete": {
+            "title": "Suppression",
+            "hint": "Retire l’annonce des listes sans supprimer les données.",
+            "cta": "Supprimer l’annonce",
+            "current": "Statut actuel :",
+            "confirmTitle": "Confirmer la suppression",
+            "confirmMessage": "Cette annonce ne sera plus visible côté hôte ni côté voyageur. Les données seront conservées.",
+            "confirmCta": "Oui, supprimer",
+            "cancelCta": "Annuler"
           }
         }
       },
@@ -257,7 +322,104 @@
         }
       },
       "arrival": {
-        "placeholder": "Section en cours de construction."
+        "intro": {
+          "title": "En-tête du guide",
+          "subtitle": "Texte d’accueil affiché en haut de la page mobile.",
+          "fields": {
+            "title": {
+              "label": "Titre court",
+              "placeholder": "Bienvenue"
+            },
+            "subtitle": {
+              "label": "Sous-titre",
+              "placeholder": "Pour profiter des lieux au maximum…"
+            },
+            "tagline": {
+              "label": "Tagline",
+              "placeholder": "Propulsé par IndieHost"
+            }
+          }
+        },
+        "practical": {
+          "savings": {
+            "title": "Économisez sur vos voyages",
+            "subtitle": "Bonnes pratiques pour réserver en direct.",
+            "fields": [
+              {
+                "key": "message",
+                "label": "Message principal",
+                "placeholder": "Réservez en direct pour éviter les commissions."
+              }
+            ]
+          },
+          "access": {
+            "title": "Adresse & accès",
+            "subtitle": "Tout ce qu’il faut pour arriver sereinement.",
+            "fields": [
+              {
+                "key": "address",
+                "label": "Adresse",
+                "placeholder": "Adresse complète ou point de rendez-vous"
+              },
+              {
+                "key": "checkIn",
+                "label": "Check-in",
+                "placeholder": "À partir de 16h"
+              },
+              {
+                "key": "checkOut",
+                "label": "Check-out",
+                "placeholder": "Avant 11h"
+              },
+              {
+                "key": "parking",
+                "label": "Parking",
+                "placeholder": "Gratuit sur place"
+              }
+            ]
+          },
+          "services": {
+            "title": "Connexion & services",
+            "subtitle": "Infos Wi-Fi, contacts utiles et assistance.",
+            "fields": [
+              {
+                "key": "wifi",
+                "label": "Wi-Fi",
+                "placeholder": "Nom du réseau et mot de passe"
+              },
+              {
+                "key": "contacts",
+                "label": "Numéros utiles",
+                "placeholder": "Urgences, médecin, police"
+              },
+              {
+                "key": "assistance",
+                "label": "Assistance hôte",
+                "placeholder": "Disponibilités et canal de contact"
+              }
+            ]
+          },
+          "rules": {
+            "title": "Règles du séjour",
+            "subtitle": "Rappels essentiels pour un séjour harmonieux.",
+            "label": "Règles principales",
+            "placeholder": "Listez les règles à respecter pendant le séjour."
+          },
+          "shops": {
+            "title": "Commerces & marchés",
+            "subtitle": "Où se ravitailler et découvrir les producteurs.",
+            "label": "Adresses recommandées",
+            "placeholder": "Partagez vos commerces et marchés préférés."
+          }
+        },
+        "guide": {
+          "title": "Guide touristique",
+          "subtitle": "Un seul champ éditorial libre pour raconter vos meilleures adresses.",
+          "titleLabel": "Titre du guide",
+          "titlePlaceholder": "Découvertes locales",
+          "contentLabel": "Contenu",
+          "contentPlaceholder": "Racontez les expériences locales, vos adresses et vos conseils."
+        }
       }
     }
   }

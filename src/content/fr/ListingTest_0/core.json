@@ -41,6 +41,22 @@
     {
       "room-name": "Salle de bain",
       "type": "bathroom"
+    },
+    {
+      "room-name": "Chambre",
+      "type": "bedroom",
+      "beds": [
+        {
+          "type": "double",
+          "capacity": 2,
+          "quantity": 2
+        },
+        {
+          "type": "bunk",
+          "capacity": 2,
+          "quantity": 1
+        }
+      ]
     }
   ],
   "perks": [
@@ -358,5 +374,11 @@
       "title": "Autres remarques",
       "content": "Cette maison est située au milieu du vignoble de l'AOC Cadillac-Côtes-de-Bordeaux. Vous pourrez donc profiter des vignes aux alentours entre plaines et côteaux. Pour les amateurs de vins, vous pourrez déguster les vins des Vignobles Gonfrier au caveau du Château Langoiran, à 10min de la maison"
     }
-  ]
+  ],
+  "pause_message": "Nous revenons trèèèès vite",
+  "reviews-display": {
+    "indiehost": true,
+    "airbnb": true,
+    "booking": true
+  }
 }

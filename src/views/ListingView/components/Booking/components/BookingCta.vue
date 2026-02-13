@@ -5,6 +5,9 @@ import { CalendarCheck, UsersRound } from 'lucide-vue-next'
 
 const props = defineProps<{
   nights: number
+  disabled?: boolean
+  disabledLabel?: string
+  disabledHint?: string
 }>()
 
 const emit = defineEmits<{
@@ -17,16 +20,16 @@ const emit = defineEmits<{
     <div class="btn-primary__full">
       <button
         type="button"
-        :disabled="!props.nights"
+        :disabled="props.disabled || !props.nights"
         @click="emit('reserve')"
       >
         <CalendarCheck :size="18" />
-        Réserver
+        {{ props.disabled && props.disabledLabel ? props.disabledLabel : 'Réserver' }}
       </button>
     </div>
     <p class="hint">
       <UsersRound :size="12" />
-      Confirmation immédiate et paiement sécurisé
+      {{ props.disabled && props.disabledHint ? props.disabledHint : 'Confirmation immédiate et paiement sécurisé' }}
     </p>
   </div>
 </template>

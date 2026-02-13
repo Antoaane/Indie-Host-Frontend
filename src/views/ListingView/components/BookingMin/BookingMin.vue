@@ -12,11 +12,15 @@ const props = withDefaults(
     pricePerNight: number
     fees?: FeeItem[]
     bookedDays?: BookedRange[]
+    disabled?: boolean
+    disabledLabel?: string
   }>(),
   {
     modelValue: null,
     fees: () => [],
     bookedDays: () => [],
+    disabled: false,
+    disabledLabel: undefined,
   },
 )
 
@@ -57,6 +61,7 @@ function unlockScroll() {
 }
 
 async function openOverlay() {
+  if (props.disabled) return
   if (overlayOpen.value) return
   overlayOpen.value = true
   lockScroll()
@@ -93,11 +98,13 @@ onBeforeUnmount(() => {
     <div
       class="bar"
       role="button"
-      tabindex="0"
+      :tabindex="props.disabled ? -1 : 0"
       ref="triggerEl"
       aria-haspopup="dialog"
       :aria-expanded="overlayOpen"
       :aria-controls="'booking-min-dialog'"
+      :class="{ 'is-disabled': props.disabled }"
+      :aria-disabled="props.disabled"
       @click="openOverlay"
       @keydown.enter.prevent="openOverlay"
       @keydown.space.prevent="openOverlay"
@@ -117,9 +124,10 @@ onBeforeUnmount(() => {
         <button
           type="button"
           class="button"
+          :disabled="props.disabled"
           @click.stop="openOverlay"
         >
-          Réserver
+          {{ props.disabled && props.disabledLabel ? props.disabledLabel : 'Réserver' }}
         </button>
       </div>
     </div>

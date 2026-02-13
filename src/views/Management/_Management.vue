@@ -8,11 +8,15 @@ import DatePicker from '@/components/DatePicker/DatePicker.vue'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
 import type { EditorMode, EditorSource } from '@/views/Editor/types/editor'
 import type { UserListingCard } from '@/views/Editor/utils/listingApi'
-import type { RawComments } from '@/domain/listings/types'
 import type { Reservation } from '@/views/Management/utils/managementReservations'
 import ManagementListings from '@/views/Management/components/ManagementListings.vue'
 import ManagementReservationSlider from '@/views/Management/components/ManagementReservationSlider.vue'
-import { buildReservationsForListing, findLatestReservation, findLatestReservationForListing } from '@/views/Management/utils/managementReservations'
+import {
+  buildReservationsForListing,
+  findClosestReservation,
+  findClosestReservationForListing,
+  findLatestReservationForListing,
+} from '@/views/Management/utils/managementReservations'
 
 const props = defineProps<{
   mode: EditorMode
@@ -117,7 +121,6 @@ async function loadReservations(sourceListings: UserListingCard[]) {
       const reservations = buildReservationsForListing({
         listing,
         bookings: volatile.bookings ?? null,
-        comments: (volatile.comments ?? null) as RawComments | null,
       })
       reservationsByListingId[listing.listingId] = reservations
     }),
@@ -132,17 +135,20 @@ async function loadReservations(sourceListings: UserListingCard[]) {
 }
 
 function selectDefaultReservation() {
-  const latest = findLatestReservation(reservationsByListingId)
-  if (latest) {
-    selectedListingId.value = latest.listingId
-    selectedReservationId.value = latest.reservation.id
+  const closest = findClosestReservation(reservationsByListingId)
+  if (closest) {
+    selectedListingId.value = closest.listingId
+    selectedReservationId.value = closest.reservation.id
     stage.value = 'reservations'
     return
   }
 
   if (listings.value.length) {
     selectedListingId.value = listings.value[0].listingId
-    selectedReservationId.value = reservationsByListingId[selectedListingId.value]?.[0]?.id ?? null
+    const closestForListing = findClosestReservationForListing(
+      reservationsByListingId[selectedListingId.value] ?? [],
+    )
+    selectedReservationId.value = closestForListing?.id ?? reservationsByListingId[selectedListingId.value]?.[0]?.id ?? null
     stage.value = 'reservations'
   }
 }
@@ -157,7 +163,9 @@ async function bootstrap() {
 function handleSelectListing(listingId: string) {
   if (!listingId.trim()) return
   selectedListingId.value = listingId
-  const fallback = reservationsByListingId[listingId]?.[0] ?? null
+  const fallback = findClosestReservationForListing(reservationsByListingId[listingId] ?? [])
+    ?? reservationsByListingId[listingId]?.[0]
+    ?? null
   selectedReservationId.value = fallback?.id ?? null
   stage.value = 'reservations'
 }
@@ -191,7 +199,7 @@ watch(reservationsForListing, (items) => {
   }
 
   if (!selectedReservationId.value || !items.some((reservation) => reservation.id === selectedReservationId.value)) {
-    selectedReservationId.value = items[0].id
+    selectedReservationId.value = findClosestReservationForListing(items)?.id ?? items[0].id
   }
 })
 
@@ -235,6 +243,7 @@ const guestLines = computed(() => {
   if (guests.children) lines.push(`${guests.children} enfant${guests.children > 1 ? 's' : ''}`)
   if (guests.infants) lines.push(`${guests.infants} b\u00e9b\u00e9${guests.infants > 1 ? 's' : ''}`)
   if (guests.pets) lines.push(`${guests.pets} animal${guests.pets > 1 ? 's' : ''}`)
+  if (guests.pmr) lines.push(`${guests.pmr} personne${guests.pmr > 1 ? 's' : ''} PMR`)
 
   return lines
 })
@@ -242,7 +251,7 @@ const guestLines = computed(() => {
 const totalGuests = computed(() => {
   const guests = selectedReservation.value?.guests
   if (!guests) return 0
-  return guests.adults + guests.children + guests.infants + guests.pets
+  return guests.adults + guests.children + guests.infants + guests.pets + guests.pmr
 })
 
 const guestLabel = computed(() => (totalGuests.value > 1 ? 'voyageurs' : 'voyageur'))

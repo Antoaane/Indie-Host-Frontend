@@ -12,6 +12,10 @@ export const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value
 }
 
+export const closeMobileMenu = () => {
+  isMobileMenuOpen.value = false
+}
+
 export function scrollToTarget(e: MouseEvent, isDropdown: boolean = true) {
   e.preventDefault()
 
@@ -31,4 +35,3 @@ export function scrollToTarget(e: MouseEvent, isDropdown: boolean = true) {
   // else
   target.scrollIntoView({ behavior: 'smooth' })
 }
-

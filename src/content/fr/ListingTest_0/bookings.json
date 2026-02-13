@@ -8,24 +8,556 @@
   ],
   "booked-days": [
     {
-      "start": "2024-12-20",
-      "end": "2024-12-27"
+      "start": "2026-02-01",
+      "end": "2026-02-03"
     },
     {
-      "start": "2025-01-10",
-      "end": "2025-01-14"
+      "start": "2026-02-03",
+      "end": "2026-02-06"
     },
     {
-      "start": "2025-01-22",
-      "end": "2025-01-25"
+      "start": "2026-02-07",
+      "end": "2026-02-11"
     },
     {
-      "start": "2025-11-06",
-      "end": "2025-11-11"
+      "start": "2026-02-11",
+      "end": "2026-02-16"
     },
     {
-      "start": "2025-11-13",
-      "end": "2025-11-16"
+      "start": "2026-02-18",
+      "end": "2026-02-21"
+    },
+    {
+      "start": "2026-02-22",
+      "end": "2026-02-24"
+    },
+    {
+      "start": "2026-02-24",
+      "end": "2026-03-02"
+    },
+    {
+      "start": "2026-03-03",
+      "end": "2026-03-07"
+    },
+    {
+      "start": "2026-03-09",
+      "end": "2026-03-12"
+    },
+    {
+      "start": "2026-03-12",
+      "end": "2026-03-17"
+    },
+    {
+      "start": "2026-03-18",
+      "end": "2026-03-20"
+    },
+    {
+      "start": "2026-03-20",
+      "end": "2026-03-24"
+    },
+    {
+      "start": "2026-03-26",
+      "end": "2026-03-29"
+    },
+    {
+      "start": "2026-03-30",
+      "end": "2026-04-01"
+    },
+    {
+      "start": "2026-04-01",
+      "end": "2026-04-06"
+    },
+    {
+      "start": "2026-04-07",
+      "end": "2026-04-11"
+    }
+  ],
+  "pricing": {
+    "deposit": {
+      "type": "info",
+      "amount": 0
+    }
+  },
+  "reservations": [
+    {
+      "id": "reservation-listingtest_0-2026-01",
+      "start": "2026-02-01",
+      "end": "2026-02-03",
+      "nights": 2,
+      "guestName": "Alexandre Morel",
+      "guestAvatar": "https://randomuser.me/api/portraits/men/10.jpg",
+      "message": "Arrivee prevue en fin d'apres-midi. Merci pour les infos d'acces.",
+      "guests": {
+        "adults": 2,
+        "children": 0,
+        "infants": 0,
+        "pets": 0,
+        "pmr": 0
+      },
+      "payment": {
+        "total": 383,
+        "deposit": 96,
+        "balance": 287,
+        "status": "pending",
+        "method": "Carte"
+      },
+      "contact": {
+        "firstName": "Alexandre",
+        "lastName": "Morel",
+        "phone": "+33 6 40 10 20 30",
+        "email": "alexandre.morel00@example.com"
+      },
+      "createdAt": "2026-01-20T09:30:00Z"
+    },
+    {
+      "id": "reservation-listingtest_0-2026-02",
+      "start": "2026-02-03",
+      "end": "2026-02-06",
+      "nights": 3,
+      "guestName": "Hugo Petit",
+      "guestAvatar": "https://randomuser.me/api/portraits/women/17.jpg",
+      "message": "Sejour en couple pour deconnecter. On respectera bien les consignes de la maison.",
+      "guests": {
+        "adults": 1,
+        "children": 0,
+        "infants": 0,
+        "pets": 0,
+        "pmr": 0
+      },
+      "payment": {
+        "total": 557,
+        "deposit": 557,
+        "balance": 0,
+        "status": "paid",
+        "method": "Virement"
+      },
+      "contact": {
+        "firstName": "Hugo",
+        "lastName": "Petit",
+        "phone": "+33 6 40 11 21 31",
+        "email": "hugo.petit01@example.com"
+      },
+      "createdAt": "2026-01-17T09:30:00Z"
+    },
+    {
+      "id": "reservation-listingtest_0-2026-03",
+      "start": "2026-02-07",
+      "end": "2026-02-11",
+      "nights": 4,
+      "guestName": "Emma Dubois",
+      "guestAvatar": "https://randomuser.me/api/portraits/men/24.jpg",
+      "message": "Reservation famille avec enfant. Merci d'avance pour votre disponibilite.",
+      "guests": {
+        "adults": 2,
+        "children": 1,
+        "infants": 0,
+        "pets": 0,
+        "pmr": 0
+      },
+      "payment": {
+        "total": 746,
+        "deposit": 746,
+        "balance": 0,
+        "status": "paid",
+        "method": "Apple Pay"
+      },
+      "contact": {
+        "firstName": "Emma",
+        "lastName": "Dubois",
+        "phone": "+33 6 40 12 22 32",
+        "email": "emma.dubois02@example.com"
+      },
+      "createdAt": "2026-01-16T09:30:00Z"
+    },
+    {
+      "id": "reservation-listingtest_0-2026-04",
+      "start": "2026-02-11",
+      "end": "2026-02-16",
+      "nights": 5,
+      "guestName": "Lea Rousset",
+      "guestAvatar": "https://randomuser.me/api/portraits/women/31.jpg",
+      "message": "Deplacement pro de quelques nuits, besoin d'une connexion wifi stable.",
+      "guests": {
+        "adults": 2,
+        "children": 0,
+        "infants": 1,
+        "pets": 0,
+        "pmr": 0
+      },
+      "payment": {
+        "total": 913,
+        "deposit": 913,
+        "balance": 0,
+        "status": "paid",
+        "method": "Espece"
+      },
+      "contact": {
+        "firstName": "Lea",
+        "lastName": "Rousset",
+        "phone": "+33 6 40 13 23 33",
+        "email": "lea.rousset03@example.com"
+      },
+      "createdAt": "2026-01-15T09:30:00Z"
+    },
+    {
+      "id": "reservation-listingtest_0-2026-05",
+      "start": "2026-02-18",
+      "end": "2026-02-21",
+      "nights": 3,
+      "guestName": "Thomas Nguyen",
+      "guestAvatar": "https://randomuser.me/api/portraits/men/38.jpg",
+      "message": "Week-end entre amis, logement ideal pour nous. Hote reactive, merci.",
+      "guests": {
+        "adults": 3,
+        "children": 0,
+        "infants": 0,
+        "pets": 1,
+        "pmr": 0
+      },
+      "payment": {
+        "total": 569,
+        "deposit": 142,
+        "balance": 427,
+        "status": "pending",
+        "method": "SEPA"
+      },
+      "contact": {
+        "firstName": "Thomas",
+        "lastName": "Nguyen",
+        "phone": "+33 6 40 14 24 34",
+        "email": "thomas.nguyen04@example.com"
+      },
+      "createdAt": "2026-01-17T09:30:00Z"
+    },
+    {
+      "id": "reservation-listingtest_0-2026-06",
+      "start": "2026-02-22",
+      "end": "2026-02-24",
+      "nights": 2,
+      "guestName": "Clara Garcia",
+      "guestAvatar": "https://randomuser.me/api/portraits/women/45.jpg",
+      "message": "Nous venons en train et prenons un taxi a l'arrivee. A bientot.",
+      "guests": {
+        "adults": 2,
+        "children": 0,
+        "infants": 0,
+        "pets": 0,
+        "pmr": 1
+      },
+      "payment": {
+        "total": 383,
+        "deposit": 383,
+        "balance": 0,
+        "status": "paid",
+        "method": "Carte"
+      },
+      "contact": {
+        "firstName": "Clara",
+        "lastName": "Garcia",
+        "phone": "+33 6 40 15 25 35",
+        "email": "clara.garcia05@example.com"
+      },
+      "createdAt": "2026-01-16T09:30:00Z"
+    },
+    {
+      "id": "reservation-listingtest_0-2026-07",
+      "start": "2026-02-24",
+      "end": "2026-03-02",
+      "nights": 6,
+      "guestName": "Maxime Faure",
+      "guestAvatar": "https://randomuser.me/api/portraits/men/52.jpg",
+      "message": "Sejour calme prevu. Merci pour le guide d'arrivee tres clair.",
+      "guests": {
+        "adults": 4,
+        "children": 1,
+        "infants": 0,
+        "pets": 0,
+        "pmr": 0
+      },
+      "payment": {
+        "total": 1094,
+        "deposit": 1094,
+        "balance": 0,
+        "status": "paid",
+        "method": "Virement"
+      },
+      "contact": {
+        "firstName": "Maxime",
+        "lastName": "Faure",
+        "phone": "+33 6 40 16 26 36",
+        "email": "maxime.faure06@example.com"
+      },
+      "createdAt": "2026-01-13T09:30:00Z"
+    },
+    {
+      "id": "reservation-listingtest_0-2026-08",
+      "start": "2026-03-03",
+      "end": "2026-03-07",
+      "nights": 4,
+      "guestName": "Lucie Riviere",
+      "guestAvatar": "https://randomuser.me/api/portraits/women/59.jpg",
+      "message": "Nous celebrons un anniversaire en petit comite, ambiance tres tranquille.",
+      "guests": {
+        "adults": 2,
+        "children": 0,
+        "infants": 0,
+        "pets": 0,
+        "pmr": 0
+      },
+      "payment": {
+        "total": 731,
+        "deposit": 731,
+        "balance": 0,
+        "status": "paid",
+        "method": "Apple Pay"
+      },
+      "contact": {
+        "firstName": "Lucie",
+        "lastName": "Riviere",
+        "phone": "+33 6 40 17 27 37",
+        "email": "lucie.riviere07@example.com"
+      },
+      "createdAt": "2026-01-15T09:30:00Z"
+    },
+    {
+      "id": "reservation-listingtest_0-2026-09",
+      "start": "2026-03-09",
+      "end": "2026-03-12",
+      "nights": 3,
+      "guestName": "Paul Michel",
+      "guestAvatar": "https://randomuser.me/api/portraits/men/66.jpg",
+      "message": "Arrivee prevue en fin d'apres-midi. Merci pour les infos d'acces.",
+      "guests": {
+        "adults": 1,
+        "children": 0,
+        "infants": 0,
+        "pets": 0,
+        "pmr": 0
+      },
+      "payment": {
+        "total": 557,
+        "deposit": 139,
+        "balance": 418,
+        "status": "pending",
+        "method": "Espece"
+      },
+      "contact": {
+        "firstName": "Paul",
+        "lastName": "Michel",
+        "phone": "+33 6 40 18 28 38",
+        "email": "paul.michel08@example.com"
+      },
+      "createdAt": "2026-01-16T09:30:00Z"
+    },
+    {
+      "id": "reservation-listingtest_0-2026-10",
+      "start": "2026-03-12",
+      "end": "2026-03-17",
+      "nights": 5,
+      "guestName": "Celine Caron",
+      "guestAvatar": "https://randomuser.me/api/portraits/women/73.jpg",
+      "message": "Sejour en couple pour deconnecter. On respectera bien les consignes de la maison.",
+      "guests": {
+        "adults": 2,
+        "children": 1,
+        "infants": 0,
+        "pets": 0,
+        "pmr": 0
+      },
+      "payment": {
+        "total": 920,
+        "deposit": 920,
+        "balance": 0,
+        "status": "paid",
+        "method": "SEPA"
+      },
+      "contact": {
+        "firstName": "Celine",
+        "lastName": "Caron",
+        "phone": "+33 6 40 19 29 39",
+        "email": "celine.caron09@example.com"
+      },
+      "createdAt": "2026-01-14T09:30:00Z"
+    },
+    {
+      "id": "reservation-listingtest_0-2026-11",
+      "start": "2026-03-18",
+      "end": "2026-03-20",
+      "nights": 2,
+      "guestName": "Alexandre Morel",
+      "guestAvatar": "https://randomuser.me/api/portraits/men/80.jpg",
+      "message": "Reservation famille avec enfant. Merci d'avance pour votre disponibilite.",
+      "guests": {
+        "adults": 2,
+        "children": 0,
+        "infants": 1,
+        "pets": 0,
+        "pmr": 0
+      },
+      "payment": {
+        "total": 391,
+        "deposit": 391,
+        "balance": 0,
+        "status": "paid",
+        "method": "Carte"
+      },
+      "contact": {
+        "firstName": "Alexandre",
+        "lastName": "Morel",
+        "phone": "+33 6 40 20 30 40",
+        "email": "alexandre.morel010@example.com"
+      },
+      "createdAt": "2026-01-15T09:30:00Z"
+    },
+    {
+      "id": "reservation-listingtest_0-2026-12",
+      "start": "2026-03-20",
+      "end": "2026-03-24",
+      "nights": 4,
+      "guestName": "Hugo Petit",
+      "guestAvatar": "https://randomuser.me/api/portraits/women/87.jpg",
+      "message": "Deplacement pro de quelques nuits, besoin d'une connexion wifi stable.",
+      "guests": {
+        "adults": 3,
+        "children": 0,
+        "infants": 0,
+        "pets": 1,
+        "pmr": 0
+      },
+      "payment": {
+        "total": 743,
+        "deposit": 743,
+        "balance": 0,
+        "status": "paid",
+        "method": "Virement"
+      },
+      "contact": {
+        "firstName": "Hugo",
+        "lastName": "Petit",
+        "phone": "+33 6 40 21 31 41",
+        "email": "hugo.petit011@example.com"
+      },
+      "createdAt": "2026-03-08T09:30:00Z"
+    },
+    {
+      "id": "reservation-listingtest_0-2026-13",
+      "start": "2026-03-26",
+      "end": "2026-03-29",
+      "nights": 3,
+      "guestName": "Emma Dubois",
+      "guestAvatar": "https://randomuser.me/api/portraits/men/14.jpg",
+      "message": "Week-end entre amis, logement ideal pour nous. Hote reactive, merci.",
+      "guests": {
+        "adults": 2,
+        "children": 0,
+        "infants": 0,
+        "pets": 0,
+        "pmr": 1
+      },
+      "payment": {
+        "total": 557,
+        "deposit": 139,
+        "balance": 418,
+        "status": "pending",
+        "method": "Apple Pay"
+      },
+      "contact": {
+        "firstName": "Emma",
+        "lastName": "Dubois",
+        "phone": "+33 6 40 22 32 42",
+        "email": "emma.dubois012@example.com"
+      },
+      "createdAt": "2026-03-09T09:30:00Z"
+    },
+    {
+      "id": "reservation-listingtest_0-2026-14",
+      "start": "2026-03-30",
+      "end": "2026-04-01",
+      "nights": 2,
+      "guestName": "Lea Rousset",
+      "guestAvatar": "https://randomuser.me/api/portraits/women/21.jpg",
+      "message": "Nous venons en train et prenons un taxi a l'arrivee. A bientot.",
+      "guests": {
+        "adults": 4,
+        "children": 1,
+        "infants": 0,
+        "pets": 0,
+        "pmr": 0
+      },
+      "payment": {
+        "total": 398,
+        "deposit": 398,
+        "balance": 0,
+        "status": "paid",
+        "method": "Espece"
+      },
+      "contact": {
+        "firstName": "Lea",
+        "lastName": "Rousset",
+        "phone": "+33 6 40 23 33 43",
+        "email": "lea.rousset013@example.com"
+      },
+      "createdAt": "2026-03-08T09:30:00Z"
+    },
+    {
+      "id": "reservation-listingtest_0-2026-15",
+      "start": "2026-04-01",
+      "end": "2026-04-06",
+      "nights": 5,
+      "guestName": "Thomas Nguyen",
+      "guestAvatar": "https://randomuser.me/api/portraits/men/28.jpg",
+      "message": "Sejour calme prevu. Merci pour le guide d'arrivee tres clair.",
+      "guests": {
+        "adults": 2,
+        "children": 0,
+        "infants": 0,
+        "pets": 0,
+        "pmr": 0
+      },
+      "payment": {
+        "total": 905,
+        "deposit": 905,
+        "balance": 0,
+        "status": "paid",
+        "method": "SEPA"
+      },
+      "contact": {
+        "firstName": "Thomas",
+        "lastName": "Nguyen",
+        "phone": "+33 6 40 24 34 44",
+        "email": "thomas.nguyen014@example.com"
+      },
+      "createdAt": "2026-03-05T09:30:00Z"
+    },
+    {
+      "id": "reservation-listingtest_0-2026-16",
+      "start": "2026-04-07",
+      "end": "2026-04-11",
+      "nights": 4,
+      "guestName": "Clara Garcia",
+      "guestAvatar": "https://randomuser.me/api/portraits/women/35.jpg",
+      "message": "Nous celebrons un anniversaire en petit comite, ambiance tres tranquille.",
+      "guests": {
+        "adults": 1,
+        "children": 0,
+        "infants": 0,
+        "pets": 0,
+        "pmr": 0
+      },
+      "payment": {
+        "total": 731,
+        "deposit": 731,
+        "balance": 0,
+        "status": "paid",
+        "method": "Carte"
+      },
+      "contact": {
+        "firstName": "Clara",
+        "lastName": "Garcia",
+        "phone": "+33 6 40 25 35 45",
+        "email": "clara.garcia015@example.com"
+      },
+      "createdAt": "2026-03-06T09:30:00Z"
     }
   ]
 }

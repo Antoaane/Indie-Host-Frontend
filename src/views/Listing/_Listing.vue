@@ -5,8 +5,10 @@ import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 // COMOOENENTS
 import ListingView from '@/views/ListingView/_ListingView.vue'
+import ListingUnavailable from '@/views/Listing/ListingUnavailable.vue'
 import { loadBookings, loadComments, loadCore, loadHost, loadMedias, loadNotes } from '@/views/Listing/utils/fetchListingRaw'
 import type { RawListingBundle } from '@/domain/listings/types'
+import { getListingStatusFlags } from '@/domain/listings/status'
 
 const route = useRoute()
 const listingKey = computed(() => {
@@ -18,6 +20,13 @@ const listingKey = computed(() => {
 
 const rawListing = ref<RawListingBundle | null>(null)
 const isLoading = ref(false)
+
+const statusFlags = computed(() => getListingStatusFlags(rawListing.value?.core?.status))
+const pauseMessage = computed(() => (rawListing.value?.core?.pause_message ?? '').trim())
+const pausedTitle = computed(() => 'Annonce en pause')
+const pausedMessage = computed(() => pauseMessage.value || 'Cette annonce n’est plus en ligne temporairement.')
+const deletedTitle = computed(() => 'Annonce supprimée')
+const deletedMessage = computed(() => 'Cette annonce n’est plus disponible.')
 
 async function fetchRawListing() {
   isLoading.value = true
@@ -58,18 +67,28 @@ watch(
     id="listing-page"
     class="listing"
   >
-    <div class="sub-container">
-      <ListingView
-        v-if="rawListing"
-        :key="listingKey"
-        :rawListing="rawListing"
+    <template v-if="rawListing && statusFlags.isPaused">
+      <ListingUnavailable
+        :title="pausedTitle"
+        :message="pausedMessage"
       />
-      <template v-else>
-        <div class="skeleton">
-          {{ isLoading ? 'Chargement…' : 'Aucune donnée' }}
-        </div>
-      </template>
-    </div>
+    </template>
+    <template v-else-if="rawListing && statusFlags.isDeleted">
+      <ListingUnavailable
+        :title="deletedTitle"
+        :message="deletedMessage"
+      />
+    </template>
+    <ListingView
+      v-else-if="rawListing"
+      :key="listingKey"
+      :rawListing="rawListing"
+    />
+    <template v-else>
+      <div class="skeleton">
+        {{ isLoading ? 'Chargement…' : 'Aucune donnée' }}
+      </div>
+    </template>
   </main>
 </template>
 
@@ -82,17 +101,11 @@ watch(
   height: 100vh;
 
   @include min-width(lg) {
-    padding-top: $nav-height;
-    height: calc(100vh - $nav-height);
     overflow: hidden;
   }
 
   > .sub-container {
     height: 100vh;
-
-    @include min-width(lg) {
-      height: calc(100vh - $nav-height);
-    }
   }
 }
 </style>

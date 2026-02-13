@@ -12,6 +12,7 @@ export function persistListingDraft(listingId: string, draft: RawListingBundle) 
     core: draft.core ?? null,
     bookings: draft.bookings ?? null,
     medias: draft.medias ?? null,
+    arrival: draft.arrival ?? null,
   }
 
   console.log('[Editor][draft] persistListingDraft', { listingId })

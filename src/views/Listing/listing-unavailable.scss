@@ -1,0 +1,40 @@
+/* File: src/views/Listing/listing-unavailable.scss */
+
+@use '@/styles/variables/globals' as *;
+
+.listing-unavailable {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: $accent;
+  color: $secondary;
+  text-align: center;
+
+  > .content {
+    max-width: 680px;
+    padding: var(--layout-gap-xl);
+    display: grid;
+    gap: var(--layout-gap-sm);
+
+    > .eyebrow {
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      font-size: 0.75rem;
+      opacity: 0.6;
+    }
+
+    > h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      letter-spacing: -0.02em;
+    }
+
+    > .message {
+      margin: 0;
+      font-size: 1.05rem;
+      line-height: 1.6;
+      opacity: 0.85;
+    }
+  }
+}

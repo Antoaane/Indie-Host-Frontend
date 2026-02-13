@@ -9,12 +9,14 @@ import type {
   RawCore,
   RawHost,
   RawListingBundle,
+  RawArrival,
   RawMedias,
   RawNotes,
   UserListingCard,
   VolatileBundle,
 } from '@/domain/listings/types'
 import type { FetchListingsOptions, ListingsController } from '@/domain/listings/controller'
+import { filterDeletedListings } from '@/domain/listings/status'
 
 const RAW_BASE_API_URL = (import.meta.env.VITE_API_BASE_URL ?? '').trim()
 const BASE_API_URL = normalizeApiBaseUrl(RAW_BASE_API_URL)
@@ -111,8 +113,40 @@ async function postRemote<T>(url: string, payload: unknown): Promise<T> {
 function fallbackEditableBundle(listingId: string): RawListingBundle {
   return {
     core: { id: listingId },
-    bookings: { price: 0, fees: [], 'booked-days': [] },
+    bookings: { price: 0, fees: [], 'booked-days': [], reservations: [] },
     medias: { images: [], videos: [] },
+    arrival: {
+      intro: {
+        title: 'Bienvenue',
+        subtitle: 'Pour profiter des lieux au maximum, voici votre guide d’arrivée.',
+        tagline: 'Propulsé par IndieHost',
+      },
+      practical: {
+        savings: {
+          message: 'Réservez en direct pour éviter les commissions.',
+        },
+        access: {
+          address: 'Baurech, Nouvelle-Aquitaine (adresse complète envoyée 24h avant l’arrivée).',
+          checkIn: 'À partir de 16h — arrivée autonome possible.',
+          checkOut: 'Avant 11h — merci de laisser les clés au point indiqué.',
+          parking: 'Gratuit sur place (1 à 2 véhicules).',
+        },
+        services: {
+          wifi: 'Nom du réseau et mot de passe disponibles sur place.',
+          contacts: 'Urgences 112 · Médecin 15 · Police 17.',
+          assistance: 'Assistance hôte disponible de 9h à 21h par message.',
+        },
+        rules:
+          '<ul>\\n  <li><strong>Respect de la nature</strong> — merci de ne rien laisser sur place et de trier vos déchets.</li>\\n  <li><strong>Silence</strong> — après 22h, merci de préserver la quiétude des lieux.</li>\\n  <li><strong>Départ</strong> — laissez le logement dans l’état trouvé et fermez bien.</li>\\n</ul>',
+        shops:
+          '<ul>\\n  <li><strong>Épicerie</strong> — à 10 minutes en voiture (produits frais et locaux).</li>\\n  <li><strong>Marché</strong> — le samedi matin, idéal pour découvrir la région.</li>\\n</ul>',
+      },
+      guide: {
+        title: 'Découvertes locales',
+        content:
+          '<h3>Patrimoine &amp; culture</h3>\\n<ul>\\n  <li><strong>Église Saint-Saturnin</strong> — édifice roman classé, à quelques minutes.</li>\\n  <li><strong>Château de Langoiran</strong> — vue panoramique sur la vallée.</li>\\n</ul>\\n<h3>Vignobles &amp; dégustations</h3>\\n<ul>\\n  <li><strong>Château Haut Peyrat</strong> — visites guidées et dégustations.</li>\\n  <li><strong>Domaine de Saint-Amand</strong> — vins bio et ateliers œnologiques.</li>\\n</ul>\\n<h3>Balades &amp; nature</h3>\\n<ul>\\n  <li><strong>Piste Roger Lapébie</strong> — ancienne voie ferrée aménagée.</li>\\n  <li><strong>Bord du lac</strong> — promenade calme au coucher du soleil.</li>\\n</ul>\\n<h3>Activités nautiques</h3>\\n<ul>\\n  <li><strong>Base nautique</strong> — paddle, canoë et bouées tractées.</li>\\n</ul>',
+      },
+    },
   }
 }
 
@@ -136,34 +170,37 @@ export function createApiListingsController(): ListingsController {
       if (!userId) return []
 
       const url = resolveUrl(buildUserListingsUrl(userId))
-      return fetchRemote<UserListingCard[]>(url)
+      const listings = await fetchRemote<UserListingCard[]>(url)
+      return filterDeletedListings(listings, options?.includeDeleted)
     },
     fetchListingBundle: async (listingId: string): Promise<RawListingBundle> => {
       console.log('[Domain][api] fetchListingBundle', { listingId })
       if (!apiEnabled) return fallbackEditableBundle(listingId)
 
-      const [core, bookings, medias, notes, comments, host] = await Promise.all([
+      const [core, bookings, medias, arrival, notes, comments, host] = await Promise.all([
         fetchRemote<RawCore>(resolveUrl(buildListingUrl('core', listingId))),
         fetchRemote<RawBookings>(resolveUrl(buildListingUrl('bookings', listingId))),
         fetchRemote<RawMedias>(resolveUrl(buildListingUrl('medias', listingId))),
+        fetchRemote<RawArrival>(resolveUrl(buildListingUrl('arrival', listingId))),
         fetchRemote<RawNotes>(resolveUrl(buildListingUrl('notes', listingId))),
         fetchRemote<RawComments>(resolveUrl(buildListingUrl('comments', listingId))),
         fetchRemote<RawHost>(resolveUrl(buildListingUrl('host', listingId))),
       ])
 
-      return { core, bookings, medias, notes, comments, host }
+      return { core, bookings, medias, arrival, notes, comments, host }
     },
     fetchEditableListingBundle: async (listingId: string): Promise<RawListingBundle> => {
       console.log('[Domain][api] fetchEditableListingBundle', { listingId })
       if (!apiEnabled) return fallbackEditableBundle(listingId)
 
-      const [core, bookings, medias] = await Promise.all([
+      const [core, bookings, medias, arrival] = await Promise.all([
         fetchRemote<RawCore>(resolveUrl(buildListingUrl('core', listingId))),
         fetchRemote<RawBookings>(resolveUrl(buildListingUrl('bookings', listingId))),
         fetchRemote<RawMedias>(resolveUrl(buildListingUrl('medias', listingId))),
+        fetchRemote<RawArrival>(resolveUrl(buildListingUrl('arrival', listingId))),
       ])
 
-      return { core, bookings, medias }
+      return { core, bookings, medias, arrival }
     },
     fetchVolatileListingBundle: async (listingId: string): Promise<VolatileBundle> => {
       console.log('[Domain][api] fetchVolatileListingBundle', { listingId })
@@ -196,6 +233,10 @@ export function createApiListingsController(): ListingsController {
         requests.push(patchRemote(resolveUrl(buildListingUrl('medias', listingId)), patch.medias))
       }
 
+      if (patch.arrival) {
+        requests.push(patchRemote(resolveUrl(buildListingUrl('arrival', listingId)), patch.arrival))
+      }
+
       if (requests.length) {
         await Promise.all(requests)
       }
@@ -216,6 +257,10 @@ export function createApiListingsController(): ListingsController {
 
       if (draft.medias) {
         requests.push(patchRemote(resolveUrl(buildListingUrl('medias', listingId)), draft.medias))
+      }
+
+      if (draft.arrival) {
+        requests.push(patchRemote(resolveUrl(buildListingUrl('arrival', listingId)), draft.arrival))
       }
 
       if (requests.length) {

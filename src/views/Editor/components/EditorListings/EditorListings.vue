@@ -12,6 +12,7 @@ import { orderByIndex } from '@/utils/medias/order'
 import { createListingMediaSwiperParams } from '@/utils/swiper/listingMedia'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 import { formatICUMessage } from '@/utils/i18n'
+import { normalizeListingStatus } from '@/domain/listings/status'
 
 const props = defineProps<{
   listings: UserListingCard[]
@@ -134,7 +135,7 @@ function handleSelect(listingId: string) {
 }
 
 function statusLabel(status?: string) {
-  const normalized = (status ?? '').trim().toLowerCase()
+  const normalized = normalizeListingStatus(status)
   if (!normalized) return ''
 
   switch (normalized) {
@@ -144,17 +145,26 @@ function statusLabel(status?: string) {
       return listingContent.status.draft
     case 'archived':
       return listingContent.status.archived
+    case 'blocked':
+      return listingContent.status.blocked
+    case 'paused':
+      return listingContent.status.paused
+    case 'deleted':
+      return listingContent.status.deleted
     default:
       return status ?? ''
   }
 }
 
 function statusVariant(status?: string) {
-  const normalized = (status ?? '').trim().toLowerCase()
+  const normalized = normalizeListingStatus(status)
   if (!normalized) return ''
   if (normalized === 'published') return 'is-published'
   if (normalized === 'draft') return 'is-draft'
   if (normalized === 'archived') return 'is-archived'
+  if (normalized === 'blocked') return 'is-blocked'
+  if (normalized === 'paused') return 'is-paused'
+  if (normalized === 'deleted') return 'is-deleted'
   return 'is-unknown'
 }
 

@@ -1,250 +1,177 @@
 <!-- File: src/components/navs/Nav/Nav.vue -->
 
 <script setup lang="ts">
-// DEPS
-import { computed } from 'vue'
-import type { Ref } from 'vue'
-import { useRoute } from 'vue-router'
-import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/vue'
+import { useAuth } from '@clerk/vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import type { Component } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
-// UTILS
+import HostReservationOverlay from '@/components/navs/HostReservationOverlay.vue'
+import NavHostVariant from '@/components/navs/Nav/NavHostVariant.vue'
+import NavLandingVariant from '@/components/navs/Nav/NavLandingVariant.vue'
+import NavPublicVariant from '@/components/navs/Nav/NavPublicVariant.vue'
+import type { NavItem, NavVariant } from '@/components/navs/Nav/navTypes'
+import { closeMobileMenu } from '@/components/navs/navUtils'
 import { vp } from '@/utils/viewport'
-import { toggleMobileMenu, isMobileMenuOpen, scrollToTarget } from '@/components/navs/navUtils'
+import clerkToken from '@/utils/clerkToken'
 
-// ASSETS
-import { icons } from '@/components/svgs'
+const route = useRoute()
+const router = useRouter()
+const { getToken } = useAuth()
 
-// --- TYPES ---
-type NavItem = {
-  id: string
-  index?: number
-  name: string
-  link: string
-  cta?: boolean
-  /**
-   * Si true → ancre interne (scrollToTarget via data-target)
-   * Si false (default) → lien standard (href)
-   */
-  target?: boolean
-  action?: (event?: MouseEvent) => void
-  attrs?: Record<string, string | number | boolean>
-  ref?: Ref<HTMLElement | null> | ((el: HTMLElement | null) => void)
+const navRoot = ref<HTMLElement | null>(null)
+const reservationAnchor = ref<HTMLElement | null>(null)
+const reservationOpen = ref(false)
+
+const navVariant = computed<NavVariant>(() => {
+  const variant = route.meta?.navVariant
+  if (variant === 'landing' || variant === 'host' || variant === 'public') return variant
+  return 'public'
+})
+const isNavHidden = computed(() => Boolean(route.meta?.hideNav))
+const isNavVisible = computed(() => {
+  if (isNavHidden.value) return false
+  if (navVariant.value === 'landing') return true
+  return vp.lg.value
+})
+const isHost = computed(() => navVariant.value === 'host')
+
+function toggleReservation(event?: MouseEvent) {
+  if (!reservationOpen.value) {
+    const target = event?.currentTarget
+    if (target instanceof HTMLElement) {
+      reservationAnchor.value = target
+    }
+  }
+  reservationOpen.value = !reservationOpen.value
 }
 
-const props = withDefaults(
-  defineProps<{
-    items?: NavItem[]
-    searchBar?: boolean
-    full?: boolean
-  }>(),
-  {
-    searchBar: false,
-    full: true,
+function closeReservation() {
+  reservationOpen.value = false
+}
+
+watch(isHost, (value) => {
+  if (!value) closeReservation()
+})
+
+watch(vp.lg, (value) => {
+  if (!value) closeReservation()
+})
+
+watch(
+  () => route.fullPath,
+  () => {
+    closeReservation()
+    closeMobileMenu()
   },
 )
 
-// Si items n’est pas fourni du tout → on affiche le bouton “Retour”
-const itemsUndefined = computed(() => typeof props.items === 'undefined')
-
-const goBack = () => {
-  if (window.history.length > 1) window.history.back()
+const resolveRouteLink = (name?: string) => {
+  if (!name) return route.fullPath
+  try {
+    const resolved = router.resolve({ name })
+    return resolved?.href || route.fullPath
+  } catch {
+    return route.fullPath
+  }
 }
 
-// ⬇️ NEW: détecter si on est sur la landing page
-const route = useRoute()
-const isLanding = computed(() => route.path === '/')
+const landingNavItems: NavItem[] = [
+  { id: 'join-section', name: 'Essayer gratuitement', link: '#join-section', target: true, cta: true },
+  { id: 'features-section', name: 'Fonctionnalités', link: '#features-section', target: true },
+  { id: 'how-section', name: 'Comment ça marche ?', link: '#how-section', target: true },
+  { id: 'strengths-section', name: 'Nos valeurs', link: '#strengths-section', target: true },
+]
+
+const hostNavItems = computed<NavItem[]>(() => [
+  {
+    id: 'add-reservation',
+    name: 'Ajouter une réservation',
+    link: resolveRouteLink('management'),
+    cta: true,
+    action: toggleReservation,
+    ref: reservationAnchor,
+    attrs: {
+      'aria-expanded': reservationOpen.value,
+      'aria-controls': 'host-reservation-overlay',
+      'aria-haspopup': 'dialog',
+    },
+  },
+  { id: 'listings', name: 'Mes annonces', link: resolveRouteLink('editor') },
+  { id: 'reservations', name: 'Réservations', link: resolveRouteLink('management') },
+  { id: 'messagery', name: 'Messagerie', link: resolveRouteLink('messaging') },
+  { id: 'dashboard', name: 'Tableau de bord', link: resolveRouteLink('dashboard') },
+])
+
+const publicNavItems = computed<NavItem[]>(() => [
+  { id: 'messagery', name: 'Messagerie', link: resolveRouteLink('messaging') },
+  { id: 'reservations', name: 'Réservations', link: resolveRouteLink('management') },
+  { id: 'become-host', name: 'Devenir hôte', link: route.fullPath, target: true, cta: true },
+])
+
+const navItems = computed<NavItem[]>(() => {
+  if (navVariant.value === 'landing') return landingNavItems
+  if (navVariant.value === 'host') return hostNavItems.value
+  return publicNavItems.value
+})
+
+const navVariantComponentMap: Record<NavVariant, Component> = {
+  landing: NavLandingVariant,
+  host: NavHostVariant,
+  public: NavPublicVariant,
+}
+
+const activeNavComponent = computed(() => navVariantComponentMap[navVariant.value])
+
+function animateNavIn() {
+  const navElement = navRoot.value?.querySelector<HTMLElement>('.navbar')
+  if (!navElement) return
+
+  navElement.style.setProperty('transition', 'none')
+  navElement.style.setProperty('opacity', '0')
+  navElement.style.setProperty('transform', 'translateY(-100px)')
+
+  window.setTimeout(() => {
+    navElement.style.setProperty('transition', 'all 1s cubic-bezier(0.75, 0, 0.25, 1)')
+    navElement.style.removeProperty('opacity')
+    navElement.style.removeProperty('transform')
+  }, 650)
+}
+
+watch(isNavVisible, (visible) => {
+  if (!visible) {
+    closeReservation()
+    closeMobileMenu()
+    return
+  }
+  nextTick(() => animateNavIn())
+})
+
+onMounted(async () => {
+  if (isNavVisible.value) animateNavIn()
+
+  clerkToken.value = await getToken.value()
+  console.log('✅[clerkToken] fetched new token :', clerkToken.value)
+})
 </script>
 
 <template>
-  <nav
-    class="navbar"
-    :class="{ contained: !full }"
+  <header
+    v-if="isNavVisible"
+    ref="navRoot"
+    class="layout-header"
   >
-    <!-- Logo -->
-    <button
-      v-if="isLanding"
-      data-target="#hero-section"
-      class="logo"
-      @click="scrollToTarget($event, false)"
-      aria-label="IndieHost - Revenir en haut de page"
-    >
-      <component
-        :is="icons.logoFull.adapt"
-        title="IndieHost"
-        desc="Logo de IndieHost, plateforme de gestion de locations saisonnières"
-        role="img"
-      />
-    </button>
-    <a
-      v-else
-      href="/"
-      class="logo"
-      aria-label="IndieHost - Aller à l'accueil"
-    >
-      <component
-        :is="icons.logoFull.adapt"
-        title="IndieHost"
-        desc="Logo de IndieHost, plateforme de gestion de locations saisonnières"
-        role="img"
-      />
-    </a>
+    <component
+      :is="activeNavComponent"
+      :items="navItems"
+    />
 
-    <div
-      v-if="searchBar"
-      class="search"
-    >
-      <input
-        type="search"
-        placeholder="Rechercher…"
-        aria-label="Rechercher"
-      />
-    </div>
-
-    <!-- Desktop Menu -->
-    <ul
-      class="links"
-      v-if="vp.lg.value"
-    >
-      <template v-if="itemsUndefined">
-        <li>
-          <button @click="goBack">Retour</button>
-        </li>
-      </template>
-
-      <template v-else>
-        <template
-          v-for="(item, i) in props.items"
-          :key="item.index || i"
-        >
-          <li :class="{ cta: !!item.cta }">
-            <button
-              v-if="item.action"
-              type="button"
-              :ref="item.ref"
-              v-bind="item.attrs"
-              @click="(event) => item.action?.(event)"
-            >
-              {{ item.name }}
-            </button>
-
-            <!-- Cas 1 : ancre interne (scroll vers section) -->
-            <a
-              v-else-if="item.target"
-              :href="item.link"
-              :data-target="item.link"
-              v-bind="item.attrs"
-              :ref="item.ref"
-              @click.prevent="scrollToTarget"
-            >
-              {{ item.name }}
-            </a>
-
-            <!-- Cas 2 : lien classique -->
-            <a
-              v-else
-              :href="item.link"
-              v-bind="item.attrs"
-              :ref="item.ref"
-            >
-              {{ item.name }}
-            </a>
-          </li>
-        </template>
-        <li>
-          <SignedOut>
-            <SignInButton>
-              <button> Se connecter </button>
-            </SignInButton>
-          </SignedOut>
-          <SignedIn>
-            <UserButton />
-          </SignedIn>
-        </li>
-      </template>
-    </ul>
-
-    <!-- Mobile Menu Button -->
-    <div
-      class="mobile-toggle"
-      :class="{ 'is-active': isMobileMenuOpen }"
-      v-if="!vp.lg.value"
-      @click="toggleMobileMenu"
-      aria-label="Ouvrir/fermer le menu"
-      role="button"
-    >
-      <span class="line is-top" />
-      <span class="line is-bottom" />
-    </div>
-
-    <!-- Mobile Menu -->
-    <transition name="fade-slide">
-      <div
-        class="mobile-menu"
-        v-if="!vp.lg.value && isMobileMenuOpen"
-      >
-        <ul class="mobile-links">
-          <template v-if="itemsUndefined">
-            <li>
-              <button @click="goBack">Retour</button>
-            </li>
-          </template>
-
-          <template v-else>
-            <template
-              v-for="(item, i) in props.items"
-              :key="item.index || i"
-            >
-              <li :class="{ cta: !!item.cta }">
-                <button
-                  v-if="item.action"
-                  type="button"
-                  v-bind="item.attrs"
-                  @click="(event) => { item.action?.(event); toggleMobileMenu() }"
-                >
-                  {{ item.name }}
-                </button>
-
-                <!-- Cas 1 : ancre interne -->
-                <a
-                  v-else-if="item.target"
-                  :href="item.link"
-                  :data-target="item.link"
-                  v-bind="item.attrs"
-                  @click.prevent="scrollToTarget"
-                >
-                  {{ item.name }}
-                </a>
-
-                <!-- Cas 2 : lien classique -->
-                <a
-                  v-else
-                  :href="item.link"
-                  v-bind="item.attrs"
-                  @click="toggleMobileMenu"
-                >
-                  {{ item.name }}
-                </a>
-              </li>
-            </template>
-          </template>
-
-          <!-- Barre de recherche (mobile) -->
-          <div
-            v-if="searchBar"
-            class="search"
-          >
-            <input
-              type="search"
-              placeholder="Rechercher…"
-              aria-label="Rechercher"
-            />
-          </div>
-        </ul>
-      </div>
-    </transition>
-  </nav>
+    <HostReservationOverlay
+      v-if="isHost"
+      :open="reservationOpen"
+      :anchor="reservationAnchor"
+      @close="closeReservation"
+      @submit="closeReservation"
+    />
+  </header>
 </template>
-
-<style lang="scss">
-@use '@/components/navs/Nav/nav.scss';
-</style>

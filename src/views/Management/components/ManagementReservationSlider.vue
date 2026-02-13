@@ -1,10 +1,11 @@
 <!-- File: src/views/Management/components/ManagementReservationSlider.vue -->
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import type { SwiperOptions, SwiperModule } from 'swiper/types'
+import type { Swiper as SwiperInstance } from 'swiper/types'
 import { Swiper, SwiperSlide } from 'swiper/vue'
-import { FreeMode } from 'swiper/modules'
+import { FreeMode, Mousewheel } from 'swiper/modules'
 
 import type { Reservation } from '@/views/Management/utils/managementReservations'
 
@@ -17,11 +18,19 @@ const emit = defineEmits<{
   (e: 'select', reservationId: string): void
 }>()
 
+const displayedReservations = computed(() => [...props.reservations].reverse())
+const swiperRef = ref<SwiperInstance | null>(null)
+const activeDisplayedIndex = computed(() => {
+  if (!props.activeReservationId) return -1
+  return displayedReservations.value.findIndex((reservation) => reservation.id === props.activeReservationId)
+})
+
 const sliderParams = computed(
   () =>
     ({
       modules: [
         FreeMode as SwiperModule,
+        Mousewheel as SwiperModule,
       ],
       slidesPerView: 'auto',
       spaceBetween: 4,
@@ -29,11 +38,63 @@ const sliderParams = computed(
         enabled: true,
         momentumRatio: 0.8,
       },
+      mousewheel: {
+        enabled: true,
+        releaseOnEdges: true,
+      },
       centeredSlides: false,
       watchOverflow: true,
       resistanceRatio: 0.85,
       threshold: 6,
     }) satisfies SwiperOptions,
+)
+
+function scrollToContextualPosition() {
+  const swiper = swiperRef.value
+  const total = displayedReservations.value.length
+  if (!swiper || !total) return
+
+  const fallbackIndex = total - 1
+  const targetIndex = activeDisplayedIndex.value >= 0 ? activeDisplayedIndex.value : fallbackIndex
+
+  if (targetIndex >= fallbackIndex) {
+    swiper.slideTo(fallbackIndex, 0)
+    return
+  }
+
+  swiper.update()
+
+  const slideStart = swiper.slidesGrid[targetIndex]
+  const slideSize = swiper.slidesSizesGrid[targetIndex]
+
+  if (!Number.isFinite(slideStart) || !Number.isFinite(slideSize)) {
+    swiper.slideTo(targetIndex, 0)
+    return
+  }
+
+  // Center selected reservation when newer ones still exist on the right.
+  const centeredTranslate = -(slideStart + slideSize / 2 - swiper.width / 2)
+  const clampedTranslate = Math.max(swiper.maxTranslate(), Math.min(swiper.minTranslate(), centeredTranslate))
+  swiper.translateTo(clampedTranslate, 0, false, true)
+}
+
+function handleSwiper(instance: SwiperInstance) {
+  swiperRef.value = instance
+  nextTick(scrollToContextualPosition)
+}
+
+watch(
+  () => displayedReservations.value.map((reservation) => reservation.id).join('|'),
+  () => {
+    nextTick(scrollToContextualPosition)
+  },
+)
+
+watch(
+  () => props.activeReservationId,
+  () => {
+    nextTick(scrollToContextualPosition)
+  },
 )
 
 function initials(name: string) {
@@ -71,9 +132,10 @@ function handleSelect(reservationId: string) {
     <Swiper
       class="swiper"
       v-bind="sliderParams"
+      @swiper="handleSwiper"
     >
       <SwiperSlide
-        v-for="reservation in reservations"
+        v-for="reservation in displayedReservations"
         :key="reservation.id"
         class="reservation-slide"
       >

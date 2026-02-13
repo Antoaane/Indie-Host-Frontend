@@ -4,13 +4,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import type { Plugin } from 'vite';
 
-type ListingResourceKey = 'core' | 'medias' | 'bookings' | 'notes' | 'comments' | 'host';
+type ListingResourceKey = 'core' | 'medias' | 'bookings' | 'arrival' | 'notes' | 'comments' | 'host';
 
 type DatasetPaths = {
   dir: string;
   core: string;
   medias: string;
   bookings: string;
+  arrival: string;
   notes: string;
   comments: string;
   host: string;
@@ -18,7 +19,7 @@ type DatasetPaths = {
 
 const LOCAL_JSON_BASE = '/__local-json';
 const CONTENT_ROOT = path.resolve(process.cwd(), 'src/content/fr');
-const RESOURCE_KEYS: ListingResourceKey[] = ['core', 'medias', 'bookings', 'notes', 'comments', 'host'];
+const RESOURCE_KEYS: ListingResourceKey[] = ['core', 'medias', 'bookings', 'arrival', 'notes', 'comments', 'host'];
 
 function sendJson(res: any, status: number, payload: unknown) {
   res.statusCode = status;
@@ -55,6 +56,7 @@ function getDatasetPaths(dirName: string): DatasetPaths {
     core: path.join(dir, 'core.json'),
     medias: path.join(dir, 'medias.json'),
     bookings: path.join(dir, 'bookings.json'),
+    arrival: path.join(dir, 'arrival.json'),
     notes: path.join(dir, 'notes.json'),
     comments: path.join(dir, 'comments.json'),
     host: path.join(dir, 'host.json'),
@@ -99,9 +101,42 @@ function deepMerge(target: any, patch: any): any {
 function buildFallbackResource(resource: ListingResourceKey, listingId: string): any {
   switch (resource) {
     case 'core':
-      return { id: listingId };
+      return { id: listingId, status: 'published', pause_message: '' };
     case 'bookings':
-      return { price: 0, fees: [], 'booked-days': [] };
+      return { price: 0, fees: [], 'booked-days': [], reservations: [] };
+    case 'arrival':
+      return {
+        intro: {
+          title: 'Bienvenue',
+          subtitle: 'Pour profiter des lieux au maximum, voici votre guide d’arrivée.',
+          tagline: 'Propulsé par IndieHost',
+        },
+        practical: {
+          savings: {
+            message: 'Réservez en direct pour éviter les commissions.',
+          },
+          access: {
+            address: 'Baurech, Nouvelle-Aquitaine (adresse complète envoyée 24h avant l’arrivée).',
+            checkIn: 'À partir de 16h — arrivée autonome possible.',
+            checkOut: 'Avant 11h — merci de laisser les clés au point indiqué.',
+            parking: 'Gratuit sur place (1 à 2 véhicules).',
+          },
+          services: {
+            wifi: 'Nom du réseau et mot de passe disponibles sur place.',
+            contacts: 'Urgences 112 · Médecin 15 · Police 17.',
+            assistance: 'Assistance hôte disponible de 9h à 21h par message.',
+          },
+          rules:
+            '<ul>\\n  <li><strong>Respect de la nature</strong> — merci de ne rien laisser sur place et de trier vos déchets.</li>\\n  <li><strong>Silence</strong> — après 22h, merci de préserver la quiétude des lieux.</li>\\n  <li><strong>Départ</strong> — laissez le logement dans l’état trouvé et fermez bien.</li>\\n</ul>',
+          shops:
+            '<ul>\\n  <li><strong>Épicerie</strong> — à 10 minutes en voiture (produits frais et locaux).</li>\\n  <li><strong>Marché</strong> — le samedi matin, idéal pour découvrir la région.</li>\\n</ul>',
+        },
+        guide: {
+          title: 'Découvertes locales',
+          content:
+            '<h3>Patrimoine &amp; culture</h3>\\n<ul>\\n  <li><strong>Église Saint-Saturnin</strong> — édifice roman classé, à quelques minutes.</li>\\n  <li><strong>Château de Langoiran</strong> — vue panoramique sur la vallée.</li>\\n</ul>\\n<h3>Vignobles &amp; dégustations</h3>\\n<ul>\\n  <li><strong>Château Haut Peyrat</strong> — visites guidées et dégustations.</li>\\n  <li><strong>Domaine de Saint-Amand</strong> — vins bio et ateliers œnologiques.</li>\\n</ul>\\n<h3>Balades &amp; nature</h3>\\n<ul>\\n  <li><strong>Piste Roger Lapébie</strong> — ancienne voie ferrée aménagée.</li>\\n  <li><strong>Bord du lac</strong> — promenade calme au coucher du soleil.</li>\\n</ul>\\n<h3>Activités nautiques</h3>\\n<ul>\\n  <li><strong>Base nautique</strong> — paddle, canoë et bouées tractées.</li>\\n</ul>',
+        },
+      };
     case 'medias':
       return { images: [], videos: [] };
     case 'notes':

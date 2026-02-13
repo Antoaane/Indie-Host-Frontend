@@ -14,7 +14,7 @@
     flex-direction: row;
     gap: var(--layout-gap-md);
     @include layout-gap(padding, inline);
-    @include layout-gap(padding, bottom);
+    @include layout-gap(padding, vertical);
   }
 
   &.editor {

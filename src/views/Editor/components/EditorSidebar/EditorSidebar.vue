@@ -95,7 +95,11 @@ async function publishDraft() {
           :draft="props.draft"
           @patch="handlePatch"
         />
-        <ArrivalPanels v-else />
+        <ArrivalPanels
+          v-else
+          :arrival="props.draft.arrival"
+          @patch="handlePatch"
+        />
       </Transition>
     </div>
 

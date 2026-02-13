@@ -8,12 +8,14 @@ import type {
   RawCore,
   RawHost,
   RawListingBundle,
+  RawArrival,
   RawMedias,
   RawNotes,
   UserListingCard,
   VolatileBundle,
 } from '@/domain/listings/types'
 import type { FetchListingsOptions, ListingsController } from '@/domain/listings/controller'
+import { filterDeletedListings } from '@/domain/listings/status'
 
 const LOCAL_JSON_BASE = '/__local-json'
 
@@ -61,30 +63,33 @@ export function createLocalJsonListingsController(): ListingsController {
       const userId = options?.userId
       console.log('[Domain][local-json] fetchListings', { userId })
       const url = userId ? buildUserListingsUrl(userId) : `${LOCAL_JSON_BASE}/listings`
-      return requestJson<UserListingCard[]>(url)
+      const listings = await requestJson<UserListingCard[]>(url)
+      return filterDeletedListings(listings, options?.includeDeleted)
     },
     fetchListingBundle: async (listingId: string): Promise<RawListingBundle> => {
       console.log('[Domain][local-json] fetchListingBundle', { listingId })
-      const [core, bookings, medias, notes, comments, host] = await Promise.all([
+      const [core, bookings, medias, arrival, notes, comments, host] = await Promise.all([
         requestJson<RawCore>(buildListingUrl('core', listingId)),
         requestJson<RawBookings>(buildListingUrl('bookings', listingId)),
         requestJson<RawMedias>(buildListingUrl('medias', listingId)),
+        requestJson<RawArrival>(buildListingUrl('arrival', listingId)),
         requestJson<RawNotes>(buildListingUrl('notes', listingId)),
         requestJson<RawComments>(buildListingUrl('comments', listingId)),
         requestJson<RawHost>(buildListingUrl('host', listingId)),
       ])
 
-      return { core, bookings, medias, notes, comments, host }
+      return { core, bookings, medias, arrival, notes, comments, host }
     },
     fetchEditableListingBundle: async (listingId: string): Promise<RawListingBundle> => {
       console.log('[Domain][local-json] fetchEditableListingBundle', { listingId })
-      const [core, bookings, medias] = await Promise.all([
+      const [core, bookings, medias, arrival] = await Promise.all([
         requestJson<RawCore>(buildListingUrl('core', listingId)),
         requestJson<RawBookings>(buildListingUrl('bookings', listingId)),
         requestJson<RawMedias>(buildListingUrl('medias', listingId)),
+        requestJson<RawArrival>(buildListingUrl('arrival', listingId)),
       ])
 
-      return { core, bookings, medias }
+      return { core, bookings, medias, arrival }
     },
     fetchVolatileListingBundle: async (listingId: string): Promise<VolatileBundle> => {
       console.log('[Domain][local-json] fetchVolatileListingBundle', { listingId })
@@ -128,6 +133,15 @@ export function createLocalJsonListingsController(): ListingsController {
         )
       }
 
+      if (patch.arrival) {
+        requests.push(
+          requestJson<RawArrival>(buildListingUrl('arrival', listingId), {
+            method: 'PATCH',
+            body: JSON.stringify(patch.arrival),
+          }),
+        )
+      }
+
       if (requests.length) {
         await Promise.all(requests)
       }
@@ -159,6 +173,15 @@ export function createLocalJsonListingsController(): ListingsController {
           requestJson<RawMedias>(buildListingUrl('medias', listingId), {
             method: 'PATCH',
             body: JSON.stringify(draft.medias),
+          }),
+        )
+      }
+
+      if (draft.arrival) {
+        requests.push(
+          requestJson<RawArrival>(buildListingUrl('arrival', listingId), {
+            method: 'PATCH',
+            body: JSON.stringify(draft.arrival),
           }),
         )
       }

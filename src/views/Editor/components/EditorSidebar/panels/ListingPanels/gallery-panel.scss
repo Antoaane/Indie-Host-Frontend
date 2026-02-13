@@ -10,12 +10,67 @@
 .editor-gallery-panel {
   @extend %panel;
 
+  &.is-dragging {
+    user-select: none;
+
+    >.body {
+      >.gallery {
+        >.tile {
+          transition: transform 80ms cubic-bezier(0.2, 0.7, 0.2, 1);
+        }
+
+        >.tile.is-dragging {
+          transition: none;
+        }
+      }
+    }
+  }
+
   >.header {
     @extend %panel-header;
   }
 
   >.body {
     @extend %panel-body;
+
+    >.actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--layout-gap-sm);
+      margin-bottom: var(--layout-gap-sm);
+
+      >.meta {
+        @include little-text($thin: false);
+        color: rgba($secondary, 0.7);
+      }
+
+      >.buttons {
+        display: flex;
+        gap: var(--layout-gap-xs);
+
+        &>div {
+          @include buttons.primary($theme: white, $icon-only: true);
+
+          >.icon {
+            &:disabled {
+              opacity: 0.4;
+              cursor: not-allowed;
+            }
+          }
+
+          &:has(.icon.danger) {
+            >.icon {
+              @include buttons.primary($theme: dark, $icon-only: true);
+            }
+          }
+        }
+      }
+
+      >.file-input {
+        display: none;
+      }
+    }
 
     >.gallery {
       display: grid;
@@ -27,6 +82,9 @@
         border-radius: borders.$rounded-md;
         aspect-ratio: 1 / 1;
         overflow: hidden;
+        cursor: pointer;
+        transition: transform 120ms cubic-bezier(0.2, 0.7, 0.2, 1);
+        will-change: transform;
 
         &::after {
           content: '';
@@ -64,23 +122,33 @@
           opacity: 1;
         }
 
-        &:hover >.remove,
-        &:focus-within >.remove,
-        &:hover >.drag-handle,
-        &:focus-within >.drag-handle {
+        &:hover>.drag-handle,
+        &:focus-within>.drag-handle {
           opacity: 1;
           pointer-events: auto;
         }
 
-        >.remove {
+        >.selection {
           position: absolute;
-          top: 0.35rem;
-          right: 0.35rem;
+          top: 0.5rem;
+          left: 0.5rem;
           z-index: 2;
-          opacity: 0;
-          pointer-events: none;
-          --button-icon-size: 2rem;
-          @include buttons.primary($theme: dark, $icon-only: true);
+          width: 22px;
+          height: 22px;
+          border-radius: 999px;
+          border: 2px solid rgba($accent, 0.85);
+          background: rgba($secondary, 0.6);
+          display: grid;
+          place-items: center;
+
+          >span {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            background: rgba($accent, 0.9);
+            opacity: 0;
+            @include animations.transition(160ms);
+          }
         }
 
         >.drag-handle {
@@ -90,8 +158,21 @@
           z-index: 2;
           opacity: 0;
           pointer-events: none;
-          --button-icon-size: 2rem;
-          @include buttons.primary($theme: white, $icon-only: true);
+
+          button {
+            border: none;
+            background-color: $translucent;
+            cursor: grab;
+            touch-action: none;
+
+            * {
+              stroke: $accent;
+            }
+
+            svg {
+              @include halo($color: rgba($secondary, 0.75), $size: 4px);
+            }
+          }
 
           >* {
             font-size: 0.9rem;
@@ -100,13 +181,27 @@
         }
 
         &.is-dragging {
-          opacity: 0.6;
-          transform: scale(0.98);
+          opacity: 0.95;
+          cursor: grabbing;
+          @include effects.soft-shadow(rgba(0, 0, 0, 0.35));
         }
 
         &.is-over {
           outline: 2px dashed rgba($secondary, 0.5);
           outline-offset: -4px;
+        }
+
+        &.is-selected {
+          outline: 2px solid rgba($secondary, 0.45);
+          outline-offset: -4px;
+
+          &::after {
+            opacity: 1;
+          }
+
+          >.selection>span {
+            opacity: 1;
+          }
         }
 
         >.placeholder {

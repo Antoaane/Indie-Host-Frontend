@@ -7,6 +7,7 @@ import type {
   RawCore,
   RawHost,
   RawListingBundle,
+  RawArrival,
   RawMedias,
   RawNotes,
 } from '@/domain/listings/types'
@@ -58,6 +59,22 @@ export async function loadMedias(listingId?: string): Promise<RawMedias> {
   const resolved = await resolveListingId(listingId)
   const bundle = await fetchBundle(resolved)
   return (bundle.medias ?? { images: [], videos: [] }) as RawMedias
+}
+
+export async function loadArrival(listingId?: string): Promise<RawArrival> {
+  const resolved = await resolveListingId(listingId)
+  const bundle = await fetchBundle(resolved)
+  return (bundle.arrival ?? {
+    intro: { title: '', subtitle: '', tagline: '' },
+    practical: {
+      savings: { message: '' },
+      access: { address: '', checkIn: '', checkOut: '', parking: '' },
+      services: { wifi: '', contacts: '', assistance: '' },
+      rules: '',
+      shops: '',
+    },
+    guide: { title: '', content: '' },
+  }) as RawArrival
 }
 
 export async function loadNotes(listingId?: string): Promise<RawNotes> {

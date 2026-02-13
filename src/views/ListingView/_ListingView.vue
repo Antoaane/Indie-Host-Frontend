@@ -8,6 +8,7 @@ import { computed, ref, watch, nextTick } from 'vue'
 import { vp } from '@/utils/viewport'
 import { core } from '@/views/ListingView/utils/useParseContent'
 import type { RawListingBundle } from '@/domain/listings/types'
+import { getListingStatusFlags } from '@/domain/listings/status'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
 
 // COMPONENTS
@@ -35,6 +36,15 @@ const listingData = computed<ListingParsed | null>(() => {
   if (!props.rawListing) return null
   return core(props.rawListing)
 })
+
+const statusFlags = computed(() => getListingStatusFlags(props.rawListing?.core?.status))
+const isBookingDisabled = computed(() => !statusFlags.value.isBookable)
+const bookingDisabledLabel = computed(() => (statusFlags.value.isBlocked ? 'Réservations bloquées' : 'Indisponible'))
+const bookingDisabledHint = computed(() =>
+  statusFlags.value.isBlocked
+    ? 'Cette annonce reste consultable mais les réservations sont suspendues.'
+    : 'Les réservations ne sont pas disponibles pour le moment.',
+)
 
 const bookingRange = ref<RangeISO | null>(null)
 const checkoutPayload = ref<ReservationPayload | null>(null)
@@ -164,6 +174,9 @@ function cancelCheckout() {
           :price-per-night="listingData.bookings.price"
           :fees="listingData.bookings.fees"
           :booked-days="listingData.bookings.bookedDays"
+          :disabled="isBookingDisabled"
+          :disabled-label="bookingDisabledLabel"
+          :disabled-hint="bookingDisabledHint"
           @reserve="onReserve"
         />
         <template v-else>
@@ -234,6 +247,9 @@ function cancelCheckout() {
                   :price-per-night="listingData.bookings.price"
                   :fees="listingData.bookings.fees"
                   :booked-days="listingData.bookings.bookedDays"
+                  :disabled="isBookingDisabled"
+                  :disabled-label="bookingDisabledLabel"
+                  :disabled-hint="bookingDisabledHint"
                   @reserve="onReserve"
                 />
               </div>
@@ -280,6 +296,8 @@ function cancelCheckout() {
           :price-per-night="listingData.bookings.price"
           :fees="listingData.bookings.fees"
           :booked-days="listingData.bookings.bookedDays"
+          :disabled="isBookingDisabled"
+          :disabled-label="bookingDisabledLabel"
         />
         <template v-else>
           <div class="skeleton">Chargement…</div>
