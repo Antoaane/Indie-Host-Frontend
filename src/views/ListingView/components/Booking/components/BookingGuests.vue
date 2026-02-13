@@ -2,8 +2,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { onClickOutside } from '@vueuse/core'
 import { Minus, Plus } from 'lucide-vue-next'
+import RelativeOverlay from '@/components/overlays/RelativeOverlay.vue'
 
 type OccupantKey = 'adults' | 'children' | 'babies' | 'animals' | 'pmr'
 
@@ -20,7 +20,6 @@ const emit = defineEmits<{
 }>()
 
 const guestsLayer = ref<HTMLElement | null>(null)
-onClickOutside(guestsLayer, () => emit('close'))
 </script>
 
 <template>
@@ -39,11 +38,17 @@ onClickOutside(guestsLayer, () => emit('close'))
       </button>
     </div>
 
-    <transition name="fade">
-      <div
-        v-if="open"
-        class="dropdown"
-      >
+    <RelativeOverlay
+      class="listing-booking-guests-overlay"
+      :open="open"
+      :anchor="guestsLayer"
+      placement="bottom-start"
+      :offset="6"
+      :match-anchor-width="true"
+      :z-index="10002"
+      @close="emit('close')"
+    >
+      <div class="dropdown">
         <div class="item">
           <div>
             <p>Adultes</p>
@@ -169,6 +174,6 @@ onClickOutside(guestsLayer, () => emit('close'))
           </div>
         </div>
       </div>
-    </transition>
+    </RelativeOverlay>
   </div>
 </template>

@@ -1,12 +1,13 @@
 <!-- File: src/components/navs/HostReservationOverlay.vue -->
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { Minus, Plus, X } from 'lucide-vue-next'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
 import { makeIsDateDisabled } from '@/components/DatePicker/utils/range'
 import DatePicker from '@/components/DatePicker/DatePicker.vue'
+import RelativeOverlay from '@/components/overlays/RelativeOverlay.vue'
 import { getListingsController } from '@/domain/listings/controller'
 import {
   deriveBookedDaysFromReservations,
@@ -57,14 +58,6 @@ type ReservationDraft = {
   }
 }
 
-const overlayRef = ref<HTMLElement | null>(null)
-const panelRef = ref<HTMLElement | null>(null)
-const position = reactive({ top: 0, left: 0 })
-const anchorEl = computed<HTMLElement | null>(() => {
-  const anchor = props.anchor
-  if (Array.isArray(anchor)) return anchor.find(Boolean) ?? null
-  return anchor ?? null
-})
 const listings = ref<UserListingCard[]>([])
 const selectedListingId = ref<string | null>(null)
 const bookingsByListingId = reactive<Record<string, RangeISO[]>>({})
@@ -121,11 +114,6 @@ const nights = computed(() => {
   if (!selection.value?.start || !selection.value?.end) return 0
   return nightsBetween(selection.value.start, selection.value.end)
 })
-
-const overlayStyle = computed(() => ({
-  top: `${position.top}px`,
-  left: `${position.left}px`,
-}))
 
 const MIN_NIGHTS = 2
 const MIN_NIGHTS_ERROR = `Le sejour doit etre d'au moins ${MIN_NIGHTS} nuits.`
@@ -461,47 +449,6 @@ async function loadListings() {
   }
 }
 
-function updatePosition() {
-  if (!props.open || !anchorEl.value) return
-  const rect = anchorEl.value.getBoundingClientRect()
-  const overlayWidth = overlayRef.value?.offsetWidth ?? 420
-  const viewportWidth = window.innerWidth
-  const gap = 12
-
-  let left = rect.left + rect.width / 2 - overlayWidth / 2
-  left = Math.max(gap, Math.min(left, viewportWidth - overlayWidth - gap))
-
-  position.top = rect.bottom + gap
-  position.left = left
-}
-
-function handlePointer(event: PointerEvent) {
-  if (!props.open) return
-  const target = event.target as Node | null
-  if (!target) return
-  if (overlayRef.value?.contains(target)) return
-  if (anchorEl.value?.contains(target)) return
-  emit('close')
-}
-
-function handleKey(event: KeyboardEvent) {
-  if (!props.open) return
-  if (event.key === 'Escape') emit('close')
-}
-
-function handleGlobalWheel(event: WheelEvent) {
-  if (!props.open || !panelRef.value || !overlayRef.value) return
-
-  const target = event.target as Node | null
-  const targetInOverlay = !!target && overlayRef.value.contains(target)
-  const activeInOverlay = !!document.activeElement && overlayRef.value.contains(document.activeElement)
-
-  if (!targetInOverlay && !activeInOverlay) return
-
-  panelRef.value.scrollTop += event.deltaY
-  event.preventDefault()
-}
-
 watch(
   () => props.open,
   async (open) => {
@@ -511,17 +458,6 @@ watch(
     }
 
     await loadListings()
-    await nextTick()
-    updatePosition()
-  },
-)
-
-watch(
-  () => anchorEl.value,
-  async () => {
-    if (!props.open || !anchorEl.value) return
-    await nextTick()
-    updatePosition()
   },
 )
 
@@ -538,38 +474,25 @@ watch(selectedListingId, (listingId) => {
 
 onMounted(() => {
   void loadListings()
-  window.addEventListener('resize', updatePosition)
-  window.addEventListener('scroll', updatePosition, { passive: true })
-  window.addEventListener('wheel', handleGlobalWheel, { passive: false, capture: true })
-  window.addEventListener('pointerdown', handlePointer)
-  window.addEventListener('keydown', handleKey)
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('resize', updatePosition)
-  window.removeEventListener('scroll', updatePosition)
-  window.removeEventListener('wheel', handleGlobalWheel, true)
-  window.removeEventListener('pointerdown', handlePointer)
-  window.removeEventListener('keydown', handleKey)
 })
 </script>
 
 <template>
-  <Teleport to="body">
-    <transition name="fade">
-      <div
-        v-if="props.open"
-        id="host-reservation-overlay"
-        ref="overlayRef"
-        class="host-reservation-overlay"
-        :style="overlayStyle"
-        role="dialog"
-        aria-label="Nouvelle r&eacute;servation"
-      >
-        <div
-          ref="panelRef"
-          class="panel"
-        >
+  <RelativeOverlay
+    id="host-reservation-overlay"
+    class="host-reservation-overlay"
+    :open="props.open"
+    :anchor="props.anchor"
+    placement="bottom-center"
+    :offset="12"
+    :viewport-padding="12"
+    :z-index="10001"
+    :trap-focus="true"
+    role="dialog"
+    aria-label="Nouvelle r&eacute;servation"
+    @close="emit('close')"
+  >
+    <div class="panel">
           <div class="header">
             <h3>Nouvelle r&eacute;servation</h3>
             <button
@@ -813,9 +736,7 @@ onBeforeUnmount(() => {
             </div>
           </div>
         </div>
-      </div>
-    </transition>
-  </Teleport>
+  </RelativeOverlay>
 </template>
 
 <style lang="scss">

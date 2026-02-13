@@ -5,9 +5,12 @@ import { computed, reactive, ref, watch } from 'vue'
 import { ArrowUpRight, Calendar, Plus } from 'lucide-vue-next'
 
 import DatePicker from '@/components/DatePicker/DatePicker.vue'
+import ConfirmationDialog from '@/components/overlays/ConfirmationDialog.vue'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
 import type { EditorMode, EditorSource } from '@/views/Editor/types/editor'
 import type { UserListingCard } from '@/views/Editor/utils/listingApi'
+import { deriveBookedDaysFromReservations, normalizeBookedDays, normalizeReservations } from '@/domain/listings/bookings'
+import type { RawBookings } from '@/domain/listings/types'
 import type { Reservation } from '@/views/Management/utils/managementReservations'
 import ManagementListings from '@/views/Management/components/ManagementListings.vue'
 import ManagementReservationSlider from '@/views/Management/components/ManagementReservationSlider.vue'
@@ -28,6 +31,7 @@ type ManagementStage = 'reservations' | 'calendar'
 const stage = ref<ManagementStage>('reservations')
 const selectedListingId = ref<string | null>(null)
 const selectedReservationId = ref<string | null>(null)
+const isDeleteOverlayOpen = ref(false)
 
 const listings = ref<UserListingCard[]>([])
 const listingsStatus = reactive({
@@ -38,6 +42,10 @@ const listingsStatus = reactive({
 const reservationsStatus = reactive({
   isLoading: false,
   error: null as unknown,
+})
+const deleteStatus = reactive({
+  isDeleting: false,
+  error: null as string | null,
 })
 
 const reservationsByListingId = reactive<Record<string, Reservation[]>>({})
@@ -162,6 +170,7 @@ async function bootstrap() {
 
 function handleSelectListing(listingId: string) {
   if (!listingId.trim()) return
+  isDeleteOverlayOpen.value = false
   selectedListingId.value = listingId
   const fallback = findClosestReservationForListing(reservationsByListingId[listingId] ?? [])
     ?? reservationsByListingId[listingId]?.[0]
@@ -171,6 +180,7 @@ function handleSelectListing(listingId: string) {
 }
 
 function handleSelectReservation(reservationId: string) {
+  isDeleteOverlayOpen.value = false
   selectedReservationId.value = reservationId
   stage.value = 'reservations'
 }
@@ -179,9 +189,84 @@ function toggleCalendarMode() {
   stage.value = stage.value === 'calendar' ? 'reservations' : 'calendar'
 }
 
+function openDeleteOverlay() {
+  if (!selectedReservation.value) return
+  deleteStatus.error = null
+  isDeleteOverlayOpen.value = true
+}
+
+function closeDeleteOverlay() {
+  if (deleteStatus.isDeleting) return
+  isDeleteOverlayOpen.value = false
+}
+
+async function confirmDeleteReservation() {
+  const listingId = selectedListingId.value
+  const reservation = selectedReservation.value
+  if (!listingId || !reservation) return
+
+  deleteStatus.isDeleting = true
+  deleteStatus.error = null
+
+  try {
+    const editable = await props.source.fetchEditableListingBundle(listingId)
+    const currentBookings = (editable.bookings ?? null) as Partial<RawBookings> | null
+    const existingReservations = normalizeReservations(currentBookings?.reservations)
+
+    let nextReservations = existingReservations.filter((item) => item.id !== reservation.id)
+
+    if (nextReservations.length === existingReservations.length) {
+      let removed = false
+      nextReservations = existingReservations.filter((item) => {
+        if (!removed && item.start === reservation.start && item.end === reservation.end) {
+          removed = true
+          return false
+        }
+        return true
+      })
+    }
+
+    const nextBookedDays = existingReservations.length
+      ? deriveBookedDaysFromReservations(nextReservations)
+      : (() => {
+        let removed = false
+        return normalizeBookedDays(currentBookings?.['booked-days']).filter((item) => {
+          if (!removed && item.start === reservation.start && item.end === reservation.end) {
+            removed = true
+            return false
+          }
+          return true
+        })
+      })()
+
+    await props.source.patchListingDraft(listingId, {
+      bookings: {
+        ...(currentBookings ?? {}),
+        reservations: nextReservations,
+        'booked-days': nextBookedDays,
+      },
+    })
+
+    reservationsByListingId[listingId] = reservationsByListingId[listingId]
+      .filter((item) => item.id !== reservation.id)
+
+    selectedReservationId.value = findClosestReservationForListing(reservationsByListingId[listingId] ?? [])?.id
+      ?? reservationsByListingId[listingId]?.[0]?.id
+      ?? null
+
+    isDeleteOverlayOpen.value = false
+  } catch (error) {
+    console.error('[Management] delete reservation failed', error)
+    deleteStatus.error = 'Impossible de supprimer cette reservation.'
+  } finally {
+    deleteStatus.isDeleting = false
+  }
+}
+
 watch(
   () => props.source,
   () => {
+    isDeleteOverlayOpen.value = false
     selectedListingId.value = null
     selectedReservationId.value = null
     stage.value = 'reservations'
@@ -195,6 +280,7 @@ watch(
 watch(reservationsForListing, (items) => {
   if (!items.length) {
     selectedReservationId.value = null
+    isDeleteOverlayOpen.value = false
     return
   }
 
@@ -430,6 +516,24 @@ const paymentStatusClass = computed(() => {
                       </div>
                     </div>
                   </section>
+
+                  <section class="delete-reservation">
+                    <div class="danger">
+                      <button
+                        type="button"
+                        :disabled="deleteStatus.isDeleting"
+                        @click="openDeleteOverlay"
+                      >
+                        Supprimer la r&eacute;servation
+                      </button>
+                    </div>
+                    <p
+                      v-if="deleteStatus.error"
+                      class="error"
+                    >
+                      {{ deleteStatus.error }}
+                    </p>
+                  </section>
                 </template>
 
                 <div
@@ -453,6 +557,20 @@ const paymentStatusClass = computed(() => {
       </section>
     </div>
   </main>
+
+  <ConfirmationDialog
+    :open="isDeleteOverlayOpen"
+    subject="Suppression de r&eacute;servation"
+    title="Confirmer la suppression"
+    message="Cette r&eacute;servation sera supprim&eacute;e d&eacute;finitivement."
+    :confirm-label="deleteStatus.isDeleting ? 'Suppression...' : 'Oui, supprimer'"
+    cancel-label="Annuler"
+    :confirm-disabled="deleteStatus.isDeleting"
+    :cancel-disabled="deleteStatus.isDeleting"
+    @close="closeDeleteOverlay"
+    @cancel="closeDeleteOverlay"
+    @confirm="confirmDeleteReservation"
+  />
 </template>
 
 <style lang="scss">

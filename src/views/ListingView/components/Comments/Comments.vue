@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 // DEPS
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import type { SwiperOptions } from 'swiper/types'
 import type { SwiperModule } from 'swiper/types'
 import { Swiper, SwiperSlide } from 'swiper/vue'
@@ -23,6 +23,7 @@ import type { CommentsModel, NotesModel } from '@/views/ListingView/types/listin
 
 // ASSETS
 import { X } from 'lucide-vue-next'
+import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'
 
 // CONTENT
 import staticLocale from '@/locales/_static/fr.json'
@@ -192,7 +193,6 @@ async function scrollOverlayToIndex(index: number) {
 }
 
 function openOverlay(targetIndex?: number) {
-  lockScroll()
   overlayLimit.value = typeof targetIndex === 'number' ? computeOverlayLimitForIndex(targetIndex) : overlayStep
 
   isOverlayOpen.value = true
@@ -214,7 +214,6 @@ function openOverlay(targetIndex?: number) {
 
 function closeOverlay() {
   isOverlayOpen.value = false
-  unlockScroll()
   // console.log(`${'ℹ️'} [Comments.vue](closeOverlay) overlay:state open=${isOverlayOpen.value}`)
 }
 
@@ -243,29 +242,6 @@ const hasData = computed(() => {
   const value = typeof overallScore.value === 'number' || commentsCount.value > 0 || distribution.value.entries.length > 0
   // console.log(`${value ? '✅' : '❌'} [Comments.vue](hasData) hasData:computed ready=${value} gating`)
   return value
-})
-
-function lockScroll() {
-  document.documentElement.style.overflow = 'hidden'
-}
-
-function unlockScroll() {
-  document.documentElement.style.overflow = ''
-}
-
-function onKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && isOverlayOpen.value) {
-    closeOverlay()
-  }
-}
-
-onMounted(() => {
-  window.addEventListener('keydown', onKeydown)
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('keydown', onKeydown)
-  unlockScroll()
 })
 
 const swiperParams = computed(
@@ -358,66 +334,63 @@ const swiperParams = computed(
       </div>
     </div>
 
-    <Transition name="comments-overlay">
-      <div
-        v-if="isOverlayOpen"
-        class="overlay"
-        role="dialog"
-        aria-modal="true"
-        @click.self="closeOverlay"
-      >
-        <div class="panel">
-          <div class="header">
-            <div class="close">
-              <button
-                type="button"
-                @click="closeOverlay"
-              >
-                <X :size="24" />
-              </button>
+    <AbsoluteOverlay
+      class="comments-overlay"
+      :open="isOverlayOpen"
+      aria-label="Tous les commentaires"
+      @close="closeOverlay"
+    >
+      <div class="panel">
+        <div class="header">
+          <div class="close">
+            <button
+              type="button"
+              @click="closeOverlay"
+            >
+              <X :size="24" />
+            </button>
+          </div>
+        </div>
+
+        <div class="body">
+          <div class="summary">
+            <div class="summary-container">
+              <h2 v-html="`${content.title} — ${countLabel}`" />
+              <SummaryCard
+                v-if="hasData"
+                :score="overallScore"
+                :rating-unit="content.summary.ratingUnit"
+                :overall-label="content.summary.overallLabel"
+                :count-label="countLabel"
+              />
             </div>
+
+            <DistributionList
+              v-if="distribution.entries.length"
+              :entries="distribution.entries"
+              :title="content.distribution.title"
+              :rating-label="content.distribution.ratingLabel"
+            />
           </div>
 
-          <div class="body">
-            <div class="summary">
-              <div class="summary-container">
-                <h2 v-html="`${content.title} — ${countLabel}`" />
-                <SummaryCard
-                  v-if="hasData"
-                  :score="overallScore"
-                  :rating-unit="content.summary.ratingUnit"
-                  :overall-label="content.summary.overallLabel"
-                  :count-label="countLabel"
-                />
-              </div>
-
-              <DistributionList
-                v-if="distribution.entries.length"
-                :entries="distribution.entries"
-                :title="content.distribution.title"
-                :rating-label="content.distribution.ratingLabel"
-              />
-            </div>
-
-            <div
-              ref="overlayScrollEl"
-              class="list"
-              @scroll="handleOverlayScroll"
-            >
-              <CommentCard
-                v-for="(comment, index) in overlayComments"
-                :key="`${comment.name}-${comment.comment}`"
-                :comment="comment"
-                :data-comment-index="index"
-                :stay-template="content.comment.stayLabel"
-                :rating-unit="content.summary.ratingUnit"
-                :see-more="false"
-              />
-            </div>
+          <div
+            ref="overlayScrollEl"
+            class="list"
+            @scroll="handleOverlayScroll"
+          >
+            <CommentCard
+              v-for="(comment, index) in overlayComments"
+              :key="`${comment.name}-${comment.comment}`"
+              :comment="comment"
+              :data-comment-index="index"
+              :stay-template="content.comment.stayLabel"
+              :rating-unit="content.summary.ratingUnit"
+              :see-more="false"
+            />
           </div>
         </div>
       </div>
-    </Transition>
+    </AbsoluteOverlay>
   </section>
 </template>
 

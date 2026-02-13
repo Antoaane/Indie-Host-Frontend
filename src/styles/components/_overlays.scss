@@ -3,33 +3,6 @@
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
 
-%overlay-backdrop {
-  width: 100%;
-  height: 100%;
-
-  padding-top: var(--layout-gap);
-  @include layout-gap(padding, inline, 0.5);
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  position: fixed;
-  inset: 50%;
-  z-index: 9999;
-
-  transform: translate(-50%, -50%);
-
-  background-color: rgba($secondary, $alpha: 0.2);
-
-  @include min-width(lg) {
-    padding-top: var(--layout-gap-4xl);
-    padding-bottom: var(--layout-gap-4xl);
-    backdrop-filter: blur(1px);
-    @include layout-gap;
-  }
-}
-
 %overlay-panel {
   height: 100%;
   max-height: 100%;
@@ -50,30 +23,5 @@
 
   @include min-width(lg) {
     border-radius: borders.$rounded-lg;
-  }
-}
-
-@mixin transition($name, $distance: 28px, $duration: 0.25s, $easing: ease) {
-
-  .#{$name}-enter-active,
-  .#{$name}-leave-active {
-    transition: opacity $duration $easing, transform $duration $easing;
-    will-change: opacity, transform;
-  }
-
-  .#{$name}-enter-from {
-    opacity: 0;
-    transform: translate(-50%, calc(-50% + #{$distance}));
-  }
-
-  .#{$name}-enter-to,
-  .#{$name}-leave-from {
-    opacity: 1;
-    transform: translate(-50%, -50%);
-  }
-
-  .#{$name}-leave-to {
-    opacity: 0;
-    transform: translate(-50%, calc(-50% + #{$distance}));
   }
 }

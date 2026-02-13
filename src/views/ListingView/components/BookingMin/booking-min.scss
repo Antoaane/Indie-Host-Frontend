@@ -83,46 +83,37 @@
   }
 }
 
-.listing-view {
-  >.footer {
-    >.overlay {
-      z-index: 9999;
-      @extend %overlay-backdrop;
+.booking-min-overlay {
+  >.panel {
+    @extend %overlay-panel;
 
-      >.panel {
-        @extend %overlay-panel;
+    >.close {
+      position: absolute;
+      top: var(--layout-gap-md);
+      right: var(--layout-gap-md);
 
-        >.close {
-          position: absolute;
-          top: var(--layout-gap-md);
-          right: var(--layout-gap-md);
-
-          border: none;
-          background: $translucent;
-          color: $secondary;
-          font-size: 1.1rem;
-          cursor: pointer;
-          padding: 0.5rem;
-        }
-
-        >.content {
-          margin-top: var(--layout-gap-xs);
-          overflow-y: auto;
-          scrollbar-width: thin;
-          scrollbar-color: rgba($secondary, 0.25) $translucent;
-        }
-
-        >.content>.placeholder {
-          @include little-text($color: rgba($secondary, 0.65));
-          text-align: center;
-
-          padding: var(--layout-gap);
-          border: 1px dashed rgba($secondary, 0.15);
-          border-radius: borders.$rounded-lg;
-        }
-      }
+      border: none;
+      background: $translucent;
+      color: $secondary;
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 0.5rem;
     }
 
-    @include overlays.transition('booking-min-overlay');
+    >.content {
+      margin-top: var(--layout-gap-xs);
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba($secondary, 0.25) $translucent;
+    }
+
+    >.content>.placeholder {
+      @include little-text($color: rgba($secondary, 0.65));
+      text-align: center;
+
+      padding: var(--layout-gap);
+      border: 1px dashed rgba($secondary, 0.15);
+      border-radius: borders.$rounded-lg;
+    }
   }
 }

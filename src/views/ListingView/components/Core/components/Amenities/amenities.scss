@@ -65,8 +65,6 @@
 }
 
 .amenities-overlay {
-  @extend %overlay-backdrop;
-
   >.panel {
     @extend %overlay-panel;
     padding-bottom: var(--layout-gap-md) !important;
@@ -153,5 +151,3 @@
     }
   }
 }
-
-@include overlays.transition('amenities-overlay');

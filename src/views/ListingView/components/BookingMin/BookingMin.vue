@@ -1,7 +1,8 @@
 <!-- File: src/views/ListingView/components/BookingMin/BookingMin.vue -->
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
+import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'
 import { formatDateLabel } from '@/views/ListingView/components/Booking/utils/labels'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
 import type { BookedRange, FeeItem } from '@/views/ListingView/types/listing'
@@ -34,8 +35,6 @@ const selection = computed<RangeISO | null>({
 })
 
 const overlayOpen = ref(false)
-const triggerEl = ref<HTMLElement | null>(null)
-const closeButtonEl = ref<HTMLButtonElement | null>(null)
 
 const currency = new Intl.NumberFormat('fr-FR', {
   style: 'currency',
@@ -52,45 +51,16 @@ const rangeLabel = computed(() => {
   return 'Sélectionnez vos dates'
 })
 
-function lockScroll() {
-  document.documentElement.style.overflow = 'hidden'
-}
-
-function unlockScroll() {
-  document.documentElement.style.overflow = ''
-}
-
-async function openOverlay() {
+function openOverlay() {
   if (props.disabled) return
   if (overlayOpen.value) return
   overlayOpen.value = true
-  lockScroll()
-  await nextTick()
-  closeButtonEl.value?.focus()
 }
 
-async function closeOverlay() {
+function closeOverlay() {
   if (!overlayOpen.value) return
   overlayOpen.value = false
-  unlockScroll()
-  await nextTick()
-  triggerEl.value?.focus?.()
 }
-
-function onKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && overlayOpen.value) {
-    closeOverlay()
-  }
-}
-
-onMounted(() => {
-  window.addEventListener('keydown', onKeydown)
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('keydown', onKeydown)
-  unlockScroll()
-})
 </script>
 
 <template>
@@ -99,7 +69,6 @@ onBeforeUnmount(() => {
       class="bar"
       role="button"
       :tabindex="props.disabled ? -1 : 0"
-      ref="triggerEl"
       aria-haspopup="dialog"
       :aria-expanded="overlayOpen"
       :aria-controls="'booking-min-dialog'"
@@ -132,36 +101,30 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <Teleport to=".footer">
-      <Transition name="booking-min-overlay">
-        <div
-          v-if="overlayOpen"
-          class="overlay"
-          id="booking-min-dialog"
-          role="dialog"
-          aria-modal="true"
-          @click.self="closeOverlay"
+    <AbsoluteOverlay
+      id="booking-min-dialog"
+      class="booking-min-overlay"
+      :open="overlayOpen"
+      aria-label="R&eacute;servation"
+      @close="closeOverlay"
+    >
+      <div class="panel">
+        <button
+          type="button"
+          class="close"
+          aria-label="Fermer"
+          @click="closeOverlay"
         >
-          <div class="panel">
-            <button
-              ref="closeButtonEl"
-              type="button"
-              class="close"
-              aria-label="Fermer"
-              @click="closeOverlay"
-            >
-              ✕
-            </button>
+          ✕
+        </button>
 
-            <div class="content">
-              <slot>
-                <p class="placeholder"> Les détails du booking arriveront ici. </p>
-              </slot>
-            </div>
-          </div>
+        <div class="content">
+          <slot>
+            <p class="placeholder"> Les détails du booking arriveront ici. </p>
+          </slot>
         </div>
-      </Transition>
-    </Teleport>
+      </div>
+    </AbsoluteOverlay>
   </div>
 </template>
 

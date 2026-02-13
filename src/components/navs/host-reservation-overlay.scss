@@ -7,9 +7,6 @@
 @use '@/styles/components/inputs' as inputs;
 
 .host-reservation-overlay {
-  position: fixed;
-  z-index: 10001;
-
   width: min(92vw, 640px);
   max-height: calc(80vh);
 
@@ -279,15 +276,4 @@
   [data-np-uid]:not(input):not(textarea):not(select) {
     pointer-events: none !important;
   }
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 150ms ease, transform 150ms ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-  transform: translateY(4px);
 }

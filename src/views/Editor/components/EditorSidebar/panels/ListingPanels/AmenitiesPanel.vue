@@ -2,7 +2,8 @@
 
 <script setup lang="ts">
 // DEPS
-import { computed, onBeforeUnmount, onMounted, ref, watch, watchEffect } from 'vue'
+import { computed, ref, watch, watchEffect } from 'vue'
+import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'
 
 // UTILS
 import { resolveAmenityIconComponent, resolveLucideComponent } from '@/utils/amenitiesIcons'
@@ -104,36 +105,13 @@ function openOverlay() {
   isOverlayOpen.value = true
   overlayView.value = 'list'
   catalogSearch.value = ''
-  lockScroll()
 }
 
 function closeOverlay() {
   isOverlayOpen.value = false
   overlayView.value = 'list'
   catalogSearch.value = ''
-  unlockScroll()
 }
-
-function lockScroll() {
-  document.documentElement.style.overflow = 'hidden'
-}
-
-function unlockScroll() {
-  document.documentElement.style.overflow = ''
-}
-
-function onKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && isOverlayOpen.value) closeOverlay()
-}
-
-onMounted(() => {
-  window.addEventListener('keydown', onKeydown)
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('keydown', onKeydown)
-  unlockScroll()
-})
 
 type AmenityRow = {
   amenity: AmenityDraft
@@ -350,214 +328,211 @@ watchEffect(() => {
       </div>
     </div>
 
-    <Transition name="editor-amenities-overlay">
-      <div
-        v-if="isOverlayOpen"
-        class="editor-amenities-overlay"
-        role="dialog"
-        aria-modal="true"
-        @click.self="closeOverlay"
-      >
-        <div class="panel">
-          <div class="header">
-            <div
-              v-if="overlayView === 'catalog'"
-              class="back"
+    <AbsoluteOverlay
+      class="editor-amenities-overlay"
+      :open="isOverlayOpen"
+      aria-label="Gestion des équipements"
+      @close="closeOverlay"
+    >
+      <div class="panel">
+        <div class="header">
+          <div
+            v-if="overlayView === 'catalog'"
+            class="back"
+          >
+            <button
+              type="button"
+              @click="overlayView = 'list'"
             >
-              <button
-                type="button"
-                @click="overlayView = 'list'"
-              >
-                <component
-                  :is="resolveLucideComponent('arrow-left')"
-                  :size="20"
-                  aria-hidden="true"
-                />
-              </button>
-            </div>
-            <div class="title">
-              <h2>{{ overlayView === 'catalog' ? panelContent.overlay.titleCatalog : panelContent.overlay.titleList }}</h2>
-            </div>
-            <div class="close">
-              <button
-                type="button"
-                @click="closeOverlay"
-              >
-                <component
-                  :is="resolveLucideComponent('x')"
-                  :size="20"
-                  aria-hidden="true"
-                />
-              </button>
+              <component
+                :is="resolveLucideComponent('arrow-left')"
+                :size="20"
+                aria-hidden="true"
+              />
+            </button>
+          </div>
+          <div class="title">
+            <h2>{{ overlayView === 'catalog' ? panelContent.overlay.titleCatalog : panelContent.overlay.titleList }}</h2>
+          </div>
+          <div class="close">
+            <button
+              type="button"
+              @click="closeOverlay"
+            >
+              <component
+                :is="resolveLucideComponent('x')"
+                :size="20"
+                aria-hidden="true"
+              />
+            </button>
+          </div>
+        </div>
+
+        <template v-if="overlayView === 'list'">
+          <div class="body">
+            <div
+              v-for="category in categorizedSelectedAmenities"
+              :key="category.name"
+              class="category"
+            >
+              <h3>{{ category.name }}</h3>
+              <ul>
+                <li
+                  v-for="item in category.items"
+                  :key="item.resolvedId || item.amenity.name || String(item.rawIndex)"
+                  class="item"
+                >
+                  <component
+                    v-if="item.icon"
+                    :is="item.icon"
+                    class="icon"
+                    aria-hidden="true"
+                  />
+                  <div class="texts">
+                    <p class="name">
+                      {{ item.amenity.name }}
+                    </p>
+                    <p
+                      v-if="(item.amenity as any)?.description"
+                      class="description"
+                    >
+                      {{ (item.amenity as any)?.description }}
+                    </p>
+                  </div>
+                  <div class="actions">
+                    <div
+                      class="pin"
+                      :class="{ 'is-active': Boolean((item.amenity as any)?.pinned) }"
+                    >
+                      <button
+                        type="button"
+                        @click="togglePinnedAt(item.rawIndex)"
+                      >
+                        <PinOff
+                          v-if="Boolean((item.amenity as any)?.pinned)"
+                          :size="18"
+                        />
+                        <Pin
+                          v-else
+                          :size="18"
+                        />
+                      </button>
+                    </div>
+                    <div class="remove">
+                      <button
+                        type="button"
+                        @click="removeAmenityAt(item.rawIndex)"
+                      >
+                        <component
+                          :is="resolveLucideComponent('x')"
+                          :size="18"
+                          aria-hidden="true"
+                        />
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              </ul>
             </div>
           </div>
 
-          <template v-if="overlayView === 'list'">
-            <div class="body">
+          <div class="cta">
+            <button
+              type="button"
+              @click="overlayView = 'catalog'"
+            >
+              {{ panelContent.overlay.addCta }}
+            </button>
+          </div>
+        </template>
+
+        <template v-else>
+          <div class="body">
+            <div class="search">
+              <input
+                v-model="catalogSearch"
+                type="search"
+                :placeholder="panelContent.overlay.searchPlaceholder"
+              />
+            </div>
+
+            <template v-if="catalogGroups.length">
               <div
-                v-for="category in categorizedSelectedAmenities"
-                :key="category.name"
+                v-for="group in catalogGroups"
+                :key="group.category"
                 class="category"
               >
-                <h3>{{ category.name }}</h3>
-                <ul>
+                <button
+                  type="button"
+                  class="category-trigger"
+                  @click="toggleCatalogCategory(group.category, group.items.length)"
+                >
+                  <span class="category-title">{{ group.category }}</span>
+                  <span class="category-meta">{{ group.items.length }}</span>
+                  <component
+                    :is="resolveLucideComponent('chevron-down')"
+                    :size="18"
+                    class="chevron"
+                    :class="{ 'is-open': isCatalogCategoryOpen(group.category, group.items.length) }"
+                    aria-hidden="true"
+                  />
+                </button>
+                <ul
+                  v-show="isCatalogCategoryOpen(group.category, group.items.length)"
+                  class="list"
+                >
                   <li
-                    v-for="item in category.items"
-                    :key="item.resolvedId || item.amenity.name || String(item.rawIndex)"
+                    v-for="item in group.items"
+                    :key="item.id"
                     class="item"
                   >
-                    <component
-                      v-if="item.icon"
-                      :is="item.icon"
-                      class="icon"
-                      aria-hidden="true"
-                    />
-                    <div class="texts">
-                      <p class="name">
-                        {{ item.amenity.name }}
-                      </p>
-                      <p
-                        v-if="(item.amenity as any)?.description"
-                        class="description"
+                    <div class="item-btn">
+                      <button
+                        type="button"
+                        :disabled="isAmenitySelected(item.id)"
+                        @click="addAmenityFromCatalog(item)"
                       >
-                        {{ (item.amenity as any)?.description }}
-                      </p>
-                    </div>
-                    <div class="actions">
-                      <div
-                        class="pin"
-                        :class="{ 'is-active': Boolean((item.amenity as any)?.pinned) }"
-                      >
-                        <button
-                          type="button"
-                          @click="togglePinnedAt(item.rawIndex)"
-                        >
-                          <PinOff
-                            v-if="Boolean((item.amenity as any)?.pinned)"
-                            :size="18"
-                          />
-                          <Pin
-                            v-else
-                            :size="18"
-                          />
-                        </button>
-                      </div>
-                      <div class="remove">
-                        <button
-                          type="button"
-                          @click="removeAmenityAt(item.rawIndex)"
-                        >
-                          <component
-                            :is="resolveLucideComponent('x')"
-                            :size="18"
-                            aria-hidden="true"
-                          />
-                        </button>
-                      </div>
+                        <div class="item-content">
+                          <span class="item-icon">
+                            <component
+                              v-if="resolveAmenityIconComponent(item.id)"
+                              :is="resolveAmenityIconComponent(item.id)"
+                              aria-hidden="true"
+                            />
+                          </span>
+                          <span class="item-texts">
+                            <span class="item-title">{{ item.name }}</span>
+                            <span
+                              v-if="item.description"
+                              class="item-desc"
+                            >
+                              {{ item.description }}
+                            </span>
+                          </span>
+                          <span
+                            v-if="isAmenitySelected(item.id)"
+                            class="item-state"
+                          >
+                            {{ panelContent.overlay.added }}
+                          </span>
+                        </div>
+                      </button>
                     </div>
                   </li>
                 </ul>
               </div>
-            </div>
+            </template>
 
-            <div class="cta">
-              <button
-                type="button"
-                @click="overlayView = 'catalog'"
-              >
-                {{ panelContent.overlay.addCta }}
-              </button>
-            </div>
-          </template>
-
-          <template v-else>
-            <div class="body">
-              <div class="search">
-                <input
-                  v-model="catalogSearch"
-                  type="search"
-                  :placeholder="panelContent.overlay.searchPlaceholder"
-                />
-              </div>
-
-              <template v-if="catalogGroups.length">
-                <div
-                  v-for="group in catalogGroups"
-                  :key="group.category"
-                  class="category"
-                >
-                  <button
-                    type="button"
-                    class="category-trigger"
-                    @click="toggleCatalogCategory(group.category, group.items.length)"
-                  >
-                    <span class="category-title">{{ group.category }}</span>
-                    <span class="category-meta">{{ group.items.length }}</span>
-                    <component
-                      :is="resolveLucideComponent('chevron-down')"
-                      :size="18"
-                      class="chevron"
-                      :class="{ 'is-open': isCatalogCategoryOpen(group.category, group.items.length) }"
-                      aria-hidden="true"
-                    />
-                  </button>
-                  <ul
-                    v-show="isCatalogCategoryOpen(group.category, group.items.length)"
-                    class="list"
-                  >
-                    <li
-                      v-for="item in group.items"
-                      :key="item.id"
-                      class="item"
-                    >
-                      <div class="item-btn">
-                        <button
-                          type="button"
-                          :disabled="isAmenitySelected(item.id)"
-                          @click="addAmenityFromCatalog(item)"
-                        >
-                          <div class="item-content">
-                            <span class="item-icon">
-                              <component
-                                v-if="resolveAmenityIconComponent(item.id)"
-                                :is="resolveAmenityIconComponent(item.id)"
-                                aria-hidden="true"
-                              />
-                            </span>
-                            <span class="item-texts">
-                              <span class="item-title">{{ item.name }}</span>
-                              <span
-                                v-if="item.description"
-                                class="item-desc"
-                              >
-                                {{ item.description }}
-                              </span>
-                            </span>
-                            <span
-                              v-if="isAmenitySelected(item.id)"
-                              class="item-state"
-                            >
-                              {{ panelContent.overlay.added }}
-                            </span>
-                          </div>
-                        </button>
-                      </div>
-                    </li>
-                  </ul>
-                </div>
-              </template>
-
-              <p
-                v-else
-                class="empty"
-              >
-                {{ panelContent.overlay.empty }}
-              </p>
-            </div>
-          </template>
-        </div>
+            <p
+              v-else
+              class="empty"
+            >
+              {{ panelContent.overlay.empty }}
+            </p>
+          </div>
+        </template>
       </div>
-    </Transition>
+    </AbsoluteOverlay>
   </section>
 </template>
 

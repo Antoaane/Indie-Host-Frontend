@@ -135,136 +135,85 @@
   }
 
 
-  >.overlay {
-    width: 100%;
-    height: 100%;
+}
 
-    padding-top: var(--layout-gap);
-    @include layout-gap(padding, inline, 0.5);
+.comments-overlay {
+  >.panel {
+    @extend %overlay-panel;
+    height: max-content;
+    gap: var(--layout-gap-sm);
 
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    >.header {
+      position: absolute;
+      right: var(--layout-gap-md);
+      top: var(--layout-gap-md);
 
-    position: fixed;
-    inset: 50%;
-    z-index: 9999;
-
-    transform: translate(-50%, -50%);
-
-    background-color: rgba($secondary, $alpha: 0.2);
-
-    @include min-width(lg) {
-      padding-top: calc($nav-height + var(--layout-gap));
-      padding-bottom: calc(var(--layout-gap) * 2);
-      backdrop-filter: blur(1px);
-      @include layout-gap;
+      >.close {
+        @include buttons.primary($theme: white, $icon-only: true);
+      }
     }
 
-    >.panel {
-      height: max-content;
-      max-height: 100%;
-      padding-bottom: 0 !important;
-
+    >.body {
+      flex: 0 1 auto;
+      height: 100%;
       display: flex;
       flex-direction: column;
+      gap: var(--layout-gap-lg);
+      overflow: hidden;
 
-      position: relative;
-
-      background-color: $accent;
-      border-top-left-radius: borders.$rounded-lg;
-      border-top-right-radius: borders.$rounded-lg;
-
-
-      @include container($max: md);
-      @include layout-gap(padding, horizontal, 2);
-      @include layout-gap(padding, top, 2);
-
-      @include min-width(lg) {
-        border-radius: borders.$rounded-lg;
-      }
-
-      >.header {
-        // flex: 1 0 auto;
-        // display: flex;
-        // align-items: center;
-        // justify-content: space-between;
-        // gap: var(--layout-gap-md);
-
-        position: absolute;
-        right: var(--layout-gap-md);
-        top: var(--layout-gap-md);
-
-        >.close {
-          @include buttons.primary($theme: white, $icon-only: true);
-        }
-      }
-
-      >.body {
-        flex: 0 1 auto;
+      >.summary {
         height: 100%;
-        display: flex;
-        flex-direction: column;
-        gap: var(--layout-gap-lg);
-        overflow: hidden;
 
+        display: grid;
+        grid-template-columns: repeat(1, 1fr);
+        gap: var(--layout-gap-2xl);
 
-        >.summary {
-          height: 100%;
+        @include min-width(lg) {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 0;
+        }
 
-          display: grid;
-          grid-template-columns: repeat(1, 1fr);
-          gap: var(--layout-gap-2xl);
+        >.summary-container {
+          height: max-content;
 
           @include min-width(lg) {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0;
+            height: 75%;
           }
 
-          >.summary-container {
-            height: max-content;
+          >h2 {
+            margin-bottom: var(--layout-gap) !important;
+            @include h2-title;
+          }
 
-            @include min-width(lg) {
-              height: 75%;
-            }
+          >.summary-card {
+            width: 100%;
+            height: 100%;
 
-            >h2 {
-              margin-bottom: var(--layout-gap) !important;
-              @include h2-title;
-            }
-
-            >.summary-card {
-              width: 100%;
-              height: 100%;
-
-              >div {
-                margin-left: var(--layout-gap-md);
-              }
+            >div {
+              margin-left: var(--layout-gap-md);
             }
           }
         }
+      }
 
-        >.list {
-          padding-top: 0 !important;
-          flex: 0 1 auto;
-          overflow-y: scroll;
+      >.list {
+        padding-top: 0 !important;
+        flex: 0 1 auto;
+        overflow-y: scroll;
 
-          display: flex;
-          flex-direction: column;
-          gap: var(--layout-gap);
+        display: flex;
+        flex-direction: column;
+        gap: var(--layout-gap);
 
-          scrollbar-width: thin;
-          scrollbar-color: rgba($secondary, 0.25) $translucent;
+        scrollbar-width: thin;
+        scrollbar-color: rgba($secondary, 0.25) $translucent;
 
-          @include layout-gap(margin, top, 1.5);
+        @include layout-gap(margin, top, 1.5);
 
-          >.comment-card::after {
-            display: none;
-          }
+        >.comment-card::after {
+          display: none;
         }
       }
     }
   }
-
-  @include overlays.transition('comments-overlay');
 }

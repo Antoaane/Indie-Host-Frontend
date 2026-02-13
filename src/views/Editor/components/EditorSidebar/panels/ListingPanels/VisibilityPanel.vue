@@ -1,11 +1,12 @@
 <!-- File: src/views/Editor/components/EditorSidebar/panels/ListingPanels/VisibilityPanel.vue -->
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import type { RawCore } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 import { getListingStatusFlags } from '@/domain/listings/status'
+import ConfirmationDialog from '@/components/overlays/ConfirmationDialog.vue'
 
 const props = defineProps<{
   core?: Partial<RawCore> | null
@@ -58,20 +59,6 @@ function confirmDelete() {
   emit('patch', { core: { status: 'deleted' } })
   closeDeleteOverlay()
 }
-
-function onKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && isDeleteOverlayOpen.value) {
-    closeDeleteOverlay()
-  }
-}
-
-onMounted(() => {
-  window.addEventListener('keydown', onKeydown)
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('keydown', onKeydown)
-})
 </script>
 
 <template>
@@ -144,40 +131,19 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <Transition name="editor-visibility-overlay">
-      <div
-        v-if="isDeleteOverlayOpen"
-        class="editor-visibility-overlay"
-        role="dialog"
-        aria-modal="true"
-        @click.self="closeDeleteOverlay"
-      >
-        <div class="panel">
-          <div class="header">
-            <h2>{{ panelContent.delete.confirmTitle }}</h2>
-          </div>
-          <div class="body">
-            <p>{{ panelContent.delete.confirmMessage }}</p>
-          </div>
-          <div class="footer">
-            <button
-              type="button"
-              class="ghost"
-              @click="closeDeleteOverlay"
-            >
-              {{ panelContent.delete.cancelCta }}
-            </button>
-            <button
-              type="button"
-              class="danger"
-              @click="confirmDelete"
-            >
-              {{ panelContent.delete.confirmCta }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </Transition>
+    <ConfirmationDialog
+      :open="isDeleteOverlayOpen"
+      :level="2"
+      :subject="panelContent.delete.title"
+      :title="panelContent.delete.confirmTitle"
+      :message="panelContent.delete.confirmMessage"
+      :confirm-label="panelContent.delete.confirmCta"
+      :cancel-label="panelContent.delete.cancelCta"
+      typing-hint="Tapez &quot;supprimer&quot; pour confirmer la suppression de cette annonce."
+      @close="closeDeleteOverlay"
+      @cancel="closeDeleteOverlay"
+      @confirm="confirmDelete"
+    />
   </section>
 </template>
 

@@ -11,7 +11,7 @@ div:has(> .step-section) {
     @include layout-gap(padding, bottom, 6);
 
     @include min-width(lg) {
-      @include layout-gap(padding, bottom, 4);
+      padding-bottom: 0 !important;
     }
 
     .wrapper {

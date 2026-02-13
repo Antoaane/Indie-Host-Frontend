@@ -2,7 +2,8 @@
 
 <script setup lang="ts">
 // DEPS
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, ref } from 'vue'
+import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'
 
 // TYPES
 import type { AmenitiesModel } from '@/views/ListingView/types/listing'
@@ -70,36 +71,11 @@ const categorizedAmenities = computed(() => {
 
 function openOverlay() {
   isOverlayOpen.value = true
-  lockScroll()
 }
 
 function closeOverlay() {
   isOverlayOpen.value = false
-  unlockScroll()
 }
-
-function lockScroll() {
-  document.documentElement.style.overflow = 'hidden'
-}
-
-function unlockScroll() {
-  document.documentElement.style.overflow = ''
-}
-
-function onKeydown(event: KeyboardEvent) {
-  if (event.key === 'Escape' && isOverlayOpen.value) {
-    closeOverlay()
-  }
-}
-
-onMounted(() => {
-  window.addEventListener('keydown', onKeydown)
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('keydown', onKeydown)
-  unlockScroll()
-})
 </script>
 
 <template>
@@ -138,70 +114,67 @@ onBeforeUnmount(() => {
       ></button>
     </div>
 
-    <Transition name="amenities-overlay">
-      <div
-        v-if="isOverlayOpen"
-        class="amenities-overlay"
-        role="dialog"
-        aria-modal="true"
-        @click.self="closeOverlay"
-      >
-        <div class="panel">
-          <div class="header">
-            <div class="title">
-              <h2 v-html="staticContent.overlayTitle || staticContent.title"></h2>
-            </div>
-            <div class="close">
-              <button
-                type="button"
-                @click="closeOverlay"
+    <AbsoluteOverlay
+      class="amenities-overlay"
+      :open="isOverlayOpen"
+      aria-label="Tous les équipements"
+      @close="closeOverlay"
+    >
+      <div class="panel">
+        <div class="header">
+          <div class="title">
+            <h2 v-html="staticContent.overlayTitle || staticContent.title"></h2>
+          </div>
+          <div class="close">
+            <button
+              type="button"
+              @click="closeOverlay"
+            >
+              <component
+                :is="resolveLucideComponent('x')"
+                :size="20"
+                aria-hidden="true"
+              />
+            </button>
+          </div>
+        </div>
+
+        <div class="body">
+          <div
+            v-for="category in categorizedAmenities"
+            :key="category.name"
+            class="category"
+          >
+            <h3 v-html="category.name"></h3>
+            <ul>
+              <li
+                v-for="amenity in category.items"
+                :key="`${category.name}-${amenity.id}`"
+                class="item"
               >
                 <component
-                  :is="resolveLucideComponent('x')"
-                  :size="20"
+                  v-if="resolveAmenityIconComponent(amenity.id)"
+                  :is="resolveAmenityIconComponent(amenity.id)"
+                  class="icon"
                   aria-hidden="true"
                 />
-              </button>
-            </div>
-          </div>
-
-          <div class="body">
-            <div
-              v-for="category in categorizedAmenities"
-              :key="category.name"
-              class="category"
-            >
-              <h3 v-html="category.name"></h3>
-              <ul>
-                <li
-                  v-for="amenity in category.items"
-                  :key="`${category.name}-${amenity.id}`"
-                  class="item"
-                >
-                  <component
-                    v-if="resolveAmenityIconComponent(amenity.id)"
-                    :is="resolveAmenityIconComponent(amenity.id)"
-                    class="icon"
-                    aria-hidden="true"
+                <div class="texts">
+                  <p
+                    class="name"
+                    v-html="amenity.name"
                   />
-                  <div class="texts">
-                    <p
-                      class="name"
-                      v-html="amenity.name"
-                    />
-                    <p
-                      v-if="amenity.description"
-                      class="description"
-                      v-html="amenity.description"
-                    />
-                  </div>
-                </li>
-              </ul>
-            </div>
+                  <p
+                    v-if="amenity.description"
+                    class="description"
+                    v-html="amenity.description"
+                  />
+                </div>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
-    </Transition>
+    </AbsoluteOverlay>
   </section>
 </template>
 

@@ -143,31 +143,6 @@
           }
         }
 
-        >.calendar {
-          position: absolute;
-          z-index: 99;
-          top: 0;
-          right: -0.75rem;
-          transform: translateY(2.5rem);
-
-          width: 30rem;
-          @include layout-gap(padding, all, 0.5);
-
-          background: rgba($accent, 0.5);
-          backdrop-filter: blur(12px);
-          border-bottom-left-radius: borders.$rounded-xxl;
-          border-bottom-right-radius: borders.$rounded-xxl;
-          border-top-right-radius: borders.$rounded-xl;
-          border-top-right-radius: borders.$rounded-xl;
-          @include big-shadow($color: rgba(0, 0, 0, 0.25));
-
-          >.date-picker {
-            >.body {
-              margin-top: 0.5rem;
-              background: rgba($accent, 0.75);
-            }
-          }
-        }
       }
 
       >.listing-booking-guests {
@@ -222,78 +197,6 @@
           }
         }
 
-        >.dropdown {
-          position: absolute;
-          z-index: 5;
-          inset: auto 0 0 0;
-          transform: translateY(calc(100% + 0.35rem));
-
-          display: flex;
-          flex-direction: column;
-          gap: var(--layout-gap-sm);
-
-          padding: var(--layout-gap-sm);
-          background: $accent;
-          border-radius: borders.$rounded-lg;
-          @include big-shadow();
-
-          >.item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: var(--layout-gap-sm);
-
-            >div {
-              >p {
-                margin: 0;
-                font-weight: 600;
-                color: $secondary;
-              }
-
-              >small {
-                color: rgba($secondary, 0.65);
-              }
-            }
-
-            >.counter {
-              display: inline-flex;
-              align-items: center;
-              gap: var(--layout-gap-xs);
-
-              >button {
-                width: 2rem;
-                height: 2rem;
-
-                display: grid;
-                place-items: center;
-
-                border: 1px solid rgba($secondary, 0.25);
-                border-radius: borders.$rounded-sm;
-                background: $accent;
-                color: $secondary;
-
-                @include animations.transition(150ms);
-
-                &:hover:not(:disabled) {
-                  background: $secondary;
-                  color: $accent;
-                }
-
-                &:disabled {
-                  opacity: 0.35;
-                  cursor: not-allowed;
-                }
-              }
-
-              >span {
-                min-width: 1.5rem;
-                text-align: center;
-                font-weight: 600;
-                color: $secondary;
-              }
-            }
-          }
-        }
       }
     }
 
@@ -384,6 +287,100 @@
   @include min-width(md) {
     >.card {
       padding: var(--layout-gap);
+    }
+  }
+}
+
+.listing-booking-dates-overlay {
+  width: min(30rem, calc(100vw - (var(--layout-gap) * 2)));
+
+  >.calendar {
+    width: 100%;
+    @include layout-gap(padding, all, 0.5);
+
+    background: rgba($accent, 0.5);
+    backdrop-filter: blur(12px);
+    border-bottom-left-radius: borders.$rounded-xxl;
+    border-bottom-right-radius: borders.$rounded-xxl;
+    border-top-right-radius: borders.$rounded-xl;
+    border-top-right-radius: borders.$rounded-xl;
+    @include big-shadow($color: rgba(0, 0, 0, 0.25));
+
+    >.date-picker {
+      >.body {
+        margin-top: 0.5rem;
+        background: rgba($accent, 0.75);
+      }
+    }
+  }
+}
+
+.listing-booking-guests-overlay {
+  >.dropdown {
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-sm);
+
+    padding: var(--layout-gap-sm);
+    background: $accent;
+    border-radius: borders.$rounded-lg;
+    @include big-shadow();
+
+    >.item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--layout-gap-sm);
+
+      >div {
+        >p {
+          margin: 0;
+          font-weight: 600;
+          color: $secondary;
+        }
+
+        >small {
+          color: rgba($secondary, 0.65);
+        }
+      }
+
+      >.counter {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--layout-gap-xs);
+
+        >button {
+          width: 2rem;
+          height: 2rem;
+
+          display: grid;
+          place-items: center;
+
+          border: 1px solid rgba($secondary, 0.25);
+          border-radius: borders.$rounded-sm;
+          background: $accent;
+          color: $secondary;
+
+          @include animations.transition(150ms);
+
+          &:hover:not(:disabled) {
+            background: $secondary;
+            color: $accent;
+          }
+
+          &:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+          }
+        }
+
+        >span {
+          min-width: 1.5rem;
+          text-align: center;
+          font-weight: 600;
+          color: $secondary;
+        }
+      }
     }
   }
 }

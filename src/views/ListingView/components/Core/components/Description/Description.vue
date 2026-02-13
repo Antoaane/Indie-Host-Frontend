@@ -4,7 +4,8 @@
 // ASSETS
 import { X } from 'lucide-vue-next'
 // VUE
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref } from 'vue'
+import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'
 // TYPES
 import type { DescriptionModel } from '@/views/ListingView/types/listing'
 
@@ -27,34 +28,11 @@ const isOpen = ref(false)
 function openPopup() {
   if (isOpen.value) return
   isOpen.value = true
-  lockScroll()
 }
 function closePopup() {
   if (!isOpen.value) return
   isOpen.value = false
-  unlockScroll()
 }
-
-/* ---------- helpers ---------- */
-function onKeydown(e: KeyboardEvent) {
-  if (e.key === 'Escape') closePopup()
-}
-
-function lockScroll() {
-  document.documentElement.style.overflow = 'hidden'
-}
-function unlockScroll() {
-  document.documentElement.style.overflow = ''
-}
-
-/* ---------- lifecycle ---------- */
-onMounted(() => {
-  window.addEventListener('keydown', onKeydown)
-})
-onBeforeUnmount(() => {
-  window.removeEventListener('keydown', onKeydown)
-  unlockScroll()
-})
 </script>
 
 <template>
@@ -78,39 +56,33 @@ onBeforeUnmount(() => {
       />
     </div>
 
-    <Transition name="description-overlay">
-      <div
-        v-if="isOpen"
-        :data-popup="isOpen"
-        class="overlay"
-        role="dialog"
-        aria-modal="true"
-        :aria-hidden="!isOpen"
-        id="listing-description-dialog"
-        @click.self="closePopup"
-      >
-        <div
-          class="panel"
-          @click.stop
-        >
-          <div class="close">
-            <div class="button">
-              <button
-                type="button"
-                aria-label="Fermer"
-                @click="closePopup"
-              >
-                <X />
-              </button>
-            </div>
+    <AbsoluteOverlay
+      id="listing-description-dialog"
+      class="listing-description-overlay"
+      :open="isOpen"
+      :aria-hidden="!isOpen"
+      aria-label="Description du logement"
+      @close="closePopup"
+    >
+      <div class="panel">
+        <div class="close">
+          <div class="button">
+            <button
+              type="button"
+              aria-label="Fermer"
+              @click="closePopup"
+            >
+              <X />
+            </button>
           </div>
+        </div>
 
-          <h2 v-html="staticContent.title" />
-          <span
-            class="content"
-            v-html="data.description"
-          />
-          <!-- <div class="block">
+        <h2 v-html="staticContent.title" />
+        <span
+          class="content"
+          v-html="data.description"
+        />
+        <!-- <div class="block">
             <p v-html="data.brief" />
           </div>
           <div
@@ -121,9 +93,8 @@ onBeforeUnmount(() => {
             <h3 v-html="block.title" />
             <p v-html="block.content" />
           </div> -->
-        </div>
       </div>
-    </Transition>
+    </AbsoluteOverlay>
   </section>
 </template>
 
@@ -165,41 +136,36 @@ onBeforeUnmount(() => {
     @include buttons.secondary($padding: false);
   }
 
-  /* Backdrop */
-  > .overlay[data-popup],
-  > #listing-description-dialog {
-    @extend %overlay-backdrop;
+}
 
-    > .panel {
-      @extend %overlay-panel;
-      @include layout-gap(padding, all, 2);
-      padding-bottom: calc(var(--layout-gap) * 2) !important;
+.listing-description-overlay {
+  > .panel {
+    @extend %overlay-panel;
+    @include layout-gap(padding, all, 2);
+    padding-bottom: calc(var(--layout-gap) * 2) !important;
 
-      > .content {
-        margin-bottom: var(--layout-gap);
+    > .content {
+      margin-bottom: var(--layout-gap);
 
-        h2 {
-          @include h2-title;
-        }
-
-        h3 {
-          margin-top: var(--layout-gap-md) !important;
-          @include h4-title;
-        }
+      h2 {
+        @include h2-title;
       }
 
-      > .close {
-        position: absolute;
-        top: var(--layout-gap-md);
-        right: var(--layout-gap-md);
+      h3 {
+        margin-top: var(--layout-gap-md) !important;
+        @include h4-title;
+      }
+    }
 
-        > .button {
-          @include buttons.primary($padding: false, $theme: white);
-        }
+    > .close {
+      position: absolute;
+      top: var(--layout-gap-md);
+      right: var(--layout-gap-md);
+
+      > .button {
+        @include buttons.primary($padding: false, $theme: white);
       }
     }
   }
 }
-
-@include overlays.transition('description-overlay');
 </style>

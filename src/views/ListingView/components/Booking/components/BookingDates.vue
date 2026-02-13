@@ -2,8 +2,8 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { onClickOutside } from '@vueuse/core'
 import DatePicker from '@/components/DatePicker/DatePicker.vue'
+import RelativeOverlay from '@/components/overlays/RelativeOverlay.vue'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
 
 const props = defineProps<{
@@ -25,7 +25,6 @@ const selection = computed<RangeISO | null>({
 })
 
 const calendarLayer = ref<HTMLElement | null>(null)
-onClickOutside(calendarLayer, () => emit('close'))
 </script>
 
 <template>
@@ -44,17 +43,22 @@ onClickOutside(calendarLayer, () => emit('close'))
       </div>
     </div>
 
-    <transition name="fade">
-      <div
-        v-if="open"
-        class="calendar"
-      >
+    <RelativeOverlay
+      class="listing-booking-dates-overlay"
+      :open="open"
+      :anchor="calendarLayer"
+      placement="bottom-start"
+      :offset="6"
+      :z-index="10002"
+      @close="emit('close')"
+    >
+      <div class="calendar">
         <DatePicker
           v-model:model-value="selection"
           :disabled-dates="bookedRanges"
           :numberOfMonths="2"
         />
       </div>
-    </transition>
+    </RelativeOverlay>
   </div>
 </template>

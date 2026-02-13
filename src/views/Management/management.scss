@@ -370,4 +370,34 @@
     flex: 1 1 auto;
     min-height: 100%;
   }
+
+  .delete-reservation {
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-xs);
+    padding: var(--layout-gap-sm);
+
+    >.danger {
+      @include buttons.primary($theme: dark, $fullwidth: true);
+
+      &:hover {
+        &>* {
+          color: $accent !important;
+          background-color: $bad !important;
+          outline: 3px solid rgba($accent, 0.75) !important;
+
+          &>* {
+            color: $accent !important;
+            stroke: $accent !important;
+          }
+        }
+      }
+    }
+
+    >.error {
+      margin: 0;
+      font-size: 0.875rem;
+      color: $bad;
+    }
+  }
 }

@@ -4,7 +4,6 @@
 @use '@/styles/variables/borders' as borders;
 @use '@/styles/components/buttons' as buttons;
 @use '@/styles/components/inputs' as inputs;
-@use '@/styles/components/overlays' as overlays;
 @use '@/views/Editor/components/EditorSidebar/panels/panel.scss' as *;
 
 .editor-visibility-panel {
@@ -104,39 +103,4 @@
       }
     }
   }
-
-  >.editor-visibility-overlay {
-    @extend %overlay-backdrop;
-
-    >.panel {
-      @extend %overlay-panel;
-      gap: var(--layout-gap-sm);
-
-      >.header h2 {
-        margin: 0;
-        @include h2-title;
-      }
-
-      >.body p {
-        margin: 0;
-        @include base-text;
-      }
-
-      >.footer {
-        display: flex;
-        gap: var(--layout-gap-sm);
-        justify-content: flex-end;
-
-        >.ghost {
-          @include buttons.primary($theme: white);
-        }
-
-        >.danger {
-          @include buttons.primary($theme: dark);
-        }
-      }
-    }
-  }
-
-  @include overlays.transition('editor-visibility-overlay');
 }
