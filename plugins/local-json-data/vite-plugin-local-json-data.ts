@@ -19,7 +19,16 @@ type DatasetPaths = {
 
 const LOCAL_JSON_BASE = '/__local-json';
 const CONTENT_ROOT = path.resolve(process.cwd(), 'src/content/fr');
+const USER_PROFILE_PATH = path.join(CONTENT_ROOT, 'user', 'user.json');
 const RESOURCE_KEYS: ListingResourceKey[] = ['core', 'medias', 'bookings', 'arrival', 'notes', 'comments', 'host'];
+const HOST_RESOURCE_TEMPLATE = {
+  name: '',
+  status: '',
+  seniority: 0,
+  'global-note': 0,
+  avatar: '',
+  'catalog-link': '',
+};
 
 function sendJson(res: any, status: number, payload: unknown) {
   res.statusCode = status;
@@ -41,12 +50,54 @@ function ensureDir(dir: string) {
   }
 }
 
+function parseText(value: unknown, fallback: string): string {
+  if (typeof value !== 'string') return fallback;
+  const trimmed = value.trim();
+  return trimmed ? trimmed : fallback;
+}
+
+function parseNumber(value: unknown, fallback: number): number {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+
+  return fallback;
+}
+
+function resolveCanonicalHostResource() {
+  if (!fs.existsSync(USER_PROFILE_PATH)) {
+    return { ...HOST_RESOURCE_TEMPLATE };
+  }
+
+  try {
+    const user = readJson(USER_PROFILE_PATH);
+    const publicProfile = user?.hosting?.publicProfile ?? {};
+
+    return {
+      ...HOST_RESOURCE_TEMPLATE,
+      name: parseText(publicProfile.displayName, HOST_RESOURCE_TEMPLATE.name),
+      status: parseText(publicProfile.badge, HOST_RESOURCE_TEMPLATE.status),
+      seniority: Math.max(0, Math.round(parseNumber(publicProfile.experienceMonths, HOST_RESOURCE_TEMPLATE.seniority))),
+      'global-note': Number(parseNumber(publicProfile.rating, HOST_RESOURCE_TEMPLATE['global-note']).toFixed(2)),
+      avatar: parseText(publicProfile.avatarUrl, HOST_RESOURCE_TEMPLATE.avatar),
+      'catalog-link': parseText(publicProfile.catalogUrl, HOST_RESOURCE_TEMPLATE['catalog-link']),
+    };
+  } catch (err) {
+    console.log('[LocalJSON] failed to resolve user profile host', err);
+    return { ...HOST_RESOURCE_TEMPLATE };
+  }
+}
+
 function listDatasetDirs(): string[] {
   if (!fs.existsSync(CONTENT_ROOT)) return [];
   return fs
     .readdirSync(CONTENT_ROOT, { withFileTypes: true })
     .filter((entry) => entry.isDirectory())
-    .map((entry) => entry.name);
+    .map((entry) => entry.name)
+    .filter((dirName) => fs.existsSync(path.join(CONTENT_ROOT, dirName, 'core.json')));
 }
 
 function getDatasetPaths(dirName: string): DatasetPaths {
@@ -144,7 +195,7 @@ function buildFallbackResource(resource: ListingResourceKey, listingId: string):
     case 'comments':
       return { comments: [] };
     case 'host':
-      return { name: '', status: '', avatar: '' };
+      return resolveCanonicalHostResource();
     default:
       return {};
   }
@@ -166,6 +217,20 @@ function buildListingCard(paths: DatasetPaths) {
     pricePerNight: bookings.price,
     rating: notes?.note?.note ?? notes?.note,
   };
+}
+
+function synchronizeDatasetHostsWithCanonicalProfile() {
+  const canonicalHost = resolveCanonicalHostResource();
+  const datasets = listDatasetDirs();
+
+  datasets.forEach((dirName) => {
+    const hostPath = getDatasetPaths(dirName).host;
+    const currentHost = fs.existsSync(hostPath) ? readJson(hostPath) : null;
+
+    if (JSON.stringify(currentHost) !== JSON.stringify(canonicalHost)) {
+      writeJson(hostPath, canonicalHost);
+    }
+  });
 }
 
 async function readBody(req: any): Promise<any> {
@@ -204,6 +269,8 @@ export default function localJsonDataPlugin(): Plugin {
         const parts = relative.split('/').filter(Boolean);
 
         try {
+          synchronizeDatasetHostsWithCanonicalProfile();
+
           if (parts.length === 1 && parts[0] === 'listings' && method === 'GET') {
             const dirs = listDatasetDirs();
             const cards = dirs.map((dirName) => buildListingCard(getDatasetPaths(dirName))).filter((card) => card.listingId);
@@ -241,6 +308,10 @@ export default function localJsonDataPlugin(): Plugin {
               RESOURCE_KEYS.forEach((key) => {
                 const sourcePath = templatePaths[key];
                 const destPath = newPaths[key];
+                if (key === 'host') {
+                  writeJson(destPath, resolveCanonicalHostResource());
+                  return;
+                }
                 if (fs.existsSync(sourcePath)) {
                   fs.copyFileSync(sourcePath, destPath);
                 } else {
@@ -258,6 +329,15 @@ export default function localJsonDataPlugin(): Plugin {
             const resourcePath = dataset[resource];
 
             if (method === 'GET') {
+              if (resource === 'host') {
+                const canonicalHost = resolveCanonicalHostResource();
+                const currentHost = fs.existsSync(resourcePath) ? readJson(resourcePath) : null;
+                if (JSON.stringify(currentHost) !== JSON.stringify(canonicalHost)) {
+                  writeJson(resourcePath, canonicalHost);
+                }
+                return sendJson(res, 200, canonicalHost);
+              }
+
               if (fs.existsSync(resourcePath)) {
                 return sendJson(res, 200, readJson(resourcePath));
               }
@@ -267,6 +347,13 @@ export default function localJsonDataPlugin(): Plugin {
             }
 
             if (method === 'PATCH') {
+              if (resource === 'host') {
+                const canonicalHost = resolveCanonicalHostResource();
+                writeJson(resourcePath, canonicalHost);
+                console.log('[LocalJSON] patched resource host ignored to preserve canonical user host');
+                return sendJson(res, 200, canonicalHost);
+              }
+
               const payload = await readBody(req);
               const current = fs.existsSync(resourcePath) ? readJson(resourcePath) : buildFallbackResource(resource, listingId);
               const next = deepMerge(current, payload ?? {});
@@ -285,7 +372,9 @@ export default function localJsonDataPlugin(): Plugin {
 
             RESOURCE_KEYS.forEach((key) => {
               const fallback = buildFallbackResource(key, listingId);
-              const seeded = payload?.[key] ? deepMerge(fallback, payload[key]) : fallback;
+              const seeded = key === 'host'
+                ? resolveCanonicalHostResource()
+                : payload?.[key] ? deepMerge(fallback, payload[key]) : fallback;
               writeJson(newPaths[key], seeded);
             });
 

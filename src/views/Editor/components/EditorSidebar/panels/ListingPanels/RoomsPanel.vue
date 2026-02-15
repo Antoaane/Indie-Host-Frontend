@@ -36,6 +36,11 @@ const bedTypeCapacities = Object.fromEntries(
     option.capacity,
   ]),
 ) as Record<string, number>
+const NON_SLEEPING_ROOM_TYPES = new Set([
+  'kitchen',
+  'bathroom',
+])
+const OTHER_ROOM_TYPE = 'other'
 
 const collapsedRooms = ref<boolean[]>([])
 
@@ -57,7 +62,15 @@ watch(
 )
 
 function setRooms(next: RoomDraft[]) {
-  emit('patch', { core: { rooms: next } })
+  const sanitized = next.map((room) => {
+    if (!isNonSleepingRoomType(room.type)) return room
+    if (!Array.isArray(room.beds) || room.beds.length === 0) return room
+    return {
+      ...room,
+      beds: [],
+    } as RoomDraft
+  })
+  emit('patch', { core: { rooms: sanitized } })
 }
 
 function addRoom() {
@@ -105,6 +118,7 @@ function setBeds(index: number, nextBeds: BedDraft[]) {
 }
 
 function addBed(roomIndex: number) {
+  if (isBedConfigDisabled(rooms.value[roomIndex])) return
   const next = [
     ...(rooms.value[roomIndex]?.beds ?? []),
   ] as BedDraft[]
@@ -113,26 +127,89 @@ function addBed(roomIndex: number) {
 }
 
 function updateBed(roomIndex: number, index: number, patch: Partial<BedDraft>) {
+  if (isBedConfigDisabled(rooms.value[roomIndex])) return
   const next = [
     ...(rooms.value[roomIndex]?.beds ?? []),
   ] as BedDraft[]
+  if (!next[index]) return
   next[index] = { ...next[index], ...patch }
   setBeds(roomIndex, next)
 }
 
 function removeBed(roomIndex: number, index: number) {
+  if (isBedConfigDisabled(rooms.value[roomIndex])) return
   const next = (rooms.value[roomIndex]?.beds ?? []).filter((_, idx) => idx !== index) as BedDraft[]
   setBeds(roomIndex, next)
 }
 
 function setRoomType(index: number, nextType: string) {
+  const room = rooms.value[index]
+  if (!room) return
+
   const nextLabel = roomTypeLabels[nextType] ?? panelContent.roomLabelGeneric
-  updateRoom(index, { type: nextType, 'room-name': nextLabel })
+  const patch: Partial<RoomDraft> = {
+    type: nextType,
+    'room-name': nextLabel,
+  }
+
+  if (isOtherRoomType(nextType)) {
+    const currentCustomName = isOtherRoomType(room.type)
+      ? String(room['room-name'] ?? '').trim()
+      : ''
+    patch['room-name'] = promptCustomRoomName(currentCustomName)
+  }
+
+  if (isNonSleepingRoomType(nextType)) {
+    patch.beds = []
+  }
+
+  updateRoom(index, patch)
 }
 
 function setBedType(roomIndex: number, bedIndex: number, nextType: string) {
+  if (isBedConfigDisabled(rooms.value[roomIndex])) return
   const nextCapacity = bedTypeCapacities[nextType] ?? 1
   updateBed(roomIndex, bedIndex, { type: nextType, capacity: nextCapacity })
+}
+
+function normalizeRoomType(type: unknown) {
+  return String(type ?? '').trim().toLowerCase()
+}
+
+function isNonSleepingRoomType(type: unknown) {
+  return NON_SLEEPING_ROOM_TYPES.has(normalizeRoomType(type))
+}
+
+function isOtherRoomType(type: unknown) {
+  return normalizeRoomType(type) === OTHER_ROOM_TYPE
+}
+
+function isBedConfigDisabled(room?: RoomDraft) {
+  return isNonSleepingRoomType(room?.type)
+}
+
+function promptCustomRoomName(currentValue: string) {
+  const fallbackLabel = roomTypeLabels[OTHER_ROOM_TYPE] ?? panelContent.roomLabelGeneric
+  if (typeof window === 'undefined') return currentValue || fallbackLabel
+
+  const response = window.prompt('Nom personnalisé de la pièce', currentValue)
+  const nextValue = (response ?? '').trim()
+  return nextValue || currentValue || fallbackLabel
+}
+
+function editRoom(index: number) {
+  const room = rooms.value[index]
+  if (!room) return
+
+  if (isOtherRoomType(room.type)) {
+    const currentName = String(room['room-name'] ?? '').trim()
+    const nextName = promptCustomRoomName(currentName)
+    if (nextName !== currentName) {
+      updateRoom(index, { 'room-name': nextName })
+    }
+  }
+
+  toggleRoomCollapse(index, false)
 }
 
 function isRoomCollapsed(index: number) {
@@ -152,6 +229,18 @@ function roomLabel(room: RoomDraft, index: number) {
   const label = (room['room-name'] ?? '').trim()
   return label || roomTypeLabels[room.type ?? ''] || panelContent.roomLabelFallback.replace('{index}', String(index + 1))
 }
+
+watch(
+  rooms,
+  (nextRooms) => {
+    const hasInvalidBeds = nextRooms.some(
+      (room) => isNonSleepingRoomType(room.type) && (room.beds?.length ?? 0) > 0,
+    )
+    if (!hasInvalidBeds) return
+    setRooms(nextRooms)
+  },
+  { deep: true, immediate: true },
+)
 </script>
 
 <template>
@@ -191,7 +280,7 @@ function roomLabel(room: RoomDraft, index: number) {
                   <button
                     type="button"
                     aria-label="Modifier la pièce"
-                    @click="toggleRoomCollapse(roomIndex, false)"
+                    @click="editRoom(roomIndex)"
                   >
                     <Pencil :size="20" />
                   </button>
@@ -239,7 +328,10 @@ function roomLabel(room: RoomDraft, index: number) {
               v-if="!isRoomCollapsed(roomIndex)"
               class="room-body"
             >
-              <div class="room-beds">
+              <div
+                v-if="!isBedConfigDisabled(room)"
+                class="room-beds"
+              >
                 <div
                   v-for="(bed, bedIndex) in room.beds ?? []"
                   :key="bedIndex"
@@ -300,7 +392,10 @@ function roomLabel(room: RoomDraft, index: number) {
                 </div>
               </div>
 
-              <div class="btn-primary__black__full room-add-bed">
+              <div
+                v-if="!isBedConfigDisabled(room)"
+                class="btn-primary__black__full room-add-bed"
+              >
                 <button
                   type="button"
                   @click="addBed(roomIndex)"

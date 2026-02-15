@@ -7,7 +7,6 @@ import type {
   RawBookings,
   RawComments,
   RawCore,
-  RawHost,
   RawListingBundle,
   RawArrival,
   RawMedias,
@@ -17,6 +16,7 @@ import type {
 } from '@/domain/listings/types'
 import type { FetchListingsOptions, ListingsController } from '@/domain/listings/controller'
 import { filterDeletedListings } from '@/domain/listings/status'
+import { getCanonicalHost } from '@/domain/listings/host'
 
 const RAW_BASE_API_URL = (import.meta.env.VITE_API_BASE_URL ?? '').trim()
 const BASE_API_URL = normalizeApiBaseUrl(RAW_BASE_API_URL)
@@ -151,7 +151,7 @@ function fallbackEditableBundle(listingId: string): RawListingBundle {
 }
 
 function fallbackVolatileBundle(): VolatileBundle {
-  return { bookings: null, notes: null, comments: null, host: null }
+  return { bookings: null, notes: null, comments: null, host: getCanonicalHost() }
 }
 
 export function createApiListingsController(): ListingsController {
@@ -175,19 +175,25 @@ export function createApiListingsController(): ListingsController {
     },
     fetchListingBundle: async (listingId: string): Promise<RawListingBundle> => {
       console.log('[Domain][api] fetchListingBundle', { listingId })
-      if (!apiEnabled) return fallbackEditableBundle(listingId)
+      if (!apiEnabled) {
+        return {
+          ...fallbackEditableBundle(listingId),
+          notes: null,
+          comments: null,
+          host: getCanonicalHost(),
+        }
+      }
 
-      const [core, bookings, medias, arrival, notes, comments, host] = await Promise.all([
+      const [core, bookings, medias, arrival, notes, comments] = await Promise.all([
         fetchRemote<RawCore>(resolveUrl(buildListingUrl('core', listingId))),
         fetchRemote<RawBookings>(resolveUrl(buildListingUrl('bookings', listingId))),
         fetchRemote<RawMedias>(resolveUrl(buildListingUrl('medias', listingId))),
         fetchRemote<RawArrival>(resolveUrl(buildListingUrl('arrival', listingId))),
         fetchRemote<RawNotes>(resolveUrl(buildListingUrl('notes', listingId))),
         fetchRemote<RawComments>(resolveUrl(buildListingUrl('comments', listingId))),
-        fetchRemote<RawHost>(resolveUrl(buildListingUrl('host', listingId))),
       ])
 
-      return { core, bookings, medias, arrival, notes, comments, host }
+      return { core, bookings, medias, arrival, notes, comments, host: getCanonicalHost() }
     },
     fetchEditableListingBundle: async (listingId: string): Promise<RawListingBundle> => {
       console.log('[Domain][api] fetchEditableListingBundle', { listingId })
@@ -206,14 +212,13 @@ export function createApiListingsController(): ListingsController {
       console.log('[Domain][api] fetchVolatileListingBundle', { listingId })
       if (!apiEnabled) return fallbackVolatileBundle()
 
-      const [bookings, notes, comments, host] = await Promise.all([
+      const [bookings, notes, comments] = await Promise.all([
         fetchRemote<RawBookings>(resolveUrl(buildListingUrl('bookings', listingId))),
         fetchRemote<RawNotes>(resolveUrl(buildListingUrl('notes', listingId))),
         fetchRemote<RawComments>(resolveUrl(buildListingUrl('comments', listingId))),
-        fetchRemote<RawHost>(resolveUrl(buildListingUrl('host', listingId))),
       ])
 
-      return { bookings, notes, comments, host }
+      return { bookings, notes, comments, host: getCanonicalHost() }
     },
     patchListingDraft: async (listingId: string, patch: DraftPatch): Promise<void> => {
       console.log('[Domain][api] patchListingDraft', { listingId, patch })

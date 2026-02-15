@@ -6,7 +6,6 @@ import type {
   RawBookings,
   RawComments,
   RawCore,
-  RawHost,
   RawListingBundle,
   RawArrival,
   RawMedias,
@@ -16,6 +15,7 @@ import type {
 } from '@/domain/listings/types'
 import type { FetchListingsOptions, ListingsController } from '@/domain/listings/controller'
 import { filterDeletedListings } from '@/domain/listings/status'
+import { getCanonicalHost } from '@/domain/listings/host'
 
 const LOCAL_JSON_BASE = '/__local-json'
 
@@ -68,17 +68,16 @@ export function createLocalJsonListingsController(): ListingsController {
     },
     fetchListingBundle: async (listingId: string): Promise<RawListingBundle> => {
       console.log('[Domain][local-json] fetchListingBundle', { listingId })
-      const [core, bookings, medias, arrival, notes, comments, host] = await Promise.all([
+      const [core, bookings, medias, arrival, notes, comments] = await Promise.all([
         requestJson<RawCore>(buildListingUrl('core', listingId)),
         requestJson<RawBookings>(buildListingUrl('bookings', listingId)),
         requestJson<RawMedias>(buildListingUrl('medias', listingId)),
         requestJson<RawArrival>(buildListingUrl('arrival', listingId)),
         requestJson<RawNotes>(buildListingUrl('notes', listingId)),
         requestJson<RawComments>(buildListingUrl('comments', listingId)),
-        requestJson<RawHost>(buildListingUrl('host', listingId)),
       ])
 
-      return { core, bookings, medias, arrival, notes, comments, host }
+      return { core, bookings, medias, arrival, notes, comments, host: getCanonicalHost() }
     },
     fetchEditableListingBundle: async (listingId: string): Promise<RawListingBundle> => {
       console.log('[Domain][local-json] fetchEditableListingBundle', { listingId })
@@ -93,14 +92,13 @@ export function createLocalJsonListingsController(): ListingsController {
     },
     fetchVolatileListingBundle: async (listingId: string): Promise<VolatileBundle> => {
       console.log('[Domain][local-json] fetchVolatileListingBundle', { listingId })
-      const [bookings, notes, comments, host] = await Promise.all([
+      const [bookings, notes, comments] = await Promise.all([
         requestJson<RawBookings>(buildListingUrl('bookings', listingId)),
         requestJson<RawNotes>(buildListingUrl('notes', listingId)),
         requestJson<RawComments>(buildListingUrl('comments', listingId)),
-        requestJson<RawHost>(buildListingUrl('host', listingId)),
       ])
 
-      return { bookings, notes, comments, host }
+      return { bookings, notes, comments, host: getCanonicalHost() }
     },
     patchListingDraft: async (listingId: string, patch: DraftPatch): Promise<void> => {
       console.log('[Domain][local-json] patchListingDraft', { listingId, patch })

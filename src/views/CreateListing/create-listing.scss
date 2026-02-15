@@ -6,43 +6,50 @@
 
 .create-listing#create-listing-page {
   height: 100vh;
-  background: linear-gradient(180deg, $accent-surface-2 0%, $accent-surface-1 100%);
+
+  background: $secondary;
 
   @include min-width(lg) {
     padding-top: $nav-height;
-    height: calc(100vh - $nav-height);
+    padding-bottom: var(--layout-gap);
+    height: calc(100vh - $nav-height - var(--layout-gap));
   }
 
-  > .layout {
+  >.layout {
     height: 100%;
     max-width: 88rem;
-    margin: 0 auto;
+    margin-left: auto;
+    margin-right: auto;
 
     display: flex;
     flex-direction: column;
     gap: var(--layout-gap-sm);
 
+    background-color: $accent;
+    // background: linear-gradient(180deg, $accent-surface-2 0%, $accent-surface-1 100%);
+    border-radius: borders.$rounded-xl;
+
     @include layout-gap(padding, all, 1);
 
-    > .header {
+    >.header {
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
       gap: var(--layout-gap-sm);
 
-      > .step-title {
-        > p {
+      >.step-title {
+        >p {
           margin: 0;
           color: rgba($secondary, 0.6);
           @include little-text($thin: false);
         }
 
-        > h1 {
+        >h1 {
           margin: 0.15rem 0 0 0;
           @include h2-title();
         }
 
-        > small {
+        >small {
           margin: 0.25rem 0 0 0;
           display: block;
           color: rgba($secondary, 0.75);
@@ -51,13 +58,13 @@
       }
     }
 
-    > .progress {
+    >.progress {
       height: 0.4rem;
       border-radius: borders.$rounded;
       background: rgba($secondary, 0.12);
       overflow: hidden;
 
-      > .bar {
+      >.bar {
         height: 100%;
         border-radius: borders.$rounded;
         background: $secondary;
@@ -65,7 +72,7 @@
       }
     }
 
-    > .steps {
+    >.steps {
       display: flex;
       align-items: center;
       gap: var(--layout-gap-xs);
@@ -73,7 +80,7 @@
       scrollbar-width: none;
       padding-bottom: 0.15rem;
 
-      > .step {
+      >.step {
         flex: 0 0 auto;
         border: 1px solid rgba($secondary, 0.15);
         border-radius: borders.$rounded;
@@ -88,7 +95,7 @@
 
         transition: 180ms ease;
 
-        > span {
+        >span {
           width: 1.2rem;
           height: 1.2rem;
           border-radius: borders.$rounded;
@@ -100,7 +107,7 @@
           color: rgba($secondary, 0.85);
         }
 
-        > small {
+        >small {
           font-size: 0.8rem;
           font-weight: 500;
           color: rgba($secondary, 0.75);
@@ -109,7 +116,7 @@
         &.is-done {
           border-color: rgba($secondary, 0.22);
 
-          > span {
+          >span {
             background: rgba($secondary, 0.9);
             color: $accent;
           }
@@ -119,12 +126,12 @@
           border-color: rgba($secondary, 0.7);
           background: $secondary;
 
-          > span {
+          >span {
             background: rgba($accent, 0.95);
             color: $secondary;
           }
 
-          > small {
+          >small {
             color: rgba($accent, 0.95);
           }
         }
@@ -136,40 +143,49 @@
       }
     }
 
-    > .stage {
+    >.stage {
       flex: 1 1 auto;
       min-height: 0;
       overflow: hidden;
       border-radius: borders.$rounded-xl;
-      background: rgba($accent, 0.55);
-      border: 1px solid rgba($secondary, 0.08);
-      @include effects.big-shadow();
+      // background: rgba($accent, 0.55);
+      // border: 1px solid rgba($secondary, 0.08);
+      // @include effects.big-shadow();
 
-      > .slide {
+      >.slide {
         height: 100%;
         overflow: auto;
         padding: var(--layout-gap-sm);
 
-        > * {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        >* {
           width: 100%;
           max-width: 72rem;
           margin: 0 auto;
         }
+
+        &>[class$="-panel"] {
+          border: none;
+        }
       }
     }
 
-    > .error {
+    >.error {
       margin: 0;
       color: rgba($bad, 0.95);
       @include little-text($thin: false);
     }
 
-    > .footer {
+    >.footer {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: var(--layout-gap-sm);
       padding-bottom: var(--layout-gap-xs);
+      background-color: #00000000 !important;
     }
   }
 }

@@ -16,6 +16,7 @@ const props = defineProps<{
   ratingUnit: string
   overallLabel: string
   countLabel: string
+  showStars?: boolean
 }>()
 
 const hasScore = computed(() => typeof props.score === 'number' && !Number.isNaN(props.score))
@@ -38,8 +39,12 @@ const scoreLabel = computed(() =>
     <div>
       <h3 v-html="scoreLabel"></h3>
 
-      <Star :size="24" />
+      <Star
+        v-if="props.showStars !== false"
+        :size="24"
+      />
       <svg
+        v-if="props.showStars !== false"
         width="0"
         height="0"
         style="position: absolute"

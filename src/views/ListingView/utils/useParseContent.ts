@@ -33,6 +33,18 @@ import type {
 export type { RawListingBundle };
 
 type Maybe<T> = T | null | undefined;
+const NON_SLEEPING_ROOM_TYPES = new Set([
+  'kitchen',
+  'bathroom',
+]);
+
+function normalizeRoomType(type: unknown): string {
+  return String(type ?? '').trim().toLowerCase();
+}
+
+function isNonSleepingRoomType(type: unknown): boolean {
+  return NON_SLEEPING_ROOM_TYPES.has(normalizeRoomType(type));
+}
 
 /* ------------------------------------------------------------------ */
 /* ----------------------- HELPERS ƒ?oROOMSƒ?? -------------------------- */
@@ -44,7 +56,9 @@ function normalizeRooms(core: Maybe<Partial<RawCore>>): RoomItem[] {
     name: r['room-name'],
     type: r.type,
     // ƒªÎ‹÷? NE PAS forcer [] : on ne met "beds" que s'il y en a
-    ...(r.beds && r.beds.length
+    ...(isNonSleepingRoomType(r.type)
+      ? {}
+      : r.beds && r.beds.length
       ? {
         beds: r.beds.map(b => ({
           type: b.type,

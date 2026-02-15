@@ -238,12 +238,6 @@ function handleOverlayScroll(event: Event) {
   }
 }
 
-const hasData = computed(() => {
-  const value = typeof overallScore.value === 'number' || commentsCount.value > 0 || distribution.value.entries.length > 0
-  // console.log(`${value ? '✅' : '❌'} [Comments.vue](hasData) hasData:computed ready=${value} gating`)
-  return value
-})
-
 const swiperParams = computed(
   () =>
     ({
@@ -278,11 +272,11 @@ const swiperParams = computed(
         />
         <!-- <p v-if="commentsCount">{{ countLabel }}</p> -->
         <SummaryCard
-          v-if="hasData"
           :score="overallScore"
           :rating-unit="content.summary.ratingUnit"
           :overall-label="content.summary.overallLabel"
           :count-label="countLabel"
+          :show-stars="commentsCount > 0"
         />
       </div>
     </div>
@@ -357,11 +351,11 @@ const swiperParams = computed(
             <div class="summary-container">
               <h2 v-html="`${content.title} — ${countLabel}`" />
               <SummaryCard
-                v-if="hasData"
                 :score="overallScore"
                 :rating-unit="content.summary.ratingUnit"
                 :overall-label="content.summary.overallLabel"
                 :count-label="countLabel"
+                :show-stars="commentsCount > 0"
               />
             </div>
 

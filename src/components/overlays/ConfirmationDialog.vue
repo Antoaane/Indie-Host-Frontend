@@ -167,24 +167,26 @@ function handleCancel() {
       </div>
 
       <div class="footer">
-        <button
-          type="button"
-          class="cancel"
-          :disabled="cancelDisabled"
-          @click="handleCancel"
-        >
-          {{ cancelLabel }}
-        </button>
-
-        <button
-          type="button"
-          class="confirm"
-          :class="{ 'is-danger': tone === 'danger' }"
-          :disabled="isConfirmDisabled"
-          @click="handleConfirm"
-        >
-          {{ confirmLabel }}
-        </button>
+        <div class="cancel">
+          <button
+            type="button"
+            :disabled="cancelDisabled"
+            @click="handleCancel"
+          >
+            {{ cancelLabel }}
+          </button>
+        </div>
+        <div class="confirm">
+          <button
+            type="button"
+            class="confirm"
+            :class="{ 'is-danger': tone === 'danger' }"
+            :disabled="isConfirmDisabled"
+            @click="handleConfirm"
+          >
+            {{ confirmLabel }}
+          </button>
+        </div>
       </div>
     </div>
   </AbsoluteOverlay>
@@ -197,17 +199,19 @@ function handleCancel() {
 @use '@/styles/components/overlays' as overlays;
 
 .confirmation-dialog-overlay {
-  >.panel {
+  > .panel {
     @extend %overlay-panel;
     max-height: max-content;
     gap: var(--layout-gap-sm);
 
-    >.header {
+    @include layout-gap(padding, bottom, 2);
+
+    > .header {
       display: flex;
       flex-direction: column;
       gap: 0.3rem;
 
-      >.subject {
+      > .subject {
         margin: 0;
         color: rgba($secondary, 0.65);
         text-transform: uppercase;
@@ -215,39 +219,39 @@ function handleCancel() {
         @include little-text($thin: false);
       }
 
-      >h2 {
+      > h2 {
         margin: 0;
         @include h2-title;
       }
     }
 
-    >.body {
+    > .body {
       display: flex;
       flex-direction: column;
       gap: var(--layout-gap-sm);
 
-      >.message {
+      > .message {
         margin: 0;
         @include base-text;
       }
 
-      >.typed-confirmation {
+      > .typed-confirmation {
         display: flex;
         flex-direction: column;
         gap: var(--layout-gap-xs);
 
-        >.hint {
+        > .hint {
           margin: 0;
           color: rgba($secondary, 0.75);
           @include little-text($thin: false);
         }
 
-        >.field {
+        > .field {
           display: flex;
           flex-direction: column;
           gap: 0.35rem;
 
-          >.field-label {
+          > .field-label {
             @include little-text($thin: false);
           }
 
@@ -256,16 +260,16 @@ function handleCancel() {
       }
     }
 
-    >.footer {
+    > .footer {
       display: flex;
       justify-content: flex-end;
       gap: var(--layout-gap-sm);
 
-      >.cancel {
+      > .cancel {
         @include buttons.primary($theme: white);
       }
 
-      >.confirm {
+      > .confirm {
         @include buttons.primary($theme: dark);
 
         &.is-danger {

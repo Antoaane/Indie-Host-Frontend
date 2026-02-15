@@ -102,7 +102,10 @@ const descriptionStatic = {
       :data="props.data.title"
       :staticContent="staticContent.listing.title"
     />
-    <Perks :data="props.data.perks" />
+    <Perks
+      v-if="props.data.perks.length > 0"
+      :data="props.data.perks"
+    />
     <Description
       :data="props.data.description"
       :staticContent="descriptionStatic"
