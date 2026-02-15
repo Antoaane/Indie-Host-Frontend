@@ -36,7 +36,9 @@
       "ratingAria": "{rating} sur 5",
       "newListing": {
         "title": "+ Nouvelle annonce",
-        "remaining": "{count} / {max} restantes"
+        "activeUsage": "{count} / {max} actives",
+        "remaining": "{count} restantes",
+        "remainingAlertSuffix": "!"
       }
     },
     "sidebar": {

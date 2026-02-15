@@ -17,20 +17,20 @@
   background: $accent;
   border-radius: borders.$rounded-xl;
 
-  > .toolbar {
+  >.toolbar {
     padding: var(--layout-gap-sm);
     border-bottom: 1px solid rgba($secondary, 0.08);
 
-    > .search {
+    >.search {
       @include inputs.search($theme: accent);
     }
   }
 
-  > .scroll-container {
+  >.scroll-container {
     overflow: hidden;
     overflow-y: scroll;
 
-    > .grid {
+    >.grid {
       height: max-content;
       flex: 1 1 auto;
       overflow: auto;
@@ -49,13 +49,14 @@
         grid-template-columns: repeat(4, minmax(0, 1fr));
       }
 
-      > .new-card {
-        aspect-ratio: 9 / 14;
-        @include buttons.primary($theme: light, $padding: false, $fullwidth: true);
+      >.new-card {
+        width: 100%;
+        aspect-ratio: 9 / 13;
+        display: flex;
 
-        > * {
+        >* {
+          width: 100%;
           text-decoration: none;
-          height: 100% !important;
           padding: var(--layout-gap-md);
           border-radius: borders.$rounded-xl;
           border: 2px dashed rgba($secondary, 0.2);
@@ -63,7 +64,11 @@
           box-shadow: none;
           outline-color: rgba($secondary, 0.08);
 
-          > .content {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          >.content {
             width: 100%;
             display: flex;
             flex-direction: column;
@@ -73,21 +78,28 @@
 
             color: rgba($secondary, 0.75);
 
-            > small {
+            >small {
               font-size: 0.85rem;
               font-weight: 300;
+            }
+
+            >small.remaining {
+              &.is-limit-reached {
+                color: rgba($bad, 1);
+                font-weight: 700;
+              }
             }
           }
         }
       }
 
-      > .card {
+      >.card {
         aspect-ratio: 9 / 13;
 
         position: relative;
         isolation: isolate;
 
-        > .select {
+        >.select {
           height: 100%;
           padding: 0.5rem;
 
@@ -106,7 +118,7 @@
             transform: translateY(-1px);
           }
 
-          > .media {
+          >.media {
             position: relative;
             aspect-ratio: 1 / 1;
             background: $accent-surface-2;
@@ -125,17 +137,17 @@
               background: linear-gradient(180deg, rgba($secondary, 0) 0%, rgba($secondary, 0.24) 100%);
             }
 
-            > .swiper-hitbox {
+            >.swiper-hitbox {
               width: 100%;
               height: 100%;
 
-              > .swiper {
+              >.swiper {
                 width: 100%;
                 height: 100%;
 
-                > .swiper-wrapper {
-                  > .swiper-slide {
-                    > img {
+                >.swiper-wrapper {
+                  >.swiper-slide {
+                    >img {
                       width: 100%;
                       height: 100%;
                       object-fit: cover;
@@ -146,14 +158,14 @@
               }
             }
 
-            > img {
+            >img {
               width: 100%;
               height: 100%;
               object-fit: cover;
               display: block;
             }
 
-            > .placeholder {
+            >.placeholder {
               width: 100%;
               height: 100%;
               background: linear-gradient(180deg, rgba($secondary, 0.06) 0%, rgba($secondary, 0.02) 100%);
@@ -168,14 +180,14 @@
                 background: radial-gradient(circle at 50% 40%, rgba($secondary, 0.08), rgba($secondary, 0) 55%);
               }
 
-              > .icon {
+              >.icon {
                 position: relative;
                 z-index: 1;
                 color: rgba($secondary, 0.25);
               }
             }
 
-            > .status {
+            >.status {
               position: absolute;
               top: 0.75rem;
               left: 0.75rem;
@@ -262,29 +274,29 @@
               }
             }
 
-            > .preview {
+            >.preview {
               position: absolute;
               top: 0.75rem;
               right: 0.75rem;
               z-index: 4;
 
-              > div {
+              >div {
                 @include buttons.primary($theme: light, $icon-only: true);
 
-                > * {
+                >* {
                   width: 38px;
                   height: 38px;
                 }
               }
             }
 
-            > .carousel {
+            >.carousel {
               position: absolute;
               inset: 0;
               z-index: 2;
               pointer-events: none;
 
-              > .nav {
+              >.nav {
                 position: absolute;
                 top: 50%;
                 transform: translateY(-50%);
@@ -315,7 +327,7 @@
                 }
               }
 
-              > .dots {
+              >.dots {
                 position: absolute;
                 left: 50%;
                 bottom: 10px;
@@ -327,7 +339,7 @@
                 gap: 6px;
                 pointer-events: auto;
 
-                > .dot {
+                >.dot {
                   width: 6px;
                   height: 6px;
                   border-radius: borders.$rounded;
@@ -345,7 +357,7 @@
             }
           }
 
-          > .body {
+          >.body {
             padding: 0rem 0.25rem 0.25rem 0.25rem;
             flex-grow: 1;
 
@@ -353,8 +365,8 @@
             flex-direction: column;
             justify-content: space-between;
 
-            > .main {
-              > .title {
+            >.main {
+              >.title {
                 margin: 0;
 
                 font-size: 1rem;
@@ -371,7 +383,7 @@
                 @include base-text($bold: true);
               }
 
-              > .meta {
+              >.meta {
                 margin: 0;
                 color: rgba($secondary, 0.7);
                 text-align: left;
@@ -380,14 +392,14 @@
               }
             }
 
-            > .footer {
+            >.footer {
               margin-top: 0.15rem;
               display: flex;
               align-items: center;
               justify-content: space-between;
               gap: var(--layout-gap-xs);
 
-              > .price {
+              >.price {
                 font-size: 0.95rem;
                 font-weight: 700;
                 color: rgba($secondary, 0.92);
@@ -396,13 +408,13 @@
                 align-items: baseline;
                 gap: 0.25rem;
 
-                > .suffix {
+                >.suffix {
                   @include little-text($thin: true);
                   color: rgba($secondary, 0.7);
                 }
               }
 
-              > .rating {
+              >.rating {
                 --rating-percent: 0%;
                 position: relative;
                 display: inline-block;
@@ -437,20 +449,20 @@
         }
 
         &.is-selected {
-          > .select {
+          >.select {
             outline: 3px solid rgba($secondary, 1);
           }
         }
 
         &:focus-within {
-          > .select {
+          >.select {
             outline: 3px solid rgba($secondary, 1);
           }
         }
       }
     }
 
-    > .state {
+    >.state {
       padding: var(--layout-gap-sm);
       text-align: center;
       font-weight: 400;
@@ -461,13 +473,13 @@
 
 @media (hover: hover) and (pointer: fine) {
   .editor-listings {
-    > .scroll-container {
-      > .grid {
-        > .card {
-          > .select {
-            > .media {
-              > .carousel {
-                > .nav {
+    >.scroll-container {
+      >.grid {
+        >.card {
+          >.select {
+            >.media {
+              >.carousel {
+                >.nav {
                   opacity: 0;
                 }
               }
@@ -475,10 +487,10 @@
           }
 
           &:hover {
-            > .select {
-              > .media {
-                > .carousel {
-                  > .nav {
+            >.select {
+              >.media {
+                >.carousel {
+                  >.nav {
                     opacity: 1;
                   }
                 }

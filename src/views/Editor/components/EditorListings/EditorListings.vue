@@ -14,6 +14,7 @@ import { createListingMediaSwiperParams } from '@/utils/swiper/listingMedia'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 import { formatICUMessage } from '@/utils/i18n'
 import { normalizeListingStatus } from '@/domain/listings/status'
+import { getUserMaxActiveListings } from '@/domain/user/subscription'
 
 const props = defineProps<{
   listings: UserListingCard[]
@@ -29,7 +30,26 @@ const emit = defineEmits<{
 const query = ref('')
 const route = useRoute()
 const listingContent = editorStatic.listings
-const newListingRemaining = computed(() => listingContent.newListing.remaining.replace('{count}', '3').replace('{max}', '6'))
+const ACTIVE_LISTING_STATUSES = new Set(['published', 'blocked'])
+const maxActiveListings = getUserMaxActiveListings()
+const activeListingsCount = computed(() =>
+  props.listings.reduce((count, listing) => count + (isActiveListingStatus(listing.status) ? 1 : 0), 0),
+)
+const remainingActiveListings = computed(() => Math.max(0, maxActiveListings - activeListingsCount.value))
+const isActiveListingsLimitReached = computed(() => remainingActiveListings.value <= 0)
+const newListingActiveUsage = computed(() =>
+  listingContent.newListing.activeUsage
+    .replace('{count}', String(activeListingsCount.value))
+    .replace('{max}', String(maxActiveListings)),
+)
+const newListingRemaining = computed(() =>
+  listingContent.newListing.remaining.replace('{count}', String(remainingActiveListings.value)),
+)
+const newListingRemainingDisplay = computed(() =>
+  isActiveListingsLimitReached.value
+    ? `${newListingRemaining.value} ${listingContent.newListing.remainingAlertSuffix}`
+    : newListingRemaining.value,
+)
 const createListingRoute = computed(() => {
   const userId = route.params.userId
   if (typeof userId === 'string' && userId.trim()) {
@@ -175,6 +195,12 @@ function statusVariant(status?: string) {
   if (normalized === 'paused') return 'is-paused'
   if (normalized === 'deleted') return 'is-deleted'
   return 'is-unknown'
+}
+
+function isActiveListingStatus(status?: string) {
+  const normalized = normalizeListingStatus(status)
+  if (!normalized) return false
+  return ACTIVE_LISTING_STATUSES.has(normalized)
 }
 
 function ratingPercent(rating?: number) {
@@ -401,7 +427,13 @@ function goToImageLabel(index: number) {
           <RouterLink :to="createListingRoute">
             <div class="content">
               <span>{{ listingContent.newListing.title }}</span>
-              <small>{{ newListingRemaining }}</small>
+              <small class="usage">{{ newListingActiveUsage }}</small>
+              <small
+                class="remaining"
+                :class="{ 'is-limit-reached': isActiveListingsLimitReached }"
+              >
+                {{ newListingRemainingDisplay }}
+              </small>
             </div>
           </RouterLink>
         </div>

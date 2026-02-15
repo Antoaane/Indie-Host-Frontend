@@ -108,14 +108,14 @@ function closePopup() {
 
 .listing-description {
   > h2 {
-    margin-bottom: var(--layout-gap-md) !important;
+    margin-bottom: var(--layout-gap-sm) !important;
     @include h2-title($gradiant: true);
   }
 
   > .preview {
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 7;
+    -webkit-line-clamp: 4;
     /* Nombre de lignes visibles */
     overflow: hidden;
     text-overflow: ellipsis;
@@ -126,8 +126,20 @@ function closePopup() {
     }
 
     h3 {
-      margin-top: var(--layout-gap-md) !important;
+      margin-top: var(--layout-gap-sm) !important;
+      margin-bottom: var(--layout-gap-xs) !important;
       @include h4-title;
+    }
+
+    h2 {
+      margin-top: var(--layout-gap-sm) !important;
+      margin-bottom: var(--layout-gap-xs) !important;
+      @include h3-title;
+    }
+
+    p {
+      margin: 0;
+      margin-bottom: var(--layout-gap-xs);
     }
   }
 
@@ -135,7 +147,6 @@ function closePopup() {
     margin-top: var(--layout-gap-sm);
     @include buttons.secondary($padding: false);
   }
-
 }
 
 .listing-description-overlay {

@@ -33,6 +33,16 @@
   },
   "billing": {
     "plan": "pro-fixed",
+    "subscription": {
+      "planCode": "superhost",
+      "planName": "SuperHost",
+      "cycle": "monthly",
+      "status": "active",
+      "startedAt": "2024-04-01T00:00:00Z",
+      "limits": {
+        "maxActiveListings": 6
+      }
+    },
     "currency": "EUR",
     "stripeConnectAccountId": "acct_demo_owner_001"
   },
