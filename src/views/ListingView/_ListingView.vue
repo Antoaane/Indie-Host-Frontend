@@ -2,12 +2,15 @@
 
 <script setup lang="ts">
 // DEPS
-import { computed, ref, watch, nextTick } from 'vue'
+import { computed, reactive, ref, watch, nextTick } from 'vue'
+import { useRoute } from 'vue-router'
 
 // UTILS
 import { vp } from '@/utils/viewport'
 import { core } from '@/views/ListingView/utils/useParseContent'
-import type { RawListingBundle } from '@/domain/listings/types'
+import { deriveBookedDaysFromReservations, nightsBetween, normalizeBookedDay, normalizeBookedDays, normalizeReservations, toUtcDay } from '@/domain/listings/bookings'
+import { getListingsController } from '@/domain/listings/controller'
+import type { RawBookingReservation, RawBookings, RawListingBundle } from '@/domain/listings/types'
 import { getListingStatusFlags } from '@/domain/listings/status'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
 
@@ -31,6 +34,8 @@ const props = defineProps<{
     height: number
   }
 }>()
+const route = useRoute()
+const controller = getListingsController()
 
 const listingData = computed<ListingParsed | null>(() => {
   if (!props.rawListing) return null
@@ -49,6 +54,10 @@ const bookingDisabledHint = computed(() =>
 const bookingRange = ref<RangeISO | null>(null)
 const checkoutPayload = ref<ReservationPayload | null>(null)
 const isCheckout = computed(() => Boolean(checkoutPayload.value))
+const checkoutStatus = reactive({
+  isSubmitting: false,
+  error: null as string | null,
+})
 
 const pvWidth = ref<number | undefined>(0)
 const pvHeight = ref<number | undefined>(0)
@@ -71,6 +80,184 @@ const aspectStyles = computed<StyleValue>(() => {
     position: 'relative',
   }
 })
+
+type CheckoutConfirmationPayload = {
+  travelerMessage: string
+  paymentChoice: 'full' | 'split' | 'cash'
+}
+
+function normalizeListingId(value: unknown): string | null {
+  if (Array.isArray(value)) return normalizeListingId(value[0])
+  if (typeof value === 'string' && value.trim()) return value.trim()
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value)
+  return null
+}
+
+const listingId = computed(() => normalizeListingId(route.params.id) ?? normalizeListingId(props.rawListing?.core?.id) ?? null)
+
+function sanitizeIdPart(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9-]/g, '-')
+}
+
+function createReservationId(currentListingId: string, start: string, end: string) {
+  const base = sanitizeIdPart(currentListingId.trim() || 'listing')
+  const suffix = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID().slice(0, 8) : Date.now().toString(36)
+  return `reservation-${base}-${start}-${end}-${suffix}`
+}
+
+function sumFees(bookings?: Partial<RawBookings> | null): number {
+  const fees = bookings?.fees ?? []
+  return fees.reduce((acc, fee) => acc + (Number(fee.amount ?? 0) || 0), 0)
+}
+
+function buildLegacyReservationFromRange(currentListingId: string, range: { start: string; end: string }, bookings?: Partial<RawBookings> | null): RawBookingReservation | null {
+  const nights = Math.max(1, nightsBetween(range.start, range.end))
+  const total = Math.max(0, Math.round((Number(bookings?.price ?? 0) || 0) * nights + sumFees(bookings)))
+  const deposit = Math.round(total * 0.3)
+  const balance = Math.max(0, total - deposit)
+
+  const [
+    reservation,
+  ] = normalizeReservations([
+    {
+      id: `legacy-${sanitizeIdPart(currentListingId)}-${range.start}-${range.end}`,
+      start: range.start,
+      end: range.end,
+      nights,
+      guestName: 'Voyageur',
+      message: '',
+      guests: {
+        adults: 1,
+        children: 0,
+        infants: 0,
+        pets: 0,
+        pmr: 0,
+      },
+      payment: {
+        total,
+        deposit,
+        balance,
+        status: 'pending',
+        method: 'Carte',
+      },
+    },
+  ])
+
+  return reservation ?? null
+}
+
+function mergeReservationsWithBookedDays(currentListingId: string, bookings?: Partial<RawBookings> | null): RawBookingReservation[] {
+  const reservations = normalizeReservations(bookings?.reservations)
+  const ranges = normalizeBookedDays(bookings?.['booked-days'])
+  const knownRanges = new Set(reservations.map((reservation) => `${reservation.start}__${reservation.end}`))
+  const merged = [
+    ...reservations,
+  ]
+
+  for (const range of ranges) {
+    const key = `${range.start}__${range.end}`
+    if (knownRanges.has(key)) continue
+    const legacyReservation = buildLegacyReservationFromRange(currentListingId, range, bookings)
+    if (!legacyReservation) continue
+    merged.push(legacyReservation)
+    knownRanges.add(key)
+  }
+
+  return normalizeReservations(merged)
+}
+
+function toNonNegativeInt(value: unknown, fallback = 0) {
+  const next = Number(value)
+  if (!Number.isFinite(next)) return fallback
+  return Math.max(0, Math.trunc(next))
+}
+
+function rangesOverlap(aStart: string, aEnd: string, bStart: string, bEnd: string) {
+  const aStartMs = toUtcDay(aStart)
+  const aEndMs = toUtcDay(aEnd)
+  const bStartMs = toUtcDay(bStart)
+  const bEndMs = toUtcDay(bEnd)
+  if (aStartMs === null || aEndMs === null || bStartMs === null || bEndMs === null) return false
+  return aStartMs < bEndMs && bStartMs < aEndMs
+}
+
+function resolvePayment(total: number, paymentChoice: CheckoutConfirmationPayload['paymentChoice']) {
+  if (paymentChoice === 'split') {
+    const deposit = Math.round(total * 0.5)
+    return {
+      total,
+      deposit,
+      balance: Math.max(0, total - deposit),
+      status: 'pending' as const,
+      method: 'Carte',
+    }
+  }
+
+  if (paymentChoice === 'cash') {
+    const deposit = Math.round(total * 0.25)
+    return {
+      total,
+      deposit,
+      balance: Math.max(0, total - deposit),
+      status: 'pending' as const,
+      method: 'Espèces',
+    }
+  }
+
+  return {
+    total,
+    deposit: total,
+    balance: 0,
+    status: 'pending' as const,
+    method: 'Carte',
+  }
+}
+
+function buildReservationFromCheckout(
+  currentListingId: string,
+  reservationPayload: ReservationPayload,
+  confirmationPayload: CheckoutConfirmationPayload,
+): RawBookingReservation {
+  const normalizedRange = normalizeBookedDay({
+    start: reservationPayload.startISO ?? undefined,
+    end: reservationPayload.endISO ?? undefined,
+  })
+
+  if (!normalizedRange) {
+    throw new Error('Invalid checkout range')
+  }
+
+  const total = Math.max(0, Math.round(Number(reservationPayload.total) || 0))
+  const payment = resolvePayment(total, confirmationPayload.paymentChoice)
+
+  const [
+    reservation,
+  ] = normalizeReservations([
+    {
+      id: createReservationId(currentListingId, normalizedRange.start, normalizedRange.end),
+      start: normalizedRange.start,
+      end: normalizedRange.end,
+      nights: Math.max(1, toNonNegativeInt(reservationPayload.nights, 1)),
+      guestName: 'Voyageur',
+      message: confirmationPayload.travelerMessage.trim(),
+      guests: {
+        adults: Math.max(1, toNonNegativeInt(reservationPayload.occupants.adults, 1)),
+        children: toNonNegativeInt(reservationPayload.occupants.children),
+        infants: toNonNegativeInt(reservationPayload.occupants.babies),
+        pets: toNonNegativeInt(reservationPayload.occupants.animals),
+        pmr: toNonNegativeInt(reservationPayload.occupants.pmr),
+      },
+      payment,
+      createdAt: new Date().toISOString(),
+    },
+  ])
+
+  if (!reservation) {
+    throw new Error('Reservation payload normalization failed')
+  }
+
+  return reservation
+}
 
 function setAspect() {
   pvWidth.value = props.aspect?.width
@@ -106,11 +293,67 @@ watch(
 )
 
 function onReserve(payload: ReservationPayload) {
+  checkoutStatus.error = null
   checkoutPayload.value = payload
 }
 
 function cancelCheckout() {
+  checkoutStatus.error = null
   checkoutPayload.value = null
+}
+
+async function confirmCheckout(payload: CheckoutConfirmationPayload) {
+  const targetListingId = listingId.value
+  const reservationPayload = checkoutPayload.value
+  checkoutStatus.error = null
+
+  if (!targetListingId) {
+    checkoutStatus.error = 'Impossible de déterminer l annonce à réserver.'
+    return
+  }
+
+  if (!reservationPayload?.startISO || !reservationPayload.endISO) {
+    checkoutStatus.error = 'Sélection de dates invalide.'
+    return
+  }
+
+  checkoutStatus.isSubmitting = true
+
+  try {
+    const editable = await controller.fetchEditableListingBundle(targetListingId)
+    const currentBookings = (editable.bookings ?? null) as Partial<RawBookings> | null
+    const currentReservations = mergeReservationsWithBookedDays(targetListingId, currentBookings)
+    const createdReservation = buildReservationFromCheckout(targetListingId, reservationPayload, payload)
+
+    const isRangeAlreadyBooked = currentReservations.some((reservation) =>
+      rangesOverlap(createdReservation.start, createdReservation.end, reservation.start, reservation.end))
+
+    if (isRangeAlreadyBooked) {
+      checkoutStatus.error = 'Cette période vient d être réservée.'
+      return
+    }
+
+    const nextReservations = normalizeReservations([
+      ...currentReservations,
+      createdReservation,
+    ])
+    const nextBookedDays = deriveBookedDaysFromReservations(nextReservations)
+
+    await controller.patchListingDraft(targetListingId, {
+      bookings: {
+        ...(currentBookings ?? {}),
+        reservations: nextReservations,
+        'booked-days': nextBookedDays,
+      },
+    })
+
+    cancelCheckout()
+  } catch (error) {
+    console.error('[ListingView] checkout reservation failed', error)
+    checkoutStatus.error = 'Impossible de valider la réservation.'
+  } finally {
+    checkoutStatus.isSubmitting = false
+  }
 }
 </script>
 
@@ -155,7 +398,10 @@ function cancelCheckout() {
             key="checkout"
             :listing="listingData"
             :reservation="checkoutPayload!"
+            :is-submitting="checkoutStatus.isSubmitting"
+            :submit-error="checkoutStatus.error"
             @cancel="cancelCheckout"
+            @confirm="confirmCheckout"
           />
           <div
             v-else
@@ -172,6 +418,7 @@ function cancelCheckout() {
           v-if="listingData"
           v-model:model-value="bookingRange"
           :price-per-night="listingData.bookings.price"
+          :weekend-pricing="listingData.bookings.weekend"
           :fees="listingData.bookings.fees"
           :booked-days="listingData.bookings.bookedDays"
           :disabled="isBookingDisabled"
@@ -240,11 +487,15 @@ function cancelCheckout() {
                 <Checkout
                   :listing="listingData"
                   :reservation="checkoutPayload!"
+                  :is-submitting="checkoutStatus.isSubmitting"
+                  :submit-error="checkoutStatus.error"
                   @cancel="cancelCheckout"
+                  @confirm="confirmCheckout"
                 />
                 <Booking
                   v-model:model-value="bookingRange"
                   :price-per-night="listingData.bookings.price"
+                  :weekend-pricing="listingData.bookings.weekend"
                   :fees="listingData.bookings.fees"
                   :booked-days="listingData.bookings.bookedDays"
                   :disabled="isBookingDisabled"

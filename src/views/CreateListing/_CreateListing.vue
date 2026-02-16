@@ -94,6 +94,7 @@ function buildInitialDraft(): RawListingBundle {
       status: 'draft',
       title: '',
       type: '',
+      precise_address: '',
       city: '',
       country: '',
       region: '',
@@ -144,10 +145,17 @@ function validateTitle(bundle: RawListingBundle): string | null {
 
 function validateLocation(bundle: RawListingBundle): string | null {
   const type = cleanText(bundle.core?.type)
+  const preciseAddress = cleanText(bundle.core?.precise_address)
   const city = cleanText(bundle.core?.city)
+  const region = cleanText(bundle.core?.region)
   const country = cleanText(bundle.core?.country)
-  if (!type || !city || !country) {
-    return 'Renseigne le type de logement, la ville et le pays.'
+  const latitude = asNumber(bundle.core?.latitude ?? bundle.core?.lat, Number.NaN)
+  const longitude = asNumber(bundle.core?.longitude ?? bundle.core?.lng, Number.NaN)
+  if (!type || !preciseAddress || !city || !region || !country) {
+    return 'Renseigne le type de logement et l’adresse précise pour déduire ville, région et pays.'
+  }
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    return 'Analyse l’adresse précise pour générer les coordonnées de la carte.'
   }
   return null
 }
@@ -198,7 +206,10 @@ const steps: CreateListingStep[] = [
     label: listingContent.location.title,
     description: listingContent.location.subtitle,
     component: LocationPanel,
-    props: (draft) => ({ core: draft.core }),
+    props: (draft) => ({
+      core: draft.core,
+      requirePreciseAddress: true,
+    }),
     acceptsPatch: true,
     validate: validateLocation,
   },
@@ -390,12 +401,23 @@ function normalizeBundleForCreate(bundle: RawListingBundle): RawListingBundle {
     status: normalizeListingStatus(String(sourceCore.status ?? '')) || 'draft',
     title: cleanText(sourceCore.title) || 'Nouvelle annonce',
     type: cleanText(sourceCore.type),
+    precise_address: cleanText(sourceCore.precise_address),
     city: cleanText(sourceCore.city),
     country: cleanText(sourceCore.country),
     region: cleanText(sourceCore.region),
     guest_capacity: Math.max(1, Math.round(asNumber(sourceCore.guest_capacity, 1))),
     amenities: Array.isArray(sourceCore.amenities) ? sourceCore.amenities : [],
     rooms: Array.isArray(sourceCore.rooms) ? sourceCore.rooms : [],
+  }
+
+  const latitude = asNumber(sourceCore.latitude ?? sourceCore.lat, Number.NaN)
+  const longitude = asNumber(sourceCore.longitude ?? sourceCore.lng, Number.NaN)
+  if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+    normalizedCore.latitude = latitude
+    normalizedCore.longitude = longitude
+    normalizedCore.lat = latitude
+    normalizedCore.lng = longitude
+    normalizedCore.zoom = Number.isFinite(asNumber(sourceCore.zoom, Number.NaN)) ? asNumber(sourceCore.zoom, 13) : 13
   }
 
   const normalizedBookings: Partial<RawBookings> = {

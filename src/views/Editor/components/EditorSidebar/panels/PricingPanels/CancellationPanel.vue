@@ -7,6 +7,8 @@ import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 
 type CancellationPolicy = 'flexible' | 'moderate' | 'strict' | 'custom'
+type CancellationPresetPolicy = Exclude<CancellationPolicy, 'custom'>
+type CancellationSeverity = 'low' | 'medium' | 'high'
 
 type CancellationCustom = {
   days?: number | null
@@ -30,18 +32,45 @@ const emit = defineEmits<{
   (e: 'patch', patch: DraftPatch): void
 }>()
 
-const pricing = computed<PricingSettings>(() => ((props.bookings as any)?.pricing ?? {}))
+const pricing = computed<PricingSettings>(() => (props.bookings as any)?.pricing ?? {})
 const cancellation = computed<PricingCancellation>(() => pricing.value.cancellation ?? {})
 const custom = computed<CancellationCustom>(() => cancellation.value.custom ?? {})
 
 const policy = computed<CancellationPolicy>(() => cancellation.value.policy ?? 'flexible')
-const customDays = computed(() => (
-  Number.isFinite(Number(custom.value.days)) ? Number(custom.value.days) : null
-))
-const customFee = computed(() => (
-  Number.isFinite(Number(custom.value.feePercent)) ? Number(custom.value.feePercent) : null
-))
+const customDays = computed(() => (Number.isFinite(Number(custom.value.days)) ? Number(custom.value.days) : null))
+const customFee = computed(() => (Number.isFinite(Number(custom.value.feePercent)) ? clampPercent(Number(custom.value.feePercent)) : null))
 const panelContent = editorStatic.panels.pricing.cancellation
+
+const POLICY_PRESETS: Record<
+  CancellationPresetPolicy,
+  {
+    severity: CancellationSeverity
+    days: number
+    feePercent: number
+  }
+> = {
+  flexible: {
+    severity: 'low',
+    days: 7,
+    feePercent: 30,
+  },
+  moderate: {
+    severity: 'medium',
+    days: 14,
+    feePercent: 50,
+  },
+  strict: {
+    severity: 'high',
+    days: 30,
+    feePercent: 100,
+  },
+}
+
+const presetPolicies: CancellationPresetPolicy[] = [
+  'flexible',
+  'moderate',
+  'strict',
+]
 
 function updatePricing(next: Partial<PricingSettings>) {
   emit('patch', {
@@ -76,6 +105,55 @@ function clampPercent(value: number) {
   return Math.min(100, Math.max(0, value))
 }
 
+function getPolicyRules(policyKey: CancellationPresetPolicy, values?: Partial<CancellationCustom>) {
+  const defaults = POLICY_PRESETS[policyKey]
+  const days = Number.isFinite(Number(values?.days)) ? Math.max(0, Number(values?.days)) : defaults.days
+  const feePercent = Number.isFinite(Number(values?.feePercent)) ? clampPercent(Number(values?.feePercent)) : defaults.feePercent
+
+  return [
+    panelContent.rules.fullRefund.replace('{days}', String(days)),
+    panelContent.rules.partialRefund.replace('{days}', String(days)).replace('{feePercent}', String(feePercent)),
+    panelContent.rules.lateCancellation,
+  ]
+}
+
+const displayedPolicies = computed(() =>
+  presetPolicies.map((policyKey) => {
+    const preset = POLICY_PRESETS[policyKey]
+    return {
+      key: policyKey,
+      label: panelContent.policies[policyKey],
+      severityLabel: panelContent.severities[preset.severity],
+      isSelected: policy.value === policyKey,
+      rules: getPolicyRules(policyKey),
+    }
+  }),
+)
+
+const customRules = computed(() =>
+  getPolicyRules('moderate', {
+    days: customDays.value ?? 0,
+    feePercent: customFee.value ?? 0,
+  }),
+)
+
+function onPolicyChange(nextPolicy: CancellationPolicy) {
+  if (nextPolicy === 'custom') {
+    updateCancellation({ policy: nextPolicy })
+    return
+  }
+
+  const preset = POLICY_PRESETS[nextPolicy]
+  updateCancellation({
+    policy: nextPolicy,
+    custom: {
+      ...custom.value,
+      days: preset.days,
+      feePercent: preset.feePercent,
+    },
+  })
+}
+
 function parseOptionalNumber(raw: string): number | null {
   const trimmed = raw.trim()
   if (!trimmed) return null
@@ -99,13 +177,47 @@ function parseOptionalNumber(raw: string): number | null {
         <div class="select">
           <select
             :value="policy"
-            @change="updateCancellation({ policy: ($event.target as HTMLSelectElement).value as CancellationPolicy })"
+            @change="onPolicyChange(($event.target as HTMLSelectElement).value as CancellationPolicy)"
           >
             <option value="flexible">{{ panelContent.policies.flexible }}</option>
             <option value="moderate">{{ panelContent.policies.moderate }}</option>
             <option value="strict">{{ panelContent.policies.strict }}</option>
             <option value="custom">{{ panelContent.policies.custom }}</option>
           </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">
+          <p>{{ panelContent.severityRulesLabel }}</p>
+        </div>
+        <div class="severity-rules">
+          <article
+            v-for="item in displayedPolicies"
+            :key="item.key"
+            :class="{
+              'rule-card': true,
+              'is-active': item.isSelected,
+            }"
+            role="button"
+            tabindex="0"
+            @click="onPolicyChange(item.key)"
+            @keydown.enter.prevent="onPolicyChange(item.key)"
+            @keydown.space.prevent="onPolicyChange(item.key)"
+          >
+            <div class="rule-head">
+              <p>{{ item.label }}</p>
+              <span>{{ panelContent.severityLabel }}: {{ item.severityLabel }}</span>
+            </div>
+            <ul>
+              <li
+                v-for="rule in item.rules"
+                :key="`${item.key}-${rule}`"
+              >
+                {{ rule }}
+              </li>
+            </ul>
+          </article>
         </div>
       </div>
 
@@ -175,6 +287,18 @@ function parseOptionalNumber(raw: string): number | null {
             </div>
           </div>
         </div>
+
+        <div class="custom-preview">
+          <p>{{ panelContent.customRulesTitle }}</p>
+          <ul>
+            <li
+              v-for="rule in customRules"
+              :key="`custom-${rule}`"
+            >
+              {{ rule }}
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
   </section>
@@ -216,6 +340,87 @@ function parseOptionalNumber(raw: string): number | null {
     .custom-settings {
       display: grid;
       gap: var(--layout-gap-xs);
+    }
+
+    .severity-rules {
+      display: grid;
+      gap: var(--layout-gap-xs);
+    }
+
+    .rule-card {
+      display: grid;
+      gap: var(--layout-gap-xs);
+      padding: var(--layout-gap-xs);
+      border-radius: 12px;
+      border: 1px solid rgba($secondary, 0.12);
+      background: rgba($secondary, 0.015);
+      cursor: pointer;
+      transition:
+        border-color 0.2s ease,
+        background-color 0.2s ease;
+
+      &:focus-visible {
+        outline: 2px solid rgba($accent, 0.4);
+        outline-offset: 2px;
+      }
+
+      &.is-active {
+        border-color: rgba($accent, 0.55);
+        background: rgba($accent, 0.08);
+      }
+
+      > ul {
+        margin: 0;
+        padding-left: 1.15rem;
+        display: grid;
+        gap: 0.3rem;
+
+        > li {
+          @include little-text($thin: false);
+          margin: 0;
+        }
+      }
+    }
+
+    .rule-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: var(--layout-gap-xs);
+
+      > p {
+        margin: 0;
+        font-weight: 700 !important;
+      }
+
+      > span {
+        @include little-text($thin: false);
+        color: rgba($secondary, 0.65);
+      }
+    }
+
+    .custom-preview {
+      padding: var(--layout-gap-xs);
+      border-radius: 12px;
+      border: 1px dashed rgba($secondary, 0.24);
+      background: rgba($secondary, 0.015);
+
+      > p {
+        margin: 0 0 var(--layout-gap-xs) 0;
+        font-weight: 700 !important;
+      }
+
+      > ul {
+        margin: 0;
+        padding-left: 1.15rem;
+        display: grid;
+        gap: 0.3rem;
+
+        > li {
+          @include little-text($thin: false);
+          margin: 0;
+        }
+      }
     }
   }
 }

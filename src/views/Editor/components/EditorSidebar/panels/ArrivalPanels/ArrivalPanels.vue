@@ -1,7 +1,9 @@
 <!-- File: src/views/Editor/components/EditorSidebar/panels/ArrivalPanels/ArrivalPanels.vue -->
 
 <script setup lang="ts">
-import type { RawArrival } from '@/domain/listings/types'
+import { computed } from 'vue'
+
+import type { RawArrival, RawCore } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 
@@ -11,6 +13,7 @@ import ArrivalHtmlPanel from '@/views/Editor/components/EditorSidebar/panels/Arr
 import ArrivalGuidePanel from '@/views/Editor/components/EditorSidebar/panels/ArrivalPanels/ArrivalGuidePanel.vue'
 
 const props = defineProps<{
+  core?: Partial<RawCore> | null
   arrival?: Partial<RawArrival> | null
 }>()
 
@@ -19,6 +22,17 @@ const emit = defineEmits<{
 }>()
 
 const panelContent = editorStatic.panels.arrival
+
+const preciseAddress = computed(() => String(props.core?.precise_address ?? '').trim())
+
+const accessValues = computed(() => {
+  const base = (props.arrival?.practical?.access ?? {}) as Record<string, string>
+  if (!preciseAddress.value) return base
+  return {
+    ...base,
+    address: preciseAddress.value,
+  }
+})
 </script>
 
 <template>
@@ -40,7 +54,9 @@ const panelContent = editorStatic.panels.arrival
       :title="panelContent.practical.access.title"
       :subtitle="panelContent.practical.access.subtitle"
       :fields="panelContent.practical.access.fields"
-      :values="props.arrival?.practical?.access"
+      :values="accessValues"
+      :locked-field-keys="['address']"
+      :locked-field-hint="panelContent.practical.access.addressLockedHint"
       @patch="emit('patch', $event)"
     />
     <ArrivalSectionPanel

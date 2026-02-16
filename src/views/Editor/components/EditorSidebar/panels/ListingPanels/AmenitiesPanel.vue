@@ -8,6 +8,7 @@ import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'
 // UTILS
 import { resolveAmenityIconComponent, resolveLucideComponent } from '@/utils/amenitiesIcons'
 import { mockAmenitiesCatalog, type AmenityCatalogItem } from '@/views/Editor/mocks/amenitiesCatalog'
+import { getAmenityPerkDefaults } from '@/domain/listings/perks'
 
 // TYPES
 import type { RawCore } from '@/domain/listings/types'
@@ -87,6 +88,7 @@ function removeAmenityAt(rawIndex: number) {
 function addAmenityFromCatalog(item: AmenityCatalogItem) {
   if (!item.id) return
   if (isAmenitySelected(item.id)) return
+  const perkDefaults = getAmenityPerkDefaults(item.id)
 
   setAmenities([
     ...amenities.value,
@@ -97,6 +99,13 @@ function addAmenityFromCatalog(item: AmenityCatalogItem) {
       category: item.category,
       relevance: item.relevance,
       pinned: false,
+      ...(perkDefaults
+        ? {
+          perkEligible: perkDefaults.perkEligible,
+          perkScore: perkDefaults.perkScore,
+          perkPriority: perkDefaults.perkPriority ?? 0,
+        }
+        : {}),
     } as AmenityDraft,
   ])
 }

@@ -10,6 +10,7 @@ import DatePicker from '@/components/DatePicker/DatePicker.vue'
 import RelativeOverlay from '@/components/overlays/RelativeOverlay.vue'
 import { getListingsController } from '@/domain/listings/controller'
 import { deriveBookedDaysFromReservations, getSynchronizedBookedDays, nightsBetween, normalizeBookedDay, normalizeBookedDays, normalizeReservations } from '@/domain/listings/bookings'
+import { computeNightlyPriceBreakdown, resolveWeekendPricing } from '@/domain/listings/pricing'
 import type { RawBookingReservation, RawBookings, UserListingCard } from '@/domain/listings/types'
 
 import { type OccupantCounts } from '@/views/ListingView/components/Booking/utils/labels'
@@ -166,6 +167,22 @@ function sumFees(bookings?: Partial<RawBookings> | null) {
   return fees.reduce((acc, fee) => acc + (Number(fee.amount ?? 0) || 0), 0)
 }
 
+function computeStayTotals(range: RangeISO, bookings?: Partial<RawBookings> | null) {
+  const basePrice = Number(bookings?.price ?? 0) || 0
+  const weekendPricing = resolveWeekendPricing(bookings?.pricing ?? null, basePrice)
+  const nightly = computeNightlyPriceBreakdown({
+    startISO: range.start,
+    endISO: range.end,
+    basePrice,
+    weekendPricing,
+  })
+
+  return {
+    nights: Math.max(1, nightly.nights),
+    total: Math.max(0, Math.round(nightly.nightlyTotal + sumFees(bookings))),
+  }
+}
+
 function sanitizeIdPart(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9-]/g, '-')
 }
@@ -211,17 +228,16 @@ function resolveDepositAmount(total: number, bookings?: Partial<RawBookings> | n
 }
 
 function buildLegacyReservationFromRange(listingId: string, range: RangeISO, bookings?: Partial<RawBookings> | null) {
-  const stayNights = Math.max(1, nightsBetween(range.start, range.end))
-  const total = Math.max(0, Math.round((Number(bookings?.price ?? 0) || 0) * stayNights + sumFees(bookings)))
-  const deposit = resolveDepositAmount(total, bookings)
-  const balance = Math.max(0, total - deposit)
+  const stay = computeStayTotals(range, bookings)
+  const deposit = resolveDepositAmount(stay.total, bookings)
+  const balance = Math.max(0, stay.total - deposit)
 
   return normalizeReservations([
     {
       id: `legacy-${sanitizeIdPart(listingId)}-${range.start}-${range.end}`,
       start: range.start,
       end: range.end,
-      nights: stayNights,
+      nights: stay.nights,
       guestName: 'Voyageur',
       message: '',
       guests: {
@@ -232,7 +248,7 @@ function buildLegacyReservationFromRange(listingId: string, range: RangeISO, boo
         pmr: 0,
       },
       payment: {
-        total,
+        total: stay.total,
         deposit,
         balance,
         status: 'pending',
@@ -263,8 +279,8 @@ function mergeReservationsWithBookedDays(listingId: string, bookings?: Partial<R
 }
 
 function buildReservationFromForm(listingId: string, range: RangeISO, bookings?: Partial<RawBookings> | null): RawBookingReservation {
-  const stayNights = Math.max(1, nightsBetween(range.start, range.end))
-  const total = Math.max(0, Math.round((Number(bookings?.price ?? 0) || 0) * stayNights + sumFees(bookings)))
+  const stay = computeStayTotals(range, bookings)
+  const total = stay.total
   const deposit = resolveDepositAmount(total, bookings)
   const balance = Math.max(0, total - deposit)
 
@@ -286,7 +302,7 @@ function buildReservationFromForm(listingId: string, range: RangeISO, bookings?:
       id: createReservationId(listingId, range.start, range.end),
       start: range.start,
       end: range.end,
-      nights: stayNights,
+      nights: stay.nights,
       guestName: buildGuestName(),
       message: normalizeText(form.notes),
       guests: {

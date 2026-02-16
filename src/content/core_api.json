@@ -15,7 +15,9 @@
     {
       "id": "1",
       "name": "Beach access",
-      "category": "Location"
+      "category": "Location",
+      "perkEligible": true,
+      "perkScore": 90
     },
     {
       "id": "2",
@@ -25,7 +27,9 @@
     {
       "id": "3",
       "name": "Wi-Fi",
-      "category": "Internet"
+      "category": "Internet",
+      "perkEligible": true,
+      "perkScore": 91
     },
     {
       "id": "4",
@@ -35,7 +39,9 @@
     {
       "id": "5",
       "name": "Free parking on premises",
-      "category": "Parking"
+      "category": "Parking",
+      "perkEligible": true,
+      "perkScore": 79
     },
     {
       "id": "6",
@@ -111,6 +117,17 @@
       "id": "40",
       "name": "Paid parking",
       "category": "Parking"
+    }
+  ],
+  "perkSettings": [
+    {
+      "id": "DIRECT_SUPPORT",
+      "name": "Support hôte réactif",
+      "description": "Réponse rapide avant et pendant le séjour.",
+      "icon": "messages-square",
+      "enabled": true,
+      "perkEligible": true,
+      "perkScore": 87
     }
   ],
   "rooms": [

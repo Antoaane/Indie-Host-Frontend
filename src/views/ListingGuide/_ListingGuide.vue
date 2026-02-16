@@ -3,12 +3,30 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import type { RawArrival } from '@/domain/listings/types'
+import ShapesBgCroped from '@/components/svgs/images/ShapesBgCroped.vue'
+import type { RawArrival, RawCore, RawHost } from '@/domain/listings/types'
 import { vp } from '@/utils/viewport'
-import { loadArrival } from '@/views/Listing/utils/fetchListingRaw'
+import { loadArrival, loadCore, loadHost } from '@/views/Listing/utils/fetchListingRaw'
 
 type PracticalKey = keyof RawArrival['practical']
 type PracticalTextKey = 'savings' | 'access' | 'services'
+type PracticalFieldsEntry = {
+  key: PracticalKey
+  title: string
+  subtitle: string
+  emoji: string
+  type: 'fields'
+  fields: Array<{ label: string; value: string }>
+}
+type PracticalHtmlEntry = {
+  key: PracticalKey
+  title: string
+  subtitle: string
+  emoji: string
+  type: 'html'
+  html: string
+}
+type PracticalSectionEntry = PracticalFieldsEntry | PracticalHtmlEntry
 
 const PRACTICAL_TITLE = 'Informations pratiques'
 const PRACTICAL_DESCRIPTION = 'Des informations claires et rapides pour un séjour sans stress.'
@@ -79,21 +97,56 @@ const listingKey = computed(() => {
 })
 
 const rawArrival = ref<RawArrival | null>(null)
+const rawCore = ref<RawCore | null>(null)
+const rawHost = ref<RawHost | null>(null)
 const isLoading = ref(false)
 
-function buildDefaultArrival(): RawArrival {
+function cleanText(value: unknown): string {
+  if (typeof value !== 'string') return ''
+  return value.trim()
+}
+
+function hasRichTextContent(value: unknown): boolean {
+  if (typeof value !== 'string') return false
+  return value
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .length > 0
+}
+
+function buildDefaultArrival(core?: Partial<RawCore> | null, host?: Partial<RawHost> | null): RawArrival {
+  const preciseAddress = cleanText(core?.precise_address)
+  const city = cleanText(core?.city)
+  const region = cleanText(core?.region)
+  const country = cleanText(core?.country)
+  const hostName = cleanText(host?.name)
+  const locationLabel = [
+    city,
+    region,
+    country,
+  ].filter(Boolean).join(', ')
+  const marketLabel = city ? `Marché de ${city}` : 'Marché local'
+
   return {
     intro: {
-      title: 'Bienvenue',
-      subtitle: 'Pour profiter des lieux au maximum, voici votre guide d’arrivée.',
+      title: hostName ? `Bienvenue chez ${hostName}` : 'Bienvenue',
+      subtitle: city
+        ? `Pour profiter des lieux au maximum, voici votre guide d’arrivée à ${city}.`
+        : 'Pour profiter des lieux au maximum, voici votre guide d’arrivée.',
       tagline: 'Propulsé par IndieHost',
     },
     practical: {
       savings: {
-        message: 'Réservez en direct pour éviter les commissions.',
+        message: city
+          ? `Réservez en direct pour profiter pleinement de votre séjour à ${city}.`
+          : 'Réservez en direct pour éviter les commissions.',
       },
       access: {
-        address: 'Baurech, Nouvelle-Aquitaine (adresse complète envoyée 24h avant l’arrivée).',
+        address: preciseAddress || (locationLabel
+          ? `${locationLabel} (adresse complète envoyée 24h avant l’arrivée).`
+          : 'Adresse complète envoyée 24h avant l’arrivée.'),
         checkIn: 'À partir de 16h — arrivée autonome possible.',
         checkOut: 'Avant 11h — merci de laisser les clés au point indiqué.',
         parking: 'Gratuit sur place (1 à 2 véhicules).',
@@ -101,7 +154,9 @@ function buildDefaultArrival(): RawArrival {
       services: {
         wifi: 'Nom du réseau et mot de passe disponibles sur place.',
         contacts: 'Urgences 112 · Médecin 15 · Police 17.',
-        assistance: 'Assistance hôte disponible de 9h à 21h par message.',
+        assistance: hostName
+          ? `${hostName} reste disponible de 9h à 21h par message.`
+          : 'Assistance hôte disponible de 9h à 21h par message.',
       },
       rules: `
         <ul>
@@ -113,33 +168,13 @@ function buildDefaultArrival(): RawArrival {
       shops: `
         <ul>
           <li><strong>Épicerie</strong> — à 10 minutes en voiture (produits frais et locaux).</li>
-          <li><strong>Marché</strong> — le samedi matin, idéal pour découvrir la région.</li>
+          <li><strong>${marketLabel}</strong> — horaires à vérifier selon la saison.</li>
         </ul>
       `,
     },
     guide: {
-      title: 'Découvertes locales',
-      content: `
-        <h3>Patrimoine &amp; culture</h3>
-        <ul>
-          <li><strong>Église Saint-Saturnin</strong> — édifice roman classé, à quelques minutes.</li>
-          <li><strong>Château de Langoiran</strong> — vue panoramique sur la vallée.</li>
-        </ul>
-        <h3>Vignobles &amp; dégustations</h3>
-        <ul>
-          <li><strong>Château Haut Peyrat</strong> — visites guidées et dégustations.</li>
-          <li><strong>Domaine de Saint-Amand</strong> — vins bio et ateliers œnologiques.</li>
-        </ul>
-        <h3>Balades &amp; nature</h3>
-        <ul>
-          <li><strong>Piste Roger Lapébie</strong> — ancienne voie ferrée aménagée.</li>
-          <li><strong>Bord du lac</strong> — promenade calme au coucher du soleil.</li>
-        </ul>
-        <h3>Activités nautiques</h3>
-        <ul>
-          <li><strong>Base nautique</strong> — paddle, canoë et bouées tractées.</li>
-        </ul>
-      `,
+      title: '',
+      content: '',
     },
   }
 }
@@ -174,8 +209,23 @@ function mergeArrival(base: RawArrival, override?: Partial<RawArrival> | null): 
   return mergeDeep(base, override) as RawArrival
 }
 
-const arrivalContent = computed(() => mergeArrival(buildDefaultArrival(), rawArrival.value))
-const practicalSections = computed(() => {
+const arrivalContent = computed(() => {
+  const merged = mergeArrival(buildDefaultArrival(rawCore.value, rawHost.value), rawArrival.value)
+  const forcedAddress = cleanText(rawCore.value?.precise_address)
+  if (!forcedAddress) return merged
+
+  return {
+    ...merged,
+    practical: {
+      ...(merged.practical ?? {}),
+      access: {
+        ...(merged.practical?.access ?? {}),
+        address: forcedAddress,
+      },
+    },
+  }
+})
+const practicalSections = computed<PracticalSectionEntry[]>(() => {
   return PRACTICAL_ORDER.map((key) => {
     const meta = PRACTICAL_META[key]
     if (meta.type === 'fields') {
@@ -184,7 +234,10 @@ const practicalSections = computed(() => {
 
       return {
         key,
-        ...meta,
+        title: meta.title,
+        subtitle: meta.subtitle,
+        emoji: meta.emoji,
+        type: 'fields',
         fields: fields.map((field) => ({
           label: field.label,
           value: values[field.key] ?? '',
@@ -194,20 +247,37 @@ const practicalSections = computed(() => {
 
     return {
       key,
-      ...meta,
+      title: meta.title,
+      subtitle: meta.subtitle,
+      emoji: meta.emoji,
+      type: 'html',
       html: (arrivalContent.value.practical?.[key] ?? '') as string,
     }
   })
 })
+const hasGuideContent = computed(() => hasRichTextContent(arrivalContent.value.guide?.content ?? ''))
+const hasGuideSection = computed(() => Boolean(cleanText(arrivalContent.value.guide?.title ?? '') || hasGuideContent.value))
+const guideSectionTitle = computed(() => cleanText(arrivalContent.value.guide?.title ?? '') || 'Guide touristique')
 
-const isDesktop = computed(() => vp.lg.value)
+const isDesktop = computed(() => vp.xl.value)
 
 watch(
   listingKey,
   async () => {
     isLoading.value = true
     try {
-      rawArrival.value = await loadArrival(listingKey.value)
+      const [
+        arrival,
+        core,
+        host,
+      ] = await Promise.all([
+        loadArrival(listingKey.value),
+        loadCore(listingKey.value),
+        loadHost(listingKey.value),
+      ])
+      rawArrival.value = arrival
+      rawCore.value = core
+      rawHost.value = host
     } finally {
       isLoading.value = false
     }
@@ -230,22 +300,23 @@ watch(
 
     <template v-else>
       <section class="guide-hero">
+        <ShapesBgCroped
+          class="shapes-bg"
+          title="Décoration du fond"
+          desc="Formes géométriques décoratives"
+        />
         <div class="hero-content">
           <p class="hero-eyebrow">{{ arrivalContent.intro.title }}</p>
           <h1 class="hero-title">{{ arrivalContent.intro.subtitle }}</h1>
           <p class="hero-tagline">{{ arrivalContent.intro.tagline }}</p>
         </div>
-        <div class="hero-shapes">
-          <span />
-          <span />
-        </div>
       </section>
 
       <section class="guide-body">
-        <header class="section-header">
+        <div class="section-header">
           <h2>{{ PRACTICAL_TITLE }}</h2>
           <p>{{ PRACTICAL_DESCRIPTION }}</p>
-        </header>
+        </div>
 
         <div class="section-grid">
           <article
@@ -299,17 +370,25 @@ watch(
           </article>
         </div>
 
-        <div class="section-header is-local">
-          <h2>{{ arrivalContent.guide.title }}</h2>
-          <p>L’inspiration de votre hôte pour découvrir les environs.</p>
-        </div>
+        <template v-if="hasGuideSection">
+          <div class="section-header is-local">
+            <h2>{{ guideSectionTitle }}</h2>
+            <p>L’inspiration de votre hôte pour découvrir les environs.</p>
+          </div>
 
-        <article class="guide-panel guide-panel--editorial">
-          <div
-            class="panel-editorial"
-            v-html="arrivalContent.guide.content"
-          />
-        </article>
+          <article class="guide-panel guide-panel--editorial">
+            <div
+              v-if="hasGuideContent"
+              class="panel-editorial"
+              v-html="arrivalContent.guide.content"
+            />
+            <p
+              v-else
+              class="panel-text is-empty"
+              >Informations à venir.</p
+            >
+          </article>
+        </template>
       </section>
 
       <div

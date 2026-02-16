@@ -245,6 +245,58 @@ function handleSelectConversation(conversationId: string) {
   void markConversationRead(conversationId, { silent: true })
 }
 
+function normalizeQueryParam(value: unknown): string | null {
+  if (Array.isArray(value)) return normalizeQueryParam(value[0])
+  if (typeof value === 'string' && value.trim()) return value.trim()
+  return null
+}
+
+function clearRouteConversationSelectionQuery() {
+  const nextQuery = {
+    ...route.query,
+  }
+  const hasSelectionQuery = 'conversationId' in nextQuery || 'listingId' in nextQuery || 'reservationId' in nextQuery
+  if (!hasSelectionQuery) return
+
+  delete nextQuery.conversationId
+  delete nextQuery.listingId
+  delete nextQuery.reservationId
+
+  void router.replace({ query: nextQuery })
+}
+
+function applyRouteConversationSelection(items: MessagingConversation[]) {
+  const conversationIdFromQuery = normalizeQueryParam(route.query.conversationId)
+  const listingIdFromQuery = normalizeQueryParam(route.query.listingId)
+  const reservationIdFromQuery = normalizeQueryParam(route.query.reservationId)
+
+  if (!conversationIdFromQuery && !listingIdFromQuery && !reservationIdFromQuery) {
+    return false
+  }
+
+  let target = conversationIdFromQuery
+    ? items.find((conversation) => conversation.id === conversationIdFromQuery) ?? null
+    : null
+
+  if (!target && (listingIdFromQuery || reservationIdFromQuery)) {
+    target = items.find((conversation) => {
+      if (listingIdFromQuery && conversation.listingId !== listingIdFromQuery) return false
+      if (reservationIdFromQuery && conversation.reservationId !== reservationIdFromQuery) return false
+      return true
+    }) ?? null
+  }
+
+  if (!target) return false
+
+  if (selectedConversationId.value !== target.id) {
+    selectedConversationId.value = target.id
+    void markConversationRead(target.id, { silent: true })
+  }
+
+  clearRouteConversationSelectionQuery()
+  return true
+}
+
 watch(
   () => props.source,
   () => {
@@ -257,11 +309,24 @@ watch(
   { immediate: true },
 )
 
+watch(
+  () => [
+    route.query.conversationId,
+    route.query.listingId,
+    route.query.reservationId,
+  ],
+  () => {
+    applyRouteConversationSelection(conversations.value)
+  },
+)
+
 watch(conversations, (items) => {
   if (!items.length) {
     selectedConversationId.value = null
     return
   }
+
+  if (applyRouteConversationSelection(items)) return
 
   if (!selectedConversationId.value || !items.some((conversation) => conversation.id === selectedConversationId.value)) {
     selectedConversationId.value = items[0].id

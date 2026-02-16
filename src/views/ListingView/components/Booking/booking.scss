@@ -316,73 +316,78 @@
 }
 
 .listing-booking-guests-overlay {
-  >.dropdown {
-    display: flex;
-    flex-direction: column;
-    gap: var(--layout-gap-sm);
 
-    padding: var(--layout-gap-sm);
-    background: $accent;
-    border-radius: borders.$rounded-lg;
-    @include big-shadow();
-
-    >.item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: var(--layout-gap-sm);
-
-      >div {
-        >p {
-          margin: 0;
-          font-weight: 600;
-          color: $secondary;
-        }
-
-        >small {
-          color: rgba($secondary, 0.65);
-        }
-      }
-
-      >.counter {
-        display: inline-flex;
-        align-items: center;
-        gap: var(--layout-gap-xs);
-
-        >button {
-          width: 2rem;
-          height: 2rem;
-
-          display: grid;
-          place-items: center;
-
-          border: 1px solid rgba($secondary, 0.25);
-          border-radius: borders.$rounded-sm;
-          background: $accent;
-          color: $secondary;
-
-          @include animations.transition(150ms);
-
-          &:hover:not(:disabled) {
-            background: $secondary;
-            color: $accent;
-          }
-
-          &:disabled {
-            opacity: 0.35;
-            cursor: not-allowed;
-          }
-        }
-
-        >span {
-          min-width: 1.5rem;
-          text-align: center;
-          font-weight: 600;
-          color: $secondary;
-        }
-      }
-    }
+  &>.dropdown {
+    @extend .dropdown;
   }
+
+  // >.dropdown {
+  //   display: flex;
+  //   flex-direction: column;
+  //   gap: var(--layout-gap-sm);
+
+  //   padding: var(--layout-gap-sm);
+  //   background: $accent;
+  //   border-radius: borders.$rounded-lg;
+  //   @include big-shadow();
+
+  //   >.item {
+  //     display: flex;
+  //     align-items: center;
+  //     justify-content: space-between;
+  //     gap: var(--layout-gap-sm);
+
+  //     >div {
+  //       >p {
+  //         margin: 0;
+  //         font-weight: 600;
+  //         color: $secondary;
+  //       }
+
+  //       >small {
+  //         color: rgba($secondary, 0.65);
+  //       }
+  //     }
+
+  //     >.counter {
+  //       display: inline-flex;
+  //       align-items: center;
+  //       gap: var(--layout-gap-xs);
+
+  //       >button {
+  //         width: 2rem;
+  //         height: 2rem;
+
+  //         display: grid;
+  //         place-items: center;
+
+  //         border: 1px solid rgba($secondary, 0.25);
+  //         border-radius: borders.$rounded-sm;
+  //         background: $accent;
+  //         color: $secondary;
+
+  //         @include animations.transition(150ms);
+
+  //         &:hover:not(:disabled) {
+  //           background: $secondary;
+  //           color: $accent;
+  //         }
+
+  //         &:disabled {
+  //           opacity: 0.35;
+  //           cursor: not-allowed;
+  //         }
+  //       }
+
+  //       >span {
+  //         min-width: 1.5rem;
+  //         text-align: center;
+  //         font-weight: 600;
+  //         color: $secondary;
+  //       }
+  //     }
+  //   }
+  // }
 }
 
 

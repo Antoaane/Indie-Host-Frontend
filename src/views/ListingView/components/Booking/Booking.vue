@@ -4,6 +4,7 @@
 import { computed, reactive, ref, watch } from 'vue'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
 import { makeIsDateDisabled } from '@/components/DatePicker/utils/range'
+import { computeNightlyPriceBreakdown } from '@/domain/listings/pricing'
 
 import BookingCta from '@/views/ListingView/components/Booking/components/BookingCta.vue'
 import BookingDates from '@/views/ListingView/components/Booking/components/BookingDates.vue'
@@ -11,7 +12,7 @@ import BookingGuests from '@/views/ListingView/components/Booking/components/Boo
 import BookingSummary from '@/views/ListingView/components/Booking/components/BookingSummary.vue'
 import { buildOccupantLabel, buildRangeLabel, type OccupantCounts } from '@/views/ListingView/components/Booking/utils/labels'
 import { findNextRange as findNextAvailableRange, isSelectedRangeValid as isSelectedRangeValidUtil } from '@/views/ListingView/components/Booking/utils/range'
-import type { BookedRange, FeeItem } from '@/views/ListingView/types/listing'
+import type { BookedRange, FeeItem, WeekendPricingModel } from '@/views/ListingView/types/listing'
 
 type OccupantKey = keyof OccupantCounts
 
@@ -29,6 +30,7 @@ const MIN_NIGHTS = 2
 const props = withDefaults(
   defineProps<{
     pricePerNight: number
+    weekendPricing?: WeekendPricingModel | null
     fees?: FeeItem[]
     bookedDays?: BookedRange[]
     modelValue?: RangeISO | null
@@ -38,6 +40,7 @@ const props = withDefaults(
   }>(),
   {
     pricePerNight: 0,
+    weekendPricing: null,
     fees: () => [],
     bookedDays: () => [],
     modelValue: null,
@@ -53,6 +56,7 @@ const emit = defineEmits<{
 }>()
 
 const pricePerNight = computed(() => props.pricePerNight)
+const weekendPricing = computed(() => props.weekendPricing ?? null)
 const fees = computed<FeeItem[]>(() => props.fees ?? [])
 const bookedRanges = computed<RangeISO[]>(() =>
   props.bookedDays.map((range) => ({
@@ -87,13 +91,14 @@ const occupants = reactive<OccupantCounts>({
 
 const isDateDisabled = computed(() => makeIsDateDisabled(bookedRanges.value))
 
-const nights = computed(() => {
-  if (!selection.value?.start || !selection.value?.end) return 0
-  const start = new Date(selection.value.start)
-  const end = new Date(selection.value.end)
-  const diff = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
-  return diff > 0 ? Math.round(diff) : 0
-})
+const nightlyBreakdown = computed(() => computeNightlyPriceBreakdown({
+  startISO: selection.value?.start ?? '',
+  endISO: selection.value?.end ?? '',
+  basePrice: pricePerNight.value,
+  weekendPricing: weekendPricing.value,
+}))
+
+const nights = computed(() => nightlyBreakdown.value.nights)
 
 const initialRange = findNextAvailableRange(MIN_NIGHTS, isDateDisabled.value)
 if (!selection.value && initialRange) {
@@ -129,7 +134,7 @@ const occupantLabel = computed(() => buildOccupantLabel(occupants, travelerCount
 
 const rangeLabel = computed(() => buildRangeLabel(selection.value, nights.value))
 
-const nightlyTotal = computed(() => nights.value * pricePerNight.value)
+const nightlyTotal = computed(() => nightlyBreakdown.value.nightlyTotal)
 const feesTotal = computed(() => fees.value.reduce((acc, fee) => acc + (Number.isFinite(fee.amount) ? fee.amount : 0), 0))
 const total = computed(() => nightlyTotal.value + feesTotal.value)
 
@@ -142,6 +147,30 @@ const currency = new Intl.NumberFormat('fr-FR', {
 const priceBreakdown = computed(() => {
   const list: Array<{ label: string; amount: string }> = []
   if (nights.value > 0) {
+    const breakdown = nightlyBreakdown.value
+    if (weekendPricing.value?.enabled) {
+      if (breakdown.weekdayNights > 0) {
+        list.push({
+          label: `${breakdown.weekdayNights} nuit${breakdown.weekdayNights > 1 ? 's' : ''} en semaine (${currency.format(breakdown.weekdayPrice)} par nuit)`,
+          amount: currency.format(breakdown.weekdayTotal),
+        })
+      }
+
+      if (breakdown.weekendNights > 0) {
+        list.push({
+          label: `${breakdown.weekendNights} nuit${breakdown.weekendNights > 1 ? 's' : ''} week-end (${currency.format(breakdown.weekendPrice)} par nuit)`,
+          amount: currency.format(breakdown.weekendTotal),
+        })
+      }
+    } else {
+      list.push({
+        label: `${nights.value} nuit${nights.value > 1 ? 's' : ''} (${currency.format(pricePerNight.value)} par nuit)`,
+        amount: currency.format(nightlyTotal.value),
+      })
+    }
+  }
+
+  if (!list.length && nights.value > 0) {
     list.push({
       label: `${nights.value} nuit${nights.value > 1 ? 's' : ''} (${currency.format(pricePerNight.value)} par nuit)`,
       amount: currency.format(nightlyTotal.value),
@@ -156,7 +185,22 @@ const priceBreakdown = computed(() => {
   return list
 })
 
-const pricePerNightLabel = computed(() => `${currency.format(pricePerNight.value)} / nuit`)
+const pricePerNightLabel = computed(() => {
+  const breakdown = nightlyBreakdown.value
+  if (breakdown.nights <= 0) {
+    return `${currency.format(pricePerNight.value)} / nuit`
+  }
+
+  if (breakdown.weekendNights > 0 && breakdown.weekdayNights > 0) {
+    return `${currency.format(breakdown.averageNightlyPrice)} / nuit (moy.)`
+  }
+
+  if (breakdown.weekendNights > 0) {
+    return `${currency.format(breakdown.weekendPrice)} / nuit`
+  }
+
+  return `${currency.format(breakdown.weekdayPrice)} / nuit`
+})
 
 function openCalendar() {
   if (!expanded.value) expanded.value = true

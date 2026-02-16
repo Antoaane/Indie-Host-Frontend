@@ -43,6 +43,8 @@ const volatileCache = reactive<Record<string, VolatileBundle>>({})
 const patchQueue = ref<DraftPatch | null>(null)
 const patchTimer = ref<number | null>(null)
 const patchListingId = ref<string | null>(null)
+const patchSyncTask = ref<Promise<void> | null>(null)
+const isPatchSyncing = ref(false)
 const selectionToken = ref(0)
 const loadToken = ref(0)
 
@@ -106,6 +108,20 @@ function mergeDraftPatch(base: DraftPatch | null, patch: DraftPatch): DraftPatch
   return next
 }
 
+function snapshotListingDraft(bundle: RawListingBundle): RawListingBundle {
+  return JSON.parse(
+    JSON.stringify({
+      core: bundle.core ?? null,
+      bookings: bundle.bookings ?? null,
+      medias: bundle.medias ?? null,
+      arrival: bundle.arrival ?? null,
+      notes: bundle.notes ?? null,
+      comments: bundle.comments ?? null,
+      host: bundle.host ?? null,
+    }),
+  ) as RawListingBundle
+}
+
 function applyPatchToListingCard(listingId: string, patch: DraftPatch) {
   const index = listings.value.findIndex((item) => item.listingId === listingId)
   if (index < 0) return
@@ -152,34 +168,72 @@ function handleDeletedListing(listingId: string) {
   }
 }
 
-async function flushPatchQueue() {
+function clearPatchTimer() {
+  if (patchTimer.value) {
+    window.clearTimeout(patchTimer.value)
+    patchTimer.value = null
+  }
+}
+
+async function flushPatchQueueOnce(options?: { throwOnError?: boolean }): Promise<boolean> {
+  const shouldThrow = options?.throwOnError === true
+  clearPatchTimer()
+
+  if (patchSyncTask.value) {
+    try {
+      await patchSyncTask.value
+    } catch (err) {
+      if (shouldThrow) throw err
+    }
+  }
+
   const queued = patchQueue.value
   const listingId = patchListingId.value
 
   patchQueue.value = null
   patchListingId.value = null
 
-  if (patchTimer.value) {
-    window.clearTimeout(patchTimer.value)
-    patchTimer.value = null
+  if (!queued || !listingId) return false
+
+  const task = (async () => {
+    console.log('[Editor] persist draft patch', { listingId, patch: queued })
+    isPatchSyncing.value = true
+    try {
+      await props.source.patchListingDraft(listingId, queued)
+      if (draft.value && selectedListingId.value === listingId) {
+        persistListingDraft(listingId, snapshotListingDraft(draft.value))
+      }
+    } catch (err) {
+      console.log('[Editor] patch persistence error', err)
+      if (shouldThrow) throw err
+    } finally {
+      isPatchSyncing.value = false
+    }
+  })()
+
+  patchSyncTask.value = task
+
+  try {
+    await task
+  } finally {
+    if (patchSyncTask.value === task) {
+      patchSyncTask.value = null
+    }
   }
 
-  if (!queued || !listingId) return
+  return true
+}
 
-  console.log('[Editor] persist draft patch', { listingId, patch: queued })
-  try {
-    await props.source.patchListingDraft(listingId, queued)
-    if (draft.value && selectedListingId.value === listingId) {
-      persistListingDraft(listingId, draft.value)
-    }
-  } catch (err) {
-    console.log('[Editor] patch persistence error', err)
+async function drainPatchQueue(options?: { throwOnError?: boolean }) {
+  while (patchQueue.value || patchSyncTask.value || patchTimer.value) {
+    const didFlush = await flushPatchQueueOnce(options)
+    if (!didFlush && !patchQueue.value && !patchSyncTask.value) return
   }
 }
 
 function queuePatchPersistence(listingId: string, patch: DraftPatch) {
   if (patchListingId.value && patchListingId.value !== listingId) {
-    void flushPatchQueue()
+    void flushPatchQueueOnce()
   }
 
   patchListingId.value = listingId
@@ -190,7 +244,7 @@ function queuePatchPersistence(listingId: string, patch: DraftPatch) {
   }
 
   patchTimer.value = window.setTimeout(() => {
-    void flushPatchQueue()
+    void flushPatchQueueOnce()
   }, 350)
 }
 
@@ -371,6 +425,27 @@ function showListings() {
   stage.value = 'listings'
 }
 
+async function saveSelectedDraft() {
+  const listingId = selectedListingId.value
+  if (!listingId || !draft.value) return
+
+  await drainPatchQueue()
+  if (selectedListingId.value !== listingId || !draft.value) return
+  persistListingDraft(listingId, snapshotListingDraft(draft.value))
+}
+
+async function publishSelectedDraft() {
+  const listingId = selectedListingId.value
+  if (!listingId || !draft.value) return
+
+  await drainPatchQueue({ throwOnError: true })
+  if (selectedListingId.value !== listingId || !draft.value) return
+
+  const snapshot = snapshotListingDraft(draft.value)
+  await props.source.publishListingDraft(listingId, snapshot)
+  persistListingDraft(listingId, snapshot)
+}
+
 const canTogglePreview = computed(() => Boolean(selectedListingId.value && draft.value))
 const staticContent = editorStatic
 
@@ -413,7 +488,7 @@ watch(
 )
 
 onBeforeUnmount(() => {
-  void flushPatchQueue()
+  void drainPatchQueue()
 })
 </script>
 
@@ -429,7 +504,9 @@ onBeforeUnmount(() => {
           :listingId="selectedListingId"
           :draft="draft"
           :isLoading="draftStatus.isLoading"
-          :publish="props.source.publishListingDraft"
+          :isPatchSyncing="isPatchSyncing"
+          :save="saveSelectedDraft"
+          :publish="publishSelectedDraft"
           @patch="applyDraftPatch"
         />
       </Transition>

@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
-import { Grip, Plus, RefreshCw, Trash2 } from 'lucide-vue-next'
+import { Grip, Plus, Pen, Trash2 } from 'lucide-vue-next'
 import type { RawMedias } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
@@ -390,7 +390,7 @@ onBeforeUnmount(() => {
               aria-label="Remplacer les images sélectionnées"
               @click="openReplacePicker"
             >
-              <RefreshCw :size="20" />
+              <Pen :size="20" />
             </button>
           </div>
           <div>

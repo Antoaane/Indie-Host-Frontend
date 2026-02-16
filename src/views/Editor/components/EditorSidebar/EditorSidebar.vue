@@ -1,7 +1,7 @@
 <!-- File: src/views/Editor/components/EditorSidebar/EditorSidebar.vue -->
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
 import EditorSidebarNav from '@/views/Editor/components/EditorSidebar/EditorSidebarNav.vue'
 import ListingPanels from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/ListingPanels.vue'
@@ -9,16 +9,18 @@ import PricingPanels from '@/views/Editor/components/EditorSidebar/panels/Pricin
 import ArrivalPanels from '@/views/Editor/components/EditorSidebar/panels/ArrivalPanels/ArrivalPanels.vue'
 import type { RawListingBundle } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
-import { persistListingDraft } from '@/views/Editor/utils/persistListingDraft'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 
 type SidebarTab = 'listing' | 'pricing' | 'arrival'
+type SuccessFeedback = 'save' | 'publish' | null
 
 const props = defineProps<{
   listingId: string
   draft: RawListingBundle
   isLoading?: boolean
-  publish: (listingId: string, draft: RawListingBundle) => Promise<void>
+  isPatchSyncing?: boolean
+  save: () => Promise<void>
+  publish: () => Promise<void>
 }>()
 
 const emit = defineEmits<{
@@ -30,18 +32,40 @@ const tab = ref<SidebarTab>('listing')
 const isSaving = ref(false)
 const isPublishing = ref(false)
 const error = ref<string | null>(null)
+const successFeedback = ref<SuccessFeedback>(null)
+const successTimer = ref<number | null>(null)
 const sidebarContent = editorStatic.sidebar
 
-const canInteract = computed(() => !props.isLoading && !isSaving.value && !isPublishing.value)
+const canInteract = computed(() => !props.isLoading && !props.isPatchSyncing && !isSaving.value && !isPublishing.value)
+const isActionRunning = computed(() => isSaving.value || isPublishing.value)
 
 function handlePatch(patch: DraftPatch) {
   emit('patch', patch)
+}
+
+function clearSuccessFeedback() {
+  if (successTimer.value) {
+    window.clearTimeout(successTimer.value)
+    successTimer.value = null
+  }
+  successFeedback.value = null
+}
+
+function showSuccessFeedback(type: Exclude<SuccessFeedback, null>) {
+  clearSuccessFeedback()
+  successFeedback.value = type
+  successTimer.value = window.setTimeout(() => {
+    successFeedback.value = null
+    successTimer.value = null
+  }, 2200)
 }
 
 watch(
   () => props.listingId,
   () => {
     tab.value = 'listing'
+    error.value = null
+    clearSuccessFeedback()
   },
 )
 
@@ -51,7 +75,8 @@ async function saveDraft() {
 
   isSaving.value = true
   try {
-    persistListingDraft(props.listingId, props.draft)
+    await props.save()
+    showSuccessFeedback('save')
   } catch (err: any) {
     error.value = err?.message ?? sidebarContent.errors.save
   } finally {
@@ -65,17 +90,36 @@ async function publishDraft() {
 
   isPublishing.value = true
   try {
-    await props.publish(props.listingId, props.draft)
+    await props.publish()
+    showSuccessFeedback('publish')
   } catch (err: any) {
     error.value = err?.message ?? sidebarContent.errors.publish
   } finally {
     isPublishing.value = false
   }
 }
+
+onBeforeUnmount(() => {
+  clearSuccessFeedback()
+})
 </script>
 
 <template>
-  <aside class="editor-sidebar">
+  <aside
+    class="editor-sidebar"
+    :class="{ 'is-action-running': isActionRunning }"
+  >
+    <Transition name="editor-sidebar-feedback">
+      <p
+        v-if="successFeedback"
+        class="action-feedback"
+        role="status"
+        aria-live="polite"
+      >
+        {{ successFeedback === 'save' ? sidebarContent.success.save : sidebarContent.success.publish }}
+      </p>
+    </Transition>
+
     <div class="header">
       <EditorSidebarNav v-model="tab" />
     </div>
@@ -97,6 +141,7 @@ async function publishDraft() {
         />
         <ArrivalPanels
           v-else
+          :core="props.draft.core"
           :arrival="props.draft.arrival"
           @patch="handlePatch"
         />
@@ -144,6 +189,7 @@ async function publishDraft() {
 .editor-sidebar {
   flex: 0 0 auto;
   min-width: 0;
+  position: relative;
 
   display: flex;
   flex-direction: column;
@@ -158,6 +204,27 @@ async function publishDraft() {
 
   > .header {
     padding-bottom: var(--layout-gap-md);
+  }
+
+  > .action-feedback {
+    margin: 0;
+    padding: 0.45rem 0.75rem;
+
+    position: absolute;
+    top: 0.25rem;
+    right: 0.25rem;
+    z-index: 5;
+
+    border-radius: borders.$rounded-sm;
+    background-color: rgba($good, 0.92);
+    color: $secondary;
+
+    font-size: 0.8rem;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+
+    pointer-events: none;
   }
 
   > .body {
@@ -189,6 +256,14 @@ async function publishDraft() {
       color: rgba($bad, 0.95);
     }
   }
+
+  &.is-action-running {
+    > .header,
+    > .body {
+      pointer-events: none;
+      user-select: none;
+    }
+  }
 }
 
 .editor-sidebar-panels-enter-active,
@@ -204,5 +279,22 @@ async function publishDraft() {
 .editor-sidebar-panels-enter-to,
 .editor-sidebar-panels-leave-from {
   opacity: 1;
+}
+
+.editor-sidebar-feedback-enter-active,
+.editor-sidebar-feedback-leave-active {
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.editor-sidebar-feedback-enter-from,
+.editor-sidebar-feedback-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+.editor-sidebar-feedback-enter-to,
+.editor-sidebar-feedback-leave-from {
+  opacity: 1;
+  transform: translateY(0);
 }
 </style>

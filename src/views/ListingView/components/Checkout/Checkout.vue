@@ -7,16 +7,27 @@ import { CalendarDays, ChevronLeft, CreditCard, Globe, Lock, MapPin, Star, User 
 import type { ListingParsed } from '@/views/ListingView/types/listing'
 import type { ReservationPayload } from '@/views/ListingView/types/reservation'
 
-const props = defineProps<{
-  reservation: ReservationPayload
-  listing: ListingParsed
-}>()
+const props = withDefaults(
+  defineProps<{
+    reservation: ReservationPayload
+    listing: ListingParsed
+    isSubmitting?: boolean
+    submitError?: string | null
+  }>(),
+  {
+    isSubmitting: false,
+    submitError: null,
+  },
+)
 
 const emit = defineEmits<{
   (e: 'cancel'): void
+  (e: 'confirm', payload: { travelerMessage: string; paymentChoice: 'full' | 'split' | 'cash' }): void
 }>()
 
 const paymentChoice = ref<'full' | 'split' | 'cash'>('full')
+const travelerMessageOpen = ref(false)
+const travelerMessage = ref('')
 
 const currency = new Intl.NumberFormat('fr-FR', {
   style: 'currency',
@@ -65,6 +76,19 @@ const listingImage = computed(() => {
   ].sort((a, b) => a.position - b.position)
   return sorted[0]?.src ?? ''
 })
+
+const travelerMessageCtaLabel = computed(() => (travelerMessageOpen.value ? 'Masquer' : 'Ajouter'))
+
+function toggleTravelerMessage() {
+  travelerMessageOpen.value = !travelerMessageOpen.value
+}
+
+function confirmCheckout() {
+  emit('confirm', {
+    travelerMessage: travelerMessage.value.trim(),
+    paymentChoice: paymentChoice.value,
+  })
+}
 </script>
 
 <template>
@@ -278,9 +302,29 @@ const listingImage = computed(() => {
             <p class="info-text">Donnez la raison de votre voyage, votre nombre, etc.</p>
           </div>
           <div class="add-button">
-            <button type="button">Ajouter</button>
+            <button
+              type="button"
+              @click="toggleTravelerMessage"
+            >
+              {{ travelerMessageCtaLabel }}
+            </button>
           </div>
         </div>
+        <transition name="info-expand">
+          <div
+            v-if="travelerMessageOpen"
+            class="traveler-message-field"
+          >
+            <label for="traveler-message">Message à l'hôte</label>
+            <textarea
+              id="traveler-message"
+              v-model="travelerMessage"
+              rows="4"
+              maxlength="1200"
+              placeholder="Ex : Nous arrivons vers 19h, merci de nous confirmer l’accès."
+            />
+          </div>
+        </transition>
         <div class="info-item">
           <div>
             <p class="info-title">Votre numéro de téléphone</p>
@@ -367,8 +411,20 @@ const listingImage = computed(() => {
 
     <div class="checkout-cta">
       <div class="btn-primary__full">
-        <button type="button">Confirmer et payer</button>
+        <button
+          type="button"
+          :disabled="props.isSubmitting"
+          @click="confirmCheckout"
+        >
+          {{ props.isSubmitting ? 'Validation en cours...' : 'Confirmer et payer' }}
+        </button>
       </div>
+      <p
+        v-if="props.submitError"
+        class="checkout-error"
+      >
+        {{ props.submitError }}
+      </p>
     </div>
   </section>
 </template>

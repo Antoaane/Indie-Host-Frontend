@@ -42,7 +42,7 @@ function closePopup() {
     </h2>
 
     <span
-      class="preview"
+      class="preview--editorial"
       v-html="data.description"
     />
 
@@ -112,7 +112,7 @@ function closePopup() {
     @include h2-title($gradiant: true);
   }
 
-  > .preview {
+  > .preview--editorial {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 4;
@@ -158,13 +158,25 @@ function closePopup() {
     > .content {
       margin-bottom: var(--layout-gap);
 
-      h2 {
-        @include h2-title;
+      > span {
+        @include base-text($thin: false);
       }
 
       h3 {
-        margin-top: var(--layout-gap-md) !important;
+        margin-top: var(--layout-gap-sm) !important;
+        margin-bottom: var(--layout-gap-xs) !important;
         @include h4-title;
+      }
+
+      h2 {
+        margin-top: var(--layout-gap-sm) !important;
+        margin-bottom: var(--layout-gap-xs) !important;
+        @include h3-title;
+      }
+
+      p {
+        margin: 0;
+        margin-bottom: var(--layout-gap-xs);
       }
     }
 

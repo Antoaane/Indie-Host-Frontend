@@ -76,6 +76,18 @@
     "deposit": {
       "type": "info",
       "amount": 0
+    },
+    "extraGuests": {
+      "price": 1
+    },
+    "cancellation": {
+      "policy": "flexible",
+      "perkEligible": true,
+      "perkScore": 96,
+      "perkPriority": 2,
+      "perkName": "Annulation gratuite 48h",
+      "perkDescription": "Annulation sans frais pendant les 48 premières heures.",
+      "perkIcon": "rotate-ccw"
     }
   },
   "reservations": [
@@ -201,6 +213,20 @@
       "messaging": {
         "conversationId": "53028879::reservation-listingtest_0-2026-13",
         "messages": [
+          {
+            "id": "message-reservation-listingtest_0-2026-13-4c33aeb5",
+            "author": "host",
+            "body": "ngnfnfgn",
+            "sentAt": "2026-02-15T20:37:22.591Z",
+            "state": "sent"
+          },
+          {
+            "id": "message-reservation-listingtest_0-2026-13-2b393bde",
+            "author": "host",
+            "body": "fgnfg",
+            "sentAt": "2026-02-15T20:37:25.692Z",
+            "state": "sent"
+          },
           {
             "id": "seed-reservation-listingtest_0-2026-13",
             "author": "guest",

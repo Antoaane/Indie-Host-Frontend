@@ -52,18 +52,18 @@
         &>div {
           @include buttons.primary($theme: white, $icon-only: true);
 
-          >.icon {
-            &:disabled {
-              opacity: 0.4;
-              cursor: not-allowed;
-            }
-          }
+          // >.icon {
+          //   &:disabled {
+          //     opacity: 0.4;
+          //     cursor: not-allowed;
+          //   }
+          // }
 
-          &:has(.icon.danger) {
-            >.icon {
-              @include buttons.primary($theme: dark, $icon-only: true);
-            }
-          }
+          // &:has(.icon.danger) {
+          //   >.icon {
+          //     @include buttons.primary($theme: dark, $icon-only: true);
+          //   }
+          // }
         }
       }
 

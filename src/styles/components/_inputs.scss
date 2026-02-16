@@ -315,7 +315,7 @@ $input-sizes: (
     border-radius: borders.$rounded-md;
     background-color: input-token($theme, bg);
     box-shadow: 0 1px 3px input-token($theme, shadow);
-    padding: input-size($compact, padding-y) input-size($compact, padding-x);
+    // padding: input-size($compact, padding-y) input-size($compact, padding-x);
     color: input-token($theme, text);
   }
 }

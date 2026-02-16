@@ -32,12 +32,17 @@
   }
 
   >.guide-hero {
+    height: 35vh;
     background: $secondary;
     color: $accent;
     position: relative;
     overflow: hidden;
-    padding: calc(var(--layout-gap) * 2) var(--layout-gap);
-    padding-bottom: calc(var(--layout-gap) * 2.5);
+    padding: 0 var(--layout-gap-2xl);
+    padding-bottom: var(--layout-gap);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
 
     >.hero-content {
       position: relative;
@@ -47,7 +52,7 @@
       gap: var(--layout-gap-xs);
 
       >.hero-eyebrow {
-        @include little-text($color: rgba($accent, 0.8), $bold: true, $thin: false);
+        @include little-text($color: $accent, $bold: true, $thin: false);
         letter-spacing: 0.08rem;
         text-transform: uppercase;
       }
@@ -58,49 +63,38 @@
         font-size: 2.1rem;
         line-height: 2.6rem;
         margin: 0;
+        color: $accent;
         @include effects.text-shadow(rgba(0, 0, 0, 0.35));
       }
 
       >.hero-tagline {
-        @include little-text($color: rgba($accent, 0.7));
+        @include little-text($color: $accent);
       }
     }
 
-    >.hero-shapes {
+    >.shapes-bg {
+      min-width: 1280px;
+      width: 100%;
+      height: auto;
       position: absolute;
-      inset: 0;
+      top: 0;
+      left: 50%;
+      z-index: 1;
+      transform: translateX(-50%);
+      opacity: 0.075;
       pointer-events: none;
-
-      >span {
-        position: absolute;
-        border: 1px solid rgba($accent, 0.15);
-        border-radius: 50%;
-        width: 240px;
-        height: 240px;
-        transform: rotate(25deg);
-      }
-
-      >span:nth-child(1) {
-        top: -120px;
-        right: -80px;
-      }
-
-      >span:nth-child(2) {
-        bottom: -140px;
-        left: -90px;
-        width: 320px;
-        height: 320px;
-      }
     }
   }
 
   >.guide-body {
+    margin-top: -2rem;
+
     display: flex;
     flex-direction: column;
     gap: var(--layout-gap-md);
     @include layout-gap(padding, all, 1.2);
     background: $accent;
-    margin-top: -2rem;
+
     border-top-left-radius: borders.$rounded-xl;
     border-top-right-radius: borders.$rounded-xl;
     position: relative;
@@ -128,17 +122,17 @@
 
   .section-grid {
     display: grid;
-    gap: var(--layout-gap-sm);
+    gap: var(--layout-gap);
   }
 
   .guide-panel {
     background: $accent;
     border-radius: borders.$rounded-lg;
     border: 1px solid rgba($secondary, 0.08);
-    padding: var(--layout-gap-sm);
+    padding: var(--layout-gap);
     display: flex;
     flex-direction: column;
-    gap: var(--layout-gap-sm);
+    gap: var(--layout-gap);
     @include effects.soft-shadow(rgba(0, 0, 0, 0.08));
 
     &--editorial {
@@ -186,8 +180,9 @@
       display: flex;
       flex-direction: column;
       gap: 0.2rem;
-      padding-bottom: var(--layout-gap-2xs);
       border-bottom: 1px solid rgba($secondary, 0.08);
+
+      @include layout-gap(padding, vertical, 0.5);
 
       &:last-child {
         border-bottom: none;
@@ -251,17 +246,20 @@
       gap: var(--layout-gap-sm);
       @include base-text($color: rgba($accent, 0.85));
 
-      h3 {
-        @include h3-title($color: $accent, $layout-gap: false);
-        margin: 0 0 0.25rem 0;
+      >:first-child {
+        margin-top: 0 !important;
       }
 
-      ul {
-        list-style: none;
+      ul,
+      ol {
+        // list-style: none;
         margin: 0;
+        margin-left: 1.5rem;
+        // margin-bottom: var(--layout-gap-md);
         padding: 0;
         display: grid;
         gap: 0.5rem;
+
       }
 
       li {
@@ -270,6 +268,29 @@
 
       strong {
         color: $accent;
+      }
+
+      >span {
+        @include base-text($thin: false);
+      }
+
+      h3 {
+        margin-top: var(--layout-gap-md) !important;
+        margin-bottom: var(--layout-gap-2xs) !important;
+        @include h3-title($color: $accent, $layout-gap: false);
+
+      }
+
+      h2 {
+        margin-top: var(--layout-gap-md) !important;
+        margin-bottom: var(--layout-gap-2xs) !important;
+        @include h2-title($color: $accent, $layout-gap: false);
+
+      }
+
+      p {
+        margin: 0;
+        margin-bottom: var(--layout-gap-xs);
       }
     }
   }

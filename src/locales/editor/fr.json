@@ -51,6 +51,10 @@
         "save": "Sauvegarder",
         "apply": "Appliquer"
       },
+      "success": {
+        "save": "Brouillon sauvegardé.",
+        "publish": "Modifications appliquées."
+      },
       "errors": {
         "save": "Erreur lors de la sauvegarde.",
         "publish": "Erreur lors de la publication."
@@ -112,9 +116,25 @@
           "subtitle": "Seule une localisation approximative sera affichée sur l’annonce",
           "placeholders": {
             "type": "Type (ex: Péniche)",
+            "preciseAddress": "Adresse précise (numéro, rue, code postal, ville)",
             "city": "Ville",
             "country": "Pays",
             "region": "Région"
+          },
+          "actions": {
+            "resolveAddress": "Déduire la localisation"
+          },
+          "states": {
+            "resolving": "Analyse de l’adresse..."
+          },
+          "hints": {
+            "preciseAddress": "Adresse privée: Indie Host utilise cette donnée pour extraire ville/région/pays et préparer la zone de carte."
+          },
+          "feedback": {
+            "resolved": "Ville, région, pays et coordonnées ont été déduits automatiquement.",
+            "partial": "Adresse partiellement reconnue. Vérifie ville, région et pays.",
+            "notFound": "Adresse introuvable. Vérifie la saisie puis réessaie.",
+            "resolveError": "Impossible d’analyser l’adresse pour le moment."
           }
         },
         "rooms": {
@@ -304,8 +324,21 @@
             "strict": "Stricte",
             "custom": "Personnalisée"
           },
+          "severityRulesLabel": "Règles par niveau de sévérité",
+          "severityLabel": "Sévérité",
+          "severities": {
+            "low": "Faible",
+            "medium": "Moyenne",
+            "high": "Élevée"
+          },
+          "rules": {
+            "fullRefund": "Remboursement intégral jusqu’à {days} jours avant l’arrivée.",
+            "partialRefund": "À moins de {days} jours : retenue de {feePercent}% du montant total.",
+            "lateCancellation": "À moins de 24h de l’arrivée ou en cas de non-présentation : retenue de 100%."
+          },
           "daysBefore": "Jours avant arrivée",
-          "feePercent": "% retenu après délai"
+          "feePercent": "% retenu après délai",
+          "customRulesTitle": "Règles personnalisées appliquées"
         },
         "summary": {
           "title": "Récapitulatif dynamique",
@@ -357,6 +390,7 @@
           "access": {
             "title": "Adresse & accès",
             "subtitle": "Tout ce qu’il faut pour arriver sereinement.",
+            "addressLockedHint": "Modifiable uniquement depuis le panneau Adresse de l’annonce.",
             "fields": [
               {
                 "key": "address",

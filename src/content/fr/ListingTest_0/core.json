@@ -59,18 +59,6 @@
       ]
     }
   ],
-  "perks": [
-    {
-      "name": "Annulation gratuite pendant 48h",
-      "description": "Si vous changez d'avis, votre réservation est annulable sans frais dans les 48 premières heures.",
-      "icon": "rotate-ccw"
-    },
-    {
-      "name": "Arrivée autonome",
-      "description": "Boîte à clé sécurisée, check-in flexible.",
-      "icon": "key-round"
-    }
-  ],
   "amenities": [
     {
       "id": "PRIVATE_DOCK_ACCESS",
@@ -78,7 +66,10 @@
       "description": "Accès direct au plan d'eau",
       "category": "Vue & accès",
       "relevance": 98,
-      "pinned": true
+      "pinned": true,
+      "perkEligible": true,
+      "perkScore": 95,
+      "perkPriority": 2
     },
     {
       "id": "PANORAMIC_LAKE_VIEW",
@@ -86,7 +77,9 @@
       "description": "Salon ouvert sur l'eau",
       "category": "Vue & accès",
       "relevance": 96,
-      "pinned": true
+      "pinned": true,
+      "perkEligible": true,
+      "perkScore": 93
     },
     {
       "id": "BEACH_ACCESS",
@@ -94,7 +87,9 @@
       "description": "Petite plage aménagée",
       "category": "Vue & accès",
       "relevance": 90,
-      "pinned": true
+      "pinned": true,
+      "perkEligible": true,
+      "perkScore": 90
     },
     {
       "id": "WOOD_TERRACE",
@@ -158,7 +153,9 @@
       "description": "Stable sur tout le bateau",
       "category": "Confort & travail",
       "relevance": 94,
-      "pinned": true
+      "pinned": true,
+      "perkEligible": true,
+      "perkScore": 91
     },
     {
       "id": "DEDICATED_WORKSPACE",
@@ -238,7 +235,9 @@
       "description": "Boîte à clé sécurisée",
       "category": "Sécurité",
       "relevance": 80,
-      "pinned": false
+      "pinned": false,
+      "perkEligible": true,
+      "perkScore": 94
     },
     {
       "id": "SMOKE_ALARM",
@@ -359,6 +358,18 @@
       "category": "Vie à bord",
       "relevance": 51,
       "pinned": false
+    }
+  ],
+  "perkSettings": [
+    {
+      "id": "DIRECT_BOOKING_SUPPORT",
+      "name": "Support direct hôte 7j/7",
+      "description": "Réponse rapide sur la messagerie Indie Host.",
+      "icon": "messages-square",
+      "enabled": true,
+      "perkEligible": true,
+      "perkScore": 88,
+      "perkPriority": 1
     }
   ],
   "description_dep": [

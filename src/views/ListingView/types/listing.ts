@@ -20,7 +20,14 @@ export type TitleModel = {
 };
 
 // -------- POLITIQUES --------
-export type PerkItem = { icon: string; name: string; description?: string };
+export type PerkItem = {
+  icon: string;
+  name: string;
+  description?: string;
+  score?: number;
+  source?: 'amenity' | 'setting';
+  sourceId?: string;
+};
 export type PerksModel = PerkItem[];
 
 // -------- HÔTE --------
@@ -54,6 +61,9 @@ export type AmenityItem = {
   category: string;
   relevance: number;
   pinned: boolean;
+  perkEligible?: boolean;
+  perkScore?: number;
+  perkPriority?: number;
 };
 export type AmenitiesModel = AmenityItem[];
 
@@ -89,10 +99,15 @@ export type RoomsModel = {
 // -------- RÉSERVATIONS / TARIFS --------
 export type BookedRange = { start: string; end: string };
 export type FeeItem = { name: string; amount: number };
+export type WeekendPricingModel = {
+  enabled: boolean;
+  price: number;
+};
 export type BookingsModel = {
   price: number;                   // prix / nuit (base)
   bookedDays: BookedRange[];       // périodes occupées
   fees?: FeeItem[];                // frais additionnels fixes
+  weekend?: WeekendPricingModel;   // tarif week-end (vendredi / samedi)
 };
 
 // -------- NOTES / COMMENTAIRES --------

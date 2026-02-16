@@ -49,6 +49,7 @@ const emit = defineEmits<{
     />
     <LocationPanel
       :core="props.draft.core"
+      :require-precise-address="true"
       @patch="emit('patch', $event)"
     />
     <RoomsPanel

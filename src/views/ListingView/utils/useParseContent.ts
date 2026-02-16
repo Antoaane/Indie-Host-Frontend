@@ -10,6 +10,8 @@ import type {
   RawListingBundle,
 } from '@/domain/listings/types';
 import { getSynchronizedBookedDays } from '@/domain/listings/bookings';
+import { resolveWeekendPricing } from '@/domain/listings/pricing';
+import { buildPerkCandidates, selectTopPerkCandidates } from '@/domain/listings/perks';
 
 // ---- TYPES ----
 import type {
@@ -137,8 +139,23 @@ function parseTitle(core: Maybe<Partial<RawCore>>): TitleModel {
 }
 
 
-function parsePerks(core: Maybe<Partial<RawCore>>): PerksModel {
-  return (core?.perks ?? []).map(p => ({ icon: p.icon, name: p.name, description: p.description }));
+function parsePerks(raw: RawListingBundle): PerksModel {
+  const candidates = selectTopPerkCandidates(
+    buildPerkCandidates({
+      core: raw.core,
+      bookings: raw.bookings,
+    }),
+    2,
+  )
+
+  return candidates.map((candidate) => ({
+    icon: candidate.icon,
+    name: candidate.name,
+    description: candidate.description,
+    score: candidate.score,
+    source: candidate.source,
+    sourceId: candidate.sourceId,
+  }))
 }
 
 function parseHost(host: Maybe<Partial<RawHost>>): HostProfileModel {
@@ -173,12 +190,15 @@ function parseMap(core: Maybe<Partial<RawCore>>): MapModel {
 
 function parseAmenities(core: Maybe<Partial<RawCore>>): AmenitiesModel {
   return (core?.amenities ?? []).map((a) => ({
-    id: a.id,
-    name: a.name,
+    id: a.id ?? '',
+    name: a.name ?? '',
     description: a.description,
-    category: a.category,
-    relevance: a.relevance,
+    category: a.category ?? '',
+    relevance: Number.isFinite(Number(a.relevance)) ? Number(a.relevance) : 0,
     pinned: Boolean(a.pinned),
+    perkEligible: typeof a.perkEligible === 'boolean' ? a.perkEligible : undefined,
+    perkScore: Number.isFinite(Number(a.perkScore)) ? Number(a.perkScore) : undefined,
+    perkPriority: Number.isFinite(Number(a.perkPriority)) ? Number(a.perkPriority) : undefined,
   }));
 }
 
@@ -196,10 +216,20 @@ function parseRooms(core: Maybe<Partial<RawCore>>): RoomsModel {
 
 function parseBookings(bookings: Maybe<Partial<RawBookings>>): BookingsModel {
   const bookedDays = getSynchronizedBookedDays(bookings ?? null)
+  const basePrice = Number(bookings?.price ?? 0)
+  const weekend = resolveWeekendPricing(bookings?.pricing ?? null, basePrice)
   return {
-    price: bookings?.price ?? 0,
+    price: basePrice,
     bookedDays: bookedDays.map(d => ({ start: d.start, end: d.end })),
     fees: (bookings?.fees ?? []).map(fee => ({ name: fee.name, amount: fee.amount })),
+    ...(weekend
+      ? {
+        weekend: {
+          enabled: weekend.enabled,
+          price: weekend.price,
+        },
+      }
+      : {}),
   };
 }
 
@@ -257,7 +287,7 @@ export function core(raw: RawListingBundle): ListingParsed {
 
   return {
     title: parseTitle(raw.core),
-    perks: parsePerks(raw.core),
+    perks: parsePerks(raw),
     hostProfile: parseHost(raw.host),
     description: parseDescription(raw.core),
     map: parseMap(raw.core),

@@ -358,6 +358,53 @@ html:has(#checkout) {
     }
   }
 
+  .traveler-message-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: var(--layout-gap-sm) var(--layout-gap-md);
+
+    background: $accent;
+    border: 1px solid rgba($secondary, 0.08);
+    border-radius: borders.$rounded-lg;
+
+    >label {
+      margin: 0;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    >textarea {
+      width: 100%;
+      box-sizing: border-box;
+      min-height: 8rem;
+      border-radius: borders.$rounded-md;
+      border: 1px solid rgba($secondary, 0.16);
+      background: $accent;
+      color: $secondary;
+      padding: 0.7rem 0.8rem;
+      font: inherit;
+      line-height: 1.45;
+      resize: vertical;
+
+      &:focus {
+        outline: 2px solid rgba($secondary, 0.25);
+        outline-offset: 1px;
+      }
+    }
+  }
+
+  .info-expand-enter-active,
+  .info-expand-leave-active {
+    transition: opacity 180ms ease, transform 180ms ease;
+  }
+
+  .info-expand-enter-from,
+  .info-expand-leave-to {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
   .add-button {
     @include buttons.primary($theme: black, $padding: true);
 
@@ -390,6 +437,11 @@ html:has(#checkout) {
         padding-block: 0.85rem;
         font-size: 1rem;
       }
+    }
+
+    >.checkout-error {
+      margin: 0.65rem 0 0;
+      @include little-text($color: #a42828, $thin: false);
     }
   }
 

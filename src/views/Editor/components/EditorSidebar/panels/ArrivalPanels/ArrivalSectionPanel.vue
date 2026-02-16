@@ -19,6 +19,8 @@ const props = defineProps<{
   subtitle?: string
   fields: TextFieldConfig[]
   values?: Partial<TextSectionValues> | null
+  lockedFieldKeys?: string[]
+  lockedFieldHint?: string
 }>()
 
 const emit = defineEmits<{
@@ -26,16 +28,23 @@ const emit = defineEmits<{
 }>()
 
 const resolvedValues = computed(() => props.values ?? {})
+const lockedFieldKeySet = computed(() => new Set((props.lockedFieldKeys ?? []).map((key) => key.trim())))
+
+function isLockedField(fieldKey: string): boolean {
+  return lockedFieldKeySet.value.has(fieldKey.trim())
+}
 
 function updateField(fieldKey: string, value: string) {
-  emit('patch', {
-    arrival: {
-      practical: {
-        [props.sectionKey]: {
-          [fieldKey]: value,
-        },
-      } as Partial<RawArrival['practical']>,
+  if (isLockedField(fieldKey)) return
+
+  const practicalPatch = {
+    [props.sectionKey]: {
+      [fieldKey]: value,
     },
+  } as Partial<RawArrival['practical']>
+
+  emit('patch', {
+    arrival: { practical: practicalPatch } as Partial<RawArrival>,
   })
 }
 </script>
@@ -59,9 +68,17 @@ function updateField(fieldKey: string, value: string) {
             type="text"
             :value="(resolvedValues as Record<string, string>)[field.key] ?? ''"
             :placeholder="field.placeholder || ''"
+            :readonly="isLockedField(field.key)"
+            :disabled="isLockedField(field.key)"
             @input="updateField(field.key, ($event.target as HTMLInputElement).value)"
           />
         </div>
+        <small
+          v-if="isLockedField(field.key) && props.lockedFieldHint"
+          class="locked-hint"
+        >
+          {{ props.lockedFieldHint }}
+        </small>
       </div>
     </div>
   </section>
@@ -101,7 +118,16 @@ function updateField(fieldKey: string, value: string) {
 
         > input {
           height: 2.9rem;
+
+          &:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+          }
         }
+      }
+
+      > .locked-hint {
+        @include little-text($color: rgba($secondary, 0.62), $thin: false);
       }
     }
   }

@@ -8,8 +8,39 @@ import commentsJSON from '@/content/fr/ListingTest_0/comments.json'
 import hostJSON from '@/content/fr/ListingTest_0/host.json'
 import arrivalJSON from '@/content/fr/ListingTest_0/arrival.json'
 
+type Override<T, U> = Omit<T, keyof U> & U
+
 export type RawCoreBase = typeof coreJSON
-export type RawCore = RawCoreBase & { lat?: number; lng?: number; zoom?: number }
+export type RawPerkScoring = {
+  perkEligible?: boolean
+  perkScore?: number
+  perkPriority?: number
+}
+export type RawAmenity = RawPerkScoring & {
+  id?: string
+  name: string
+  description?: string
+  category?: string
+  relevance?: number
+  pinned?: boolean
+}
+export type RawPerkSetting = RawPerkScoring & {
+  id: string
+  name: string
+  description?: string
+  icon: string
+  enabled?: boolean
+}
+export type RawCore = Override<RawCoreBase, {
+  amenities?: RawAmenity[]
+  perkSettings?: RawPerkSetting[]
+  precise_address?: string
+  latitude?: number
+  longitude?: number
+  lat?: number
+  lng?: number
+  zoom?: number
+}>
 type RawBookingsBase = typeof bookingsJSON
 export type RawBookedDay = {
   start: string
@@ -42,6 +73,30 @@ export type RawReservationMessaging = {
   conversationId?: string
   messages: RawReservationMessage[]
 }
+export type RawPricingCancellationPolicy = 'flexible' | 'moderate' | 'strict' | 'custom' | string
+export type RawPricingCancellation = RawPerkScoring & {
+  policy?: RawPricingCancellationPolicy
+  custom?: {
+    days?: number | null
+    feePercent?: number | null
+  }
+  perkName?: string
+  perkDescription?: string
+  perkIcon?: string
+}
+export type RawPricingWeekend = {
+  enabled?: boolean
+  price?: number | null
+}
+export type RawPricingDeposit = {
+  type?: string
+  amount?: number | null
+}
+export type RawPricingSettings = Record<string, unknown> & {
+  cancellation?: RawPricingCancellation
+  weekend?: RawPricingWeekend
+  deposit?: RawPricingDeposit
+}
 export type RawBookingReservation = {
   id: string
   start: string
@@ -61,10 +116,11 @@ export type RawBookingReservation = {
   createdAt?: string
   messaging?: RawReservationMessaging
 }
-export type RawBookings = Omit<RawBookingsBase, 'booked-days' | 'reservations'> & {
+export type RawBookings = Override<RawBookingsBase, {
   'booked-days': RawBookedDay[]
   reservations?: RawBookingReservation[]
-}
+  pricing?: RawPricingSettings
+}>
 export type RawMedias = typeof mediasJSON
 export type RawNotes = typeof notesJSON
 export type RawComments = typeof commentsJSON

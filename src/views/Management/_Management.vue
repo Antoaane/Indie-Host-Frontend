@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ArrowUpRight, Calendar, Plus } from 'lucide-vue-next'
 
 import DatePicker from '@/components/DatePicker/DatePicker.vue'
@@ -22,6 +22,7 @@ const props = defineProps<{
   source: EditorSource
 }>()
 const route = useRoute()
+const router = useRouter()
 
 type ManagementStage = 'reservations' | 'calendar'
 
@@ -236,6 +237,36 @@ function handleSelectReservation(reservationId: string) {
 
 function toggleCalendarMode() {
   stage.value = stage.value === 'calendar' ? 'reservations' : 'calendar'
+}
+
+function handleReplyToTraveler() {
+  const listingId = selectedListingId.value
+  const reservation = selectedReservation.value
+  if (!listingId || !reservation) return
+
+  const userId = normalizeQueryParam(route.params.userId)
+  const query: Record<string, string> = {
+    listingId,
+    reservationId: reservation.id,
+  }
+  const conversationId = reservation.messaging?.conversationId?.trim()
+  if (conversationId) {
+    query.conversationId = conversationId
+  }
+
+  if (userId) {
+    void router.push({
+      name: 'messaging-user',
+      params: { userId },
+      query,
+    })
+    return
+  }
+
+  void router.push({
+    name: 'messaging',
+    query,
+  })
 }
 
 function openDeleteOverlay() {
@@ -494,6 +525,7 @@ const paymentStatusClass = computed(() => {
                       <button
                         type="button"
                         class="reply"
+                        @click="handleReplyToTraveler"
                       >
                         R&eacute;pondre
                         <ArrowUpRight :size="20" />

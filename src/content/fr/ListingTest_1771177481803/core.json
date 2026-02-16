@@ -1,0 +1,191 @@
+{
+  "id": "listing-1771177481803",
+  "status": "published",
+  "pause_message": "",
+  "title": "Annonce test",
+  "type": "Appartement",
+  "precise_address": "7 Carriera Castelet Roman, 31320 Castanet Tolosan",
+  "city": "Castanet-Tolosan",
+  "country": "France",
+  "region": "Occitanie",
+  "guest_capacity": 3,
+  "rooms": [
+    {
+      "room-name": "Chambre",
+      "type": "bedroom",
+      "beds": [
+        {
+          "type": "double",
+          "capacity": 2,
+          "quantity": 1
+        },
+        {
+          "type": "simple",
+          "capacity": 1,
+          "quantity": 2
+        },
+        {
+          "type": "bunk",
+          "capacity": 2,
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "room-name": "Salle de bain",
+      "type": "bathroom",
+      "beds": []
+    },
+    {
+      "room-name": "Cuisine",
+      "type": "kitchen",
+      "beds": []
+    },
+    {
+      "room-name": "Pièce de BDSM",
+      "type": "other",
+      "beds": []
+    },
+    {
+      "room-name": "Salon",
+      "type": "livingroom",
+      "beds": [
+        {
+          "type": "double",
+          "capacity": 2,
+          "quantity": 1
+        }
+      ]
+    }
+  ],
+  "amenities": [
+    {
+      "id": "WIFI",
+      "name": "Wifi",
+      "description": "Connexion internet",
+      "category": "Confort & travail",
+      "relevance": 95,
+      "pinned": false,
+      "perkEligible": true,
+      "perkScore": 91,
+      "perkPriority": 0
+    },
+    {
+      "id": "LINENS_PROVIDED",
+      "name": "Linge de lit et de bain",
+      "description": "Draps et serviettes fournis",
+      "category": "Confort & travail",
+      "relevance": 75,
+      "pinned": false
+    },
+    {
+      "id": "FILTER_COFFEE_MAKER",
+      "name": "Machine à café filtre",
+      "description": "Café moulu de bienvenue",
+      "category": "Cuisine & boissons",
+      "relevance": 60,
+      "pinned": false
+    },
+    {
+      "id": "EQUIPPED_KITCHEN",
+      "name": "Cuisine équipée",
+      "description": "Plaques, four, vaisselle…",
+      "category": "Cuisine & boissons",
+      "relevance": 85,
+      "pinned": false,
+      "perkEligible": true,
+      "perkScore": 77,
+      "perkPriority": 0
+    },
+    {
+      "id": "WOOD_TERRACE",
+      "name": "Terrasse",
+      "description": "Espace extérieur aménagé",
+      "category": "Extérieur & détente",
+      "relevance": 70,
+      "pinned": false,
+      "perkEligible": true,
+      "perkScore": 84,
+      "perkPriority": 0
+    },
+    {
+      "id": "ELECTRIC_BARBECUE",
+      "name": "Barbecue",
+      "description": "Ustensiles fournis",
+      "category": "Extérieur & détente",
+      "relevance": 60,
+      "pinned": true
+    },
+    {
+      "id": "SMART_LOCK",
+      "name": "Serrure connectée",
+      "description": "Entrée autonome",
+      "category": "Sécurité",
+      "relevance": 65,
+      "pinned": false,
+      "perkEligible": true,
+      "perkScore": 87,
+      "perkPriority": 0
+    },
+    {
+      "id": "FIRE_EXTINGUISHER",
+      "name": "Extincteur",
+      "description": "Accessible",
+      "category": "Sécurité",
+      "relevance": 55,
+      "pinned": false
+    },
+    {
+      "id": "SMART_TV",
+      "name": "TV connectée",
+      "description": "Netflix / YouTube",
+      "category": "Vie à bord",
+      "relevance": 60,
+      "pinned": false
+    },
+    {
+      "id": "BLUETOOTH_SPEAKER",
+      "name": "Enceinte Bluetooth",
+      "description": "Pour la musique",
+      "category": "Vie à bord",
+      "relevance": 55,
+      "pinned": false
+    },
+    {
+      "id": "WALK_TO_BEACH",
+      "name": "Plage à pied",
+      "description": "Accès rapide",
+      "category": "Vue & accès",
+      "relevance": 85,
+      "pinned": false,
+      "perkEligible": true,
+      "perkScore": 88,
+      "perkPriority": 0
+    },
+    {
+      "id": "PANORAMIC_LAKE_VIEW",
+      "name": "Vue panoramique",
+      "description": "Belle vue",
+      "category": "Vue & accès",
+      "relevance": 80,
+      "pinned": false,
+      "perkEligible": true,
+      "perkScore": 93,
+      "perkPriority": 0
+    },
+    {
+      "id": "ELEVATOR",
+      "name": "Ascenseur",
+      "description": "Accès pratique",
+      "category": "Arrivée & mobilité",
+      "relevance": 55,
+      "pinned": false
+    }
+  ],
+  "latitude": 43.5162703,
+  "longitude": 1.4961132,
+  "lat": 43.5162703,
+  "lng": 1.4961132,
+  "zoom": 13,
+  "description": "<p>Airbnb et Booking dominent aujourd’hui le marché de la location courte durée en imposant aux hôtes des commissions élevées, généralement comprises entre 15 % et 20 %. Ces plateformes concentrent l’audience et le volume, mais privent les hôtes d’autonomie et de marges, tout en interdisant tout lien direct avec le voyageur. Nombre d’hôtes interrogés expriment également une fatigue face aux changements d’algorithmes, au manque de réactivité du support et à la pression constante sur les prix et les évaluations.</p><p><br></p><p>Indie Host répond à cette problématique en proposant une alternative claire et simple : un abonnement fixe, sans commission, qui permet à chaque hôte de disposer de sa propre page de réservation, entièrement personnalisée, accessible via un sous-domaine dédié (ex : john-doe.indiehost.fr). Ce sous-domaine devient une véritable vitrine personnelle pour l’hôte, où chaque élément – visuels, textes, ambiance, tonalité – reflète son identité et ses choix, à l’opposé des plateformes traditionnelles qui uniformisent l’expérience voyageur.</p>"
+}

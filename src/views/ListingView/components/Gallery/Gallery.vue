@@ -79,8 +79,8 @@ const swiperParams = computed(
       :items="mosaicImages"
       :lightbox-items="lightboxItems"
       :intervalMs="10000"
-      :minSlots="3"
-      :maxSlots="4"
+      :minSlots="2"
+      :maxSlots="3"
       :minTileW="45"
       :minTileH="45"
     />

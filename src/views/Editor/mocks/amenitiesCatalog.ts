@@ -1,9 +1,14 @@
+// File: src/views/Editor/mocks/amenitiesCatalog.ts
+
 export type AmenityCatalogItem = {
   id: string
   name: string
   description?: string
   category: string
   relevance: number
+  perkEligible?: boolean
+  perkScore?: number
+  perkPriority?: number
 }
 
 export type AmenitiesCatalogResponse = {
@@ -287,4 +292,3 @@ export const mockAmenitiesCatalog: AmenitiesCatalogResponse = {
     },
   ],
 }
-

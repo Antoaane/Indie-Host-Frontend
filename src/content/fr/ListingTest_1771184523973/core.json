@@ -1,0 +1,239 @@
+{
+  "id": "listing-1771184523973",
+  "status": "published",
+  "pause_message": "",
+  "title": "La maison du content",
+  "type": "Gîte",
+  "precise_address": "7 Carriera Castelet Roman",
+  "city": "Castanet-Tolosan",
+  "country": "France",
+  "region": "Occitanie",
+  "guest_capacity": 7,
+  "rooms": [
+    {
+      "room-name": "Chambre",
+      "type": "bedroom",
+      "beds": [
+        {
+          "type": "double",
+          "capacity": 2,
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "room-name": "Cuisine",
+      "type": "kitchen",
+      "beds": []
+    },
+    {
+      "room-name": "Chambre",
+      "type": "bedroom",
+      "beds": []
+    },
+    {
+      "room-name": "Chambre",
+      "type": "bedroom",
+      "beds": []
+    }
+  ],
+  "amenities": [
+    {
+      "id": "PORTABLE_AIR_CONDITIONING",
+      "name": "Climatisation mobile",
+      "description": "Pour les fortes chaleurs",
+      "category": "Confort & travail",
+      "relevance": 70,
+      "pinned": false
+    },
+    {
+      "id": "REVERSIBLE_AIR_CONDITIONING",
+      "name": "Climatisation réversible",
+      "description": "Chaud / froid",
+      "category": "Confort & travail",
+      "relevance": 80,
+      "pinned": false,
+      "perkEligible": true,
+      "perkScore": 80,
+      "perkPriority": 0
+    },
+    {
+      "id": "WIFI",
+      "name": "Wifi",
+      "description": "Connexion internet",
+      "category": "Confort & travail",
+      "relevance": 95,
+      "pinned": false,
+      "perkEligible": true,
+      "perkScore": 91,
+      "perkPriority": 0
+    },
+    {
+      "id": "EQUIPPED_KITCHEN",
+      "name": "Cuisine équipée",
+      "description": "Plaques, four, vaisselle…",
+      "category": "Cuisine & boissons",
+      "relevance": 85,
+      "pinned": false,
+      "perkEligible": true,
+      "perkScore": 77,
+      "perkPriority": 0
+    },
+    {
+      "id": "OUTDOOR_DINING_AREA",
+      "name": "Espace repas extérieur",
+      "description": "Table / chaises",
+      "category": "Extérieur & détente",
+      "relevance": 65,
+      "pinned": false
+    },
+    {
+      "id": "SMOKE_ALARM",
+      "name": "Détecteur de fumée",
+      "description": "Sécurité",
+      "category": "Sécurité",
+      "relevance": 70,
+      "pinned": false
+    },
+    {
+      "id": "FIRE_EXTINGUISHER",
+      "name": "Extincteur",
+      "description": "Accessible",
+      "category": "Sécurité",
+      "relevance": 55,
+      "pinned": false
+    },
+    {
+      "id": "BOARD_GAMES",
+      "name": "Jeux de société",
+      "description": "Pour les soirées",
+      "category": "Vie à bord",
+      "relevance": 50,
+      "pinned": false
+    },
+    {
+      "id": "SMART_TV",
+      "name": "TV connectée",
+      "description": "Netflix / YouTube",
+      "category": "Vie à bord",
+      "relevance": 60,
+      "pinned": false
+    },
+    {
+      "id": "PANORAMIC_LAKE_VIEW",
+      "name": "Vue panoramique",
+      "description": "Belle vue",
+      "category": "Vue & accès",
+      "relevance": 80,
+      "pinned": false,
+      "perkEligible": true,
+      "perkScore": 93,
+      "perkPriority": 0
+    },
+    {
+      "id": "PARKING_FOR_TWO_CARS",
+      "name": "Parking 2 voitures",
+      "description": "Sur la propriété",
+      "category": "Arrivée & mobilité",
+      "relevance": 70,
+      "pinned": false
+    },
+    {
+      "id": "HAIR_DRYER",
+      "name": "Sèche-cheveux",
+      "description": "Dans la salle de bain",
+      "category": "Confort & travail",
+      "relevance": 55,
+      "pinned": false
+    },
+    {
+      "id": "LINENS_PROVIDED",
+      "name": "Linge de lit et de bain",
+      "description": "Draps et serviettes fournis",
+      "category": "Confort & travail",
+      "relevance": 75,
+      "pinned": false
+    },
+    {
+      "id": "SELF_CHECK_IN",
+      "name": "Arrivée autonome",
+      "description": "Boîte à clés / entrée autonome",
+      "category": "Sécurité",
+      "relevance": 70,
+      "pinned": false,
+      "perkEligible": true,
+      "perkScore": 94,
+      "perkPriority": 0
+    },
+    {
+      "id": "CARBON_MONOXIDE_ALARM",
+      "name": "Détecteur monoxyde",
+      "description": "Sécurité",
+      "category": "Sécurité",
+      "relevance": 50,
+      "pinned": false
+    },
+    {
+      "id": "FIRST_AID_KIT",
+      "name": "Kit de secours",
+      "description": "Premiers soins",
+      "category": "Sécurité",
+      "relevance": 60,
+      "pinned": false
+    },
+    {
+      "id": "SMART_LOCK",
+      "name": "Serrure connectée",
+      "description": "Entrée autonome",
+      "category": "Sécurité",
+      "relevance": 65,
+      "pinned": false,
+      "perkEligible": true,
+      "perkScore": 87,
+      "perkPriority": 0
+    },
+    {
+      "id": "KETTLE_AND_TEA",
+      "name": "Bouilloire + thés",
+      "description": "Sélection de thés",
+      "category": "Cuisine & boissons",
+      "relevance": 55,
+      "pinned": false
+    },
+    {
+      "id": "NESPRESSO_COFFEE_MACHINE",
+      "name": "Machine à café Nespresso",
+      "description": "Capsules incluses",
+      "category": "Cuisine & boissons",
+      "relevance": 70,
+      "pinned": false
+    },
+    {
+      "id": "FILTER_COFFEE_MAKER",
+      "name": "Machine à café filtre",
+      "description": "Café moulu de bienvenue",
+      "category": "Cuisine & boissons",
+      "relevance": 60,
+      "pinned": false
+    },
+    {
+      "id": "SPACE_HEATER",
+      "name": "Chauffage d'appoint",
+      "description": "Convecteurs électriques",
+      "category": "Confort & travail",
+      "relevance": 60,
+      "pinned": false
+    }
+  ],
+  "latitude": 43.5162703,
+  "longitude": 1.4961132,
+  "lat": 43.5162703,
+  "lng": 1.4961132,
+  "zoom": 13,
+  "description": "<h2>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><p><em>En terme de comodité, nous sommes en face de la station de métro.</em></p><h2>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><h2><em>En terme de comodité, nous sommes en face de la station de métro.</em>Logement vue merde</h2><p><strong>Bonjour, </strong></p><p>Je mets à disposition pour mes futurs locataire ce magnifique bien d'exception avec une vue sur la merde. </p><p>Merde authentique, à cheval entre les crack-head de la gare et la chaude pisse de l'aéroport. </p><p><em>En terme de comodité, nous sommes en face de la station de métro.</em></p>",
+  "reviews-display": {
+    "indiehost": true,
+    "airbnb": true,
+    "booking": true
+  }
+}

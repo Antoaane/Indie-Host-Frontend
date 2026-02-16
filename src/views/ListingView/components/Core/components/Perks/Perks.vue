@@ -30,7 +30,7 @@ function resolveIcon(name: string) {
     <ul class="list">
       <li
         v-for="perk in data"
-        :key="perk.name"
+        :key="`${perk.source ?? 'perk'}:${perk.sourceId ?? perk.name}`"
         class="item"
       >
         <component
@@ -44,6 +44,7 @@ function resolveIcon(name: string) {
             v-html="perk.name"
           />
           <p
+            v-if="perk.description"
             class="description"
             v-html="perk.description"
           />
