@@ -1,0 +1,49 @@
+{
+  "price": 50,
+  "fees": [],
+  "booked-days": [
+    {
+      "start": "2026-03-22",
+      "end": "2026-03-24"
+    }
+  ],
+  "reservations": [
+    {
+      "id": "reservation-listing-1771339902269-2026-03-22-2026-03-24-ead1bdcd",
+      "start": "2026-03-22",
+      "end": "2026-03-24",
+      "nights": 2,
+      "guestName": "Voyageur",
+      "message": "",
+      "guests": {
+        "adults": 2,
+        "children": 0,
+        "infants": 0,
+        "pets": 0,
+        "pmr": 0
+      },
+      "payment": {
+        "total": 100,
+        "deposit": 100,
+        "balance": 0,
+        "status": "pending",
+        "method": "Carte"
+      },
+      "createdAt": "2026-02-17T14:53:05.309Z"
+    }
+  ],
+  "pricing": {
+    "deposit": {
+      "type": "info",
+      "amount": 0
+    },
+    "weekend": {
+      "enabled": true,
+      "price": 60
+    },
+    "extraGuests": {
+      "price": 1,
+      "threshold": 20
+    }
+  }
+}
