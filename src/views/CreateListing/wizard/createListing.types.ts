@@ -9,7 +9,10 @@ export type CreateListingStep = {
   label: string
   description: string
   component: Component
-  props: (draft: RawListingBundle) => Record<string, unknown>
+  props: (
+    draft: RawListingBundle,
+    context?: { validationError?: string | null },
+  ) => Record<string, unknown>
   acceptsPatch?: boolean
   validate?: (draft: RawListingBundle) => string | null
 }

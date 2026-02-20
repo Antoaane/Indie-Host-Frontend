@@ -10,6 +10,7 @@ import type { CreateListingStep } from '@/views/CreateListing/wizard/createListi
 const props = defineProps<{
   step: CreateListingStep
   draft: RawListingBundle
+  stepError?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -21,6 +22,11 @@ function forwardPatch(patch: DraftPatch) {
 }
 
 const listeners = computed(() => (props.step.acceptsPatch ? { patch: forwardPatch } : {}))
+const stepProps = computed(() =>
+  props.step.props(props.draft, {
+    validationError: props.stepError ?? null,
+  }),
+)
 </script>
 
 <template>
@@ -35,7 +41,7 @@ const listeners = computed(() => (props.step.acceptsPatch ? { patch: forwardPatc
       >
         <component
           :is="props.step.component"
-          v-bind="props.step.props(props.draft)"
+          v-bind="stepProps"
           v-on="listeners"
         />
       </div>

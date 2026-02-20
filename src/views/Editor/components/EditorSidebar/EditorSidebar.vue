@@ -3,6 +3,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
+import BaseSidebar from '@/components/layouts/BaseSidebar.vue'
 import EditorSidebarNav from '@/views/Editor/components/EditorSidebar/EditorSidebarNav.vue'
 import ListingPanels from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/ListingPanels.vue'
 import PricingPanels from '@/views/Editor/components/EditorSidebar/panels/PricingPanels/PricingPanels.vue'
@@ -105,50 +106,49 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <aside
+  <BaseSidebar
     class="editor-sidebar"
     :class="{ 'is-action-running': isActionRunning }"
+    body-scrollable
   >
-    <Transition name="editor-sidebar-feedback">
-      <p
-        v-if="successFeedback"
-        class="action-feedback"
-        role="status"
-        aria-live="polite"
-      >
-        {{ successFeedback === 'save' ? sidebarContent.success.save : sidebarContent.success.publish }}
-      </p>
+    <template #header>
+      <Transition name="editor-sidebar-feedback">
+        <p
+          v-if="successFeedback"
+          class="action-feedback"
+          role="status"
+          aria-live="polite"
+        >
+          {{ successFeedback === 'save' ? sidebarContent.success.save : sidebarContent.success.publish }}
+        </p>
+      </Transition>
+
+      <EditorSidebarNav v-model="tab" />
+    </template>
+
+    <Transition
+      name="editor-sidebar-panels"
+      mode="out-in"
+    >
+      <ListingPanels
+        v-if="tab === 'listing'"
+        :draft="props.draft"
+        @patch="handlePatch"
+      />
+      <PricingPanels
+        v-else-if="tab === 'pricing'"
+        :draft="props.draft"
+        @patch="handlePatch"
+      />
+      <ArrivalPanels
+        v-else
+        :core="props.draft.core"
+        :arrival="props.draft.arrival"
+        @patch="handlePatch"
+      />
     </Transition>
 
-    <div class="header">
-      <EditorSidebarNav v-model="tab" />
-    </div>
-
-    <div class="body">
-      <Transition
-        name="editor-sidebar-panels"
-        mode="out-in"
-      >
-        <ListingPanels
-          v-if="tab === 'listing'"
-          :draft="props.draft"
-          @patch="handlePatch"
-        />
-        <PricingPanels
-          v-else-if="tab === 'pricing'"
-          :draft="props.draft"
-          @patch="handlePatch"
-        />
-        <ArrivalPanels
-          v-else
-          :core="props.draft.core"
-          :arrival="props.draft.arrival"
-          @patch="handlePatch"
-        />
-      </Transition>
-    </div>
-
-    <div class="footer">
+    <template #footer>
       <p
         v-if="error"
         class="error"
@@ -175,8 +175,8 @@ onBeforeUnmount(() => {
           </button>
         </div>
       </div>
-    </div>
-  </aside>
+    </template>
+  </BaseSidebar>
 </template>
 
 <style lang="scss">
@@ -184,29 +184,9 @@ onBeforeUnmount(() => {
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
-@use '@/styles/variables/effects' as effects;
 
 .editor-sidebar {
-  flex: 0 0 auto;
-  min-width: 0;
-  position: relative;
-
-  display: flex;
-  flex-direction: column;
-
-  @include effects.big-shadow();
-
-  @include min-width(lg) {
-    min-width: 24rem;
-    max-width: 36rem;
-    width: 30vw;
-  }
-
-  > .header {
-    padding-bottom: var(--layout-gap-md);
-  }
-
-  > .action-feedback {
+  .action-feedback {
     margin: 0;
     padding: 0.45rem 0.75rem;
 
@@ -227,20 +207,13 @@ onBeforeUnmount(() => {
     pointer-events: none;
   }
 
-  > .body {
-    // margin: var(--layout-gap-sm) 0;
-    min-height: 0;
-
-    flex: 1 1 auto;
-    overflow: auto;
-    scrollbar-width: none;
-
+  > .base-sidebar__body {
     border-radius: borders.$rounded-xl;
   }
 
-  > .footer {
+  > .base-sidebar__footer {
     flex: 0 0 auto;
-    padding: var(--layout-gap-sm) 0;
+    padding-bottom: var(--layout-gap-sm);
     border-top: 1px solid rgba($secondary, 0.08);
 
     > .actions {
@@ -258,8 +231,8 @@ onBeforeUnmount(() => {
   }
 
   &.is-action-running {
-    > .header,
-    > .body {
+    > .base-sidebar__header,
+    > .base-sidebar__body {
       pointer-events: none;
       user-select: none;
     }
@@ -283,7 +256,9 @@ onBeforeUnmount(() => {
 
 .editor-sidebar-feedback-enter-active,
 .editor-sidebar-feedback-leave-active {
-  transition: opacity 180ms ease, transform 180ms ease;
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
 }
 
 .editor-sidebar-feedback-enter-from,

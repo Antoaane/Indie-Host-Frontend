@@ -1,9 +1,10 @@
-<!-- File: src/views/Management/components/ManagementListings.vue -->
+<!-- File: src/views/Management/components/ManagementSidebar.vue -->
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { LayoutGrid, Search } from 'lucide-vue-next'
+import { Search } from 'lucide-vue-next'
 
+import BaseSidebar from '@/components/layouts/BaseSidebar.vue'
 import type { UserListingCard } from '@/views/Editor/utils/listingApi'
 import type { Reservation } from '@/views/Management/utils/managementReservations'
 
@@ -70,19 +71,18 @@ function handleSelect(listingId: string) {
 </script>
 
 <template>
-  <aside class="management-listings">
-    <div class="toolbar">
-      <div class="search">
-        <Search class="icon" />
-        <input
-          v-model="query"
-          type="search"
-          placeholder="Recherchez une annonce"
-        />
-      </div>
-    </div>
-
+  <BaseSidebar class="management-sidebar">
     <div class="scroll-container">
+      <div class="toolbar">
+        <div class="search">
+          <Search class="icon" />
+          <input
+            v-model="query"
+            type="search"
+            placeholder="Recherchez une annonce"
+          />
+        </div>
+      </div>
       <div class="list">
         <button
           v-for="listing in filtered"
@@ -120,21 +120,18 @@ function handleSelect(listingId: string) {
       </div>
     </div>
 
-    <div
-      v-if="props.isLoading"
-      class="state"
+    <template
+      v-if="props.isLoading || props.error"
+      #footer
     >
-      Chargement des annonces&hellip;
-    </div>
-    <div
-      v-else-if="props.error"
-      class="state"
-    >
-      Impossible de charger les annonces.
-    </div>
-  </aside>
+      <div class="state">
+        <template v-if="props.isLoading"> Chargement des annonces&hellip; </template>
+        <template v-else> Impossible de charger les annonces. </template>
+      </div>
+    </template>
+  </BaseSidebar>
 </template>
 
 <style lang="scss">
-@use '@/views/Management/components/management-listings.scss';
+@use '@/views/Management/components/management-sidebar.scss';
 </style>

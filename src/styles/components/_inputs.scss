@@ -136,7 +136,7 @@ $input-sizes: (
   @extend %input-icon;
   gap: input-size($compact, gap);
   min-height: input-size($compact, min-height);
-  border-radius: borders.$rounded;
+  border-radius: borders.$rounded-md;
   border-color: input-token($theme, border);
   background-color: input-token($theme, bg);
   color: input-token($theme, text);

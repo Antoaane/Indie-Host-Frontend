@@ -1,16 +1,16 @@
 // File: src/views/CreateListing/wizard/createListingSteps.ts
 
-import TitlePanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/TitlePanel.vue'
-import LocationPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/LocationPanel.vue'
-import CapacityPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/CapacityPanel.vue'
-import RoomsPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/RoomsPanel.vue'
-import AmenitiesPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/AmenitiesPanel.vue'
-import GalleryPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/GalleryPanel.vue'
-import DescriptionPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/DescriptionPanel.vue'
-import BasePricingPanel from '@/views/Editor/components/EditorSidebar/panels/PricingPanels/BasePricingPanel.vue'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
-import CreateListingSummarySlide from '@/views/CreateListing/components/CreateListingSummarySlide.vue'
 import type { RawListingBundle } from '@/domain/listings/types'
+import CreateAmenitiesStepPanel from '@/views/CreateListing/components/panels/CreateAmenitiesStepPanel.vue'
+import CreateBasePricingStepPanel from '@/views/CreateListing/components/panels/CreateBasePricingStepPanel.vue'
+import CreateCapacityStepPanel from '@/views/CreateListing/components/panels/CreateCapacityStepPanel.vue'
+import CreateDescriptionStepPanel from '@/views/CreateListing/components/panels/CreateDescriptionStepPanel.vue'
+import CreateGalleryStepPanel from '@/views/CreateListing/components/panels/CreateGalleryStepPanel.vue'
+import CreateLocationStepPanel from '@/views/CreateListing/components/panels/CreateLocationStepPanel.vue'
+import CreateListingPreviewStepPanel from '@/views/CreateListing/components/panels/CreateListingPreviewStepPanel.vue'
+import CreateRoomsStepPanel from '@/views/CreateListing/components/panels/CreateRoomsStepPanel.vue'
+import CreateTitleStepPanel from '@/views/CreateListing/components/panels/CreateTitleStepPanel.vue'
 import type { CreateListingStep } from '@/views/CreateListing/wizard/createListing.types'
 import { asNumber, cleanText, stripHtml } from '@/views/CreateListing/wizard/createListingDraft'
 
@@ -72,22 +72,14 @@ export function createListingSteps(): CreateListingStep[] {
 
   return [
     {
-      id: 'title',
-      label: listingContent.title.title,
-      description: listingContent.title.subtitle,
-      component: TitlePanel,
-      props: (draft) => ({ core: draft.core }),
-      acceptsPatch: true,
-      validate: validateTitle,
-    },
-    {
       id: 'location',
       label: listingContent.location.title,
       description: listingContent.location.subtitle,
-      component: LocationPanel,
-      props: (draft) => ({
+      component: CreateLocationStepPanel,
+      props: (draft, context) => ({
         core: draft.core,
         requirePreciseAddress: true,
+        validationError: context?.validationError ?? null,
       }),
       acceptsPatch: true,
       validate: validateLocation,
@@ -96,8 +88,11 @@ export function createListingSteps(): CreateListingStep[] {
       id: 'capacity',
       label: listingContent.capacity.title,
       description: listingContent.capacity.subtitle,
-      component: CapacityPanel,
-      props: (draft) => ({ core: draft.core }),
+      component: CreateCapacityStepPanel,
+      props: (draft, context) => ({
+        core: draft.core,
+        validationError: context?.validationError ?? null,
+      }),
       acceptsPatch: true,
       validate: validateCapacity,
     },
@@ -105,33 +100,57 @@ export function createListingSteps(): CreateListingStep[] {
       id: 'rooms',
       label: listingContent.rooms.title,
       description: listingContent.rooms.subtitle,
-      component: RoomsPanel,
-      props: (draft) => ({ core: draft.core }),
+      component: CreateRoomsStepPanel,
+      props: (draft, context) => ({
+        core: draft.core,
+        validationError: context?.validationError ?? null,
+      }),
       acceptsPatch: true,
     },
     {
       id: 'amenities',
       label: listingContent.amenities.title,
       description: listingContent.amenities.subtitle,
-      component: AmenitiesPanel,
-      props: (draft) => ({ core: draft.core }),
+      component: CreateAmenitiesStepPanel,
+      props: (draft, context) => ({
+        core: draft.core,
+        validationError: context?.validationError ?? null,
+      }),
       acceptsPatch: true,
     },
     {
       id: 'gallery',
       label: listingContent.gallery.title,
       description: listingContent.gallery.subtitle,
-      component: GalleryPanel,
-      props: (draft) => ({ medias: draft.medias }),
+      component: CreateGalleryStepPanel,
+      props: (draft, context) => ({
+        medias: draft.medias,
+        validationError: context?.validationError ?? null,
+      }),
       acceptsPatch: true,
       validate: validateMedia,
+    },
+    {
+      id: 'title',
+      label: listingContent.title.title,
+      description: listingContent.title.subtitle,
+      component: CreateTitleStepPanel,
+      props: (draft, context) => ({
+        core: draft.core,
+        validationError: context?.validationError ?? null,
+      }),
+      acceptsPatch: true,
+      validate: validateTitle,
     },
     {
       id: 'description',
       label: listingContent.description.title,
       description: listingContent.description.subtitle,
-      component: DescriptionPanel,
-      props: (draft) => ({ core: draft.core }),
+      component: CreateDescriptionStepPanel,
+      props: (draft, context) => ({
+        core: draft.core,
+        validationError: context?.validationError ?? null,
+      }),
       acceptsPatch: true,
       validate: validateDescription,
     },
@@ -139,17 +158,22 @@ export function createListingSteps(): CreateListingStep[] {
       id: 'pricing',
       label: pricingContent.base.title,
       description: pricingContent.base.subtitle,
-      component: BasePricingPanel,
-      props: (draft) => ({ bookings: draft.bookings }),
+      component: CreateBasePricingStepPanel,
+      props: (draft, context) => ({
+        bookings: draft.bookings,
+        validationError: context?.validationError ?? null,
+      }),
       acceptsPatch: true,
       validate: validatePricing,
     },
     {
-      id: 'summary',
-      label: 'Validation finale',
-      description: 'Vérifie les données, puis crée ton annonce.',
-      component: CreateListingSummarySlide,
-      props: (draft) => ({ draft }),
+      id: 'preview',
+      label: 'Aperçu final',
+      description: 'Visualise ton annonce telle qu’elle sera affichée avant de terminer.',
+      component: CreateListingPreviewStepPanel,
+      props: (draft) => ({
+        rawListing: draft,
+      }),
     },
   ]
 }

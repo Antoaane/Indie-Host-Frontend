@@ -1,38 +1,40 @@
-/* File: src/views/Management/components/management-listings.scss */
+/* File: src/views/Management/components/management-sidebar.scss */
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
 @use '@/styles/variables/effects' as effects;
 @use '@/styles/components/inputs' as inputs;
 
-.management-listings {
+.management-sidebar {
   height: 100%;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  background: $accent;
-  border-radius: borders.$rounded-xl;
-  overflow: hidden;
 
-  >.toolbar {
-    padding: var(--layout-gap-sm);
-    border-bottom: 1px solid rgba($secondary, 0.08);
+  >.base-sidebar__body {
+    display: flex;
+    min-height: 0;
 
-    >.search {
-      @include inputs.search($theme: accent);
-    }
-  }
+    background: var(--base-sidebar-surface, #{$accent});
+    border-radius: borders.$rounded-xl;
 
-  >.scroll-container {
-    flex: 1 1 auto;
-    overflow: auto;
-    scrollbar-width: none;
+    >.scroll-container {
+      flex: 1 1 auto;
+      overflow: auto;
+      scrollbar-width: none;
 
-    >.list {
-      padding: var(--layout-gap-md);
-      display: flex;
-      flex-direction: column;
-      gap: var(--layout-gap-sm);
+      >.toolbar {
+        padding: var(--layout-gap-sm);
+        border-bottom: 1px solid rgba($secondary, 0.08);
+
+        >.search {
+          @include inputs.search($theme: accent);
+        }
+      }
+
+      >.list {
+        padding: var(--layout-gap-md);
+        display: flex;
+        flex-direction: column;
+        gap: var(--layout-gap-sm);
+      }
     }
   }
 
@@ -109,10 +111,13 @@
     }
   }
 
-  >.state {
-    padding: var(--layout-gap-sm);
-    text-align: center;
-    font-weight: 400;
-    color: rgba($secondary, 0.6);
+  >.base-sidebar__footer {
+    >.state {
+      padding: var(--layout-gap-sm);
+      text-align: center;
+      font-weight: 400;
+      color: rgba($secondary, 0.6);
+      border-top: 1px solid rgba($secondary, 0.08);
+    }
   }
 }

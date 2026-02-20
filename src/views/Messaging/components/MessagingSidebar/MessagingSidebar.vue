@@ -4,6 +4,7 @@
 import { computed, ref } from 'vue'
 import { Search } from 'lucide-vue-next'
 
+import BaseSidebar from '@/components/layouts/BaseSidebar.vue'
 import type { MessagingConversation } from '@/views/Messaging/types/messaging'
 
 const props = defineProps<{
@@ -51,20 +52,19 @@ const filteredConversations = computed(() => {
 </script>
 
 <template>
-  <aside class="messaging-sidebar">
-    <div class="toolbar">
-      <div class="search">
-        <Search class="icon" />
-        <input
-          v-model="query"
-          type="search"
-          :placeholder="props.searchPlaceholder"
-          aria-label="Rechercher une conversation"
-        />
-      </div>
-    </div>
-
+  <BaseSidebar class="messaging-sidebar">
     <div class="scroll-container">
+      <div class="toolbar">
+        <div class="search">
+          <Search class="icon" />
+          <input
+            v-model="query"
+            type="search"
+            :placeholder="props.searchPlaceholder"
+            aria-label="Rechercher une conversation"
+          />
+        </div>
+      </div>
       <ul class="conversation-list">
         <li
           v-for="conversation in filteredConversations"
@@ -116,25 +116,21 @@ const filteredConversations = computed(() => {
       </ul>
     </div>
 
-    <div
-      v-if="props.isLoading"
-      class="state"
+    <template
+      v-if="props.isLoading || props.error || !filteredConversations.length"
+      #footer
     >
-      Chargement des conversations...
-    </div>
-    <div
-      v-else-if="props.error"
-      class="state"
-    >
-      {{ props.error }}
-    </div>
-    <div
-      v-else-if="!filteredConversations.length"
-      class="state"
-    >
-      {{ props.searchEmptyLabel }}
-    </div>
-  </aside>
+      <div class="state">
+        <template v-if="props.isLoading"> Chargement des conversations... </template>
+        <template v-else-if="props.error">
+          {{ props.error }}
+        </template>
+        <template v-else>
+          {{ props.searchEmptyLabel }}
+        </template>
+      </div>
+    </template>
+  </BaseSidebar>
 </template>
 
 <style lang="scss">

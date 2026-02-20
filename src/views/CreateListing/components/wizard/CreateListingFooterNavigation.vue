@@ -1,13 +1,18 @@
 <!-- File: src/views/CreateListing/components/wizard/CreateListingFooterNavigation.vue -->
 
 <script setup lang="ts">
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   isLastStep: boolean
   canGoBack: boolean
   canGoNext: boolean
   canSubmit: boolean
   isSubmitting: boolean
-}>()
+  submitLabel?: string
+  submitLoadingLabel?: string
+}>(), {
+  submitLabel: 'Créer l’annonce',
+  submitLoadingLabel: 'Création...',
+})
 
 const emit = defineEmits<{
   (e: 'previous'): void
@@ -48,9 +53,15 @@ const emit = defineEmits<{
       <button
         type="button"
         :disabled="!props.canSubmit"
+        :class="{ 'is-loading': props.isSubmitting }"
         @click="emit('submit')"
       >
-        {{ props.isSubmitting ? 'Création...' : 'Créer l’annonce' }}
+        <span
+          v-if="props.isSubmitting"
+          class="loading-dot"
+          aria-hidden="true"
+        />
+        {{ props.isSubmitting ? props.submitLoadingLabel : props.submitLabel }}
       </button>
     </div>
   </footer>

@@ -186,6 +186,21 @@
       gap: var(--layout-gap-sm);
       padding-bottom: var(--layout-gap-xs);
       background-color: #00000000 !important;
+
+      .is-loading {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+      }
+
+      .loading-dot {
+        width: 0.52rem;
+        height: 0.52rem;
+        border-radius: 999px;
+        background: currentColor;
+        opacity: 0.75;
+        animation: create-listing-loading-pulse 900ms ease-in-out infinite;
+      }
     }
   }
 }
@@ -205,4 +220,17 @@
 .create-slide-leave-to {
   opacity: 0;
   transform: translateX(-24px);
+}
+
+@keyframes create-listing-loading-pulse {
+  0%,
+  100% {
+    transform: scale(0.8);
+    opacity: 0.45;
+  }
+
+  50% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }

@@ -33,20 +33,12 @@
     }
   }
 
-  .panel-left {
+  .management-sidebar {
     flex: 0 0 auto;
     min-width: 0;
+    min-height: 0;
     display: flex;
     flex-direction: column;
-
-    @include min-width(lg) {
-      width: 24rem;
-      max-width: 32rem;
-    }
-
-    >.management-listings {
-      flex: 1 1 auto;
-    }
   }
 
   .stage {

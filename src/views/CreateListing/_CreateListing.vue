@@ -45,7 +45,7 @@ const {
 })
 
 const stepsCount = computed(() => stepItems.value.length)
-const currentError = computed(() => stepError.value || submitState.error)
+const submitError = computed(() => submitState.error)
 </script>
 
 <template>
@@ -69,14 +69,15 @@ const currentError = computed(() => stepError.value || submitState.error)
     <CreateListingStage
       :step="currentStep"
       :draft="draft"
+      :step-error="stepError"
       @patch="applyDraftPatch"
     />
 
     <p
-      v-if="currentError"
+      v-if="submitError"
       class="error"
     >
-      {{ currentError }}
+      {{ submitError }}
     </p>
 
     <CreateListingFooterNavigation
@@ -85,6 +86,8 @@ const currentError = computed(() => stepError.value || submitState.error)
       :can-go-next="canGoNext"
       :can-submit="canSubmit"
       :is-submitting="submitState.isSubmitting"
+      submit-label="Consulter mon annonce"
+      submit-loading-label="Création de l’annonce..."
       @previous="goToPreviousStep"
       @next="goToNextStep"
       @submit="submitCreateListing"

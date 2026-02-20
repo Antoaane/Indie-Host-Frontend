@@ -13,7 +13,7 @@ import type { UserListingCard } from '@/views/Editor/utils/listingApi'
 import { deriveBookedDaysFromReservations, normalizeBookedDays, normalizeReservations } from '@/domain/listings/bookings'
 import type { RawBookings } from '@/domain/listings/types'
 import type { Reservation } from '@/views/Management/utils/managementReservations'
-import ManagementListings from '@/views/Management/components/ManagementListings.vue'
+import ManagementSidebar from '@/views/Management/components/ManagementSidebar.vue'
 import ManagementReservationSlider from '@/views/Management/components/ManagementReservationSlider.vue'
 import { buildReservationsForListing, findClosestReservation, findClosestReservationForListing, findLatestReservationForListing } from '@/views/Management/utils/managementReservations'
 
@@ -453,16 +453,14 @@ const paymentStatusClass = computed(() => {
     class="management"
   >
     <div class="layout">
-      <aside class="panel-left">
-        <ManagementListings
-          :listings="listings"
-          :isLoading="listingsStatus.isLoading"
-          :error="listingsStatus.error"
-          :selectedListingId="selectedListingId"
-          :latestReservationByListingId="latestReservationByListingId"
-          @select="handleSelectListing"
-        />
-      </aside>
+      <ManagementSidebar
+        :listings="listings"
+        :isLoading="listingsStatus.isLoading"
+        :error="listingsStatus.error"
+        :selectedListingId="selectedListingId"
+        :latestReservationByListingId="latestReservationByListingId"
+        @select="handleSelectListing"
+      />
 
       <section class="stage">
         <div class="content">
