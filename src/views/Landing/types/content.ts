@@ -104,6 +104,30 @@ export interface JoinFormSubmit {
   icon?: string
 }
 
+export interface JoinFormValidationField {
+  minLength?: number
+  maxLength?: number
+  autocomplete?: string
+  inputMode?: 'text' | 'email' | 'tel' | 'numeric'
+  pattern?: string
+  patternTitle?: string
+}
+
+export interface JoinFormValidation {
+  fields?: {
+    text?: JoinFormValidationField
+    email?: JoinFormValidationField
+    tel?: JoinFormValidationField
+    zip?: JoinFormValidationField
+  }
+  nameAutocomplete?: {
+    first?: string
+    last?: string
+    name?: string
+    default?: string
+  }
+}
+
 export interface JoinContent {
   title: string
   description: string
@@ -116,6 +140,7 @@ export interface JoinContent {
     fields: JoinFormField[]
     groups: JoinFormGroup[]
     consents: JoinFormConsent[]
+    validation?: JoinFormValidation
     submit: JoinFormSubmit
   }
 }

@@ -340,6 +340,44 @@
           "required": true
         }
       ],
+      "validation": {
+        "fields": {
+          "text": {
+            "maxLength": 80,
+            "autocomplete": "off",
+            "inputMode": "text"
+          },
+          "email": {
+            "minLength": 5,
+            "maxLength": 160,
+            "autocomplete": "email",
+            "inputMode": "email",
+            "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+            "patternTitle": "Format attendu: nom@domaine.tld"
+          },
+          "tel": {
+            "minLength": 6,
+            "maxLength": 25,
+            "autocomplete": "tel",
+            "inputMode": "tel",
+            "pattern": "^\\+?[0-9().\\s-]{6,25}$",
+            "patternTitle": "Utilisez uniquement chiffres, espaces, parenthèses, + ou -"
+          },
+          "zip": {
+            "maxLength": 12,
+            "autocomplete": "postal-code",
+            "inputMode": "numeric",
+            "pattern": "^[0-9A-Za-z\\s-]{3,12}$",
+            "patternTitle": "Code postal invalide"
+          }
+        },
+        "nameAutocomplete": {
+          "first": "given-name",
+          "last": "family-name",
+          "name": "name",
+          "default": "off"
+        }
+      },
       "submit": {
         "label": "Envoyer",
         "icon": "SendIcon"

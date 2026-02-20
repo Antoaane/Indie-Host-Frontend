@@ -75,6 +75,12 @@
         resize: vertical;
         @include inputs.textarea($theme: base);
       }
+
+      .meta {
+        margin: 0;
+        @include little-text($thin: false);
+        color: rgba($secondary, 0.65);
+      }
     }
 
     >.delete {

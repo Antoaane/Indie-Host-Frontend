@@ -5,6 +5,7 @@ import { computed } from 'vue'
 import type { RawBookings } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
+import { clampInteger, formatValidationMessage, parseOptionalInteger } from '@/utils/inputValidation'
 
 type PricingWeekend = {
   enabled?: boolean
@@ -32,19 +33,31 @@ const emit = defineEmits<{
 const pricing = computed<PricingSettings>(() => ((props.bookings as any)?.pricing ?? {}))
 const weekend = computed<PricingWeekend>(() => pricing.value.weekend ?? {})
 const extraGuests = computed<PricingExtraGuests>(() => pricing.value.extraGuests ?? {})
+const pricingLimits = editorStatic.validation.pricing
 
-const pricePerNight = computed(() => Number(props.bookings?.price ?? 0))
+const pricePerNight = computed(() => clampMoney(props.bookings?.price))
 const weekendEnabled = computed(() => Boolean(weekend.value.enabled))
-const weekendPrice = computed(() => Number(weekend.value.price ?? 0))
-const extraGuestPrice = computed(() => Number(extraGuests.value.price ?? 0))
+const weekendPrice = computed(() => clampMoney(weekend.value.price))
+const extraGuestPrice = computed(() => clampMoney(extraGuests.value.price))
 const extraGuestThreshold = computed(() => (
-  Number.isFinite(Number(extraGuests.value.threshold)) ? Number(extraGuests.value.threshold) : null
+  Number.isFinite(Number(extraGuests.value.threshold))
+    ? clampInteger(extraGuests.value.threshold, pricingLimits.moneyMin, pricingLimits.extraGuestsThresholdMax, pricingLimits.moneyMin)
+    : null
 ))
 
 const panelContent = editorStatic.panels.pricing.base
+const baseHint = computed(() =>
+  formatValidationMessage(pricingLimits.messages.baseHint, {
+    moneyMin: pricingLimits.moneyMin,
+    moneyMax: pricingLimits.moneyMax,
+    extraGuestsThresholdMax: pricingLimits.extraGuestsThresholdMax,
+  }),
+)
 
 function setPricePerNight(next: number) {
-  emit('patch', { bookings: { price: Math.max(0, next) } })
+  const normalized = clampMoney(next)
+  if (normalized === pricePerNight.value) return
+  emit('patch', { bookings: { price: normalized } })
 }
 
 function updatePricing(next: Partial<PricingSettings>) {
@@ -59,28 +72,48 @@ function updatePricing(next: Partial<PricingSettings>) {
 }
 
 function updateWeekend(patch: Partial<PricingWeekend>) {
+  const nextPatch = {
+    ...patch,
+    ...(Object.prototype.hasOwnProperty.call(patch, 'price') ? { price: clampMoney(patch.price) } : {}),
+  }
+
   updatePricing({
     weekend: {
       ...weekend.value,
-      ...patch,
+      ...nextPatch,
     },
   })
 }
 
 function updateExtraGuests(patch: Partial<PricingExtraGuests>) {
+  const hasThreshold = Object.prototype.hasOwnProperty.call(patch, 'threshold')
+  const nextPatch = {
+    ...patch,
+    ...(Object.prototype.hasOwnProperty.call(patch, 'price') ? { price: clampMoney(patch.price) } : {}),
+    ...(hasThreshold
+      ? {
+          threshold:
+            patch.threshold === null
+              ? null
+              : clampInteger(patch.threshold, pricingLimits.moneyMin, pricingLimits.extraGuestsThresholdMax, pricingLimits.moneyMin),
+        }
+      : {}),
+  }
+
   updatePricing({
     extraGuests: {
       ...extraGuests.value,
-      ...patch,
+      ...nextPatch,
     },
   })
 }
 
 function parseOptionalNumber(raw: string): number | null {
-  const trimmed = raw.trim()
-  if (!trimmed) return null
-  const parsed = Number(trimmed)
-  return Number.isFinite(parsed) ? parsed : null
+  return parseOptionalInteger(raw, pricingLimits.moneyMin, pricingLimits.extraGuestsThresholdMax)
+}
+
+function clampMoney(value: unknown): number {
+  return clampInteger(value, pricingLimits.moneyMin, pricingLimits.moneyMax, pricingLimits.moneyMin)
 }
 </script>
 
@@ -109,9 +142,12 @@ function parseOptionalNumber(raw: string): number | null {
           <input
             class="value"
             type="number"
-            min="0"
+            :min="pricingLimits.moneyMin"
+            :max="pricingLimits.moneyMax"
+            step="1"
+            inputmode="numeric"
             :value="pricePerNight"
-            @input="setPricePerNight(Number(($event.target as HTMLInputElement).value))"
+            @input="setPricePerNight(($event.target as HTMLInputElement).valueAsNumber)"
           />
           <div class="btn">
             <button
@@ -145,7 +181,7 @@ function parseOptionalNumber(raw: string): number | null {
           <div class="btn">
             <button
               type="button"
-              @click="updateWeekend({ price: Math.max(0, weekendPrice - 1) })"
+              @click="updateWeekend({ price: Math.max(pricingLimits.moneyMin, weekendPrice - 1) })"
             >
               −
             </button>
@@ -153,9 +189,12 @@ function parseOptionalNumber(raw: string): number | null {
           <input
             class="value"
             type="number"
-            min="0"
+            :min="pricingLimits.moneyMin"
+            :max="pricingLimits.moneyMax"
+            step="1"
+            inputmode="numeric"
             :value="weekendPrice"
-            @input="updateWeekend({ price: Math.max(0, Number(($event.target as HTMLInputElement).value)) })"
+            @input="updateWeekend({ price: ($event.target as HTMLInputElement).valueAsNumber })"
           />
           <div class="btn">
             <button
@@ -178,7 +217,7 @@ function parseOptionalNumber(raw: string): number | null {
             <div class="btn">
               <button
                 type="button"
-                @click="updateExtraGuests({ price: Math.max(0, extraGuestPrice - 1) })"
+                @click="updateExtraGuests({ price: Math.max(pricingLimits.moneyMin, extraGuestPrice - 1) })"
               >
                 −
               </button>
@@ -186,9 +225,12 @@ function parseOptionalNumber(raw: string): number | null {
             <input
               class="value"
               type="number"
-              min="0"
+              :min="pricingLimits.moneyMin"
+              :max="pricingLimits.moneyMax"
+              step="1"
+              inputmode="numeric"
               :value="extraGuestPrice"
-              @input="updateExtraGuests({ price: Math.max(0, Number(($event.target as HTMLInputElement).value)) })"
+              @input="updateExtraGuests({ price: ($event.target as HTMLInputElement).valueAsNumber })"
             />
             <div class="btn">
               <button
@@ -203,13 +245,19 @@ function parseOptionalNumber(raw: string): number | null {
             <input
               :value="extraGuestThreshold ?? ''"
               type="number"
-              min="0"
+              :min="pricingLimits.moneyMin"
+              :max="pricingLimits.extraGuestsThresholdMax"
+              step="1"
+              inputmode="numeric"
               :placeholder="panelContent.extraGuestsPlaceholder"
               @input="updateExtraGuests({ threshold: parseOptionalNumber(($event.target as HTMLInputElement).value) })"
             />
           </div>
         </div>
       </div>
+      <p class="hint">
+        {{ baseHint }}
+      </p>
     </div>
   </section>
 </template>
@@ -258,6 +306,12 @@ function parseOptionalNumber(raw: string): number | null {
       > .input {
         @include inputs.field($theme: base);
       }
+    }
+
+    .hint {
+      margin: 0;
+      @include little-text($thin: false);
+      color: rgba($secondary, 0.65);
     }
   }
 }

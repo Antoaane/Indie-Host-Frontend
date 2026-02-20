@@ -5,6 +5,7 @@ import { computed } from 'vue'
 import type { RawBookings } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
+import { clampInteger, formatValidationMessage, parseOptionalInteger } from '@/utils/inputValidation'
 
 type PricingStay = {
   minNights?: number | null
@@ -27,12 +28,31 @@ const emit = defineEmits<{
 
 const pricing = computed<PricingSettings>(() => (props.bookings as any)?.pricing ?? {})
 const stay = computed<PricingStay>(() => pricing.value.stay ?? {})
+const pricingLimits = editorStatic.validation.pricing
 
-const minNights = computed(() => Math.max(1, Number(stay.value.minNights ?? 1)))
-const maxNights = computed(() => (Number.isFinite(Number(stay.value.maxNights)) ? Number(stay.value.maxNights) : null))
-const weeklyDiscount = computed(() => Number(stay.value.weeklyDiscount ?? 0))
-const monthlyDiscount = computed(() => Number(stay.value.monthlyDiscount ?? 0))
+const minNights = computed(() =>
+  clampInteger(stay.value.minNights, pricingLimits.minNights, pricingLimits.maxNights, pricingLimits.minNights),
+)
+const maxNights = computed(() =>
+  Number.isFinite(Number(stay.value.maxNights))
+    ? clampInteger(stay.value.maxNights, pricingLimits.minNights, pricingLimits.maxNights, pricingLimits.minNights)
+    : null,
+)
+const weeklyDiscount = computed(() =>
+  clampPercent(Number(stay.value.weeklyDiscount ?? 0)),
+)
+const monthlyDiscount = computed(() =>
+  clampPercent(Number(stay.value.monthlyDiscount ?? 0)),
+)
 const panelContent = editorStatic.panels.pricing.stay
+const stayHint = computed(() =>
+  formatValidationMessage(pricingLimits.messages.stayHint, {
+    minNights: pricingLimits.minNights,
+    maxNights: pricingLimits.maxNights,
+    discountMin: pricingLimits.discountMin,
+    discountMax: pricingLimits.discountMax,
+  }),
+)
 
 function updatePricing(next: Partial<PricingSettings>) {
   emit('patch', {
@@ -46,28 +66,71 @@ function updatePricing(next: Partial<PricingSettings>) {
 }
 
 function updateStay(patch: Partial<PricingStay>) {
+  const nextPatch: Partial<PricingStay> = {
+    ...patch,
+    ...(Object.prototype.hasOwnProperty.call(patch, 'minNights')
+      ? {
+          minNights: clampInteger(
+            patch.minNights,
+            pricingLimits.minNights,
+            pricingLimits.maxNights,
+            pricingLimits.minNights,
+          ),
+        }
+      : {}),
+    ...(Object.prototype.hasOwnProperty.call(patch, 'maxNights')
+      ? {
+          maxNights:
+            patch.maxNights === null
+              ? null
+              : clampInteger(
+                  patch.maxNights,
+                  pricingLimits.minNights,
+                  pricingLimits.maxNights,
+                  pricingLimits.minNights,
+                ),
+        }
+      : {}),
+    ...(Object.prototype.hasOwnProperty.call(patch, 'weeklyDiscount')
+      ? { weeklyDiscount: clampPercent(Number(patch.weeklyDiscount)) }
+      : {}),
+    ...(Object.prototype.hasOwnProperty.call(patch, 'monthlyDiscount')
+      ? { monthlyDiscount: clampPercent(Number(patch.monthlyDiscount)) }
+      : {}),
+  }
+
+  const nextStay = {
+    ...stay.value,
+    ...nextPatch,
+  }
+
+  const normalizedMinNights = clampInteger(
+    nextStay.minNights,
+    pricingLimits.minNights,
+    pricingLimits.maxNights,
+    pricingLimits.minNights,
+  )
+  const normalizedMaxNights =
+    nextStay.maxNights === null || nextStay.maxNights === undefined
+      ? null
+      : clampInteger(nextStay.maxNights, normalizedMinNights, pricingLimits.maxNights, normalizedMinNights)
+
   updatePricing({
-    stay: {
-      ...stay.value,
-      ...patch,
-    },
+    stay: { ...nextStay, minNights: normalizedMinNights, maxNights: normalizedMaxNights },
   })
 }
 
 function clampPercent(value: number) {
-  return Math.min(100, Math.max(0, value))
+  return clampInteger(value, pricingLimits.discountMin, pricingLimits.discountMax, pricingLimits.discountMin)
 }
 
 function parseOptionalNumber(raw: string): number | null {
-  const trimmed = raw.trim()
-  if (!trimmed) return null
-  const parsed = Number(trimmed)
-  return Number.isFinite(parsed) ? parsed : null
+  return parseOptionalInteger(raw, pricingLimits.minNights, pricingLimits.maxNights)
 }
 
 function stepMaxNights(delta: number) {
   const base = maxNights.value ?? minNights.value
-  const next = Math.max(1, base + delta)
+  const next = clampInteger(base + delta, minNights.value, pricingLimits.maxNights, minNights.value)
   updateStay({ maxNights: next })
 }
 </script>
@@ -89,7 +152,7 @@ function stepMaxNights(delta: number) {
           <div class="btn">
             <button
               type="button"
-              @click="updateStay({ minNights: Math.max(1, minNights - 1) })"
+              @click="updateStay({ minNights: Math.max(pricingLimits.minNights, minNights - 1) })"
             >
               −
             </button>
@@ -97,9 +160,12 @@ function stepMaxNights(delta: number) {
           <input
             class="value"
             type="number"
-            min="1"
+            :min="pricingLimits.minNights"
+            :max="pricingLimits.maxNights"
+            step="1"
+            inputmode="numeric"
             :value="minNights"
-            @input="updateStay({ minNights: Math.max(1, Number(($event.target as HTMLInputElement).value)) })"
+            @input="updateStay({ minNights: ($event.target as HTMLInputElement).valueAsNumber })"
           />
           <div class="btn">
             <button
@@ -129,7 +195,10 @@ function stepMaxNights(delta: number) {
           <input
             class="value"
             type="number"
-            min="1"
+            :min="minNights"
+            :max="pricingLimits.maxNights"
+            step="1"
+            inputmode="numeric"
             :value="maxNights ?? ''"
             :placeholder="panelContent.maxPlaceholder"
             @input="updateStay({ maxNights: parseOptionalNumber(($event.target as HTMLInputElement).value) })"
@@ -161,10 +230,12 @@ function stepMaxNights(delta: number) {
           <input
             class="value"
             type="number"
-            min="0"
-            max="100"
+            :min="pricingLimits.discountMin"
+            :max="pricingLimits.discountMax"
+            step="1"
+            inputmode="numeric"
             :value="weeklyDiscount"
-            @input="updateStay({ weeklyDiscount: clampPercent(Number(($event.target as HTMLInputElement).value)) })"
+            @input="updateStay({ weeklyDiscount: ($event.target as HTMLInputElement).valueAsNumber })"
           />
             <span class="suffix">{{ panelContent.weeklySuffix }}</span>
           <div class="btn">
@@ -194,10 +265,12 @@ function stepMaxNights(delta: number) {
           <input
             class="value"
             type="number"
-            min="0"
-            max="100"
+            :min="pricingLimits.discountMin"
+            :max="pricingLimits.discountMax"
+            step="1"
+            inputmode="numeric"
             :value="monthlyDiscount"
-            @input="updateStay({ monthlyDiscount: clampPercent(Number(($event.target as HTMLInputElement).value)) })"
+            @input="updateStay({ monthlyDiscount: ($event.target as HTMLInputElement).valueAsNumber })"
           />
             <span class="suffix">{{ panelContent.monthlySuffix }}</span>
           <div class="btn">
@@ -210,6 +283,9 @@ function stepMaxNights(delta: number) {
           </div>
         </div>
       </div>
+      <p class="hint">
+        {{ stayHint }}
+      </p>
     </div>
   </section>
 </template>
@@ -251,6 +327,12 @@ function stepMaxNights(delta: number) {
         color: rgba($secondary, 0.6);
         white-space: nowrap;
       }
+    }
+
+    .hint {
+      margin: 0;
+      @include little-text($thin: false);
+      color: rgba($secondary, 0.65);
     }
   }
 }

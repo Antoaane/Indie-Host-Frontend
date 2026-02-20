@@ -5,6 +5,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import type { RawCore } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
+import { formatValidationMessage, plainTextLengthFromHtml } from '@/utils/inputValidation'
 
 import { QuillyEditor } from 'vue-quilly'
 import type { QuillOptions } from 'quill/core'
@@ -28,18 +29,61 @@ const description = computed({
 const editor = ref<InstanceType<typeof QuillyEditor>>()
 const content = ref(description.value)
 let quill: Quill | undefined
+const descriptionValidation = editorStatic.validation.listing.description
+const quillLengthLimit = descriptionValidation.maxPlainText + 1
+const plainTextLength = ref(plainTextLengthFromHtml(content.value))
 
 watch(description, (value) => {
   if (value !== content.value) {
     content.value = value
   }
+  plainTextLength.value = plainTextLengthFromHtml(value)
 })
 
 watch(content, (value) => {
+  const nextLength = plainTextLengthFromHtml(value)
+  plainTextLength.value = nextLength
+  if (nextLength > descriptionValidation.maxPlainText) {
+    trimContentToLimit()
+    return
+  }
   if (value !== description.value) {
     description.value = value
   }
 })
+
+const hasLengthError = computed(() => plainTextLength.value > descriptionValidation.maxPlainText)
+const hasLengthWarning = computed(
+  () => plainTextLength.value > 0 && plainTextLength.value < descriptionValidation.minPlainText,
+)
+const descriptionMeta = computed(() => {
+  const current = Math.min(plainTextLength.value, descriptionValidation.maxPlainText)
+  if (hasLengthError.value) {
+    return formatValidationMessage(descriptionValidation.messages.max, {
+      max: descriptionValidation.maxPlainText,
+    })
+  }
+  if (hasLengthWarning.value) {
+    return formatValidationMessage(descriptionValidation.messages.minHint, {
+      current,
+      max: descriptionValidation.maxPlainText,
+      min: descriptionValidation.minPlainText,
+    })
+  }
+  return formatValidationMessage(descriptionValidation.messages.counter, {
+    current,
+    max: descriptionValidation.maxPlainText,
+  })
+})
+
+function trimContentToLimit() {
+  if (!quill) return
+  const currentLength = quill.getLength()
+  if (currentLength <= quillLengthLimit) return
+  quill.deleteText(quillLengthLimit - 1, currentLength - quillLengthLimit, 'silent')
+  content.value = quill.root.innerHTML
+  plainTextLength.value = plainTextLengthFromHtml(content.value)
+}
 
 const options: QuillOptions = {
   theme: 'snow',
@@ -72,7 +116,8 @@ const toolbarLabels = computed(() => ({
 
 onMounted(() => {
   quill = editor.value?.initialize(Quill)
-  console.log('Description content:', description.value)
+  trimContentToLimit()
+  plainTextLength.value = plainTextLengthFromHtml(content.value)
 })
 </script>
 
@@ -86,6 +131,10 @@ onMounted(() => {
     <div
       class="body"
       :style="toolbarLabels"
+      :class="{
+        'is-error': hasLengthError,
+        'is-warning': hasLengthWarning,
+      }"
     >
       <!--
       <div class="textarea">
@@ -101,6 +150,15 @@ onMounted(() => {
         :options="options"
         v-model="content"
       />
+      <p
+        class="meta"
+        :class="{
+          'is-error': hasLengthError,
+          'is-warning': hasLengthWarning,
+        }"
+      >
+        {{ descriptionMeta }}
+      </p>
     </div>
   </section>
 </template>
@@ -213,6 +271,20 @@ onMounted(() => {
 
     > .ql-container {
       @include inputs.richtext($theme: base);
+    }
+
+    > .meta {
+      margin: 0;
+      @include little-text($thin: false);
+      color: rgba($secondary, 0.7);
+
+      &.is-warning {
+        color: #9c6b00;
+      }
+
+      &.is-error {
+        color: #b3261e;
+      }
     }
   }
 }

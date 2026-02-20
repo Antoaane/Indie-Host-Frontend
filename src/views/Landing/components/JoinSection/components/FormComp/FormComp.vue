@@ -30,10 +30,35 @@ type SubmitDef = {
   icon?: string
 }
 
+type FieldValidation = {
+  minLength?: number
+  maxLength?: number
+  autocomplete?: string
+  inputMode?: 'text' | 'email' | 'tel' | 'numeric'
+  pattern?: string
+  patternTitle?: string
+}
+
+type FormValidation = {
+  fields?: {
+    text?: FieldValidation
+    email?: FieldValidation
+    tel?: FieldValidation
+    zip?: FieldValidation
+  }
+  nameAutocomplete?: {
+    first?: string
+    last?: string
+    name?: string
+    default?: string
+  }
+}
+
 type NewsletterFormData = {
   fields?: FieldDef[]
   groups?: CheckboxGroup[]
   consents?: ConsentDef[]
+  validation?: FormValidation
   submit?: SubmitDef
 }
 
@@ -42,6 +67,67 @@ const props = defineProps<{ data: NewsletterFormData }>()
 // Icône utilisée dans le bouton (inchangée)
 import { SendIcon } from 'lucide-vue-next'
 const iconMap: Record<string, any> = { SendIcon }
+
+function normalizedFieldType(field: FieldDef): string {
+  const type = String(field.type || 'text').toLowerCase()
+  if (type === 'email' || type === 'tel' || type === 'text') return type
+  return 'text'
+}
+
+function fieldName(field: FieldDef): string {
+  return String(field.name || '').toLowerCase()
+}
+
+function isZipField(field: FieldDef): boolean {
+  const name = fieldName(field)
+  return name.includes('zip') || name.includes('postal') || name.includes('code_postal') || name === 'cp'
+}
+
+function resolveFieldValidation(field: FieldDef): FieldValidation {
+  const byType = props.data.validation?.fields
+  if (isZipField(field)) return byType?.zip ?? {}
+
+  const type = normalizedFieldType(field)
+  if (type === 'email') return byType?.email ?? {}
+  if (type === 'tel') return byType?.tel ?? {}
+  return byType?.text ?? {}
+}
+
+function resolveAutocomplete(field: FieldDef): string {
+  const byName = props.data.validation?.nameAutocomplete
+  const fieldValidation = resolveFieldValidation(field)
+  if (fieldValidation.autocomplete) return fieldValidation.autocomplete
+
+  const name = fieldName(field)
+  if (name.includes('first')) return byName?.first ?? byName?.default ?? 'off'
+  if (name.includes('last')) return byName?.last ?? byName?.default ?? 'off'
+  if (name.includes('name')) return byName?.name ?? byName?.default ?? 'off'
+  return byName?.default ?? 'off'
+}
+
+function resolveInputMode(field: FieldDef): 'email' | 'tel' | 'numeric' | 'text' {
+  const configured = resolveFieldValidation(field).inputMode
+  if (configured === 'email' || configured === 'tel' || configured === 'numeric' || configured === 'text') {
+    return configured
+  }
+  return 'text'
+}
+
+function resolveMaxLength(field: FieldDef): number | undefined {
+  return resolveFieldValidation(field).maxLength
+}
+
+function resolveMinLength(field: FieldDef): number | undefined {
+  return resolveFieldValidation(field).minLength
+}
+
+function resolvePattern(field: FieldDef): string | undefined {
+  return resolveFieldValidation(field).pattern
+}
+
+function resolvePatternTitle(field: FieldDef): string | undefined {
+  return resolveFieldValidation(field).patternTitle
+}
 </script>
 
 <template>
@@ -57,11 +143,17 @@ const iconMap: Record<string, any> = { SendIcon }
       class="input"
     >
       <input
-        :type="f.type"
+        :type="normalizedFieldType(f)"
         :name="f.name"
         :placeholder="f.placeholder"
         :required="f.required"
-        autocomplete="email"
+        :autocomplete="resolveAutocomplete(f)"
+        :inputmode="resolveInputMode(f)"
+        :maxlength="resolveMaxLength(f)"
+        :minlength="resolveMinLength(f)"
+        :pattern="resolvePattern(f)"
+        :title="resolvePatternTitle(f)"
+        :spellcheck="normalizedFieldType(f) === 'text' && !isZipField(f)"
       />
     </div>
 

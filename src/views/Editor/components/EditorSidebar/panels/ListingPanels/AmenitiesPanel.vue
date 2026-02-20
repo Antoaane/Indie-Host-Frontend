@@ -9,6 +9,7 @@ import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'
 import { resolveAmenityIconComponent, resolveLucideComponent } from '@/utils/amenitiesIcons'
 import { mockAmenitiesCatalog, type AmenityCatalogItem } from '@/views/Editor/mocks/amenitiesCatalog'
 import { getAmenityPerkDefaults } from '@/domain/listings/perks'
+import { formatValidationMessage, normalizeTextInput } from '@/utils/inputValidation'
 
 // TYPES
 import type { RawCore } from '@/domain/listings/types'
@@ -38,6 +39,8 @@ const catalogSearch = ref('')
 const catalogOpenCategories = ref<Record<string, boolean>>({})
 const defaultCatalogOpenLimit = 10
 const panelContent = editorStatic.panels.listing.amenities
+const amenitiesValidation = editorStatic.validation.listing.amenities
+const searchLimit = amenitiesValidation.searchMax
 
 function setAmenities(next: AmenityDraft[]) {
   emit('patch', { core: { amenities: next } })
@@ -219,6 +222,13 @@ function tokenizeSearch(value: string): string[] {
 
 const catalogSearchTokens = computed(() => tokenizeSearch(catalogSearch.value))
 const isCatalogSearchActive = computed(() => catalogSearchTokens.value.length > 0)
+const catalogSearchLength = computed(() => Math.min(catalogSearch.value.length, searchLimit))
+const searchCounter = computed(() =>
+  formatValidationMessage(amenitiesValidation.messages.counter, {
+    current: catalogSearchLength.value,
+    max: searchLimit,
+  }),
+)
 
 function matchesCatalogSearch(item: AmenityCatalogItem, tokens: string[]): boolean {
   if (!tokens.length) return true
@@ -269,6 +279,16 @@ function isCatalogCategoryOpen(category: string, size: number): boolean {
 function toggleCatalogCategory(category: string, size: number) {
   catalogOpenCategories.value[category] = !isCatalogCategoryOpen(category, size)
 }
+
+watch(
+  () => catalogSearch.value,
+  (value) => {
+    const next = normalizeTextInput(value, searchLimit)
+    if (next !== value) {
+      catalogSearch.value = next
+    }
+  },
+)
 
 watch(
   () => isCatalogSearchActive.value,
@@ -458,11 +478,17 @@ watchEffect(() => {
         <template v-else>
           <div class="body">
             <div class="search">
-              <input
-                v-model="catalogSearch"
-                type="search"
-                :placeholder="panelContent.overlay.searchPlaceholder"
-              />
+              <div class="search-input">
+                <input
+                  v-model="catalogSearch"
+                  type="search"
+                  :placeholder="panelContent.overlay.searchPlaceholder"
+                  :maxlength="searchLimit"
+                  inputmode="search"
+                  autocomplete="off"
+                />
+              </div>
+              <p class="meta">{{ searchCounter }}</p>
             </div>
 
             <template v-if="catalogGroups.length">

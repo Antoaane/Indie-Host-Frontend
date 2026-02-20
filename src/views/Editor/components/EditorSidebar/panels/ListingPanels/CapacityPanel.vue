@@ -5,6 +5,7 @@ import { computed } from 'vue'
 import type { RawCore } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
+import { clampInteger, formatValidationMessage } from '@/utils/inputValidation'
 
 const props = defineProps<{
   core?: Partial<RawCore> | null
@@ -14,11 +15,27 @@ const emit = defineEmits<{
   (e: 'patch', patch: DraftPatch): void
 }>()
 
-const capacity = computed(() => Number(props.core?.guest_capacity ?? 0))
+const capacityValidation = editorStatic.validation.listing.capacity
+const capacity = computed(() =>
+  clampInteger(
+    props.core?.guest_capacity,
+    capacityValidation.min,
+    capacityValidation.max,
+    capacityValidation.min,
+  ),
+)
+const capacityHint = computed(() =>
+  formatValidationMessage(capacityValidation.messages.hint, {
+    min: capacityValidation.min,
+    max: capacityValidation.max,
+  }),
+)
 const panelContent = editorStatic.panels.listing.capacity
 
 function setCapacity(next: number) {
-  emit('patch', { core: { guest_capacity: Math.max(0, next) } })
+  const normalized = clampInteger(next, capacityValidation.min, capacityValidation.max, capacityValidation.min)
+  if (normalized === capacity.value) return
+  emit('patch', { core: { guest_capacity: normalized } })
 }
 </script>
 
@@ -34,6 +51,7 @@ function setCapacity(next: number) {
         <div class="btn">
           <button
             type="button"
+            :disabled="capacity <= capacityValidation.min"
             @click="setCapacity(capacity - 1)"
           >
             −
@@ -42,19 +60,24 @@ function setCapacity(next: number) {
         <input
           class="value"
           type="number"
-          min="0"
+          :min="capacityValidation.min"
+          :max="capacityValidation.max"
+          step="1"
+          inputmode="numeric"
           :value="capacity"
-          @input="setCapacity(Number(($event.target as HTMLInputElement).value))"
+          @input="setCapacity(($event.target as HTMLInputElement).valueAsNumber)"
         />
         <div class="btn">
           <button
             type="button"
+            :disabled="capacity >= capacityValidation.max"
             @click="setCapacity(capacity + 1)"
           >
             +
           </button>
         </div>
       </div>
+      <p class="hint">{{ capacityHint }}</p>
     </div>
   </section>
 </template>
@@ -79,6 +102,12 @@ function setCapacity(next: number) {
 
     > .stepper {
       @include inputs.stepper($theme: base);
+    }
+
+    > .hint {
+      margin: 0;
+      @include little-text($thin: false);
+      color: rgba($secondary, 0.7);
     }
   }
 }

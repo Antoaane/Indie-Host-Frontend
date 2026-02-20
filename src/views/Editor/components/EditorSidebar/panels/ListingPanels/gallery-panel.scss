@@ -38,7 +38,6 @@
       align-items: center;
       justify-content: space-between;
       gap: var(--layout-gap-sm);
-      margin-bottom: var(--layout-gap-sm);
 
       >.meta {
         @include little-text($thin: false);
@@ -69,6 +68,24 @@
 
       >.file-input {
         display: none;
+      }
+    }
+
+    >.hint,
+    >.feedback {
+      margin: 0;
+      @include little-text($thin: false);
+    }
+
+    >.hint {
+      color: rgba($secondary, 0.65);
+    }
+
+    >.feedback {
+      color: #0f8f4f;
+
+      &.is-error {
+        color: #b3261e;
       }
     }
 

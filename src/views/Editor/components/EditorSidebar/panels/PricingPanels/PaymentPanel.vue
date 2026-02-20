@@ -5,6 +5,7 @@ import { computed } from 'vue'
 import type { RawBookings } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
+import { clampInteger, formatValidationMessage, parseOptionalInteger } from '@/utils/inputValidation'
 
 type PaymentMode = 'full' | 'deposit'
 type BalanceType = 'arrival' | 'before'
@@ -42,6 +43,7 @@ const emit = defineEmits<{
 const pricing = computed<PricingSettings>(() => ((props.bookings as any)?.pricing ?? {}))
 const payment = computed<PricingPayment>(() => pricing.value.payment ?? {})
 const balance = computed<PaymentBalance>(() => payment.value.balance ?? {})
+const pricingLimits = editorStatic.validation.pricing
 
 const methods = computed(() => ({
   card: Boolean(payment.value.methods?.card ?? true),
@@ -51,14 +53,34 @@ const methods = computed(() => ({
 
 const paymentMode = computed<PaymentMode>(() => payment.value.mode ?? 'full')
 const depositPercent = computed(() => {
-  const raw = Number(payment.value.depositPercent ?? 10)
-  return Math.min(90, Math.max(10, raw))
+  const raw = Number(payment.value.depositPercent ?? pricingLimits.depositPercentMin)
+  return clampInteger(
+    raw,
+    pricingLimits.depositPercentMin,
+    pricingLimits.depositPercentMax,
+    pricingLimits.depositPercentMin,
+  )
 })
 const balanceType = computed<BalanceType>(() => balance.value.type ?? 'arrival')
 const balanceDays = computed(() => (
-  Number.isFinite(Number(balance.value.days)) ? Number(balance.value.days) : null
+  Number.isFinite(Number(balance.value.days))
+    ? clampInteger(
+        balance.value.days,
+        pricingLimits.balanceDaysMin,
+        pricingLimits.balanceDaysMax,
+        pricingLimits.balanceDaysMin,
+      )
+    : null
 ))
 const panelContent = editorStatic.panels.pricing.payment
+const paymentHint = computed(() =>
+  formatValidationMessage(pricingLimits.messages.paymentHint, {
+    depositPercentMin: pricingLimits.depositPercentMin,
+    depositPercentMax: pricingLimits.depositPercentMax,
+    balanceDaysMin: pricingLimits.balanceDaysMin,
+    balanceDaysMax: pricingLimits.balanceDaysMax,
+  }),
+)
 
 function updatePricing(next: Partial<PricingSettings>) {
   emit('patch', {
@@ -96,14 +118,18 @@ function toggleMethod(key: keyof PaymentMethods) {
 }
 
 function setDepositPercent(next: number) {
-  updatePayment({ depositPercent: Math.min(90, Math.max(10, next)) })
+  updatePayment({
+    depositPercent: clampInteger(
+      next,
+      pricingLimits.depositPercentMin,
+      pricingLimits.depositPercentMax,
+      pricingLimits.depositPercentMin,
+    ),
+  })
 }
 
 function parseOptionalNumber(raw: string): number | null {
-  const trimmed = raw.trim()
-  if (!trimmed) return null
-  const parsed = Number(trimmed)
-  return Number.isFinite(parsed) ? parsed : null
+  return parseOptionalInteger(raw, pricingLimits.balanceDaysMin, pricingLimits.balanceDaysMax)
 }
 </script>
 
@@ -187,8 +213,8 @@ function parseOptionalNumber(raw: string): number | null {
           <input
             class="range"
             type="range"
-            min="10"
-            max="90"
+            :min="pricingLimits.depositPercentMin"
+            :max="pricingLimits.depositPercentMax"
             step="1"
             :value="depositPercent"
             @input="setDepositPercent(Number(($event.target as HTMLInputElement).value))"
@@ -216,7 +242,10 @@ function parseOptionalNumber(raw: string): number | null {
               <input
                 :value="balanceDays ?? ''"
                 type="number"
-                min="0"
+                :min="pricingLimits.balanceDaysMin"
+                :max="pricingLimits.balanceDaysMax"
+                step="1"
+                inputmode="numeric"
                 :placeholder="panelContent.daysPlaceholder"
                 @input="updatePayment({ balance: { ...balance, days: parseOptionalNumber(($event.target as HTMLInputElement).value) } })"
               />
@@ -224,6 +253,9 @@ function parseOptionalNumber(raw: string): number | null {
           </div>
         </div>
       </div>
+      <p class="hint">
+        {{ paymentHint }}
+      </p>
     </div>
   </section>
 </template>
@@ -293,6 +325,12 @@ function parseOptionalNumber(raw: string): number | null {
 
     .input {
       @include inputs.field($theme: base);
+    }
+
+    .hint {
+      margin: 0;
+      @include little-text($thin: false);
+      color: rgba($secondary, 0.65);
     }
   }
 }

@@ -5,6 +5,7 @@ import { computed } from 'vue'
 import type { RawBookings } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
+import { clampInteger, formatValidationMessage, normalizeTextInput, parseOptionalInteger } from '@/utils/inputValidation'
 
 type FeeDraft = {
   name?: string
@@ -17,6 +18,14 @@ const CLEANING_CODE = 'cleaning'
 const LINEN_CODE = 'linen'
 const CLEANING_LABEL = panelContent.cleaning
 const LINEN_LABEL = panelContent.linen
+const pricingLimits = editorStatic.validation.pricing
+const feesHint = computed(() =>
+  formatValidationMessage(pricingLimits.messages.feesHint, {
+    moneyMin: pricingLimits.moneyMin,
+    moneyMax: pricingLimits.moneyMax,
+    customFeeNameMax: pricingLimits.customFeeNameMax,
+  }),
+)
 
 const props = defineProps<{
   bookings?: Partial<RawBookings> | null
@@ -69,7 +78,7 @@ function setReservedFee(code: string, label: string, amount: number | null) {
     ...(index >= 0 ? next[index] : {}),
     code,
     name: label,
-    amount: Math.max(0, amount),
+    amount: clampInteger(amount, pricingLimits.moneyMin, pricingLimits.moneyMax, pricingLimits.moneyMin),
   }
 
   if (index >= 0) {
@@ -81,10 +90,7 @@ function setReservedFee(code: string, label: string, amount: number | null) {
 }
 
 function parseOptionalNumber(raw: string): number | null {
-  const trimmed = raw.trim()
-  if (!trimmed) return null
-  const parsed = Number(trimmed)
-  return Number.isFinite(parsed) ? parsed : null
+  return parseOptionalInteger(raw, pricingLimits.moneyMin, pricingLimits.moneyMax)
 }
 
 const cleaningFee = computed(() => {
@@ -109,9 +115,18 @@ function addCustomFee() {
 function updateCustomFee(index: number, patch: Partial<FeeDraft>) {
   const next = [...fees.value]
   if (!next[index]) return
+  const nextPatch = {
+    ...patch,
+    ...(typeof patch.name === 'string'
+      ? { name: normalizeTextInput(patch.name, pricingLimits.customFeeNameMax) }
+      : {}),
+    ...(Object.prototype.hasOwnProperty.call(patch, 'amount')
+      ? { amount: clampInteger(patch.amount, pricingLimits.moneyMin, pricingLimits.moneyMax, pricingLimits.moneyMin) }
+      : {}),
+  }
   next[index] = {
     ...next[index],
-    ...patch,
+    ...nextPatch,
   }
   updateFees(next)
 }
@@ -137,7 +152,7 @@ function removeCustomFee(index: number) {
           <div class="btn">
             <button
               type="button"
-              @click="setReservedFee(CLEANING_CODE, CLEANING_LABEL, Math.max(0, (cleaningFee ?? 0) - 1))"
+              @click="setReservedFee(CLEANING_CODE, CLEANING_LABEL, Math.max(pricingLimits.moneyMin, (cleaningFee ?? 0) - 1))"
             >
               −
             </button>
@@ -145,7 +160,10 @@ function removeCustomFee(index: number) {
           <input
             class="value"
             type="number"
-            min="0"
+            :min="pricingLimits.moneyMin"
+            :max="pricingLimits.moneyMax"
+            step="1"
+            inputmode="numeric"
             :value="cleaningFee ?? ''"
             @input="setReservedFee(CLEANING_CODE, CLEANING_LABEL, parseOptionalNumber(($event.target as HTMLInputElement).value))"
           />
@@ -169,7 +187,7 @@ function removeCustomFee(index: number) {
           <div class="btn">
             <button
               type="button"
-              @click="setReservedFee(LINEN_CODE, LINEN_LABEL, Math.max(0, (linenFee ?? 0) - 1))"
+              @click="setReservedFee(LINEN_CODE, LINEN_LABEL, Math.max(pricingLimits.moneyMin, (linenFee ?? 0) - 1))"
             >
               −
             </button>
@@ -177,7 +195,10 @@ function removeCustomFee(index: number) {
           <input
             class="value"
             type="number"
-            min="0"
+            :min="pricingLimits.moneyMin"
+            :max="pricingLimits.moneyMax"
+            step="1"
+            inputmode="numeric"
             :value="linenFee ?? ''"
             @input="setReservedFee(LINEN_CODE, LINEN_LABEL, parseOptionalNumber(($event.target as HTMLInputElement).value))"
           />
@@ -215,7 +236,10 @@ function removeCustomFee(index: number) {
             <input
               :value="entry.fee.name ?? ''"
               type="text"
+              :maxlength="pricingLimits.customFeeNameMax"
               :placeholder="panelContent.customPlaceholder"
+              autocomplete="off"
+              inputmode="text"
               @input="updateCustomFee(entry.index, { name: ($event.target as HTMLInputElement).value })"
             />
           </div>
@@ -223,7 +247,7 @@ function removeCustomFee(index: number) {
             <div class="btn">
               <button
                 type="button"
-                @click="updateCustomFee(entry.index, { amount: Math.max(0, Number(entry.fee.amount ?? 0) - 1) })"
+                @click="updateCustomFee(entry.index, { amount: Math.max(pricingLimits.moneyMin, Number(entry.fee.amount ?? 0) - 1) })"
               >
                 −
               </button>
@@ -231,9 +255,12 @@ function removeCustomFee(index: number) {
             <input
               class="value"
               type="number"
-              min="0"
+              :min="pricingLimits.moneyMin"
+              :max="pricingLimits.moneyMax"
+              step="1"
+              inputmode="numeric"
               :value="entry.fee.amount ?? 0"
-              @input="updateCustomFee(entry.index, { amount: Math.max(0, Number(($event.target as HTMLInputElement).value)) })"
+              @input="updateCustomFee(entry.index, { amount: ($event.target as HTMLInputElement).valueAsNumber })"
             />
             <div class="btn">
               <button
@@ -254,6 +281,9 @@ function removeCustomFee(index: number) {
           </div>
         </div>
       </div>
+      <p class="hint">
+        {{ feesHint }}
+      </p>
     </div>
   </section>
 </template>
@@ -349,6 +379,12 @@ function removeCustomFee(index: number) {
           font-weight: 700;
         }
       }
+    }
+
+    .hint {
+      margin: 0;
+      @include little-text($thin: false);
+      color: rgba($secondary, 0.65);
     }
   }
 }

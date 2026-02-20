@@ -6,6 +6,7 @@ import { computed, ref } from 'vue'
 import type { RawCore } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
+import { formatValidationMessage, normalizeTextInput } from '@/utils/inputValidation'
 
 const props = withDefaults(defineProps<{
   core?: Partial<RawCore> | null
@@ -19,15 +20,28 @@ const emit = defineEmits<{
 }>()
 
 const panelContent = editorStatic.panels.listing.location
+const locationValidation = editorStatic.validation.listing.location
+const locationLimits = {
+  type: locationValidation.typeMax,
+  preciseAddress: locationValidation.preciseAddressMax,
+  city: locationValidation.cityMax,
+  country: locationValidation.countryMax,
+  region: locationValidation.regionMax,
+}
 
 const isResolvingAddress = ref(false)
 const addressResolveError = ref('')
 const hasResolvedAddress = ref(false)
 const lastResolvedAddress = ref('')
 
-const preciseAddress = computed(() => String(props.core?.precise_address ?? '').trim())
+const typeValue = computed(() => String(props.core?.type ?? ''))
+const preciseAddressRaw = computed(() => String(props.core?.precise_address ?? ''))
+const cityValue = computed(() => String(props.core?.city ?? ''))
+const countryValue = computed(() => String(props.core?.country ?? ''))
+const regionValue = computed(() => String(props.core?.region ?? ''))
+const preciseAddress = computed(() => normalizeAddress(preciseAddressRaw.value))
 
-const geocodeQueryMinLength = 5
+const geocodeQueryMinLength = locationValidation.geocodeQueryMinLength
 
 type NominatimAddress = {
   city?: string
@@ -55,6 +69,35 @@ function inputValue(event: Event): string {
   return (event.target as HTMLInputElement).value
 }
 
+function fieldLength(value: string, max: number): number {
+  return Math.min(value.length, max)
+}
+
+const typeLength = computed(() => fieldLength(typeValue.value, locationLimits.type))
+const preciseAddressLength = computed(() => fieldLength(preciseAddressRaw.value, locationLimits.preciseAddress))
+const cityLength = computed(() => fieldLength(cityValue.value, locationLimits.city))
+const countryLength = computed(() => fieldLength(countryValue.value, locationLimits.country))
+const regionLength = computed(() => fieldLength(regionValue.value, locationLimits.region))
+const preciseAddressLengthError = computed(() => {
+  if (!props.requirePreciseAddress) return ''
+  if (!preciseAddress.value) return ''
+  if (preciseAddress.value.length < geocodeQueryMinLength) {
+    return formatValidationMessage(locationValidation.messages.geocodeMin, { min: geocodeQueryMinLength })
+  }
+  return ''
+})
+
+function fieldCounter(current: number, max: number): string {
+  return formatValidationMessage(locationValidation.messages.counter, { current, max })
+}
+
+function patchTextField<K extends keyof RawCore>(key: K, rawValue: string, maxLength: number) {
+  const next = normalizeTextInput(rawValue, maxLength)
+  const current = String(props.core?.[key] ?? '')
+  if (next === current) return
+  patchCore({ [key]: next } as Partial<RawCore>)
+}
+
 function pickAddressValue(address: NominatimAddress | undefined, keys: Array<keyof NominatimAddress>): string {
   if (!address) return ''
   for (const key of keys) {
@@ -65,11 +108,11 @@ function pickAddressValue(address: NominatimAddress | undefined, keys: Array<key
 }
 
 function onPreciseAddressInput(event: Event) {
-  const value = inputValue(event)
-  patchCore({ precise_address: value })
+  const value = normalizeTextInput(inputValue(event), locationLimits.preciseAddress)
+  patchTextField('precise_address', value, locationLimits.preciseAddress)
   addressResolveError.value = ''
 
-  if (value.trim() !== lastResolvedAddress.value) {
+  if (normalizeAddress(value) !== lastResolvedAddress.value) {
     hasResolvedAddress.value = false
   }
 }
@@ -166,27 +209,40 @@ async function maybeResolvePreciseAddress(rawAddress?: string) {
     </div>
 
     <div class="body">
-      <div class="input">
-        <input
-          :value="props.core?.type ?? ''"
-          type="text"
-          :placeholder="panelContent.placeholders.type"
-          @input="patchCore({ type: inputValue($event) })"
-        />
+      <div class="field">
+        <div class="input">
+          <input
+            :value="typeValue"
+            type="text"
+            :placeholder="panelContent.placeholders.type"
+            :maxlength="locationLimits.type"
+            autocomplete="off"
+            inputmode="text"
+            @input="patchTextField('type', inputValue($event), locationLimits.type)"
+          />
+        </div>
+        <p class="meta">{{ fieldCounter(typeLength, locationLimits.type) }}</p>
       </div>
 
       <div
         v-if="props.requirePreciseAddress"
-        class="input"
+        class="field"
       >
-        <input
-          :value="props.core?.precise_address ?? ''"
-          type="text"
-          :placeholder="panelContent.placeholders.preciseAddress"
-          @input="onPreciseAddressInput"
-          @blur="maybeResolvePreciseAddress(inputValue($event))"
-          @keydown.enter.prevent="resolvePreciseAddress(inputValue($event))"
-        />
+        <div class="input">
+          <input
+            :value="preciseAddressRaw"
+            type="text"
+            :placeholder="panelContent.placeholders.preciseAddress"
+            :maxlength="locationLimits.preciseAddress"
+            autocomplete="street-address"
+            inputmode="text"
+            :aria-invalid="Boolean(preciseAddressLengthError || addressResolveError)"
+            @input="onPreciseAddressInput"
+            @blur="maybeResolvePreciseAddress(inputValue($event))"
+            @keydown.enter.prevent="resolvePreciseAddress(inputValue($event))"
+          />
+        </div>
+        <p class="meta">{{ fieldCounter(preciseAddressLength, locationLimits.preciseAddress) }}</p>
       </div>
 
       <div
@@ -205,6 +261,12 @@ async function maybeResolvePreciseAddress(rawAddress?: string) {
           {{ panelContent.hints.preciseAddress }}
         </p>
         <p
+          v-if="preciseAddressLengthError && !addressResolveError"
+          class="feedback is-error"
+        >
+          {{ preciseAddressLengthError }}
+        </p>
+        <p
           v-if="addressResolveError"
           class="feedback is-error"
         >
@@ -219,30 +281,48 @@ async function maybeResolvePreciseAddress(rawAddress?: string) {
       </div>
 
       <div class="row">
-        <div class="input">
-          <input
-            :value="props.core?.city ?? ''"
-            type="text"
-            :placeholder="panelContent.placeholders.city"
-            @input="patchCore({ city: inputValue($event) })"
-          />
+        <div class="field">
+          <div class="input">
+            <input
+              :value="cityValue"
+              type="text"
+              :placeholder="panelContent.placeholders.city"
+              :maxlength="locationLimits.city"
+              autocomplete="address-level2"
+              inputmode="text"
+              @input="patchTextField('city', inputValue($event), locationLimits.city)"
+            />
+          </div>
+          <p class="meta">{{ fieldCounter(cityLength, locationLimits.city) }}</p>
         </div>
-        <div class="input">
-          <input
-            :value="props.core?.country ?? ''"
-            type="text"
-            :placeholder="panelContent.placeholders.country"
-            @input="patchCore({ country: inputValue($event) })"
-          />
+        <div class="field">
+          <div class="input">
+            <input
+              :value="countryValue"
+              type="text"
+              :placeholder="panelContent.placeholders.country"
+              :maxlength="locationLimits.country"
+              autocomplete="country-name"
+              inputmode="text"
+              @input="patchTextField('country', inputValue($event), locationLimits.country)"
+            />
+          </div>
+          <p class="meta">{{ fieldCounter(countryLength, locationLimits.country) }}</p>
         </div>
       </div>
-      <div class="input">
-        <input
-          :value="props.core?.region ?? ''"
-          type="text"
-          :placeholder="panelContent.placeholders.region"
-          @input="patchCore({ region: inputValue($event) })"
-        />
+      <div class="field">
+        <div class="input">
+          <input
+            :value="regionValue"
+            type="text"
+            :placeholder="panelContent.placeholders.region"
+            :maxlength="locationLimits.region"
+            autocomplete="address-level1"
+            inputmode="text"
+            @input="patchTextField('region', inputValue($event), locationLimits.region)"
+          />
+        </div>
+        <p class="meta">{{ fieldCounter(regionLength, locationLimits.region) }}</p>
       </div>
     </div>
   </section>
@@ -265,8 +345,20 @@ async function maybeResolvePreciseAddress(rawAddress?: string) {
   > .body {
     @extend %panel-body;
 
-    > .input {
-      @include inputs.field($theme: base);
+    > .field {
+      display: flex;
+      flex-direction: column;
+      gap: calc(var(--layout-gap-xs) / 2);
+
+      > .input {
+        @include inputs.field($theme: base);
+      }
+
+      > .meta {
+        margin: 0;
+        @include little-text($thin: false);
+        color: rgba($secondary, 0.7);
+      }
     }
 
     > .address-tools {
@@ -322,8 +414,20 @@ async function maybeResolvePreciseAddress(rawAddress?: string) {
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: var(--layout-gap-xs);
 
-      > .input {
-        @include inputs.field($theme: base);
+      > .field {
+        display: flex;
+        flex-direction: column;
+        gap: calc(var(--layout-gap-xs) / 2);
+
+        > .input {
+          @include inputs.field($theme: base);
+        }
+
+        > .meta {
+          margin: 0;
+          @include little-text($thin: false);
+          color: rgba($secondary, 0.7);
+        }
       }
     }
   }

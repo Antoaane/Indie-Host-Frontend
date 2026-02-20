@@ -4,6 +4,8 @@
 import { computed } from 'vue'
 import type { RawArrival } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
+import { editorStatic } from '@/views/Editor/utils/editorContent'
+import { formatValidationMessage, normalizeTextInput } from '@/utils/inputValidation'
 
 type TextSectionKey = 'savings' | 'access' | 'services'
 type TextSectionValues = Record<string, string>
@@ -29,6 +31,8 @@ const emit = defineEmits<{
 
 const resolvedValues = computed(() => props.values ?? {})
 const lockedFieldKeySet = computed(() => new Set((props.lockedFieldKeys ?? []).map((key) => key.trim())))
+const arrivalValidation = editorStatic.validation.arrival
+const fieldMaxLength = arrivalValidation.practicalFieldMax
 
 function isLockedField(fieldKey: string): boolean {
   return lockedFieldKeySet.value.has(fieldKey.trim())
@@ -36,15 +40,25 @@ function isLockedField(fieldKey: string): boolean {
 
 function updateField(fieldKey: string, value: string) {
   if (isLockedField(fieldKey)) return
+  const next = normalizeTextInput(value, fieldMaxLength)
+  if ((resolvedValues.value as Record<string, string>)[fieldKey] === next) return
 
   const practicalPatch = {
     [props.sectionKey]: {
-      [fieldKey]: value,
+      [fieldKey]: next,
     },
   } as Partial<RawArrival['practical']>
 
   emit('patch', {
     arrival: { practical: practicalPatch } as Partial<RawArrival>,
+  })
+}
+
+function fieldCounter(fieldKey: string): string {
+  const currentLength = Math.min(String((resolvedValues.value as Record<string, string>)[fieldKey] ?? '').length, fieldMaxLength)
+  return formatValidationMessage(arrivalValidation.messages.counter, {
+    current: currentLength,
+    max: fieldMaxLength,
   })
 }
 </script>
@@ -68,11 +82,17 @@ function updateField(fieldKey: string, value: string) {
             type="text"
             :value="(resolvedValues as Record<string, string>)[field.key] ?? ''"
             :placeholder="field.placeholder || ''"
+            :maxlength="fieldMaxLength"
+            autocomplete="off"
+            inputmode="text"
             :readonly="isLockedField(field.key)"
             :disabled="isLockedField(field.key)"
             @input="updateField(field.key, ($event.target as HTMLInputElement).value)"
           />
         </div>
+        <small class="meta">
+          {{ fieldCounter(field.key) }}
+        </small>
         <small
           v-if="isLockedField(field.key) && props.lockedFieldHint"
           class="locked-hint"
@@ -127,6 +147,10 @@ function updateField(fieldKey: string, value: string) {
       }
 
       > .locked-hint {
+        @include little-text($color: rgba($secondary, 0.62), $thin: false);
+      }
+
+      > .meta {
         @include little-text($color: rgba($secondary, 0.62), $thin: false);
       }
     }

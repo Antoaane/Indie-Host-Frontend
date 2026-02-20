@@ -6,6 +6,7 @@ import { ChevronUp, Minus, Pencil, Plus, Trash2, X } from 'lucide-vue-next'
 import type { RawCore } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
+import { clampInteger, normalizeTextInput } from '@/utils/inputValidation'
 
 type RoomDraft = NonNullable<RawCore['rooms']>[number]
 type BedDraft = NonNullable<NonNullable<RoomDraft['beds']>[number]>
@@ -41,6 +42,7 @@ const NON_SLEEPING_ROOM_TYPES = new Set([
   'bathroom',
 ])
 const OTHER_ROOM_TYPE = 'other'
+const roomsLimits = editorStatic.validation.listing.rooms
 
 const collapsedRooms = ref<boolean[]>([])
 
@@ -63,10 +65,25 @@ watch(
 
 function setRooms(next: RoomDraft[]) {
   const sanitized = next.map((room) => {
-    if (!isNonSleepingRoomType(room.type)) return room
-    if (!Array.isArray(room.beds) || room.beds.length === 0) return room
-    return {
+    const roomName = normalizeTextInput(String(room['room-name'] ?? ''), roomsLimits.roomNameMax).trim()
+    const baseRoom = {
       ...room,
+      'room-name': roomName || panelContent.roomLabelGeneric,
+    } as RoomDraft
+
+    if (!isNonSleepingRoomType(baseRoom.type) && Array.isArray(baseRoom.beds)) {
+      return {
+        ...baseRoom,
+        beds: baseRoom.beds.map((bed) => ({
+          ...bed,
+          quantity: sanitizeBedQuantity((bed as any)?.quantity),
+        })),
+      } as RoomDraft
+    }
+
+    if (!Array.isArray(baseRoom.beds) || baseRoom.beds.length === 0) return baseRoom
+    return {
+      ...baseRoom,
       beds: [],
     } as RoomDraft
   })
@@ -132,7 +149,14 @@ function updateBed(roomIndex: number, index: number, patch: Partial<BedDraft>) {
     ...(rooms.value[roomIndex]?.beds ?? []),
   ] as BedDraft[]
   if (!next[index]) return
-  next[index] = { ...next[index], ...patch }
+
+  const nextPatch = {
+    ...patch,
+    ...(Object.prototype.hasOwnProperty.call(patch, 'quantity')
+      ? { quantity: sanitizeBedQuantity(patch.quantity) }
+      : {}),
+  }
+  next[index] = { ...next[index], ...nextPatch }
   setBeds(roomIndex, next)
 }
 
@@ -193,8 +217,12 @@ function promptCustomRoomName(currentValue: string) {
   if (typeof window === 'undefined') return currentValue || fallbackLabel
 
   const response = window.prompt('Nom personnalisé de la pièce', currentValue)
-  const nextValue = (response ?? '').trim()
+  const nextValue = normalizeTextInput((response ?? '').trim(), roomsLimits.roomNameMax)
   return nextValue || currentValue || fallbackLabel
+}
+
+function sanitizeBedQuantity(value: unknown): number {
+  return clampInteger(value, roomsLimits.bedQuantityMin, roomsLimits.bedQuantityMax, roomsLimits.bedQuantityMin)
 }
 
 function editRoom(index: number) {
@@ -342,7 +370,8 @@ watch(
                       <button
                         type="button"
                         aria-label="Augmenter la quantité"
-                        @click="updateBed(roomIndex, bedIndex, { quantity: (bed.quantity ?? 0) + 1 })"
+                        :disabled="sanitizeBedQuantity(bed.quantity) >= roomsLimits.bedQuantityMax"
+                        @click="updateBed(roomIndex, bedIndex, { quantity: sanitizeBedQuantity(bed.quantity) + 1 })"
                       >
                         <Plus :size="20" />
                       </button>
@@ -350,15 +379,19 @@ watch(
                     <input
                       class="value"
                       type="number"
-                      min="0"
-                      :value="bed.quantity ?? 0"
-                      @input="updateBed(roomIndex, bedIndex, { quantity: Number(($event.target as HTMLInputElement).value) })"
+                      :min="roomsLimits.bedQuantityMin"
+                      :max="roomsLimits.bedQuantityMax"
+                      step="1"
+                      inputmode="numeric"
+                      :value="sanitizeBedQuantity(bed.quantity)"
+                      @input="updateBed(roomIndex, bedIndex, { quantity: ($event.target as HTMLInputElement).valueAsNumber })"
                     />
                     <div class="btn">
                       <button
                         type="button"
                         aria-label="Diminuer la quantité"
-                        @click="updateBed(roomIndex, bedIndex, { quantity: Math.max(0, (bed.quantity ?? 0) - 1) })"
+                        :disabled="sanitizeBedQuantity(bed.quantity) <= roomsLimits.bedQuantityMin"
+                        @click="updateBed(roomIndex, bedIndex, { quantity: sanitizeBedQuantity(bed.quantity) - 1 })"
                       >
                         <Minus :size="20" />
                       </button>

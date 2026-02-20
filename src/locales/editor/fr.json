@@ -457,6 +457,125 @@
           "contentPlaceholder": "Racontez les expériences locales, vos adresses et vos conseils."
         }
       }
+    },
+    "validation": {
+      "listing": {
+        "title": {
+          "min": 6,
+          "max": 120,
+          "messages": {
+            "min": "Minimum {min} caractères.",
+            "counter": "{current}/{max} caractères"
+          }
+        },
+        "description": {
+          "minPlainText": 30,
+          "maxPlainText": 3000,
+          "messages": {
+            "max": "Maximum {max} caractères.",
+            "counter": "{current}/{max} caractères",
+            "minHint": "{current}/{max} caractères (minimum {min})."
+          }
+        },
+        "capacity": {
+          "min": 1,
+          "max": 50,
+          "messages": {
+            "hint": "Entre {min} et {max} voyageurs."
+          }
+        },
+        "location": {
+          "typeMax": 80,
+          "preciseAddressMax": 180,
+          "cityMax": 80,
+          "countryMax": 56,
+          "regionMax": 80,
+          "geocodeQueryMinLength": 5,
+          "messages": {
+            "counter": "{current}/{max} caractères",
+            "geocodeMin": "Minimum {min} caractères pour analyser l’adresse."
+          }
+        },
+        "gallery": {
+          "maxImages": 40,
+          "maxFileSizeBytes": 10485760,
+          "minWidth": 800,
+          "minHeight": 600,
+          "maxWidth": 8000,
+          "maxHeight": 8000,
+          "acceptedMimeTypes": [
+            "image/jpeg",
+            "image/png",
+            "image/webp",
+            "image/avif"
+          ],
+          "messages": {
+            "hint": "Formats {formats} · max {maxSizeMb} Mo · min {minWidth}x{minHeight}px · {count}/{maxImages} photos.",
+            "maxImages": "Maximum {maxImages} photos dans la galerie.",
+            "invalidMime": "Format non supporté. Utilisez {formatsReadable}.",
+            "maxFileSize": "Fichier trop lourd (max {maxSizeMb} Mo).",
+            "minDimensions": "Image trop petite (min {minWidth}x{minHeight}px).",
+            "maxDimensions": "Image trop grande (max {maxWidth}x{maxHeight}px).",
+            "unreadable": "Impossible de lire ce fichier image.",
+            "processError": "Impossible de traiter ce fichier image."
+          }
+        },
+        "amenities": {
+          "searchMax": 80,
+          "messages": {
+            "counter": "{current}/{max} caractères"
+          }
+        },
+        "rooms": {
+          "roomNameMax": 64,
+          "bedQuantityMin": 1,
+          "bedQuantityMax": 12
+        },
+        "visibility": {
+          "pauseMessageMax": 280,
+          "messages": {
+            "counter": "{current}/{max} caractères"
+          }
+        }
+      },
+      "pricing": {
+        "moneyMin": 0,
+        "moneyMax": 50000,
+        "taxAmountMax": 5000,
+        "extraGuestsThresholdMax": 50,
+        "minNights": 1,
+        "maxNights": 365,
+        "discountMin": 0,
+        "discountMax": 100,
+        "depositPercentMin": 10,
+        "depositPercentMax": 90,
+        "balanceDaysMin": 0,
+        "balanceDaysMax": 365,
+        "customFeeNameMax": 64,
+        "cancellationDaysMin": 0,
+        "cancellationDaysMax": 365,
+        "messages": {
+          "baseHint": "Montants entre {moneyMin}€ et {moneyMax}€. Seuil voyageurs max {extraGuestsThresholdMax}.",
+          "stayHint": "Durée entre {minNights} et {maxNights} nuits · réductions {discountMin}-{discountMax}%.",
+          "feesHint": "Frais entre {moneyMin}€ et {moneyMax}€ · libellé max {customFeeNameMax} caractères.",
+          "paymentHint": "Acompte entre {depositPercentMin}% et {depositPercentMax}% · solde avant arrivée: {balanceDaysMin}-{balanceDaysMax} jours.",
+          "depositHint": "Montant de caution entre {moneyMin}€ et {moneyMax}€.",
+          "taxesHint": "Montant de taxe entre {moneyMin}€ et {taxAmountMax}€.",
+          "cancellationHint": "Annulation personnalisée: délai {cancellationDaysMin}-{cancellationDaysMax} jours, retenue {discountMin}-{discountMax}%."
+        }
+      },
+      "arrival": {
+        "titleMax": 120,
+        "subtitleMax": 400,
+        "taglineMax": 120,
+        "practicalFieldMax": 160,
+        "guideTitleMax": 120,
+        "guideContentMaxPlainText": 3500,
+        "practicalHtmlMaxPlainText": 2500,
+        "messages": {
+          "counter": "{current}/{max} caractères"
+        }
+      }
     }
   }
 }

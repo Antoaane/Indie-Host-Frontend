@@ -5,6 +5,7 @@ import { computed } from 'vue'
 import type { RawBookings } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
+import { clampInteger, formatValidationMessage } from '@/utils/inputValidation'
 
 type TaxMode = 'per-person-night' | 'per-night'
 type TaxDisplay = 'included' | 'added'
@@ -30,12 +31,19 @@ const emit = defineEmits<{
 
 const pricing = computed<PricingSettings>(() => ((props.bookings as any)?.pricing ?? {}))
 const taxes = computed<PricingTaxes>(() => pricing.value.taxes ?? {})
+const pricingLimits = editorStatic.validation.pricing
 
 const isEnabled = computed(() => Boolean(taxes.value.enabled))
 const mode = computed<TaxMode>(() => taxes.value.mode ?? 'per-person-night')
-const amount = computed(() => Number(taxes.value.amount ?? 0))
+const amount = computed(() => clampInteger(taxes.value.amount, pricingLimits.moneyMin, pricingLimits.taxAmountMax, pricingLimits.moneyMin))
 const display = computed<TaxDisplay>(() => taxes.value.display ?? 'included')
 const panelContent = editorStatic.panels.pricing.taxes
+const taxesHint = computed(() =>
+  formatValidationMessage(pricingLimits.messages.taxesHint, {
+    moneyMin: pricingLimits.moneyMin,
+    taxAmountMax: pricingLimits.taxAmountMax,
+  }),
+)
 
 function updatePricing(next: Partial<PricingSettings>) {
   emit('patch', {
@@ -49,10 +57,17 @@ function updatePricing(next: Partial<PricingSettings>) {
 }
 
 function updateTaxes(patch: Partial<PricingTaxes>) {
+  const nextPatch = {
+    ...patch,
+    ...(Object.prototype.hasOwnProperty.call(patch, 'amount')
+      ? { amount: clampInteger(patch.amount, pricingLimits.moneyMin, pricingLimits.taxAmountMax, pricingLimits.moneyMin) }
+      : {}),
+  }
+
   updatePricing({
     taxes: {
       ...taxes.value,
-      ...patch,
+      ...nextPatch,
     },
   })
 }
@@ -103,7 +118,7 @@ function updateTaxes(patch: Partial<PricingTaxes>) {
             <div class="btn">
               <button
                 type="button"
-                @click="updateTaxes({ amount: Math.max(0, amount - 1) })"
+                @click="updateTaxes({ amount: Math.max(pricingLimits.moneyMin, amount - 1) })"
               >
                 −
               </button>
@@ -111,9 +126,12 @@ function updateTaxes(patch: Partial<PricingTaxes>) {
             <input
               class="value"
               type="number"
-              min="0"
+              :min="pricingLimits.moneyMin"
+              :max="pricingLimits.taxAmountMax"
+              step="1"
+              inputmode="numeric"
               :value="amount"
-              @input="updateTaxes({ amount: Math.max(0, Number(($event.target as HTMLInputElement).value)) })"
+              @input="updateTaxes({ amount: ($event.target as HTMLInputElement).valueAsNumber })"
             />
             <div class="btn">
               <button
@@ -154,6 +172,9 @@ function updateTaxes(patch: Partial<PricingTaxes>) {
           </label>
         </div>
       </div>
+      <p class="hint">
+        {{ taxesHint }}
+      </p>
     </div>
   </section>
 </template>
@@ -216,6 +237,12 @@ function updateTaxes(patch: Partial<PricingTaxes>) {
         @include buttons.checkbox(white);
         border-radius: 999px;
       }
+    }
+
+    .hint {
+      margin: 0;
+      @include little-text($thin: false);
+      color: rgba($secondary, 0.65);
     }
   }
 }

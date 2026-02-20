@@ -7,6 +7,7 @@ import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 import { getListingStatusFlags } from '@/domain/listings/status'
 import ConfirmationDialog from '@/components/overlays/ConfirmationDialog.vue'
+import { formatValidationMessage, normalizeTextInput } from '@/utils/inputValidation'
 
 const props = defineProps<{
   core?: Partial<RawCore> | null
@@ -17,6 +18,8 @@ const emit = defineEmits<{
 }>()
 
 const panelContent = editorStatic.panels.listing.visibility
+const visibilityValidation = editorStatic.validation.listing.visibility
+const pauseMessageMax = visibilityValidation.pauseMessageMax
 
 const statusFlags = computed(() => getListingStatusFlags(props.core?.status))
 const currentStatus = computed(() => statusFlags.value.normalized || 'published')
@@ -42,8 +45,19 @@ const selectedState = computed({
 
 const pauseMessage = computed({
   get: () => (props.core?.pause_message as string | undefined) ?? '',
-  set: (value: string) => emit('patch', { core: { pause_message: value } }),
+  set: (value: string) => {
+    const next = normalizeTextInput(value, pauseMessageMax)
+    if (next === ((props.core?.pause_message as string | undefined) ?? '')) return
+    emit('patch', { core: { pause_message: next } })
+  },
 })
+const pauseMessageLength = computed(() => Math.min(pauseMessage.value.length, pauseMessageMax))
+const pauseMessageCounter = computed(() =>
+  formatValidationMessage(visibilityValidation.messages.counter, {
+    current: pauseMessageLength.value,
+    max: pauseMessageMax,
+  }),
+)
 
 const isDeleteOverlayOpen = ref(false)
 
@@ -116,7 +130,11 @@ function confirmDelete() {
           v-model="pauseMessage"
           rows="4"
           :placeholder="panelContent.pauseMessage.placeholder"
+          :maxlength="pauseMessageMax"
+          autocomplete="off"
+          inputmode="text"
         />
+        <p class="meta">{{ pauseMessageCounter }}</p>
       </div>
 
       <div class="delete">

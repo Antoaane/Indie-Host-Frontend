@@ -6,6 +6,13 @@ import { Grip, Plus, Pen, Trash2 } from 'lucide-vue-next'
 import type { RawMedias } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
+import {
+  acceptedGalleryMimeTypes,
+  formatValidationMessage,
+  humanizeGalleryMimeTypes,
+  normalizeTextInput,
+  validateGalleryImageFile,
+} from '@/utils/inputValidation'
 
 type DraftImage = NonNullable<RawMedias['images']>[number]
 
@@ -20,9 +27,13 @@ const emit = defineEmits<{
 const images = computed<DraftImage[]>(() => (props.medias?.images as DraftImage[] | undefined) ?? [])
 const panelContent = editorStatic.panels.listing.gallery
 const dragLabel = 'Reordonner la photo'
+const galleryLimits = editorStatic.validation.listing.gallery
+const titleValidation = editorStatic.validation.listing.title
 const fileInput = ref<HTMLInputElement | null>(null)
 const replaceInput = ref<HTMLInputElement | null>(null)
 const tileRefs = ref<HTMLElement[]>([])
+const galleryFeedback = ref('')
+const galleryFeedbackLevel = ref<'error' | 'success'>('error')
 const dragState = reactive({
   active: false,
   index: -1,
@@ -39,6 +50,25 @@ const dragState = reactive({
 const selectedIndices = ref<number[]>([])
 const selectedCount = computed(() => selectedIndices.value.length)
 const isDragging = computed(() => dragState.active)
+const acceptedMimeTypes = acceptedGalleryMimeTypes(galleryLimits.acceptedMimeTypes)
+const readableFormats = humanizeGalleryMimeTypes(galleryLimits.acceptedMimeTypes)
+const maxFileSizeMb = (galleryLimits.maxFileSizeBytes / (1024 * 1024)).toFixed(1)
+const galleryHint = computed(() =>
+  formatValidationMessage(galleryLimits.messages.hint, {
+    formats: readableFormats,
+    maxSizeMb: maxFileSizeMb,
+    minWidth: galleryLimits.minWidth,
+    minHeight: galleryLimits.minHeight,
+    count: orderedImages.value.length,
+    maxImages: galleryLimits.maxImages,
+  }),
+)
+
+function maxImagesErrorMessage(): string {
+  return formatValidationMessage(galleryLimits.messages.maxImages, {
+    maxImages: galleryLimits.maxImages,
+  })
+}
 
 const orderedImages = computed(() => {
   return [
@@ -83,7 +113,21 @@ function normalizePositions(next: DraftImage[]) {
   return next.map((img, idx) => ({ ...img, position: idx }))
 }
 
+function setGalleryFeedback(message: string, level: 'error' | 'success' = 'error') {
+  galleryFeedback.value = message
+  galleryFeedbackLevel.value = level
+}
+
+function clearGalleryFeedback() {
+  galleryFeedback.value = ''
+}
+
 function openFilePicker() {
+  if (orderedImages.value.length >= galleryLimits.maxImages) {
+    setGalleryFeedback(maxImagesErrorMessage())
+    return
+  }
+
   const input = fileInput.value
   if (!input) return
   if (typeof input.showPicker === 'function') {
@@ -118,18 +162,29 @@ async function onFilePicked(event: Event) {
   const file = input?.files?.[0]
   if (input) input.value = ''
   if (!file) return
+  if (orderedImages.value.length >= galleryLimits.maxImages) {
+    setGalleryFeedback(maxImagesErrorMessage())
+    return
+  }
 
-  console.log('[Editor][Gallery] file picked', { name: file.name, size: file.size })
+  const validation = await validateGalleryImageFile(file, galleryLimits)
+  if (!validation.valid) {
+    setGalleryFeedback(validation.message, 'error')
+    return
+  }
+
   try {
     const src = await readFileAsDataUrl(file)
-    const alt = file.name.replace(/\.[^/.]+$/, '')
+    const alt = normalizeTextInput(file.name.replace(/\.[^/.]+$/, ''), titleValidation.max)
     const next = normalizePositions([
       ...orderedImages.value,
       { src, alt, position: images.value.length } as DraftImage,
     ])
     setImages(next)
+    clearGalleryFeedback()
   } catch (err) {
     console.log('[Editor][Gallery] failed to read file', err)
+    setGalleryFeedback(galleryLimits.messages.processError, 'error')
   }
 }
 
@@ -156,6 +211,7 @@ function deleteSelected() {
   const next = orderedImages.value.filter((_, idx) => !toRemove.has(idx))
   setImages(normalizePositions(next))
   clearSelection()
+  clearGalleryFeedback()
 }
 
 async function onReplacePicked(event: Event) {
@@ -172,8 +228,12 @@ async function onReplacePicked(event: Event) {
   try {
     const replacements = await Promise.all(
       files.slice(0, maxReplace).map(async (file) => {
+        const validation = await validateGalleryImageFile(file, galleryLimits)
+        if (!validation.valid) {
+          throw new Error(validation.message)
+        }
         const src = await readFileAsDataUrl(file)
-        const alt = file.name.replace(/\.[^/.]+$/, '')
+        const alt = normalizeTextInput(file.name.replace(/\.[^/.]+$/, ''), titleValidation.max)
         return { src, alt }
       }),
     )
@@ -194,8 +254,10 @@ async function onReplacePicked(event: Event) {
 
     setImages(normalizePositions(next))
     clearSelection()
+    clearGalleryFeedback()
   } catch (err) {
     console.log('[Editor][Gallery] failed to replace files', err)
+    setGalleryFeedback(err instanceof Error ? err.message : 'Impossible de remplacer les images.', 'error')
   }
 }
 
@@ -225,7 +287,6 @@ function updateOverIndex() {
 
   let nearestIndex = dragState.index
   let nearestDistance = Number.POSITIVE_INFINITY
-  let nearestRect: DOMRect | null = null
 
   positions.forEach((rect, idx) => {
     const cx = (rect.left + rect.right) / 2
@@ -236,11 +297,11 @@ function updateOverIndex() {
     if (distance < nearestDistance) {
       nearestDistance = distance
       nearestIndex = idx
-      nearestRect = rect
     }
   })
 
   dragState.overIndex = nearestIndex
+  const nearestRect = positions[nearestIndex]
   if (nearestRect) {
     const cx = (nearestRect.left + nearestRect.right) / 2
     const cy = (nearestRect.top + nearestRect.bottom) / 2
@@ -409,11 +470,19 @@ onBeforeUnmount(() => {
           ref="replaceInput"
           class="file-input"
           type="file"
-          accept="image/*"
+          :accept="acceptedMimeTypes"
           multiple
           @change="onReplacePicked"
         />
       </div>
+      <p class="hint">{{ galleryHint }}</p>
+      <p
+        v-if="galleryFeedback"
+        class="feedback"
+        :class="{ 'is-error': galleryFeedbackLevel === 'error' }"
+      >
+        {{ galleryFeedback }}
+      </p>
 
       <div class="gallery">
         <div
@@ -459,6 +528,7 @@ onBeforeUnmount(() => {
             <button
               type="button"
               :aria-label="panelContent.addLabel"
+              :disabled="orderedImages.length >= galleryLimits.maxImages"
               @click="openFilePicker"
             >
               <Plus :size="20" />
@@ -468,7 +538,7 @@ onBeforeUnmount(() => {
             ref="fileInput"
             class="file-input"
             type="file"
-            accept="image/*"
+            :accept="acceptedMimeTypes"
             @change="onFilePicked"
           />
         </div>

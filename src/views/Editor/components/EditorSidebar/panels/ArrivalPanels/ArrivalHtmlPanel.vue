@@ -5,6 +5,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import type { RawArrival } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
+import { formatValidationMessage, plainTextLengthFromHtml } from '@/utils/inputValidation'
 
 import { QuillyEditor } from 'vue-quilly'
 import type { QuillOptions } from 'quill/core'
@@ -28,6 +29,9 @@ const emit = defineEmits<{
 }>()
 
 const toolbarContent = editorStatic.panels.listing.description.toolbar
+const arrivalValidation = editorStatic.validation.arrival
+const contentLimit = arrivalValidation.practicalHtmlMaxPlainText
+const contentLengthLimit = contentLimit + 1
 
 const sectionContent = computed({
   get: () => props.value ?? '',
@@ -37,7 +41,7 @@ const sectionContent = computed({
         practical: {
           [props.sectionKey]: value,
         } as Partial<RawArrival['practical']>,
-      },
+      } as Partial<RawArrival>,
     })
   },
 })
@@ -45,18 +49,42 @@ const sectionContent = computed({
 const editor = ref<InstanceType<typeof QuillyEditor>>()
 const content = ref(sectionContent.value)
 let quill: Quill | undefined
+const sectionContentLength = ref(plainTextLengthFromHtml(content.value))
 
 watch(sectionContent, (value) => {
   if (value !== content.value) {
     content.value = value
   }
+  sectionContentLength.value = plainTextLengthFromHtml(value)
 })
 
 watch(content, (value) => {
+  const nextLength = plainTextLengthFromHtml(value)
+  sectionContentLength.value = nextLength
+  if (nextLength > contentLimit) {
+    trimSectionContentToLimit()
+    return
+  }
   if (value !== sectionContent.value) {
     sectionContent.value = value
   }
 })
+
+const sectionContentMeta = computed(() =>
+  formatValidationMessage(arrivalValidation.messages.counter, {
+    current: Math.min(sectionContentLength.value, contentLimit),
+    max: contentLimit,
+  }),
+)
+
+function trimSectionContentToLimit() {
+  if (!quill) return
+  const currentLength = quill.getLength()
+  if (currentLength <= contentLengthLimit) return
+  quill.deleteText(contentLengthLimit - 1, currentLength - contentLengthLimit, 'silent')
+  content.value = quill.root.innerHTML
+  sectionContentLength.value = plainTextLengthFromHtml(content.value)
+}
 
 const options: QuillOptions = {
   theme: 'snow',
@@ -91,7 +119,8 @@ const toolbarLabels = computed(() => ({
 
 onMounted(() => {
   quill = editor.value?.initialize(Quill)
-  console.log('Arrival practical html content:', sectionContent.value)
+  trimSectionContentToLimit()
+  sectionContentLength.value = plainTextLengthFromHtml(content.value)
 })
 </script>
 
@@ -112,6 +141,7 @@ onMounted(() => {
         v-model="content"
         :options="options"
       />
+      <p class="meta">{{ sectionContentMeta }}</p>
     </div>
   </section>
 </template>
@@ -223,6 +253,11 @@ onMounted(() => {
 
     > .ql-container {
       @include inputs.richtext($theme: base);
+    }
+
+    > .meta {
+      margin: 0;
+      @include little-text($color: rgba($secondary, 0.65), $thin: false);
     }
   }
 }

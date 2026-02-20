@@ -5,6 +5,7 @@ import { computed } from 'vue'
 import type { RawBookings } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
+import { clampInteger, formatValidationMessage, parseOptionalInteger } from '@/utils/inputValidation'
 
 type CancellationPolicy = 'flexible' | 'moderate' | 'strict' | 'custom'
 type CancellationPresetPolicy = Exclude<CancellationPolicy, 'custom'>
@@ -35,11 +36,31 @@ const emit = defineEmits<{
 const pricing = computed<PricingSettings>(() => (props.bookings as any)?.pricing ?? {})
 const cancellation = computed<PricingCancellation>(() => pricing.value.cancellation ?? {})
 const custom = computed<CancellationCustom>(() => cancellation.value.custom ?? {})
+const pricingLimits = editorStatic.validation.pricing
 
 const policy = computed<CancellationPolicy>(() => cancellation.value.policy ?? 'flexible')
-const customDays = computed(() => (Number.isFinite(Number(custom.value.days)) ? Number(custom.value.days) : null))
-const customFee = computed(() => (Number.isFinite(Number(custom.value.feePercent)) ? clampPercent(Number(custom.value.feePercent)) : null))
+const customDays = computed(() =>
+  Number.isFinite(Number(custom.value.days))
+    ? clampInteger(
+        custom.value.days,
+        pricingLimits.cancellationDaysMin,
+        pricingLimits.cancellationDaysMax,
+        pricingLimits.cancellationDaysMin,
+      )
+    : null,
+)
+const customFee = computed(() =>
+  Number.isFinite(Number(custom.value.feePercent)) ? clampPercent(Number(custom.value.feePercent)) : null,
+)
 const panelContent = editorStatic.panels.pricing.cancellation
+const cancellationHint = computed(() =>
+  formatValidationMessage(pricingLimits.messages.cancellationHint, {
+    cancellationDaysMin: pricingLimits.cancellationDaysMin,
+    cancellationDaysMax: pricingLimits.cancellationDaysMax,
+    discountMin: pricingLimits.discountMin,
+    discountMax: pricingLimits.discountMax,
+  }),
+)
 
 const POLICY_PRESETS: Record<
   CancellationPresetPolicy,
@@ -93,21 +114,43 @@ function updateCancellation(patch: Partial<PricingCancellation>) {
 }
 
 function updateCustom(patch: Partial<CancellationCustom>) {
+  const nextPatch = {
+    ...patch,
+    ...(Object.prototype.hasOwnProperty.call(patch, 'days')
+      ? {
+          days:
+            patch.days === null
+              ? null
+              : clampInteger(
+                  patch.days,
+                  pricingLimits.cancellationDaysMin,
+                  pricingLimits.cancellationDaysMax,
+                  pricingLimits.cancellationDaysMin,
+                ),
+        }
+      : {}),
+    ...(Object.prototype.hasOwnProperty.call(patch, 'feePercent')
+      ? { feePercent: clampPercent(Number(patch.feePercent)) }
+      : {}),
+  }
+
   updateCancellation({
     custom: {
       ...custom.value,
-      ...patch,
+      ...nextPatch,
     },
   })
 }
 
 function clampPercent(value: number) {
-  return Math.min(100, Math.max(0, value))
+  return clampInteger(value, pricingLimits.discountMin, pricingLimits.discountMax, pricingLimits.discountMin)
 }
 
 function getPolicyRules(policyKey: CancellationPresetPolicy, values?: Partial<CancellationCustom>) {
   const defaults = POLICY_PRESETS[policyKey]
-  const days = Number.isFinite(Number(values?.days)) ? Math.max(0, Number(values?.days)) : defaults.days
+  const days = Number.isFinite(Number(values?.days))
+    ? Math.max(pricingLimits.cancellationDaysMin, Number(values?.days))
+    : defaults.days
   const feePercent = Number.isFinite(Number(values?.feePercent)) ? clampPercent(Number(values?.feePercent)) : defaults.feePercent
 
   return [
@@ -132,8 +175,8 @@ const displayedPolicies = computed(() =>
 
 const customRules = computed(() =>
   getPolicyRules('moderate', {
-    days: customDays.value ?? 0,
-    feePercent: customFee.value ?? 0,
+    days: customDays.value ?? pricingLimits.cancellationDaysMin,
+    feePercent: customFee.value ?? pricingLimits.discountMin,
   }),
 )
 
@@ -155,10 +198,7 @@ function onPolicyChange(nextPolicy: CancellationPolicy) {
 }
 
 function parseOptionalNumber(raw: string): number | null {
-  const trimmed = raw.trim()
-  if (!trimmed) return null
-  const parsed = Number(trimmed)
-  return Number.isFinite(parsed) ? parsed : null
+  return parseOptionalInteger(raw, pricingLimits.cancellationDaysMin, pricingLimits.cancellationDaysMax)
 }
 </script>
 
@@ -233,7 +273,7 @@ function parseOptionalNumber(raw: string): number | null {
             <div class="btn">
               <button
                 type="button"
-                @click="updateCustom({ days: Math.max(0, Number(customDays ?? 0) - 1) })"
+                @click="updateCustom({ days: Math.max(pricingLimits.cancellationDaysMin, Number(customDays ?? 0) - 1) })"
               >
                 −
               </button>
@@ -241,7 +281,10 @@ function parseOptionalNumber(raw: string): number | null {
             <input
               class="value"
               type="number"
-              min="0"
+              :min="pricingLimits.cancellationDaysMin"
+              :max="pricingLimits.cancellationDaysMax"
+              step="1"
+              inputmode="numeric"
               :value="customDays ?? ''"
               @input="updateCustom({ days: parseOptionalNumber(($event.target as HTMLInputElement).value) })"
             />
@@ -272,8 +315,10 @@ function parseOptionalNumber(raw: string): number | null {
             <input
               class="value"
               type="number"
-              min="0"
-              max="100"
+              :min="pricingLimits.discountMin"
+              :max="pricingLimits.discountMax"
+              step="1"
+              inputmode="numeric"
               :value="customFee ?? ''"
               @input="updateCustom({ feePercent: clampPercent(Number(($event.target as HTMLInputElement).value)) })"
             />
@@ -300,6 +345,9 @@ function parseOptionalNumber(raw: string): number | null {
           </ul>
         </div>
       </div>
+      <p class="hint">
+        {{ cancellationHint }}
+      </p>
     </div>
   </section>
 </template>
@@ -421,6 +469,12 @@ function parseOptionalNumber(raw: string): number | null {
           margin: 0;
         }
       }
+    }
+
+    .hint {
+      margin: 0;
+      @include little-text($thin: false);
+      color: rgba($secondary, 0.65);
     }
   }
 }

@@ -5,6 +5,7 @@ import { computed } from 'vue'
 import type { RawBookings } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
+import { clampInteger, formatValidationMessage } from '@/utils/inputValidation'
 
 type DepositType = 'info' | 'card' | 'cash' | 'check'
 
@@ -27,10 +28,17 @@ const emit = defineEmits<{
 
 const pricing = computed<PricingSettings>(() => ((props.bookings as any)?.pricing ?? {}))
 const deposit = computed<PricingDeposit>(() => pricing.value.deposit ?? {})
+const pricingLimits = editorStatic.validation.pricing
 
-const amount = computed(() => Number(deposit.value.amount ?? 0))
+const amount = computed(() => clampInteger(deposit.value.amount, pricingLimits.moneyMin, pricingLimits.moneyMax, pricingLimits.moneyMin))
 const depositType = computed<DepositType>(() => deposit.value.type ?? 'info')
 const panelContent = editorStatic.panels.pricing.deposit
+const depositHint = computed(() =>
+  formatValidationMessage(pricingLimits.messages.depositHint, {
+    moneyMin: pricingLimits.moneyMin,
+    moneyMax: pricingLimits.moneyMax,
+  }),
+)
 
 function updatePricing(next: Partial<PricingSettings>) {
   emit('patch', {
@@ -44,10 +52,17 @@ function updatePricing(next: Partial<PricingSettings>) {
 }
 
 function updateDeposit(patch: Partial<PricingDeposit>) {
+  const nextPatch = {
+    ...patch,
+    ...(Object.prototype.hasOwnProperty.call(patch, 'amount')
+      ? { amount: clampInteger(patch.amount, pricingLimits.moneyMin, pricingLimits.moneyMax, pricingLimits.moneyMin) }
+      : {}),
+  }
+
   updatePricing({
     deposit: {
       ...deposit.value,
-      ...patch,
+      ...nextPatch,
     },
   })
 }
@@ -70,7 +85,7 @@ function updateDeposit(patch: Partial<PricingDeposit>) {
           <div class="btn">
             <button
               type="button"
-              @click="updateDeposit({ amount: Math.max(0, amount - 1) })"
+              @click="updateDeposit({ amount: Math.max(pricingLimits.moneyMin, amount - 1) })"
             >
               −
             </button>
@@ -78,9 +93,12 @@ function updateDeposit(patch: Partial<PricingDeposit>) {
           <input
             class="value"
             type="number"
-            min="0"
+            :min="pricingLimits.moneyMin"
+            :max="pricingLimits.moneyMax"
+            step="1"
+            inputmode="numeric"
             :value="amount"
-            @input="updateDeposit({ amount: Math.max(0, Number(($event.target as HTMLInputElement).value)) })"
+            @input="updateDeposit({ amount: ($event.target as HTMLInputElement).valueAsNumber })"
           />
           <div class="btn">
             <button
@@ -109,6 +127,9 @@ function updateDeposit(patch: Partial<PricingDeposit>) {
           </select>
         </div>
       </div>
+      <p class="hint">
+        {{ depositHint }}
+      </p>
     </div>
   </section>
 </template>
@@ -144,6 +165,12 @@ function updateDeposit(patch: Partial<PricingDeposit>) {
 
     .select {
       @include inputs.select($theme: base);
+    }
+
+    .hint {
+      margin: 0;
+      @include little-text($thin: false);
+      color: rgba($secondary, 0.65);
     }
   }
 }

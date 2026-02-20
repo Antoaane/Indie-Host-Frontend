@@ -5,6 +5,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import type { RawArrival } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
+import { formatValidationMessage, normalizeTextInput, plainTextLengthFromHtml } from '@/utils/inputValidation'
 
 import { QuillyEditor } from 'vue-quilly'
 import type { QuillOptions } from 'quill/core'
@@ -22,17 +23,20 @@ const emit = defineEmits<{
 
 const panelContent = editorStatic.panels.arrival.guide
 const toolbarContent = editorStatic.panels.listing.description.toolbar
+const arrivalLimits = editorStatic.validation.arrival
+const guideContentLengthLimit = arrivalLimits.guideContentMaxPlainText + 1
 
 const guideTitle = computed({
   get: () => props.arrival?.guide?.title ?? '',
   set: (value: string) => {
+    const next = normalizeTextInput(value, arrivalLimits.guideTitleMax)
     emit('patch', {
       arrival: {
         guide: {
-          ...(props.arrival?.guide ?? {}),
-          title: value,
+          title: next,
+          content: props.arrival?.guide?.content ?? '',
         },
-      },
+      } as Partial<RawArrival>,
     })
   },
 })
@@ -43,10 +47,10 @@ const guideContent = computed({
     emit('patch', {
       arrival: {
         guide: {
-          ...(props.arrival?.guide ?? {}),
+          title: props.arrival?.guide?.title ?? '',
           content: value,
         },
-      },
+      } as Partial<RawArrival>,
     })
   },
 })
@@ -54,18 +58,50 @@ const guideContent = computed({
 const editor = ref<InstanceType<typeof QuillyEditor>>()
 const content = ref(guideContent.value)
 let quill: Quill | undefined
+const guideContentLength = ref(plainTextLengthFromHtml(content.value))
 
 watch(guideContent, (value) => {
   if (value !== content.value) {
     content.value = value
   }
+  guideContentLength.value = plainTextLengthFromHtml(value)
 })
 
 watch(content, (value) => {
+  const nextLength = plainTextLengthFromHtml(value)
+  guideContentLength.value = nextLength
+  if (nextLength > arrivalLimits.guideContentMaxPlainText) {
+    trimGuideContentToLimit()
+    return
+  }
   if (value !== guideContent.value) {
     guideContent.value = value
   }
 })
+
+const guideTitleLength = computed(() => Math.min(guideTitle.value.length, arrivalLimits.guideTitleMax))
+const guideTitleMeta = computed(() =>
+  formatValidationMessage(arrivalLimits.messages.counter, {
+    current: guideTitleLength.value,
+    max: arrivalLimits.guideTitleMax,
+  }),
+)
+const guideContentMeta = computed(
+  () =>
+    formatValidationMessage(arrivalLimits.messages.counter, {
+      current: Math.min(guideContentLength.value, arrivalLimits.guideContentMaxPlainText),
+      max: arrivalLimits.guideContentMaxPlainText,
+    }),
+)
+
+function trimGuideContentToLimit() {
+  if (!quill) return
+  const currentLength = quill.getLength()
+  if (currentLength <= guideContentLengthLimit) return
+  quill.deleteText(guideContentLengthLimit - 1, currentLength - guideContentLengthLimit, 'silent')
+  content.value = quill.root.innerHTML
+  guideContentLength.value = plainTextLengthFromHtml(content.value)
+}
 
 const options: QuillOptions = {
   theme: 'snow',
@@ -100,7 +136,8 @@ const toolbarLabels = computed(() => ({
 
 onMounted(() => {
   quill = editor.value?.initialize(Quill)
-  console.log('Arrival guide content:', guideContent.value)
+  trimGuideContentToLimit()
+  guideContentLength.value = plainTextLengthFromHtml(content.value)
 })
 </script>
 
@@ -122,9 +159,13 @@ onMounted(() => {
             type="text"
             :value="guideTitle"
             :placeholder="panelContent.titlePlaceholder"
+            :maxlength="arrivalLimits.guideTitleMax"
+            autocomplete="off"
+            inputmode="text"
             @input="guideTitle = ($event.target as HTMLInputElement).value"
           />
         </div>
+        <p class="meta">{{ guideTitleMeta }}</p>
       </div>
 
       <p class="label">{{ panelContent.contentLabel }}</p>
@@ -133,6 +174,7 @@ onMounted(() => {
         v-model="content"
         :options="options"
       />
+      <p class="meta">{{ guideContentMeta }}</p>
     </div>
   </section>
 </template>
@@ -170,6 +212,11 @@ onMounted(() => {
 
       > .field {
         @include inputs.field($theme: base);
+      }
+
+      > .meta {
+        margin: 0;
+        @include little-text($color: rgba($secondary, 0.62), $thin: false);
       }
     }
 
@@ -261,6 +308,11 @@ onMounted(() => {
 
     > .ql-container {
       @include inputs.richtext($theme: base);
+    }
+
+    > .meta {
+      margin: 0;
+      @include little-text($color: rgba($secondary, 0.65), $thin: false);
     }
   }
 }

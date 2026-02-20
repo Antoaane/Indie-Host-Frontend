@@ -39,6 +39,7 @@ const formProps = computed(() => ({
     fields: formMeta.value?.fields ?? [],
     groups: formMeta.value?.groups ?? [],
     consents: formMeta.value?.consents ?? [],
+    validation: formMeta.value?.validation,
     submit: formMeta.value?.submit,
   },
 }))

@@ -4,7 +4,7 @@
 import { shallowRef, computed, watch } from 'vue'
 import { CalendarDate } from '@internationalized/date'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
-import { parseISO, toISO, todayCalendarDate } from '@/components/DatePicker/helpers/date'
+import { parseISO, toISO, toNum, todayCalendarDate } from '@/components/DatePicker/helpers/date'
 import { makeIsDateDisabled } from '@/components/DatePicker/utils/range'
 
 const props = withDefaults(
@@ -32,17 +32,35 @@ const emit = defineEmits<{
 const isDateDisabled = computed(() => makeIsDateDisabled(props.disabledDates, { allowPast: !props.restrictToFuture }))
 
 /* ---------- selection (v-model) ---------- */
-const internal = shallowRef<{ start?: CalendarDate; end?: CalendarDate } | undefined>()
+const internal = shallowRef<any>()
+
+function isRangeValid(start: CalendarDate, end: CalendarDate): boolean {
+  if (toNum(start) > toNum(end)) return false
+  if (isDateDisabled.value(start) || isDateDisabled.value(end)) return false
+  return true
+}
 
 function syncInternalFromModel(value: RangeISO | null | undefined) {
   if (value?.start && value?.end) {
-    const alreadySynced = internal.value?.start && internal.value?.end && toISO(internal.value.start) === value.start && toISO(internal.value.end) === value.end
-
-    if (!alreadySynced) {
-      internal.value = {
-        start: parseISO(value.start),
-        end: parseISO(value.end),
+    try {
+      const start = parseISO(value.start)
+      const end = parseISO(value.end)
+      if (!isRangeValid(start, end)) {
+        internal.value = undefined
+        return
       }
+
+      const alreadySynced =
+        internal.value?.start &&
+        internal.value?.end &&
+        toISO(internal.value.start) === value.start &&
+        toISO(internal.value.end) === value.end
+
+      if (!alreadySynced) {
+        internal.value = { start, end }
+      }
+    } catch {
+      internal.value = undefined
     }
   } else {
     internal.value = undefined
@@ -64,6 +82,7 @@ watch(
   (val) => {
     if (props.readOnly) return
     if (val?.start && val?.end) {
+      if (!isRangeValid(val.start, val.end)) return
       emit('update:modelValue', {
         start: toISO(val.start),
         end: toISO(val.end),
