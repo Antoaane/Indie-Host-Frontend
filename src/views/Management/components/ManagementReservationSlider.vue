@@ -6,6 +6,7 @@ import type { SwiperOptions, SwiperModule } from 'swiper/types'
 import type { Swiper as SwiperInstance } from 'swiper/types'
 import { Swiper, SwiperSlide } from 'swiper/vue'
 import { FreeMode, Mousewheel } from 'swiper/modules'
+import SliderCorner from '@/components/svgs/images/SliderCorner.vue'
 
 import type { Reservation } from '@/views/Management/utils/managementReservations'
 
@@ -18,7 +19,11 @@ const emit = defineEmits<{
   (e: 'select', reservationId: string): void
 }>()
 
-const displayedReservations = computed(() => [...props.reservations].reverse())
+const displayedReservations = computed(() =>
+  [
+    ...props.reservations,
+  ].reverse(),
+)
 const swiperRef = ref<SwiperInstance | null>(null)
 const activeDisplayedIndex = computed(() => {
   if (!props.activeReservationId) return -1
@@ -129,6 +134,7 @@ function handleSelect(reservationId: string) {
 
 <template>
   <div class="management-reservation-slider">
+    <SliderCorner class="slider-corner-1" />
     <Swiper
       class="swiper"
       v-bind="sliderParams"
@@ -167,6 +173,7 @@ function handleSelect(reservationId: string) {
         </button>
       </SwiperSlide>
     </Swiper>
+    <SliderCorner class="slider-corner-2" />
   </div>
 </template>
 

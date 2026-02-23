@@ -2,7 +2,6 @@
 
 export type ListingStatus =
   | 'published'
-  | 'draft'
   | 'archived'
   | 'blocked'
   | 'paused'
@@ -26,7 +25,6 @@ export function getListingStatusFlags(status?: string | null) {
     isPaused,
     isBlocked,
     isPublished: normalized === 'published',
-    isDraft: normalized === 'draft',
     isArchived: normalized === 'archived',
     isVisiblePublic: !isPaused && !isDeleted,
     isBookable: !isBlocked && !isPaused && !isDeleted,

@@ -93,9 +93,6 @@
       flex-direction: column;
       gap: var(--layout-gap);
 
-      scrollbar-width: thin;
-      scrollbar-color: rgba($secondary, 0.25) $translucent;
-
       >.category {
         display: flex;
         flex-direction: column;

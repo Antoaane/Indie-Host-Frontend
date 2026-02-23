@@ -5,7 +5,12 @@ import { computed } from 'vue'
 import type { RawArrival } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
-import { formatValidationMessage, normalizeTextInput } from '@/utils/inputValidation'
+import {
+  formatValidationMessage,
+  normalizeTextInput,
+  resolveTextMaxLength,
+  shouldDisplayTextLimit,
+} from '@/utils/inputValidation'
 
 type TextSectionKey = 'savings' | 'access' | 'services'
 type TextSectionValues = Record<string, string>
@@ -32,7 +37,9 @@ const emit = defineEmits<{
 const resolvedValues = computed(() => props.values ?? {})
 const lockedFieldKeySet = computed(() => new Set((props.lockedFieldKeys ?? []).map((key) => key.trim())))
 const arrivalValidation = editorStatic.validation.arrival
-const fieldMaxLength = arrivalValidation.practicalFieldMax
+const textDefaults = editorStatic.validation.defaults.simpleText
+const fieldMaxLength = resolveTextMaxLength(arrivalValidation.practicalFieldMax, textDefaults)
+const showFieldCounter = shouldDisplayTextLimit(fieldMaxLength, textDefaults)
 
 function isLockedField(fieldKey: string): boolean {
   return lockedFieldKeySet.value.has(fieldKey.trim())
@@ -90,7 +97,10 @@ function fieldCounter(fieldKey: string): string {
             @input="updateField(field.key, ($event.target as HTMLInputElement).value)"
           />
         </div>
-        <small class="meta">
+        <small
+          v-if="showFieldCounter"
+          class="meta"
+        >
           {{ fieldCounter(field.key) }}
         </small>
         <small

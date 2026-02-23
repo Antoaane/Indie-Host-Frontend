@@ -21,8 +21,6 @@ html:has(#checkout) {
   @include layout-gap(padding, all);
 
   overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgba($secondary, 0.25) $translucent;
 
   >* {
     flex-shrink: 0;

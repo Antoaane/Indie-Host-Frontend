@@ -9,7 +9,12 @@ import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'
 import { resolveAmenityIconComponent, resolveLucideComponent } from '@/utils/amenitiesIcons'
 import { mockAmenitiesCatalog, type AmenityCatalogItem } from '@/views/Editor/mocks/amenitiesCatalog'
 import { getAmenityPerkDefaults } from '@/domain/listings/perks'
-import { formatValidationMessage, normalizeTextInput } from '@/utils/inputValidation'
+import {
+  formatValidationMessage,
+  normalizeTextInput,
+  resolveTextMaxLength,
+  shouldDisplayTextLimit,
+} from '@/utils/inputValidation'
 
 // TYPES
 import type { RawCore } from '@/domain/listings/types'
@@ -40,7 +45,9 @@ const catalogOpenCategories = ref<Record<string, boolean>>({})
 const defaultCatalogOpenLimit = 10
 const panelContent = editorStatic.panels.listing.amenities
 const amenitiesValidation = editorStatic.validation.listing.amenities
-const searchLimit = amenitiesValidation.searchMax
+const textDefaults = editorStatic.validation.defaults.simpleText
+const searchLimit = resolveTextMaxLength(amenitiesValidation.searchMax, textDefaults)
+const showSearchCounter = shouldDisplayTextLimit(searchLimit, textDefaults)
 
 function setAmenities(next: AmenityDraft[]) {
   emit('patch', { core: { amenities: next } })
@@ -488,7 +495,12 @@ watchEffect(() => {
                   autocomplete="off"
                 />
               </div>
-              <p class="meta">{{ searchCounter }}</p>
+              <p
+                v-if="showSearchCounter"
+                class="meta"
+              >
+                {{ searchCounter }}
+              </p>
             </div>
 
             <template v-if="catalogGroups.length">

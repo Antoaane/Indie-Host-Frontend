@@ -158,12 +158,6 @@ html:has(#core) {
   background-color: $accent;
   border-radius: borders.$rounded-xxl;
 
-  // overflow-y: scroll;
-  scrollbar-width: thin;
-  /* auto | thin | none */
-  scrollbar-color: rgba($secondary, 0.25) $translucent;
-  /* thumb | track */
-
   @include layout-gap(padding, all);
 
   @include min-width(lg) {
@@ -171,39 +165,6 @@ html:has(#core) {
     overflow-y: scroll;
     border-radius: borders.$rounded-lg;
     gap: var(--layout-gap-2xl);
-  }
-
-  /* Cible la scrollbar entière */
-  ::-webkit-scrollbar {
-    width: thin;
-    /* largeur verticale */
-  }
-
-  /* La "piste" (fond) */
-  ::-webkit-scrollbar-track {
-    background: $translucent;
-    /* couleur du fond */
-    border-radius: 6px;
-  }
-
-  /* Le "thumb" (curseur qu’on déplace) */
-  ::-webkit-scrollbar-thumb {
-    background: rgba($secondary, 0.6);
-    border-radius: borders.$rounded;
-    border: 2px solid $translucent;
-    /* crée un effet d’espace autour */
-  }
-
-  /* Changement au survol */
-  ::-webkit-scrollbar-thumb:hover {
-    background: rgba($secondary, 0.8);
-  }
-
-  /* Optionnel : boutons de défilement */
-  ::-webkit-scrollbar-button {
-    background: none;
-    display: none;
-    /* souvent on les cache */
   }
 }
 </style>

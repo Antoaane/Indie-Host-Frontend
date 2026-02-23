@@ -5,7 +5,14 @@ import { computed } from 'vue'
 import type { RawBookings } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
-import { clampInteger, formatValidationMessage, normalizeTextInput, parseOptionalInteger } from '@/utils/inputValidation'
+import {
+  clampInteger,
+  formatValidationMessage,
+  normalizeTextInput,
+  parseOptionalInteger,
+  resolveTextMaxLength,
+  shouldDisplayTextLimit,
+} from '@/utils/inputValidation'
 
 type FeeDraft = {
   name?: string
@@ -19,11 +26,17 @@ const LINEN_CODE = 'linen'
 const CLEANING_LABEL = panelContent.cleaning
 const LINEN_LABEL = panelContent.linen
 const pricingLimits = editorStatic.validation.pricing
+const textDefaults = editorStatic.validation.defaults.simpleText
+const customFeeNameMax = resolveTextMaxLength(pricingLimits.customFeeNameMax, textDefaults)
+const showCustomFeeNameLimit = shouldDisplayTextLimit(customFeeNameMax, textDefaults)
+const feesHintTemplate = showCustomFeeNameLimit
+  ? pricingLimits.messages.feesHint
+  : pricingLimits.messages.feesHintNoTextLimit
 const feesHint = computed(() =>
-  formatValidationMessage(pricingLimits.messages.feesHint, {
+  formatValidationMessage(feesHintTemplate, {
     moneyMin: pricingLimits.moneyMin,
     moneyMax: pricingLimits.moneyMax,
-    customFeeNameMax: pricingLimits.customFeeNameMax,
+    customFeeNameMax,
   }),
 )
 
@@ -118,7 +131,7 @@ function updateCustomFee(index: number, patch: Partial<FeeDraft>) {
   const nextPatch = {
     ...patch,
     ...(typeof patch.name === 'string'
-      ? { name: normalizeTextInput(patch.name, pricingLimits.customFeeNameMax) }
+      ? { name: normalizeTextInput(patch.name, customFeeNameMax) }
       : {}),
     ...(Object.prototype.hasOwnProperty.call(patch, 'amount')
       ? { amount: clampInteger(patch.amount, pricingLimits.moneyMin, pricingLimits.moneyMax, pricingLimits.moneyMin) }
@@ -236,7 +249,7 @@ function removeCustomFee(index: number) {
             <input
               :value="entry.fee.name ?? ''"
               type="text"
-              :maxlength="pricingLimits.customFeeNameMax"
+              :maxlength="customFeeNameMax"
               :placeholder="panelContent.customPlaceholder"
               autocomplete="off"
               inputmode="text"

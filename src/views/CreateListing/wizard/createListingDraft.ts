@@ -49,7 +49,7 @@ export function deepMerge(target: any, source: any): any {
 export function buildInitialDraft(): RawListingBundle {
   return {
     core: {
-      status: 'draft',
+      status: 'paused',
       title: '',
       type: '',
       precise_address: '',
@@ -101,7 +101,7 @@ export function normalizeBundleForCreate(bundle: RawListingBundle): RawListingBu
 
   const normalizedCore: Partial<RawCore> = {
     ...sourceCore,
-    status: normalizeListingStatus(String(sourceCore.status ?? '')) || 'draft',
+    status: normalizeListingStatus(String(sourceCore.status ?? '')) || 'paused',
     title: cleanText(sourceCore.title) || 'Nouvelle annonce',
     type: cleanText(sourceCore.type),
     precise_address: cleanText(sourceCore.precise_address),

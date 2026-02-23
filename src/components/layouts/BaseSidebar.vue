@@ -74,11 +74,11 @@ withDefaults(
 
   &.is-body-scrollable {
     > .base-sidebar__body {
-      overflow: auto;
+      overflow: scroll;
       scrollbar-width: none;
 
       &::-webkit-scrollbar {
-        display: none;
+        display: none !important;
       }
     }
   }

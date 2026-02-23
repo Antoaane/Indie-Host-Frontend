@@ -5,7 +5,12 @@ import { computed } from 'vue'
 import type { RawCore } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
-import { formatValidationMessage, normalizeTextInput } from '@/utils/inputValidation'
+import {
+  formatValidationMessage,
+  normalizeTextInput,
+  resolveTextMaxLength,
+  shouldDisplayTextLimit,
+} from '@/utils/inputValidation'
 
 const props = defineProps<{
   core?: Partial<RawCore> | null
@@ -16,11 +21,14 @@ const emit = defineEmits<{
 }>()
 
 const titleValidation = editorStatic.validation.listing.title
+const textDefaults = editorStatic.validation.defaults.simpleText
+const titleMaxLength = resolveTextMaxLength(titleValidation.max, textDefaults)
+const showTitleCounter = shouldDisplayTextLimit(titleMaxLength, textDefaults)
 
 const title = computed({
   get: () => props.core?.title ?? '',
   set: (value: string) => {
-    const next = normalizeTextInput(value, titleValidation.max)
+    const next = normalizeTextInput(value, titleMaxLength)
     if (next === (props.core?.title ?? '')) return
     emit('patch', { core: { title: next } })
   },
@@ -39,7 +47,7 @@ const panelContent = editorStatic.panels.listing.title
 const titleCounter = computed(() =>
   formatValidationMessage(titleValidation.messages.counter, {
     current: titleLength.value,
-    max: titleValidation.max,
+    max: titleMaxLength,
   }),
 )
 </script>
@@ -57,7 +65,7 @@ const titleCounter = computed(() =>
           v-model="title"
           type="text"
           :placeholder="panelContent.placeholder"
-          :maxlength="titleValidation.max"
+          :maxlength="titleMaxLength"
           :minlength="titleValidation.min"
           inputmode="text"
           autocomplete="off"
@@ -65,6 +73,7 @@ const titleCounter = computed(() =>
         />
       </div>
       <p
+        v-if="titleError || showTitleCounter"
         class="meta"
         :class="{ 'is-error': titleError }"
       >

@@ -6,7 +6,12 @@ import { computed, ref } from 'vue'
 import type { RawCore } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
-import { formatValidationMessage, normalizeTextInput } from '@/utils/inputValidation'
+import {
+  formatValidationMessage,
+  normalizeTextInput,
+  resolveTextMaxLength,
+  shouldDisplayTextLimit,
+} from '@/utils/inputValidation'
 
 const props = withDefaults(defineProps<{
   core?: Partial<RawCore> | null
@@ -21,12 +26,13 @@ const emit = defineEmits<{
 
 const panelContent = editorStatic.panels.listing.location
 const locationValidation = editorStatic.validation.listing.location
+const textDefaults = editorStatic.validation.defaults.simpleText
 const locationLimits = {
-  type: locationValidation.typeMax,
-  preciseAddress: locationValidation.preciseAddressMax,
-  city: locationValidation.cityMax,
-  country: locationValidation.countryMax,
-  region: locationValidation.regionMax,
+  type: resolveTextMaxLength(locationValidation.typeMax, textDefaults),
+  preciseAddress: resolveTextMaxLength(locationValidation.preciseAddressMax, textDefaults),
+  city: resolveTextMaxLength(locationValidation.cityMax, textDefaults),
+  country: resolveTextMaxLength(locationValidation.countryMax, textDefaults),
+  region: resolveTextMaxLength(locationValidation.regionMax, textDefaults),
 }
 
 const isResolvingAddress = ref(false)
@@ -89,6 +95,10 @@ const preciseAddressLengthError = computed(() => {
 
 function fieldCounter(current: number, max: number): string {
   return formatValidationMessage(locationValidation.messages.counter, { current, max })
+}
+
+function shouldShowFieldCounter(max: number): boolean {
+  return shouldDisplayTextLimit(max, textDefaults)
 }
 
 function patchTextField<K extends keyof RawCore>(key: K, rawValue: string, maxLength: number) {
@@ -221,7 +231,12 @@ async function maybeResolvePreciseAddress(rawAddress?: string) {
             @input="patchTextField('type', inputValue($event), locationLimits.type)"
           />
         </div>
-        <p class="meta">{{ fieldCounter(typeLength, locationLimits.type) }}</p>
+        <p
+          v-if="shouldShowFieldCounter(locationLimits.type)"
+          class="meta"
+        >
+          {{ fieldCounter(typeLength, locationLimits.type) }}
+        </p>
       </div>
 
       <div
@@ -242,7 +257,12 @@ async function maybeResolvePreciseAddress(rawAddress?: string) {
             @keydown.enter.prevent="resolvePreciseAddress(inputValue($event))"
           />
         </div>
-        <p class="meta">{{ fieldCounter(preciseAddressLength, locationLimits.preciseAddress) }}</p>
+        <p
+          v-if="shouldShowFieldCounter(locationLimits.preciseAddress)"
+          class="meta"
+        >
+          {{ fieldCounter(preciseAddressLength, locationLimits.preciseAddress) }}
+        </p>
       </div>
 
       <div
@@ -293,7 +313,12 @@ async function maybeResolvePreciseAddress(rawAddress?: string) {
               @input="patchTextField('city', inputValue($event), locationLimits.city)"
             />
           </div>
-          <p class="meta">{{ fieldCounter(cityLength, locationLimits.city) }}</p>
+          <p
+            v-if="shouldShowFieldCounter(locationLimits.city)"
+            class="meta"
+          >
+            {{ fieldCounter(cityLength, locationLimits.city) }}
+          </p>
         </div>
         <div class="field">
           <div class="input">
@@ -307,7 +332,12 @@ async function maybeResolvePreciseAddress(rawAddress?: string) {
               @input="patchTextField('country', inputValue($event), locationLimits.country)"
             />
           </div>
-          <p class="meta">{{ fieldCounter(countryLength, locationLimits.country) }}</p>
+          <p
+            v-if="shouldShowFieldCounter(locationLimits.country)"
+            class="meta"
+          >
+            {{ fieldCounter(countryLength, locationLimits.country) }}
+          </p>
         </div>
       </div>
       <div class="field">
@@ -322,7 +352,12 @@ async function maybeResolvePreciseAddress(rawAddress?: string) {
             @input="patchTextField('region', inputValue($event), locationLimits.region)"
           />
         </div>
-        <p class="meta">{{ fieldCounter(regionLength, locationLimits.region) }}</p>
+        <p
+          v-if="shouldShowFieldCounter(locationLimits.region)"
+          class="meta"
+        >
+          {{ fieldCounter(regionLength, locationLimits.region) }}
+        </p>
       </div>
     </div>
   </section>

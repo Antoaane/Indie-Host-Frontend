@@ -19,9 +19,16 @@ import App from './App.vue'
 import router from './router'
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
+const IN_DEV_UTILITIES_ROOT_CLASS = 'in-dev-utilities-enabled'
+const IN_DEV_UTILITIES_RAW = (import.meta.env.VITE_IN_DEV_UTILITIES_ENABLED ?? '').trim().toLowerCase()
+const IN_DEV_UTILITIES_ENABLED = ['1', 'true', 'yes', 'on'].includes(IN_DEV_UTILITIES_RAW)
 
 if (!PUBLISHABLE_KEY) {
   throw new Error('Missing VITE_CLERK_PUBLISHABLE_KEY in .env')
+}
+
+if (IN_DEV_UTILITIES_ENABLED) {
+  document.documentElement.classList.add(IN_DEV_UTILITIES_ROOT_CLASS)
 }
 
 const app = createApp(App)

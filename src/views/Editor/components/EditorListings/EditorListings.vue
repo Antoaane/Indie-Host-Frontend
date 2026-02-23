@@ -1,9 +1,9 @@
 <!-- File: src/views/Editor/components/EditorListings/EditorListings.vue -->
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { Camera, ChevronLeft, ChevronRight, Eye, Search } from 'lucide-vue-next'
+import { Camera, ChevronDown, ChevronLeft, ChevronRight, ExternalLink, Eye, Search } from 'lucide-vue-next'
 import type { Swiper as SwiperInstance } from 'swiper/types'
 import type { SwiperOptions } from 'swiper/types'
 import { Swiper, SwiperSlide } from 'swiper/vue'
@@ -25,12 +25,19 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'select', listingId: string): void
+  (e: 'preview', listingId: string): void
+  (e: 'status-change', payload: { listingId: string; status: string }): void
 }>()
 
 const query = ref('')
 const route = useRoute()
 const listingContent = editorStatic.listings
 const ACTIVE_LISTING_STATUSES = new Set(['published', 'blocked'])
+const STATUS_OPTIONS = [
+  'published',
+  'blocked',
+  'paused',
+] as const
 const maxActiveListings = getUserMaxActiveListings()
 const activeListingsCount = computed(() =>
   props.listings.reduce((count, listing) => count + (isActiveListingStatus(listing.status) ? 1 : 0), 0),
@@ -130,9 +137,11 @@ const cardSwiperBaseParams = createListingMediaSwiperParams({
   navigation: false,
   pagination: false,
 }) satisfies SwiperOptions
+const cardSwiperParams = cardSwiperBaseParams as unknown as Record<string, unknown>
 
 const swiperByListingId = new Map<string, SwiperInstance>()
 const activeIndexByListingId = ref<Record<string, number>>({})
+const openStatusMenuListingId = ref<string | null>(null)
 
 function activeIndexFor(listingId: string): number {
   return activeIndexByListingId.value[listingId] ?? 0
@@ -163,6 +172,10 @@ function handleSelect(listingId: string) {
   emit('select', listingId)
 }
 
+function handlePreview(listingId: string) {
+  emit('preview', listingId)
+}
+
 function statusLabel(status?: string) {
   const normalized = normalizeListingStatus(status)
   if (!normalized) return ''
@@ -170,8 +183,6 @@ function statusLabel(status?: string) {
   switch (normalized) {
     case 'published':
       return listingContent.status.published
-    case 'draft':
-      return listingContent.status.draft
     case 'archived':
       return listingContent.status.archived
     case 'blocked':
@@ -189,12 +200,56 @@ function statusVariant(status?: string) {
   const normalized = normalizeListingStatus(status)
   if (!normalized) return ''
   if (normalized === 'published') return 'is-published'
-  if (normalized === 'draft') return 'is-draft'
   if (normalized === 'archived') return 'is-archived'
   if (normalized === 'blocked') return 'is-blocked'
   if (normalized === 'paused') return 'is-paused'
   if (normalized === 'deleted') return 'is-deleted'
   return 'is-unknown'
+}
+
+function isStatusOptionSelected(currentStatus: string | undefined, option: string) {
+  return normalizeListingStatus(currentStatus) === option
+}
+
+function statusOptionAria(option: string) {
+  return listingContent.statusMenu.changeTo.replace('{status}', statusLabel(option))
+}
+
+function statusMenuId(listingId: string) {
+  return `listing-status-menu-${listingId}`
+}
+
+function isStatusMenuOpen(listingId: string) {
+  return openStatusMenuListingId.value === listingId
+}
+
+function closeStatusMenu() {
+  openStatusMenuListingId.value = null
+}
+
+function toggleStatusMenu(listingId: string) {
+  openStatusMenuListingId.value = openStatusMenuListingId.value === listingId ? null : listingId
+}
+
+function handleStatusMenuDocumentPointerDown(event: PointerEvent) {
+  const target = event.target
+  if (!(target instanceof Element)) {
+    closeStatusMenu()
+    return
+  }
+
+  if (target.closest('.status-menu')) return
+  closeStatusMenu()
+}
+
+function handleStatusMenuDocumentKeyDown(event: KeyboardEvent) {
+  if (event.key !== 'Escape') return
+  closeStatusMenu()
+}
+
+function setListingStatus(listingId: string, status: string) {
+  closeStatusMenu()
+  emit('status-change', { listingId, status })
 }
 
 function isActiveListingStatus(status?: string) {
@@ -226,6 +281,16 @@ function ratingAria(value: number) {
 function goToImageLabel(index: number) {
   return listingContent.carousel.goTo.replace('{index}', String(index))
 }
+
+onMounted(() => {
+  window.addEventListener('pointerdown', handleStatusMenuDocumentPointerDown)
+  window.addEventListener('keydown', handleStatusMenuDocumentKeyDown)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('pointerdown', handleStatusMenuDocumentPointerDown)
+  window.removeEventListener('keydown', handleStatusMenuDocumentKeyDown)
+})
 
 // const DRAFT_STORAGE_PREFIX = 'indiehost:listing-draft:'
 </script>
@@ -271,7 +336,7 @@ function goToImageLabel(index: number) {
                 >
                   <Swiper
                     class="swiper"
-                    v-bind="cardSwiperBaseParams"
+                    v-bind="cardSwiperParams"
                     @swiper="(swiper) => registerSwiper(swiper as SwiperInstance, listing.listingId)"
                     @slideChange="(swiper) => syncActiveIndex(swiper as SwiperInstance, listing.listingId)"
                   >
@@ -352,25 +417,69 @@ function goToImageLabel(index: number) {
                 />
               </div>
 
-              <span
-                v-if="listing.status"
-                class="status"
-                :class="statusVariant(listing.status)"
+              <div
+                v-if="statusLabel(listing.status)"
+                class="status-menu"
+                :class="{ 'is-open': isStatusMenuOpen(listing.listingId) }"
+                @click.stop
+                @pointerdown.stop
+                @keydown.escape.stop="closeStatusMenu"
               >
-                {{ statusLabel(listing.status) }}
-              </span>
+                <button
+                  class="status"
+                  :class="statusVariant(listing.status)"
+                  type="button"
+                  :aria-label="listingContent.statusMenu.open"
+                  :title="listingContent.statusMenu.label"
+                  :aria-expanded="isStatusMenuOpen(listing.listingId)"
+                  :aria-controls="statusMenuId(listing.listingId)"
+                  aria-haspopup="menu"
+                  @click.stop="toggleStatusMenu(listing.listingId)"
+                >
+                  <span class="text">{{ statusLabel(listing.status) }}</span>
+                  <ChevronDown :size="14" />
+                </button>
+
+                <div
+                  :id="statusMenuId(listing.listingId)"
+                  class="status-options"
+                  role="menu"
+                  :aria-label="listingContent.statusMenu.label"
+                >
+                  <button
+                    v-for="status in STATUS_OPTIONS"
+                    :key="`${listing.listingId}-${status}`"
+                    class="status-option"
+                    :class="{ 'is-active': isStatusOptionSelected(listing.status, status) }"
+                    type="button"
+                    role="menuitemradio"
+                    :aria-checked="isStatusOptionSelected(listing.status, status)"
+                    :aria-label="statusOptionAria(status)"
+                    :disabled="isStatusOptionSelected(listing.status, status)"
+                    @click.stop="setListingStatus(listing.listingId, status)"
+                  >
+                    {{ statusLabel(status) }}
+                  </button>
+                </div>
+              </div>
+
+              <div
+                v-if="listing.hasPendingChanges"
+                class="pending-changes"
+              >
+                {{ listingContent.pendingChanges.label }}
+              </div>
 
               <div class="preview">
                 <div>
-                  <RouterLink
-                    :to="{ name: 'listing', params: { id: listing.listingId } }"
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    type="button"
                     :aria-label="listingContent.previewLink"
-                    @click.stop
+                    @click.stop="handlePreview(listing.listingId)"
+                    @pointerdown.stop
                   >
                     <Eye :size="20" />
-                  </RouterLink>
+                  </button>
                 </div>
               </div>
             </div>
@@ -389,38 +498,39 @@ function goToImageLabel(index: number) {
               </div>
 
               <div class="footer">
-                <span
-                  v-if="typeof listing.pricePerNight === 'number'"
-                  class="price"
-                >
-                  {{ listing.pricePerNight }} € <span class="suffix">{{ listingContent.priceSuffix }}</span>
-                </span>
-                <span
-                  v-if="typeof listing.rating === 'number'"
-                  class="rating"
-                  :style="{ '--rating-percent': ratingPercent(listing.rating) }"
-                  :title="ratingTitle(listing.rating)"
-                  :aria-label="ratingAria(listing.rating)"
-                  role="img"
-                />
+                <div class="pricing">
+                  <span
+                    v-if="typeof listing.pricePerNight === 'number'"
+                    class="price"
+                  >
+                    {{ listing.pricePerNight }} € <span class="suffix">{{ listingContent.priceSuffix }}</span>
+                  </span>
+                  <span
+                    v-if="typeof listing.rating === 'number'"
+                    class="rating"
+                    :style="{ '--rating-percent': ratingPercent(listing.rating) }"
+                    :title="ratingTitle(listing.rating)"
+                    :aria-label="ratingAria(listing.rating)"
+                    role="img"
+                  />
+                </div>
+
+                <div class="public-link">
+                  <RouterLink
+                    :to="{ name: 'listing', params: { id: listing.listingId } }"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    :aria-label="listingContent.externalLink"
+                    @click.stop
+                    @pointerdown.stop
+                  >
+                    <ExternalLink :size="18" />
+                  </RouterLink>
+                </div>
               </div>
             </div>
             <!-- </div> -->
           </div>
-
-          <!-- <div class="preview">
-            <div>
-              <RouterLink
-                :to="{ name: 'listing', params: { id: listing.listingId } }"
-                target="_blank"
-                rel="noopener noreferrer"
-                :aria-label="listingContent.previewLink"
-                @click.stop
-              >
-                <Eye :size="20" />
-              </RouterLink>
-            </div>
-          </div> -->
         </article>
 
         <div class="new-card">

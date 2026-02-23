@@ -101,9 +101,6 @@
       flex-direction: column;
       gap: var(--layout-gap);
 
-      scrollbar-width: thin;
-      scrollbar-color: rgba($secondary, 0.25) $translucent;
-
       >.search {
         position: sticky;
         top: 0;

@@ -26,7 +26,7 @@ export function createListingMediaSwiperParams({
   slidesPerView = 1,
   spaceBetween = 0,
   centeredSlides = true,
-}: ListingMediaSwiperInput = {}): SwiperOptions {
+}: ListingMediaSwiperInput = {}) {
   const modules: SwiperModule[] = []
 
   const useAutoplayModule = withAutoplayModule ?? autoplay

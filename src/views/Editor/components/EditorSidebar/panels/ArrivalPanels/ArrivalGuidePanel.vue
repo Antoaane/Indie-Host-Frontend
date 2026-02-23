@@ -5,7 +5,13 @@ import { computed, onMounted, ref, watch } from 'vue'
 import type { RawArrival } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
-import { formatValidationMessage, normalizeTextInput, plainTextLengthFromHtml } from '@/utils/inputValidation'
+import {
+  formatValidationMessage,
+  normalizeTextInput,
+  plainTextLengthFromHtml,
+  resolveTextMaxLength,
+  shouldDisplayTextLimit,
+} from '@/utils/inputValidation'
 
 import { QuillyEditor } from 'vue-quilly'
 import type { QuillOptions } from 'quill/core'
@@ -24,12 +30,15 @@ const emit = defineEmits<{
 const panelContent = editorStatic.panels.arrival.guide
 const toolbarContent = editorStatic.panels.listing.description.toolbar
 const arrivalLimits = editorStatic.validation.arrival
+const textDefaults = editorStatic.validation.defaults.simpleText
+const guideTitleMaxLength = resolveTextMaxLength(arrivalLimits.guideTitleMax, textDefaults)
+const showGuideTitleCounter = shouldDisplayTextLimit(guideTitleMaxLength, textDefaults)
 const guideContentLengthLimit = arrivalLimits.guideContentMaxPlainText + 1
 
 const guideTitle = computed({
   get: () => props.arrival?.guide?.title ?? '',
   set: (value: string) => {
-    const next = normalizeTextInput(value, arrivalLimits.guideTitleMax)
+    const next = normalizeTextInput(value, guideTitleMaxLength)
     emit('patch', {
       arrival: {
         guide: {
@@ -79,11 +88,11 @@ watch(content, (value) => {
   }
 })
 
-const guideTitleLength = computed(() => Math.min(guideTitle.value.length, arrivalLimits.guideTitleMax))
+const guideTitleLength = computed(() => Math.min(guideTitle.value.length, guideTitleMaxLength))
 const guideTitleMeta = computed(() =>
   formatValidationMessage(arrivalLimits.messages.counter, {
     current: guideTitleLength.value,
-    max: arrivalLimits.guideTitleMax,
+    max: guideTitleMaxLength,
   }),
 )
 const guideContentMeta = computed(
@@ -159,13 +168,18 @@ onMounted(() => {
             type="text"
             :value="guideTitle"
             :placeholder="panelContent.titlePlaceholder"
-            :maxlength="arrivalLimits.guideTitleMax"
+            :maxlength="guideTitleMaxLength"
             autocomplete="off"
             inputmode="text"
             @input="guideTitle = ($event.target as HTMLInputElement).value"
           />
         </div>
-        <p class="meta">{{ guideTitleMeta }}</p>
+        <p
+          v-if="showGuideTitleCounter"
+          class="meta"
+        >
+          {{ guideTitleMeta }}
+        </p>
       </div>
 
       <p class="label">{{ panelContent.contentLabel }}</p>

@@ -6,7 +6,7 @@ import { ChevronUp, Minus, Pencil, Plus, Trash2, X } from 'lucide-vue-next'
 import type { RawCore } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
-import { clampInteger, normalizeTextInput } from '@/utils/inputValidation'
+import { clampInteger, normalizeTextInput, resolveTextMaxLength } from '@/utils/inputValidation'
 
 type RoomDraft = NonNullable<RawCore['rooms']>[number]
 type BedDraft = NonNullable<NonNullable<RoomDraft['beds']>[number]>
@@ -43,6 +43,8 @@ const NON_SLEEPING_ROOM_TYPES = new Set([
 ])
 const OTHER_ROOM_TYPE = 'other'
 const roomsLimits = editorStatic.validation.listing.rooms
+const textDefaults = editorStatic.validation.defaults.simpleText
+const roomNameMaxLength = resolveTextMaxLength(roomsLimits.roomNameMax, textDefaults)
 
 const collapsedRooms = ref<boolean[]>([])
 
@@ -65,7 +67,7 @@ watch(
 
 function setRooms(next: RoomDraft[]) {
   const sanitized = next.map((room) => {
-    const roomName = normalizeTextInput(String(room['room-name'] ?? ''), roomsLimits.roomNameMax).trim()
+    const roomName = normalizeTextInput(String(room['room-name'] ?? ''), roomNameMaxLength).trim()
     const baseRoom = {
       ...room,
       'room-name': roomName || panelContent.roomLabelGeneric,
@@ -217,7 +219,7 @@ function promptCustomRoomName(currentValue: string) {
   if (typeof window === 'undefined') return currentValue || fallbackLabel
 
   const response = window.prompt('Nom personnalisé de la pièce', currentValue)
-  const nextValue = normalizeTextInput((response ?? '').trim(), roomsLimits.roomNameMax)
+  const nextValue = normalizeTextInput((response ?? '').trim(), roomNameMaxLength)
   return nextValue || currentValue || fallbackLabel
 }
 

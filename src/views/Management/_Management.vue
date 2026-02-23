@@ -466,7 +466,7 @@ const paymentStatusClass = computed(() => {
         <div class="content">
           <div class="reservation-toolbar">
             <div
-              class="icon-btn calendar"
+              class="icon-btn calendar in-dev-hide"
               :class="{ 'is-active': stage === 'calendar' }"
             >
               <button
@@ -484,7 +484,7 @@ const paymentStatusClass = computed(() => {
               @select="handleSelectReservation"
             />
 
-            <div class="icon-btn add">
+            <div class="icon-btn add in-dev-hide">
               <button
                 type="button"
                 aria-label="Ajouter une r&eacute;servation"

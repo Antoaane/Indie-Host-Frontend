@@ -59,18 +59,18 @@
   }
 
   .reservation-toolbar {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    display: flex;
     align-items: center;
     gap: var(--layout-gap-sm);
 
     padding-bottom: var(--layout-gap-sm);
     border-bottom: 1px solid rgba($secondary, 0.08);
 
-    @include layout-gap(padding, inline, 0.5);
+    // @include layout-gap(padding, inline, 0.5);
   }
 
   .icon-btn {
+    height: max-content;
     @include buttons.primary($theme: white, $icon-only: true, $deep: true);
 
     >* {

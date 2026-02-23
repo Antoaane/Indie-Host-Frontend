@@ -46,12 +46,6 @@
         min-height: 0;
         position: relative;
       }
-
-      >.footer {
-        flex: 0 0 auto;
-        padding: var(--layout-gap-sm) 3px;
-        background: $secondary;
-      }
     }
   }
 }

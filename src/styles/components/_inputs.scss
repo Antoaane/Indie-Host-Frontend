@@ -82,6 +82,17 @@ $input-sizes: (
   }
 }
 
+input[type='number'] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
 @mixin field($theme: base, $compact: false) {
   $field-padding-y: if($compact, 0.5rem, 0.65rem);
 
@@ -117,16 +128,6 @@ $input-sizes: (
     &:disabled {
       cursor: not-allowed;
       color: rgba(input-token($theme, text), 0.5);
-    }
-
-    &[type='number'] {
-      -moz-appearance: textfield;
-
-      &::-webkit-outer-spin-button,
-      &::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-      }
     }
   }
 }

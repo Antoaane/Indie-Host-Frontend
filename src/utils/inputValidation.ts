@@ -1,5 +1,30 @@
 // File: src/utils/inputValidation.ts
 
+const DEFAULT_SIMPLE_TEXT_MAX_LENGTH = 255
+
+export type SimpleTextDefaultsConfig = {
+  maxLength?: number
+  hideIndicatorAt?: number
+}
+
+function asPositiveInteger(value: unknown): number | null {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed)) return null
+  const integer = Math.trunc(parsed)
+  if (integer <= 0) return null
+  return integer
+}
+
+export function resolveTextMaxLength(configuredMax: unknown, defaults?: SimpleTextDefaultsConfig): number {
+  const fallbackMaxLength = asPositiveInteger(defaults?.maxLength) ?? DEFAULT_SIMPLE_TEXT_MAX_LENGTH
+  return asPositiveInteger(configuredMax) ?? fallbackMaxLength
+}
+
+export function shouldDisplayTextLimit(maxLength: number, defaults?: SimpleTextDefaultsConfig): boolean {
+  const hideIndicatorAt = asPositiveInteger(defaults?.hideIndicatorAt) ?? DEFAULT_SIMPLE_TEXT_MAX_LENGTH
+  return maxLength !== hideIndicatorAt
+}
+
 export function normalizeTextInput(value: unknown, maxLength: number): string {
   if (typeof value !== 'string') return ''
   return value.slice(0, Math.max(0, maxLength))

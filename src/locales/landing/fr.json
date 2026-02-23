@@ -341,6 +341,12 @@
         }
       ],
       "validation": {
+        "defaults": {
+          "simpleText": {
+            "maxLength": 255,
+            "hideIndicatorAt": 255
+          }
+        },
         "fields": {
           "text": {
             "maxLength": 80,

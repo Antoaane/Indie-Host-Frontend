@@ -55,6 +55,23 @@ $breakpoints: (
   }
 }
 
+@function responsive-grid-track($min-card-width) {
+  @return minmax(min(100%, #{$min-card-width}), 1fr);
+}
+
+@mixin responsive-grid-columns($min-card-width, $fit-mode: auto-fit) {
+  grid-template-columns: repeat($fit-mode, responsive-grid-track($min-card-width));
+}
+
+// Backward-compatible aliases for existing components.
+@function adaptive-grid-track($min-card-width) {
+  @return responsive-grid-track($min-card-width);
+}
+
+@mixin adaptive-grid-columns($min-card-width, $fit-mode: auto-fit) {
+  @include responsive-grid-columns($min-card-width, $fit-mode);
+}
+
 @function get-layout-gap($multiple: 1) {
   // @return (base: (calc(0.75rem * #{$multiple})),
   //   md: (calc(1rem * #{$multiple})),

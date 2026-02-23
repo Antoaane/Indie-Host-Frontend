@@ -72,7 +72,7 @@ const props = withDefaults(
 // console.log(`${data?.comments?.length ? '✅' : '❌'} [Comments.vue](setup) core:resolved commentsCount=${data.comments?.length ?? 0} fetched`)
 // console.log(`${'ℹ️'} [Comments.vue](setup) contentLoaded=commentsWidget ready for render`)
 
-const previewLimit = content.preview?.maxItems ?? 5
+const previewLimit = content.preview?.maxItems ?? 10
 
 const overlayStep = 10
 const isOverlayOpen = ref(false)

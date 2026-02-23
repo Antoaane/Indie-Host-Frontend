@@ -13,14 +13,13 @@ import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 
 type SidebarTab = 'listing' | 'pricing' | 'arrival'
-type SuccessFeedback = 'save' | 'publish' | null
+type SuccessFeedback = 'publish' | null
 
 const props = defineProps<{
   listingId: string
   draft: RawListingBundle
   isLoading?: boolean
   isPatchSyncing?: boolean
-  save: () => Promise<void>
   publish: () => Promise<void>
 }>()
 
@@ -30,15 +29,14 @@ const emit = defineEmits<{
 
 const tab = ref<SidebarTab>('listing')
 
-const isSaving = ref(false)
 const isPublishing = ref(false)
 const error = ref<string | null>(null)
 const successFeedback = ref<SuccessFeedback>(null)
 const successTimer = ref<number | null>(null)
 const sidebarContent = editorStatic.sidebar
 
-const canInteract = computed(() => !props.isLoading && !props.isPatchSyncing && !isSaving.value && !isPublishing.value)
-const isActionRunning = computed(() => isSaving.value || isPublishing.value)
+const canPublish = computed(() => !props.isLoading && !isPublishing.value)
+const isActionRunning = computed(() => isPublishing.value)
 
 function handlePatch(patch: DraftPatch) {
   emit('patch', patch)
@@ -52,9 +50,9 @@ function clearSuccessFeedback() {
   successFeedback.value = null
 }
 
-function showSuccessFeedback(type: Exclude<SuccessFeedback, null>) {
+function showSuccessFeedback() {
   clearSuccessFeedback()
-  successFeedback.value = type
+  successFeedback.value = 'publish'
   successTimer.value = window.setTimeout(() => {
     successFeedback.value = null
     successTimer.value = null
@@ -70,29 +68,14 @@ watch(
   },
 )
 
-async function saveDraft() {
-  if (!canInteract.value) return
-  error.value = null
-
-  isSaving.value = true
-  try {
-    await props.save()
-    showSuccessFeedback('save')
-  } catch (err: any) {
-    error.value = err?.message ?? sidebarContent.errors.save
-  } finally {
-    isSaving.value = false
-  }
-}
-
 async function publishDraft() {
-  if (!canInteract.value) return
+  if (!canPublish.value) return
   error.value = null
 
   isPublishing.value = true
   try {
     await props.publish()
-    showSuccessFeedback('publish')
+    showSuccessFeedback()
   } catch (err: any) {
     error.value = err?.message ?? sidebarContent.errors.publish
   } finally {
@@ -119,7 +102,7 @@ onBeforeUnmount(() => {
           role="status"
           aria-live="polite"
         >
-          {{ successFeedback === 'save' ? sidebarContent.success.save : sidebarContent.success.publish }}
+          {{ sidebarContent.success.publish }}
         </p>
       </Transition>
 
@@ -155,20 +138,19 @@ onBeforeUnmount(() => {
       >
         {{ error }}
       </p>
+      <p
+        v-if="props.isPatchSyncing"
+        class="sync-status"
+        role="status"
+        aria-live="polite"
+      >
+        {{ sidebarContent.sync.pending }}
+      </p>
       <div class="actions">
-        <div class="btn-primary__black__full">
-          <button
-            type="button"
-            :disabled="!canInteract"
-            @click="saveDraft"
-          >
-            {{ sidebarContent.actions.save }}
-          </button>
-        </div>
         <div class="btn-primary__white__full">
           <button
             type="button"
-            :disabled="!canInteract"
+            :disabled="!canPublish"
             @click="publishDraft"
           >
             {{ sidebarContent.actions.apply }}
@@ -218,7 +200,7 @@ onBeforeUnmount(() => {
 
     > .actions {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: minmax(0, 1fr);
       gap: var(--layout-gap-sm);
     }
 
@@ -227,6 +209,13 @@ onBeforeUnmount(() => {
       font-size: 0.9rem;
       font-weight: 500;
       color: rgba($bad, 0.95);
+    }
+
+    > .sync-status {
+      margin: 0 0 var(--layout-gap-sm) 0;
+      font-size: 0.86rem;
+      font-weight: 600;
+      color: rgba($secondary, 0.7);
     }
   }
 

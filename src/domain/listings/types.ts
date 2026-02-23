@@ -150,6 +150,7 @@ export type UserListingCard = {
   listingId: string
   title?: string
   status?: string
+  hasPendingChanges?: boolean
   coverSrc?: string
   images?: Array<{
     src: string

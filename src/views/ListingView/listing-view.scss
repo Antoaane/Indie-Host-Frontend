@@ -74,7 +74,6 @@
     height: 100%;
     overflow: hidden;
     overflow-y: scroll;
-    scrollbar-width: none;
 
     >.core {
       @include layout-gap(padding, inline, 0.5);

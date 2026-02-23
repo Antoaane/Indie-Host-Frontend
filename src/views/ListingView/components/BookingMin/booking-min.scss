@@ -103,8 +103,6 @@
     >.content {
       margin-top: var(--layout-gap-xs);
       overflow-y: auto;
-      scrollbar-width: thin;
-      scrollbar-color: rgba($secondary, 0.25) $translucent;
     }
 
     >.content>.placeholder {

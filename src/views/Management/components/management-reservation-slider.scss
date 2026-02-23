@@ -8,6 +8,29 @@
   min-width: 0;
   width: 100%;
 
+  position: relative;
+
+  [class^="slider-corner"] {
+    height: 45px;
+
+    position: absolute;
+    top: 3.5px;
+    z-index: 99;
+
+    * {
+      fill: $secondary;
+    }
+  }
+
+  .slider-corner-1 {
+    left: -1px;
+    transform: rotate(180deg);
+  }
+
+  .slider-corner-2 {
+    right: -1px;
+  }
+
   >.swiper {
     width: 100%;
 

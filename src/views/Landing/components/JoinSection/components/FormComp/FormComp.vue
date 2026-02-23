@@ -1,6 +1,8 @@
 <!-- File: src/views/Landing/components/JoinSection/components/FormComp/FormComp.vue -->
 
 <script setup lang="ts">
+import { resolveTextMaxLength } from '@/utils/inputValidation'
+
 // Types minimes pour typer les props
 type FieldDef = {
   type: string
@@ -40,6 +42,12 @@ type FieldValidation = {
 }
 
 type FormValidation = {
+  defaults?: {
+    simpleText?: {
+      maxLength?: number
+      hideIndicatorAt?: number
+    }
+  }
   fields?: {
     text?: FieldValidation
     email?: FieldValidation
@@ -114,7 +122,10 @@ function resolveInputMode(field: FieldDef): 'email' | 'tel' | 'numeric' | 'text'
 }
 
 function resolveMaxLength(field: FieldDef): number | undefined {
-  return resolveFieldValidation(field).maxLength
+  return resolveTextMaxLength(
+    resolveFieldValidation(field).maxLength,
+    props.data.validation?.defaults?.simpleText,
+  )
 }
 
 function resolveMinLength(field: FieldDef): number | undefined {

@@ -11,6 +11,7 @@ import {
   formatValidationMessage,
   humanizeGalleryMimeTypes,
   normalizeTextInput,
+  resolveTextMaxLength,
   validateGalleryImageFile,
 } from '@/utils/inputValidation'
 
@@ -29,6 +30,8 @@ const panelContent = editorStatic.panels.listing.gallery
 const dragLabel = 'Reordonner la photo'
 const galleryLimits = editorStatic.validation.listing.gallery
 const titleValidation = editorStatic.validation.listing.title
+const textDefaults = editorStatic.validation.defaults.simpleText
+const imageAltMaxLength = resolveTextMaxLength(titleValidation.max, textDefaults)
 const fileInput = ref<HTMLInputElement | null>(null)
 const replaceInput = ref<HTMLInputElement | null>(null)
 const tileRefs = ref<HTMLElement[]>([])
@@ -175,7 +178,7 @@ async function onFilePicked(event: Event) {
 
   try {
     const src = await readFileAsDataUrl(file)
-    const alt = normalizeTextInput(file.name.replace(/\.[^/.]+$/, ''), titleValidation.max)
+    const alt = normalizeTextInput(file.name.replace(/\.[^/.]+$/, ''), imageAltMaxLength)
     const next = normalizePositions([
       ...orderedImages.value,
       { src, alt, position: images.value.length } as DraftImage,
@@ -233,7 +236,7 @@ async function onReplacePicked(event: Event) {
           throw new Error(validation.message)
         }
         const src = await readFileAsDataUrl(file)
-        const alt = normalizeTextInput(file.name.replace(/\.[^/.]+$/, ''), titleValidation.max)
+        const alt = normalizeTextInput(file.name.replace(/\.[^/.]+$/, ''), imageAltMaxLength)
         return { src, alt }
       }),
     )

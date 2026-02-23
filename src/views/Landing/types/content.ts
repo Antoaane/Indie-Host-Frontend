@@ -113,7 +113,15 @@ export interface JoinFormValidationField {
   patternTitle?: string
 }
 
+export interface JoinFormSimpleTextDefaults {
+  maxLength?: number
+  hideIndicatorAt?: number
+}
+
 export interface JoinFormValidation {
+  defaults?: {
+    simpleText?: JoinFormSimpleTextDefaults
+  }
   fields?: {
     text?: JoinFormValidationField
     email?: JoinFormValidationField

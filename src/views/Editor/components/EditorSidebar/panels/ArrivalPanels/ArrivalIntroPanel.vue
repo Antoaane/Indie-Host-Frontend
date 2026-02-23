@@ -5,7 +5,12 @@ import { computed } from 'vue'
 import type { RawArrival } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
-import { formatValidationMessage, normalizeTextInput } from '@/utils/inputValidation'
+import {
+  formatValidationMessage,
+  normalizeTextInput,
+  resolveTextMaxLength,
+  shouldDisplayTextLimit,
+} from '@/utils/inputValidation'
 
 const props = defineProps<{
   arrival?: Partial<RawArrival> | null
@@ -18,13 +23,18 @@ const emit = defineEmits<{
 const panelContent = editorStatic.panels.arrival.intro
 const intro = computed(() => props.arrival?.intro ?? { title: '', subtitle: '', tagline: '' })
 const introLimits = editorStatic.validation.arrival
-const titleLength = computed(() => Math.min(String(intro.value.title ?? '').length, introLimits.titleMax))
+const textDefaults = editorStatic.validation.defaults.simpleText
+const titleMaxLength = resolveTextMaxLength(introLimits.titleMax, textDefaults)
+const taglineMaxLength = resolveTextMaxLength(introLimits.taglineMax, textDefaults)
+const showTitleCounter = shouldDisplayTextLimit(titleMaxLength, textDefaults)
+const showTaglineCounter = shouldDisplayTextLimit(taglineMaxLength, textDefaults)
+const titleLength = computed(() => Math.min(String(intro.value.title ?? '').length, titleMaxLength))
 const subtitleLength = computed(() => Math.min(String(intro.value.subtitle ?? '').length, introLimits.subtitleMax))
-const taglineLength = computed(() => Math.min(String(intro.value.tagline ?? '').length, introLimits.taglineMax))
+const taglineLength = computed(() => Math.min(String(intro.value.tagline ?? '').length, taglineMaxLength))
 const titleCounter = computed(() =>
   formatValidationMessage(introLimits.messages.counter, {
     current: titleLength.value,
-    max: introLimits.titleMax,
+    max: titleMaxLength,
   }),
 )
 const subtitleCounter = computed(() =>
@@ -36,15 +46,15 @@ const subtitleCounter = computed(() =>
 const taglineCounter = computed(() =>
   formatValidationMessage(introLimits.messages.counter, {
     current: taglineLength.value,
-    max: introLimits.taglineMax,
+    max: taglineMaxLength,
   }),
 )
 
 function updateIntro(patch: Partial<NonNullable<RawArrival['intro']>>) {
   const sanitizedPatch = {
-    ...(typeof patch.title === 'string' ? { title: normalizeTextInput(patch.title, introLimits.titleMax) } : {}),
+    ...(typeof patch.title === 'string' ? { title: normalizeTextInput(patch.title, titleMaxLength) } : {}),
     ...(typeof patch.subtitle === 'string' ? { subtitle: normalizeTextInput(patch.subtitle, introLimits.subtitleMax) } : {}),
-    ...(typeof patch.tagline === 'string' ? { tagline: normalizeTextInput(patch.tagline, introLimits.taglineMax) } : {}),
+    ...(typeof patch.tagline === 'string' ? { tagline: normalizeTextInput(patch.tagline, taglineMaxLength) } : {}),
   }
 
   emit('patch', {
@@ -73,13 +83,18 @@ function updateIntro(patch: Partial<NonNullable<RawArrival['intro']>>) {
             type="text"
             :value="intro.title"
             :placeholder="panelContent.fields.title.placeholder"
-            :maxlength="introLimits.titleMax"
+            :maxlength="titleMaxLength"
             autocomplete="off"
             inputmode="text"
             @input="updateIntro({ title: ($event.target as HTMLInputElement).value })"
           />
         </div>
-        <p class="meta">{{ titleCounter }}</p>
+        <p
+          v-if="showTitleCounter"
+          class="meta"
+        >
+          {{ titleCounter }}
+        </p>
       </div>
       <div class="input">
         <label>{{ panelContent.fields.subtitle.label }}</label>
@@ -102,13 +117,18 @@ function updateIntro(patch: Partial<NonNullable<RawArrival['intro']>>) {
             type="text"
             :value="intro.tagline"
             :placeholder="panelContent.fields.tagline.placeholder"
-            :maxlength="introLimits.taglineMax"
+            :maxlength="taglineMaxLength"
             autocomplete="off"
             inputmode="text"
             @input="updateIntro({ tagline: ($event.target as HTMLInputElement).value })"
           />
         </div>
-        <p class="meta">{{ taglineCounter }}</p>
+        <p
+          v-if="showTaglineCounter"
+          class="meta"
+        >
+          {{ taglineCounter }}
+        </p>
       </div>
     </div>
   </section>

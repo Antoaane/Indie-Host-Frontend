@@ -22,7 +22,6 @@ body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
-  scrollbar-width: none;
 
   background-color: $secondary;
 
@@ -120,6 +119,17 @@ ul {
 
 .fallback-warning {
   color: rgb(152, 124, 0) !important;
+}
+
+html.in-dev-utilities-enabled {
+  .in-dev {
+    pointer-events: none !important;
+    opacity: 0.25 !important;
+  }
+
+  .in-dev-hide {
+    display: none !important;
+  }
 }
 
 
