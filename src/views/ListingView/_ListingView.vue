@@ -12,6 +12,8 @@ import { deriveBookedDaysFromReservations, nightsBetween, normalizeBookedDay, no
 import { getListingsController } from '@/domain/listings/controller'
 import type { RawBookingReservation, RawBookings, RawListingBundle } from '@/domain/listings/types'
 import { getListingStatusFlags } from '@/domain/listings/status'
+import { resolveCheckoutPaymentBreakdown, type CheckoutPaymentBreakdown, type CheckoutPaymentChoice } from '@/domain/payments/checkoutPayment'
+import { getOwnerStripeConnectAccountId } from '@/domain/user/stripeConnect'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
 
 // COMPONENTS
@@ -83,7 +85,14 @@ const aspectStyles = computed<StyleValue>(() => {
 
 type CheckoutConfirmationPayload = {
   travelerMessage: string
-  paymentChoice: 'full' | 'split' | 'cash'
+  paymentChoice: CheckoutPaymentChoice
+  payment: {
+    breakdown: CheckoutPaymentBreakdown
+    paymentIntentId: string
+    paymentIntentStatus: string
+    currency: string
+    connectedAccountId: string
+  }
 }
 
 function normalizeListingId(value: unknown): string | null {
@@ -94,6 +103,7 @@ function normalizeListingId(value: unknown): string | null {
 }
 
 const listingId = computed(() => normalizeListingId(route.params.id) ?? normalizeListingId(props.rawListing?.core?.id) ?? null)
+const ownerStripeConnectAccountId = computed(() => getOwnerStripeConnectAccountId())
 
 function sanitizeIdPart(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9-]/g, '-')
@@ -181,38 +191,6 @@ function rangesOverlap(aStart: string, aEnd: string, bStart: string, bEnd: strin
   return aStartMs < bEndMs && bStartMs < aEndMs
 }
 
-function resolvePayment(total: number, paymentChoice: CheckoutConfirmationPayload['paymentChoice']) {
-  if (paymentChoice === 'split') {
-    const deposit = Math.round(total * 0.5)
-    return {
-      total,
-      deposit,
-      balance: Math.max(0, total - deposit),
-      status: 'pending' as const,
-      method: 'Carte',
-    }
-  }
-
-  if (paymentChoice === 'cash') {
-    const deposit = Math.round(total * 0.25)
-    return {
-      total,
-      deposit,
-      balance: Math.max(0, total - deposit),
-      status: 'pending' as const,
-      method: 'Espèces',
-    }
-  }
-
-  return {
-    total,
-    deposit: total,
-    balance: 0,
-    status: 'pending' as const,
-    method: 'Carte',
-  }
-}
-
 function buildReservationFromCheckout(
   currentListingId: string,
   reservationPayload: ReservationPayload,
@@ -228,7 +206,46 @@ function buildReservationFromCheckout(
   }
 
   const total = Math.max(0, Math.round(Number(reservationPayload.total) || 0))
-  const payment = resolvePayment(total, confirmationPayload.paymentChoice)
+  const breakdown = resolveCheckoutPaymentBreakdown({
+    totalAmount: total,
+    choice: confirmationPayload.paymentChoice,
+    arrivalDateISO: normalizedRange.start,
+  })
+  const emittedBreakdown = confirmationPayload.payment.breakdown
+  if (
+    emittedBreakdown.totalAmount !== breakdown.totalAmount ||
+    emittedBreakdown.chargeNowAmount !== breakdown.chargeNowAmount ||
+    emittedBreakdown.deferredAmount !== breakdown.deferredAmount
+  ) {
+    console.warn('[ListingView] payment breakdown mismatch, using server-side-safe computed breakdown', {
+      emittedBreakdown,
+      computedBreakdown: breakdown,
+    })
+  }
+  const paymentIntentStatus = confirmationPayload.payment.paymentIntentStatus
+  const immediateChargeSettled =
+    paymentIntentStatus === 'succeeded' ||
+    paymentIntentStatus === 'processing' ||
+    paymentIntentStatus === 'requires_capture'
+
+  const payment = {
+    total: breakdown.totalAmount,
+    deposit: breakdown.chargeNowAmount,
+    balance: breakdown.deferredAmount,
+    status: breakdown.deferredAmount === 0 && immediateChargeSettled ? 'paid' as const : 'pending' as const,
+    method: breakdown.reservationMethodLabel,
+    stripe: {
+      paymentIntentId: confirmationPayload.payment.paymentIntentId,
+      status: paymentIntentStatus,
+      currency: confirmationPayload.payment.currency,
+      connectedAccountId: confirmationPayload.payment.connectedAccountId,
+      paymentChoice: confirmationPayload.paymentChoice,
+      chargeNowAmount: breakdown.chargeNowAmount,
+      deferredAmount: breakdown.deferredAmount,
+      deferredMode: breakdown.deferredMode,
+      deferredDueDateISO: breakdown.deferredDueDateISO,
+    },
+  }
 
   const [
     reservation,
@@ -398,6 +415,8 @@ async function confirmCheckout(payload: CheckoutConfirmationPayload) {
             key="checkout"
             :listing="listingData"
             :reservation="checkoutPayload!"
+            :listing-id="listingId ?? ''"
+            :connected-account-id="ownerStripeConnectAccountId"
             :is-submitting="checkoutStatus.isSubmitting"
             :submit-error="checkoutStatus.error"
             @cancel="cancelCheckout"
@@ -487,6 +506,8 @@ async function confirmCheckout(payload: CheckoutConfirmationPayload) {
                 <Checkout
                   :listing="listingData"
                   :reservation="checkoutPayload!"
+                  :listing-id="listingId ?? ''"
+                  :connected-account-id="ownerStripeConnectAccountId"
                   :is-submitting="checkoutStatus.isSubmitting"
                   :submit-error="checkoutStatus.error"
                   @cancel="cancelCheckout"

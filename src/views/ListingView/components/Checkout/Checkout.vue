@@ -1,16 +1,45 @@
 <!-- File: src/views/ListingView/components/Checkout/Checkout.vue -->
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import { CalendarDays, ChevronLeft, CreditCard, Globe, Lock, MapPin, Star, User } from 'lucide-vue-next'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { ChevronLeft, Lock, Star } from 'lucide-vue-next'
+import type { Stripe, StripeElements, StripePaymentElement } from '@stripe/stripe-js'
 
 import type { ListingParsed } from '@/views/ListingView/types/listing'
 import type { ReservationPayload } from '@/views/ListingView/types/reservation'
+import { createStripePaymentIntent } from '@/domain/api/stripePayments'
+import {
+  buildStripeReservationMetadata,
+  resolveCheckoutPaymentBreakdown,
+  type CheckoutPaymentBreakdown,
+  type CheckoutPaymentChoice,
+} from '@/domain/payments/checkoutPayment'
+import { getStripePaymentReturnUrl, getStripePublishableKey, loadStripeClient } from '@/domain/payments/stripeClient'
+
+type CheckoutConfirmationPayload = {
+  travelerMessage: string
+  paymentChoice: CheckoutPaymentChoice
+  payment: {
+    breakdown: CheckoutPaymentBreakdown
+    paymentIntentId: string
+    paymentIntentStatus: string
+    currency: string
+    connectedAccountId: string
+  }
+}
+
+const ACCEPTED_PAYMENT_INTENT_STATUSES = new Set([
+  'succeeded',
+  'processing',
+  'requires_capture',
+])
 
 const props = withDefaults(
   defineProps<{
     reservation: ReservationPayload
     listing: ListingParsed
+    listingId: string
+    connectedAccountId: string | null
     isSubmitting?: boolean
     submitError?: string | null
   }>(),
@@ -22,12 +51,23 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (e: 'cancel'): void
-  (e: 'confirm', payload: { travelerMessage: string; paymentChoice: 'full' | 'split' | 'cash' }): void
+  (e: 'confirm', payload: CheckoutConfirmationPayload): void
 }>()
 
-const paymentChoice = ref<'full' | 'split' | 'cash'>('full')
+const paymentChoice = ref<CheckoutPaymentChoice>('full')
 const travelerMessageOpen = ref(false)
 const travelerMessage = ref('')
+const paymentIntentError = ref<string | null>(null)
+const isPreparingPayment = ref(false)
+const isConfirmingPayment = ref(false)
+const paymentElementMount = ref<HTMLDivElement | null>(null)
+const paymentIntentId = ref<string | null>(null)
+const paymentIntentCurrency = ref('eur')
+
+let stripe: Stripe | null = null
+let stripeElements: StripeElements | null = null
+let paymentElement: StripePaymentElement | null = null
+let intentRequestSequence = 0
 
 const currency = new Intl.NumberFormat('fr-FR', {
   style: 'currency',
@@ -35,17 +75,30 @@ const currency = new Intl.NumberFormat('fr-FR', {
   maximumFractionDigits: 0,
 })
 
-const total = computed(() => props.reservation.total)
-const splitNow = computed(() => Math.round(total.value * 0.5))
-const splitLater = computed(() => Math.max(0, total.value - splitNow.value))
-const cashNow = computed(() => Math.round(total.value * 0.25))
-const cashLater = computed(() => Math.max(0, total.value - cashNow.value))
+const totalLabel = computed(() => currency.format(props.reservation.total))
 
-const totalLabel = computed(() => currency.format(total.value))
-const splitNowLabel = computed(() => currency.format(splitNow.value))
-const splitLaterLabel = computed(() => currency.format(splitLater.value))
-const cashNowLabel = computed(() => currency.format(cashNow.value))
-const cashLaterLabel = computed(() => currency.format(cashLater.value))
+const splitBreakdown = computed(() => resolveCheckoutPaymentBreakdown({
+  totalAmount: props.reservation.total,
+  choice: 'split',
+  arrivalDateISO: props.reservation.startISO,
+}))
+const cashBreakdown = computed(() => resolveCheckoutPaymentBreakdown({
+  totalAmount: props.reservation.total,
+  choice: 'cash',
+  arrivalDateISO: props.reservation.startISO,
+}))
+const selectedBreakdown = computed(() => resolveCheckoutPaymentBreakdown({
+  totalAmount: props.reservation.total,
+  choice: paymentChoice.value,
+  arrivalDateISO: props.reservation.startISO,
+}))
+
+const splitNowLabel = computed(() => currency.format(splitBreakdown.value.chargeNowAmount))
+const splitLaterLabel = computed(() => currency.format(splitBreakdown.value.deferredAmount))
+const cashNowLabel = computed(() => currency.format(cashBreakdown.value.chargeNowAmount))
+const cashLaterLabel = computed(() => currency.format(cashBreakdown.value.deferredAmount))
+const selectedChargeNowLabel = computed(() => currency.format(selectedBreakdown.value.chargeNowAmount))
+const selectedDeferredLabel = computed(() => currency.format(selectedBreakdown.value.deferredAmount))
 
 const dueDateLabel = computed(() => {
   const base = props.reservation.startISO ? new Date(props.reservation.startISO) : null
@@ -78,17 +131,201 @@ const listingImage = computed(() => {
 })
 
 const travelerMessageCtaLabel = computed(() => (travelerMessageOpen.value ? 'Masquer' : 'Ajouter'))
+const isPaymentReady = computed(() => Boolean(paymentElement && stripeElements && stripe && paymentIntentId.value))
+const canSubmit = computed(() =>
+  !props.isSubmitting &&
+  !isPreparingPayment.value &&
+  !isConfirmingPayment.value &&
+  isPaymentReady.value,
+)
+
+const submitLabel = computed(() => {
+  if (props.isSubmitting) return 'Validation de la réservation...'
+  if (isConfirmingPayment.value) return 'Confirmation du paiement...'
+  if (isPreparingPayment.value) return 'Préparation du paiement...'
+  return `Confirmer et payer ${selectedChargeNowLabel.value}`
+})
 
 function toggleTravelerMessage() {
   travelerMessageOpen.value = !travelerMessageOpen.value
 }
 
-function confirmCheckout() {
-  emit('confirm', {
-    travelerMessage: travelerMessage.value.trim(),
-    paymentChoice: paymentChoice.value,
-  })
+function resetPaymentElement() {
+  if (paymentElement) {
+    paymentElement.unmount()
+    paymentElement.destroy()
+    paymentElement = null
+  }
+  stripeElements = null
 }
+
+function getPaymentSetupError(): string | null {
+  if (!props.listingId?.trim()) return "Impossible de déterminer l'annonce pour le paiement."
+  if (!props.connectedAccountId?.trim()) return 'Le compte Stripe Connect du propriétaire est manquant.'
+  if (!getStripePublishableKey()) return 'La clé Stripe publique est absente. Vérifiez VITE_STRIPE_PUBLISHABLE_KEY.'
+  return null
+}
+
+function resolveErrorMessage(error: unknown, fallback: string): string {
+  if (error && typeof error === 'object') {
+    const maybeMessage = (error as { message?: unknown }).message
+    if (typeof maybeMessage === 'string' && maybeMessage.trim()) return maybeMessage.trim()
+  }
+  return fallback
+}
+
+async function mountPaymentElement(clientSecret: string) {
+  stripe = await loadStripeClient()
+  if (!stripe) {
+    throw new Error('Le client Stripe ne peut pas être initialisé. Vérifiez VITE_STRIPE_PUBLISHABLE_KEY.')
+  }
+
+  await nextTick()
+  const mountNode = paymentElementMount.value
+  if (!mountNode) {
+    throw new Error('Le module de paiement ne peut pas être affiché pour le moment.')
+  }
+
+  stripeElements = stripe.elements({
+    clientSecret,
+    appearance: {
+      theme: 'stripe',
+    },
+  })
+
+  paymentElement = stripeElements.create('payment', {
+    layout: {
+      type: 'tabs',
+      defaultCollapsed: false,
+    },
+  })
+  paymentElement.mount(mountNode)
+}
+
+async function preparePaymentIntent() {
+  const sequence = ++intentRequestSequence
+  paymentIntentError.value = null
+  paymentIntentId.value = null
+  resetPaymentElement()
+
+  const setupError = getPaymentSetupError()
+  if (setupError) {
+    paymentIntentError.value = setupError
+    return
+  }
+
+  const breakdown = selectedBreakdown.value
+  if (breakdown.chargeNowAmount <= 0) {
+    paymentIntentError.value = 'Le montant à payer immédiatement doit être supérieur à 0.'
+    return
+  }
+
+  isPreparingPayment.value = true
+
+  try {
+    const session = await createStripePaymentIntent({
+      listingId: props.listingId.trim(),
+      connectedAccountId: (props.connectedAccountId ?? '').trim(),
+      reservation: props.reservation,
+      breakdown,
+      currency: 'eur',
+      metadata: buildStripeReservationMetadata({
+        listingId: props.listingId.trim(),
+        reservation: props.reservation,
+        breakdown,
+      }),
+    })
+
+    if (sequence !== intentRequestSequence) return
+
+    paymentIntentId.value = session.id
+    paymentIntentCurrency.value = session.currency
+    await mountPaymentElement(session.clientSecret)
+  } catch (error) {
+    if (sequence !== intentRequestSequence) return
+    console.error('[Checkout] prepare payment intent failed', error)
+    paymentIntentError.value = resolveErrorMessage(error, 'Impossible de préparer le paiement Stripe.')
+  } finally {
+    if (sequence === intentRequestSequence) {
+      isPreparingPayment.value = false
+    }
+  }
+}
+
+async function confirmCheckout() {
+  if (!canSubmit.value) return
+  if (!stripe || !stripeElements || !paymentIntentId.value) {
+    paymentIntentError.value = 'Le paiement n\'est pas prêt. Réessayez dans quelques secondes.'
+    return
+  }
+
+  isConfirmingPayment.value = true
+  paymentIntentError.value = null
+
+  try {
+    const result = await stripe.confirmPayment({
+      elements: stripeElements,
+      confirmParams: {
+        return_url: getStripePaymentReturnUrl(),
+      },
+      redirect: 'if_required',
+    })
+
+    if (result.error) {
+      paymentIntentError.value = result.error.message ?? 'Le paiement a été refusé.'
+      return
+    }
+
+    const paymentIntent = result.paymentIntent
+    if (!paymentIntent) {
+      paymentIntentError.value = 'Confirmation Stripe incomplète. Aucun PaymentIntent retourné.'
+      return
+    }
+
+    if (!ACCEPTED_PAYMENT_INTENT_STATUSES.has(paymentIntent.status)) {
+      paymentIntentError.value = `Le paiement Stripe est dans un état non valide (${paymentIntent.status}).`
+      return
+    }
+
+    emit('confirm', {
+      travelerMessage: travelerMessage.value.trim(),
+      paymentChoice: paymentChoice.value,
+      payment: {
+        breakdown: selectedBreakdown.value,
+        paymentIntentId: paymentIntent.id,
+        paymentIntentStatus: paymentIntent.status,
+        currency: paymentIntent.currency || paymentIntentCurrency.value,
+        connectedAccountId: (props.connectedAccountId ?? '').trim(),
+      },
+    })
+  } catch (error) {
+    console.error('[Checkout] confirm payment failed', error)
+    paymentIntentError.value = resolveErrorMessage(error, 'Impossible de confirmer le paiement Stripe.')
+  } finally {
+    isConfirmingPayment.value = false
+  }
+}
+
+watch(
+  () => [
+    props.listingId,
+    props.connectedAccountId,
+    props.reservation.startISO,
+    props.reservation.endISO,
+    props.reservation.nights,
+    props.reservation.total,
+    paymentChoice.value,
+  ],
+  () => {
+    void preparePaymentIntent()
+  },
+  { immediate: true },
+)
+
+onBeforeUnmount(() => {
+  intentRequestSequence += 1
+  resetPaymentElement()
+})
 </script>
 
 <template>
@@ -176,12 +413,6 @@ function confirmCheckout() {
             <p class="title">Payer une partie maintenant et l'autre plus tard</p>
             <p class="subtitle">
               {{ splitNowLabel }} à payer aujourd'hui, {{ splitLaterLabel }} à payer le {{ dueDateLabel }}.
-              <button
-                type="button"
-                class="link"
-              >
-                Plus d'informations
-              </button>
             </p>
           </div>
           <span class="indicator" />
@@ -200,12 +431,6 @@ function confirmCheckout() {
             <p class="title">Payer en espèce</p>
             <p class="subtitle">
               {{ cashNowLabel }} à payer aujourd'hui, {{ cashLaterLabel }} en espèce le premier jour de location.
-              <button
-                type="button"
-                class="link"
-              >
-                Plus d'informations
-              </button>
             </p>
           </div>
           <span class="indicator" />
@@ -214,81 +439,43 @@ function confirmCheckout() {
     </section>
 
     <section class="checkout-section">
-      <h3>Votre mode de paiement</h3>
+      <h3>Paiement sécurisé Stripe</h3>
       <div class="payment-brands">
         <span class="brand">Visa</span>
-        <span class="brand">Amex</span>
-        <span class="brand">PayPal</span>
+        <span class="brand">Mastercard</span>
+        <span class="brand">SEPA</span>
         <span class="brand">Apple Pay</span>
-        <span class="brand">G Pay</span>
       </div>
 
       <div class="payment-fields">
-        <label class="field select">
-          <select aria-label="Mode de paiement">
-            <option selected>Carte bancaire</option>
-            <option>Apple Pay</option>
-            <option>PayPal</option>
-          </select>
-        </label>
+        <p class="payment-summary">
+          <Lock :size="14" />
+          <span>{{ selectedChargeNowLabel }} débité maintenant</span>
+          <span v-if="selectedBreakdown.deferredAmount > 0">
+            · {{ selectedDeferredLabel }}
+            <template v-if="selectedBreakdown.deferredMode === 'cash'"> en espèces à l arrivée</template>
+            <template v-else> à payer le {{ dueDateLabel }}</template>
+          </span>
+        </p>
 
-        <label class="field">
-          <CreditCard class="icon" />
-          <input
-            type="text"
-            inputmode="numeric"
-            placeholder="Numéros de carte"
-            aria-label="Numéros de carte"
-          />
-          <Lock class="icon is-right" />
-        </label>
-
-        <div class="field-grid">
-          <label class="field">
-            <User class="icon" />
-            <input
-              type="text"
-              placeholder="Nom sur la carte"
-              aria-label="Nom sur la carte"
-            />
-          </label>
-          <label class="field">
-            <CalendarDays class="icon" />
-            <input
-              type="text"
-              placeholder="MM/AA"
-              aria-label="Date d'expiration"
-            />
-          </label>
-          <label class="field">
-            <Lock class="icon" />
-            <input
-              type="text"
-              inputmode="numeric"
-              placeholder="CVV"
-              aria-label="Code de sécurité"
-            />
-          </label>
+        <div
+          v-if="isPreparingPayment"
+          class="payment-placeholder"
+        >
+          Initialisation sécurisée du module Stripe...
         </div>
+        <div
+          v-else
+          ref="paymentElementMount"
+          class="payment-element"
+        />
 
-        <div class="field-grid">
-          <label class="field">
-            <MapPin class="icon" />
-            <input
-              type="text"
-              placeholder="Code postal"
-              aria-label="Code postal"
-            />
-          </label>
-          <label class="field">
-            <Globe class="icon" />
-            <input
-              type="text"
-              placeholder="Pays/région"
-              aria-label="Pays ou région"
-            />
-          </label>
-        </div>
+        <p
+          v-if="paymentIntentError"
+          class="payment-error"
+        >
+          {{ paymentIntentError }}
+        </p>
       </div>
     </section>
 
@@ -413,10 +600,10 @@ function confirmCheckout() {
       <div class="btn-primary__full">
         <button
           type="button"
-          :disabled="props.isSubmitting"
+          :disabled="!canSubmit"
           @click="confirmCheckout"
         >
-          {{ props.isSubmitting ? 'Validation en cours...' : 'Confirmer et payer' }}
+          {{ submitLabel }}
         </button>
       </div>
       <p

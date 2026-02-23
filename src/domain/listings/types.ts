@@ -59,6 +59,17 @@ export type RawReservationPayment = {
   balance: number
   status: 'paid' | 'pending'
   method: string
+  stripe?: {
+    paymentIntentId?: string
+    status?: string
+    currency?: string
+    connectedAccountId?: string
+    paymentChoice?: 'full' | 'split' | 'cash'
+    chargeNowAmount?: number
+    deferredAmount?: number
+    deferredMode?: 'none' | 'online' | 'cash'
+    deferredDueDateISO?: string | null
+  }
 }
 export type RawReservationMessageState = 'sent' | 'delivered' | 'read'
 export type RawReservationMessageAuthor = 'host' | 'guest'

@@ -86,6 +86,56 @@ function normalizeGuests(input: Partial<RawReservationGuests> | null | undefined
   }
 }
 
+function normalizeStripePayment(input: unknown): RawReservationPayment['stripe'] | undefined {
+  if (!input || typeof input !== 'object') return undefined
+  const raw = input as Record<string, unknown>
+
+  const paymentIntentId = isNonEmptyString(raw.paymentIntentId) ? raw.paymentIntentId.trim() : undefined
+  const status = isNonEmptyString(raw.status) ? raw.status.trim() : undefined
+  const currency = isNonEmptyString(raw.currency) ? raw.currency.trim().toLowerCase() : undefined
+  const connectedAccountId = isNonEmptyString(raw.connectedAccountId) ? raw.connectedAccountId.trim() : undefined
+
+  const paymentChoice =
+    raw.paymentChoice === 'split' || raw.paymentChoice === 'cash' || raw.paymentChoice === 'full'
+      ? raw.paymentChoice
+      : undefined
+
+  const deferredMode =
+    raw.deferredMode === 'online' || raw.deferredMode === 'cash' || raw.deferredMode === 'none'
+      ? raw.deferredMode
+      : undefined
+
+  const chargeNowAmount = Number.isFinite(Number(raw.chargeNowAmount)) ? Math.max(0, Math.round(Number(raw.chargeNowAmount))) : undefined
+  const deferredAmount = Number.isFinite(Number(raw.deferredAmount)) ? Math.max(0, Math.round(Number(raw.deferredAmount))) : undefined
+  const deferredDueDateISO = isNonEmptyString(raw.deferredDueDateISO) ? raw.deferredDueDateISO.trim() : undefined
+
+  if (
+    !paymentIntentId &&
+    !status &&
+    !currency &&
+    !connectedAccountId &&
+    !paymentChoice &&
+    !deferredMode &&
+    chargeNowAmount === undefined &&
+    deferredAmount === undefined &&
+    !deferredDueDateISO
+  ) {
+    return undefined
+  }
+
+  return {
+    ...(paymentIntentId ? { paymentIntentId } : {}),
+    ...(status ? { status } : {}),
+    ...(currency ? { currency } : {}),
+    ...(connectedAccountId ? { connectedAccountId } : {}),
+    ...(paymentChoice ? { paymentChoice } : {}),
+    ...(deferredMode ? { deferredMode } : {}),
+    ...(chargeNowAmount !== undefined ? { chargeNowAmount } : {}),
+    ...(deferredAmount !== undefined ? { deferredAmount } : {}),
+    ...(deferredDueDateISO ? { deferredDueDateISO } : {}),
+  }
+}
+
 function normalizePayment(input: Partial<RawReservationPayment> | null | undefined, fallbackTotal: number): RawReservationPayment {
   const total = Math.max(0, Number.isFinite(Number(input?.total)) ? Number(input?.total) : fallbackTotal)
   const fallbackDeposit = Math.round(total * 0.3)
@@ -95,6 +145,7 @@ function normalizePayment(input: Partial<RawReservationPayment> | null | undefin
   const balance = Math.max(0, rawBalance)
   const status = input?.status === 'paid' ? 'paid' : 'pending'
   const method = isNonEmptyString(input?.method) ? input.method.trim() : 'Carte'
+  const stripe = normalizeStripePayment(input?.stripe)
 
   return {
     total: Math.round(total),
@@ -102,6 +153,7 @@ function normalizePayment(input: Partial<RawReservationPayment> | null | undefin
     balance: Math.round(balance),
     status,
     method,
+    ...(stripe ? { stripe } : {}),
   }
 }
 

@@ -41,19 +41,18 @@ function openCoverLightbox() {
 
 const slides = computed(() => orderedImages.value)
 
-const swiperParams = computed(
-  () =>
-    createListingMediaSwiperParams({
-      autoplay: false,
-      slidesPerView: 1,
-      spaceBetween: 0,
-      centeredSlides: true,
-      pagination: {
-        clickable: true,
-      },
-      navigation: false,
-    }) satisfies SwiperOptions,
-)
+const swiperBaseParams = createListingMediaSwiperParams({
+  autoplay: false,
+  slidesPerView: 1,
+  spaceBetween: 0,
+  centeredSlides: true,
+  pagination: {
+    clickable: true,
+  },
+  navigation: false,
+}) satisfies SwiperOptions
+
+const swiperParams = swiperBaseParams as unknown as Record<string, unknown>
 </script>
 
 <template>

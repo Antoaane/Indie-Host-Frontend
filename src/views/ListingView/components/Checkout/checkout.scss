@@ -303,29 +303,38 @@ html:has(#checkout) {
     flex-direction: column;
     gap: var(--layout-gap-sm);
 
-    .field {
-      @include inputs.field($theme: base);
-      gap: 0.5rem;
+    .payment-summary {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin: 0;
+      @include little-text($color: rgba($secondary, 0.8), $thin: false);
 
-      .icon {
-        margin-left: 0.75rem;
-        color: rgba($secondary, 0.6);
-      }
-
-      .icon.is-right {
-        margin-left: auto;
-        margin-right: 0.75rem;
+      >svg {
+        flex-shrink: 0;
       }
     }
 
-    .field.select {
-      @include inputs.select($theme: base);
+    .payment-placeholder {
+      padding: 0.8rem 0.9rem;
+      border-radius: borders.$rounded-md;
+      border: 1px solid rgba($secondary, 0.12);
+      background: $accent-surface-1;
+      @include little-text($color: rgba($secondary, 0.75), $thin: false);
     }
 
-    .field-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: var(--layout-gap-sm);
+    .payment-element {
+      min-height: 3rem;
+      padding: 0.65rem;
+      border-radius: borders.$rounded-md;
+      border: 1px solid rgba($secondary, 0.12);
+      background: $accent;
+    }
+
+    .payment-error {
+      margin: 0;
+      @include little-text($color: #a42828, $thin: false);
     }
   }
 

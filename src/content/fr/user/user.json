@@ -44,7 +44,18 @@
       }
     },
     "currency": "EUR",
-    "stripeConnectAccountId": "acct_demo_owner_001"
+    "stripeConnectAccountId": "acct_demo_owner_001",
+    "stripeConnect": {
+      "accountId": "acct_demo_owner_001",
+      "onboardingStatus": "completed",
+      "chargesEnabled": true,
+      "payoutsEnabled": true,
+      "country": "FR",
+      "defaultCurrency": "eur",
+      "transferSchedule": "daily",
+      "applicationFeePercent": 0,
+      "statementDescriptor": "INDIEHOST"
+    }
   },
   "preferences": {
     "messagingTone": "friendly",

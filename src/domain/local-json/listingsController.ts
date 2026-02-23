@@ -16,8 +16,11 @@ import type {
 import type { FetchListingsOptions, ListingsController } from '@/domain/listings/controller'
 import { filterDeletedListings } from '@/domain/listings/status'
 import { getCanonicalHost } from '@/domain/listings/host'
+import { createRuntimeLocalJsonStore } from '@/domain/local-json/runtimeStore'
 
 const LOCAL_JSON_BASE = '/__local-json'
+const USE_HTTP_LOCAL_JSON = import.meta.env.DEV
+const runtimeStore = createRuntimeLocalJsonStore()
 
 function resolveUrl(path: string) {
   if (typeof window === 'undefined') return path
@@ -56,52 +59,102 @@ const buildListingUrl = (resource: ListingResourceKey, listingId: string) =>
 
 const buildUserListingsUrl = (userId: string) => `${LOCAL_JSON_BASE}/user/${userId}/listings`
 
+async function runWithRuntimeFallback<T>({
+  label,
+  http,
+  runtime,
+}: {
+  label: string
+  http: () => Promise<T>
+  runtime: () => T | Promise<T>
+}): Promise<T> {
+  if (!USE_HTTP_LOCAL_JSON) {
+    return await runtime()
+  }
+
+  try {
+    return await http()
+  } catch (error) {
+    console.warn(`[Domain][local-json] ${label} fallback to bundled runtime store`, error)
+    return await runtime()
+  }
+}
+
 export function createLocalJsonListingsController(): ListingsController {
   return {
     mode: 'local-json',
     fetchListings: async (options?: FetchListingsOptions): Promise<UserListingCard[]> => {
       const userId = options?.userId
       console.log('[Domain][local-json] fetchListings', { userId })
-      const url = userId ? buildUserListingsUrl(userId) : `${LOCAL_JSON_BASE}/listings`
-      const listings = await requestJson<UserListingCard[]>(url)
-      return filterDeletedListings(listings, options?.includeDeleted)
+      return runWithRuntimeFallback({
+        label: 'fetchListings',
+        http: async () => {
+          const url = userId ? buildUserListingsUrl(userId) : `${LOCAL_JSON_BASE}/listings`
+          const listings = await requestJson<UserListingCard[]>(url)
+          return filterDeletedListings(listings, options?.includeDeleted)
+        },
+        runtime: () => filterDeletedListings(runtimeStore.listListings(), options?.includeDeleted),
+      })
     },
     fetchListingBundle: async (listingId: string): Promise<RawListingBundle> => {
       console.log('[Domain][local-json] fetchListingBundle', { listingId })
-      const [core, bookings, medias, arrival, notes, comments] = await Promise.all([
-        requestJson<RawCore>(buildListingUrl('core', listingId)),
-        requestJson<RawBookings>(buildListingUrl('bookings', listingId)),
-        requestJson<RawMedias>(buildListingUrl('medias', listingId)),
-        requestJson<RawArrival>(buildListingUrl('arrival', listingId)),
-        requestJson<RawNotes>(buildListingUrl('notes', listingId)),
-        requestJson<RawComments>(buildListingUrl('comments', listingId)),
-      ])
+      return runWithRuntimeFallback({
+        label: 'fetchListingBundle',
+        http: async (): Promise<RawListingBundle> => {
+          const [core, bookings, medias, arrival, notes, comments] = await Promise.all([
+            requestJson<RawCore>(buildListingUrl('core', listingId)),
+            requestJson<RawBookings>(buildListingUrl('bookings', listingId)),
+            requestJson<RawMedias>(buildListingUrl('medias', listingId)),
+            requestJson<RawArrival>(buildListingUrl('arrival', listingId)),
+            requestJson<RawNotes>(buildListingUrl('notes', listingId)),
+            requestJson<RawComments>(buildListingUrl('comments', listingId)),
+          ])
 
-      return { core, bookings, medias, arrival, notes, comments, host: getCanonicalHost() }
+          return { core, bookings, medias, arrival, notes, comments, host: getCanonicalHost() }
+        },
+        runtime: () => runtimeStore.getBundle(listingId),
+      })
     },
     fetchEditableListingBundle: async (listingId: string): Promise<RawListingBundle> => {
       console.log('[Domain][local-json] fetchEditableListingBundle', { listingId })
-      const [core, bookings, medias, arrival] = await Promise.all([
-        requestJson<RawCore>(buildListingUrl('core', listingId)),
-        requestJson<RawBookings>(buildListingUrl('bookings', listingId)),
-        requestJson<RawMedias>(buildListingUrl('medias', listingId)),
-        requestJson<RawArrival>(buildListingUrl('arrival', listingId)),
-      ])
+      return runWithRuntimeFallback({
+        label: 'fetchEditableListingBundle',
+        http: async (): Promise<RawListingBundle> => {
+          const [core, bookings, medias, arrival] = await Promise.all([
+            requestJson<RawCore>(buildListingUrl('core', listingId)),
+            requestJson<RawBookings>(buildListingUrl('bookings', listingId)),
+            requestJson<RawMedias>(buildListingUrl('medias', listingId)),
+            requestJson<RawArrival>(buildListingUrl('arrival', listingId)),
+          ])
 
-      return { core, bookings, medias, arrival }
+          return { core, bookings, medias, arrival }
+        },
+        runtime: () => runtimeStore.getEditableBundle(listingId),
+      })
     },
     fetchVolatileListingBundle: async (listingId: string): Promise<VolatileBundle> => {
       console.log('[Domain][local-json] fetchVolatileListingBundle', { listingId })
-      const [bookings, notes, comments] = await Promise.all([
-        requestJson<RawBookings>(buildListingUrl('bookings', listingId)),
-        requestJson<RawNotes>(buildListingUrl('notes', listingId)),
-        requestJson<RawComments>(buildListingUrl('comments', listingId)),
-      ])
+      return runWithRuntimeFallback({
+        label: 'fetchVolatileListingBundle',
+        http: async (): Promise<VolatileBundle> => {
+          const [bookings, notes, comments] = await Promise.all([
+            requestJson<RawBookings>(buildListingUrl('bookings', listingId)),
+            requestJson<RawNotes>(buildListingUrl('notes', listingId)),
+            requestJson<RawComments>(buildListingUrl('comments', listingId)),
+          ])
 
-      return { bookings, notes, comments, host: getCanonicalHost() }
+          return { bookings, notes, comments, host: getCanonicalHost() }
+        },
+        runtime: () => runtimeStore.getVolatileBundle(listingId),
+      })
     },
     patchListingDraft: async (listingId: string, patch: DraftPatch): Promise<void> => {
       console.log('[Domain][local-json] patchListingDraft', { listingId, patch })
+      if (!USE_HTTP_LOCAL_JSON) {
+        runtimeStore.patchDraft(listingId, patch)
+        return
+      }
+
       const requests: Promise<unknown>[] = []
 
       if (patch.core) {
@@ -140,12 +193,23 @@ export function createLocalJsonListingsController(): ListingsController {
         )
       }
 
-      if (requests.length) {
-        await Promise.all(requests)
+      try {
+        if (requests.length) {
+          await Promise.all(requests)
+        }
+        runtimeStore.patchDraft(listingId, patch)
+      } catch (error) {
+        console.warn('[Domain][local-json] patchListingDraft fallback to bundled runtime store', error)
+        runtimeStore.patchDraft(listingId, patch)
       }
     },
     publishListingDraft: async (listingId: string, draft: RawListingBundle): Promise<void> => {
       console.log('[Domain][local-json] publishListingDraft', { listingId, draft })
+      if (!USE_HTTP_LOCAL_JSON) {
+        runtimeStore.publishDraft(listingId, draft)
+        return
+      }
+
       const requests: Promise<unknown>[] = []
 
       if (draft.core) {
@@ -184,15 +248,25 @@ export function createLocalJsonListingsController(): ListingsController {
         )
       }
 
-      if (requests.length) {
-        await Promise.all(requests)
+      try {
+        if (requests.length) {
+          await Promise.all(requests)
+        }
+        runtimeStore.publishDraft(listingId, draft)
+      } catch (error) {
+        console.warn('[Domain][local-json] publishListingDraft fallback to bundled runtime store', error)
+        runtimeStore.publishDraft(listingId, draft)
       }
     },
     createListing: async (payload?: Partial<RawListingBundle>): Promise<{ listingId: string }> => {
       console.log('[Domain][local-json] createListing', { payload })
-      return requestJson<{ listingId: string }>(`${LOCAL_JSON_BASE}/listings`, {
-        method: 'POST',
-        body: JSON.stringify(payload ?? {}),
+      return runWithRuntimeFallback({
+        label: 'createListing',
+        http: () => requestJson<{ listingId: string }>(`${LOCAL_JSON_BASE}/listings`, {
+          method: 'POST',
+          body: JSON.stringify(payload ?? {}),
+        }),
+        runtime: () => runtimeStore.createListing(payload),
       })
     },
   }
