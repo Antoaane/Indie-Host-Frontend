@@ -10,7 +10,7 @@ const panelContent = editorStatic.panels.listing.import
 </script>
 
 <template>
-  <section class="editor-import-panel">
+  <section class="editor-import-panel in-dev-hide">
     <div class="header">
       <h3>{{ panelContent.title }}</h3>
       <p>{{ panelContent.subtitle }}</p>

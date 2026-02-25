@@ -26,7 +26,6 @@ const emit = defineEmits<{
 
 <template>
   <div class="editor-listing-panels">
-    <ImportPanel />
     <TitlePanel
       :core="props.draft.core"
       @patch="emit('patch', $event)"
@@ -64,6 +63,7 @@ const emit = defineEmits<{
       :core="props.draft.core"
       @patch="emit('patch', $event)"
     />
+    <ImportPanel />
   </div>
 </template>
 

@@ -388,7 +388,7 @@ function goToImageLabel(index: number) {
             v-if="props.listing.guestCapacity"
             class="meta"
           >
-            {{ props.listing.guestCapacity }} {{ guestLabel(props.listing.guestCapacity) }}
+            {{ guestLabel(props.listing.guestCapacity) }}
           </p>
         </div>
 

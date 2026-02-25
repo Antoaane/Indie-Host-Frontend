@@ -28,6 +28,8 @@ export function useEditorController(options: EditorControllerOptions) {
   const selectedListingId = ref<string | null>(null)
   const selectionToken = ref(0)
   const sourceToken = ref(0)
+  const cardPublishVersionByListingId = new Map<string, number>()
+  const cardPublishTaskByListingId = new Map<string, Promise<void>>()
 
   const listingState = useEditorListingState({
     getSource: () => options.source.value,
@@ -189,12 +191,46 @@ export function useEditorController(options: EditorControllerOptions) {
 
     console.log('[Editor] apply listing status patch', { listingId, status: normalizedStatus })
     listingState.applyPatchToListingCard(listingId, patch)
+
+    const publishedSnapshot = listingState.publishedSnapshotByListingId[listingId]
+    listingState.publishedSnapshotByListingId[listingId] = snapshotListingDraft(
+      applyPatchToDraftBundle(publishedSnapshot ?? {}, patch),
+    )
     listingState.syncListingPendingChanges(listingId)
     patchQueue.queuePatchPersistence(listingId, patch)
+    queueCardPatchPublish(listingId, patch)
 
     if (normalizedStatus === 'deleted') {
       handleDeletedListing(listingId)
     }
+  }
+
+  function queueCardPatchPublish(listingId: string, patch: DraftPatch) {
+    const version = (cardPublishVersionByListingId.get(listingId) ?? 0) + 1
+    cardPublishVersionByListingId.set(listingId, version)
+
+    const previousTask = cardPublishTaskByListingId.get(listingId) ?? Promise.resolve()
+    const task = previousTask
+      .catch(() => undefined)
+      .then(async () => {
+        if (cardPublishVersionByListingId.get(listingId) !== version) return
+        await patchQueue.drainPatchQueue({ throwOnError: true })
+        if (cardPublishVersionByListingId.get(listingId) !== version) return
+        await options.source.value.publishListingDraft(listingId, patch)
+      })
+
+    cardPublishTaskByListingId.set(listingId, task)
+
+    void task
+      .catch((err) => {
+        console.log('[Editor] auto publish listing card patch error', { listingId, err })
+      })
+      .finally(() => {
+        if (cardPublishTaskByListingId.get(listingId) === task) {
+          cardPublishTaskByListingId.delete(listingId)
+          cardPublishVersionByListingId.delete(listingId)
+        }
+      })
   }
 
   async function showPreview(listingId: string) {
