@@ -136,8 +136,8 @@
         font-family: 'outfit', sans-serif !important;
 
         --title-bg-direction: 180deg;
-        --title-bg-color-1:#{rgba($secondary, 1)};
-        --title-bg-color-2: #{rgba($secondary, 0.75)};
+        --title-bg-color-1:#{rgba($secondary-text, 1)};
+        --title-bg-color-2: #{rgba($secondary-text, 0.75)};
         --title-bg-clr1-pos: 17.65%;
         --title-bg-clr2-pos: 72.06%;
 
@@ -162,7 +162,7 @@
       opacity: 0.2;
       transform: translate(-45%, -50%);
 
-      filter: drop-shadow(0px 0px 15px rgba($secondary, 0.5));
+      filter: drop-shadow(0px 0px 15px rgba($secondary-dark-background, 0.5));
     }
   }
 
@@ -193,7 +193,7 @@
       justify-content: center;
       align-items: center;
 
-      background-color: rgba($secondary, 0.5);
+      background-color: rgba($secondary-dark-background, 0.5);
 
       @include halo;
 
@@ -393,7 +393,7 @@
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
 
-        @include halo(xs, true, $secondary, 0.25);
+        @include halo(xs, true, $secondary-text, 0.25);
         @include lp-h2-title();
       }
     }
@@ -493,8 +493,8 @@
 
           /* mêmes variables CSS que desktop → l’anim GSAP marche d’office */
           --title-bg-direction: 180deg;
-          --title-bg-color-1: #{rgba($secondary, 1)};
-          --title-bg-color-2: #{rgba($secondary, .75)};
+          --title-bg-color-1: #{rgba($secondary-text, 1)};
+          --title-bg-color-2: #{rgba($secondary-text, .75)};
           --title-bg-clr1-pos: 17.65%;
           --title-bg-clr2-pos: 72.06%;
 
@@ -547,8 +547,8 @@
 
         /* même gradient que .result pour la cohérence */
         --title-bg-direction: 180deg;
-        --title-bg-color-1: #{rgba($secondary, 1)};
-        --title-bg-color-2: #{rgba($secondary, .75)};
+        --title-bg-color-1: #{rgba($secondary-text, 1)};
+        --title-bg-color-2: #{rgba($secondary-text, .75)};
         --title-bg-clr1-pos: 17.65%;
         --title-bg-clr2-pos: 72.06%;
         background: linear-gradient(var(--title-bg-direction),
@@ -574,7 +574,7 @@
       opacity: 0.2;
       transform: translate(-45%, -50%);
 
-      filter: drop-shadow(0px 0px 15px rgba($secondary, 0.5));
+      filter: drop-shadow(0px 0px 15px rgba($secondary-dark-background, 0.5));
     }
   }
 
@@ -615,7 +615,7 @@
       justify-content: center;
       align-items: center;
 
-      background-color: rgba($secondary, 0.5);
+      background-color: rgba($secondary-dark-background, 0.5);
 
       @include halo;
 

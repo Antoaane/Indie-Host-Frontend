@@ -20,6 +20,7 @@ const props = defineProps<{
   draft: RawListingBundle
   isLoading?: boolean
   isPatchSyncing?: boolean
+  hasPendingChanges?: boolean
   publish: () => Promise<void>
 }>()
 
@@ -35,7 +36,7 @@ const successFeedback = ref<SuccessFeedback>(null)
 const successTimer = ref<number | null>(null)
 const sidebarContent = editorStatic.sidebar
 
-const canPublish = computed(() => !props.isLoading && !isPublishing.value)
+const canPublish = computed(() => !props.isLoading && !isPublishing.value && Boolean(props.hasPendingChanges))
 const isActionRunning = computed(() => isPublishing.value)
 
 function handlePatch(patch: DraftPatch) {
@@ -131,7 +132,10 @@ onBeforeUnmount(() => {
       />
     </Transition>
 
-    <template #footer>
+    <template
+      #footer
+      v-if="props.hasPendingChanges"
+    >
       <p
         v-if="error"
         class="error"
@@ -147,7 +151,7 @@ onBeforeUnmount(() => {
         {{ sidebarContent.sync.pending }}
       </p>
       <div class="actions">
-        <div class="btn-primary__white__full">
+        <div class="btn">
           <button
             type="button"
             :disabled="!canPublish"
@@ -166,8 +170,11 @@ onBeforeUnmount(() => {
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
+@use '@/styles/components/buttons' as buttons;
 
 .editor-sidebar {
+  position: relative;
+
   .action-feedback {
     margin: 0;
     padding: 0.45rem 0.75rem;
@@ -194,14 +201,28 @@ onBeforeUnmount(() => {
   }
 
   > .base-sidebar__footer {
-    flex: 0 0 auto;
-    padding-bottom: var(--layout-gap-sm);
-    border-top: 1px solid rgba($secondary, 0.08);
+    width: 100%;
+    padding: var(--layout-gap-md);
+    padding-top: var(--layout-gap-xl);
+
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    z-index: 99;
+
+    background: linear-gradient(to bottom, rgba($accent, 0) 0%, $accent 25%, $accent 100%);
+    // border-bottom-left-radius: borders.$rounded-xl;
+    // border-bottom-right-radius: borders.$rounded-xl;
+    border-radius: borders.$rounded-xl;
 
     > .actions {
       display: grid;
       grid-template-columns: minmax(0, 1fr);
       gap: var(--layout-gap-sm);
+
+      & > .btn {
+        @include buttons.primary($cta: true, $theme: dark, $fullwidth: true);
+      }
     }
 
     > .error {

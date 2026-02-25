@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { Camera, ChevronDown, ChevronLeft, ChevronRight, Eye } from 'lucide-vue-next'
+import { Camera, ChevronDown, ChevronLeft, ChevronRight, EllipsisVertical, Eye } from 'lucide-vue-next'
 import type { Swiper as SwiperInstance } from 'swiper/types'
 import type { SwiperOptions } from 'swiper/types'
 import { Swiper, SwiperSlide } from 'swiper/vue'
@@ -13,6 +13,7 @@ import { formatICUMessage } from '@/utils/i18n'
 import { createListingMediaSwiperParams } from '@/utils/swiper/listingMedia'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 import type { UserListingCard } from '@/views/Editor/utils/listingApi'
+import ConfirmationDialog from '@/components/overlays/ConfirmationDialog.vue'
 
 type ListingSlide = {
   src: string
@@ -27,6 +28,7 @@ const props = defineProps<{
   listing: UserListingCard
   isSelected: boolean
   isStatusMenuOpen: boolean
+  isActionsMenuOpen: boolean
   statusOptions: readonly string[]
   listingContent: ListingContent
 }>()
@@ -35,12 +37,14 @@ const emit = defineEmits<{
   (e: 'select', listingId: string): void
   (e: 'preview', listingId: string): void
   (e: 'toggle-status-menu', listingId: string): void
-  (e: 'close-status-menu'): void
+  (e: 'toggle-actions-menu', listingId: string): void
+  (e: 'close-menus'): void
   (e: 'status-change', payload: { listingId: string; status: string }): void
 }>()
 
 const swiper = ref<SwiperInstance | null>(null)
 const activeIndex = ref(0)
+const isDeleteOverlayOpen = ref(false)
 
 const slides = computed<ListingSlide[]>(() => {
   const title = (props.listing.title ?? '').trim()
@@ -77,6 +81,8 @@ const slides = computed<ListingSlide[]>(() => {
 
 const currentStatusLabel = computed(() => statusLabel(props.listing.status))
 const statusMenuControlId = computed(() => `listing-status-menu-${props.listing.listingId}`)
+const actionsMenuControlId = computed(() => `listing-actions-menu-${props.listing.listingId}`)
+const deleteContent = computed(() => editorStatic.panels.listing.visibility.delete)
 
 const cardSwiperBaseParams = createListingMediaSwiperParams({
   autoplay: false,
@@ -123,8 +129,12 @@ function handleToggleStatusMenu() {
   emit('toggle-status-menu', props.listing.listingId)
 }
 
+function handleToggleActionsMenu() {
+  emit('toggle-actions-menu', props.listing.listingId)
+}
+
 function handleSetListingStatus(status: string) {
-  emit('close-status-menu')
+  emit('close-menus')
   emit('status-change', { listingId: props.listing.listingId, status })
 }
 
@@ -144,7 +154,26 @@ function handleGoTo(index: number) {
 }
 
 function handleStatusMenuEscape() {
-  emit('close-status-menu')
+  emit('close-menus')
+}
+
+function handleActionsMenuEscape() {
+  emit('close-menus')
+}
+
+function openDeleteOverlay() {
+  emit('close-menus')
+  isDeleteOverlayOpen.value = true
+}
+
+function closeDeleteOverlay() {
+  isDeleteOverlayOpen.value = false
+}
+
+function confirmDelete() {
+  emit('close-menus')
+  emit('status-change', { listingId: props.listing.listingId, status: 'deleted' })
+  closeDeleteOverlay()
 }
 
 function statusLabel(status?: string) {
@@ -381,20 +410,72 @@ function goToImageLabel(index: number) {
             />
           </div>
 
-          <div class="preview">
-            <div>
+          <div class="actions">
+            <div class="preview">
               <button
                 type="button"
                 :aria-label="props.listingContent.previewLink"
                 @click.stop="handlePreview"
                 @pointerdown.stop
               >
+                Voir l'aperçu
                 <Eye :size="20" />
               </button>
+            </div>
+            <div
+              class="dots actions-menu"
+              :class="{ 'is-open': props.isActionsMenuOpen }"
+              @click.stop
+              @pointerdown.stop
+              @keydown.escape.stop="handleActionsMenuEscape"
+            >
+              <div class="trigger">
+                <button
+                  type="button"
+                  :aria-label="deleteContent.cta"
+                  :title="deleteContent.title"
+                  :aria-expanded="props.isActionsMenuOpen"
+                  :aria-controls="actionsMenuControlId"
+                  aria-haspopup="menu"
+                  @click.stop="handleToggleActionsMenu"
+                >
+                  <EllipsisVertical :size="20" />
+                </button>
+              </div>
+
+              <div
+                :id="actionsMenuControlId"
+                class="status-options"
+                role="menu"
+                :aria-label="deleteContent.title"
+              >
+                <button
+                  class="status-option is-danger"
+                  type="button"
+                  role="menuitem"
+                  :aria-label="deleteContent.cta"
+                  @click.stop="openDeleteOverlay"
+                >
+                  {{ deleteContent.cta }}
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
   </article>
+
+  <ConfirmationDialog
+    :open="isDeleteOverlayOpen"
+    :level="2"
+    :title="deleteContent.confirmTitle"
+    :message="deleteContent.confirmMessage"
+    :confirm-label="deleteContent.confirmCta"
+    :cancel-label="deleteContent.cancelCta"
+    typing-hint='Tapez "supprimer" pour confirmer la suppression de cette annonce.'
+    @close="closeDeleteOverlay"
+    @cancel="closeDeleteOverlay"
+    @confirm="confirmDelete"
+  />
 </template>

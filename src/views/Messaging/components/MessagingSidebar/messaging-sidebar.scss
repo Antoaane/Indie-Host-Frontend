@@ -72,7 +72,7 @@
             }
 
             &:focus-visible {
-              @include halo(xs, false, $secondary, 0.25);
+              @include halo(xs, false, $secondary-text, 0.25);
               outline-color: rgba($secondary, 0.35);
             }
 
@@ -91,7 +91,7 @@
               display: grid;
               place-items: center;
               background: $accent-surface-2;
-              color: rgba($secondary, 0.7);
+              color: rgba($secondary-text, 0.7);
               font-weight: 700;
               font-size: 0.95rem;
               flex: 0 0 auto;
@@ -192,7 +192,7 @@
                   height: 22px;
                   border-radius: 999px;
                   border: 1px solid rgba($secondary, 0.2);
-                  background: $secondary;
+                  background: $secondary-dark-background;
                   color: $accent;
                   font-size: 0.75rem;
                   font-weight: 600;
@@ -228,12 +228,12 @@
       border-top: 1px solid rgba($secondary, 0.08);
       padding: 0.75rem 1rem;
       font-size: 0.82rem;
-      color: rgba($secondary, 0.66);
+      color: rgba($secondary-text, 0.66);
     }
   }
 }
 
 .messaging-sidebar .avatar[data-tone] {
   background: $accent-surface-2;
-  color: rgba($secondary, 0.7);
+  color: rgba($secondary-text, 0.7);
 }

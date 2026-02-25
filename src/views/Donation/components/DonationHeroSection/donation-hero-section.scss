@@ -7,7 +7,7 @@
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  color: $secondary;
+  color: $secondary-text;
 }
 
 .donation-hero__intro {
@@ -17,16 +17,16 @@
 
 .donation-hero__intro-block {
   margin: 0;
-  @include base-text(rgba($secondary, 0.78));
+  @include base-text(rgba($secondary-text, 0.78));
 }
 
 .donation-hero__title {
-  @include lp-h2-title($secondary, true, false, false);
+  @include lp-h2-title($secondary-text, true, false, false);
 }
 
 .donation-hero__lead {
   max-width: 52ch;
-  @include base-text(rgba($secondary, 0.82));
+  @include base-text(rgba($secondary-text, 0.82));
 }
 
 .donation-hero__eyebrow {
@@ -36,7 +36,7 @@
   padding: 0.35rem 0.75rem;
   border-radius: borders.$rounded;
   background: $accent-surface-2;
-  @include little-text(rgba($secondary, 0.75), true);
+  @include little-text(rgba($secondary-text, 0.75), true);
   text-transform: uppercase;
 }
 
@@ -46,11 +46,11 @@
   max-width: 70ch;
 
   h3 {
-    @include lp-h3-title($secondary, true, false);
+    @include lp-h3-title($secondary-text, true, false);
   }
 
   p {
-    @include base-text(rgba($secondary, 0.78));
+    @include base-text(rgba($secondary-text, 0.78));
   }
 
   ul {
@@ -60,7 +60,7 @@
     gap: 0.5rem;
 
     li {
-      @include base-text(rgba($secondary, 0.78));
+      @include base-text(rgba($secondary-text, 0.78));
     }
   }
 
@@ -72,14 +72,14 @@
     border-radius: borders.$rounded-md;
 
     p {
-      @include base-text(rgba($secondary, 0.78), false, false, true);
+      @include base-text(rgba($secondary-text, 0.78), false, false, true);
     }
 
     cite {
       display: block;
       margin-top: 0.75rem;
       font-style: normal;
-      @include little-text(rgba($secondary, 0.6));
+      @include little-text(rgba($secondary-text, 0.6));
     }
   }
 }
@@ -91,7 +91,7 @@
 
 .donation-hero__body-block {
   margin: 0;
-  @include base-text(rgba($secondary, 0.78));
+  @include base-text(rgba($secondary-text, 0.78));
 }
 
 video {

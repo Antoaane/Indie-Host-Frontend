@@ -39,7 +39,7 @@
         >.icon {
           width: 18px;
           height: 18px;
-          stroke: $secondary;
+          stroke: $secondary-text;
           flex-shrink: 0;
         }
 
@@ -116,7 +116,7 @@
         >.meta {
           margin: 0;
           @include little-text($thin: false);
-          color: rgba($secondary, 0.65);
+          color: rgba($secondary-text, 0.65);
         }
       }
 
@@ -150,7 +150,7 @@
           border-radius: borders.$rounded-lg;
 
           background: rgba($accent, 0.75);
-          color: $secondary;
+          color: $secondary-text;
 
           >.category-title {
             flex: 1 1 auto;
@@ -196,7 +196,7 @@
             >.icon {
               height: 1.5rem;
               width: 1.5rem;
-              stroke: $secondary;
+              stroke: $secondary-text;
               flex-shrink: 0;
             }
 

@@ -91,21 +91,21 @@
         margin: 0;
         font-size: 0.95rem;
         font-weight: 600;
-        color: rgba($secondary, 0.95);
+        color: rgba($secondary-text, 0.95);
         line-height: 1.2;
       }
 
       >.meta {
         margin: 0;
         font-size: 0.75rem;
-        color: rgba($secondary, 0.55);
+        color: rgba($secondary-text, 0.55);
       }
     }
 
     >.price {
       font-weight: 600;
       font-size: 0.85rem;
-      color: rgba($secondary, 0.8);
+      color: rgba($secondary-text, 0.8);
       white-space: nowrap;
     }
   }
@@ -115,7 +115,7 @@
       padding: var(--layout-gap-sm);
       text-align: center;
       font-weight: 400;
-      color: rgba($secondary, 0.6);
+      color: rgba($secondary-text, 0.6);
       border-top: 1px solid rgba($secondary, 0.08);
     }
   }

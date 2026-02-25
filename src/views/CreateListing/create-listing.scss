@@ -7,7 +7,7 @@
 .create-listing#create-listing-page {
   height: 100vh;
 
-  background: $secondary;
+  background: $secondary-dark-background;
 
   @include min-width(lg) {
     padding-top: $nav-height;
@@ -40,7 +40,7 @@
       >.step-title {
         >p {
           margin: 0;
-          color: rgba($secondary, 0.6);
+          color: rgba($secondary-text, 0.6);
           @include little-text($thin: false);
         }
 
@@ -52,7 +52,7 @@
         >small {
           margin: 0.25rem 0 0 0;
           display: block;
-          color: rgba($secondary, 0.75);
+          color: rgba($secondary-text, 0.75);
           @include little-text($thin: false);
         }
       }
@@ -61,13 +61,13 @@
     >.progress {
       height: 0.4rem;
       border-radius: borders.$rounded;
-      background: rgba($secondary, 0.12);
+      background: rgba($secondary-dark-background, 0.12);
       overflow: hidden;
 
       >.bar {
         height: 100%;
         border-radius: borders.$rounded;
-        background: $secondary;
+        background: $secondary-dark-background;
         transition: width 220ms ease;
       }
     }
@@ -102,32 +102,32 @@
           place-items: center;
           font-size: 0.75rem;
           font-weight: 600;
-          background: rgba($secondary, 0.08);
-          color: rgba($secondary, 0.85);
+          background: rgba($secondary-dark-background, 0.08);
+          color: rgba($secondary-text, 0.85);
         }
 
         >small {
           font-size: 0.8rem;
           font-weight: 500;
-          color: rgba($secondary, 0.75);
+          color: rgba($secondary-text, 0.75);
         }
 
         &.is-done {
           border-color: rgba($secondary, 0.22);
 
           >span {
-            background: rgba($secondary, 0.9);
+            background: rgba($secondary-dark-background, 0.9);
             color: $accent;
           }
         }
 
         &.is-active {
           border-color: rgba($secondary, 0.7);
-          background: $secondary;
+          background: $secondary-dark-background;
 
           >span {
             background: rgba($accent, 0.95);
-            color: $secondary;
+            color: $secondary-text;
           }
 
           >small {

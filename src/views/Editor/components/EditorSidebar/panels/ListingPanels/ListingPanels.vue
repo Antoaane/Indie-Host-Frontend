@@ -72,5 +72,7 @@ const emit = defineEmits<{
 
 .editor-listing-panels {
   @extend %panels-stack;
+
+  padding-bottom: var(--layout-gap);
 }
 </style>

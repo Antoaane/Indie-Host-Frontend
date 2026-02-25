@@ -234,7 +234,7 @@
             "cta": "Supprimer l’annonce",
             "current": "Statut actuel :",
             "confirmTitle": "Confirmer la suppression",
-            "confirmMessage": "Cette annonce ne sera plus visible côté hôte ni côté voyageur. Les données seront conservées.",
+            "confirmMessage": "Cette annonce sera supprimée définitivement dans 14 jours après la confirmation de suppression.",
             "confirmCta": "Oui, supprimer",
             "cancelCta": "Annuler"
           }

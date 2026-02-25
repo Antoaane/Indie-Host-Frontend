@@ -3,7 +3,7 @@
 @use "@/styles/variables/colors" as *;
 @use "@/styles/variables/layouts" as *;
 
-@mixin base-text($color : $secondary, $bold: false, $underline: false, $italic: false, $thin: true, $bigger: false) {
+@mixin base-text($color : $secondary-text, $bold: false, $underline: false, $italic: false, $thin: true, $bigger: false) {
   margin: 0;
 
   font-family: 'outfit', sans-serif;
@@ -50,7 +50,7 @@
   }
 }
 
-@mixin little-text($color: $secondary, $bold: false, $underline: false, $italic: false, $thin: true) {
+@mixin little-text($color: $secondary-text, $bold: false, $underline: false, $italic: false, $thin: true) {
   margin: 0;
 
   font-family: 'outfit', sans-serif;
@@ -95,7 +95,7 @@
   }
 }
 
-@mixin base-title($size: 1.5rem, $weight: 700, $color: $secondary, $bigger: true, $colorful: true) {
+@mixin base-title($size: 1.5rem, $weight: 700, $color: $secondary-text, $bigger: true, $colorful: true) {
   font-family: 'Fustat', sans-serif;
   font-weight: $weight;
   color: $color;
@@ -116,7 +116,7 @@
   }
 }
 
-@mixin main-title($color : $secondary, $bigger: true, $colorful: true, $gradiant: false) {
+@mixin main-title($color : $secondary-text, $bigger: true, $colorful: true, $gradiant: false) {
   margin-top: 0;
   margin-bottom: 1rem;
 
@@ -185,7 +185,7 @@
   }
 }
 
-@mixin h1-title($color : $secondary, $bigger: true, $colorful: true, $layout-gap: false, $gradiant: false) {
+@mixin h1-title($color : $secondary-text, $bigger: true, $colorful: true, $layout-gap: false, $gradiant: false) {
   // margin-top: 0;
   // margin-bottom: 0.75rem;
 
@@ -246,7 +246,7 @@
   }
 }
 
-@mixin h2-title($color : $secondary, $bigger: true, $colorful: true, $layout-gap: false, $gradiant: false) {
+@mixin h2-title($color : $secondary-text, $bigger: true, $colorful: true, $layout-gap: false, $gradiant: false) {
   // margin-top: 0;
   // margin-bottom: 0.75rem;
 
@@ -307,7 +307,7 @@
   }
 }
 
-@mixin h3-title($color : $secondary, $bigger: true, $colorful: true, $layout-gap: false, $gradiant: false) {
+@mixin h3-title($color : $secondary-text, $bigger: true, $colorful: true, $layout-gap: false, $gradiant: false) {
   // margin-top: 0;
   // margin-bottom: 0.75rem;
 
@@ -368,7 +368,7 @@
   }
 }
 
-@mixin h4-title($color : $secondary, $bigger: true, $colorful: true, $layout-gap: false, $gradiant: false) {
+@mixin h4-title($color : $secondary-text, $bigger: true, $colorful: true, $layout-gap: false, $gradiant: false) {
   // margin-top: 0;
   // margin-bottom: 0.75rem;
 
@@ -430,7 +430,7 @@
 }
 
 
-@mixin lp-h2-title($color : $secondary, $bigger: true, $colorful: true, $layout-gap: true) {
+@mixin lp-h2-title($color : $secondary-text, $bigger: true, $colorful: true, $layout-gap: true) {
   margin-top: 0;
   margin-bottom: 0.75rem;
 
@@ -493,7 +493,7 @@
   }
 }
 
-@mixin lp-h3-title($color : $secondary, $bigger: true, $colorful: true) {
+@mixin lp-h3-title($color : $secondary-text, $bigger: true, $colorful: true) {
   margin-top: 0;
   margin-bottom: 0.5rem;
 
@@ -561,7 +561,7 @@
   }
 }
 
-@mixin lp-h4-title($color : $secondary, $bigger: true, $colorful: true) {
+@mixin lp-h4-title($color : $secondary-text, $bigger: true, $colorful: true) {
   margin-top: 0;
   margin-bottom: 0.5rem;
 

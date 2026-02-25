@@ -108,7 +108,7 @@
   }
 
   >.footer {
-    background: $secondary;
+    background: $secondary-dark-background;
     padding-top: var(--layout-gap-sm);
     padding-bottom: var(--layout-gap);
 
@@ -138,7 +138,7 @@
         display: block;
 
         >path {
-          fill: $secondary;
+          fill: $secondary-text;
         }
       }
 

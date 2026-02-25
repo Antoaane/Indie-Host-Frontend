@@ -1,6 +1,6 @@
 // File: src/views/Editor/composables/useEditorController.ts
 
-import { onBeforeUnmount, ref, watch, type Ref } from 'vue'
+import { computed, onBeforeUnmount, ref, watch, type Ref } from 'vue'
 import type { RouteLocationNormalizedLoaded } from 'vue-router'
 
 import { normalizeListingStatus } from '@/domain/listings/status'
@@ -35,6 +35,13 @@ export function useEditorController(options: EditorControllerOptions) {
 
   const patchQueue = useEditorPatchQueue({
     getSource: () => options.source.value,
+  })
+
+  const selectedListingHasPendingChanges = computed(() => {
+    const listingId = selectedListingId.value
+    if (!listingId) return false
+    const selectedListing = listingState.listings.value.find((item) => item.listingId === listingId)
+    return Boolean(selectedListing?.hasPendingChanges)
   })
 
   const draftLifecycle = useEditorDraftLifecycle({
@@ -277,6 +284,7 @@ export function useEditorController(options: EditorControllerOptions) {
     previewRawListing: draftLifecycle.previewRawListing,
     publishSelectedDraft,
     selectedListingId,
+    selectedListingHasPendingChanges,
     showListings,
     showPreview,
     stage,

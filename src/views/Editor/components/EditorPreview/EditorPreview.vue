@@ -135,11 +135,15 @@ onBeforeUnmount(() => {
     gap: var(--layout-gap-sm);
 
     > .back-to-listings {
-      @include buttons.primary($theme: white, $icon-only: true);
+      button {
+        @include buttons.low-btn($icon-only: true);
+      }
     }
 
     > .show-online {
-      @include buttons.primary($theme: white, $icon-only: true);
+      a {
+        @include buttons.low-btn($icon-only: true);
+      }
     }
   }
 

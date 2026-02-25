@@ -39,12 +39,12 @@
 .donation-status__title {
   margin: 0;
   font-weight: 600;
-  @include base-text($secondary, true);
+  @include base-text($secondary-text, true);
 }
 
 .donation-status__body {
   margin: 0;
-  @include little-text(rgba($secondary, 0.75));
+  @include little-text(rgba($secondary-text, 0.75));
 
   a {
     color: inherit;

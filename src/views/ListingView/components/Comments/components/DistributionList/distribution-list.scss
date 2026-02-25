@@ -46,14 +46,14 @@
           }
 
           &::-webkit-progress-value {
-            background: $secondary;
+            background: $secondary-dark-background;
             /* barre noire */
             transition: width 0.25s ease;
           }
 
           /* Firefox */
           &::-moz-progress-bar {
-            background: $secondary;
+            background: $secondary-dark-background;
             /* barre noire */
             transition: width 0.25s ease;
           }
@@ -68,8 +68,8 @@
           @include little-text($thin: false);
 
           .lucide-star-icon {
-            fill: $secondary;
-            stroke: $secondary;
+            fill: $secondary-text;
+            stroke: $secondary-text;
           }
         }
 

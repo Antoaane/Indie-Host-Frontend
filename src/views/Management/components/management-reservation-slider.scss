@@ -18,7 +18,7 @@
     z-index: 99;
 
     * {
-      fill: $secondary;
+      fill: $secondary-text;
     }
   }
 
@@ -48,7 +48,7 @@
 
     border-radius: borders.$rounded;
     border: 1px rgba($accent, 0) solid;
-    background: $secondary;
+    background: $secondary-dark-background;
 
     cursor: pointer;
     transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
@@ -71,7 +71,7 @@
       border-radius: borders.$rounded;
       background: $accent;
 
-      color: rgba($secondary, 0.9);
+      color: rgba($secondary-text, 0.9);
       text-align: left;
 
       >.avatar {
@@ -94,7 +94,7 @@
         >.initials {
           font-size: 0.7rem;
           font-weight: 700;
-          color: rgba($secondary, 0.7);
+          color: rgba($secondary-text, 0.7);
         }
       }
 
@@ -111,7 +111,7 @@
 
         >.dates {
           font-size: 0.7rem;
-          color: rgba($secondary, 0.55);
+          color: rgba($secondary-text, 0.55);
         }
       }
     }

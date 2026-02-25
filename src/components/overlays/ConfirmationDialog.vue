@@ -136,16 +136,15 @@ function handleCancel() {
           {{ subject }}
         </p>
         <h2>{{ title }}</h2>
-      </div>
-
-      <div class="body">
         <p
           v-if="message"
           class="message"
         >
           {{ message }}
         </p>
+      </div>
 
+      <div class="body">
         <div
           v-if="isLevelTwo"
           class="typed-confirmation"
@@ -155,7 +154,6 @@ function handleCancel() {
           </p>
 
           <label class="field">
-            <span class="field-label">{{ resolvedTypingLabel }}</span>
             <input
               v-model="typedValue"
               type="text"
@@ -179,7 +177,6 @@ function handleCancel() {
         <div class="confirm">
           <button
             type="button"
-            class="confirm"
             :class="{ 'is-danger': tone === 'danger' }"
             :disabled="isConfirmDisabled"
             @click="handleConfirm"
@@ -202,14 +199,13 @@ function handleCancel() {
   > .panel {
     @extend %overlay-panel;
     max-height: max-content;
-    gap: var(--layout-gap-sm);
+    gap: var(--layout-gap);
 
     @include layout-gap(padding, bottom, 2);
 
     > .header {
       display: flex;
       flex-direction: column;
-      gap: 0.3rem;
 
       > .subject {
         margin: 0;
@@ -223,17 +219,17 @@ function handleCancel() {
         margin: 0;
         @include h2-title;
       }
+
+      > .message {
+        margin: 0;
+        @include base-text($thin: false);
+      }
     }
 
     > .body {
       display: flex;
       flex-direction: column;
       gap: var(--layout-gap-sm);
-
-      > .message {
-        margin: 0;
-        @include base-text;
-      }
 
       > .typed-confirmation {
         display: flex;
@@ -242,7 +238,7 @@ function handleCancel() {
 
         > .hint {
           margin: 0;
-          color: rgba($secondary, 0.75);
+          color: rgba($secondary, 0.5) !important;
           @include little-text($thin: false);
         }
 
@@ -266,21 +262,23 @@ function handleCancel() {
       gap: var(--layout-gap-sm);
 
       > .cancel {
-        @include buttons.primary($theme: white);
+        @include buttons.primary($theme: dark);
       }
 
       > .confirm {
-        @include buttons.primary($theme: dark);
+        @include buttons.primary($theme: white);
 
-        &.is-danger {
-          &:hover:not(:disabled) {
-            background-color: $bad !important;
-            color: $accent !important;
-            outline-color: rgba($bad, 0.35) !important;
-
-            * {
+        button {
+          &.is-danger {
+            &:hover:not(:disabled) {
+              background-color: $bad !important;
               color: $accent !important;
-              stroke: $accent !important;
+              outline-color: rgba($bad, 0.35) !important;
+
+              * {
+                color: $accent !important;
+                stroke: $accent !important;
+              }
             }
           }
         }

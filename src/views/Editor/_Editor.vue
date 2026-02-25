@@ -30,6 +30,7 @@ const {
   previewRawListing,
   publishSelectedDraft,
   selectedListingId,
+  selectedListingHasPendingChanges,
   showListings,
   showPreview,
   stage,
@@ -52,6 +53,7 @@ const {
           :draft="draft"
           :isLoading="draftStatus.isLoading"
           :isPatchSyncing="isPatchSyncPending"
+          :hasPendingChanges="selectedListingHasPendingChanges"
           :publish="publishSelectedDraft"
           @patch="applyDraftPatch"
         />

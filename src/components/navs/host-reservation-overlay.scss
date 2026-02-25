@@ -52,8 +52,8 @@
       }
 
       >.close {
-        @include buttons.low-btn($color: rgba($accent, 0.9), $hover-color: $secondary, $stroke: true);
-        box-shadow: 0 2px 6px rgba($secondary, 0.12);
+        @include buttons.low-btn($color: rgba($accent, 0.9), $hover: $secondary-button-reference, $stroke: true);
+        box-shadow: 0 2px 6px rgba($secondary-button-reference, 0.12);
       }
     }
 
@@ -315,11 +315,11 @@
       >p {
         margin: 0;
         font-weight: 600;
-        color: $secondary;
+        color: $secondary-text;
       }
 
       >small {
-        color: rgba($secondary, 0.65);
+        color: rgba($secondary-text, 0.65);
       }
     }
 
@@ -338,14 +338,14 @@
         border: 1px solid rgba($secondary, 0.25);
         border-radius: borders.$rounded-sm;
         background: $accent;
-        color: $secondary;
+        color: $secondary-text;
 
         cursor: pointer;
 
         @include animations.transition(150ms);
 
         &:hover:not(:disabled) {
-          background: $secondary;
+          background: $secondary-dark-background;
           color: $accent;
           stroke: $accent;
 
@@ -365,7 +365,7 @@
         min-width: 1.5rem;
         text-align: center;
         font-weight: 600;
-        color: $secondary;
+        color: $secondary-text;
       }
     }
   }

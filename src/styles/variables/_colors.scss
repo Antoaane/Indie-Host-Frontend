@@ -5,6 +5,9 @@
 // MAIN
 $accent: #fcfafa;
 $secondary: #111117;
+$secondary-dark-background: $secondary;
+$secondary-text: $secondary;
+$secondary-button-reference: $secondary;
 $tertiary: #ece8e8;
 $quaternary: #e2dede;
 $quinary: #343339;
@@ -17,15 +20,15 @@ $accent-surface-2: darken($tertiary, 2.5%);
 $accent-surface-3: darken($tertiary, 7.5%);
 $accent-surface-4: darken($tertiary, 15%);
 
-$secondary-surface-0: lighten($secondary, 90%);
-$secondary-surface-1: lighten($secondary, 85%);
-$secondary-surface-2: lighten($secondary, 80%);
-$secondary-surface-3: lighten($secondary, 70%);
+$secondary-surface-0: lighten($secondary-dark-background, 90%);
+$secondary-surface-1: lighten($secondary-dark-background, 85%);
+$secondary-surface-2: lighten($secondary-dark-background, 80%);
+$secondary-surface-3: lighten($secondary-dark-background, 70%);
 
-$translucent-surface-0: rgba($secondary, 0.1);
-$translucent-surface-1: rgba($secondary, 0.15);
-$translucent-surface-2: rgba($secondary, 0.2);
-$translucent-surface-3: rgba($secondary, 0.3);
+$translucent-surface-0: rgba($secondary-dark-background, 0.1);
+$translucent-surface-1: rgba($secondary-dark-background, 0.15);
+$translucent-surface-2: rgba($secondary-dark-background, 0.2);
+$translucent-surface-3: rgba($secondary-dark-background, 0.3);
 
 // GRADIENTS
 $primary_gradiant_first: rgb(163, 153, 255);
@@ -38,8 +41,8 @@ $secondary_gradiant_second: rgb(153, 255, 226);
 // TEXT GRADIANTS
 $accent_text_gradiant_first: rgba($accent, 1);
 $accent_text_gradiant_second: rgba($accent, 0.75);
-$secondary_text_gradiant_first: rgba($secondary, 1);
-$secondary_text_gradiant_second: rgba($secondary, 0.75);
+$secondary_text_gradiant_first: rgba($secondary-text, 1);
+$secondary_text_gradiant_second: rgba($secondary-text, 0.75);
 
 // STATUS
 $airbnb: rgb(255, 82, 82);

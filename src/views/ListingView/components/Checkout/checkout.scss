@@ -50,7 +50,7 @@ html:has(#checkout) {
       border-radius: borders.$rounded-xl;
       border: 1px solid rgba($secondary, 0.12);
       background: $accent;
-      color: $secondary;
+      color: $secondary-text;
       font-weight: 600;
       box-shadow: 0 6px 20px rgba($secondary, 0.08);
 
@@ -100,7 +100,7 @@ html:has(#checkout) {
         display: grid;
         place-items: center;
         font-size: 0.75rem;
-        color: rgba($secondary, 0.5);
+        color: rgba($secondary-text, 0.5);
       }
     }
 
@@ -117,13 +117,13 @@ html:has(#checkout) {
 
       >.host {
         margin: 0;
-        color: rgba($secondary, 0.7);
+        color: rgba($secondary-text, 0.7);
         font-size: 0.85rem;
       }
 
       >.location {
         margin: 0;
-        color: rgba($secondary, 0.55);
+        color: rgba($secondary-text, 0.55);
         font-size: 0.8rem;
       }
 
@@ -134,8 +134,8 @@ html:has(#checkout) {
         font-weight: 600;
 
         >svg {
-          stroke: $secondary;
-          fill: $secondary;
+          stroke: $secondary-text;
+          fill: $secondary-text;
         }
       }
     }
@@ -156,7 +156,7 @@ html:has(#checkout) {
     }
 
     >.section-subtitle {
-      @include little-text($color: rgba($secondary, 0.7));
+      @include little-text($color: rgba($secondary-text, 0.7));
     }
 
     >.section-text {
@@ -196,7 +196,7 @@ html:has(#checkout) {
     }
 
     &.is-selected {
-      background: $secondary;
+      background: $secondary-dark-background;
       color: $accent;
 
       .title {
@@ -239,7 +239,7 @@ html:has(#checkout) {
       }
 
       .subtitle {
-        @include little-text($color: rgba($secondary, 0.7), $thin: false);
+        @include little-text($color: rgba($secondary-text, 0.7), $thin: false);
         line-height: 1.3;
       }
     }
@@ -270,7 +270,7 @@ html:has(#checkout) {
     display: inline;
     border: none;
     background: transparent;
-    color: $secondary;
+    color: $secondary-text;
     font-size: inherit;
     line-height: inherit;
     font-weight: 600;
@@ -292,7 +292,7 @@ html:has(#checkout) {
       border: 1px solid rgba($secondary, 0.08);
       font-size: 0.75rem;
       font-weight: 700;
-      color: rgba($secondary, 0.7);
+      color: rgba($secondary-text, 0.7);
       text-transform: uppercase;
       letter-spacing: 0.04em;
     }
@@ -309,7 +309,7 @@ html:has(#checkout) {
       flex-wrap: wrap;
       gap: 0.35rem;
       margin: 0;
-      @include little-text($color: rgba($secondary, 0.8), $thin: false);
+      @include little-text($color: rgba($secondary-text, 0.8), $thin: false);
 
       >svg {
         flex-shrink: 0;
@@ -321,7 +321,7 @@ html:has(#checkout) {
       border-radius: borders.$rounded-md;
       border: 1px solid rgba($secondary, 0.12);
       background: $accent-surface-1;
-      @include little-text($color: rgba($secondary, 0.75), $thin: false);
+      @include little-text($color: rgba($secondary-text, 0.75), $thin: false);
     }
 
     .payment-element {
@@ -361,7 +361,7 @@ html:has(#checkout) {
     }
 
     .info-text {
-      @include little-text($color: rgba($secondary, 0.65));
+      @include little-text($color: rgba($secondary-text, 0.65));
     }
   }
 
@@ -388,7 +388,7 @@ html:has(#checkout) {
       border-radius: borders.$rounded-md;
       border: 1px solid rgba($secondary, 0.16);
       background: $accent;
-      color: $secondary;
+      color: $secondary-text;
       padding: 0.7rem 0.8rem;
       font: inherit;
       line-height: 1.45;

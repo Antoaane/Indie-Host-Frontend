@@ -73,7 +73,7 @@
       }
 
       >small {
-        @include little-text($color: rgba($secondary, 0.65));
+        @include little-text($color: rgba($secondary-text, 0.65));
       }
     }
 
@@ -94,7 +94,7 @@
 
       border: none;
       background: $translucent;
-      color: $secondary;
+      color: $secondary-text;
       font-size: 1.1rem;
       cursor: pointer;
       padding: 0.5rem;
@@ -106,7 +106,7 @@
     }
 
     >.content>.placeholder {
-      @include little-text($color: rgba($secondary, 0.65));
+      @include little-text($color: rgba($secondary-text, 0.65));
       text-align: center;
 
       padding: var(--layout-gap);

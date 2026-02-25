@@ -152,12 +152,11 @@ function confirmDelete() {
     <ConfirmationDialog
       :open="isDeleteOverlayOpen"
       :level="2"
-      :subject="panelContent.delete.title"
       :title="panelContent.delete.confirmTitle"
       :message="panelContent.delete.confirmMessage"
       :confirm-label="panelContent.delete.confirmCta"
       :cancel-label="panelContent.delete.cancelCta"
-      typing-hint="Tapez &quot;supprimer&quot; pour confirmer la suppression de cette annonce."
+      typing-hint='Tapez "supprimer" pour confirmer la suppression de cette annonce.'
       @close="closeDeleteOverlay"
       @cancel="closeDeleteOverlay"
       @confirm="confirmDelete"

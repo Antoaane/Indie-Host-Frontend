@@ -37,6 +37,11 @@ const STATUS_OPTIONS = [
   'blocked',
   'paused',
 ] as const
+type CardMenuType = 'status' | 'actions'
+type OpenCardMenuState = {
+  listingId: string
+  type: CardMenuType
+}
 
 const maxActiveListings = getUserMaxActiveListings()
 const activeListingsCount = computed(() => props.listings.reduce((count, listing) => count + (isActiveListingStatus(listing.status) ? 1 : 0), 0))
@@ -64,7 +69,7 @@ const filtered = computed(() => {
   return props.listings.filter((item) => (item.title ?? '').toLowerCase().includes(q))
 })
 
-const openStatusMenuListingId = ref<string | null>(null)
+const openCardMenu = ref<OpenCardMenuState | null>(null)
 
 function handleSelect(listingId: string) {
   emit('select', listingId)
@@ -75,36 +80,52 @@ function handlePreview(listingId: string) {
 }
 
 function setListingStatus(payload: { listingId: string; status: string }) {
-  closeStatusMenu()
+  closeCardMenus()
   emit('status-change', payload)
 }
 
 function isStatusMenuOpen(listingId: string) {
-  return openStatusMenuListingId.value === listingId
+  return openCardMenu.value?.type === 'status' && openCardMenu.value.listingId === listingId
 }
 
-function closeStatusMenu() {
-  openStatusMenuListingId.value = null
+function isActionsMenuOpen(listingId: string) {
+  return openCardMenu.value?.type === 'actions' && openCardMenu.value.listingId === listingId
+}
+
+function closeCardMenus() {
+  openCardMenu.value = null
 }
 
 function toggleStatusMenu(listingId: string) {
-  openStatusMenuListingId.value = openStatusMenuListingId.value === listingId ? null : listingId
+  if (isStatusMenuOpen(listingId)) {
+    closeCardMenus()
+    return
+  }
+  openCardMenu.value = { listingId, type: 'status' }
+}
+
+function toggleActionsMenu(listingId: string) {
+  if (isActionsMenuOpen(listingId)) {
+    closeCardMenus()
+    return
+  }
+  openCardMenu.value = { listingId, type: 'actions' }
 }
 
 function handleStatusMenuDocumentPointerDown(event: PointerEvent) {
   const target = event.target
   if (!(target instanceof Element)) {
-    closeStatusMenu()
+    closeCardMenus()
     return
   }
 
-  if (target.closest('.status-menu')) return
-  closeStatusMenu()
+  if (target.closest('.status-menu') || target.closest('.actions-menu')) return
+  closeCardMenus()
 }
 
 function handleStatusMenuDocumentKeyDown(event: KeyboardEvent) {
   if (event.key !== 'Escape') return
-  closeStatusMenu()
+  closeCardMenus()
 }
 
 function isActiveListingStatus(status?: string) {
@@ -139,12 +160,14 @@ onBeforeUnmount(() => {
           :listing="listing"
           :isSelected="listing.listingId === props.selectedListingId"
           :isStatusMenuOpen="isStatusMenuOpen(listing.listingId)"
+          :isActionsMenuOpen="isActionsMenuOpen(listing.listingId)"
           :statusOptions="STATUS_OPTIONS"
           :listingContent="listingContent"
           @select="handleSelect"
           @preview="handlePreview"
           @toggle-status-menu="toggleStatusMenu"
-          @close-status-menu="closeStatusMenu"
+          @toggle-actions-menu="toggleActionsMenu"
+          @close-menus="closeCardMenus"
           @status-change="setListingStatus"
         />
 

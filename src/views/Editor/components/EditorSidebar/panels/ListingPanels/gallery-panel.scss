@@ -41,7 +41,7 @@
 
       >.meta {
         @include little-text($thin: false);
-        color: rgba($secondary, 0.7);
+        color: rgba($secondary-text, 0.7);
       }
 
       >.buttons {
@@ -78,7 +78,7 @@
     }
 
     >.hint {
-      color: rgba($secondary, 0.65);
+      color: rgba($secondary-text, 0.65);
     }
 
     >.feedback {
@@ -154,7 +154,7 @@
           height: 22px;
           border-radius: 999px;
           border: 2px solid rgba($accent, 0.85);
-          background: rgba($secondary, 0.6);
+          background: rgba($secondary-dark-background, 0.6);
           display: grid;
           place-items: center;
 
@@ -187,7 +187,7 @@
             }
 
             svg {
-              @include halo($color: rgba($secondary, 0.75), $size: 4px);
+              @include halo($color: rgba($secondary-text, 0.75), $size: 4px);
             }
           }
 
