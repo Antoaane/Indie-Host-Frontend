@@ -723,7 +723,7 @@ onBeforeUnmount(() => {
       <div
         class="preference-card"
         role="radiogroup"
-        aria-label="Options de paiement"
+        aria-label="Options de paiement" title="Options de paiement"
       >
         <label
           class="preference-option"

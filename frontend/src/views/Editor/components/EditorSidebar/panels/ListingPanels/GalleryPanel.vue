@@ -444,7 +444,7 @@ onBeforeUnmount(() => {
               type="button"
               aria-label="Supprimer l’image"
               @pointerdown.stop
-              @click.stop="removeImage(index)"
+              @click.stop="removeImage(index)" title="Supprimer l’image"
             >
               <Trash2 :size="18" />
             </button>
@@ -456,6 +456,7 @@ onBeforeUnmount(() => {
             <button
               type="button"
               :aria-label="panelContent.addLabel"
+              :title="panelContent.addLabel"
               :disabled="orderedImages.length >= galleryLimits.maxImages"
               @click="openFilePicker"
             >

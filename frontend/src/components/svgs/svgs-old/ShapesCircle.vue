@@ -1,4 +1,4 @@
-<!-- File: src/components/svgs/images/ShapesCircle.vue -->
+<!-- File: src/components/svgs/svgs-old/ShapesCircle.vue -->
 
 <template>
   <svg

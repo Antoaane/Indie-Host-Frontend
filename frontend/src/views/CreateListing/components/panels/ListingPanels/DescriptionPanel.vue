@@ -6,6 +6,7 @@ import type { RawCore } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 import { formatValidationMessage, plainTextLengthFromHtml } from '@/utils/inputValidation'
+import { applyQuillToolbarTitles } from '@/utils/quillToolbarA11y'
 
 import { QuillyEditor } from 'vue-quilly'
 import type { QuillOptions } from 'quill/core'
@@ -116,6 +117,10 @@ const toolbarLabels = computed(() => ({
 
 onMounted(() => {
   quill = editor.value?.initialize(Quill)
+  applyQuillToolbarTitles(quill, {
+    text: panelContent.toolbar.text,
+    title: panelContent.toolbar.title,
+  })
   trimContentToLimit()
   plainTextLength.value = plainTextLengthFromHtml(content.value)
 })

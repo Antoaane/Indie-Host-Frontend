@@ -1,0 +1,48 @@
+{
+  "price": 150,
+  "fees": [
+    {
+      "name": "teeeeeest",
+      "amount": 50,
+      "code": "custom"
+    },
+    {
+      "code": "linen",
+      "name": "Frais de linge",
+      "amount": 12
+    },
+    {
+      "code": "cleaning",
+      "name": "Frais de ménage",
+      "amount": 28
+    }
+  ],
+  "booked-days": [],
+  "reservations": [],
+  "pricing": {
+    "deposit": {
+      "type": "info",
+      "amount": 0
+    },
+    "stay": {
+      "minNights": 1,
+      "maxNights": 1,
+      "durationDiscounts": [
+        {
+          "minNights": 7,
+          "percent": 10
+        },
+        {
+          "minNights": 28,
+          "percent": 15
+        },
+        {
+          "minNights": 29,
+          "percent": 20
+        }
+      ],
+      "weeklyDiscount": 10,
+      "monthlyDiscount": 15
+    }
+  }
+}

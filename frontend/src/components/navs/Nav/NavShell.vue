@@ -53,7 +53,7 @@ function handleAction(item: NavItem, event: MouseEvent, closeMenuAfterClick: boo
       :data-target="logoScrollTarget"
       class="logo"
       @click="scrollToTarget($event, false)"
-      aria-label="IndieHost - Revenir en haut de page"
+      aria-label="IndieHost - Revenir en haut de page" title="IndieHost - Revenir en haut de page"
     >
       <component
         :is="icons.logoFull.adapt"
@@ -66,7 +66,7 @@ function handleAction(item: NavItem, event: MouseEvent, closeMenuAfterClick: boo
       v-else
       :href="logoHref"
       class="logo"
-      aria-label="IndieHost - Aller à l'accueil"
+      aria-label="IndieHost - Aller à l'accueil" title="IndieHost - Aller à l'accueil"
     >
       <component
         :is="icons.logoFull.adapt"
@@ -153,7 +153,7 @@ function handleAction(item: NavItem, event: MouseEvent, closeMenuAfterClick: boo
       :class="{ 'is-active': isMobileMenuOpen }"
       @click="toggleMobileMenu"
       aria-label="Ouvrir/fermer le menu"
-      role="button"
+      role="button" title="Ouvrir/fermer le menu"
     >
       <span class="line is-top" />
       <span class="line is-bottom" />

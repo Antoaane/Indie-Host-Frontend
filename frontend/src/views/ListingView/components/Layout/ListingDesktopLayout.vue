@@ -69,7 +69,7 @@ function onConfirmCheckout(payload: CheckoutConfirmationPayload) {
     v-if="props.canEditListing && !props.ownershipLoading"
     class="owner-edit-overlay"
     :to="props.editListingRoute"
-    aria-label="Éditer cette annonce"
+    aria-label="Éditer cette annonce" title="Éditer cette annonce"
   >
     Éditer
   </RouterLink>

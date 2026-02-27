@@ -963,7 +963,7 @@ const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !nor
               <button
                 type="button"
                 aria-label="Basculer vers le calendrier"
-                @click="toggleCalendarMode"
+                @click="toggleCalendarMode" title="Basculer vers le calendrier"
               >
                 <Calendar :size="20" />
               </button>
@@ -978,7 +978,7 @@ const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !nor
             <div class="icon-btn add in-dev-hide">
               <button
                 type="button"
-                aria-label="Ajouter une r&eacute;servation"
+                aria-label="Ajouter une r&eacute;servation" title="Ajouter une r&eacute;servation"
               >
                 <Plus :size="20" />
               </button>
@@ -1050,7 +1050,7 @@ const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !nor
                         type="button"
                         class="edit-note-btn"
                         aria-label="Modifier la note interne"
-                        @click="openInternalNoteEditor"
+                        @click="openInternalNoteEditor" title="Modifier la note interne"
                       >
                         <Pen :size="16" />
                       </button>
@@ -1110,7 +1110,7 @@ const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !nor
                           aria-label="Progression totale du paiement"
                           :aria-valuenow="paymentSchedule.completionPercent"
                           aria-valuemin="0"
-                          aria-valuemax="100"
+                          aria-valuemax="100" title="Progression totale du paiement"
                         >
                           <div class="progress-track">
                             <span

@@ -658,7 +658,7 @@ function createDefaultBedDraft(): BedDraftExtended {
                   <button
                     type="button"
                     aria-label="Supprimer la pièce"
-                    @click="removeRoom(roomIndex)"
+                    @click="removeRoom(roomIndex)" title="Supprimer la pièce"
                   >
                     <Trash2 :size="16" />
                   </button>
@@ -757,7 +757,7 @@ function createDefaultBedDraft(): BedDraftExtended {
             <button
               type="button"
               aria-label="Fermer"
-              @click="closeBedOverlay"
+              @click="closeBedOverlay" title="Fermer"
             >
               <X :size="18" />
             </button>
@@ -783,6 +783,7 @@ function createDefaultBedDraft(): BedDraftExtended {
                   <button
                     type="button"
                     aria-label="Augmenter la quantité"
+                    title="Augmenter la quantité"
                     :disabled="sanitizeBedQuantity(bed.quantity) >= roomsLimits.bedQuantityMax"
                     @click="incrementBedQuantity(activeOverlayRoomIndex, bedIndex)"
                   >
@@ -806,7 +807,7 @@ function createDefaultBedDraft(): BedDraftExtended {
                     type="button"
                     aria-label="Diminuer la quantité"
                     :disabled="sanitizeBedQuantity(bed.quantity) <= roomsLimits.bedQuantityMin"
-                    @click="decrementBedQuantity(activeOverlayRoomIndex, bedIndex)"
+                    @click="decrementBedQuantity(activeOverlayRoomIndex, bedIndex)" title="Diminuer la quantité"
                   >
                     <Minus :size="18" />
                   </button>
@@ -832,7 +833,7 @@ function createDefaultBedDraft(): BedDraftExtended {
                 <button
                   type="button"
                   aria-label="Supprimer le lit"
-                  @click="removeBed(activeOverlayRoomIndex, bedIndex)"
+                  @click="removeBed(activeOverlayRoomIndex, bedIndex)" title="Supprimer le lit"
                 >
                   <Trash2 :size="18" />
                 </button>
@@ -863,6 +864,7 @@ function createDefaultBedDraft(): BedDraftExtended {
                       type="button"
                       :class="{ 'is-selected': sanitizeCustomBedIcon(bed.customIcon) === sanitizeCustomBedIcon(iconChoice.value) }"
                       :aria-label="iconChoice.label"
+                      :title="iconChoice.label"
                       @click="updateBed(activeOverlayRoomIndex, bedIndex, { customIcon: iconChoice.value })"
                     >
                       <component
@@ -881,6 +883,7 @@ function createDefaultBedDraft(): BedDraftExtended {
                       <button
                         type="button"
                         aria-label="Augmenter la capacité"
+                        title="Augmenter la capacité"
                         :disabled="sanitizeBedCapacity(bed.capacity) >= customBedCapacityMax"
                         @click="incrementBedCapacity(activeOverlayRoomIndex, bedIndex)"
                       >
@@ -904,7 +907,7 @@ function createDefaultBedDraft(): BedDraftExtended {
                         type="button"
                         aria-label="Diminuer la capacité"
                         :disabled="sanitizeBedCapacity(bed.capacity) <= customBedCapacityMin"
-                        @click="decrementBedCapacity(activeOverlayRoomIndex, bedIndex)"
+                        @click="decrementBedCapacity(activeOverlayRoomIndex, bedIndex)" title="Diminuer la capacité"
                       >
                         <Minus :size="18" />
                       </button>

@@ -200,7 +200,7 @@ onBeforeUnmount(() => {
         :aria-label="ariaLabel"
         :aria-labelledby="ariaLabelledby"
         tabindex="-1"
-        @click.self="handleBackdropClick"
+        @click.self="handleBackdropClick" title="ariaLabel"
       >
         <slot :close="requestClose" />
       </div>

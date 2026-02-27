@@ -543,7 +543,7 @@ onMounted(() => {
             type="button"
             class="close"
             aria-label="Fermer"
-            @click="emit('close')"
+            @click="emit('close')" title="Fermer"
           >
             <X :size="20" />
           </button>
@@ -644,7 +644,7 @@ onMounted(() => {
                     type="button"
                     aria-label="Retirer un adulte"
                     :disabled="occupants.adults <= 1"
-                    @click="updateCount('adults', -1)"
+                    @click="updateCount('adults', -1)" title="Retirer un adulte"
                   >
                     <Minus :size="20" />
                   </button>
@@ -652,7 +652,7 @@ onMounted(() => {
                   <button
                     type="button"
                     aria-label="Ajouter un adulte"
-                    @click="updateCount('adults', 1)"
+                    @click="updateCount('adults', 1)" title="Ajouter un adulte"
                   >
                     <Plus :size="20" />
                   </button>
@@ -669,7 +669,7 @@ onMounted(() => {
                     type="button"
                     aria-label="Retirer un enfant"
                     :disabled="occupants.children <= 0"
-                    @click="updateCount('children', -1)"
+                    @click="updateCount('children', -1)" title="Retirer un enfant"
                   >
                     <Minus :size="20" />
                   </button>
@@ -677,7 +677,7 @@ onMounted(() => {
                   <button
                     type="button"
                     aria-label="Ajouter un enfant"
-                    @click="updateCount('children', 1)"
+                    @click="updateCount('children', 1)" title="Ajouter un enfant"
                   >
                     <Plus :size="20" />
                   </button>
@@ -694,7 +694,7 @@ onMounted(() => {
                     type="button"
                     aria-label="Retirer un b&eacute;b&eacute;"
                     :disabled="occupants.babies <= 0"
-                    @click="updateCount('babies', -1)"
+                    @click="updateCount('babies', -1)" title="Retirer un b&eacute;b&eacute;"
                   >
                     <Minus :size="20" />
                   </button>
@@ -702,7 +702,7 @@ onMounted(() => {
                   <button
                     type="button"
                     aria-label="Ajouter un b&eacute;b&eacute;"
-                    @click="updateCount('babies', 1)"
+                    @click="updateCount('babies', 1)" title="Ajouter un b&eacute;b&eacute;"
                   >
                     <Plus :size="20" />
                   </button>
@@ -719,7 +719,7 @@ onMounted(() => {
                     type="button"
                     aria-label="Retirer un animal"
                     :disabled="occupants.animals <= 0"
-                    @click="updateCount('animals', -1)"
+                    @click="updateCount('animals', -1)" title="Retirer un animal"
                   >
                     <Minus :size="20" />
                   </button>
@@ -727,7 +727,7 @@ onMounted(() => {
                   <button
                     type="button"
                     aria-label="Ajouter un animal"
-                    @click="updateCount('animals', 1)"
+                    @click="updateCount('animals', 1)" title="Ajouter un animal"
                   >
                     <Plus :size="20" />
                   </button>
@@ -744,7 +744,7 @@ onMounted(() => {
                     type="button"
                     aria-label="Retirer une personne PMR"
                     :disabled="occupants.pmr <= 0"
-                    @click="updateCount('pmr', -1)"
+                    @click="updateCount('pmr', -1)" title="Retirer une personne PMR"
                   >
                     <Minus :size="20" />
                   </button>
@@ -752,7 +752,7 @@ onMounted(() => {
                   <button
                     type="button"
                     aria-label="Ajouter une personne PMR"
-                    @click="updateCount('pmr', 1)"
+                    @click="updateCount('pmr', 1)" title="Ajouter une personne PMR"
                   >
                     <Plus :size="20" />
                   </button>

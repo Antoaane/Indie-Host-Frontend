@@ -322,6 +322,7 @@ const swiperParams = computed(
           type="button"
           class=""
           :disabled="!commentsCount"
+          :title="content.ctaLabel"
           @click="openOverlay()"
           v-html="content.ctaLabel"
         />
@@ -339,6 +340,8 @@ const swiperParams = computed(
           <div class="close">
             <button
               type="button"
+              aria-label="Fermer les commentaires"
+              title="Fermer les commentaires"
               @click="closeOverlay"
             >
               <X :size="24" />

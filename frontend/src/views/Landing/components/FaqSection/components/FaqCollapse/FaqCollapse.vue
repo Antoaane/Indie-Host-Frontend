@@ -22,6 +22,7 @@ function toggle() {
       @click="toggle"
       :aria-expanded="isOpen"
       :aria-controls="id"
+      :title="isOpen ? 'Réduire la réponse' : 'Afficher la réponse'"
       type="button"
     >
       <slot name="summary" />

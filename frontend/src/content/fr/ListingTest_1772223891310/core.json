@@ -1,0 +1,173 @@
+{
+  "id": "listing-1772223891310",
+  "status": "published",
+  "pause_message": "",
+  "title": "teeeeeeeeeest",
+  "type": "Appartement",
+  "precise_address": "7 Carriera Castelet Roman",
+  "city": "Castanet-Tolosan",
+  "country": "France",
+  "region": "Occitanie",
+  "guest_capacity": 4,
+  "rooms": [
+    {
+      "room-name": "Chambre",
+      "type": "bedroom",
+      "beds": []
+    },
+    {
+      "room-name": "Salon",
+      "type": "livingroom",
+      "beds": [
+        {
+          "type": "bunk",
+          "quantity": 2,
+          "capacity": 2
+        },
+        {
+          "type": "simple",
+          "quantity": 1,
+          "capacity": 1
+        }
+      ]
+    }
+  ],
+  "amenities": [
+    {
+      "id": "DEDICATED_WORKSPACE",
+      "name": "Espace de travail dédié",
+      "description": "Bureau / table + prise",
+      "category": "Confort & travail",
+      "relevance": 85,
+      "pinned": false,
+      "perkEligible": true,
+      "perkScore": 82,
+      "perkPriority": 0
+    },
+    {
+      "id": "WIFI",
+      "name": "Wifi",
+      "description": "Connexion internet",
+      "category": "Confort & travail",
+      "relevance": 95,
+      "pinned": false,
+      "perkEligible": true,
+      "perkScore": 91,
+      "perkPriority": 0
+    },
+    {
+      "id": "LINENS_PROVIDED",
+      "name": "Linge de lit et de bain",
+      "description": "Draps et serviettes fournis",
+      "category": "Confort & travail",
+      "relevance": 75,
+      "pinned": false
+    },
+    {
+      "id": "REVERSIBLE_AIR_CONDITIONING",
+      "name": "Climatisation réversible",
+      "description": "Chaud / froid",
+      "category": "Confort & travail",
+      "relevance": 80,
+      "pinned": false,
+      "perkEligible": true,
+      "perkScore": 80,
+      "perkPriority": 0
+    },
+    {
+      "id": "ELEVATOR",
+      "name": "Ascenseur",
+      "description": "Accès pratique",
+      "category": "Arrivée & mobilité",
+      "relevance": 55,
+      "pinned": false
+    },
+    {
+      "id": "FREE_PARKING_ON_PREMISES",
+      "name": "Parking gratuit sur place",
+      "description": "Sur place",
+      "category": "Arrivée & mobilité",
+      "relevance": 70,
+      "pinned": false,
+      "perkEligible": true,
+      "perkScore": 79,
+      "perkPriority": 0
+    },
+    {
+      "id": "NESPRESSO_COFFEE_MACHINE",
+      "name": "Machine à café Nespresso",
+      "description": "Capsules incluses",
+      "category": "Cuisine & boissons",
+      "relevance": 70,
+      "pinned": false
+    },
+    {
+      "id": "KETTLE_AND_TEA",
+      "name": "Bouilloire + thés",
+      "description": "Sélection de thés",
+      "category": "Cuisine & boissons",
+      "relevance": 55,
+      "pinned": false
+    },
+    {
+      "id": "HEATED_POOL",
+      "name": "Piscine chauffée",
+      "description": "En saison",
+      "category": "Extérieur & détente",
+      "relevance": 90,
+      "pinned": false,
+      "perkEligible": true,
+      "perkScore": 90,
+      "perkPriority": 0
+    },
+    {
+      "id": "OUTDOOR_DINING_AREA",
+      "name": "Espace repas extérieur",
+      "description": "Table / chaises",
+      "category": "Extérieur & détente",
+      "relevance": 65,
+      "pinned": false
+    },
+    {
+      "id": "SUN_LOUNGERS",
+      "name": "Chaises longues",
+      "description": "Pour se détendre",
+      "category": "Extérieur & détente",
+      "relevance": 60,
+      "pinned": false
+    },
+    {
+      "id": "EQUIPPED_KITCHEN",
+      "name": "Cuisine équipée",
+      "description": "Plaques, four, vaisselle…",
+      "category": "Cuisine & boissons",
+      "relevance": 85,
+      "pinned": false,
+      "perkEligible": true,
+      "perkScore": 77,
+      "perkPriority": 0
+    },
+    {
+      "id": "FILTER_COFFEE_MAKER",
+      "name": "Machine à café filtre",
+      "description": "Café moulu de bienvenue",
+      "category": "Cuisine & boissons",
+      "relevance": 60,
+      "pinned": false
+    },
+    {
+      "id": "EASY_METRO_ACCESS",
+      "name": "Accès facile métro",
+      "description": "Station à proximité",
+      "category": "Arrivée & mobilité",
+      "relevance": 70,
+      "pinned": false
+    }
+  ],
+  "latitude": 43.5162703,
+  "longitude": 1.4961132,
+  "lat": 43.5162703,
+  "lng": 1.4961132,
+  "zoom": 13,
+  "description": "<p>teeeeeeeeeestteeeeeeeeeestteeeeeeeeeestteeeeeeeeeestteeeeeeeeeestteeeeeeeeeestteeeeeeeeeestteeeeeeeeeestteeeeeeeeeestteeeeeeeeeestteeeeeeeeeestteeeeeeeeeest</p>"
+}

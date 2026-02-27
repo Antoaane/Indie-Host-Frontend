@@ -51,6 +51,7 @@ function closePopup() {
         type="button"
         :aria-expanded="isOpen"
         :aria-controls="'listing-description-dialog'"
+        :title="staticContent.ctaLabel"
         v-html="staticContent.ctaLabel"
         @click="openPopup"
       />
@@ -70,7 +71,7 @@ function closePopup() {
             <button
               type="button"
               aria-label="Fermer"
-              @click="closePopup"
+              @click="closePopup" title="Fermer"
             >
               <X />
             </button>

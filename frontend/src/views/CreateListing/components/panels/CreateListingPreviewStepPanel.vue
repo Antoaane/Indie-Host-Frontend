@@ -134,6 +134,8 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: var(--layout-gap);
   width: min(100%, 64rem);
+  height: 100%;
+  min-height: 0;
   margin: 0 auto;
 
   > .intro {
@@ -154,7 +156,7 @@ onBeforeUnmount(() => {
   }
 
   > .preview-frame {
-    height: 100%;
+    flex: 1 1 auto;
     min-height: 18rem;
     border-radius: borders.$rounded-xl;
     overflow: hidden;

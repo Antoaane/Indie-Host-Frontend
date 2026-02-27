@@ -113,7 +113,7 @@ function closeOverlay() {
           type="button"
           class="close"
           aria-label="Fermer"
-          @click="closeOverlay"
+          @click="closeOverlay" title="Fermer"
         >
           ✕
         </button>

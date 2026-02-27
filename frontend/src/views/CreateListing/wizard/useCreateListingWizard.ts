@@ -208,11 +208,23 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
 
   function clearStorageDraft() {
     if (typeof window === 'undefined') return
+    if (persistTimer.value) {
+      window.clearTimeout(persistTimer.value)
+      persistTimer.value = null
+    }
     try {
       window.localStorage.removeItem(storageKey.value)
     } catch (err) {
       console.log('[CreateListing] failed to clear draft', err)
     }
+  }
+
+  function disableStoragePersistence() {
+    if (typeof window !== 'undefined' && persistTimer.value) {
+      window.clearTimeout(persistTimer.value)
+      persistTimer.value = null
+    }
+    hasHydratedStorage.value = false
   }
 
   function restoreStorageDraft() {
@@ -264,6 +276,7 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
     try {
       const payload = normalizeBundleForCreate(draft.value)
       const { listingId } = await toValue(options.source).createListing(payload)
+      disableStoragePersistence()
       clearStorageDraft()
       await router.push(
         buildEditorRoute({

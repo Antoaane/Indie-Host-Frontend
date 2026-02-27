@@ -76,6 +76,7 @@ onBeforeUnmount(() => {
           target="_blank"
           rel="noopener noreferrer"
           :aria-label="editorStatic.listings.externalLink"
+          :title="editorStatic.listings.externalLink"
           @click.stop
           @pointerdown.stop
         >

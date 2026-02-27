@@ -89,6 +89,7 @@ function plusLabel(row: GuestRow): string {
             <button
               type="button"
               :aria-label="minusLabel(row)"
+              :title="minusLabel(row)"
               :disabled="!canDecrease(row)"
               @click="props.updateCount(row.key, -1)"
             >
@@ -98,6 +99,7 @@ function plusLabel(row: GuestRow): string {
             <button
               type="button"
               :aria-label="plusLabel(row)"
+              :title="plusLabel(row)"
               :disabled="!canIncrease(row)"
               @click="props.updateCount(row.key, 1)"
             >

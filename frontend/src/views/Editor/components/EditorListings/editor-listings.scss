@@ -442,6 +442,15 @@ $editor-listing-card-target-width: 20rem;
                 padding: 0;
                 cursor: pointer;
 
+                * {
+                  stroke: $accent;
+                }
+
+                .lucide {
+                  width: 1.9rem;
+                  height: 1.9rem;
+                }
+
                 &.is-prev {
                   left: 0;
                   background: linear-gradient(90deg, rgba($secondary-dark-background, 0.42) 0%, rgba($secondary-dark-background, 0) 100%);

@@ -150,7 +150,7 @@ watch(
                 type="button"
                 aria-label="Options"
                 :disabled="props.isActionPending"
-                @click="toggleOptions"
+                @click="toggleOptions" title="Options"
               >
                 <MoreHorizontal :size="20" />
               </button>
@@ -247,7 +247,7 @@ watch(
         <div class="icon-btn">
           <button
             type="button"
-            aria-label="Ajouter une pièce jointe"
+            aria-label="Ajouter une pièce jointe" title="Ajouter une pièce jointe"
           >
             <Paperclip :size="20" />
           </button>
@@ -271,7 +271,7 @@ watch(
             type="button"
             aria-label="Envoyer"
             :disabled="!canSend"
-            @click="submitMessage"
+            @click="submitMessage" title="Envoyer"
           >
             <Send :size="20" />
             {{ props.isActionPending ? 'Envoi...' : props.composer.send }}

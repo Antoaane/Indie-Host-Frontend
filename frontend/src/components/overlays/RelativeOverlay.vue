@@ -310,7 +310,7 @@ onBeforeUnmount(() => {
         :aria-modal="ariaModal"
         :aria-label="ariaLabel"
         :aria-labelledby="ariaLabelledby"
-        tabindex="-1"
+        tabindex="-1" title="ariaLabel"
       >
         <slot :close="requestClose" />
       </div>

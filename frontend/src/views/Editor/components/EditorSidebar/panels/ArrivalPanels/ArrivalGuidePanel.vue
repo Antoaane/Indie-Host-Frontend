@@ -12,6 +12,7 @@ import {
   resolveTextMaxLength,
   shouldDisplayTextLimit,
 } from '@/utils/inputValidation'
+import { applyQuillToolbarTitles } from '@/utils/quillToolbarA11y'
 
 import { QuillyEditor } from 'vue-quilly'
 import type { QuillOptions } from 'quill/core'
@@ -145,6 +146,10 @@ const toolbarLabels = computed(() => ({
 
 onMounted(() => {
   quill = editor.value?.initialize(Quill)
+  applyQuillToolbarTitles(quill, {
+    text: toolbarContent.text,
+    title: toolbarContent.title,
+  })
   trimGuideContentToLimit()
   guideContentLength.value = plainTextLengthFromHtml(content.value)
 })

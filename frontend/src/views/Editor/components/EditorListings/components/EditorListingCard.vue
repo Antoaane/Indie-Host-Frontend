@@ -281,6 +281,7 @@ function goToImageLabel(index: number) {
               class="nav is-prev"
               type="button"
               :aria-label="props.listingContent.carousel.prev"
+              :title="props.listingContent.carousel.prev"
               @click.stop="handlePrev"
               @pointerdown.stop="handleSelect"
             >
@@ -290,6 +291,7 @@ function goToImageLabel(index: number) {
               class="nav is-next"
               type="button"
               :aria-label="props.listingContent.carousel.next"
+              :title="props.listingContent.carousel.next"
               @click.stop="handleNext"
               @pointerdown.stop="handleSelect"
             >
@@ -298,6 +300,7 @@ function goToImageLabel(index: number) {
             <div
               class="dots"
               :aria-label="props.listingContent.carousel.pagination"
+              :title="props.listingContent.carousel.pagination"
               @click.stop="handleSelect"
               @pointerdown.stop="handleSelect"
             >
@@ -308,6 +311,7 @@ function goToImageLabel(index: number) {
                 :class="{ 'is-active': activeIndex === index }"
                 type="button"
                 :aria-label="goToImageLabel(index + 1)"
+                :title="goToImageLabel(index + 1)"
                 @click.stop="handleGoTo(index)"
                 @pointerdown.stop="handleSelect"
               />
@@ -353,6 +357,7 @@ function goToImageLabel(index: number) {
             class="status-options"
             role="menu"
             :aria-label="props.listingContent.statusMenu.label"
+            :title="props.listingContent.statusMenu.label"
           >
             <button
               v-for="status in props.statusOptions"
@@ -363,6 +368,7 @@ function goToImageLabel(index: number) {
               role="menuitemradio"
               :aria-checked="isStatusOptionSelected(props.listing.status, status)"
               :aria-label="statusOptionAria(status)"
+              :title="statusOptionAria(status)"
               :disabled="isStatusOptionSelected(props.listing.status, status)"
               @click.stop="handleSetListingStatus(status)"
             >
@@ -415,6 +421,7 @@ function goToImageLabel(index: number) {
               <button
                 type="button"
                 :aria-label="props.listingContent.previewLink"
+                :title="props.listingContent.previewLink"
                 @click.stop="handlePreview"
                 @pointerdown.stop
               >
@@ -448,12 +455,14 @@ function goToImageLabel(index: number) {
                 class="status-options"
                 role="menu"
                 :aria-label="deleteContent.title"
+                :title="deleteContent.title"
               >
                 <button
                   class="status-option is-danger"
                   type="button"
                   role="menuitem"
                   :aria-label="deleteContent.cta"
+                  :title="deleteContent.cta"
                   @click.stop="openDeleteOverlay"
                 >
                   {{ deleteContent.cta }}
