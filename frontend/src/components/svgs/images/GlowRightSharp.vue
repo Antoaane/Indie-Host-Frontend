@@ -1,3 +1,5 @@
+<!-- File: src/components/svgs/images/GlowRightSharp.vue -->
+
 <template>
   <svg
     :role="attrRole"

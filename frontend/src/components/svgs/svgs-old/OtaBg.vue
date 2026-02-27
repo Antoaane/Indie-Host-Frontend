@@ -1,4 +1,4 @@
-<!-- File: src/components/svgs/images/OtaBg.vue -->
+<!-- File: src/components/svgs/svgs-old/OtaBg.vue -->
 
 <template>
   <svg

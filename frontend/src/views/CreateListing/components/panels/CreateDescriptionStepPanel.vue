@@ -3,7 +3,7 @@
 <script setup lang="ts">
 import type { RawCore } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
-import DescriptionPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/DescriptionPanel.vue'
+import DescriptionPanel from '@/views/CreateListing/components/panels/ListingPanels/DescriptionPanel.vue'
 import CreateWizardStepShell from '@/views/CreateListing/components/panels/CreateWizardStepShell.vue'
 
 const props = defineProps<{

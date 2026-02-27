@@ -1,3 +1,5 @@
+// File: src/utils/amenitiesIcons.ts
+
 import amenitiesIcons from '@/content/fr/amenities-icons.json'
 import * as LucideIcons from 'lucide-vue-next'
 

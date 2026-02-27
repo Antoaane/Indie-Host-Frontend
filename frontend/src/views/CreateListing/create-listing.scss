@@ -31,33 +31,6 @@
 
     @include layout-gap(padding, all, 1);
 
-    >.header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: var(--layout-gap-sm);
-
-      >.step-title {
-        >p {
-          margin: 0;
-          color: rgba($secondary-text, 0.6);
-          @include little-text($thin: false);
-        }
-
-        >h1 {
-          margin: 0.15rem 0 0 0;
-          @include h2-title();
-        }
-
-        >small {
-          margin: 0.25rem 0 0 0;
-          display: block;
-          color: rgba($secondary-text, 0.75);
-          @include little-text($thin: false);
-        }
-      }
-    }
-
     >.progress {
       height: 0.4rem;
       border-radius: borders.$rounded;
@@ -73,10 +46,16 @@
     }
 
     >.steps {
+      flex: 0 0 auto;
+      min-width: 0;
+      max-width: 100%;
       display: flex;
       align-items: center;
       gap: var(--layout-gap-xs);
-      overflow: auto;
+      overflow-x: auto;
+      overflow-y: hidden;
+      overscroll-behavior-x: contain;
+      -webkit-overflow-scrolling: touch;
       padding-bottom: 0.15rem;
 
       >.step {
@@ -144,7 +123,10 @@
 
     >.stage {
       flex: 1 1 auto;
+      min-width: 0;
       min-height: 0;
+      display: flex;
+      flex-direction: column;
       overflow: hidden;
       border-radius: borders.$rounded-xl;
       // background: rgba($accent, 0.55);
@@ -152,12 +134,18 @@
       // @include effects.big-shadow();
 
       >.slide {
-        height: 100%;
-        overflow: auto;
+        flex: 1 1 auto;
+        min-width: 0;
+        min-height: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior-y: contain;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-gutter: stable both-edges;
         padding: var(--layout-gap-sm);
 
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         justify-content: center;
 
         >* {
@@ -185,6 +173,12 @@
       gap: var(--layout-gap-sm);
       padding-bottom: var(--layout-gap-xs);
       background-color: #00000000 !important;
+
+      >.start-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--layout-gap-xs);
+      }
 
       .is-loading {
         display: inline-flex;

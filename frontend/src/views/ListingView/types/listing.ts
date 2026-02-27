@@ -1,5 +1,7 @@
 // File: src/views/ListingView/types/listing.ts
 
+import type { ListingReservationRules } from '@/domain/listings/reservationRules'
+
 // -------- MEDIAS --------
 export type ImageItem = { src: string; alt: string; position: number };
 export type VideoItem = { src: string; poster?: string; alt?: string };
@@ -108,6 +110,7 @@ export type BookingsModel = {
   bookedDays: BookedRange[];       // périodes occupées
   fees?: FeeItem[];                // frais additionnels fixes
   weekend?: WeekendPricingModel;   // tarif week-end (vendredi / samedi)
+  rules: ListingReservationRules;
 };
 
 // -------- NOTES / COMMENTAIRES --------

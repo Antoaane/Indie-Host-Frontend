@@ -3,7 +3,7 @@
 <script setup lang="ts">
 import type { RawBookings } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
-import BasePricingPanel from '@/views/Editor/components/EditorSidebar/panels/PricingPanels/BasePricingPanel.vue'
+import BasePricingPanel from '@/views/CreateListing/components/panels/PricingPanels/BasePricingPanel.vue'
 import CreateWizardStepShell from '@/views/CreateListing/components/panels/CreateWizardStepShell.vue'
 
 const props = defineProps<{
@@ -23,6 +23,7 @@ const emit = defineEmits<{
   >
     <BasePricingPanel
       :bookings="props.bookings"
+      :show-extra-guests="false"
       @patch="emit('patch', $event)"
     />
   </CreateWizardStepShell>

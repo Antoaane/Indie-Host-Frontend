@@ -1,4 +1,4 @@
-// File: src/views/Landing/StrengthsSection/utils/useStrengthsAnim.ts
+// File: src/views/Landing/components/StrengthsSection/utils/useStrengthsAnim.ts
 
 import { onMounted } from 'vue'
 import gsap from 'gsap'

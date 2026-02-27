@@ -1,3 +1,5 @@
+<!-- File: src/components/svgs/images/GradiantSeparator.vue -->
+
 <template>
   <svg
     :role="attrRole"

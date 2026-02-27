@@ -1,3 +1,5 @@
+<!-- File: src/components/svgs/images/RoadMapDark.vue -->
+
 <template>
   <svg
     :role="attrRole"

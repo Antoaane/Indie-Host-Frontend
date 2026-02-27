@@ -1,3 +1,5 @@
+<!-- File: src/components/svgs/images/EndLeft.vue -->
+
 <template>
   <svg
     :role="attrRole"

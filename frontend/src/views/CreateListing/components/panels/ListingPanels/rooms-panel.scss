@@ -1,0 +1,148 @@
+/* File: src/views/CreateListing/components/panels/ListingPanels/rooms-panel.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/components/buttons' as buttons;
+@use '@/styles/components/inputs' as inputs;
+@use '@/views/CreateListing/components/panels/panel.scss' as *;
+
+.create-rooms-panel {
+  @extend %panel;
+
+  >.header {
+    @extend %panel-header;
+  }
+
+  >.body {
+    @extend %panel-body;
+
+    >.rooms-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-sm);
+    }
+
+    .room-card {
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-sm);
+      padding: var(--layout-gap-sm);
+      border-radius: borders.$rounded-lg;
+      border: 1px solid $quaternary;
+      background: $accent;
+      box-shadow: 0 2px 6px rgba($secondary, 0.06);
+
+      &.is-collapsed {
+        gap: 0;
+      }
+    }
+
+    .room-header {
+      display: grid;
+      grid-template-columns: 44px 1fr 44px;
+      align-items: center;
+      gap: var(--layout-gap-xs);
+
+      &.is-collapsed {
+        grid-template-columns: 1fr auto;
+      }
+
+      >.room-name {
+        margin: 0;
+        @include base-text($bigger: true, $bold: true);
+      }
+
+      >.room-select {
+        @include inputs.select($theme: base);
+        justify-self: center;
+        min-width: 160px;
+      }
+
+      .room-actions {
+        display: flex;
+        align-items: center;
+        justify-self: end;
+        gap: var(--layout-gap-xs);
+      }
+
+      .room-remove,
+      .room-toggle {
+        >* {
+          width: 44px;
+          height: 44px;
+        }
+      }
+
+      .room-remove {
+        @include buttons.primary($theme: light, $icon-only: true);
+      }
+
+      .room-toggle {
+        @include buttons.primary($theme: black, $icon-only: true);
+      }
+    }
+
+    .room-beds {
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-xs);
+    }
+
+    .bed-row {
+      display: grid;
+      grid-template-columns: auto 1fr 40px;
+      gap: var(--layout-gap-xs);
+      align-items: center;
+
+      >.stepper {
+        @include inputs.stepper($theme: base);
+        justify-content: flex-start;
+      }
+
+      >.input.select {
+        @include inputs.select($theme: base);
+      }
+
+      >.remove {
+        @include buttons.primary($theme: light, $icon-only: true);
+
+        >* {
+          width: 40px;
+          height: 40px;
+        }
+      }
+    }
+
+    .room-add-bed {
+      margin-top: var(--layout-gap-2xs);
+    }
+
+    .room-body {
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-sm);
+    }
+
+    .room-collapse-enter-active,
+    .room-collapse-leave-active {
+      overflow: hidden;
+      transition: max-height 240ms cubic-bezier(0.6, 0, 0.3, 1),
+        opacity 200ms ease,
+        transform 240ms cubic-bezier(0.6, 0, 0.3, 1);
+    }
+
+    .room-collapse-enter-from,
+    .room-collapse-leave-to {
+      max-height: 0;
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+
+    .room-collapse-enter-to,
+    .room-collapse-leave-from {
+      max-height: 9999px;
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

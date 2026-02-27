@@ -195,6 +195,16 @@ html:has(#checkout) {
       border-top: none;
     }
 
+    &.is-disabled {
+      cursor: not-allowed;
+      opacity: 0.72;
+
+      .title,
+      .subtitle {
+        color: rgba($secondary-text, 0.6);
+      }
+    }
+
     &.is-selected {
       background: $secondary-dark-background;
       color: $accent;
@@ -278,6 +288,11 @@ html:has(#checkout) {
     text-underline-offset: 0.2rem;
     cursor: pointer;
     padding: 0;
+  }
+
+  .payment-rule-error {
+    margin: 0.5rem 0 0;
+    @include little-text($color: #a42828, $thin: false);
   }
 
   .payment-brands {

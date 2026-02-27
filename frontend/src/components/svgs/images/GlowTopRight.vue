@@ -1,3 +1,5 @@
+<!-- File: src/components/svgs/images/GlowTopRight.vue -->
+
 <template>
   <svg
     :role="attrRole"

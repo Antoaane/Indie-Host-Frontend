@@ -16,7 +16,7 @@ const props = defineProps<{
 
 const mapSrc = computed(() => {
   const zoom = props.zoom ?? 15
-  return `https://www.google.com/maps?q=${props.latitude},${props.longitude}&z=${zoom}&output=embed`
+  return `https://www.google.com/maps?hl=fr&ll=${props.latitude},${props.longitude}&z=${zoom}&output=embed`
 })
 
 const heading = computed(() => props.staticContent.map || props.staticContent.features)
@@ -30,6 +30,8 @@ const heading = computed(() => props.staticContent.map || props.staticContent.fe
     <iframe
       class="frame"
       :src="mapSrc"
+      title="Localisation du logement sur Google Maps"
+      allowfullscreen
       loading="lazy"
       referrerpolicy="no-referrer-when-downgrade"
     >
@@ -52,9 +54,13 @@ const heading = computed(() => props.staticContent.map || props.staticContent.fe
   > .frame {
     width: 100%;
     max-width: 100%;
+    display: block;
     height: 20vh;
     border: 0;
     border-radius: 12px;
+    pointer-events: auto;
+    touch-action: pan-x pan-y;
+    overscroll-behavior: contain;
     // overflow: hidden;
   }
 }

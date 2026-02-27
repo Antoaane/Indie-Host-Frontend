@@ -4,7 +4,13 @@
 import { computed, reactive, ref, watch } from 'vue'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
 import { makeIsDateDisabled } from '@/components/DatePicker/utils/range'
-import { computeNightlyPriceBreakdown } from '@/domain/listings/pricing'
+import {
+  clampOccupantsToRules,
+  computeReservationPricing,
+  resolveListingReservationRules,
+  validateReservationAgainstRules,
+  type ListingReservationRules,
+} from '@/domain/listings/reservationRules'
 
 import BookingCta from '@/views/ListingView/components/Booking/components/BookingCta.vue'
 import BookingDates from '@/views/ListingView/components/Booking/components/BookingDates.vue'
@@ -25,8 +31,6 @@ type ReservationPayload = {
   total: number
 }
 
-const MIN_NIGHTS = 2
-
 const props = withDefaults(
   defineProps<{
     pricePerNight: number
@@ -37,6 +41,7 @@ const props = withDefaults(
     disabled?: boolean
     disabledLabel?: string
     disabledHint?: string
+    rules?: ListingReservationRules
   }>(),
   {
     pricePerNight: 0,
@@ -47,6 +52,7 @@ const props = withDefaults(
     disabled: false,
     disabledLabel: undefined,
     disabledHint: undefined,
+    rules: () => resolveListingReservationRules({}),
   },
 )
 
@@ -65,9 +71,16 @@ const bookedRanges = computed<RangeISO[]>(() =>
   })),
 )
 
+const currency = new Intl.NumberFormat('fr-FR', {
+  style: 'currency',
+  currency: 'EUR',
+  maximumFractionDigits: 0,
+})
+
 const calendarOpen = ref(false)
 const guestsOpen = ref(false)
 const expanded = ref(false)
+const reservationError = ref<string | null>(null)
 
 const selection = computed<RangeISO | null>({
   get: () => props.modelValue,
@@ -81,46 +94,78 @@ function setSelection(range: RangeISO | null) {
   emit('update:modelValue', range)
 }
 
-const occupants = reactive<OccupantCounts>({
-  adults: 2,
-  children: 0,
-  babies: 0,
-  animals: 0,
-  pmr: 0,
-})
+const occupancyRules = computed(() => props.rules.occupancy)
+const stayRules = computed(() => props.rules.stay)
+const extraGuestRules = computed(() => props.rules.extraGuests)
+const minNights = computed(() => Math.max(1, Number(stayRules.value.minNights) || 1))
+
+const occupants = reactive<OccupantCounts>(
+  clampOccupantsToRules(
+    {
+      adults: 2,
+      children: 0,
+      babies: 0,
+      animals: 0,
+      pmr: 0,
+    },
+    occupancyRules.value,
+  ),
+)
+
+watch(
+  () => occupancyRules.value,
+  (nextRules) => {
+    const clamped = clampOccupantsToRules(occupants, nextRules)
+    occupants.adults = clamped.adults
+    occupants.children = clamped.children
+    occupants.babies = clamped.babies
+    occupants.animals = clamped.animals
+    occupants.pmr = clamped.pmr
+  },
+  { immediate: true, deep: true },
+)
 
 const isDateDisabled = computed(() => makeIsDateDisabled(bookedRanges.value))
 
-const nightlyBreakdown = computed(() => computeNightlyPriceBreakdown({
-  startISO: selection.value?.start ?? '',
-  endISO: selection.value?.end ?? '',
+const pricingBreakdown = computed(() => computeReservationPricing({
+  startISO: selection.value?.start ?? null,
+  endISO: selection.value?.end ?? null,
   basePrice: pricePerNight.value,
   weekendPricing: weekendPricing.value,
+  fees: fees.value,
+  occupants,
+  rules: props.rules,
 }))
 
-const nights = computed(() => nightlyBreakdown.value.nights)
-
-const initialRange = findNextAvailableRange(MIN_NIGHTS, isDateDisabled.value)
-if (!selection.value && initialRange) {
-  setSelection(initialRange)
-}
+const nightlyBreakdown = computed(() => pricingBreakdown.value.nightly)
+const nights = computed(() => pricingBreakdown.value.nightly.nights)
+const travelerCount = computed(() => pricingBreakdown.value.travelerCount)
+const total = computed(() => pricingBreakdown.value.total)
 
 function isSelectedRangeValid() {
   return isSelectedRangeValidUtil(selection.value, nights.value, isDateDisabled.value)
 }
 
-watch(bookedRanges, () => {
-  if (!selection.value || !isSelectedRangeValid()) {
-    setSelection(findNextAvailableRange(MIN_NIGHTS, isDateDisabled.value))
-  }
-})
+watch(
+  [
+    bookedRanges,
+    minNights,
+  ],
+  () => {
+    if (!selection.value || !isSelectedRangeValid()) {
+      setSelection(findNextAvailableRange(minNights.value, isDateDisabled.value))
+    }
+  },
+  { immediate: true },
+)
 
 watch(
   () => selection.value,
   (val) => {
+    reservationError.value = null
     if (val?.start && val?.end) {
       if (!isSelectedRangeValid()) {
-        setSelection(findNextAvailableRange(MIN_NIGHTS, isDateDisabled.value))
+        setSelection(findNextAvailableRange(minNights.value, isDateDisabled.value))
         return
       }
       calendarOpen.value = false
@@ -129,20 +174,144 @@ watch(
   { deep: true },
 )
 
-const travelerCount = computed(() => occupants.adults + occupants.children)
-const occupantLabel = computed(() => buildOccupantLabel(occupants, travelerCount.value))
+const adultsDynamicMax = computed(() =>
+  Math.max(
+    occupancyRules.value.adultsMin,
+    Math.min(
+      occupancyRules.value.adultsMax,
+      occupancyRules.value.capacity - occupants.children,
+    ),
+  ),
+)
 
+const childrenDynamicMax = computed(() =>
+  Math.max(
+    0,
+    Math.min(
+      occupancyRules.value.childrenMax,
+      occupancyRules.value.capacity - occupants.adults,
+    ),
+  ),
+)
+
+const guestRows = computed(() => [
+  {
+    key: 'adults' as const,
+    label: 'Adultes',
+    description: '13 ans et plus',
+    value: occupants.adults,
+    min: occupancyRules.value.adultsMin,
+    max: adultsDynamicMax.value,
+    hint: `Minimum ${occupancyRules.value.adultsMin} · Maximum ${occupancyRules.value.adultsMax}`,
+  },
+  {
+    key: 'children' as const,
+    label: 'Enfants',
+    description: '2 a 12 ans',
+    value: occupants.children,
+    min: 0,
+    max: childrenDynamicMax.value,
+    hint: occupancyRules.value.childrenMax > 0
+      ? `Maximum ${occupancyRules.value.childrenMax}`
+      : 'Non autorise pour cette annonce',
+  },
+  {
+    key: 'babies' as const,
+    label: 'Bebes',
+    description: 'Moins de 2 ans',
+    value: occupants.babies,
+    min: 0,
+    max: occupancyRules.value.babiesMax,
+    hint: occupancyRules.value.babiesMax > 0
+      ? `Maximum ${occupancyRules.value.babiesMax}`
+      : 'Non autorise pour cette annonce',
+  },
+  {
+    key: 'animals' as const,
+    label: 'Animaux',
+    description: 'Chien, chat...',
+    value: occupants.animals,
+    min: 0,
+    max: occupancyRules.value.animalsMax,
+    hint: occupancyRules.value.animalsMax > 0
+      ? `Maximum ${occupancyRules.value.animalsMax}`
+      : 'Non autorise pour cette annonce',
+  },
+  {
+    key: 'pmr' as const,
+    label: 'Personnes PMR',
+    description: 'Besoin d amenagement',
+    value: occupants.pmr,
+    min: 0,
+    max: occupancyRules.value.pmrMax,
+    hint: occupancyRules.value.pmrMax > 0
+      ? `Maximum ${occupancyRules.value.pmrMax}`
+      : 'Non autorise pour cette annonce',
+  },
+])
+
+function resolveCounterBounds(key: OccupantKey) {
+  if (key === 'adults') {
+    return {
+      min: occupancyRules.value.adultsMin,
+      max: adultsDynamicMax.value,
+    }
+  }
+  if (key === 'children') {
+    return {
+      min: 0,
+      max: childrenDynamicMax.value,
+    }
+  }
+  if (key === 'babies') {
+    return {
+      min: 0,
+      max: occupancyRules.value.babiesMax,
+    }
+  }
+  if (key === 'animals') {
+    return {
+      min: 0,
+      max: occupancyRules.value.animalsMax,
+    }
+  }
+  return {
+    min: 0,
+    max: occupancyRules.value.pmrMax,
+  }
+}
+
+function updateCount(key: OccupantKey, delta: number) {
+  reservationError.value = null
+  const bounds = resolveCounterBounds(key)
+  const next = occupants[key] + delta
+  occupants[key] = Math.max(bounds.min, Math.min(bounds.max, next))
+}
+
+const occupantLabel = computed(() => buildOccupantLabel(occupants, travelerCount.value))
 const rangeLabel = computed(() => buildRangeLabel(selection.value, nights.value))
 
-const nightlyTotal = computed(() => nightlyBreakdown.value.nightlyTotal)
-const feesTotal = computed(() => fees.value.reduce((acc, fee) => acc + (Number.isFinite(fee.amount) ? fee.amount : 0), 0))
-const total = computed(() => nightlyTotal.value + feesTotal.value)
+const travelerHint = computed(() =>
+  `Capacite: ${occupancyRules.value.capacity} voyageurs max (adultes + enfants).`,
+)
 
-const currency = new Intl.NumberFormat('fr-FR', {
-  style: 'currency',
-  currency: 'EUR',
-  maximumFractionDigits: 0,
-})
+const stayHint = computed(() =>
+  stayRules.value.maxNights === null
+    ? `Sejour minimum: ${stayRules.value.minNights} nuit${stayRules.value.minNights > 1 ? 's' : ''}.`
+    : `Sejour: ${stayRules.value.minNights}-${stayRules.value.maxNights} nuits.`,
+)
+
+const extraGuestHint = computed(() =>
+  extraGuestRules.value.enabled
+    ? `Voyageur supplementaire: ${currency.format(extraGuestRules.value.price)} / pers / nuit au dela de ${extraGuestRules.value.threshold}.`
+    : null,
+)
+
+const bookingRuleHint = computed(() => [
+  travelerHint.value,
+  stayHint.value,
+  extraGuestHint.value,
+].filter(Boolean).join(' '))
 
 const priceBreakdown = computed(() => {
   const list: Array<{ label: string; amount: string }> = []
@@ -165,7 +334,7 @@ const priceBreakdown = computed(() => {
     } else {
       list.push({
         label: `${nights.value} nuit${nights.value > 1 ? 's' : ''} (${currency.format(pricePerNight.value)} par nuit)`,
-        amount: currency.format(nightlyTotal.value),
+        amount: currency.format(breakdown.nightlyTotal),
       })
     }
   }
@@ -173,15 +342,24 @@ const priceBreakdown = computed(() => {
   if (!list.length && nights.value > 0) {
     list.push({
       label: `${nights.value} nuit${nights.value > 1 ? 's' : ''} (${currency.format(pricePerNight.value)} par nuit)`,
-      amount: currency.format(nightlyTotal.value),
+      amount: currency.format(nightlyBreakdown.value.nightlyTotal),
     })
   }
-  fees.value.forEach((fee) => {
+
+  if (pricingBreakdown.value.extraGuestsTotal > 0) {
+    list.push({
+      label: `${pricingBreakdown.value.extraGuestsCount} voyageur${pricingBreakdown.value.extraGuestsCount > 1 ? 's' : ''} supplementaire${pricingBreakdown.value.extraGuestsCount > 1 ? 's' : ''}`,
+      amount: currency.format(pricingBreakdown.value.extraGuestsTotal),
+    })
+  }
+
+  pricingBreakdown.value.fees.forEach((fee) => {
     list.push({
       label: fee.name,
       amount: currency.format(fee.amount),
     })
   })
+
   return list
 })
 
@@ -213,26 +391,30 @@ function toggleGuests() {
   guestsOpen.value = !guestsOpen.value
 }
 
-function updateCount(key: OccupantKey, delta: number) {
-  const next = occupants[key] + delta
-  const min = key === 'adults' ? 1 : 0
-  occupants[key] = Math.max(min, next)
-}
-
 function reserve() {
   if (props.disabled) return
-  if (!selection.value?.start || !selection.value?.end || !nights.value) {
+  reservationError.value = null
+
+  const validation = validateReservationAgainstRules({
+    startISO: selection.value?.start ?? null,
+    endISO: selection.value?.end ?? null,
+    occupants,
+    rules: props.rules,
+  })
+
+  if (validation.errors.length > 0 || !validation.range) {
+    reservationError.value = validation.errors[0] ?? 'Selection invalide.'
     calendarOpen.value = true
     return
   }
 
   const payload: ReservationPayload = {
-    startISO: selection.value?.start ?? null,
-    endISO: selection.value?.end ?? null,
-    nights: nights.value,
-    occupants: { ...occupants },
-    fees: fees.value,
-    total: total.value,
+    startISO: validation.range.startISO,
+    endISO: validation.range.endISO,
+    nights: validation.range.nights,
+    occupants: { ...validation.occupants },
+    fees: pricingBreakdown.value.fees,
+    total: pricingBreakdown.value.total,
   }
   emit('reserve', payload)
 }
@@ -245,7 +427,7 @@ function reserve() {
   >
     <div class="card">
       <div class="header">
-        <h2>Vous réservez</h2>
+        <h2>Vous reservez</h2>
         <transition name="price-toggle">
           <span
             v-if="!expanded"
@@ -268,12 +450,16 @@ function reserve() {
 
         <BookingGuests
           :occupant-label="occupantLabel"
-          :occupants="occupants"
+          :rows="guestRows"
           :open="guestsOpen"
           :update-count="updateCount"
           @close="guestsOpen = false"
           @toggle="toggleGuests"
         />
+
+        <p class="booking-rules-hint">
+          {{ bookingRuleHint }}
+        </p>
       </div>
 
       <BookingSummary
@@ -290,6 +476,13 @@ function reserve() {
         :disabled-hint="props.disabledHint"
         @reserve="reserve"
       />
+
+      <p
+        v-if="reservationError"
+        class="booking-error"
+      >
+        {{ reservationError }}
+      </p>
     </div>
   </section>
 </template>

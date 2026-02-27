@@ -1,9 +1,15 @@
 // File: src/domain/payments/checkoutPayment.ts
 
 import type { ReservationPayload } from '@/views/ListingView/types/reservation'
+import { toUtcDay } from '@/domain/listings/bookings'
+import {
+  resolveCheckoutPaymentChoice,
+  type CheckoutPaymentChoice,
+  type ListingPaymentRules,
+} from '@/domain/listings/reservationRules'
 
-export type CheckoutPaymentChoice = 'full' | 'split' | 'cash'
 export type CheckoutDeferredMode = 'none' | 'online' | 'cash'
+export type { CheckoutPaymentChoice } from '@/domain/listings/reservationRules'
 
 export type CheckoutPaymentBreakdown = {
   choice: CheckoutPaymentChoice
@@ -33,9 +39,65 @@ function roundCurrency(value: number): number {
 
 function normalizeIsoDate(value: unknown): string | null {
   if (typeof value !== 'string' || !value.trim()) return null
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return null
-  return value.trim()
+  const normalized = value.trim()
+  return toUtcDay(normalized) === null ? null : normalized
+}
+
+function normalizeRatio(value: unknown, fallback: number): number {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed)) return fallback
+  return Math.max(0, Math.min(1, parsed))
+}
+
+function toIsoFromUtcDay(value: number): string {
+  return new Date(value).toISOString().slice(0, 10)
+}
+
+function subtractDays(isoDate: string, days: number): string {
+  const base = toUtcDay(isoDate)
+  if (base === null) return isoDate
+  const normalizedDays = Math.max(0, Math.trunc(days))
+  const DAY_MS = 24 * 60 * 60 * 1000
+  return toIsoFromUtcDay(base - normalizedDays * DAY_MS)
+}
+
+function resolveDeferredDueDate({
+  choice,
+  arrivalDateISO,
+  paymentRules,
+}: {
+  choice: CheckoutPaymentChoice
+  arrivalDateISO?: string | null
+  paymentRules?: ListingPaymentRules | null
+}): string | null {
+  if (choice === 'full') return null
+
+  const normalizedArrival = normalizeIsoDate(arrivalDateISO)
+  if (!normalizedArrival) return null
+
+  if (!paymentRules || paymentRules.source === 'legacy') {
+    return normalizedArrival
+  }
+
+  if (choice === 'cash') {
+    return normalizedArrival
+  }
+
+  if (paymentRules.balance.type === 'before' && paymentRules.balance.days > 0) {
+    return subtractDays(normalizedArrival, paymentRules.balance.days)
+  }
+
+  return normalizedArrival
+}
+
+function resolveDeferredMode({
+  choice,
+}: {
+  choice: CheckoutPaymentChoice
+}): CheckoutDeferredMode {
+  if (choice === 'full') return 'none'
+  if (choice === 'cash') return 'cash'
+  return 'online'
 }
 
 export function resolveReservationMethodLabel(choice: CheckoutPaymentChoice): string {
@@ -47,30 +109,39 @@ export function resolveCheckoutPaymentBreakdown({
   totalAmount,
   choice,
   arrivalDateISO,
+  paymentRules,
 }: {
   totalAmount: number
   choice: CheckoutPaymentChoice
   arrivalDateISO?: string | null
+  paymentRules?: ListingPaymentRules | null
 }): CheckoutPaymentBreakdown {
   const normalizedTotal = roundCurrency(toNonNegativeAmount(totalAmount))
-  const ratio = CHARGE_NOW_RATIO[choice] ?? CHARGE_NOW_RATIO.full
+  const effectiveChoice = paymentRules
+    ? resolveCheckoutPaymentChoice(choice, paymentRules) ?? choice
+    : choice
+  const ratio = normalizeRatio(
+    paymentRules?.chargeNowRatioByChoice?.[effectiveChoice] ?? CHARGE_NOW_RATIO[effectiveChoice] ?? CHARGE_NOW_RATIO.full,
+    CHARGE_NOW_RATIO.full,
+  )
   const chargeNowAmount = roundCurrency(normalizedTotal * ratio)
   const deferredAmount = Math.max(0, normalizedTotal - chargeNowAmount)
-  const deferredMode: CheckoutDeferredMode =
-    choice === 'full'
-      ? 'none'
-      : choice === 'cash'
-        ? 'cash'
-        : 'online'
+  const deferredMode = resolveDeferredMode({
+    choice: effectiveChoice,
+  })
 
   return {
-    choice,
+    choice: effectiveChoice,
     totalAmount: normalizedTotal,
     chargeNowAmount,
     deferredAmount,
     deferredMode,
-    deferredDueDateISO: deferredMode === 'none' ? null : normalizeIsoDate(arrivalDateISO),
-    reservationMethodLabel: resolveReservationMethodLabel(choice),
+    deferredDueDateISO: resolveDeferredDueDate({
+      choice: effectiveChoice,
+      arrivalDateISO,
+      paymentRules,
+    }),
+    reservationMethodLabel: resolveReservationMethodLabel(effectiveChoice),
   }
 }
 
@@ -78,10 +149,12 @@ export function buildStripeReservationMetadata({
   listingId,
   reservation,
   breakdown,
+  paymentRules,
 }: {
   listingId: string
   reservation: ReservationPayload
   breakdown: CheckoutPaymentBreakdown
+  paymentRules?: ListingPaymentRules | null
 }): Record<string, string> {
   const metadata: Record<string, string> = {
     listing_id: listingId,
@@ -98,6 +171,19 @@ export function buildStripeReservationMetadata({
     reservation_babies: String(Math.max(0, Number(reservation.occupants.babies ?? 0) || 0)),
     reservation_animals: String(Math.max(0, Number(reservation.occupants.animals ?? 0) || 0)),
     reservation_pmr: String(Math.max(0, Number(reservation.occupants.pmr ?? 0) || 0)),
+  }
+
+  if (paymentRules) {
+    metadata.payment_rule_source = paymentRules.source
+    metadata.payment_rule_mode = paymentRules.mode
+    metadata.payment_rule_deposit_percent = String(paymentRules.depositPercent)
+    metadata.payment_rule_balance_type = paymentRules.balance.type
+    metadata.payment_rule_balance_days = String(paymentRules.balance.days)
+    metadata.payment_rule_methods = [
+      paymentRules.methods.card ? 'card' : null,
+      paymentRules.methods.sepa ? 'sepa' : null,
+      paymentRules.methods.cash ? 'cash' : null,
+    ].filter(Boolean).join(',')
   }
 
   if (breakdown.deferredDueDateISO) {

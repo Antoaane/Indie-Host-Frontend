@@ -1,3 +1,5 @@
+<!-- File: src/components/svgs/images/ShapesBg.vue -->
+
 <template>
   <svg
     :role="attrRole"

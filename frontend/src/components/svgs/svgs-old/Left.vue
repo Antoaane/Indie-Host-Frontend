@@ -1,4 +1,4 @@
-<!-- File: src/components/svgs/images/Left.vue -->
+<!-- File: src/components/svgs/svgs-old/Left.vue -->
 
 <template>
   <svg

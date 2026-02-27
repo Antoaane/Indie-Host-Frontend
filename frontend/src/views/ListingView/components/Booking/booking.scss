@@ -81,6 +81,13 @@
         position: relative;
       }
 
+      >.booking-rules-hint {
+        margin: 0;
+        @include little-text($thin: false);
+        color: rgba($secondary-text, 0.72);
+        line-height: 1.35;
+      }
+
       >.listing-booking-dates {
         >.group {
           display: grid;
@@ -282,6 +289,12 @@
         }
       }
     }
+
+    >.booking-error {
+      margin: 0;
+      @include little-text($thin: false);
+      color: #a42828;
+    }
   }
 
   @include min-width(md) {
@@ -319,6 +332,18 @@
 
   &>.dropdown {
     @extend .dropdown;
+
+    >.item {
+      >div {
+        >small {
+          display: block;
+        }
+      }
+
+      &.is-locked {
+        opacity: 0.72;
+      }
+    }
   }
 
   // >.dropdown {

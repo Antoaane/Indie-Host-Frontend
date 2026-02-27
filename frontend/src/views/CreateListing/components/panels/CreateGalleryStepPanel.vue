@@ -3,7 +3,7 @@
 <script setup lang="ts">
 import type { RawMedias } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
-import GalleryPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/GalleryPanel.vue'
+import GalleryPanel from '@/views/CreateListing/components/panels/ListingPanels/GalleryPanel.vue'
 import CreateWizardStepShell from '@/views/CreateListing/components/panels/CreateWizardStepShell.vue'
 
 const props = defineProps<{

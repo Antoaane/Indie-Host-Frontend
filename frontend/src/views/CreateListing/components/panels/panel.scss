@@ -1,0 +1,79 @@
+/* File: src/views/CreateListing/components/panels/panel.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+
+%panels-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--layout-gap-sm);
+}
+
+%panel {
+  padding: var(--layout-gap-2xl) var(--layout-gap-md);
+  border-radius: borders.$rounded-md;
+  background: $accent;
+  border: 1px solid rgba($secondary, 0.06);
+}
+
+%panel-title {
+  margin: 0;
+  // font-size: 1rem;
+  font-weight: 700 !important;
+  // color: $secondary;
+
+  @include h3-title();
+}
+
+%panel-subtitle {
+  margin: 0.25rem 0 0 0;
+  // font-size: 0.875rem;
+  // font-weight: 300;
+  // color: rgba($secondary, 0.75);
+
+  @include little-text($thin: false);
+}
+
+%panel-header {
+  margin-bottom: var(--layout-gap);
+
+  >h3 {
+    @extend %panel-title;
+  }
+
+  >p {
+    @extend %panel-subtitle;
+  }
+}
+
+%panel-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--layout-gap);
+}
+
+%panel-field {
+  display: flex;
+  flex-direction: column;
+  // gap: var(--layout-gap-sm);
+}
+
+%panel-field-label {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--layout-gap-xs);
+
+  >h4,
+  >p {
+    margin: 0;
+    font-weight: 600 !important;
+    // color: $secondary;
+
+    @include h4-title();
+  }
+
+  >span {
+    font-size: 0.85rem;
+    color: rgba($secondary-text, 0.6);
+  }
+}

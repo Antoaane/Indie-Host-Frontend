@@ -1,4 +1,4 @@
-// File: src/views/Landing/StrengthsSection/utils/useDropDown.ts
+// File: src/views/Landing/components/StrengthsSection/utils/useDropDown.ts
 
 import { onMounted } from 'vue'
 import gsap from 'gsap'

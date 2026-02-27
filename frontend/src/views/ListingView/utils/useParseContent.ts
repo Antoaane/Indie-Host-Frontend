@@ -12,6 +12,7 @@ import type {
 import { getSynchronizedBookedDays } from '@/domain/listings/bookings';
 import { resolveWeekendPricing } from '@/domain/listings/pricing';
 import { buildPerkCandidates, selectTopPerkCandidates } from '@/domain/listings/perks';
+import { normalizeFeeItems, resolveListingReservationRules } from '@/domain/listings/reservationRules';
 
 // ---- TYPES ----
 import type {
@@ -214,14 +215,19 @@ function parseRooms(core: Maybe<Partial<RawCore>>): RoomsModel {
   };
 }
 
-function parseBookings(bookings: Maybe<Partial<RawBookings>>): BookingsModel {
+function parseBookings(core: Maybe<Partial<RawCore>>, bookings: Maybe<Partial<RawBookings>>): BookingsModel {
   const bookedDays = getSynchronizedBookedDays(bookings ?? null)
-  const basePrice = Number(bookings?.price ?? 0)
+  const basePrice = Math.max(0, Number(bookings?.price ?? 0) || 0)
   const weekend = resolveWeekendPricing(bookings?.pricing ?? null, basePrice)
+  const rules = resolveListingReservationRules({
+    core: core ?? null,
+    bookings: bookings ?? null,
+  })
   return {
     price: basePrice,
     bookedDays: bookedDays.map(d => ({ start: d.start, end: d.end })),
-    fees: (bookings?.fees ?? []).map(fee => ({ name: fee.name, amount: fee.amount })),
+    fees: normalizeFeeItems(bookings?.fees),
+    rules,
     ...(weekend
       ? {
         weekend: {
@@ -293,7 +299,7 @@ export function core(raw: RawListingBundle): ListingParsed {
     map: parseMap(raw.core),
     amenities: parseAmenities(raw.core),
     rooms: parseRooms(raw.core),
-    bookings: parseBookings(raw.bookings),
+    bookings: parseBookings(raw.core, raw.bookings),
     medias: parseMedias(raw.medias),
     notes: parseNotes(raw.notes),
     comments: parsedComments.flat,

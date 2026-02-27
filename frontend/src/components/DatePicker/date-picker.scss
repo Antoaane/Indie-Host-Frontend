@@ -12,6 +12,14 @@
     pointer-events: none;
   }
 
+  &.is-readonly.is-readonly-with-navigation {
+    pointer-events: auto;
+
+    > .body {
+      pointer-events: none;
+    }
+  }
+
   >.header {
     // @include buttons.primary();
 
@@ -132,7 +140,7 @@
               border-radius: 0;
             }
 
-            &:has(.cell-trigger[data-selection-start="true"]) {
+            &:has(.cell-trigger:is([data-selection-start="true"], [data-selection-start])) {
               border-top-left-radius: borders.$rounded-md;
               border-bottom-left-radius: borders.$rounded-md;
               border-top-right-radius: 0;
@@ -141,7 +149,7 @@
               background-color: $translucent-surface-0;
             }
 
-            &:has(.cell-trigger[data-selection-end="true"]) {
+            &:has(.cell-trigger:is([data-selection-end="true"], [data-selection-end])) {
               border-top-right-radius: borders.$rounded-md;
               border-bottom-right-radius: borders.$rounded-md;
               border-top-left-radius: 0;
@@ -170,24 +178,30 @@
               border: 0;
               border-radius: 0;
 
-              &[data-selection-start="true"] {
+              &:is([data-selection-start="true"], [data-selection-start]) {
                 background-color: $secondary-dark-background;
                 border-radius: borders.$rounded-md;
 
-                color: $accent;
+                color: $accent !important;
               }
 
-              &[data-selection-end="true"] {
+              &:is([data-selection-end="true"], [data-selection-end]) {
                 background-color: $secondary-dark-background;
                 border-radius: borders.$rounded-md;
 
-                color: $accent;
+                color: $accent !important;
               }
 
               &[data-disabled] {
                 color: rgba($secondary-text, 0.4);
                 text-decoration: line-through;
                 text-decoration-thickness: 1.5px;
+                cursor: not-allowed;
+              }
+
+              &:is([data-selection-start="true"], [data-selection-start], [data-selection-end="true"], [data-selection-end])[data-disabled] {
+                color: $accent !important;
+                text-decoration: none;
               }
 
               &[data-today] {

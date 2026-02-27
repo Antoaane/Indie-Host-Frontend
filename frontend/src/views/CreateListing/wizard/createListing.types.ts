@@ -28,6 +28,7 @@ export type CreateListingStepItem = {
 
 export type PersistedCreateDraft = {
   stepIndex: number
+  furthestStepIndex?: number
   draft: RawListingBundle
   updatedAt: string
 }

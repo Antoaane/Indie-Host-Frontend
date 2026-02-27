@@ -24,6 +24,7 @@ type PricingSettings = {
 
 const props = defineProps<{
   bookings?: Partial<RawBookings> | null
+  showExtraGuests?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -47,11 +48,16 @@ const extraGuestThreshold = computed(() => (
 
 const panelContent = editorStatic.panels.pricing.base
 const baseHint = computed(() =>
-  formatValidationMessage(pricingLimits.messages.baseHint, {
-    moneyMin: pricingLimits.moneyMin,
-    moneyMax: pricingLimits.moneyMax,
-    extraGuestsThresholdMax: pricingLimits.extraGuestsThresholdMax,
-  }),
+  formatValidationMessage(
+    props.showExtraGuests
+      ? pricingLimits.messages.baseHint
+      : pricingLimits.messages.baseHintNoExtraGuests,
+    {
+      moneyMin: pricingLimits.moneyMin,
+      moneyMax: pricingLimits.moneyMax,
+      extraGuestsThresholdMax: pricingLimits.extraGuestsThresholdMax,
+    },
+  ),
 )
 
 function setPricePerNight(next: number) {
@@ -207,7 +213,10 @@ function clampMoney(value: unknown): number {
         </div>
       </div>
 
-      <div class="field">
+      <div
+        v-if="props.showExtraGuests !== false"
+        class="field"
+      >
         <div class="field-label">
           <p>{{ panelContent.extraGuestsLabel }}</p>
           <span>{{ panelContent.extraGuestsSuffix }}</span>

@@ -1,4 +1,4 @@
-/* File: src/components/overlays/scrollLock.ts */
+// File: src/components/overlays/scrollLock.ts
 
 let lockCount = 0
 let previousHtmlOverflow = ''

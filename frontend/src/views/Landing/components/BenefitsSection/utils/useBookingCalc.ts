@@ -1,4 +1,4 @@
-// File: src/views/Landing/BenefitsSection/utils/useBookingCalc.ts
+// File: src/views/Landing/components/BenefitsSection/utils/useBookingCalc.ts
 
 import { ref, computed } from 'vue'
 

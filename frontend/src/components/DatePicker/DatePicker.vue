@@ -13,14 +13,18 @@ const props = withDefaults(
     disabledDates?: RangeISO[]
     modelValue?: RangeISO | null
     readOnly?: boolean
+    allowNavigationInReadOnly?: boolean
     restrictToFuture?: boolean
+    allowDisabledModelValue?: boolean
   }>(),
   {
     numberOfMonths: 2,
     disabledDates: () => [],
     modelValue: null,
     readOnly: false,
+    allowNavigationInReadOnly: false,
     restrictToFuture: true,
+    allowDisabledModelValue: false,
   },
 )
 
@@ -34,8 +38,13 @@ const isDateDisabled = computed(() => makeIsDateDisabled(props.disabledDates, { 
 /* ---------- selection (v-model) ---------- */
 const internal = shallowRef<any>()
 
-function isRangeValid(start: CalendarDate, end: CalendarDate): boolean {
+function isRangeValid(
+  start: CalendarDate,
+  end: CalendarDate,
+  options?: { allowDisabledBoundaries?: boolean },
+): boolean {
   if (toNum(start) > toNum(end)) return false
+  if (options?.allowDisabledBoundaries) return true
   if (isDateDisabled.value(start) || isDateDisabled.value(end)) return false
   return true
 }
@@ -45,7 +54,7 @@ function syncInternalFromModel(value: RangeISO | null | undefined) {
     try {
       const start = parseISO(value.start)
       const end = parseISO(value.end)
-      if (!isRangeValid(start, end)) {
+      if (!isRangeValid(start, end, { allowDisabledBoundaries: props.allowDisabledModelValue })) {
         internal.value = undefined
         return
       }
@@ -73,6 +82,18 @@ watch(
   () => props.modelValue,
   (val) => {
     syncInternalFromModel(val)
+  },
+  { deep: true },
+)
+
+watch(
+  () => [
+    props.disabledDates,
+    props.restrictToFuture,
+    props.allowDisabledModelValue,
+  ],
+  () => {
+    syncInternalFromModel(props.modelValue)
   },
   { deep: true },
 )
@@ -106,7 +127,10 @@ const minValue = computed(() => (props.restrictToFuture ? today : undefined))
     :min-value="minValue"
     :number-of-months="numberOfMonths"
     :year-controls="false"
-    :class="{ 'is-readonly': props.readOnly }"
+    :class="{
+      'is-readonly': props.readOnly,
+      'is-readonly-with-navigation': props.readOnly && props.allowNavigationInReadOnly,
+    }"
     range
     locale="fr"
     :ui="{

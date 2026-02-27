@@ -5,7 +5,6 @@ import { computed } from 'vue'
 
 import type { EditorMode, EditorSource } from '@/views/Editor/types/editor'
 import CreateListingFooterNavigation from '@/views/CreateListing/components/wizard/CreateListingFooterNavigation.vue'
-import CreateListingHeader from '@/views/CreateListing/components/wizard/CreateListingHeader.vue'
 import CreateListingLayout from '@/views/CreateListing/components/wizard/CreateListingLayout.vue'
 import CreateListingProgressBar from '@/views/CreateListing/components/wizard/CreateListingProgressBar.vue'
 import CreateListingStage from '@/views/CreateListing/components/wizard/CreateListingStage.vue'
@@ -22,7 +21,6 @@ const props = defineProps<{
 const {
   stepItems,
   draft,
-  activeStepIndex,
   currentStep,
   stepError,
   submitState,
@@ -44,21 +42,11 @@ const {
   steps: createListingSteps(),
 })
 
-const stepsCount = computed(() => stepItems.value.length)
 const submitError = computed(() => submitState.error)
 </script>
 
 <template>
   <CreateListingLayout>
-    <CreateListingHeader
-      :active-step-index="activeStepIndex"
-      :steps-count="stepsCount"
-      :title="currentStep.label"
-      :description="currentStep.description"
-      :is-submitting="submitState.isSubmitting"
-      @cancel="cancelCreation"
-    />
-
     <CreateListingProgressBar :progress-percent="progressPercent" />
 
     <CreateListingStepsTabs
@@ -88,6 +76,7 @@ const submitError = computed(() => submitState.error)
       :is-submitting="submitState.isSubmitting"
       submit-label="Consulter mon annonce"
       submit-loading-label="Création de l’annonce..."
+      @cancel="cancelCreation"
       @previous="goToPreviousStep"
       @next="goToNextStep"
       @submit="submitCreateListing"

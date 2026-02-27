@@ -9,10 +9,17 @@ import { useRoute } from 'vue-router'
 import { vp } from '@/utils/viewport'
 import { core } from '@/views/ListingView/utils/useParseContent'
 import { deriveBookedDaysFromReservations, nightsBetween, normalizeBookedDay, normalizeBookedDays, normalizeReservations, toUtcDay } from '@/domain/listings/bookings'
+import { resolveWeekendPricing } from '@/domain/listings/pricing'
 import { getListingsController } from '@/domain/listings/controller'
-import type { RawBookingReservation, RawBookings, RawListingBundle } from '@/domain/listings/types'
+import type { RawBookingReservation, RawBookings, RawCore, RawListingBundle } from '@/domain/listings/types'
 import { getListingStatusFlags } from '@/domain/listings/status'
 import { resolveCheckoutPaymentBreakdown, type CheckoutPaymentBreakdown, type CheckoutPaymentChoice } from '@/domain/payments/checkoutPayment'
+import {
+  computeReservationPricing,
+  resolveListingReservationRules,
+  validateReservationAgainstRules,
+  type ListingPaymentRules,
+} from '@/domain/listings/reservationRules'
 import { getOwnerStripeConnectAccountId } from '@/domain/user/stripeConnect'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
 
@@ -195,6 +202,7 @@ function buildReservationFromCheckout(
   currentListingId: string,
   reservationPayload: ReservationPayload,
   confirmationPayload: CheckoutConfirmationPayload,
+  paymentRules: ListingPaymentRules,
 ): RawBookingReservation {
   const normalizedRange = normalizeBookedDay({
     start: reservationPayload.startISO ?? undefined,
@@ -210,6 +218,7 @@ function buildReservationFromCheckout(
     totalAmount: total,
     choice: confirmationPayload.paymentChoice,
     arrivalDateISO: normalizedRange.start,
+    paymentRules,
   })
   const emittedBreakdown = confirmationPayload.payment.breakdown
   if (
@@ -239,7 +248,7 @@ function buildReservationFromCheckout(
       status: paymentIntentStatus,
       currency: confirmationPayload.payment.currency,
       connectedAccountId: confirmationPayload.payment.connectedAccountId,
-      paymentChoice: confirmationPayload.paymentChoice,
+      paymentChoice: breakdown.choice,
       chargeNowAmount: breakdown.chargeNowAmount,
       deferredAmount: breakdown.deferredAmount,
       deferredMode: breakdown.deferredMode,
@@ -311,7 +320,39 @@ watch(
 
 function onReserve(payload: ReservationPayload) {
   checkoutStatus.error = null
-  checkoutPayload.value = payload
+  const listing = listingData.value
+  if (!listing) return
+
+  const validation = validateReservationAgainstRules({
+    startISO: payload.startISO,
+    endISO: payload.endISO,
+    occupants: payload.occupants,
+    rules: listing.bookings.rules,
+  })
+
+  if (!validation.range || validation.errors.length > 0) {
+    checkoutStatus.error = validation.errors[0] ?? 'Selection de reservation invalide.'
+    return
+  }
+
+  const pricing = computeReservationPricing({
+    startISO: validation.range.startISO,
+    endISO: validation.range.endISO,
+    basePrice: listing.bookings.price,
+    weekendPricing: listing.bookings.weekend,
+    fees: listing.bookings.fees,
+    occupants: validation.occupants,
+    rules: listing.bookings.rules,
+  })
+
+  checkoutPayload.value = {
+    startISO: validation.range.startISO,
+    endISO: validation.range.endISO,
+    nights: validation.range.nights,
+    occupants: { ...validation.occupants },
+    fees: pricing.fees,
+    total: pricing.total,
+  }
 }
 
 function cancelCheckout() {
@@ -338,9 +379,48 @@ async function confirmCheckout(payload: CheckoutConfirmationPayload) {
 
   try {
     const editable = await controller.fetchEditableListingBundle(targetListingId)
+    const currentCore = (editable.core ?? props.rawListing?.core ?? null) as Partial<RawCore> | null
     const currentBookings = (editable.bookings ?? null) as Partial<RawBookings> | null
+    const reservationRules = resolveListingReservationRules({
+      core: currentCore,
+      bookings: currentBookings,
+    })
+    const reservationValidation = validateReservationAgainstRules({
+      startISO: reservationPayload.startISO,
+      endISO: reservationPayload.endISO,
+      occupants: reservationPayload.occupants,
+      rules: reservationRules,
+    })
+
+    if (!reservationValidation.range || reservationValidation.errors.length > 0) {
+      checkoutStatus.error = reservationValidation.errors[0] ?? 'Reservation invalide.'
+      return
+    }
+
+    const reservationPricing = computeReservationPricing({
+      startISO: reservationValidation.range.startISO,
+      endISO: reservationValidation.range.endISO,
+      basePrice: currentBookings?.price ?? 0,
+      weekendPricing: resolveWeekendPricing(currentBookings?.pricing ?? null, Number(currentBookings?.price ?? 0) || 0),
+      fees: currentBookings?.fees ?? [],
+      occupants: reservationValidation.occupants,
+      rules: reservationRules,
+    })
+    const normalizedReservationPayload: ReservationPayload = {
+      startISO: reservationValidation.range.startISO,
+      endISO: reservationValidation.range.endISO,
+      nights: reservationValidation.range.nights,
+      occupants: { ...reservationValidation.occupants },
+      fees: reservationPricing.fees,
+      total: reservationPricing.total,
+    }
     const currentReservations = mergeReservationsWithBookedDays(targetListingId, currentBookings)
-    const createdReservation = buildReservationFromCheckout(targetListingId, reservationPayload, payload)
+    const createdReservation = buildReservationFromCheckout(
+      targetListingId,
+      normalizedReservationPayload,
+      payload,
+      reservationRules.payment,
+    )
 
     const isRangeAlreadyBooked = currentReservations.some((reservation) =>
       rangesOverlap(createdReservation.start, createdReservation.end, reservation.start, reservation.end))
@@ -440,6 +520,7 @@ async function confirmCheckout(payload: CheckoutConfirmationPayload) {
           :weekend-pricing="listingData.bookings.weekend"
           :fees="listingData.bookings.fees"
           :booked-days="listingData.bookings.bookedDays"
+          :rules="listingData.bookings.rules"
           :disabled="isBookingDisabled"
           :disabled-label="bookingDisabledLabel"
           :disabled-hint="bookingDisabledHint"
@@ -519,6 +600,7 @@ async function confirmCheckout(payload: CheckoutConfirmationPayload) {
                   :weekend-pricing="listingData.bookings.weekend"
                   :fees="listingData.bookings.fees"
                   :booked-days="listingData.bookings.bookedDays"
+                  :rules="listingData.bookings.rules"
                   :disabled="isBookingDisabled"
                   :disabled-label="bookingDisabledLabel"
                   :disabled-hint="bookingDisabledHint"

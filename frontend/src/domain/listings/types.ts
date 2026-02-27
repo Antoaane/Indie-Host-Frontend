@@ -59,6 +59,15 @@ export type RawReservationPayment = {
   balance: number
   status: 'paid' | 'pending'
   method: string
+  manual?: {
+    entries?: Array<{
+      id?: string
+      amount: number
+      date: string
+      method?: string
+      comment?: string
+    }>
+  }
   stripe?: {
     paymentIntentId?: string
     status?: string
@@ -99,13 +108,67 @@ export type RawPricingWeekend = {
   enabled?: boolean
   price?: number | null
 }
+export type RawPricingStay = {
+  minNights?: number | null
+  maxNights?: number | null
+  weeklyDiscount?: number | null
+  monthlyDiscount?: number | null
+}
+export type RawPricingExtraGuests = {
+  price?: number | null
+  threshold?: number | null
+}
+export type RawPricingTaxesMode = 'per-person-night' | 'per-night'
+export type RawPricingTaxesDisplay = 'included' | 'added'
+export type RawPricingTaxes = {
+  enabled?: boolean
+  mode?: RawPricingTaxesMode
+  amount?: number | null
+  display?: RawPricingTaxesDisplay
+}
+export type RawPricingPaymentMode = 'full' | 'deposit'
+export type RawPricingPaymentBalanceType = 'arrival' | 'before'
+export type RawPricingPaymentMethods = {
+  card?: boolean
+  sepa?: boolean
+  cash?: boolean
+}
+export type RawPricingPaymentBalance = {
+  type?: RawPricingPaymentBalanceType
+  days?: number | null
+}
+export type RawPricingPayment = {
+  methods?: RawPricingPaymentMethods
+  mode?: RawPricingPaymentMode
+  depositPercent?: number | null
+  balance?: RawPricingPaymentBalance
+}
+export type RawPricingOccupancy = {
+  adultsMin?: number | null
+  adultsMax?: number | null
+  childrenMax?: number | null
+  babiesMax?: number | null
+  infantsMax?: number | null
+  animalsMax?: number | null
+  petsMax?: number | null
+  pmrMax?: number | null
+  allowChildren?: boolean
+  allowBabies?: boolean
+  allowAnimals?: boolean
+  allowPmr?: boolean
+}
 export type RawPricingDeposit = {
   type?: string
   amount?: number | null
 }
 export type RawPricingSettings = Record<string, unknown> & {
+  stay?: RawPricingStay
   cancellation?: RawPricingCancellation
   weekend?: RawPricingWeekend
+  extraGuests?: RawPricingExtraGuests
+  taxes?: RawPricingTaxes
+  payment?: RawPricingPayment
+  occupancy?: RawPricingOccupancy
   deposit?: RawPricingDeposit
 }
 export type RawBookingReservation = {
@@ -116,6 +179,7 @@ export type RawBookingReservation = {
   guestName: string
   guestAvatar?: string
   message: string
+  internalNote?: string
   guests: RawReservationGuests
   payment: RawReservationPayment
   contact?: {

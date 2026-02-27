@@ -8,9 +8,12 @@ defineOptions({
   inheritAttrs: false,
 })
 
+type AbsoluteOverlayMode = 'centered' | 'side-panel'
+
 const props = withDefaults(
   defineProps<{
     open: boolean
+    mode?: AbsoluteOverlayMode
     teleportTo?: string
     transitionName?: string
     role?: string
@@ -23,6 +26,7 @@ const props = withDefaults(
     zIndex?: number
   }>(),
   {
+    mode: 'centered',
     teleportTo: 'body',
     transitionName: 'absolute-overlay',
     role: 'dialog',
@@ -43,6 +47,10 @@ const emit = defineEmits<{
 const attrs = useAttrs()
 const overlayRef = ref<HTMLElement | null>(null)
 const ariaModal = computed(() => (props.role === 'dialog' ? 'true' : undefined))
+const overlayClasses = computed(() => [
+  'absolute-overlay',
+  `absolute-overlay--${props.mode}`,
+])
 const overlayStyle = computed(() => ({
   '--absolute-overlay-z-index': String(props.zIndex),
 }))
@@ -185,7 +193,7 @@ onBeforeUnmount(() => {
         v-if="open"
         ref="overlayRef"
         v-bind="attrs"
-        class="absolute-overlay"
+        :class="overlayClasses"
         :style="overlayStyle"
         :role="role"
         :aria-modal="ariaModal"
@@ -204,48 +212,90 @@ onBeforeUnmount(() => {
 @use '@/styles/variables/globals' as *;
 
 .absolute-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--absolute-overlay-z-index, 9999);
+
   width: 100%;
   height: 100%;
 
+  display: flex;
+  background-color: rgba($secondary, 0.2);
+
+  @include min-width(lg) {
+    backdrop-filter: blur(1px);
+  }
+}
+
+.absolute-overlay--centered {
   padding-top: var(--layout-gap);
   @include layout-gap(padding, inline, 0.5);
 
-  display: flex;
   align-items: center;
   justify-content: center;
-
-  position: fixed;
-  inset: 50%;
-  z-index: var(--absolute-overlay-z-index, 9999);
-
-  transform: translate(-50%, -50%);
-  background-color: rgba($secondary, 0.2);
 
   @include min-width(lg) {
     padding-top: var(--layout-gap-4xl);
     padding-bottom: var(--layout-gap-4xl);
-    backdrop-filter: blur(1px);
     @include layout-gap;
   }
 }
 
+.absolute-overlay--centered > * {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.absolute-overlay--side-panel {
+  align-items: stretch;
+  justify-content: flex-end;
+  overflow: hidden;
+}
+
+.absolute-overlay--side-panel > * {
+  height: 100%;
+  max-width: 100%;
+}
+
 .absolute-overlay-enter-active,
 .absolute-overlay-leave-active {
-  transition:
-    opacity 0.25s ease,
-    transform 0.25s ease;
-  will-change: opacity, transform;
+  transition: opacity 0.25s ease;
+  will-change: opacity;
+}
+
+.absolute-overlay-enter-active > *,
+.absolute-overlay-leave-active > * {
+  transition: transform 0.25s ease;
+  will-change: transform;
 }
 
 .absolute-overlay-enter-from,
 .absolute-overlay-leave-to {
   opacity: 0;
-  transform: translate(-50%, calc(-50% + 24px));
 }
 
 .absolute-overlay-enter-to,
 .absolute-overlay-leave-from {
   opacity: 1;
-  transform: translate(-50%, -50%);
+}
+
+.absolute-overlay.absolute-overlay--centered.absolute-overlay-enter-from > *,
+.absolute-overlay.absolute-overlay--centered.absolute-overlay-leave-to > * {
+  transform: translateY(24px);
+}
+
+.absolute-overlay.absolute-overlay--centered.absolute-overlay-enter-to > *,
+.absolute-overlay.absolute-overlay--centered.absolute-overlay-leave-from > * {
+  transform: translateY(0);
+}
+
+.absolute-overlay.absolute-overlay--side-panel.absolute-overlay-enter-from > *,
+.absolute-overlay.absolute-overlay--side-panel.absolute-overlay-leave-to > * {
+  transform: translateX(100%);
+}
+
+.absolute-overlay.absolute-overlay--side-panel.absolute-overlay-enter-to > *,
+.absolute-overlay.absolute-overlay--side-panel.absolute-overlay-leave-from > * {
+  transform: translateX(0);
 }
 </style>

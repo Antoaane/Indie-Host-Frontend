@@ -36,6 +36,7 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
 
   const draft = ref<RawListingBundle>(buildInitialDraft())
   const activeStepIndex = ref(0)
+  const furthestVisitedStepIndex = ref(0)
   const stepError = ref<string | null>(null)
   const persistTimer = ref<number | null>(null)
   const hasHydratedStorage = ref(false)
@@ -65,9 +66,13 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
       index,
       isActive: index === activeStepIndex.value,
       isDone: index < activeStepIndex.value,
-      isDisabled: submitState.isSubmitting || index > activeStepIndex.value,
+      isDisabled: submitState.isSubmitting || index > furthestVisitedStepIndex.value,
     })),
   )
+
+  function clampStepIndex(index: number): number {
+    return Math.max(0, Math.min(steps.length - 1, Math.trunc(asNumber(index, 0))))
+  }
 
   function clearStepError() {
     stepError.value = null
@@ -132,8 +137,8 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
 
   function goToStep(index: number) {
     if (submitState.isSubmitting) return
-    const safeIndex = Math.max(0, Math.min(steps.length - 1, Math.trunc(asNumber(index, 0))))
-    if (safeIndex > activeStepIndex.value) return
+    const safeIndex = clampStepIndex(index)
+    if (safeIndex > furthestVisitedStepIndex.value) return
     activeStepIndex.value = safeIndex
   }
 
@@ -146,7 +151,9 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
   function goToNextStep() {
     if (!canGoNext.value) return
     if (!validateStep(activeStepIndex.value)) return
-    activeStepIndex.value = Math.min(steps.length - 1, activeStepIndex.value + 1)
+    const nextIndex = Math.min(steps.length - 1, activeStepIndex.value + 1)
+    activeStepIndex.value = nextIndex
+    furthestVisitedStepIndex.value = Math.max(furthestVisitedStepIndex.value, nextIndex)
   }
 
   function flushStorageDraft() {
@@ -158,6 +165,7 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
 
     const payload: PersistedCreateDraft = {
       stepIndex: activeStepIndex.value,
+      furthestStepIndex: furthestVisitedStepIndex.value,
       draft: draft.value,
       updatedAt: new Date().toISOString(),
     }
@@ -205,8 +213,10 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
       const parsed = JSON.parse(raw) as PersistedCreateDraft
       if (parsed && typeof parsed === 'object') {
         draft.value = normalizeDraft(parsed.draft)
-        const index = asNumber(parsed.stepIndex, 0)
-        activeStepIndex.value = Math.max(0, Math.min(steps.length - 1, Math.trunc(index)))
+        const restoredStepIndex = clampStepIndex(asNumber(parsed.stepIndex, 0))
+        const restoredFurthestStepIndex = clampStepIndex(asNumber(parsed.furthestStepIndex, restoredStepIndex))
+        activeStepIndex.value = restoredStepIndex
+        furthestVisitedStepIndex.value = Math.max(restoredStepIndex, restoredFurthestStepIndex)
       }
     } catch (err) {
       console.log('[CreateListing] failed to restore draft', err)

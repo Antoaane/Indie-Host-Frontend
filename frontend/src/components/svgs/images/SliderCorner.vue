@@ -1,3 +1,5 @@
+<!-- File: src/components/svgs/images/SliderCorner.vue -->
+
 <template>
   <svg
     :role="attrRole"

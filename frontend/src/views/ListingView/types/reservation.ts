@@ -1,8 +1,9 @@
 // File: src/views/ListingView/types/reservation.ts
 
 import type { FeeItem } from '@/views/ListingView/types/listing'
+import type { OccupantCounts as ListingOccupantCounts } from '@/domain/listings/reservationRules'
 
-export type OccupantCounts = Record<'adults' | 'children' | 'babies' | 'animals' | 'pmr', number>
+export type OccupantCounts = ListingOccupantCounts
 
 export type ReservationPayload = {
   startISO: string | null

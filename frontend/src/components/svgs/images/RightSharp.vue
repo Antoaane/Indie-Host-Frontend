@@ -1,3 +1,5 @@
+<!-- File: src/components/svgs/images/RightSharp.vue -->
+
 <template>
   <svg
     :role="attrRole"

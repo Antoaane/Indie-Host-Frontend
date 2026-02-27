@@ -1,4 +1,4 @@
-<!-- File: src/components/svgs/images/ShapesTriangle.vue -->
+<!-- File: src/components/svgs/svgs-old/ShapesTriangle.vue -->
 
 <template>
   <svg

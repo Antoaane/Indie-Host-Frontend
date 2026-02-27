@@ -34,7 +34,7 @@ const props = defineProps<{
 /* File: src/views/CreateListing/components/panels/create-wizard-step-shell.scss */
 
 @use '@/styles/variables/globals' as *;
-@use '@/views/Editor/components/EditorSidebar/panels/panel.scss' as *;
+@use '@/views/CreateListing/components/panels/panel.scss' as *;
 
 .create-wizard-step-shell {
   @extend %panel;
@@ -47,7 +47,7 @@ const props = defineProps<{
   > .content {
     @extend %panel-body;
 
-    > [class*='editor-'][class$='-panel'] {
+    > [class*='create-'][class$='-panel'] {
       border: none;
       box-shadow: none;
       background: transparent;

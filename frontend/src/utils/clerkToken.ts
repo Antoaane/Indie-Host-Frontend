@@ -1,4 +1,4 @@
-// File: src/stores/clerkToken.ts
+// File: src/utils/clerkToken.ts
 
 import { ref } from 'vue'
 

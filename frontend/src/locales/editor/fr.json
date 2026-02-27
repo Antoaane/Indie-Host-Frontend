@@ -573,6 +573,7 @@
         "cancellationDaysMax": 365,
         "messages": {
           "baseHint": "Montants entre {moneyMin}€ et {moneyMax}€. Seuil voyageurs max {extraGuestsThresholdMax}.",
+          "baseHintNoExtraGuests": "Montants entre {moneyMin}€ et {moneyMax}€.",
           "stayHint": "Durée entre {minNights} et {maxNights} nuits · réductions {discountMin}-{discountMax}%.",
           "feesHint": "Frais entre {moneyMin}€ et {moneyMax}€ · libellé max {customFeeNameMax} caractères.",
           "feesHintNoTextLimit": "Frais entre {moneyMin}€ et {moneyMax}€.",

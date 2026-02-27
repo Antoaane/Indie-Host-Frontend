@@ -2,312 +2,199 @@
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
-@use '@/styles/components/buttons' as buttons;
 @use '@/styles/components/inputs' as inputs;
-@use '@/styles/components/overlays' as overlays;
 @use '@/views/Editor/components/EditorSidebar/panels/panel.scss' as *;
 
 .editor-amenities-panel {
   @extend %panel;
 
-  >.header {
+  > .header {
     @extend %panel-header;
   }
 
-  >.body {
+  > .body {
     @extend %panel-body;
+    gap: var(--layout-gap-sm);
 
-    >.preview {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-
+    > .search {
       display: flex;
       flex-direction: column;
-      gap: var(--layout-gap-xs);
+      gap: calc(var(--layout-gap-xs) / 2);
 
-      >.item {
-        display: flex;
-        align-items: center;
-        gap: var(--layout-gap-xs);
+      > .search-input {
+        @include inputs.search($theme: accent);
+      }
 
-        padding: var(--layout-gap-xs);
-
-        border: solid 1px rgba($secondary, 0.08);
-        border-radius: borders.$rounded-md;
-
-        >.icon {
-          width: 18px;
-          height: 18px;
-          stroke: $secondary-text;
-          flex-shrink: 0;
-        }
-
-        >.name {
-          @include little-text($thin: false);
-        }
+      > .meta {
+        margin: 0;
+        @include little-text($thin: false);
+        color: rgba($secondary-text, 0.65);
       }
     }
 
-    >.empty {
+    > .catalog {
+      max-height: clamp(20rem, 48vh, 34rem);
+      overflow-y: auto;
+      padding-right: var(--layout-gap-2xs);
+
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap);
+      scrollbar-gutter: stable;
+    }
+
+    > .empty {
       margin: 0;
       opacity: 0.7;
       @include little-text($thin: false);
     }
   }
 
-}
+  .category {
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-sm);
 
-.editor-amenities-overlay {
-  >.panel {
-    @extend %overlay-panel;
-    padding-bottom: var(--layout-gap-4xl) !important;
-    gap: var(--layout-gap);
+    > h4 {
+      margin: 0;
+      @include base-text($bigger: true, $thin: false);
+    }
 
-    >.header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: var(--layout-gap-md);
+    > ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
 
-      >.back {
-        @include buttons.primary($theme: white, $icon-only: true);
-        flex: 0 0 auto;
+      display: grid;
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+      gap: var(--layout-gap-sm);
+
+      @include min-width(md) {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
-      >.title {
-        flex: 1 1 auto;
+      > .item {
         min-width: 0;
 
-        >h2 {
-          margin: 0;
-          @include h2-title;
-        }
-      }
-
-      >.close {
-        @include buttons.primary($theme: white, $icon-only: true);
-        flex: 0 0 auto;
-      }
-    }
-
-    >.body {
-      padding-bottom: var(--layout-gap-xs);
-      flex: 1 1 auto;
-      min-height: 0;
-      overflow-y: auto;
-
-      display: flex;
-      flex-direction: column;
-      gap: var(--layout-gap);
-
-      >.search {
-        position: sticky;
-        top: 0;
-        z-index: 10;
-        display: flex;
-        flex-direction: column;
-        gap: calc(var(--layout-gap-xs) / 2);
-
-        >.search-input {
-          @include inputs.search($theme: accent);
-        }
-
-        >.meta {
-          margin: 0;
-          @include little-text($thin: false);
-          color: rgba($secondary-text, 0.65);
-        }
-      }
-
-      >.empty {
-        margin: 0;
-        opacity: 0.7;
-        @include little-text($thin: false);
-      }
-
-      >.category {
-        display: flex;
-        flex-direction: column;
-        gap: var(--layout-gap-sm);
-
-        >h3 {
-          margin: 0;
-          @include base-text($bigger: true, $thin: false);
-        }
-
-        >.category-trigger {
+        > .amenity-card {
           width: 100%;
-          cursor: pointer;
+          padding: var(--layout-gap-md);
 
           display: flex;
-          align-items: center;
-          gap: var(--layout-gap-xs);
-
-          padding: var(--layout-gap-sm) var(--layout-gap-md);
-
-          border: 1px solid rgba($secondary, 0.12);
-          border-radius: borders.$rounded-lg;
-
-          background: rgba($accent, 0.75);
-          color: $secondary-text;
-
-          >.category-title {
-            flex: 1 1 auto;
-            min-width: 0;
-            text-align: left;
-            @include base-text($thin: false);
-          }
-
-          >.category-meta {
-            opacity: 0.7;
-            @include little-text($thin: false);
-          }
-
-          >.chevron {
-            flex: 0 0 auto;
-            transition: transform 180ms ease;
-
-            &.is-open {
-              transform: rotate(180deg);
-            }
-          }
-        }
-
-        >ul:not(.list) {
-          display: grid;
+          align-items: flex-start;
           gap: var(--layout-gap-sm);
-          grid-template-columns: repeat(1, 1fr);
 
-          @include min-width(md) {
-            grid-template-columns: repeat(2, 1fr);
+          border: 1px solid $quaternary;
+          border-radius: borders.$rounded-lg;
+          background-color: rgba($accent, 0.75);
+          color: inherit;
+          cursor: pointer;
+          text-align: left;
+          font: inherit;
+
+          transition:
+            border-color 180ms ease,
+            background-color 180ms ease,
+            box-shadow 180ms ease;
+
+          > .icon {
+            height: 1.5rem;
+            width: 1.5rem;
+            margin-top: 1px;
+            stroke: $secondary-text;
+            flex-shrink: 0;
           }
 
-          >.item {
+          > .texts {
+            min-width: 0;
+            flex: 1 1 auto;
+
             display: flex;
-            gap: var(--layout-gap-sm);
-            align-items: flex-start;
+            flex-direction: column;
+            gap: var(--layout-gap-3xs);
 
-            padding: var(--layout-gap-md);
-
-            border: solid 1px $quaternary;
-            border-radius: borders.$rounded-lg;
-
-            >.icon {
-              height: 1.5rem;
-              width: 1.5rem;
-              stroke: $secondary-text;
-              flex-shrink: 0;
+            > .name {
+              margin: 0;
+              @include base-text($thin: false);
             }
 
-            >.texts {
-              display: flex;
-              flex-direction: column;
-              gap: var(--layout-gap-3xs);
-
-              >.name {
-                margin: 0;
-                @include base-text($bigger: true, $thin: false);
-              }
-
-              >.description {
-                margin: 0;
-                opacity: 0.75;
-                @include little-text($thin: false);
-              }
+            > .description {
+              margin: 0;
+              opacity: 0.75;
+              @include little-text($thin: false);
             }
+          }
 
-            >.actions {
-              margin-left: auto;
-              display: flex;
-              align-items: center;
-              gap: var(--layout-gap-sm);
+          > .state {
+            margin-left: auto;
+            flex: 0 0 auto;
 
-              >.pin,
-              >.remove {
-                @include buttons.primary($theme: white, $icon-only: true);
-              }
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
 
-              >.pin {
-                >button {
-                  font-weight: 700;
-                }
+            padding: 0.2rem 0.45rem;
+            border-radius: borders.$rounded-md;
+            background: $secondary;
+            color: $accent;
+            @include little-text($thin: false);
 
-                &.is-active {
-                  @include buttons.primary($theme: black, $icon-only: true);
-                }
-              }
-
-              >.remove {
-                .lucide {
-                  width: 18px;
-                  height: 18px;
-                }
-              }
+            > .check {
+              width: 0.95rem;
+              height: 0.95rem;
+              stroke: currentColor;
             }
+          }
+
+          &:hover {
+            border-color: rgba($secondary, 0.24);
+            background-color: rgba($accent, 0.9);
+          }
+
+          &:focus-visible {
+            outline: 2px solid rgba($secondary, 0.45);
+            outline-offset: 2px;
           }
         }
 
-        >.list {
-          list-style: none;
-          margin: 0;
-          padding: 0 var(--layout-gap-xs);
-          display: grid;
-          gap: var(--layout-gap-xs);
+        &.is-selected {
+          > .amenity-card {
+            border-color: rgba($secondary, 0.24);
+            background-color: rgba($secondary, 0.08);
+            box-shadow: 0 6px 14px rgba($secondary, 0.08);
 
-          >.item {
-            >.item-btn {
-              @include buttons.primary($theme: light, $fullwidth: true, $deep: true);
-              width: 100%;
+            > .icon {
+              stroke: $secondary;
+            }
 
-              >* {
-                text-align: left;
+            > .state {
+              background: $secondary;
 
-                >.item-content {
-                  width: 100%;
-                  display: grid;
-                  grid-template-columns: 40px 1fr auto;
-                  align-items: center;
-                  gap: var(--layout-gap-sm);
+              * {
+                stroke: $accent !important;
+              }
 
-                  >.item-icon {
-                    display: grid;
-                    place-items: center;
-
-                    >.lucide {
-                      width: 18px;
-                      height: 18px;
-                    }
-                  }
-
-                  >.item-texts {
-                    display: grid;
-                    gap: 2px;
-
-                    >.item-title {
-                      font-weight: 600;
-                    }
-
-                    >.item-desc {
-                      font-size: 0.9rem;
-                      opacity: 0.75;
-                    }
-                  }
-
-                  >.item-state {
-                    font-size: 0.85rem;
-                    opacity: 0.75;
-                  }
-                }
+              &>span {
+                color: $accent !important;
               }
             }
           }
         }
       }
     }
+  }
+}
 
-    >.cta {
-      @include buttons.primary($theme: white, $fullwidth: true);
+@media (prefers-reduced-motion: reduce) {
+  .editor-amenities-panel {
+    .category {
+      > ul {
+        > .item {
+          > .amenity-card {
+            transition: none;
+          }
+        }
+      }
     }
   }
 }

@@ -1,0 +1,200 @@
+/* File: src/views/CreateListing/components/panels/ListingPanels/amenities-panel.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/components/inputs' as inputs;
+@use '@/views/CreateListing/components/panels/panel.scss' as *;
+
+.create-amenities-panel {
+  @extend %panel;
+
+  > .header {
+    @extend %panel-header;
+  }
+
+  > .body {
+    @extend %panel-body;
+    gap: var(--layout-gap-sm);
+
+    > .search {
+      display: flex;
+      flex-direction: column;
+      gap: calc(var(--layout-gap-xs) / 2);
+
+      > .search-input {
+        @include inputs.search($theme: accent);
+      }
+
+      > .meta {
+        margin: 0;
+        @include little-text($thin: false);
+        color: rgba($secondary-text, 0.65);
+      }
+    }
+
+    > .catalog {
+      max-height: clamp(20rem, 48vh, 34rem);
+      overflow-y: auto;
+      padding-right: var(--layout-gap-2xs);
+
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap);
+      scrollbar-gutter: stable;
+    }
+
+    > .empty {
+      margin: 0;
+      opacity: 0.7;
+      @include little-text($thin: false);
+    }
+  }
+
+  .category {
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-sm);
+
+    > h4 {
+      margin: 0;
+      @include base-text($bigger: true, $thin: false);
+    }
+
+    > ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+
+      display: grid;
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+      gap: var(--layout-gap-sm);
+
+      @include min-width(md) {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      > .item {
+        min-width: 0;
+
+        > .amenity-card {
+          width: 100%;
+          padding: var(--layout-gap-md);
+
+          display: flex;
+          align-items: flex-start;
+          gap: var(--layout-gap-sm);
+
+          border: 1px solid $quaternary;
+          border-radius: borders.$rounded-lg;
+          background-color: rgba($accent, 0.75);
+          color: inherit;
+          cursor: pointer;
+          text-align: left;
+          font: inherit;
+
+          transition:
+            border-color 180ms ease,
+            background-color 180ms ease,
+            box-shadow 180ms ease;
+
+          > .icon {
+            height: 1.5rem;
+            width: 1.5rem;
+            margin-top: 1px;
+            stroke: $secondary-text;
+            flex-shrink: 0;
+          }
+
+          > .texts {
+            min-width: 0;
+            flex: 1 1 auto;
+
+            display: flex;
+            flex-direction: column;
+            gap: var(--layout-gap-3xs);
+
+            > .name {
+              margin: 0;
+              @include base-text($thin: false);
+            }
+
+            > .description {
+              margin: 0;
+              opacity: 0.75;
+              @include little-text($thin: false);
+            }
+          }
+
+          > .state {
+            margin-left: auto;
+            flex: 0 0 auto;
+
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+
+            padding: 0.2rem 0.45rem;
+            border-radius: borders.$rounded-md;
+            background: $secondary;
+            color: $accent;
+            @include little-text($thin: false);
+
+            > .check {
+              width: 0.95rem;
+              height: 0.95rem;
+              stroke: currentColor;
+            }
+          }
+
+          &:hover {
+            border-color: rgba($secondary, 0.24);
+            background-color: rgba($accent, 0.9);
+          }
+
+          &:focus-visible {
+            outline: 2px solid rgba($secondary, 0.45);
+            outline-offset: 2px;
+          }
+        }
+
+        &.is-selected {
+          > .amenity-card {
+            border-color: rgba($secondary, 0.24);
+            background-color: rgba($secondary, 0.08);
+            box-shadow: 0 6px 14px rgba($secondary, 0.08);
+
+            > .icon {
+              stroke: $secondary;
+            }
+
+            > .state {
+              background: $secondary;
+
+              * {
+                stroke: $accent !important;
+              }
+
+              &>span {
+                color: $accent !important;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .create-amenities-panel {
+    .category {
+      > ul {
+        > .item {
+          > .amenity-card {
+            transition: none;
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,4 +1,4 @@
-// File: src/utils/ScrollReveal.ts
+// File: src/utils/scrollReveal.ts
 
 // sr.ts
 import { gsap } from "gsap";

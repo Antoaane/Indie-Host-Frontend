@@ -60,14 +60,6 @@
       "pinned": true
     },
     {
-      "id": "EASY_METRO_ACCESS",
-      "name": "Accès facile métro",
-      "description": "République / Goncourt à proximité",
-      "category": "Vue & accès",
-      "relevance": 90,
-      "pinned": true
-    },
-    {
       "id": "ELEVATOR",
       "name": "Ascenseur",
       "description": "Accès pratique avec bagages",
@@ -177,6 +169,14 @@
       "description": "Pour vos playlists",
       "category": "Vie à bord",
       "relevance": 60,
+      "pinned": false
+    },
+    {
+      "id": "EASY_METRO_ACCESS",
+      "name": "Accès facile métro",
+      "description": "Station à proximité",
+      "category": "Arrivée & mobilité",
+      "relevance": 70,
       "pinned": false
     }
   ],

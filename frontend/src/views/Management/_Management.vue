@@ -1,21 +1,40 @@
 <!-- File: src/views/Management/_Management.vue -->
 
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowUpRight, Calendar, Plus } from 'lucide-vue-next'
+import { ArrowUpRight, Calendar, Pen, Plus } from 'lucide-vue-next'
 
 import DatePicker from '@/components/DatePicker/DatePicker.vue'
 import ConfirmationDialog from '@/components/overlays/ConfirmationDialog.vue'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
+import { vp } from '@/utils/viewport'
 import type { EditorMode, EditorSource } from '@/views/Editor/types/editor'
 import type { UserListingCard } from '@/views/Editor/utils/listingApi'
 import { deriveBookedDaysFromReservations, normalizeBookedDays, normalizeReservations } from '@/domain/listings/bookings'
-import type { RawBookings } from '@/domain/listings/types'
-import type { Reservation } from '@/views/Management/utils/managementReservations'
+import type { RawBookingReservation, RawBookings } from '@/domain/listings/types'
+import type {
+  LatestVisitForListing,
+  Reservation,
+  ReservationPaymentManualEntry,
+  ReservationPaymentManualMethod,
+} from '@/views/Management/utils/managementReservations'
+import ManagementPaymentEditor from '@/views/Management/components/ManagementPaymentEditor.vue'
 import ManagementSidebar from '@/views/Management/components/ManagementSidebar.vue'
 import ManagementReservationSlider from '@/views/Management/components/ManagementReservationSlider.vue'
-import { buildReservationsForListing, findClosestReservation, findClosestReservationForListing, findLatestReservationForListing } from '@/views/Management/utils/managementReservations'
+import ManagementScheduleCard from '@/views/Management/components/ManagementScheduleCard.vue'
+import {
+  MANUAL_PAYMENT_METHODS,
+  buildReservationsForListing,
+  findClosestReservation,
+  findClosestReservationForListing,
+  findLatestReservationForListing,
+  findLatestVisitForListing,
+  normalizeManualPaymentEntries,
+  resolveReservationPayment,
+  resolveReservationPaymentSchedule,
+  toRawReservationPayment,
+} from '@/views/Management/utils/managementReservations'
 
 const props = defineProps<{
   mode: EditorMode
@@ -45,6 +64,42 @@ const deleteStatus = reactive({
   isDeleting: false,
   error: null as string | null,
 })
+type PaymentEditorEntry = ReservationPaymentManualEntry
+const DEFAULT_MANUAL_PAYMENT_METHOD: ReservationPaymentManualMethod = MANUAL_PAYMENT_METHODS[0]?.value ?? 'tpe_manual'
+type PaymentEditorState = {
+  total: number
+  baseDeposit: number
+  entries: PaymentEditorEntry[]
+  draftAmount: number | null
+  draftMethod: ReservationPaymentManualMethod
+  draftDate: string
+  draftComment: string
+  isSaving: boolean
+  error: string | null
+  success: string | null
+}
+
+const paymentEditor = reactive<PaymentEditorState>({
+  total: 0,
+  baseDeposit: 0,
+  entries: [],
+  draftAmount: null,
+  draftMethod: DEFAULT_MANUAL_PAYMENT_METHOD,
+  draftDate: '',
+  draftComment: '',
+  isSaving: false,
+  error: null,
+  success: null,
+})
+
+let paymentSaveQueue: Promise<void> = Promise.resolve()
+const noteEditor = reactive({
+  value: '',
+  isEditing: false,
+  isSaving: false,
+  error: null as string | null,
+})
+const internalNoteTextareaRef = ref<HTMLTextAreaElement | null>(null)
 
 const reservationsByListingId = reactive<Record<string, Reservation[]>>({})
 
@@ -62,21 +117,7 @@ const stayRange = computed<RangeISO | null>(() => {
 })
 
 const stayMonthsCount = computed(() => {
-  const range = stayRange.value
-  if (!range) return 1
-
-  const [
-    startYear,
-    startMonth,
-  ] = range.start.split('-').map(Number)
-  const [
-    endYear,
-    endMonth,
-  ] = range.end.split('-').map(Number)
-  if (!startYear || !startMonth || !endYear || !endMonth) return 1
-
-  const diff = (endYear - startYear) * 12 + (endMonth - startMonth)
-  return Math.max(1, diff + 1)
+  return vp.xxxl.value ? 2 : 1
 })
 
 const selectedReservation = computed(() => {
@@ -89,10 +130,35 @@ const selectedReservation = computed(() => {
   return items[0] ?? null
 })
 
+const disabledStayRanges = computed<RangeISO[]>(() => {
+  const activeReservation = selectedReservation.value
+
+  return normalizeBookedDays(
+    reservationsForListing.value
+      .filter((reservation) => {
+        if (!activeReservation) return true
+        if (reservation.id === activeReservation.id) return false
+        return reservation.start !== activeReservation.start || reservation.end !== activeReservation.end
+      })
+      .map((reservation) => ({
+        start: reservation.start,
+        end: reservation.end,
+      })),
+  )
+})
+
 const latestReservationByListingId = computed(() => {
   const map: Record<string, Reservation | null> = {}
   for (const listing of listings.value) {
     map[listing.listingId] = findLatestReservationForListing(reservationsByListingId[listing.listingId] ?? [])
+  }
+  return map
+})
+
+const latestVisitByListingId = computed(() => {
+  const map: Record<string, LatestVisitForListing | null> = {}
+  for (const listing of listings.value) {
+    map[listing.listingId] = findLatestVisitForListing(reservationsByListingId[listing.listingId] ?? [])
   }
   return map
 })
@@ -269,6 +335,373 @@ function handleReplyToTraveler() {
   })
 }
 
+function normalizeInternalNote(value: unknown): string {
+  if (typeof value !== 'string') return ''
+  return value.trim()
+}
+
+function buildInternalNoteDraftStorageKey(listingId: string, reservationId: string) {
+  return `ihf.management.internal-note.${listingId}.${reservationId}`
+}
+
+function readInternalNoteDraft(listingId: string, reservationId: string): string | null {
+  if (typeof window === 'undefined') return null
+  try {
+    const raw = window.localStorage.getItem(buildInternalNoteDraftStorageKey(listingId, reservationId))
+    return raw === null ? null : raw
+  } catch {
+    return null
+  }
+}
+
+function writeInternalNoteDraft(listingId: string, reservationId: string, value: string) {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.setItem(buildInternalNoteDraftStorageKey(listingId, reservationId), value)
+  } catch {
+    // Ignore localStorage write errors (quota/private mode).
+  }
+}
+
+function clearInternalNoteDraft(listingId: string, reservationId: string) {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.removeItem(buildInternalNoteDraftStorageKey(listingId, reservationId))
+  } catch {
+    // Ignore localStorage clear errors.
+  }
+}
+
+function syncInternalNoteDraft() {
+  const listingId = selectedListingId.value
+  const reservation = selectedReservation.value
+  if (!listingId || !reservation) return
+
+  const currentPersisted = reservation.internalNote ?? ''
+  if (noteEditor.value === currentPersisted) {
+    clearInternalNoteDraft(listingId, reservation.id)
+    return
+  }
+
+  writeInternalNoteDraft(listingId, reservation.id, noteEditor.value)
+}
+
+function handleInternalNoteInput() {
+  noteEditor.error = null
+  syncInternalNoteDraft()
+}
+
+async function openInternalNoteEditor() {
+  if (!selectedReservation.value) return
+  noteEditor.isEditing = true
+  noteEditor.error = null
+
+  await nextTick()
+  internalNoteTextareaRef.value?.focus()
+}
+
+async function saveInternalNote() {
+  const listingId = selectedListingId.value
+  const reservation = selectedReservation.value
+  if (!listingId || !reservation || noteEditor.isSaving) return false
+
+  const nextNote = normalizeInternalNote(noteEditor.value)
+  const currentNote = normalizeInternalNote(reservation.internalNote)
+  if (nextNote === currentNote) {
+    clearInternalNoteDraft(listingId, reservation.id)
+    return true
+  }
+
+  noteEditor.isSaving = true
+  noteEditor.error = null
+
+  try {
+    const editable = await props.source.fetchEditableListingBundle(listingId)
+    const currentBookings = (editable.bookings ?? null) as Partial<RawBookings> | null
+    const existingReservations = normalizeReservations(currentBookings?.reservations)
+    let reservationIndex = existingReservations.findIndex((item) => item.id === reservation.id)
+
+    if (reservationIndex < 0) {
+      reservationIndex = existingReservations.findIndex((item) => item.start === reservation.start && item.end === reservation.end)
+    }
+
+    if (reservationIndex < 0) {
+      throw new Error('Reservation not found')
+    }
+
+    const nextReservations = [
+      ...existingReservations,
+    ]
+    const targetReservation = nextReservations[reservationIndex]
+    nextReservations[reservationIndex] = {
+      ...targetReservation,
+      ...(nextNote ? { internalNote: nextNote } : { internalNote: undefined }),
+    }
+
+    const normalizedNextReservations = normalizeReservations(nextReservations)
+
+    await props.source.patchListingDraft(listingId, {
+      bookings: {
+        ...(currentBookings ?? {}),
+        reservations: normalizedNextReservations,
+      },
+    })
+
+    reservationsByListingId[listingId] = reservationsByListingId[listingId].map((item) => {
+      if (item.id !== reservation.id && !(item.start === reservation.start && item.end === reservation.end)) return item
+      return {
+        ...item,
+        internalNote: nextNote || undefined,
+      }
+    })
+
+    noteEditor.value = nextNote
+    clearInternalNoteDraft(listingId, reservation.id)
+    return true
+  } catch (error) {
+    console.error('[Management] save internal note failed', error)
+    noteEditor.error = 'Impossible d enregistrer la note interne.'
+    return false
+  } finally {
+    noteEditor.isSaving = false
+  }
+}
+
+async function handleInternalNoteBlur() {
+  const saved = await saveInternalNote()
+  if (!saved) return
+
+  if (normalizeInternalNote(noteEditor.value)) {
+    noteEditor.isEditing = false
+  }
+}
+
+function todayIsoDate(referenceDate = new Date()) {
+  const year = referenceDate.getFullYear()
+  const month = String(referenceDate.getMonth() + 1).padStart(2, '0')
+  const day = String(referenceDate.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function resetPaymentEditor(reservation: Reservation | null) {
+  if (!reservation) {
+    paymentEditor.total = 0
+    paymentEditor.baseDeposit = 0
+    paymentEditor.entries = []
+    paymentEditor.draftAmount = null
+    paymentEditor.draftMethod = DEFAULT_MANUAL_PAYMENT_METHOD
+    paymentEditor.draftDate = todayIsoDate()
+    paymentEditor.draftComment = ''
+    paymentEditor.error = null
+    paymentEditor.success = null
+    return
+  }
+
+  paymentEditor.total = reservation.payment.total
+  paymentEditor.baseDeposit = reservation.payment.baseDeposit
+  paymentEditor.entries = reservation.payment.manual.entries.map((entry) => ({
+    id: entry.id,
+    amount: entry.amount,
+    date: entry.date,
+    method: entry.method,
+    comment: entry.comment,
+  }))
+  paymentEditor.draftAmount = null
+  paymentEditor.draftMethod = DEFAULT_MANUAL_PAYMENT_METHOD
+  paymentEditor.draftDate = todayIsoDate()
+  paymentEditor.draftComment = ''
+  paymentEditor.error = null
+  paymentEditor.success = null
+}
+
+function createManualEntryId(date: string) {
+  const suffix = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID().slice(0, 8) : Date.now().toString(36)
+  return `manual-${date}-${suffix}`
+}
+
+function updatePaymentEditorDraftAmount(value: number | null) {
+  paymentEditor.draftAmount = typeof value === 'number' && Number.isFinite(value) ? Math.max(0, value) : null
+  paymentEditor.error = null
+  paymentEditor.success = null
+}
+
+function updatePaymentEditorDraftMethod(value: ReservationPaymentManualMethod) {
+  paymentEditor.draftMethod = value
+  paymentEditor.error = null
+  paymentEditor.success = null
+}
+
+function updatePaymentEditorDraftDate(value: string) {
+  paymentEditor.draftDate = value
+  paymentEditor.error = null
+  paymentEditor.success = null
+}
+
+function updatePaymentEditorDraftComment(value: string) {
+  paymentEditor.draftComment = value
+  paymentEditor.error = null
+  paymentEditor.success = null
+}
+
+function queuePaymentSave() {
+  paymentSaveQueue = paymentSaveQueue
+    .then(async () => {
+      await savePaymentChanges()
+    })
+    .catch(() => {
+      // savePaymentChanges gère déjà l'erreur utilisateur.
+    })
+}
+
+function addManualPaymentEntry() {
+  const reservation = selectedReservation.value
+  const preview = paymentPreview.value
+  if (!reservation || !preview || !preview.canEditManualPayments) return
+
+  const amount = Number(paymentEditor.draftAmount)
+  if (!Number.isFinite(amount) || amount <= 0) {
+    paymentEditor.error = 'Saisissez un montant manuel sup\u00e9rieur \u00e0 0.'
+    return
+  }
+
+  const date = paymentEditor.draftDate.trim() || todayIsoDate()
+  const [
+    normalizedEntry,
+  ] = normalizeManualPaymentEntries([
+    {
+      id: createManualEntryId(date),
+      amount: Math.round(amount),
+      date,
+      method: paymentEditor.draftMethod,
+      comment: paymentEditor.draftComment,
+    },
+  ])
+
+  if (!normalizedEntry) {
+    paymentEditor.error = 'Saisissez une date valide pour le paiement manuel.'
+    return
+  }
+
+  paymentEditor.entries.push(normalizedEntry)
+  paymentEditor.draftAmount = null
+  paymentEditor.draftMethod = DEFAULT_MANUAL_PAYMENT_METHOD
+  paymentEditor.draftDate = todayIsoDate()
+  paymentEditor.draftComment = ''
+  paymentEditor.error = null
+  paymentEditor.success = null
+  queuePaymentSave()
+}
+
+function removeManualPaymentEntry(entryId: string) {
+  const preview = paymentPreview.value
+  if (!preview || !preview.canEditManualPayments || paymentEditor.isSaving) return
+
+  const nextEntries = paymentEditor.entries.filter((entry) => entry.id !== entryId)
+  if (nextEntries.length === paymentEditor.entries.length) return
+
+  paymentEditor.entries = nextEntries
+  paymentEditor.error = null
+  paymentEditor.success = null
+  queuePaymentSave()
+}
+
+function findReservationIndexByIdOrRange(reservations: RawBookingReservation[], reservation: Reservation): number {
+  const byId = reservations.findIndex((item) => item.id === reservation.id)
+  if (byId >= 0) return byId
+  return reservations.findIndex((item) => item.start === reservation.start && item.end === reservation.end)
+}
+
+async function savePaymentChanges() {
+  const listingId = selectedListingId.value
+  const reservation = selectedReservation.value
+  const preview = paymentPreview.value
+
+  if (!listingId || !reservation || !preview || paymentEditor.isSaving) return
+
+  paymentEditor.isSaving = true
+  paymentEditor.error = null
+  paymentEditor.success = null
+
+  try {
+    const editable = await props.source.fetchEditableListingBundle(listingId)
+    const currentBookings = (editable.bookings ?? null) as Partial<RawBookings> | null
+    const existingReservations = normalizeReservations(currentBookings?.reservations)
+    const manualEntries = normalizeManualPaymentEntries(paymentEditor.entries)
+    const targetIndex = findReservationIndexByIdOrRange(existingReservations, reservation)
+
+    if (targetIndex >= 0) {
+      const targetReservation = existingReservations[targetIndex]
+      const fallbackTotal = Math.max(0, Math.round(Number(targetReservation.payment?.total ?? preview.total) || preview.total))
+      const nextPayment = resolveReservationPayment(targetReservation.payment, fallbackTotal, {
+        total: paymentEditor.total,
+        baseDeposit: paymentEditor.baseDeposit,
+        manualEntries,
+      })
+
+      existingReservations[targetIndex] = {
+        ...targetReservation,
+        payment: toRawReservationPayment(nextPayment),
+      }
+    } else {
+      const nextPayment = resolveReservationPayment(undefined, Math.max(0, paymentEditor.total || preview.total), {
+        total: paymentEditor.total,
+        baseDeposit: paymentEditor.baseDeposit,
+        manualEntries,
+      })
+
+      const createdReservation: RawBookingReservation = {
+        id: reservation.id,
+        start: reservation.start,
+        end: reservation.end,
+        nights: reservation.nights,
+        guestName: reservation.guestName,
+        message: reservation.message,
+        guests: reservation.guests,
+        payment: toRawReservationPayment(nextPayment),
+        ...(reservation.internalNote ? { internalNote: reservation.internalNote } : {}),
+        ...(reservation.guestAvatar ? { guestAvatar: reservation.guestAvatar } : {}),
+        ...(reservation.contact ? { contact: reservation.contact } : {}),
+        ...(reservation.createdAt ? { createdAt: reservation.createdAt } : {}),
+        ...(reservation.messaging ? { messaging: reservation.messaging } : {}),
+      }
+
+      existingReservations.push(createdReservation)
+    }
+
+    const nextReservations = normalizeReservations(existingReservations)
+
+    await props.source.patchListingDraft(listingId, {
+      bookings: {
+        ...(currentBookings ?? {}),
+        reservations: nextReservations,
+      },
+    })
+
+    const listing = listings.value.find((item) => item.listingId === listingId)
+    if (listing) {
+      reservationsByListingId[listingId] = buildReservationsForListing({
+        listing,
+        bookings: {
+          ...(currentBookings ?? {}),
+          reservations: nextReservations,
+        },
+      })
+    }
+
+    const refreshed = (reservationsByListingId[listingId] ?? []).find((item) => item.id === reservation.id) ?? (reservationsByListingId[listingId] ?? []).find((item) => item.start === reservation.start && item.end === reservation.end)
+    if (refreshed) {
+      selectedReservationId.value = refreshed.id
+    }
+
+    paymentEditor.success = 'Paiements mis \u00e0 jour.'
+  } catch (error) {
+    console.error('[Management] update payment failed', error)
+    paymentEditor.error = 'Impossible de mettre \u00e0 jour les paiements.'
+  } finally {
+    paymentEditor.isSaving = false
+  }
+}
+
 function openDeleteOverlay() {
   if (!selectedReservation.value) return
   deleteStatus.error = null
@@ -354,6 +787,14 @@ watch(
   { immediate: true },
 )
 
+watch(
+  selectedReservation,
+  (reservation) => {
+    resetPaymentEditor(reservation)
+  },
+  { immediate: true },
+)
+
 watch(reservationsForListing, (items) => {
   if (!items.length) {
     selectedReservationId.value = null
@@ -365,6 +806,24 @@ watch(reservationsForListing, (items) => {
     selectedReservationId.value = findClosestReservationForListing(items)?.id ?? items[0].id
   }
 })
+
+watch(
+  selectedReservation,
+  (reservation) => {
+    const listingId = selectedListingId.value
+    const persistedNote = reservation?.internalNote ?? ''
+    const draftNote = listingId && reservation ? readInternalNoteDraft(listingId, reservation.id) : null
+    if (listingId && reservation && draftNote !== null && draftNote === persistedNote) {
+      clearInternalNoteDraft(listingId, reservation.id)
+    }
+
+    noteEditor.value = draftNote ?? persistedNote
+    noteEditor.isEditing = !normalizeInternalNote(noteEditor.value) || (draftNote !== null && draftNote !== persistedNote)
+    noteEditor.isSaving = false
+    noteEditor.error = null
+  },
+  { immediate: true },
+)
 
 watch(
   () => [
@@ -388,7 +847,7 @@ function formatCurrency(value?: number) {
   }).format(value)
 }
 
-function formatDate(iso?: string) {
+function formatDate(iso?: string | null) {
   if (!iso) return ''
   const [
     year,
@@ -432,19 +891,50 @@ const totalGuests = computed(() => {
 
 const guestLabel = computed(() => (totalGuests.value > 1 ? 'voyageurs' : 'voyageur'))
 
-const paymentStatusLabel = computed(() => {
-  const status = selectedReservation.value?.payment.status
-  if (status === 'paid') return 'Pay\u00e9'
-  if (status === 'pending') return 'En attente'
-  return ''
+const paymentPreview = computed(() => {
+  const reservation = selectedReservation.value
+  if (!reservation) return null
+
+  return resolveReservationPayment(reservation.payment, reservation.payment.total, {
+    total: paymentEditor.total,
+    baseDeposit: paymentEditor.baseDeposit,
+    manualEntries: paymentEditor.entries,
+  })
 })
 
-const paymentStatusClass = computed(() => {
-  const status = selectedReservation.value?.payment.status
-  if (status === 'paid') return 'is-paid'
-  if (status === 'pending') return 'is-pending'
-  return ''
+const paymentSchedule = computed(() => {
+  const payment = paymentPreview.value
+  const reservation = selectedReservation.value
+  if (!payment) return null
+
+  return resolveReservationPaymentSchedule(payment, {
+    fallbackDueDateISO: reservation?.start ?? null,
+  })
 })
+
+const paymentScheduleProgressWidth = computed(() => `${paymentSchedule.value?.completionPercent ?? 0}%`)
+const paymentScheduleProgressClass = computed(() => (paymentSchedule.value?.completionPercent ?? 0) >= 100 ? 'is-complete' : 'is-incomplete')
+const paymentScheduleExpectedCount = computed(() => paymentSchedule.value?.entries.length ?? 0)
+const paymentScheduleRemainingCount = computed(() => paymentSchedule.value?.entries.filter((entry) => entry.status === 'pending').length ?? 0)
+
+const paymentSubtitle = computed(() => {
+  const payment = paymentPreview.value
+  if (!payment) return ''
+
+  if (!payment.isStripeBacked) {
+    return `Paiement en ${payment.method.toLowerCase()}`
+  }
+
+  if (payment.canEditManualPayments) {
+    return `Stripe synchronis\u00e9 + part manuelle en ${payment.method.toLowerCase()}`
+  }
+
+  return 'Paiement en ligne synchronis\u00e9 avec Stripe'
+})
+
+const canEditManualPayments = computed(() => Boolean(paymentPreview.value?.canEditManualPayments))
+
+const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !normalizeInternalNote(noteEditor.value))
 </script>
 
 <template>
@@ -458,6 +948,7 @@ const paymentStatusClass = computed(() => {
         :isLoading="listingsStatus.isLoading"
         :error="listingsStatus.error"
         :selectedListingId="selectedListingId"
+        :latestVisitByListingId="latestVisitByListingId"
         :latestReservationByListingId="latestReservationByListingId"
         @select="handleSelectListing"
       />
@@ -532,15 +1023,59 @@ const paymentStatusClass = computed(() => {
                     <p class="message">{{ selectedReservation.message }}</p>
                   </section>
 
+                  <section class="internal-note-card">
+                    <div class="section-title">
+                      <h3>Note interne h&ocirc;te</h3>
+                      <p>Visible uniquement par l&apos;h&ocirc;te.</p>
+                    </div>
+
+                    <template v-if="shouldShowInternalNoteEditor">
+                      <textarea
+                        ref="internalNoteTextareaRef"
+                        v-model="noteEditor.value"
+                        class="internal-note-input"
+                        rows="4"
+                        :disabled="noteEditor.isSaving"
+                        placeholder="Ajoutez une note interne sur ce voyageur (preferences, rappels, points de vigilance)."
+                        @input="handleInternalNoteInput"
+                        @blur="handleInternalNoteBlur"
+                      />
+                    </template>
+                    <div
+                      v-else
+                      class="internal-note-preview"
+                    >
+                      <p>{{ selectedReservation.internalNote }}</p>
+                      <button
+                        type="button"
+                        class="edit-note-btn"
+                        aria-label="Modifier la note interne"
+                        @click="openInternalNoteEditor"
+                      >
+                        <Pen :size="16" />
+                      </button>
+                    </div>
+
+                    <p
+                      v-if="noteEditor.error"
+                      class="feedback error"
+                    >
+                      {{ noteEditor.error }}
+                    </p>
+                  </section>
+
                   <section class="stay-section">
                     <h3>S&eacute;jour</h3>
                     <div class="stay-container">
                       <div class="stay-calendar">
                         <DatePicker
                           :model-value="stayRange"
+                          :disabled-dates="disabledStayRanges"
                           :number-of-months="stayMonthsCount"
                           :read-only="true"
-                          :restrict-to-future="false"
+                          :allow-navigation-in-read-only="true"
+                          :allow-disabled-model-value="true"
+                          :restrict-to-future="true"
                         />
                       </div>
                       <div class="stay-cards">
@@ -566,44 +1101,79 @@ const paymentStatusClass = computed(() => {
                   </section>
 
                   <section class="schedule-section">
-                    <h3>&Eacute;ch&eacute;ancier</h3>
-                    <p class="subtitle">Paiement en {{ selectedReservation.payment.method.toLowerCase() }}</p>
-                    <div class="schedule-card">
-                      <div class="summary">
-                        <div>
-                          <p class="label">Paiement</p>
-                          <p class="value">{{ formatCurrency(selectedReservation.payment.total) }}</p>
-                        </div>
-                        <span
-                          class="status"
-                          :class="paymentStatusClass"
+                    <h3>Paiements</h3>
+                    <template v-if="paymentPreview && paymentSchedule">
+                      <div class="schedule-overview">
+                        <div
+                          class="progress-box"
+                          role="progressbar"
+                          aria-label="Progression totale du paiement"
+                          :aria-valuenow="paymentSchedule.completionPercent"
+                          aria-valuemin="0"
+                          aria-valuemax="100"
                         >
-                          {{ paymentStatusLabel }}
-                        </span>
+                          <div class="progress-track">
+                            <span
+                              class="progress-fill"
+                              :class="paymentScheduleProgressClass"
+                              :style="{ width: paymentScheduleProgressWidth }"
+                            />
+                          </div>
+                        </div>
+
+                        <div class="reference-grid">
+                          <p class="reference-item">
+                            <span>Type de paiement</span>
+                            <strong>{{ paymentSubtitle }}</strong>
+                          </p>
+                          <p class="reference-item">
+                            <span>Montant total</span>
+                            <strong>{{ formatCurrency(paymentPreview.total) }}</strong>
+                          </p>
+                          <p class="reference-item">
+                            <span>Acompte initial</span>
+                            <strong>{{ formatCurrency(paymentPreview.baseDeposit) }}</strong>
+                          </p>
+                          <p class="reference-item">
+                            <span>Paiements restants</span>
+                            <strong>{{ paymentScheduleRemainingCount }} / {{ paymentScheduleExpectedCount }}</strong>
+                          </p>
+                          <p class="reference-item">
+                            <span>Reste a regler</span>
+                            <strong>{{ formatCurrency(paymentSchedule.balance) }}</strong>
+                          </p>
+                        </div>
                       </div>
-                      <div class="rows">
-                        <div class="row">
-                          <span>Mode de paiement</span>
-                          <strong>{{ selectedReservation.payment.method }}</strong>
-                        </div>
-                        <div class="row">
-                          <span>Acompte</span>
-                          <strong>{{ formatCurrency(selectedReservation.payment.deposit) }}</strong>
-                        </div>
-                        <div class="row">
-                          <span>Solde</span>
-                          <strong>{{ formatCurrency(selectedReservation.payment.balance) }}</strong>
-                        </div>
-                        <div class="row">
-                          <span>Date d'&eacute;mission</span>
-                          <strong>{{ formatDate(selectedReservation.start) }}</strong>
-                        </div>
-                        <div class="row">
-                          <span>Date de paiement</span>
-                          <strong>{{ formatDate(selectedReservation.end) }}</strong>
-                        </div>
-                      </div>
-                    </div>
+
+                      <ManagementScheduleCard
+                        :schedule="paymentSchedule"
+                        :method-label="paymentPreview.method"
+                        :issue-date-iso="selectedReservation.start"
+                        :fallback-payment-date-iso="selectedReservation.end"
+                        :can-remove-manual-entries="canEditManualPayments"
+                        :is-saving="paymentEditor.isSaving"
+                        :format-currency="formatCurrency"
+                        :format-date="formatDate"
+                        @remove-manual-entry="removeManualPaymentEntry"
+                      />
+
+                      <ManagementPaymentEditor
+                        :draft-amount="paymentEditor.draftAmount"
+                        :draft-method="paymentEditor.draftMethod"
+                        :draft-date="paymentEditor.draftDate"
+                        :draft-comment="paymentEditor.draftComment"
+                        :manual-payment-methods="MANUAL_PAYMENT_METHODS"
+                        :is-saving="paymentEditor.isSaving"
+                        :can-edit-manual-payments="canEditManualPayments"
+                        :error="paymentEditor.error"
+                        :success="paymentEditor.success"
+                        @update:draft-amount="updatePaymentEditorDraftAmount"
+                        @update:draft-method="updatePaymentEditorDraftMethod"
+                        @update:draft-date="updatePaymentEditorDraftDate"
+                        @update:draft-comment="updatePaymentEditorDraftComment"
+                        @add-manual-entry="addManualPaymentEntry"
+                      />
+                    </template>
                   </section>
 
                   <section class="delete-reservation">

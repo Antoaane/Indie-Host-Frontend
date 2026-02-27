@@ -14,6 +14,10 @@ import {
   type CheckoutPaymentBreakdown,
   type CheckoutPaymentChoice,
 } from '@/domain/payments/checkoutPayment'
+import {
+  resolveCheckoutPaymentChoice,
+  validateReservationAgainstRules,
+} from '@/domain/listings/reservationRules'
 import { getStripePaymentReturnUrl, getStripePublishableKey, loadStripeClient } from '@/domain/payments/stripeClient'
 
 type CheckoutConfirmationPayload = {
@@ -75,22 +79,74 @@ const currency = new Intl.NumberFormat('fr-FR', {
   maximumFractionDigits: 0,
 })
 
+function formatDateLabel(iso?: string | null): string {
+  if (!iso) return "le jour d'arrivee"
+  const parsed = new Date(iso)
+  if (Number.isNaN(parsed.getTime())) return "le jour d'arrivee"
+  return new Intl.DateTimeFormat('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(parsed)
+}
+
+const reservationValidation = computed(() => validateReservationAgainstRules({
+  startISO: props.reservation.startISO,
+  endISO: props.reservation.endISO,
+  occupants: props.reservation.occupants,
+  rules: props.listing.bookings.rules,
+}))
+const reservationError = computed(() => reservationValidation.value.errors[0] ?? null)
+const paymentRules = computed(() => props.listing.bookings.rules.payment)
+const allowedPaymentChoices = computed(() => paymentRules.value.allowedChoices)
+const paymentOptionError = computed(() =>
+  allowedPaymentChoices.value.length
+    ? null
+    : 'Aucune modalite de paiement valide n est configuree pour cette annonce.',
+)
+
+watch(
+  () => paymentRules.value,
+  (rules) => {
+    const next = resolveCheckoutPaymentChoice(paymentChoice.value, rules)
+    if (next && next !== paymentChoice.value) {
+      paymentChoice.value = next
+      return
+    }
+    if (!next && allowedPaymentChoices.value[0]) {
+      paymentChoice.value = allowedPaymentChoices.value[0]
+    }
+  },
+  { immediate: true, deep: true },
+)
+
+function isChoiceAllowed(choice: CheckoutPaymentChoice): boolean {
+  return allowedPaymentChoices.value.includes(choice)
+}
+
+function resolveChoiceBlockedReason(choice: CheckoutPaymentChoice): string {
+  return paymentRules.value.blockedReasons[choice] ?? 'Option non autorisee pour cette annonce.'
+}
+
 const totalLabel = computed(() => currency.format(props.reservation.total))
 
 const splitBreakdown = computed(() => resolveCheckoutPaymentBreakdown({
   totalAmount: props.reservation.total,
   choice: 'split',
   arrivalDateISO: props.reservation.startISO,
+  paymentRules: paymentRules.value,
 }))
 const cashBreakdown = computed(() => resolveCheckoutPaymentBreakdown({
   totalAmount: props.reservation.total,
   choice: 'cash',
   arrivalDateISO: props.reservation.startISO,
+  paymentRules: paymentRules.value,
 }))
 const selectedBreakdown = computed(() => resolveCheckoutPaymentBreakdown({
   totalAmount: props.reservation.total,
   choice: paymentChoice.value,
   arrivalDateISO: props.reservation.startISO,
+  paymentRules: paymentRules.value,
 }))
 
 const splitNowLabel = computed(() => currency.format(splitBreakdown.value.chargeNowAmount))
@@ -100,14 +156,18 @@ const cashLaterLabel = computed(() => currency.format(cashBreakdown.value.deferr
 const selectedChargeNowLabel = computed(() => currency.format(selectedBreakdown.value.chargeNowAmount))
 const selectedDeferredLabel = computed(() => currency.format(selectedBreakdown.value.deferredAmount))
 
-const dueDateLabel = computed(() => {
-  const base = props.reservation.startISO ? new Date(props.reservation.startISO) : null
-  if (!base || Number.isNaN(base.getTime())) return "le jour d'arrivée"
-  return new Intl.DateTimeFormat('fr-FR', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  }).format(base)
+const splitDueDateLabel = computed(() => formatDateLabel(splitBreakdown.value.deferredDueDateISO ?? props.reservation.startISO))
+const cashDueDateLabel = computed(() => formatDateLabel(cashBreakdown.value.deferredDueDateISO ?? props.reservation.startISO))
+const selectedDueDateLabel = computed(() => formatDateLabel(selectedBreakdown.value.deferredDueDateISO ?? props.reservation.startISO))
+const paymentBrands = computed(() => {
+  const list: string[] = []
+  if (paymentRules.value.methods.card) {
+    list.push('Carte')
+    list.push('Apple Pay')
+  }
+  if (paymentRules.value.methods.sepa) list.push('SEPA')
+  if (paymentRules.value.methods.cash) list.push('Especes')
+  return Array.from(new Set(list))
 })
 
 const listingTitle = computed(() => props.listing.title.title)
@@ -133,13 +193,18 @@ const listingImage = computed(() => {
 const travelerMessageCtaLabel = computed(() => (travelerMessageOpen.value ? 'Masquer' : 'Ajouter'))
 const isPaymentReady = computed(() => Boolean(paymentElement && stripeElements && stripe && paymentIntentId.value))
 const canSubmit = computed(() =>
+  !reservationError.value &&
+  !paymentOptionError.value &&
   !props.isSubmitting &&
   !isPreparingPayment.value &&
   !isConfirmingPayment.value &&
-  isPaymentReady.value,
+  isPaymentReady.value &&
+  !paymentIntentError.value,
 )
 
 const submitLabel = computed(() => {
+  if (reservationError.value) return 'Reservation invalide'
+  if (paymentOptionError.value) return 'Paiement indisponible'
   if (props.isSubmitting) return 'Validation de la réservation...'
   if (isConfirmingPayment.value) return 'Confirmation du paiement...'
   if (isPreparingPayment.value) return 'Préparation du paiement...'
@@ -208,6 +273,21 @@ async function preparePaymentIntent() {
   paymentIntentId.value = null
   resetPaymentElement()
 
+  if (reservationError.value) {
+    paymentIntentError.value = reservationError.value
+    return
+  }
+
+  if (paymentOptionError.value) {
+    paymentIntentError.value = paymentOptionError.value
+    return
+  }
+
+  if (!isChoiceAllowed(paymentChoice.value)) {
+    paymentIntentError.value = resolveChoiceBlockedReason(paymentChoice.value)
+    return
+  }
+
   const setupError = getPaymentSetupError()
   if (setupError) {
     paymentIntentError.value = setupError
@@ -233,6 +313,7 @@ async function preparePaymentIntent() {
         listingId: props.listingId.trim(),
         reservation: props.reservation,
         breakdown,
+        paymentRules: paymentRules.value,
       }),
     })
 
@@ -254,6 +335,10 @@ async function preparePaymentIntent() {
 
 async function confirmCheckout() {
   if (!canSubmit.value) return
+  if (!isChoiceAllowed(paymentChoice.value)) {
+    paymentIntentError.value = resolveChoiceBlockedReason(paymentChoice.value)
+    return
+  }
   if (!stripe || !stripeElements || !paymentIntentId.value) {
     paymentIntentError.value = 'Le paiement n\'est pas prêt. Réessayez dans quelques secondes.'
     return
@@ -289,7 +374,7 @@ async function confirmCheckout() {
 
     emit('confirm', {
       travelerMessage: travelerMessage.value.trim(),
-      paymentChoice: paymentChoice.value,
+      paymentChoice: selectedBreakdown.value.choice,
       payment: {
         breakdown: selectedBreakdown.value,
         paymentIntentId: paymentIntent.id,
@@ -315,6 +400,13 @@ watch(
     props.reservation.nights,
     props.reservation.total,
     paymentChoice.value,
+    paymentRules.value.mode,
+    paymentRules.value.depositPercent,
+    paymentRules.value.balance.type,
+    paymentRules.value.balance.days,
+    allowedPaymentChoices.value.join('|'),
+    reservationError.value,
+    paymentOptionError.value,
   ],
   () => {
     void preparePaymentIntent()
@@ -387,32 +479,49 @@ onBeforeUnmount(() => {
       >
         <label
           class="preference-option"
-          :class="{ 'is-selected': paymentChoice === 'full' }"
+          :class="{ 'is-selected': paymentChoice === 'full', 'is-disabled': !isChoiceAllowed('full') }"
         >
           <input
             v-model="paymentChoice"
             type="radio"
             value="full"
+            :disabled="!isChoiceAllowed('full')"
           />
           <div class="content">
             <p class="title">Payer {{ totalLabel }} maintenant</p>
+            <p
+              v-if="!isChoiceAllowed('full')"
+              class="subtitle"
+            >
+              {{ resolveChoiceBlockedReason('full') }}
+            </p>
           </div>
           <span class="indicator" />
         </label>
 
         <label
           class="preference-option"
-          :class="{ 'is-selected': paymentChoice === 'split' }"
+          :class="{ 'is-selected': paymentChoice === 'split', 'is-disabled': !isChoiceAllowed('split') }"
         >
           <input
             v-model="paymentChoice"
             type="radio"
             value="split"
+            :disabled="!isChoiceAllowed('split')"
           />
           <div class="content">
             <p class="title">Payer une partie maintenant et l'autre plus tard</p>
-            <p class="subtitle">
-              {{ splitNowLabel }} à payer aujourd'hui, {{ splitLaterLabel }} à payer le {{ dueDateLabel }}.
+            <p
+              v-if="isChoiceAllowed('split')"
+              class="subtitle"
+            >
+              {{ splitNowLabel }} à payer aujourd'hui, {{ splitLaterLabel }} à payer le {{ splitDueDateLabel }}.
+            </p>
+            <p
+              v-else
+              class="subtitle"
+            >
+              {{ resolveChoiceBlockedReason('split') }}
             </p>
           </div>
           <span class="indicator" />
@@ -420,31 +529,50 @@ onBeforeUnmount(() => {
 
         <label
           class="preference-option"
-          :class="{ 'is-selected': paymentChoice === 'cash' }"
+          :class="{ 'is-selected': paymentChoice === 'cash', 'is-disabled': !isChoiceAllowed('cash') }"
         >
           <input
             v-model="paymentChoice"
             type="radio"
             value="cash"
+            :disabled="!isChoiceAllowed('cash')"
           />
           <div class="content">
             <p class="title">Payer en espèce</p>
-            <p class="subtitle">
-              {{ cashNowLabel }} à payer aujourd'hui, {{ cashLaterLabel }} en espèce le premier jour de location.
+            <p
+              v-if="isChoiceAllowed('cash')"
+              class="subtitle"
+            >
+              {{ cashNowLabel }} à payer aujourd'hui, {{ cashLaterLabel }} en especes le {{ cashDueDateLabel }}.
+            </p>
+            <p
+              v-else
+              class="subtitle"
+            >
+              {{ resolveChoiceBlockedReason('cash') }}
             </p>
           </div>
           <span class="indicator" />
         </label>
       </div>
+      <p
+        v-if="paymentOptionError || reservationError"
+        class="payment-rule-error"
+      >
+        {{ paymentOptionError ?? reservationError }}
+      </p>
     </section>
 
     <section class="checkout-section">
       <h3>Paiement sécurisé Stripe</h3>
       <div class="payment-brands">
-        <span class="brand">Visa</span>
-        <span class="brand">Mastercard</span>
-        <span class="brand">SEPA</span>
-        <span class="brand">Apple Pay</span>
+        <span
+          v-for="brand in paymentBrands"
+          :key="brand"
+          class="brand"
+        >
+          {{ brand }}
+        </span>
       </div>
 
       <div class="payment-fields">
@@ -454,12 +582,18 @@ onBeforeUnmount(() => {
           <span v-if="selectedBreakdown.deferredAmount > 0">
             · {{ selectedDeferredLabel }}
             <template v-if="selectedBreakdown.deferredMode === 'cash'"> en espèces à l arrivée</template>
-            <template v-else> à payer le {{ dueDateLabel }}</template>
+            <template v-else> à payer le {{ selectedDueDateLabel }}</template>
           </span>
         </p>
 
         <div
-          v-if="isPreparingPayment"
+          v-if="reservationError || paymentOptionError"
+          class="payment-placeholder"
+        >
+          {{ reservationError ?? paymentOptionError }}
+        </div>
+        <div
+          v-else-if="isPreparingPayment"
           class="payment-placeholder"
         >
           Initialisation sécurisée du module Stripe...

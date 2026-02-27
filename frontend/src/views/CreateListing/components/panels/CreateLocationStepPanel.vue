@@ -3,7 +3,7 @@
 <script setup lang="ts">
 import type { RawCore } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
-import LocationPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/LocationPanel.vue'
+import LocationPanel from '@/views/CreateListing/components/panels/ListingPanels/LocationPanel.vue'
 import CreateWizardStepShell from '@/views/CreateListing/components/panels/CreateWizardStepShell.vue'
 
 const props = withDefaults(defineProps<{

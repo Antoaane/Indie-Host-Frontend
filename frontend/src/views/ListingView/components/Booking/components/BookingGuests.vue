@@ -6,11 +6,20 @@ import { Minus, Plus } from 'lucide-vue-next'
 import RelativeOverlay from '@/components/overlays/RelativeOverlay.vue'
 
 type OccupantKey = 'adults' | 'children' | 'babies' | 'animals' | 'pmr'
+type GuestRow = {
+  key: OccupantKey
+  label: string
+  description: string
+  value: number
+  min: number
+  max: number
+  hint?: string
+}
 
 const props = defineProps<{
   open: boolean
   occupantLabel: string
-  occupants: Record<OccupantKey, number>
+  rows: GuestRow[]
   updateCount: (key: OccupantKey, delta: number) => void
 }>()
 
@@ -20,6 +29,22 @@ const emit = defineEmits<{
 }>()
 
 const guestsLayer = ref<HTMLElement | null>(null)
+
+function canDecrease(row: GuestRow): boolean {
+  return row.value > row.min
+}
+
+function canIncrease(row: GuestRow): boolean {
+  return row.value < row.max
+}
+
+function minusLabel(row: GuestRow): string {
+  return `Retirer ${row.label.toLowerCase()}`
+}
+
+function plusLabel(row: GuestRow): string {
+  return `Ajouter ${row.label.toLowerCase()}`
+}
 </script>
 
 <template>
@@ -49,125 +74,32 @@ const guestsLayer = ref<HTMLElement | null>(null)
       @close="emit('close')"
     >
       <div class="dropdown">
-        <div class="item">
+        <div
+          v-for="row in props.rows"
+          :key="row.key"
+          class="item"
+          :class="{ 'is-locked': row.max <= row.min }"
+        >
           <div>
-            <p>Adultes</p>
-            <small>13 ans et plus</small>
+            <p>{{ row.label }}</p>
+            <small>{{ row.description }}</small>
+            <small v-if="row.hint">{{ row.hint }}</small>
           </div>
           <div class="counter">
             <button
               type="button"
-              aria-label="Retirer un adulte"
-              :disabled="occupants.adults <= 1"
-              @click="props.updateCount('adults', -1)"
+              :aria-label="minusLabel(row)"
+              :disabled="!canDecrease(row)"
+              @click="props.updateCount(row.key, -1)"
             >
               <Minus :size="20" />
             </button>
-            <span>{{ occupants.adults }}</span>
+            <span>{{ row.value }}</span>
             <button
               type="button"
-              aria-label="Ajouter un adulte"
-              @click="props.updateCount('adults', 1)"
-            >
-              <Plus :size="20" />
-            </button>
-          </div>
-        </div>
-
-        <div class="item">
-          <div>
-            <p>Enfants</p>
-            <small>2 à 12 ans</small>
-          </div>
-          <div class="counter">
-            <button
-              type="button"
-              aria-label="Retirer un enfant"
-              :disabled="occupants.children <= 0"
-              @click="props.updateCount('children', -1)"
-            >
-              <Minus :size="20" />
-            </button>
-            <span>{{ occupants.children }}</span>
-            <button
-              type="button"
-              aria-label="Ajouter un enfant"
-              @click="props.updateCount('children', 1)"
-            >
-              <Plus :size="20" />
-            </button>
-          </div>
-        </div>
-
-        <div class="item">
-          <div>
-            <p>Bébés</p>
-            <small>Moins de 2 ans</small>
-          </div>
-          <div class="counter">
-            <button
-              type="button"
-              aria-label="Retirer un bébé"
-              :disabled="occupants.babies <= 0"
-              @click="props.updateCount('babies', -1)"
-            >
-              <Minus :size="20" />
-            </button>
-            <span>{{ occupants.babies }}</span>
-            <button
-              type="button"
-              aria-label="Ajouter un bébé"
-              @click="props.updateCount('babies', 1)"
-            >
-              <Plus :size="20" />
-            </button>
-          </div>
-        </div>
-
-        <div class="item">
-          <div>
-            <p>Animaux</p>
-            <small>Chien, chat...</small>
-          </div>
-          <div class="counter">
-            <button
-              type="button"
-              aria-label="Retirer un animal"
-              :disabled="occupants.animals <= 0"
-              @click="props.updateCount('animals', -1)"
-            >
-              <Minus :size="20" />
-            </button>
-            <span>{{ occupants.animals }}</span>
-            <button
-              type="button"
-              aria-label="Ajouter un animal"
-              @click="props.updateCount('animals', 1)"
-            >
-              <Plus :size="20" />
-            </button>
-          </div>
-        </div>
-
-        <div class="item">
-          <div>
-            <p>Personnes PMR</p>
-            <small>Besoin d'aménagement</small>
-          </div>
-          <div class="counter">
-            <button
-              type="button"
-              aria-label="Retirer une personne PMR"
-              :disabled="occupants.pmr <= 0"
-              @click="props.updateCount('pmr', -1)"
-            >
-              <Minus :size="20" />
-            </button>
-            <span>{{ occupants.pmr }}</span>
-            <button
-              type="button"
-              aria-label="Ajouter une personne PMR"
-              @click="props.updateCount('pmr', 1)"
+              :aria-label="plusLabel(row)"
+              :disabled="!canIncrease(row)"
+              @click="props.updateCount(row.key, 1)"
             >
               <Plus :size="20" />
             </button>

@@ -15,7 +15,7 @@
     overflow: hidden;
   }
 
-  >.layout {
+  > .layout {
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -48,7 +48,7 @@
     display: flex;
     flex-direction: column;
 
-    >.content {
+    > .content {
       flex: 1 1 auto;
       min-height: 0;
       display: flex;
@@ -73,18 +73,18 @@
     height: max-content;
     @include buttons.primary($theme: white, $icon-only: true, $deep: true);
 
-    >* {
+    > * {
       width: 40px;
       height: 40px;
     }
 
     &.is-active {
-      >button {
+      > button {
         background: $secondary-dark-background;
         color: $accent;
         outline-color: rgba($secondary-button-reference, 0.9);
 
-        >svg {
+        > svg {
           color: $accent;
           stroke: $accent;
         }
@@ -114,7 +114,7 @@
     align-items: center;
     gap: var(--layout-gap-sm);
 
-    >.avatar {
+    > .avatar {
       width: 52px;
       height: 52px;
       border-radius: 50%;
@@ -125,7 +125,7 @@
       font-weight: 700;
       color: rgba($secondary-text, 0.7);
 
-      >img {
+      > img {
         width: 100%;
         height: 100%;
         object-fit: cover;
@@ -133,12 +133,12 @@
       }
     }
 
-    >.title {
+    > .title {
       display: flex;
       flex-direction: column;
       gap: 0.25rem;
 
-      >h2 {
+      > h2 {
         margin: 0;
         font-size: 1.6rem;
         font-weight: 700;
@@ -146,7 +146,7 @@
         color: rgba($secondary-text, 0.95);
       }
 
-      >p {
+      > p {
         margin: 0;
         font-size: 0.85rem;
         color: rgba($secondary-text, 0.6);
@@ -169,12 +169,12 @@
       justify-content: space-between;
       gap: var(--layout-gap-sm);
 
-      >h3 {
+      > h3 {
         margin: 0;
         font-size: 1.1rem;
       }
 
-      >.reply {
+      > .reply {
         background: none;
         border: none;
         display: inline-flex;
@@ -194,27 +194,127 @@
     }
   }
 
+  .internal-note-card {
+    padding: var(--layout-gap-md);
+    border-radius: borders.$rounded-lg;
+    border: 1px solid rgba($secondary, 0.08);
+    background: $accent-surface-0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-sm);
+
+    .section-title {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--layout-gap-xs);
+
+      > h3 {
+        margin: 0;
+        font-size: 1.1rem;
+      }
+
+      > p {
+        margin: 0;
+        font-size: 0.8rem;
+        color: rgba($secondary-text, 0.6);
+      }
+    }
+
+    .internal-note-input {
+      width: 100%;
+      min-width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+      min-height: 7rem;
+      resize: vertical;
+      padding: 0.8rem;
+      border-radius: borders.$rounded-md;
+      border: 1px solid rgba($secondary, 0.16);
+      background: $accent;
+      color: rgba($secondary-text, 0.9);
+      font-family: inherit;
+      font-size: 0.95rem;
+      line-height: 1.45;
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+
+      &:focus {
+        outline: none;
+        border-color: rgba($secondary-button-reference, 0.75);
+        box-shadow: 0 0 0 3px rgba($secondary-button-reference, 0.18);
+      }
+
+      &:disabled {
+        opacity: 0.75;
+        cursor: not-allowed;
+      }
+    }
+
+    .internal-note-preview {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--layout-gap-sm);
+
+      > p {
+        margin: 0;
+        flex: 1 1 auto;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        color: rgba($secondary-text, 0.82);
+        white-space: pre-wrap;
+      }
+
+      > .edit-note-btn {
+        flex: 0 0 auto;
+        @include buttons.low-btn($color: $secondary, $hover: $accent, $text-color: $accent, $text-hover-color: $secondary, $icon-only: true);
+      }
+    }
+
+    .feedback {
+      margin: 0;
+      font-size: 0.85rem;
+    }
+
+    .feedback.error {
+      color: $bad;
+    }
+  }
+
   .stay-section {
     display: flex;
     flex-direction: column;
     gap: var(--layout-gap-sm);
 
-    >h3 {
-      margin: 0;
-      font-size: 1.1rem;
+    > h3 {
+      @include h2-title($color: $secondary-text, $colorful: false, $bigger: false, $layout-gap: false, $gradiant: false);
     }
 
     .stay-container {
       display: flex;
       gap: var(--layout-gap-md);
       align-items: start;
-
     }
 
     .stay-calendar {
-      flex: 0 0 24rem;
+      flex: 0 0 16rem;
 
-      >.date-picker {
+      @include min-width(xl) {
+        flex: 0 0 18rem;
+      }
+
+      @include min-width(xxl) {
+        flex: 0 0 24rem;
+      }
+
+      @include min-width(xxxl) {
+        flex: 0 0 36rem;
+      }
+
+      > .date-picker {
         width: 100%;
         max-width: none !important;
       }
@@ -228,7 +328,7 @@
       justify-content: center;
       gap: var(--layout-gap-md);
 
-      &>div {
+      & > div {
         width: 100%;
         padding: var(--layout-gap);
         border-radius: borders.$rounded-lg;
@@ -275,18 +375,219 @@
     flex-direction: column;
     gap: var(--layout-gap-sm);
 
-    >h3 {
-      margin: 0;
-      font-size: 1.1rem;
+    > h3 {
+      @include h2-title($color: $secondary-text, $colorful: false, $bigger: false, $layout-gap: false, $gradiant: false);
     }
 
-    >.subtitle {
+    > .subtitle {
       margin: 0;
       font-size: 0.85rem;
       color: rgba($secondary-text, 0.6);
     }
 
+    .schedule-overview {
+      padding: var(--layout-gap-xs) 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.55rem;
+
+      .progress-box {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+      }
+
+      .progress-track {
+        width: 100%;
+        height: 0.38rem;
+        border-radius: 999px;
+        overflow: hidden;
+        background: rgba($secondary, 0.1);
+      }
+
+      .progress-fill {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        transition: width 220ms ease;
+        background: rgba($progressing, 0.95);
+
+        &.is-complete {
+          background: rgba($good, 0.95);
+        }
+      }
+
+      .reference-grid {
+        display: grid;
+        gap: 0.15rem 0.9rem;
+        grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+      }
+
+      .reference-item {
+        display: flex;
+        align-items: baseline;
+        gap: 0.35rem;
+        margin: 0;
+        font-size: 0.83rem;
+        color: rgba($secondary-text, 0.62);
+
+        > span {
+          font-size: inherit;
+          color: inherit;
+        }
+
+        > strong {
+          color: rgba($secondary-text, 0.95);
+          font-size: 0.9rem;
+          font-weight: 700;
+        }
+      }
+    }
+
     .schedule-card {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      .list-entries {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      .payment-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+        padding: var(--layout-gap-md);
+        border-radius: borders.$rounded-lg;
+        border: 1px solid rgba($secondary, 0.08);
+        background: $accent;
+        @include effects.soft-shadow(rgba(0, 0, 0, 0.08), 12px, -4px);
+
+        &.is-online {
+          border-left: 3px solid rgba($secondary, 0.42);
+        }
+
+        &.is-manual {
+          border-left: 3px solid rgba($progressing, 0.7);
+        }
+
+        &.is-deferred {
+          border-left: 3px solid rgba($good, 0.7);
+        }
+      }
+
+      .payment-item-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: var(--layout-gap-sm);
+
+        > h4 {
+          margin: 0;
+          font-size: 1.22rem;
+          line-height: 1.25;
+          font-weight: 600;
+        }
+
+        > .payment-item-actions {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+          gap: 0.4rem;
+
+          > strong {
+            font-size: 2rem;
+            line-height: 1;
+            font-weight: 700;
+            color: rgba($secondary-text, 0.98);
+          }
+
+          > .remove-manual-entry {
+            border: 1px solid rgba($secondary, 0.2);
+            border-radius: borders.$rounded;
+            background: $accent-surface-0;
+            color: rgba($secondary-text, 0.84);
+            font-size: 0.76rem;
+            font-weight: 600;
+            padding: 0.28rem 0.55rem;
+            cursor: pointer;
+            transition: 120ms ease;
+
+            &:hover:not(:disabled) {
+              border-color: rgba($bad, 0.5);
+              color: rgba($bad, 0.95);
+            }
+
+            &:disabled {
+              opacity: 0.6;
+              cursor: not-allowed;
+            }
+          }
+        }
+      }
+
+      .payment-item-rows {
+        display: grid;
+        gap: 0.35rem;
+
+        .row {
+          display: flex;
+          justify-content: space-between;
+          gap: var(--layout-gap-sm);
+          font-size: 0.9rem;
+          color: rgba($secondary-text, 0.85);
+
+          > strong {
+            color: rgba($secondary-text, 0.96);
+            font-weight: 600;
+          }
+        }
+      }
+
+      .status-row {
+        padding-top: 0.25rem;
+        border-top: 1px solid rgba($secondary, 0.08);
+      }
+
+      .entry-state {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        font-size: 0.9rem;
+        font-weight: 700;
+
+        &::after {
+          content: '';
+          width: 0.9rem;
+          height: 0.9rem;
+          border-radius: 999px;
+          background: currentColor;
+          opacity: 0.9;
+        }
+
+        &.is-paid {
+          color: rgba($good, 0.92);
+        }
+
+        &.is-pending {
+          color: rgba($progressing, 0.92);
+        }
+      }
+
+      .list-empty {
+        margin: 0;
+        font-size: 0.82rem;
+        color: rgba($secondary-text, 0.56);
+        text-align: center;
+        padding: var(--layout-gap-sm);
+        border-radius: borders.$rounded;
+        border: 1px solid rgba($secondary, 0.08);
+        background: $accent-surface-0;
+      }
+    }
+
+    .payment-editor-card {
       padding: var(--layout-gap-md);
       border-radius: borders.$rounded-lg;
       border: 1px solid rgba($secondary, 0.08);
@@ -296,60 +597,104 @@
       gap: var(--layout-gap-sm);
       @include effects.soft-shadow(rgba(0, 0, 0, 0.08), 12px, -4px);
 
-      .summary {
+      .section-title {
         display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: var(--layout-gap-sm);
+        flex-direction: column;
+        gap: 0.2rem;
 
-        .label {
+        > h4 {
           margin: 0;
-          font-size: 0.85rem;
+          font-size: 1rem;
+        }
+
+        > p {
+          margin: 0;
+          font-size: 0.82rem;
           color: rgba($secondary-text, 0.6);
-        }
-
-        .value {
-          margin: 0.2rem 0 0;
-          font-size: 1.4rem;
-          font-weight: 700;
-        }
-
-        .status {
-          padding: 0.35rem 0.75rem;
-          border-radius: borders.$rounded;
-          font-size: 0.75rem;
-          font-weight: 600;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-          border: 1px solid transparent;
-
-          &.is-paid {
-            background: rgba($good, 0.12);
-            color: rgba($good, 0.9);
-            border-color: rgba($good, 0.4);
-          }
-
-          &.is-pending {
-            background: rgba($progressing, 0.12);
-            color: rgba($progressing, 0.9);
-            border-color: rgba($progressing, 0.4);
-          }
         }
       }
 
-      .rows {
-        display: grid;
-        gap: 0.35rem;
+      .payment-editor {
+        display: flex;
+        flex-direction: column;
+        gap: var(--layout-gap-sm);
 
-        .row {
+        .hint {
+          margin: 0;
+          font-size: 0.8rem;
+          color: rgba($secondary-text, 0.62);
+        }
+
+        .manual-editor {
           display: flex;
-          justify-content: space-between;
-          font-size: 0.85rem;
-          color: rgba($secondary-text, 0.75);
+          flex-direction: column;
+          gap: var(--layout-gap-xs);
+        }
 
-          strong {
-            color: rgba($secondary-text, 0.95);
-            font-weight: 600;
+        .manual-add {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr);
+          gap: 0.45rem;
+
+          @include min-width(md) {
+            grid-template-columns: 1fr 0.85fr 1fr 1.4fr auto;
+          }
+
+          > input,
+          > select {
+            border: 1px solid rgba($secondary, 0.22);
+            border-radius: borders.$rounded;
+            padding: 0.5rem 0.6rem;
+            font-size: 0.85rem;
+            background: $accent-surface-0;
+            color: rgba($secondary-text, 0.92);
+
+            &:focus {
+              outline: 2px solid rgba($secondary, 0.2);
+              border-color: rgba($secondary, 0.45);
+            }
+
+            &:disabled {
+              background: rgba($secondary, 0.08);
+              color: rgba($secondary-text, 0.55);
+              cursor: not-allowed;
+            }
+          }
+        }
+
+        .manual-add > button {
+          border: 1px solid rgba($secondary, 0.22);
+          border-radius: borders.$rounded;
+          background: $accent-surface-0;
+          color: rgba($secondary-text, 0.86);
+          font-size: 0.8rem;
+          font-weight: 600;
+          padding: 0.5rem 0.7rem;
+          cursor: pointer;
+          transition: 120ms ease;
+
+          &:hover:not(:disabled) {
+            background: rgba($secondary, 0.08);
+            border-color: rgba($secondary, 0.36);
+          }
+
+          &:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+          }
+        }
+
+        .feedback {
+          margin: 0;
+          font-size: 0.82rem;
+          font-weight: 600;
+
+          &.error {
+            color: $bad;
+          }
+
+          &.success {
+            color: rgba($good, 0.9);
           }
         }
       }
@@ -373,16 +718,16 @@
     gap: var(--layout-gap-xs);
     padding: var(--layout-gap-sm);
 
-    >.danger {
+    > .danger {
       @include buttons.primary($theme: dark, $fullwidth: true);
 
       &:hover {
-        &>* {
+        & > * {
           color: $accent !important;
           background-color: $bad !important;
           outline: 3px solid rgba($accent, 0.75) !important;
 
-          &>* {
+          & > * {
             color: $accent !important;
             stroke: $accent !important;
           }
@@ -390,7 +735,7 @@
       }
     }
 
-    >.error {
+    > .error {
       margin: 0;
       font-size: 0.875rem;
       color: $bad;

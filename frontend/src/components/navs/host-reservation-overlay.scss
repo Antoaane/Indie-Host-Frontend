@@ -7,8 +7,9 @@
 @use '@/styles/components/inputs' as inputs;
 
 .host-reservation-overlay {
-  width: min(92vw, 640px);
-  max-height: calc(80vh);
+  width: min(100vw, 640px);
+  height: 100vh;
+  max-height: 100vh;
 
   display: flex;
   flex-direction: column;
@@ -17,10 +18,14 @@
   padding: var(--layout-gap-sm);
   background: rgba($accent, 0.5);
   backdrop-filter: blur(12px);
-  border-radius: borders.$rounded-xxl;
+  border-radius: 0;
 
   @include big-shadow($color: rgba(0, 0, 0, 0.25));
-  // @extend .scrollbar;
+
+  @include min-width(lg) {
+    border-top-left-radius: borders.$rounded-xxl;
+    border-bottom-left-radius: borders.$rounded-xxl;
+  }
 
   .panel {
     flex: 1 1 auto;
@@ -30,7 +35,7 @@
     flex-direction: column;
     gap: var(--layout-gap);
 
-    max-height: calc(80vh - 1.5rem);
+    max-height: 100%;
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;

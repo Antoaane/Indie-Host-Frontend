@@ -1,4 +1,4 @@
-<!-- File: src/components/svgs/images/ShapesBg.vue -->
+<!-- File: src/components/svgs/svgs-old/ShapesBg.vue -->
 
 <template>
   <svg
