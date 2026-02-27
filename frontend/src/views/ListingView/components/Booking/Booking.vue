@@ -29,6 +29,16 @@ type ReservationPayload = {
   occupants: Record<OccupantKey, number>
   fees: FeeItem[]
   total: number
+  pricing?: {
+    nightlySubtotal: number
+    nightlyDiscountTotal: number
+    nightlyDiscountPercent: number
+    discountThresholdNights: number | null
+    nightlyTotal: number
+    averageNightlyPrice: number
+    feesTotal: number
+    extraGuestsTotal: number
+  }
 }
 
 const props = withDefaults(
@@ -334,7 +344,7 @@ const priceBreakdown = computed(() => {
     } else {
       list.push({
         label: `${nights.value} nuit${nights.value > 1 ? 's' : ''} (${currency.format(pricePerNight.value)} par nuit)`,
-        amount: currency.format(breakdown.nightlyTotal),
+        amount: currency.format(breakdown.nightlySubtotal),
       })
     }
   }
@@ -342,7 +352,16 @@ const priceBreakdown = computed(() => {
   if (!list.length && nights.value > 0) {
     list.push({
       label: `${nights.value} nuit${nights.value > 1 ? 's' : ''} (${currency.format(pricePerNight.value)} par nuit)`,
-      amount: currency.format(nightlyBreakdown.value.nightlyTotal),
+      amount: currency.format(nightlyBreakdown.value.nightlySubtotal),
+    })
+  }
+
+  if (pricingBreakdown.value.nightly.durationDiscountTotal > 0) {
+    const threshold = pricingBreakdown.value.nightly.appliedDurationDiscountTier?.minNights
+    const thresholdLabel = threshold ? `dès ${threshold} nuit${threshold > 1 ? 's' : ''}` : 'long séjour'
+    list.push({
+      label: `Réduction ${pricingBreakdown.value.nightly.durationDiscountPercent}% (${thresholdLabel})`,
+      amount: `−${currency.format(pricingBreakdown.value.nightly.durationDiscountTotal)}`,
     })
   }
 
@@ -415,6 +434,16 @@ function reserve() {
     occupants: { ...validation.occupants },
     fees: pricingBreakdown.value.fees,
     total: pricingBreakdown.value.total,
+    pricing: {
+      nightlySubtotal: Math.round(pricingBreakdown.value.nightly.nightlySubtotal),
+      nightlyDiscountTotal: Math.round(pricingBreakdown.value.nightly.durationDiscountTotal),
+      nightlyDiscountPercent: pricingBreakdown.value.nightly.durationDiscountPercent,
+      discountThresholdNights: pricingBreakdown.value.nightly.appliedDurationDiscountTier?.minNights ?? null,
+      nightlyTotal: Math.round(pricingBreakdown.value.nightly.nightlyTotal),
+      averageNightlyPrice: pricingBreakdown.value.nightly.averageNightlyPrice,
+      feesTotal: pricingBreakdown.value.feesTotal,
+      extraGuestsTotal: pricingBreakdown.value.extraGuestsTotal,
+    },
   }
   emit('reserve', payload)
 }

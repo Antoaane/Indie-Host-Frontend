@@ -47,7 +47,8 @@ const props = defineProps<{
   > .content {
     @extend %panel-body;
 
-    > [class*='create-'][class$='-panel'] {
+    > [class*='create-'][class$='-panel'],
+    > [class*='editor-'][class$='-panel'] {
       border: none;
       box-shadow: none;
       background: transparent;

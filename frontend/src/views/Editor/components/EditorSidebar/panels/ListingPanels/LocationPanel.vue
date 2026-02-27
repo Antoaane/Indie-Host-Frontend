@@ -48,6 +48,22 @@ const regionValue = computed(() => String(props.core?.region ?? ''))
 const preciseAddress = computed(() => normalizeAddress(preciseAddressRaw.value))
 
 const geocodeQueryMinLength = locationValidation.geocodeQueryMinLength
+const mapLatitude = computed(() => {
+  const value = Number(props.core?.latitude ?? props.core?.lat)
+  return Number.isFinite(value) ? value : null
+})
+const mapLongitude = computed(() => {
+  const value = Number(props.core?.longitude ?? props.core?.lng)
+  return Number.isFinite(value) ? value : null
+})
+const mapZoom = computed(() => {
+  const value = Number(props.core?.zoom)
+  return Number.isFinite(value) && value > 0 ? value : 13
+})
+const mapPreviewSrc = computed(() => {
+  if (mapLatitude.value === null || mapLongitude.value === null) return ''
+  return `https://www.google.com/maps?hl=fr&ll=${mapLatitude.value},${mapLongitude.value}&z=${mapZoom.value}&output=embed`
+})
 
 type NominatimAddress = {
   city?: string
@@ -359,6 +375,21 @@ async function maybeResolvePreciseAddress(rawAddress?: string) {
           {{ fieldCounter(regionLength, locationLimits.region) }}
         </p>
       </div>
+
+      <div
+        v-if="mapPreviewSrc"
+        class="map-preview"
+      >
+        <iframe
+          class="frame"
+          :src="mapPreviewSrc"
+          title="Aperçu de localisation sur Google Maps"
+          allowfullscreen
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+        >
+        </iframe>
+      </div>
     </div>
   </section>
 </template>
@@ -463,6 +494,23 @@ async function maybeResolvePreciseAddress(rawAddress?: string) {
           @include little-text($thin: false);
           color: rgba($secondary, 0.7);
         }
+      }
+    }
+
+    > .map-preview {
+      border: 1px solid rgba($secondary, 0.12);
+      border-radius: 0.75rem;
+      overflow: hidden;
+
+      > .frame {
+        width: 100%;
+        max-width: 100%;
+        display: block;
+        height: 220px;
+        border: 0;
+        pointer-events: auto;
+        touch-action: pan-x pan-y;
+        overscroll-behavior: contain;
       }
     }
   }

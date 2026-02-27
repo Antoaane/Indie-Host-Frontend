@@ -14,7 +14,7 @@ html:has(#checkout) {
   height: 100%;
   display: flex;
   flex-direction: column;
-  gap: var(--layout-gap-lg);
+  gap: var(--layout-gap);
 
   background: $accent;
   border-radius: borders.$rounded-xxl;
@@ -153,6 +153,13 @@ html:has(#checkout) {
     >h3 {
       margin: 0;
       @include h3-title($colorful: false);
+      font-size: 1.2rem;
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: 0.01em;
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
     }
 
     >.section-subtitle {
@@ -166,12 +173,153 @@ html:has(#checkout) {
   }
 
   >.checkout-section+.checkout-section {
-    margin-top: var(--layout-gap-sm);
+    margin-top: var(--layout-gap-md);
+  }
+
+  .progress-section-title {
+    margin: 0;
+  }
+
+  .section-title-label {
+    min-width: 0;
+  }
+
+  .progress-step-indicator {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid rgba($secondary, 0.2);
+    background: rgba($secondary, 0.06);
+    color: rgba($secondary-text, 0.9);
+    font-size: 0.78rem;
+    font-weight: 700;
+
+    &.is-active {
+      border-color: rgba($secondary, 0.45);
+      background: rgba($secondary, 0.14);
+    }
+
+    &.is-complete {
+      border-color: rgba($secondary, 0.9);
+      background: $secondary-dark-background;
+      color: $accent;
+    }
+
+    &.is-locked {
+      border-color: rgba($secondary, 0.12);
+      background: $accent-surface-1;
+      color: rgba($secondary-text, 0.55);
+    }
+  }
+
+  .checkout-progress-section {
+    &.is-locked {
+      opacity: 0.9;
+    }
+
+    .progress-section-toggle {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      border: none;
+      padding: 0;
+      background: transparent;
+      color: inherit;
+      text-align: left;
+      cursor: pointer;
+      font-size: 1.2rem;
+      font-weight: 700;
+      line-height: 1.2;
+      letter-spacing: 0.01em;
+      margin-bottom: 0 !important;
+
+      @include h3-title($colorful: false);
+    }
+
+    .progress-step-chevron {
+      margin-left: auto;
+      color: rgba($secondary-text, 0.7);
+      transform: rotate(0deg);
+      transition: transform 220ms ease, color 220ms ease;
+
+      &.is-open {
+        transform: rotate(180deg);
+        color: rgba($secondary-text, 0.95);
+      }
+    }
+
+    .progress-section-body {
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-sm);
+      margin-top: 0.2rem;
+
+      &.is-disabled {
+        opacity: 0.62;
+        pointer-events: none;
+      }
+
+      >.section-subtitle {
+        @include little-text($color: rgba($secondary-text, 0.7));
+      }
+    }
+
+    .progress-check-field {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.55rem;
+      padding: 0.75rem 0.9rem;
+      border-radius: borders.$rounded-md;
+      border: 1px solid rgba($secondary, 0.12);
+      background: $accent-surface-1;
+
+      >input {
+        margin: 0.2rem 0 0;
+        width: 1rem;
+        height: 1rem;
+        accent-color: $secondary;
+
+        &:disabled {
+          cursor: not-allowed;
+        }
+      }
+
+      >span {
+        @include little-text($color: rgba($secondary-text, 0.78), $thin: false);
+      }
+    }
+  }
+
+  .checkout-step-expand-enter-active,
+  .checkout-step-expand-leave-active {
+    overflow: hidden;
+    transition: max-height 280ms ease, opacity 220ms ease, transform 220ms ease;
+  }
+
+  .checkout-step-expand-enter-from,
+  .checkout-step-expand-leave-to {
+    max-height: 0;
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  .checkout-step-expand-enter-to,
+  .checkout-step-expand-leave-from {
+    max-height: 1200px;
+    opacity: 1;
+    transform: translateY(0);
   }
 
   .preference-card {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-auto-rows: 1fr;
+    align-items: stretch;
     border-radius: borders.$rounded-xl;
     border: 1px solid rgba($secondary, 0.1);
     background: $accent;
@@ -249,12 +397,14 @@ html:has(#checkout) {
       }
 
       .subtitle {
+        margin: 0;
         @include little-text($color: rgba($secondary-text, 0.7), $thin: false);
         line-height: 1.3;
       }
     }
 
     .indicator {
+      align-self: center;
       width: 1.1rem;
       height: 1.1rem;
       border-radius: 999px;
@@ -347,9 +497,67 @@ html:has(#checkout) {
       background: $accent;
     }
 
+    .payment-card-form,
+    .payment-offline {
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+      // padding: 0.8rem 0.9rem;
+      border-radius: borders.$rounded-md;
+      // border: 1px solid rgba($secondary, 0.12);
+      background: $accent;
+    }
+
+    .payment-card-grid,
+    .payment-offline-grid {
+      display: grid;
+      gap: 0.6rem;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .payment-card-field,
+    .payment-offline-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+
+      >span {
+        @include little-text($color: rgba($secondary-text, 0.75), $thin: false);
+      }
+
+      >input {
+        width: 100%;
+        box-sizing: border-box;
+        min-height: 2.5rem;
+        border-radius: borders.$rounded-md;
+        border: 1px solid rgba($secondary, 0.16);
+        background: $accent;
+        color: $secondary-text;
+        padding: 0.5rem 0.7rem;
+        font: inherit;
+
+        &:focus {
+          outline: 2px solid rgba($secondary, 0.24);
+          outline-offset: 1px;
+        }
+      }
+    }
+
     .payment-error {
       margin: 0;
       @include little-text($color: #a42828, $thin: false);
+    }
+
+    .payment-reveal-hint {
+      margin: 0;
+      @include little-text($color: rgba($secondary-text, 0.68), $thin: false);
+    }
+
+    @media (max-width: 600px) {
+      .payment-card-grid,
+      .payment-offline-grid {
+        grid-template-columns: 1fr;
+      }
     }
   }
 
@@ -396,6 +604,11 @@ html:has(#checkout) {
       font-size: 0.9rem;
     }
 
+    >.field-help {
+      margin: 0;
+      @include little-text($color: rgba($secondary-text, 0.65));
+    }
+
     >textarea {
       width: 100%;
       box-sizing: border-box;
@@ -416,15 +629,43 @@ html:has(#checkout) {
     }
   }
 
-  .info-expand-enter-active,
-  .info-expand-leave-active {
-    transition: opacity 180ms ease, transform 180ms ease;
-  }
+  .phone-input-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    // padding: var(--layout-gap-sm) var(--layout-gap-md);
 
-  .info-expand-enter-from,
-  .info-expand-leave-to {
-    opacity: 0;
-    transform: translateY(-4px);
+    background: $accent;
+    // border: 1px solid rgba($secondary, 0.08);
+    border-radius: borders.$rounded-lg;
+
+    >label {
+      margin: 0;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    >input {
+      width: 100%;
+      box-sizing: border-box;
+      min-height: 2.7rem;
+      border-radius: borders.$rounded-md;
+      border: 1px solid rgba($secondary, 0.16);
+      background: $accent;
+      color: $secondary-text;
+      padding: 0.5rem 0.7rem;
+      font: inherit;
+
+      &:focus {
+        outline: 2px solid rgba($secondary, 0.25);
+        outline-offset: 1px;
+      }
+    }
+
+    >.field-help {
+      margin: 0;
+      @include little-text($color: rgba($secondary-text, 0.65));
+    }
   }
 
   .add-button {
@@ -433,19 +674,6 @@ html:has(#checkout) {
     >button {
       padding-inline: 1.2rem;
       white-space: nowrap;
-    }
-  }
-
-  .policy-list {
-    margin: 0;
-    padding-left: 1.1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-
-    li {
-      @include base-text($thin: false);
-      line-height: 1.45;
     }
   }
 
@@ -476,7 +704,7 @@ html:has(#checkout) {
   }
 
   @include min-width(lg) {
-    gap: var(--layout-gap-lg);
+    gap: var(--layout-gap);
   }
 }
 

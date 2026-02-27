@@ -28,7 +28,11 @@
       "bedType": {
         "simple": "{count, plural, one {lit simple} other {lits simples}}",
         "double": "{count, plural, one {lit double} other {lits doubles}}",
-        "bunk": "{count, plural, one {lit superposé} other {lits superposés}}"
+        "bunk": "{count, plural, one {lit superposé} other {lits superposés}}",
+        "sofa-bed": "{count, plural, one {canapé-lit} other {canapés-lits}}",
+        "futon": "{count, plural, one {futon} other {futons}}",
+        "crib": "{count, plural, one {lit bébé} other {lits bébé}}",
+        "custom": "{count, plural, one {lit personnalisé} other {lits personnalisés}}"
       }
     },
     "amenities": {

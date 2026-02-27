@@ -424,32 +424,38 @@ $editor-listing-card-target-width: 20rem;
 
               >.nav {
                 position: absolute;
-                top: 50%;
-                transform: translateY(-50%);
+                top: 0;
+                bottom: 0;
+                width: clamp(2.8rem, 14%, 3.75rem);
+                display: flex;
+                align-items: center;
+                justify-content: center;
 
-                width: 34px;
-                height: 34px;
-                display: grid;
-                place-items: center;
+                border: 0;
+                border-radius: 0;
+                background: transparent;
+                color: rgba($accent, 0.95);
 
-                border-radius: borders.$rounded;
-                border: 1px solid rgba($secondary, 0.08);
-                background: rgba($accent, 0.92);
-                color: rgba($secondary-text, 0.85);
-                box-shadow: 0 6px 12px rgba($secondary, 0.12);
-
-                opacity: 1;
+                opacity: 0.85;
                 @include animations.transition(200ms);
                 pointer-events: auto;
                 padding: 0;
                 cursor: pointer;
 
                 &.is-prev {
-                  left: 10px;
+                  left: 0;
+                  background: linear-gradient(90deg, rgba($secondary-dark-background, 0.42) 0%, rgba($secondary-dark-background, 0) 100%);
                 }
 
                 &.is-next {
-                  right: 10px;
+                  right: 0;
+                  background: linear-gradient(270deg, rgba($secondary-dark-background, 0.42) 0%, rgba($secondary-dark-background, 0) 100%);
+                }
+
+                &:hover,
+                &:focus-visible {
+                  opacity: 1;
+                  color: rgba($accent, 1);
                 }
               }
 
@@ -730,7 +736,7 @@ $editor-listing-card-target-width: 20rem;
             >.media {
               >.carousel {
                 >.nav {
-                  opacity: 0;
+                  opacity: 0.6;
                 }
               }
             }
@@ -741,7 +747,7 @@ $editor-listing-card-target-width: 20rem;
               >.media {
                 >.carousel {
                   >.nav {
-                    opacity: 1;
+                    opacity: 0.95;
                   }
                 }
               }

@@ -48,7 +48,10 @@ const submitError = computed(() => submitState.error)
 
 <template>
   <CreateListingLayout>
-    <div class="btn-primary__white quit-floating">
+    <!-- <div
+      v-if="!isPreviewStage"
+      class="btn-primary__white quit-floating"
+    >
       <button
         type="button"
         :disabled="submitState.isSubmitting"
@@ -56,11 +59,15 @@ const submitError = computed(() => submitState.error)
       >
         Quitter
       </button>
-    </div>
+    </div> -->
 
-    <CreateListingProgressBar :progress-percent="progressPercent" />
+    <CreateListingProgressBar
+      v-if="!isPreviewStage"
+      :progress-percent="progressPercent"
+    />
 
     <CreateListingStepsTabs
+      v-if="!isPreviewStage"
       :items="stepItems"
       @select="goToStep"
     />

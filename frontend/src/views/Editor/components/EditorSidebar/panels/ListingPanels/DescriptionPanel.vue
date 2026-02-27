@@ -1,7 +1,9 @@
 <!-- File: src/views/Editor/components/EditorSidebar/panels/ListingPanels/DescriptionPanel.vue -->
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { Maximize2, X } from 'lucide-vue-next'
+import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'
 import type { RawCore } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
@@ -26,12 +28,18 @@ const description = computed({
   set: (value: string) => emit('patch', { core: { description: value } }),
 })
 
-const editor = ref<InstanceType<typeof QuillyEditor>>()
+const inlineEditor = ref<InstanceType<typeof QuillyEditor> | null>(null)
+const overlayEditor = ref<InstanceType<typeof QuillyEditor> | null>(null)
 const content = ref(description.value)
 let quill: Quill | undefined
 const descriptionValidation = editorStatic.validation.listing.description
 const quillLengthLimit = descriptionValidation.maxPlainText + 1
 const plainTextLength = ref(plainTextLengthFromHtml(content.value))
+const isFullscreenOpen = ref(false)
+const fullscreenOpenAriaLabel = 'Ouvrir la description en plein écran'
+const fullscreenCloseAriaLabel = 'Fermer la description en plein écran'
+const fullscreenOverlayAriaLabel = 'Description en plein écran'
+const overlayTitleId = `editor-description-overlay-title-${Math.random().toString(36).slice(2, 9)}`
 
 watch(description, (value) => {
   if (value !== content.value) {
@@ -114,22 +122,57 @@ const toolbarLabels = computed(() => ({
   '--editor-ql-title': `'${panelContent.toolbar.title}'`,
 }))
 
-onMounted(() => {
-  quill = editor.value?.initialize(Quill)
+function initializeEditor() {
+  const currentEditor = isFullscreenOpen.value ? overlayEditor.value : inlineEditor.value
+  const instance = currentEditor?.initialize(Quill)
+  if (!instance) return
+  quill = instance
   trimContentToLimit()
   plainTextLength.value = plainTextLengthFromHtml(content.value)
+}
+
+function openFullscreen() {
+  isFullscreenOpen.value = true
+}
+
+function closeFullscreen() {
+  isFullscreenOpen.value = false
+}
+
+watch(isFullscreenOpen, async () => {
+  await nextTick()
+  initializeEditor()
+})
+
+onMounted(async () => {
+  await nextTick()
+  initializeEditor()
 })
 </script>
 
 <template>
   <section class="editor-description-panel">
     <div class="header">
-      <h3>{{ panelContent.title }}</h3>
-      <p>{{ panelContent.subtitle }}</p>
+      <div class="main">
+        <h3>{{ panelContent.title }}</h3>
+        <p>{{ panelContent.subtitle }}</p>
+      </div>
+
+      <div class="actions">
+        <button
+          type="button"
+          :aria-label="fullscreenOpenAriaLabel"
+          :title="fullscreenOpenAriaLabel"
+          @click="openFullscreen"
+        >
+          <Maximize2 :size="17" />
+        </button>
+      </div>
     </div>
 
     <div
-      class="body"
+      v-if="!isFullscreenOpen"
+      class="body description-editor-shell"
       :style="toolbarLabels"
       :class="{
         'is-error': hasLengthError,
@@ -146,7 +189,7 @@ onMounted(() => {
       </div>
       -->
       <QuillyEditor
-        ref="editor"
+        ref="inlineEditor"
         :options="options"
         v-model="content"
       />
@@ -160,6 +203,58 @@ onMounted(() => {
         {{ descriptionMeta }}
       </p>
     </div>
+
+    <AbsoluteOverlay
+      class="description-overlay"
+      :open="isFullscreenOpen"
+      mode="centered"
+      :aria-label="fullscreenOverlayAriaLabel"
+      :aria-labelledby="overlayTitleId"
+      @close="closeFullscreen"
+    >
+      <div class="description-overlay-panel">
+        <div class="overlay-header">
+          <h4 :id="overlayTitleId">
+            {{ panelContent.title }}
+          </h4>
+
+          <div class="overlay-close">
+            <button
+              type="button"
+              :aria-label="fullscreenCloseAriaLabel"
+              :title="fullscreenCloseAriaLabel"
+              @click="closeFullscreen"
+            >
+              <X :size="18" />
+            </button>
+          </div>
+        </div>
+
+        <div
+          class="overlay-body description-editor-shell"
+          :style="toolbarLabels"
+          :class="{
+            'is-error': hasLengthError,
+            'is-warning': hasLengthWarning,
+          }"
+        >
+          <QuillyEditor
+            ref="overlayEditor"
+            :options="options"
+            v-model="content"
+          />
+          <p
+            class="meta"
+            :class="{
+              'is-error': hasLengthError,
+              'is-warning': hasLengthWarning,
+            }"
+          >
+            {{ descriptionMeta }}
+          </p>
+        </div>
+      </div>
+    </AbsoluteOverlay>
   </section>
 </template>
 
@@ -169,6 +264,7 @@ onMounted(() => {
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
 @use '@/styles/variables/animations' as animations;
+@use '@/styles/components/buttons' as buttons;
 @use '@/styles/components/inputs' as inputs;
 @use '@/views/Editor/components/EditorSidebar/panels/panel.scss' as *;
 
@@ -176,116 +272,220 @@ onMounted(() => {
   @extend %panel;
 
   > .header {
-    @extend %panel-header;
+    margin-bottom: var(--layout-gap);
+
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--layout-gap-sm);
+
+    > .main {
+      min-width: 0;
+      flex: 1 1 auto;
+
+      > h3 {
+        @extend %panel-title;
+      }
+
+      > p {
+        @extend %panel-subtitle;
+      }
+    }
+
+    > .actions {
+      @include buttons.low-btn($icon-only: true);
+      flex: 0 0 auto;
+
+      > * {
+        width: 2.2rem;
+        height: 2.2rem;
+      }
+    }
   }
 
   > .body {
-    @extend %panel-body;
+    max-height: clamp(18rem, 58vh, 28rem);
+  }
+}
 
-    > .textarea {
-      @include inputs.textarea($theme: base);
-    }
+.description-editor-shell {
+  @extend %panel-body;
+  min-height: 0;
+  overflow: hidden;
 
-    > .ql-toolbar {
-      border: 0.5px rgba($secondary, 0.1) solid;
-      border-radius: borders.$rounded-md;
-      background-color: $accent;
+  > .textarea {
+    @include inputs.textarea($theme: base);
+  }
 
-      color: $secondary;
+  > .ql-toolbar {
+    border: 0.5px rgba($secondary, 0.1) solid;
+    border-radius: borders.$rounded-md;
+    background-color: $accent;
 
-      box-shadow: 0 0 0 0 rgba($accent, 0);
+    color: $secondary;
 
-      @include soft-shadow();
+    box-shadow: 0 0 0 0 rgba($accent, 0);
 
-      .ql-header {
-        .ql-picker-item::before {
-          content: var(--editor-ql-text);
-        }
+    @include soft-shadow();
 
-        .ql-picker-item[data-value='2']::before {
-          content: var(--editor-ql-title);
-        }
+    .ql-header {
+      .ql-picker-item::before {
+        content: var(--editor-ql-text);
+      }
 
-        .ql-picker-label::before {
-          content: var(--editor-ql-text);
-        }
+      .ql-picker-item[data-value='2']::before {
+        content: var(--editor-ql-title);
+      }
 
-        .ql-picker-label[data-value='2']::before {
-          content: var(--editor-ql-title);
-        }
+      .ql-picker-label::before {
+        content: var(--editor-ql-text);
+      }
 
+      .ql-picker-label[data-value='2']::before {
+        content: var(--editor-ql-title);
+      }
+
+      * {
+        color: $secondary !important;
+        @include animations.transition($duration: 150ms);
+      }
+
+      svg {
         * {
-          color: $secondary !important;
+          stroke: $secondary !important;
+
           @include animations.transition($duration: 150ms);
         }
-
-        svg {
-          * {
-            stroke: $secondary !important;
-
-            @include animations.transition($duration: 150ms);
-          }
-        }
-
-        &:hover {
-          * {
-            color: rgba($secondary, 0.8) !important;
-          }
-
-          svg {
-            * {
-              stroke: rgba($secondary, 0.8) !important;
-            }
-          }
-        }
       }
 
-      button {
-        border-radius: borders.$rounded-md;
-
-        @include animations.transition($duration: 150ms);
+      &:hover {
+        * {
+          color: rgba($secondary, 0.8) !important;
+        }
 
         svg {
           * {
-            stroke: $secondary !important;
-
-            @include animations.transition($duration: 150ms);
-          }
-        }
-
-        &:hover {
-          background-color: $accent-surface-3;
-        }
-
-        &.ql-active {
-          background-color: $secondary;
-
-          svg {
-            * {
-              stroke: $accent !important;
-            }
+            stroke: rgba($secondary, 0.8) !important;
           }
         }
       }
     }
 
-    > .ql-container {
-      @include inputs.richtext($theme: base);
-    }
+    button {
+      border-radius: borders.$rounded-md;
 
-    > .meta {
-      margin: 0;
-      @include little-text($thin: false);
-      color: rgba($secondary, 0.7);
+      @include animations.transition($duration: 150ms);
 
-      &.is-warning {
-        color: #9c6b00;
+      svg {
+        * {
+          stroke: $secondary !important;
+
+          @include animations.transition($duration: 150ms);
+        }
       }
 
-      &.is-error {
-        color: #b3261e;
+      &:hover {
+        background-color: $accent-surface-3;
+      }
+
+      &.ql-active {
+        background-color: $secondary;
+
+        svg {
+          * {
+            stroke: $accent !important;
+          }
+        }
       }
     }
   }
+
+  > .ql-container {
+    @include inputs.richtext($theme: base);
+    min-height: 0;
+
+    > .ql-editor {
+      max-height: clamp(11rem, 34vh, 18rem);
+      overflow-y: auto;
+    }
+  }
+
+  > .meta {
+    margin: 0;
+    @include little-text($thin: false);
+    color: rgba($secondary, 0.7);
+
+    &.is-warning {
+      color: #9c6b00;
+    }
+
+    &.is-error {
+      color: #b3261e;
+    }
+  }
+}
+
+.description-overlay {
+  align-items: center !important;
+  justify-content: center !important;
+
+  > .description-overlay-panel {
+    width: min(56rem, 100%);
+    min-width: min(34rem, calc(100vw - var(--layout-gap)));
+    height: 84vh;
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap);
+    padding: var(--layout-gap);
+    border-radius: borders.$rounded-xl;
+    border: 1px solid rgba($secondary, 0.12);
+    background: $accent;
+    box-shadow: 0 18px 40px rgba($secondary, 0.2);
+  }
+
+  .overlay-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--layout-gap-sm);
+
+    > h4 {
+      margin: 0;
+      @include h4-title();
+    }
+  }
+
+  .overlay-close {
+    @include buttons.low-btn($icon-only: true);
+
+    > * {
+      width: 2.25rem;
+      height: 2.25rem;
+    }
+  }
+
+  .overlay-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+
+    > .ql-container {
+      flex: 1 1 auto;
+      min-height: 0;
+
+      > .ql-editor {
+        height: 100%;
+        max-height: none;
+      }
+    }
+  }
+
+  // @include min-width(md) {
+  //   > .description-overlay-panel {
+  //     min-width: 0;
+  //     width: calc(100vw - var(--layout-gap));
+  //     padding: var(--layout-gap-sm);
+  //   }
+  // }
 }
 </style>

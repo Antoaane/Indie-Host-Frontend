@@ -3,9 +3,19 @@
 import { loadStripe, type Stripe } from '@stripe/stripe-js'
 
 let stripePromise: Promise<Stripe | null> | null = null
+const TRUTHY_ENV_VALUES = new Set(['1', 'true', 'yes', 'on'])
+
+function isTruthyEnvFlag(value: unknown): boolean {
+  if (typeof value !== 'string') return false
+  return TRUTHY_ENV_VALUES.has(value.trim().toLowerCase())
+}
 
 export function getStripePublishableKey(): string {
   return (import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ?? '').trim()
+}
+
+export function isStripeCheckoutOfflineModeEnabled(): boolean {
+  return isTruthyEnvFlag(import.meta.env.VITE_STRIPE_CHECKOUT_OFFLINE_MODE ?? '')
 }
 
 export function getStripePaymentReturnUrl(): string {

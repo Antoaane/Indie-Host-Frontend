@@ -113,6 +113,11 @@ export type RawPricingStay = {
   maxNights?: number | null
   weeklyDiscount?: number | null
   monthlyDiscount?: number | null
+  durationDiscounts?: RawPricingStayDiscountTier[]
+}
+export type RawPricingStayDiscountTier = {
+  minNights?: number | null
+  percent?: number | null
 }
 export type RawPricingExtraGuests = {
   price?: number | null

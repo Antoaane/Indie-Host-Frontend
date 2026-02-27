@@ -1,7 +1,7 @@
 // File: src/domain/listings/reservationRules.ts
 
 import { nightsBetween, toUtcDay } from '@/domain/listings/bookings'
-import { computeNightlyPriceBreakdown, type WeekendPricingConfig } from '@/domain/listings/pricing'
+import { computeNightlyPriceBreakdown, type DurationDiscountTier, type WeekendPricingConfig } from '@/domain/listings/pricing'
 import type { RawBookings, RawCore, RawPricingSettings } from '@/domain/listings/types'
 
 export type CheckoutPaymentChoice = 'full' | 'split' | 'cash'
@@ -21,7 +21,10 @@ export type ListingOccupancyRules = {
 export type ListingStayRules = {
   minNights: number
   maxNights: number | null
+  discountTiers: ListingStayDiscountTier[]
 }
+
+export type ListingStayDiscountTier = DurationDiscountTier
 
 export type ListingExtraGuestRules = {
   enabled: boolean
@@ -91,6 +94,9 @@ const MAX_CAPACITY = 50
 const DEFAULT_MIN_NIGHTS = 2
 const MAX_NIGHTS = 365
 const MAX_MONEY = 50000
+const DISCOUNT_PERCENT_MIN = 0
+const DISCOUNT_PERCENT_MAX = 100
+const STAY_DISCOUNT_TIERS_MAX = 24
 const PAYMENT_DEPOSIT_PERCENT_MIN = 10
 const PAYMENT_DEPOSIT_PERCENT_MAX = 90
 const PAYMENT_BALANCE_DAYS_MAX = 365
@@ -131,16 +137,95 @@ function toPricingSettings(bookings?: Partial<RawBookings> | null): RawPricingSe
   return bookings?.pricing as RawPricingSettings
 }
 
+function normalizeDurationDiscountTier(input: unknown): ListingStayDiscountTier | null {
+  if (!isPlainObject(input)) return null
+
+  const minNights = clampInteger(
+    input.minNights ?? input.threshold ?? input.nights,
+    1,
+    MAX_NIGHTS,
+    1,
+  )
+  const percent = clampInteger(
+    input.percent ?? input.discount ?? input.discountPercent,
+    DISCOUNT_PERCENT_MIN,
+    DISCOUNT_PERCENT_MAX,
+    DISCOUNT_PERCENT_MIN,
+  )
+  if (percent <= 0) return null
+
+  return {
+    minNights,
+    percent,
+  }
+}
+
+function dedupeAndSortDurationDiscountTiers(tiers: ListingStayDiscountTier[]): ListingStayDiscountTier[] {
+  const byThreshold = new Map<number, ListingStayDiscountTier>()
+
+  tiers.slice(0, STAY_DISCOUNT_TIERS_MAX).forEach((tier) => {
+    const existing = byThreshold.get(tier.minNights)
+    if (!existing || tier.percent > existing.percent) {
+      byThreshold.set(tier.minNights, tier)
+    }
+  })
+
+  return Array.from(byThreshold.values()).sort((a, b) => a.minNights - b.minNights)
+}
+
+function resolveDurationDiscountTiers(rawStay: Record<string, unknown>): ListingStayDiscountTier[] {
+  const configuredTiers = Array.isArray(rawStay.durationDiscounts)
+    ? rawStay.durationDiscounts
+        .map((entry) => normalizeDurationDiscountTier(entry))
+        .filter((entry): entry is ListingStayDiscountTier => Boolean(entry))
+    : []
+
+  if (configuredTiers.length > 0) {
+    return dedupeAndSortDurationDiscountTiers(configuredTiers)
+  }
+
+  const weeklyDiscount = clampInteger(
+    rawStay.weeklyDiscount,
+    DISCOUNT_PERCENT_MIN,
+    DISCOUNT_PERCENT_MAX,
+    DISCOUNT_PERCENT_MIN,
+  )
+  const monthlyDiscount = clampInteger(
+    rawStay.monthlyDiscount,
+    DISCOUNT_PERCENT_MIN,
+    DISCOUNT_PERCENT_MAX,
+    DISCOUNT_PERCENT_MIN,
+  )
+
+  const legacyTiers: ListingStayDiscountTier[] = []
+  if (weeklyDiscount > 0) {
+    legacyTiers.push({
+      minNights: 7,
+      percent: weeklyDiscount,
+    })
+  }
+  if (monthlyDiscount > 0) {
+    legacyTiers.push({
+      minNights: 28,
+      percent: monthlyDiscount,
+    })
+  }
+
+  return dedupeAndSortDurationDiscountTiers(legacyTiers)
+}
+
 function resolveStayRules(pricing: RawPricingSettings): ListingStayRules {
   const rawStay = isPlainObject(pricing.stay) ? pricing.stay : {}
   const minNights = clampInteger(rawStay.minNights, 1, MAX_NIGHTS, DEFAULT_MIN_NIGHTS)
   const maxNights = Number.isFinite(Number(rawStay.maxNights))
     ? clampInteger(rawStay.maxNights, minNights, MAX_NIGHTS, minNights)
     : null
+  const discountTiers = resolveDurationDiscountTiers(rawStay)
 
   return {
     minNights,
     maxNights,
+    discountTiers,
   }
 }
 
@@ -506,6 +591,7 @@ export function computeReservationPricing({
     endISO: range?.endISO ?? '',
     basePrice: toNonNegativeAmount(basePrice),
     weekendPricing,
+    durationDiscountTiers: rules.stay.discountTiers,
   })
 
   const normalizedFees = normalizeFeeItems(fees)

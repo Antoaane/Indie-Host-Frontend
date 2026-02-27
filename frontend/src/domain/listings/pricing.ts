@@ -10,6 +10,11 @@ export type WeekendPricingConfig = {
   price: number
 }
 
+export type DurationDiscountTier = {
+  minNights: number
+  percent: number
+}
+
 export type NightlyPriceBreakdown = {
   nights: number
   weekdayNights: number
@@ -18,14 +23,68 @@ export type NightlyPriceBreakdown = {
   weekendPrice: number
   weekdayTotal: number
   weekendTotal: number
+  nightlySubtotal: number
+  durationDiscountPercent: number
+  durationDiscountTotal: number
+  appliedDurationDiscountTier: DurationDiscountTier | null
   nightlyTotal: number
   averageNightlyPrice: number
+}
+
+function clampInteger(value: unknown, min: number, max: number, fallback = min): number {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed)) return fallback
+  return Math.min(max, Math.max(min, Math.trunc(parsed)))
 }
 
 function toNonNegativeAmount(value: unknown, fallback = 0): number {
   const candidate = Number(value)
   if (!Number.isFinite(candidate) || candidate < 0) return fallback
   return candidate
+}
+
+function normalizeDurationDiscountTier(input: unknown): DurationDiscountTier | null {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return null
+
+  const raw = input as Record<string, unknown>
+  const minNights = clampInteger(raw.minNights, 1, 365, 1)
+  const percent = clampInteger(raw.percent, 0, 100, 0)
+  if (percent <= 0) return null
+
+  return {
+    minNights,
+    percent,
+  }
+}
+
+export function normalizeDurationDiscountTiers(input: unknown): DurationDiscountTier[] {
+  if (!Array.isArray(input)) return []
+
+  const byThreshold = new Map<number, DurationDiscountTier>()
+
+  input.forEach((entry) => {
+    const normalized = normalizeDurationDiscountTier(entry)
+    if (!normalized) return
+    const previous = byThreshold.get(normalized.minNights)
+    if (!previous || normalized.percent > previous.percent) {
+      byThreshold.set(normalized.minNights, normalized)
+    }
+  })
+
+  return Array.from(byThreshold.values()).sort((a, b) => a.minNights - b.minNights)
+}
+
+function resolveAppliedDurationDiscountTier(nights: number, tiers: DurationDiscountTier[]): DurationDiscountTier | null {
+  if (!tiers.length || nights <= 0) return null
+
+  let applied: DurationDiscountTier | null = null
+  tiers.forEach((tier) => {
+    if (nights >= tier.minNights) {
+      applied = tier
+    }
+  })
+
+  return applied
 }
 
 export function resolveWeekendPricing(pricing?: Partial<RawPricingSettings> | null, fallbackPrice = 0): WeekendPricingConfig | null {
@@ -60,11 +119,13 @@ export function computeNightlyPriceBreakdown({
   endISO,
   basePrice,
   weekendPricing,
+  durationDiscountTiers,
 }: {
   startISO: string
   endISO: string
   basePrice: number
   weekendPricing?: WeekendPricingConfig | null
+  durationDiscountTiers?: DurationDiscountTier[] | null
 }): NightlyPriceBreakdown {
   const nights = Math.max(0, nightsBetween(startISO, endISO))
   const weekdayPrice = toNonNegativeAmount(basePrice)
@@ -73,7 +134,12 @@ export function computeNightlyPriceBreakdown({
   const weekdayNights = Math.max(0, nights - weekendNights)
   const weekdayTotal = weekdayNights * weekdayPrice
   const weekendTotal = weekendNights * weekendPrice
-  const nightlyTotal = weekdayTotal + weekendTotal
+  const nightlySubtotal = weekdayTotal + weekendTotal
+  const normalizedTiers = normalizeDurationDiscountTiers(durationDiscountTiers)
+  const appliedDurationDiscountTier = resolveAppliedDurationDiscountTier(nights, normalizedTiers)
+  const durationDiscountPercent = appliedDurationDiscountTier?.percent ?? 0
+  const durationDiscountTotal = Math.round((nightlySubtotal * durationDiscountPercent) / 100)
+  const nightlyTotal = Math.max(0, nightlySubtotal - durationDiscountTotal)
   const averageNightlyPrice = nights > 0 ? nightlyTotal / nights : weekdayPrice
 
   return {
@@ -84,6 +150,10 @@ export function computeNightlyPriceBreakdown({
     weekendPrice,
     weekdayTotal,
     weekendTotal,
+    nightlySubtotal,
+    durationDiscountPercent,
+    durationDiscountTotal,
+    appliedDurationDiscountTier,
     nightlyTotal,
     averageNightlyPrice,
   }

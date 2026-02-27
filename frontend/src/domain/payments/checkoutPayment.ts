@@ -186,6 +186,20 @@ export function buildStripeReservationMetadata({
     ].filter(Boolean).join(',')
   }
 
+  if (reservation.pricing) {
+    metadata.reservation_nightly_subtotal = String(Math.max(0, Math.round(Number(reservation.pricing.nightlySubtotal) || 0)))
+    metadata.reservation_nightly_discount_total = String(Math.max(0, Math.round(Number(reservation.pricing.nightlyDiscountTotal) || 0)))
+    metadata.reservation_nightly_discount_percent = String(Math.max(0, Math.round(Number(reservation.pricing.nightlyDiscountPercent) || 0)))
+    metadata.reservation_nightly_total = String(Math.max(0, Math.round(Number(reservation.pricing.nightlyTotal) || 0)))
+    metadata.reservation_average_nightly_price = String(Math.max(0, Math.round(Number(reservation.pricing.averageNightlyPrice) || 0)))
+    metadata.reservation_fees_total = String(Math.max(0, Math.round(Number(reservation.pricing.feesTotal) || 0)))
+    metadata.reservation_extra_guests_total = String(Math.max(0, Math.round(Number(reservation.pricing.extraGuestsTotal) || 0)))
+
+    if (reservation.pricing.discountThresholdNights !== null && reservation.pricing.discountThresholdNights !== undefined) {
+      metadata.reservation_discount_threshold_nights = String(Math.max(0, Math.round(Number(reservation.pricing.discountThresholdNights) || 0)))
+    }
+  }
+
   if (breakdown.deferredDueDateISO) {
     metadata.payment_deferred_due_date = breakdown.deferredDueDateISO
   }

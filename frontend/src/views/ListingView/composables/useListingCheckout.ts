@@ -2,7 +2,7 @@
 
 import { computed, reactive, ref, type ComputedRef, type Ref } from 'vue'
 
-import { deriveBookedDaysFromReservations, nightsBetween, normalizeBookedDay, normalizeBookedDays, normalizeReservations, toUtcDay } from '@/domain/listings/bookings'
+import { deriveBookedDaysFromReservations, normalizeBookedDay, normalizeBookedDays, normalizeReservations, toUtcDay } from '@/domain/listings/bookings'
 import { resolveWeekendPricing } from '@/domain/listings/pricing'
 import {
   computeReservationPricing,
@@ -38,14 +38,55 @@ function createReservationId(currentListingId: string, start: string, end: strin
   return `reservation-${base}-${start}-${end}-${suffix}`
 }
 
-function sumFees(bookings?: Partial<RawBookings> | null): number {
-  const fees = bookings?.fees ?? []
-  return fees.reduce((acc, fee) => acc + (Number(fee.amount ?? 0) || 0), 0)
+function computeLegacyStayPricing({
+  range,
+  bookings,
+  core,
+}: {
+  range: { start: string; end: string }
+  bookings?: Partial<RawBookings> | null
+  core?: Partial<RawCore> | null
+}) {
+  const basePrice = Number(bookings?.price ?? 0) || 0
+  const reservationRules = resolveListingReservationRules({
+    core,
+    bookings,
+  })
+  const nightlyPricing = computeReservationPricing({
+    startISO: range.start,
+    endISO: range.end,
+    basePrice,
+    weekendPricing: resolveWeekendPricing(bookings?.pricing ?? null, basePrice),
+    fees: bookings?.fees,
+    occupants: {
+      adults: Math.max(1, reservationRules.occupancy.adultsMin),
+      children: 0,
+      babies: 0,
+      animals: 0,
+      pmr: 0,
+    },
+    rules: reservationRules,
+  })
+
+  return {
+    nights: Math.max(1, nightlyPricing.nightly.nights),
+    total: nightlyPricing.total,
+  }
 }
 
-function buildLegacyReservationFromRange(currentListingId: string, range: { start: string; end: string }, bookings?: Partial<RawBookings> | null): RawBookingReservation | null {
-  const nights = Math.max(1, nightsBetween(range.start, range.end))
-  const total = Math.max(0, Math.round((Number(bookings?.price ?? 0) || 0) * nights + sumFees(bookings)))
+function buildLegacyReservationFromRange(
+  currentListingId: string,
+  range: { start: string; end: string },
+  bookings?: Partial<RawBookings> | null,
+  core?: Partial<RawCore> | null,
+): RawBookingReservation | null {
+  const stayPricing = computeLegacyStayPricing({
+    range,
+    bookings,
+    core,
+  })
+  const nights = stayPricing.nights
+  const total = stayPricing.total
   const deposit = Math.round(total * 0.3)
   const balance = Math.max(0, total - deposit)
 
@@ -77,7 +118,11 @@ function buildLegacyReservationFromRange(currentListingId: string, range: { star
   return reservation ?? null
 }
 
-function mergeReservationsWithBookedDays(currentListingId: string, bookings?: Partial<RawBookings> | null): RawBookingReservation[] {
+function mergeReservationsWithBookedDays(
+  currentListingId: string,
+  bookings?: Partial<RawBookings> | null,
+  core?: Partial<RawCore> | null,
+): RawBookingReservation[] {
   const reservations = normalizeReservations(bookings?.reservations)
   const ranges = normalizeBookedDays(bookings?.['booked-days'])
   const knownRanges = new Set(reservations.map((reservation) => `${reservation.start}__${reservation.end}`))
@@ -86,7 +131,7 @@ function mergeReservationsWithBookedDays(currentListingId: string, bookings?: Pa
   for (const range of ranges) {
     const key = `${range.start}__${range.end}`
     if (knownRanges.has(key)) continue
-    const legacyReservation = buildLegacyReservationFromRange(currentListingId, range, bookings)
+    const legacyReservation = buildLegacyReservationFromRange(currentListingId, range, bookings, core)
     if (!legacyReservation) continue
     merged.push(legacyReservation)
     knownRanges.add(key)
@@ -237,6 +282,16 @@ export function useListingCheckout(options: UseListingCheckoutOptions) {
       occupants: { ...validation.occupants },
       fees: pricing.fees,
       total: pricing.total,
+      pricing: {
+        nightlySubtotal: Math.round(pricing.nightly.nightlySubtotal),
+        nightlyDiscountTotal: Math.round(pricing.nightly.durationDiscountTotal),
+        nightlyDiscountPercent: pricing.nightly.durationDiscountPercent,
+        discountThresholdNights: pricing.nightly.appliedDurationDiscountTier?.minNights ?? null,
+        nightlyTotal: Math.round(pricing.nightly.nightlyTotal),
+        averageNightlyPrice: pricing.nightly.averageNightlyPrice,
+        feesTotal: pricing.feesTotal,
+        extraGuestsTotal: pricing.extraGuestsTotal,
+      },
     }
   }
 
@@ -298,8 +353,18 @@ export function useListingCheckout(options: UseListingCheckoutOptions) {
         occupants: { ...reservationValidation.occupants },
         fees: reservationPricing.fees,
         total: reservationPricing.total,
+        pricing: {
+          nightlySubtotal: Math.round(reservationPricing.nightly.nightlySubtotal),
+          nightlyDiscountTotal: Math.round(reservationPricing.nightly.durationDiscountTotal),
+          nightlyDiscountPercent: reservationPricing.nightly.durationDiscountPercent,
+          discountThresholdNights: reservationPricing.nightly.appliedDurationDiscountTier?.minNights ?? null,
+          nightlyTotal: Math.round(reservationPricing.nightly.nightlyTotal),
+          averageNightlyPrice: reservationPricing.nightly.averageNightlyPrice,
+          feesTotal: reservationPricing.feesTotal,
+          extraGuestsTotal: reservationPricing.extraGuestsTotal,
+        },
       }
-      const currentReservations = mergeReservationsWithBookedDays(targetListingId, currentBookings)
+      const currentReservations = mergeReservationsWithBookedDays(targetListingId, currentBookings, currentCore)
       const createdReservation = buildReservationFromCheckout(
         targetListingId,
         normalizedReservationPayload,

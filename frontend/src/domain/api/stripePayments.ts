@@ -182,6 +182,7 @@ export async function createStripePaymentIntent(input: CreateStripePaymentIntent
       total: input.reservation.total,
       occupants: input.reservation.occupants,
       fees: input.reservation.fees,
+      pricing: input.reservation.pricing,
     },
     payment: {
       choice: input.breakdown.choice,

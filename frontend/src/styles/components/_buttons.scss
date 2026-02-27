@@ -146,6 +146,14 @@ $button-themes: (
     box-shadow: none;
   }
 
+  &:has(>*:disabled),
+  &:has(>*[aria-disabled="true"]) {
+    &::before,
+    &::after {
+      display: none;
+    }
+  }
+
   @if $cta {
     &::after {
       content: '';

@@ -161,6 +161,46 @@
           "addRoom": "+ Ajouter une pièce",
           "roomLabelGeneric": "Pièce",
           "roomLabelFallback": "Pièce {index}",
+          "roomCustomNamePlaceholder": "Nom de la pièce",
+          "nonSleepingLabel": "Cette pièce n'a pas de couchage.",
+          "emptyBedsLabel": "Aucun lit ajouté pour le moment.",
+          "overlayAddTitle": "Ajouter un couchage",
+          "customBed": {
+            "typeValue": "custom",
+            "nameLabel": "Nom du lit personnalisé",
+            "namePlaceholder": "Ex : Canapé-lit convertible",
+            "fallbackName": "Lit personnalisé",
+            "iconLabel": "Choisir une icône",
+            "capacityLabel": "Capacité par lit",
+            "addButton": "+ Ajouter ce lit",
+            "overlayAriaLabel": "Gestion des lits de la pièce",
+            "iconChoices": [
+              {
+                "value": "bed-single",
+                "label": "Lit simple"
+              },
+              {
+                "value": "bed-double",
+                "label": "Lit double"
+              },
+              {
+                "value": "bed-bunk",
+                "label": "Lit superposé"
+              },
+              {
+                "value": "bed-sofa",
+                "label": "Canapé-lit"
+              },
+              {
+                "value": "bed-futon",
+                "label": "Futon"
+              },
+              {
+                "value": "bed-baby",
+                "label": "Lit bébé"
+              }
+            ]
+          },
           "types": [
             {
               "value": "bedroom",
@@ -187,17 +227,44 @@
             {
               "value": "simple",
               "label": "Lit simple",
-              "capacity": 1
+              "capacity": 1,
+              "icon": "bed-single"
             },
             {
               "value": "double",
               "label": "Lit double",
-              "capacity": 2
+              "capacity": 2,
+              "icon": "bed-double"
             },
             {
               "value": "bunk",
-              "label": "Lit superposés",
-              "capacity": 2
+              "label": "Lit superposé",
+              "capacity": 2,
+              "icon": "bed-bunk"
+            },
+            {
+              "value": "sofa-bed",
+              "label": "Canapé-lit",
+              "capacity": 2,
+              "icon": "bed-sofa"
+            },
+            {
+              "value": "futon",
+              "label": "Futon",
+              "capacity": 2,
+              "icon": "bed-futon"
+            },
+            {
+              "value": "crib",
+              "label": "Lit bébé",
+              "capacity": 1,
+              "icon": "bed-baby"
+            },
+            {
+              "value": "custom",
+              "label": "Lit personnalisé",
+              "capacity": 1,
+              "icon": "bed-custom"
             }
           ]
         },
@@ -248,8 +315,8 @@
       },
       "pricing": {
         "base": {
-          "title": "Prix de base",
-          "subtitle": "Définissez votre tarif principal et vos options d’ajustement",
+          "title": "Tarification",
+          "subtitle": "Définissez votre tarif principal et vos ajustements automatiques",
           "pricePerNightLabel": "Prix par nuit",
           "pricePerNightSuffix": "€ / nuit",
           "weekendToggle": "Prix week-end (vendredi / samedi)",
@@ -261,14 +328,16 @@
         },
         "stay": {
           "title": "Durée de séjour",
-          "subtitle": "Fixez vos règles de durée et vos réductions longues durées",
+          "subtitle": "Fixez vos règles de durée et vos paliers de réduction",
           "minNights": "Séjour minimum",
           "maxNights": "Séjour maximum (optionnel)",
           "nightsUnit": "nuits",
-          "weeklyDiscount": "Réduction hebdomadaire",
-          "weeklySuffix": "% dès 7 nuits",
-          "monthlyDiscount": "Réduction mensuelle",
-          "monthlySuffix": "% dès 28 nuits",
+          "durationDiscountsTitle": "Paliers de réduction",
+          "durationDiscountsSubtitle": "Appliqués selon le nombre total de nuits",
+          "durationDiscountsEmpty": "Aucun palier actif.",
+          "addDurationDiscount": "Ajouter un palier",
+          "thresholdSuffix": "nuits min",
+          "discountSuffix": "% de remise",
           "maxPlaceholder": "—"
         },
         "fees": {
@@ -551,8 +620,11 @@
         },
         "rooms": {
           "roomNameMax": 255,
+          "customBedNameMax": 80,
           "bedQuantityMin": 1,
-          "bedQuantityMax": 12
+          "bedQuantityMax": 12,
+          "bedCapacityMin": 1,
+          "bedCapacityMax": 6
         },
         "visibility": {
           "pauseMessageMax": 300,
@@ -570,6 +642,7 @@
         "maxNights": 365,
         "discountMin": 0,
         "discountMax": 100,
+        "discountTiersMax": 12,
         "depositPercentMin": 10,
         "depositPercentMax": 90,
         "balanceDaysMin": 0,
@@ -580,7 +653,7 @@
         "messages": {
           "baseHint": "Montants entre {moneyMin}€ et {moneyMax}€. Seuil voyageurs max {extraGuestsThresholdMax}.",
           "baseHintNoExtraGuests": "Montants entre {moneyMin}€ et {moneyMax}€.",
-          "stayHint": "Durée entre {minNights} et {maxNights} nuits · réductions {discountMin}-{discountMax}%.",
+          "stayHint": "Durée entre {minNights} et {maxNights} nuits · remise {discountMin}-{discountMax}% · max {discountTiersMax} paliers.",
           "feesHint": "Frais entre {moneyMin}€ et {moneyMax}€ · libellé max {customFeeNameMax} caractères.",
           "feesHintNoTextLimit": "Frais entre {moneyMin}€ et {moneyMax}€.",
           "paymentHint": "Acompte entre {depositPercentMin}% et {depositPercentMax}% · solde avant arrivée: {balanceDaysMin}-{balanceDaysMax} jours.",

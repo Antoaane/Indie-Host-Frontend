@@ -61,7 +61,7 @@ function validateDescription(bundle: RawListingBundle): string | null {
 
 function validatePricing(bundle: RawListingBundle): string | null {
   const price = asNumber(bundle.bookings?.price, 0)
-  if (price <= 0) return 'Indique un prix de base supérieur à 0 €.'
+  if (price <= 0) return 'Indique une tarification de nuit supérieure à 0 €.'
   return null
 }
 

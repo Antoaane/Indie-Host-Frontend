@@ -9,7 +9,9 @@ export type ListingStatus =
   | string
 
 export function normalizeListingStatus(status?: string | null): string {
-  return (status ?? '').trim().toLowerCase()
+  const normalized = (status ?? '').trim().toLowerCase()
+  if (normalized === 'draft') return 'published'
+  return normalized
 }
 
 export function getListingStatusFlags(status?: string | null) {

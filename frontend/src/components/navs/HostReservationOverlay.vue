@@ -10,8 +10,9 @@ import DatePicker from '@/components/DatePicker/DatePicker.vue'
 import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'
 import { getListingsController } from '@/domain/listings/controller'
 import { deriveBookedDaysFromReservations, getSynchronizedBookedDays, nightsBetween, normalizeBookedDay, normalizeBookedDays, normalizeReservations } from '@/domain/listings/bookings'
-import { computeNightlyPriceBreakdown, resolveWeekendPricing } from '@/domain/listings/pricing'
-import type { RawBookingReservation, RawBookings, UserListingCard } from '@/domain/listings/types'
+import { resolveWeekendPricing } from '@/domain/listings/pricing'
+import { computeReservationPricing, resolveListingReservationRules } from '@/domain/listings/reservationRules'
+import type { RawBookingReservation, RawBookings, RawCore, UserListingCard } from '@/domain/listings/types'
 
 import { type OccupantCounts } from '@/views/ListingView/components/Booking/utils/labels'
 import { findNextRange, isSelectedRangeValid } from '@/views/ListingView/components/Booking/utils/range'
@@ -162,24 +163,41 @@ function updateCount(key: OccupantKey, delta: number) {
   occupants[key] = Math.max(min, next)
 }
 
-function sumFees(bookings?: Partial<RawBookings> | null) {
-  const fees = bookings?.fees ?? []
-  return fees.reduce((acc, fee) => acc + (Number(fee.amount ?? 0) || 0), 0)
-}
-
-function computeStayTotals(range: RangeISO, bookings?: Partial<RawBookings> | null) {
+function computeStayTotals({
+  range,
+  bookings,
+  core,
+  occupants,
+}: {
+  range: RangeISO
+  bookings?: Partial<RawBookings> | null
+  core?: Partial<RawCore> | null
+  occupants?: OccupantCounts
+}) {
   const basePrice = Number(bookings?.price ?? 0) || 0
-  const weekendPricing = resolveWeekendPricing(bookings?.pricing ?? null, basePrice)
-  const nightly = computeNightlyPriceBreakdown({
+  const rules = resolveListingReservationRules({
+    core,
+    bookings,
+  })
+  const nightly = computeReservationPricing({
     startISO: range.start,
     endISO: range.end,
     basePrice,
-    weekendPricing,
+    weekendPricing: resolveWeekendPricing(bookings?.pricing ?? null, basePrice),
+    fees: bookings?.fees,
+    occupants: occupants ?? {
+      adults: Math.max(1, rules.occupancy.adultsMin),
+      children: 0,
+      babies: 0,
+      animals: 0,
+      pmr: 0,
+    },
+    rules,
   })
 
   return {
-    nights: Math.max(1, nightly.nights),
-    total: Math.max(0, Math.round(nightly.nightlyTotal + sumFees(bookings))),
+    nights: Math.max(1, nightly.nightly.nights),
+    total: nightly.total,
   }
 }
 
@@ -227,8 +245,17 @@ function resolveDepositAmount(total: number, bookings?: Partial<RawBookings> | n
   return Math.round(total * 0.3)
 }
 
-function buildLegacyReservationFromRange(listingId: string, range: RangeISO, bookings?: Partial<RawBookings> | null) {
-  const stay = computeStayTotals(range, bookings)
+function buildLegacyReservationFromRange(
+  listingId: string,
+  range: RangeISO,
+  bookings?: Partial<RawBookings> | null,
+  core?: Partial<RawCore> | null,
+) {
+  const stay = computeStayTotals({
+    range,
+    bookings,
+    core,
+  })
   const deposit = resolveDepositAmount(stay.total, bookings)
   const balance = Math.max(0, stay.total - deposit)
 
@@ -258,7 +285,11 @@ function buildLegacyReservationFromRange(listingId: string, range: RangeISO, boo
   ])[0]
 }
 
-function mergeReservationsWithBookedDays(listingId: string, bookings?: Partial<RawBookings> | null) {
+function mergeReservationsWithBookedDays(
+  listingId: string,
+  bookings?: Partial<RawBookings> | null,
+  core?: Partial<RawCore> | null,
+) {
   const reservations = normalizeReservations(bookings?.reservations)
   const ranges = normalizeBookedDays(bookings?.['booked-days'])
   const knownRanges = new Set(reservations.map((reservation) => `${reservation.start}__${reservation.end}`))
@@ -269,7 +300,7 @@ function mergeReservationsWithBookedDays(listingId: string, bookings?: Partial<R
   for (const range of ranges) {
     const key = `${range.start}__${range.end}`
     if (knownRanges.has(key)) continue
-    const legacyReservation = buildLegacyReservationFromRange(listingId, range, bookings)
+    const legacyReservation = buildLegacyReservationFromRange(listingId, range, bookings, core)
     if (!legacyReservation) continue
     merged.push(legacyReservation)
     knownRanges.add(key)
@@ -278,8 +309,18 @@ function mergeReservationsWithBookedDays(listingId: string, bookings?: Partial<R
   return normalizeReservations(merged)
 }
 
-function buildReservationFromForm(listingId: string, range: RangeISO, bookings?: Partial<RawBookings> | null): RawBookingReservation {
-  const stay = computeStayTotals(range, bookings)
+function buildReservationFromForm(
+  listingId: string,
+  range: RangeISO,
+  bookings?: Partial<RawBookings> | null,
+  core?: Partial<RawCore> | null,
+): RawBookingReservation {
+  const stay = computeStayTotals({
+    range,
+    bookings,
+    core,
+    occupants,
+  })
   const total = stay.total
   const deposit = resolveDepositAmount(total, bookings)
   const balance = Math.max(0, total - deposit)
@@ -360,8 +401,9 @@ async function submit() {
 
   try {
     const editable = await controller.fetchEditableListingBundle(listingId)
+    const currentCore = (editable.core ?? null) as Partial<RawCore> | null
     const currentBookings = (editable.bookings ?? null) as Partial<RawBookings> | null
-    const currentReservations = mergeReservationsWithBookedDays(listingId, currentBookings)
+    const currentReservations = mergeReservationsWithBookedDays(listingId, currentBookings, currentCore)
     const currentBookedDays = deriveBookedDaysFromReservations(currentReservations)
     const isDateDisabledFresh = makeIsDateDisabled(currentBookedDays)
 
@@ -372,7 +414,7 @@ async function submit() {
       return
     }
 
-    const createdReservation = buildReservationFromForm(listingId, normalizedSelection, currentBookings)
+    const createdReservation = buildReservationFromForm(listingId, normalizedSelection, currentBookings, currentCore)
     const nextReservations = normalizeReservations([
       ...currentReservations,
       createdReservation,

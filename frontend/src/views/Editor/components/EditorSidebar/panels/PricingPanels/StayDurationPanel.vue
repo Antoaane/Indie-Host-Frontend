@@ -7,15 +7,26 @@ import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 import { clampInteger, formatValidationMessage, parseOptionalInteger } from '@/utils/inputValidation'
 
+type PricingDurationDiscountTier = {
+  minNights?: number | null
+  percent?: number | null
+}
+
 type PricingStay = {
   minNights?: number | null
   maxNights?: number | null
   weeklyDiscount?: number | null
   monthlyDiscount?: number | null
+  durationDiscounts?: PricingDurationDiscountTier[]
 }
 
 type PricingSettings = {
   stay?: PricingStay
+}
+
+type NormalizedDurationDiscountTier = {
+  minNights: number
+  percent: number
 }
 
 const props = defineProps<{
@@ -29,6 +40,7 @@ const emit = defineEmits<{
 const pricing = computed<PricingSettings>(() => (props.bookings as any)?.pricing ?? {})
 const stay = computed<PricingStay>(() => pricing.value.stay ?? {})
 const pricingLimits = editorStatic.validation.pricing
+const panelContent = editorStatic.panels.pricing.stay
 
 const minNights = computed(() =>
   clampInteger(stay.value.minNights, pricingLimits.minNights, pricingLimits.maxNights, pricingLimits.minNights),
@@ -38,19 +50,18 @@ const maxNights = computed(() =>
     ? clampInteger(stay.value.maxNights, pricingLimits.minNights, pricingLimits.maxNights, pricingLimits.minNights)
     : null,
 )
-const weeklyDiscount = computed(() =>
-  clampPercent(Number(stay.value.weeklyDiscount ?? 0)),
+
+const durationDiscounts = computed<NormalizedDurationDiscountTier[]>(() =>
+  normalizeDurationDiscounts(stay.value.durationDiscounts, stay.value),
 )
-const monthlyDiscount = computed(() =>
-  clampPercent(Number(stay.value.monthlyDiscount ?? 0)),
-)
-const panelContent = editorStatic.panels.pricing.stay
+
 const stayHint = computed(() =>
   formatValidationMessage(pricingLimits.messages.stayHint, {
     minNights: pricingLimits.minNights,
     maxNights: pricingLimits.maxNights,
     discountMin: pricingLimits.discountMin,
     discountMax: pricingLimits.discountMax,
+    discountTiersMax: pricingLimits.discountTiersMax,
   }),
 )
 
@@ -63,6 +74,76 @@ function updatePricing(next: Partial<PricingSettings>) {
       },
     } as any,
   })
+}
+
+function clampPercent(value: unknown) {
+  return clampInteger(value, pricingLimits.discountMin, pricingLimits.discountMax, pricingLimits.discountMin)
+}
+
+function normalizeDurationDiscountTier(input: unknown): NormalizedDurationDiscountTier | null {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return null
+
+  const raw = input as Record<string, unknown>
+  const minNightsValue = raw.minNights ?? raw.threshold ?? raw.nights
+  const percentValue = raw.percent ?? raw.discount ?? raw.discountPercent
+
+  const threshold = clampInteger(minNightsValue, pricingLimits.minNights, pricingLimits.maxNights, pricingLimits.minNights)
+  const percent = clampPercent(percentValue)
+  if (percent <= 0) return null
+
+  return {
+    minNights: threshold,
+    percent,
+  }
+}
+
+function dedupeAndSortDurationDiscounts(input: NormalizedDurationDiscountTier[]) {
+  const maxItems = Math.max(1, clampInteger(pricingLimits.discountTiersMax, 1, 50, 12))
+  const byThreshold = new Map<number, NormalizedDurationDiscountTier>()
+
+  input.slice(0, maxItems).forEach((tier) => {
+    const existing = byThreshold.get(tier.minNights)
+    if (!existing || tier.percent > existing.percent) {
+      byThreshold.set(tier.minNights, tier)
+    }
+  })
+
+  return Array.from(byThreshold.values()).sort((a, b) => a.minNights - b.minNights)
+}
+
+function legacyDurationDiscounts(rawStay: PricingStay): NormalizedDurationDiscountTier[] {
+  const weekly = clampPercent(rawStay.weeklyDiscount)
+  const monthly = clampPercent(rawStay.monthlyDiscount)
+
+  const tiers: NormalizedDurationDiscountTier[] = []
+  if (weekly > 0) {
+    tiers.push({
+      minNights: 7,
+      percent: weekly,
+    })
+  }
+  if (monthly > 0) {
+    tiers.push({
+      minNights: 28,
+      percent: monthly,
+    })
+  }
+
+  return tiers
+}
+
+function normalizeDurationDiscounts(input: unknown, rawStay?: PricingStay): NormalizedDurationDiscountTier[] {
+  if (Array.isArray(input)) {
+    const configured = input
+      .map((entry) => normalizeDurationDiscountTier(entry))
+      .filter((entry): entry is NormalizedDurationDiscountTier => Boolean(entry))
+
+    if (configured.length > 0) {
+      return dedupeAndSortDurationDiscounts(configured)
+    }
+  }
+
+  return dedupeAndSortDurationDiscounts(legacyDurationDiscounts(rawStay ?? {}))
 }
 
 function updateStay(patch: Partial<PricingStay>) {
@@ -91,12 +172,6 @@ function updateStay(patch: Partial<PricingStay>) {
                 ),
         }
       : {}),
-    ...(Object.prototype.hasOwnProperty.call(patch, 'weeklyDiscount')
-      ? { weeklyDiscount: clampPercent(Number(patch.weeklyDiscount)) }
-      : {}),
-    ...(Object.prototype.hasOwnProperty.call(patch, 'monthlyDiscount')
-      ? { monthlyDiscount: clampPercent(Number(patch.monthlyDiscount)) }
-      : {}),
   }
 
   const nextStay = {
@@ -115,13 +190,20 @@ function updateStay(patch: Partial<PricingStay>) {
       ? null
       : clampInteger(nextStay.maxNights, normalizedMinNights, pricingLimits.maxNights, normalizedMinNights)
 
-  updatePricing({
-    stay: { ...nextStay, minNights: normalizedMinNights, maxNights: normalizedMaxNights },
-  })
-}
+  const normalizedDurationDiscounts = normalizeDurationDiscounts(nextStay.durationDiscounts, nextStay)
+  const weeklyDiscount = normalizedDurationDiscounts.find((tier) => tier.minNights === 7)?.percent ?? 0
+  const monthlyDiscount = normalizedDurationDiscounts.find((tier) => tier.minNights === 28)?.percent ?? 0
 
-function clampPercent(value: number) {
-  return clampInteger(value, pricingLimits.discountMin, pricingLimits.discountMax, pricingLimits.discountMin)
+  updatePricing({
+    stay: {
+      ...nextStay,
+      minNights: normalizedMinNights,
+      maxNights: normalizedMaxNights,
+      durationDiscounts: normalizedDurationDiscounts,
+      weeklyDiscount,
+      monthlyDiscount,
+    },
+  })
 }
 
 function parseOptionalNumber(raw: string): number | null {
@@ -132,6 +214,88 @@ function stepMaxNights(delta: number) {
   const base = maxNights.value ?? minNights.value
   const next = clampInteger(base + delta, minNights.value, pricingLimits.maxNights, minNights.value)
   updateStay({ maxNights: next })
+}
+
+function resolveNextDurationDiscountThreshold(tiers: NormalizedDurationDiscountTier[]): number {
+  const used = new Set(tiers.map((tier) => tier.minNights))
+  const preferred = [
+    7,
+    28,
+  ].find((threshold) => threshold >= pricingLimits.minNights && threshold <= pricingLimits.maxNights && !used.has(threshold))
+
+  if (preferred) return preferred
+
+  const lastThreshold = tiers[tiers.length - 1]?.minNights ?? minNights.value
+  return clampInteger(lastThreshold + 1, pricingLimits.minNights, pricingLimits.maxNights, pricingLimits.minNights)
+}
+
+function addDurationDiscountTier() {
+  const current = durationDiscounts.value
+  const maxItems = Math.max(1, clampInteger(pricingLimits.discountTiersMax, 1, 50, 12))
+  if (current.length >= maxItems) return
+
+  const nextThreshold = resolveNextDurationDiscountThreshold(current)
+  const defaultPercent = clampInteger(5, Math.max(1, pricingLimits.discountMin), pricingLimits.discountMax, 5)
+
+  updateStay({
+    durationDiscounts: [
+      ...current,
+      {
+        minNights: nextThreshold,
+        percent: defaultPercent,
+      },
+    ],
+  })
+}
+
+function updateDurationDiscountTier(index: number, patch: Partial<NormalizedDurationDiscountTier>) {
+  const current = durationDiscounts.value
+  if (!current[index]) return
+
+  const next = [
+    ...current,
+  ]
+
+  const previous = next[index]
+  next[index] = {
+    minNights: Object.prototype.hasOwnProperty.call(patch, 'minNights')
+      ? clampInteger(patch.minNights, pricingLimits.minNights, pricingLimits.maxNights, previous.minNights)
+      : previous.minNights,
+    percent: Object.prototype.hasOwnProperty.call(patch, 'percent')
+      ? clampPercent(patch.percent)
+      : previous.percent,
+  }
+
+  updateStay({ durationDiscounts: next })
+}
+
+function removeDurationDiscountTier(index: number) {
+  updateStay({
+    durationDiscounts: durationDiscounts.value.filter((_, currentIndex) => currentIndex !== index),
+  })
+}
+
+function stepDurationThreshold(index: number, delta: number) {
+  const tier = durationDiscounts.value[index]
+  if (!tier) return
+
+  updateDurationDiscountTier(index, {
+    minNights: clampInteger(
+      tier.minNights + delta,
+      pricingLimits.minNights,
+      pricingLimits.maxNights,
+      pricingLimits.minNights,
+    ),
+  })
+}
+
+function stepDurationDiscount(index: number, delta: number) {
+  const tier = durationDiscounts.value[index]
+  if (!tier) return
+
+  updateDurationDiscountTier(index, {
+    percent: clampPercent(tier.percent + delta),
+  })
 }
 </script>
 
@@ -214,75 +378,105 @@ function stepMaxNights(delta: number) {
         </div>
       </div>
 
-        <div class="field">
-          <div class="field-label">
-            <p>{{ panelContent.weeklyDiscount }}</p>
+      <div class="discount-tiers">
+        <div class="discount-header">
+          <div class="copy">
+            <p>{{ panelContent.durationDiscountsTitle }}</p>
+            <span>{{ panelContent.durationDiscountsSubtitle }}</span>
           </div>
-        <div class="stepper with-suffix">
-          <div class="btn">
+          <div class="add-tier">
             <button
               type="button"
-              @click="updateStay({ weeklyDiscount: clampPercent(weeklyDiscount - 1) })"
+              @click="addDurationDiscountTier"
             >
-              −
+              {{ panelContent.addDurationDiscount }}
             </button>
           </div>
-          <input
-            class="value"
-            type="number"
-            :min="pricingLimits.discountMin"
-            :max="pricingLimits.discountMax"
-            step="1"
-            inputmode="numeric"
-            :value="weeklyDiscount"
-            @input="updateStay({ weeklyDiscount: ($event.target as HTMLInputElement).valueAsNumber })"
-          />
-            <span class="suffix">{{ panelContent.weeklySuffix }}</span>
-          <div class="btn">
+        </div>
+
+        <p
+          v-if="!durationDiscounts.length"
+          class="discount-empty"
+        >
+          {{ panelContent.durationDiscountsEmpty }}
+        </p>
+
+        <div
+          v-for="(tier, index) in durationDiscounts"
+          :key="`tier-${index}-${tier.minNights}`"
+          class="discount-row"
+        >
+          <div class="stepper with-suffix threshold">
+            <div class="btn">
+              <button
+                type="button"
+                @click="stepDurationThreshold(index, -1)"
+              >
+                −
+              </button>
+            </div>
+            <input
+              class="value"
+              type="number"
+              :min="pricingLimits.minNights"
+              :max="pricingLimits.maxNights"
+              step="1"
+              inputmode="numeric"
+              :value="tier.minNights"
+              @input="updateDurationDiscountTier(index, { minNights: ($event.target as HTMLInputElement).valueAsNumber })"
+            />
+            <span class="suffix">{{ panelContent.thresholdSuffix }}</span>
+            <div class="btn">
+              <button
+                type="button"
+                @click="stepDurationThreshold(index, 1)"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          <div class="stepper with-suffix percent">
+            <div class="btn">
+              <button
+                type="button"
+                @click="stepDurationDiscount(index, -1)"
+              >
+                −
+              </button>
+            </div>
+            <input
+              class="value"
+              type="number"
+              :min="pricingLimits.discountMin"
+              :max="pricingLimits.discountMax"
+              step="1"
+              inputmode="numeric"
+              :value="tier.percent"
+              @input="updateDurationDiscountTier(index, { percent: ($event.target as HTMLInputElement).valueAsNumber })"
+            />
+            <span class="suffix">{{ panelContent.discountSuffix }}</span>
+            <div class="btn">
+              <button
+                type="button"
+                @click="stepDurationDiscount(index, 1)"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          <div class="remove">
             <button
               type="button"
-              @click="updateStay({ weeklyDiscount: clampPercent(weeklyDiscount + 1) })"
+              @click="removeDurationDiscountTier(index)"
             >
-              +
+              ✕
             </button>
           </div>
         </div>
       </div>
 
-        <div class="field">
-          <div class="field-label">
-            <p>{{ panelContent.monthlyDiscount }}</p>
-          </div>
-        <div class="stepper with-suffix">
-          <div class="btn">
-            <button
-              type="button"
-              @click="updateStay({ monthlyDiscount: clampPercent(monthlyDiscount - 1) })"
-            >
-              −
-            </button>
-          </div>
-          <input
-            class="value"
-            type="number"
-            :min="pricingLimits.discountMin"
-            :max="pricingLimits.discountMax"
-            step="1"
-            inputmode="numeric"
-            :value="monthlyDiscount"
-            @input="updateStay({ monthlyDiscount: ($event.target as HTMLInputElement).valueAsNumber })"
-          />
-            <span class="suffix">{{ panelContent.monthlySuffix }}</span>
-          <div class="btn">
-            <button
-              type="button"
-              @click="updateStay({ monthlyDiscount: clampPercent(monthlyDiscount + 1) })"
-            >
-              +
-            </button>
-          </div>
-        </div>
-      </div>
       <p class="hint">
         {{ stayHint }}
       </p>
@@ -326,6 +520,75 @@ function stepMaxNights(delta: number) {
         font-size: 0.85rem;
         color: rgba($secondary, 0.6);
         white-space: nowrap;
+      }
+    }
+
+    .discount-tiers {
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-xs);
+    }
+
+    .discount-header {
+      display: flex;
+      justify-content: space-between;
+      gap: var(--layout-gap-xs);
+      align-items: flex-start;
+
+      > .copy {
+        display: grid;
+        gap: 0.25rem;
+
+        > p {
+          margin: 0;
+          @include h4-title();
+          color: rgba($secondary, 0.9);
+        }
+
+        > span {
+          @include little-text($thin: false);
+          color: rgba($secondary, 0.65);
+        }
+      }
+
+      > .add-tier {
+        > button {
+          border: none;
+          background: none;
+          padding: 0;
+          cursor: pointer;
+          font-size: 0.85rem;
+          font-weight: 600;
+          color: $secondary;
+          text-decoration: underline;
+          text-underline-offset: 0.2rem;
+        }
+      }
+    }
+
+    .discount-empty {
+      margin: 0;
+      @include little-text($thin: false);
+      color: rgba($secondary, 0.6);
+    }
+
+    .discount-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+      gap: var(--layout-gap-xs);
+      align-items: center;
+
+      > .remove {
+        > button {
+          border: none;
+          background: none;
+          padding: 0.25rem;
+          cursor: pointer;
+          font-size: 0.95rem;
+          font-weight: 600;
+          color: rgba($secondary, 0.7);
+          line-height: 1;
+        }
       }
     }
 
