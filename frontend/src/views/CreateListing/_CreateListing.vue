@@ -9,6 +9,7 @@ import CreateListingLayout from '@/views/CreateListing/components/wizard/CreateL
 import CreateListingProgressBar from '@/views/CreateListing/components/wizard/CreateListingProgressBar.vue'
 import CreateListingStage from '@/views/CreateListing/components/wizard/CreateListingStage.vue'
 import CreateListingStepsTabs from '@/views/CreateListing/components/wizard/CreateListingStepsTabs.vue'
+import CreateListingPreviewStepPanel from '@/views/CreateListing/components/panels/CreateListingPreviewStepPanel.vue'
 import { createListingSteps } from '@/views/CreateListing/wizard/createListingSteps'
 import { useCreateListingWizard } from '@/views/CreateListing/wizard/useCreateListingWizard'
 
@@ -22,9 +23,9 @@ const {
   stepItems,
   draft,
   currentStep,
+  isPreviewStage,
   stepError,
   submitState,
-  isLastStep,
   progressPercent,
   canGoNext,
   canGoBack,
@@ -47,6 +48,16 @@ const submitError = computed(() => submitState.error)
 
 <template>
   <CreateListingLayout>
+    <div class="btn-primary__white quit-floating">
+      <button
+        type="button"
+        :disabled="submitState.isSubmitting"
+        @click="cancelCreation"
+      >
+        Quitter
+      </button>
+    </div>
+
     <CreateListingProgressBar :progress-percent="progressPercent" />
 
     <CreateListingStepsTabs
@@ -55,11 +66,21 @@ const submitError = computed(() => submitState.error)
     />
 
     <CreateListingStage
+      v-if="!isPreviewStage"
       :step="currentStep"
       :draft="draft"
       :step-error="stepError"
       @patch="applyDraftPatch"
     />
+
+    <section
+      v-else
+      class="stage is-preview"
+    >
+      <div class="slide">
+        <CreateListingPreviewStepPanel :raw-listing="draft" />
+      </div>
+    </section>
 
     <p
       v-if="submitError"
@@ -69,14 +90,13 @@ const submitError = computed(() => submitState.error)
     </p>
 
     <CreateListingFooterNavigation
-      :is-last-step="isLastStep"
+      :is-last-step="isPreviewStage"
       :can-go-back="canGoBack"
       :can-go-next="canGoNext"
       :can-submit="canSubmit"
       :is-submitting="submitState.isSubmitting"
       submit-label="Consulter mon annonce"
       submit-loading-label="Création de l’annonce..."
-      @cancel="cancelCreation"
       @previous="goToPreviousStep"
       @next="goToNextStep"
       @submit="submitCreateListing"

@@ -8,7 +8,6 @@ import CreateCapacityStepPanel from '@/views/CreateListing/components/panels/Cre
 import CreateDescriptionStepPanel from '@/views/CreateListing/components/panels/CreateDescriptionStepPanel.vue'
 import CreateGalleryStepPanel from '@/views/CreateListing/components/panels/CreateGalleryStepPanel.vue'
 import CreateLocationStepPanel from '@/views/CreateListing/components/panels/CreateLocationStepPanel.vue'
-import CreateListingPreviewStepPanel from '@/views/CreateListing/components/panels/CreateListingPreviewStepPanel.vue'
 import CreateRoomsStepPanel from '@/views/CreateListing/components/panels/CreateRoomsStepPanel.vue'
 import CreateTitleStepPanel from '@/views/CreateListing/components/panels/CreateTitleStepPanel.vue'
 import type { CreateListingStep } from '@/views/CreateListing/wizard/createListing.types'
@@ -165,15 +164,6 @@ export function createListingSteps(): CreateListingStep[] {
       }),
       acceptsPatch: true,
       validate: validatePricing,
-    },
-    {
-      id: 'preview',
-      label: 'Aperçu final',
-      description: 'Visualise ton annonce telle qu’elle sera affichée avant de terminer.',
-      component: CreateListingPreviewStepPanel,
-      props: (draft) => ({
-        rawListing: draft,
-      }),
     },
   ]
 }

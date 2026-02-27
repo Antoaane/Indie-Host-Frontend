@@ -2,10 +2,10 @@
 
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import confetti from 'canvas-confetti'
 
 import type { RawListingBundle } from '@/domain/listings/types'
 import ListingView from '@/views/ListingView/_ListingView.vue'
-import CreateWizardStepShell from '@/views/CreateListing/components/panels/CreateWizardStepShell.vue'
 
 const props = defineProps<{
   rawListing: RawListingBundle | null
@@ -13,6 +13,7 @@ const props = defineProps<{
 
 const wrapper = ref<HTMLElement | null>(null)
 const aspectRatio = ref<{ width: number; height: number } | null>(null)
+let confettiTimer: number | null = null
 
 function updateScale() {
   const container = wrapper.value
@@ -34,23 +35,72 @@ watch(
   { immediate: true },
 )
 
+function launchConfetti() {
+  if (typeof window === 'undefined') return
+
+  const baseConfig = {
+    spread: 68,
+    startVelocity: 42,
+    decay: 0.92,
+    scalar: 0.9,
+    ticks: 160,
+    zIndex: 1200,
+    colors: [
+      '#0b132b',
+      '#f97316',
+      '#16a34a',
+      '#0ea5e9',
+      '#facc15',
+    ],
+  }
+
+  confetti({
+    ...baseConfig,
+    particleCount: 75,
+    origin: { x: 0.18, y: 0.76 },
+  })
+
+  confetti({
+    ...baseConfig,
+    particleCount: 75,
+    origin: { x: 0.82, y: 0.76 },
+  })
+
+  confettiTimer = window.setTimeout(() => {
+    confetti({
+      ...baseConfig,
+      particleCount: 55,
+      origin: { x: 0.5, y: 0.66 },
+    })
+  }, 240)
+}
+
 onMounted(() => {
   updateScale()
   window.addEventListener('resize', updateScale)
+  launchConfetti()
 })
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', updateScale)
+  if (typeof window !== 'undefined' && confettiTimer !== null) {
+    window.clearTimeout(confettiTimer)
+  }
 })
 </script>
 
 <template>
-  <CreateWizardStepShell
-    title="Prévisualise ton annonce telle que les voyageurs la verront"
-  >
-    <section class="create-listing-preview-step-panel">
+  <section class="create-listing-preview-step-panel">
+    <div class="intro">
+      <h2>Félicitations, ton annonce est prête.</h2>
+      <p>Prends une dernière minute pour vérifier l’aperçu avant publication.</p>
+    </div>
+
+    <div
+      v-if="props.rawListing"
+      class="preview-frame"
+    >
       <div
-        v-if="props.rawListing"
         ref="wrapper"
         class="content"
       >
@@ -60,48 +110,73 @@ onBeforeUnmount(() => {
           :raw-listing="props.rawListing"
         />
       </div>
+    </div>
 
-      <div
-        v-else
-        class="empty"
-      >
-        <div class="skeleton">
-          Chargement…
-        </div>
+    <div
+      v-else
+      class="empty"
+    >
+      <div class="skeleton">
+        Chargement...
       </div>
-    </section>
-  </CreateWizardStepShell>
+    </div>
+  </section>
 </template>
 
 <style lang="scss">
 /* File: src/views/CreateListing/components/panels/create-listing-preview-step-panel.scss */
 
 @use '@/styles/variables/globals' as *;
-@use '@/styles/variables/effects' as effects;
 @use '@/styles/variables/borders' as borders;
 
 .create-listing-preview-step-panel {
-  height: clamp(28rem, 72vh, 48rem);
-  min-height: 28rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--layout-gap);
+  width: min(100%, 64rem);
+  margin: 0 auto;
 
-  background-color: $secondary;
-  border-radius: borders.$rounded-xl;
+  > .intro {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--layout-gap-xs) / 2);
 
-  box-shadow: 0 0 20px 0 rgba($accent, 0.3);
+    > h2 {
+      margin: 0;
+      @include h2-title();
+    }
 
-  > .content {
+    > p {
+      margin: 0;
+      @include little-text($thin: false);
+      color: rgba($secondary-text, 0.75);
+    }
+  }
+
+  > .preview-frame {
     height: 100%;
-    min-height: 0;
+    min-height: 18rem;
+    border-radius: borders.$rounded-xl;
     overflow: hidden;
-    position: relative;
+    background-color: $secondary;
+    box-shadow: 0 10px 28px rgba($secondary-dark-background, 0.16);
+
+    > .content {
+      height: 100%;
+      min-height: 0;
+      overflow: hidden;
+      position: relative;
+    }
   }
 
   > .empty {
-    height: 100%;
+    height: clamp(18rem, 52vh, 30rem);
     display: grid;
     place-items: center;
     padding: var(--layout-gap-md);
-    color: rgba($secondary, 0.7);
+    border-radius: borders.$rounded-xl;
+    background: rgba($secondary, 0.05);
+    color: rgba($secondary-text, 0.65);
   }
 }
 </style>

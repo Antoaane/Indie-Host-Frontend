@@ -120,6 +120,8 @@ function closePopup() {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 
     > span {
       @include base-text($thin: false);
@@ -154,9 +156,25 @@ function closePopup() {
     @extend %overlay-panel;
     @include layout-gap(padding, all, 2);
     padding-bottom: calc(var(--layout-gap) * 2) !important;
+    min-height: 0;
+    overflow: hidden;
+
+    > h2 {
+      flex: 0 0 auto;
+    }
 
     > .content {
-      margin-bottom: var(--layout-gap);
+      display: block;
+      flex: 1 1 auto;
+      min-height: 0;
+      margin-bottom: 0;
+      padding-bottom: var(--layout-gap);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
+      overflow-wrap: anywhere;
+      word-break: break-word;
 
       > span {
         @include base-text($thin: false);

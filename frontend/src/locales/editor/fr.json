@@ -57,15 +57,21 @@
       },
       "actions": {
         "save": "Sauvegarder",
-        "apply": "Appliquer"
+        "apply": "Appliquer",
+        "cancel": "Annuler",
+        "applyAllPending": "Appliquer à toutes les annonces modifiées"
       },
       "success": {
         "save": "Brouillon sauvegardé.",
-        "publish": "Modifications appliquées."
+        "publish": "Modifications appliquées.",
+        "publishAll": "Modifications appliquées sur toutes les annonces modifiées.",
+        "cancel": "Modifications annulées pour l’annonce en cours."
       },
       "errors": {
         "save": "Erreur lors de la sauvegarde.",
-        "publish": "Erreur lors de la publication."
+        "publish": "Erreur lors de la publication.",
+        "publishAll": "Erreur lors de l’application des modifications sur plusieurs annonces.",
+        "cancel": "Erreur lors de l’annulation des modifications."
       },
       "sync": {
         "pending": "Synchronisation automatique en cours…"

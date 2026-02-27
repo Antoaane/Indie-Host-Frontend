@@ -13,7 +13,7 @@ import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 
 type SidebarTab = 'listing' | 'pricing' | 'arrival'
-type SuccessFeedback = 'publish' | null
+type SuccessFeedback = 'publish' | 'publishAll' | 'cancel' | null
 
 const props = defineProps<{
   listingId: string
@@ -21,6 +21,11 @@ const props = defineProps<{
   isLoading?: boolean
   isPatchSyncing?: boolean
   hasPendingChanges?: boolean
+  hasAnyPendingChanges?: boolean
+  hasMultiplePendingListings?: boolean
+  pendingListingsCount?: number
+  publishAllPending: () => Promise<void>
+  cancelPendingChanges: () => Promise<void>
   publish: () => Promise<void>
 }>()
 
@@ -31,13 +36,38 @@ const emit = defineEmits<{
 const tab = ref<SidebarTab>('listing')
 
 const isPublishing = ref(false)
+const isCancelling = ref(false)
 const error = ref<string | null>(null)
 const successFeedback = ref<SuccessFeedback>(null)
 const successTimer = ref<number | null>(null)
+const applyToAllPending = ref(false)
 const sidebarContent = editorStatic.sidebar
 
-const canPublish = computed(() => !props.isLoading && !isPublishing.value && Boolean(props.hasPendingChanges))
-const isActionRunning = computed(() => isPublishing.value)
+const showApplyToAllToggle = computed(() => Boolean(props.hasMultiplePendingListings))
+const shouldShowFooter = computed(() => Boolean(props.hasPendingChanges))
+const canPublish = computed(() => {
+  if (props.isLoading || isPublishing.value || isCancelling.value) return false
+  if (showApplyToAllToggle.value && applyToAllPending.value) {
+    return Boolean(props.hasAnyPendingChanges)
+  }
+  return Boolean(props.hasPendingChanges)
+})
+const canCancel = computed(() => !props.isLoading && !isPublishing.value && !isCancelling.value && Boolean(props.hasPendingChanges))
+const isActionRunning = computed(() => isPublishing.value || isCancelling.value)
+const successFeedbackText = computed(() => {
+  if (successFeedback.value === 'publishAll') {
+    return sidebarContent.success.publishAll ?? sidebarContent.success.publish
+  }
+  if (successFeedback.value === 'cancel') {
+    return sidebarContent.success.cancel ?? sidebarContent.success.publish
+  }
+  return sidebarContent.success.publish
+})
+const applyToAllLabel = computed(() => {
+  const count = props.pendingListingsCount ?? 0
+  if (count > 1) return `${sidebarContent.actions.applyAllPending} (${count})`
+  return sidebarContent.actions.applyAllPending
+})
 
 function handlePatch(patch: DraftPatch) {
   emit('patch', patch)
@@ -51,9 +81,9 @@ function clearSuccessFeedback() {
   successFeedback.value = null
 }
 
-function showSuccessFeedback() {
+function showSuccessFeedback(type: Exclude<SuccessFeedback, null> = 'publish') {
   clearSuccessFeedback()
-  successFeedback.value = 'publish'
+  successFeedback.value = type
   successTimer.value = window.setTimeout(() => {
     successFeedback.value = null
     successTimer.value = null
@@ -65,22 +95,51 @@ watch(
   () => {
     tab.value = 'listing'
     error.value = null
+    applyToAllPending.value = false
     clearSuccessFeedback()
   },
 )
+
+watch(showApplyToAllToggle, (enabled) => {
+  if (!enabled) {
+    applyToAllPending.value = false
+  }
+})
 
 async function publishDraft() {
   if (!canPublish.value) return
   error.value = null
 
+  const shouldPublishAll = showApplyToAllToggle.value && applyToAllPending.value
+
   isPublishing.value = true
   try {
-    await props.publish()
-    showSuccessFeedback()
+    if (shouldPublishAll) {
+      await props.publishAllPending()
+      showSuccessFeedback('publishAll')
+    } else {
+      await props.publish()
+      showSuccessFeedback('publish')
+    }
   } catch (err: any) {
-    error.value = err?.message ?? sidebarContent.errors.publish
+    error.value = err?.message ?? (shouldPublishAll ? (sidebarContent.errors.publishAll ?? sidebarContent.errors.publish) : sidebarContent.errors.publish)
   } finally {
     isPublishing.value = false
+  }
+}
+
+async function cancelDraftChanges() {
+  if (!canCancel.value) return
+  error.value = null
+
+  isCancelling.value = true
+  try {
+    await props.cancelPendingChanges()
+    showSuccessFeedback('cancel')
+  } catch (err: any) {
+    error.value = err?.message ?? (sidebarContent.errors.cancel ?? sidebarContent.errors.publish)
+  } finally {
+    isCancelling.value = false
   }
 }
 
@@ -103,7 +162,7 @@ onBeforeUnmount(() => {
           role="status"
           aria-live="polite"
         >
-          {{ sidebarContent.success.publish }}
+          {{ successFeedbackText }}
         </p>
       </Transition>
 
@@ -132,10 +191,7 @@ onBeforeUnmount(() => {
       />
     </Transition>
 
-    <template
-      #footer
-      v-if="props.hasPendingChanges"
-    >
+    <template #footer v-if="shouldShowFooter">
       <p
         v-if="error"
         class="error"
@@ -150,8 +206,28 @@ onBeforeUnmount(() => {
       >
         {{ sidebarContent.sync.pending }}
       </p>
+      <label
+        v-if="showApplyToAllToggle"
+        class="apply-all-toggle"
+      >
+        <input
+          v-model="applyToAllPending"
+          type="checkbox"
+          :disabled="isActionRunning || !!props.isLoading"
+        >
+        <span>{{ applyToAllLabel }}</span>
+      </label>
       <div class="actions">
-        <div class="btn">
+        <div class="btn is-cancel">
+          <button
+            type="button"
+            :disabled="!canCancel"
+            @click="cancelDraftChanges"
+          >
+            {{ sidebarContent.actions.cancel }}
+          </button>
+        </div>
+        <div class="btn is-apply">
           <button
             type="button"
             :disabled="!canPublish"
@@ -215,13 +291,24 @@ onBeforeUnmount(() => {
     // border-bottom-right-radius: borders.$rounded-xl;
     border-radius: borders.$rounded-xl;
 
+    > .apply-all-toggle {
+      margin: 0 0 var(--layout-gap-sm) 0;
+      width: 100%;
+      justify-content: flex-start;
+      @include buttons.checkbox-label(white);
+    }
+
     > .actions {
       display: grid;
-      grid-template-columns: minmax(0, 1fr);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: var(--layout-gap-sm);
 
-      & > .btn {
+      & > .btn.is-apply {
         @include buttons.primary($cta: true, $theme: dark, $fullwidth: true);
+      }
+
+      & > .btn.is-cancel {
+        @include buttons.primary($theme: white, $fullwidth: true);
       }
     }
 

@@ -37,6 +37,7 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
   const draft = ref<RawListingBundle>(buildInitialDraft())
   const activeStepIndex = ref(0)
   const furthestVisitedStepIndex = ref(0)
+  const isPreviewStage = ref(false)
   const stepError = ref<string | null>(null)
   const persistTimer = ref<number | null>(null)
   const hasHydratedStorage = ref(false)
@@ -55,17 +56,20 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
   const currentStep = computed(() => steps[activeStepIndex.value] ?? steps[0])
   const isFirstStep = computed(() => activeStepIndex.value <= 0)
   const isLastStep = computed(() => activeStepIndex.value >= steps.length - 1)
-  const progressPercent = computed(() => Math.round(((activeStepIndex.value + 1) / steps.length) * 100))
-  const canGoNext = computed(() => !submitState.isSubmitting && !isLastStep.value)
-  const canGoBack = computed(() => !submitState.isSubmitting && !isFirstStep.value)
-  const canSubmit = computed(() => !submitState.isSubmitting && isLastStep.value)
+  const progressPercent = computed(() => {
+    const completedSteps = isPreviewStage.value ? steps.length : activeStepIndex.value + 1
+    return Math.round((completedSteps / steps.length) * 100)
+  })
+  const canGoNext = computed(() => !submitState.isSubmitting && !isPreviewStage.value)
+  const canGoBack = computed(() => !submitState.isSubmitting && (isPreviewStage.value || !isFirstStep.value))
+  const canSubmit = computed(() => !submitState.isSubmitting && isPreviewStage.value)
   const stepItems = computed<CreateListingStepItem[]>(() =>
     steps.map((step, index) => ({
       id: step.id,
       label: step.label,
       index,
-      isActive: index === activeStepIndex.value,
-      isDone: index < activeStepIndex.value,
+      isActive: !isPreviewStage.value && index === activeStepIndex.value,
+      isDone: index < activeStepIndex.value || (isPreviewStage.value && index === activeStepIndex.value),
       isDisabled: submitState.isSubmitting || index > furthestVisitedStepIndex.value,
     })),
   )
@@ -126,6 +130,7 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
       const nextError = validator(draft.value)
       if (nextError) {
         activeStepIndex.value = index
+        isPreviewStage.value = false
         stepError.value = nextError
         return false
       }
@@ -139,18 +144,30 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
     if (submitState.isSubmitting) return
     const safeIndex = clampStepIndex(index)
     if (safeIndex > furthestVisitedStepIndex.value) return
+    isPreviewStage.value = false
     activeStepIndex.value = safeIndex
   }
 
   function goToPreviousStep() {
     if (!canGoBack.value) return
     clearStepError()
+    if (isPreviewStage.value) {
+      isPreviewStage.value = false
+      return
+    }
     activeStepIndex.value = Math.max(0, activeStepIndex.value - 1)
   }
 
   function goToNextStep() {
     if (!canGoNext.value) return
     if (!validateStep(activeStepIndex.value)) return
+
+    if (isLastStep.value) {
+      clearStepError()
+      isPreviewStage.value = true
+      return
+    }
+
     const nextIndex = Math.min(steps.length - 1, activeStepIndex.value + 1)
     activeStepIndex.value = nextIndex
     furthestVisitedStepIndex.value = Math.max(furthestVisitedStepIndex.value, nextIndex)
@@ -166,6 +183,7 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
     const payload: PersistedCreateDraft = {
       stepIndex: activeStepIndex.value,
       furthestStepIndex: furthestVisitedStepIndex.value,
+      isPreviewStage: isPreviewStage.value,
       draft: draft.value,
       updatedAt: new Date().toISOString(),
     }
@@ -217,6 +235,7 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
         const restoredFurthestStepIndex = clampStepIndex(asNumber(parsed.furthestStepIndex, restoredStepIndex))
         activeStepIndex.value = restoredStepIndex
         furthestVisitedStepIndex.value = Math.max(restoredStepIndex, restoredFurthestStepIndex)
+        isPreviewStage.value = Boolean(parsed.isPreviewStage) && restoredStepIndex >= steps.length - 1
       }
     } catch (err) {
       console.log('[CreateListing] failed to restore draft', err)
@@ -264,6 +283,7 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
     [
       draft,
       activeStepIndex,
+      isPreviewStage,
     ],
     () => {
       queueStorageDraft()
@@ -284,6 +304,7 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
     stepItems,
     draft,
     activeStepIndex,
+    isPreviewStage,
     currentStep,
     stepError,
     submitState,

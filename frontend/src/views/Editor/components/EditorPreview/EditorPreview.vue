@@ -108,8 +108,6 @@ onBeforeUnmount(() => {
 </template>
 
 <style lang="scss">
-/* File: src/views/Editor/components/EditorPreview/editor-preview.scss */
-
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/effects' as effects;
 @use '@/styles/variables/borders' as borders;

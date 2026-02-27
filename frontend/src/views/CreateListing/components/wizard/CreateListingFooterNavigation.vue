@@ -15,7 +15,6 @@ const props = withDefaults(defineProps<{
 })
 
 const emit = defineEmits<{
-  (e: 'cancel'): void
   (e: 'previous'): void
   (e: 'next'): void
   (e: 'submit'): void
@@ -25,16 +24,6 @@ const emit = defineEmits<{
 <template>
   <footer class="footer">
     <div class="start-actions">
-      <div class="btn-primary__white">
-        <button
-          type="button"
-          :disabled="props.isSubmitting"
-          @click="emit('cancel')"
-        >
-          Quitter
-        </button>
-      </div>
-
       <div class="btn-primary__white">
         <button
           type="button"

@@ -13,186 +13,217 @@
     padding-top: $nav-height;
     padding-bottom: var(--layout-gap);
     height: calc(100vh - $nav-height - var(--layout-gap));
+
+    @include layout-gap(padding, inline);
   }
 
-  >.layout {
+  .container {
+    max-width: none !important;
+    width: 100%;
     height: 100%;
-    max-width: 88rem;
-    margin-left: auto;
-    margin-right: auto;
-
     display: flex;
-    flex-direction: column;
-    gap: var(--layout-gap-sm);
+    align-items: center;
+    justify-content: center;
 
-    background-color: $accent;
-    // background: linear-gradient(180deg, $accent-surface-2 0%, $accent-surface-1 100%);
     border-radius: borders.$rounded-xl;
+    background-color: $accent;
 
-    @include layout-gap(padding, all, 1);
+    >.layout {
+      position: relative;
+      height: 100%;
+      max-width: 88rem;
+      margin-left: auto;
+      margin-right: auto;
 
-    >.progress {
-      height: 0.4rem;
-      border-radius: borders.$rounded;
-      background: rgba($secondary-dark-background, 0.12);
-      overflow: hidden;
-
-      >.bar {
-        height: 100%;
-        border-radius: borders.$rounded;
-        background: $secondary-dark-background;
-        transition: width 220ms ease;
-      }
-    }
-
-    >.steps {
-      flex: 0 0 auto;
-      min-width: 0;
-      max-width: 100%;
       display: flex;
-      align-items: center;
-      gap: var(--layout-gap-xs);
-      overflow-x: auto;
-      overflow-y: hidden;
-      overscroll-behavior-x: contain;
-      -webkit-overflow-scrolling: touch;
-      padding-bottom: 0.15rem;
+      flex-direction: column;
+      gap: var(--layout-gap-sm);
 
-      >.step {
-        flex: 0 0 auto;
-        border: 1px solid rgba($secondary, 0.15);
+      background-color: $accent;
+      // background: linear-gradient(180deg, $accent-surface-2 0%, $accent-surface-1 100%);
+      border-radius: borders.$rounded-xl;
+
+      @include layout-gap(padding, all, 1);
+
+      >.quit-floating {
+        z-index: 4;
+      }
+
+      >.progress {
+        height: 0.4rem;
         border-radius: borders.$rounded;
-        background: $accent;
-        cursor: pointer;
-        padding: 0.4rem 0.75rem;
-        min-height: 2.35rem;
+        background: rgba($secondary-dark-background, 0.12);
+        overflow: hidden;
 
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-
-        transition: 180ms ease;
-
-        >span {
-          width: 1.2rem;
-          height: 1.2rem;
+        >.bar {
+          height: 100%;
           border-radius: borders.$rounded;
-          display: grid;
-          place-items: center;
-          font-size: 0.75rem;
-          font-weight: 600;
-          background: rgba($secondary-dark-background, 0.08);
-          color: rgba($secondary-text, 0.85);
-        }
-
-        >small {
-          font-size: 0.8rem;
-          font-weight: 500;
-          color: rgba($secondary-text, 0.75);
-        }
-
-        &.is-done {
-          border-color: rgba($secondary, 0.22);
-
-          >span {
-            background: rgba($secondary-dark-background, 0.9);
-            color: $accent;
-          }
-        }
-
-        &.is-active {
-          border-color: rgba($secondary, 0.7);
           background: $secondary-dark-background;
+          transition: width 220ms ease;
+        }
+      }
+
+      >.steps {
+        flex: 0 0 auto;
+        min-width: 0;
+        max-width: 100%;
+        display: flex;
+        align-items: center;
+        gap: var(--layout-gap-xs);
+        overflow-x: auto;
+        overflow-y: hidden;
+        overscroll-behavior-x: contain;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 0.15rem;
+
+        >.step {
+          flex: 0 0 auto;
+          border: 1px solid rgba($secondary, 0.15);
+          border-radius: borders.$rounded;
+          background: $accent;
+          cursor: pointer;
+          padding: 0.4rem 0.75rem;
+          min-height: 2.35rem;
+
+          display: inline-flex;
+          align-items: center;
+          gap: 0.5rem;
+
+          transition: 180ms ease;
 
           >span {
-            background: rgba($accent, 0.95);
-            color: $secondary-text;
+            width: 1.2rem;
+            height: 1.2rem;
+            border-radius: borders.$rounded;
+            display: grid;
+            place-items: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba($secondary-dark-background, 0.08);
+            color: rgba($secondary-text, 0.85);
           }
 
           >small {
-            color: rgba($accent, 0.95);
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: rgba($secondary-text, 0.75);
+          }
+
+          &.is-done {
+            border-color: rgba($secondary, 0.22);
+
+            >span {
+              background: rgba($secondary-dark-background, 0.9);
+              color: $accent;
+            }
+          }
+
+          &.is-active {
+            border-color: rgba($secondary, 0.7);
+            background: $secondary-dark-background;
+
+            >span {
+              background: rgba($accent, 0.95);
+              color: $secondary-text;
+            }
+
+            >small {
+              color: rgba($accent, 0.95);
+            }
+          }
+
+          &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
           }
         }
-
-        &:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
       }
-    }
 
-    >.stage {
-      flex: 1 1 auto;
-      min-width: 0;
-      min-height: 0;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      border-radius: borders.$rounded-xl;
-      // background: rgba($accent, 0.55);
-      // border: 1px solid rgba($secondary, 0.08);
-      // @include effects.big-shadow();
-
-      >.slide {
+      >.stage {
         flex: 1 1 auto;
         min-width: 0;
         min-height: 0;
-        overflow-x: hidden;
-        overflow-y: auto;
-        overscroll-behavior-y: contain;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-gutter: stable both-edges;
-        padding: var(--layout-gap-sm);
-
         display: flex;
-        align-items: flex-start;
-        justify-content: center;
+        flex-direction: column;
+        overflow: hidden;
+        border-radius: borders.$rounded-xl;
+        // background: rgba($accent, 0.55);
+        // border: 1px solid rgba($secondary, 0.08);
+        // @include effects.big-shadow();
 
-        >* {
-          width: 100%;
-          max-width: 72rem;
-          margin: 0 auto;
+        >.slide {
+          flex: 1 1 auto;
+          min-width: 0;
+          min-height: 0;
+          overflow-x: hidden;
+          overflow-y: auto;
+          overscroll-behavior-y: contain;
+          -webkit-overflow-scrolling: touch;
+          scrollbar-gutter: stable both-edges;
+          padding: var(--layout-gap-sm);
+
+          display: flex;
+          align-items: flex-start;
+          justify-content: center;
+
+          >* {
+            width: 100%;
+            max-width: 65rem;
+            margin: 0 auto;
+          }
+
+          &>[class$="-panel"] {
+            border: none;
+          }
         }
 
-        &>[class$="-panel"] {
-          border: none;
+        &.is-preview {
+          >.slide {
+            align-items: flex-start;
+            padding-top: 0;
+            padding-bottom: 0;
+
+            >* {
+              max-width: none;
+            }
+          }
         }
       }
-    }
 
-    >.error {
-      margin: 0;
-      color: rgba($bad, 0.95);
-      @include little-text($thin: false);
-    }
-
-    >.footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: var(--layout-gap-sm);
-      padding-bottom: var(--layout-gap-xs);
-      background-color: #00000000 !important;
-
-      >.start-actions {
-        display: inline-flex;
-        align-items: center;
-        gap: var(--layout-gap-xs);
+      >.error {
+        margin: 0;
+        color: rgba($bad, 0.95);
+        @include little-text($thin: false);
       }
 
-      .is-loading {
-        display: inline-flex;
+      >.footer {
+        display: flex;
         align-items: center;
-        gap: 0.45rem;
-      }
+        justify-content: space-between;
+        gap: var(--layout-gap-sm);
+        padding-bottom: var(--layout-gap-xs);
+        background-color: #00000000 !important;
 
-      .loading-dot {
-        width: 0.52rem;
-        height: 0.52rem;
-        border-radius: 999px;
-        background: currentColor;
-        opacity: 0.75;
-        animation: create-listing-loading-pulse 900ms ease-in-out infinite;
+        >.start-actions {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--layout-gap-xs);
+        }
+
+        .is-loading {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.45rem;
+        }
+
+        .loading-dot {
+          width: 0.52rem;
+          height: 0.52rem;
+          border-radius: 999px;
+          background: currentColor;
+          opacity: 0.75;
+          animation: create-listing-loading-pulse 900ms ease-in-out infinite;
+        }
       }
     }
   }

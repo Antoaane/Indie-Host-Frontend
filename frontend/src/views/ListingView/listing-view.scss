@@ -10,14 +10,72 @@
   flex-direction: column;
   position: relative;
 
+  >.owner-edit-overlay {
+    position: absolute;
+    top: calc(env(safe-area-inset-top) + var(--layout-gap-sm));
+    right: var(--layout-gap-sm);
+    z-index: 20;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0.5rem 0.95rem;
+    border-radius: borders.$rounded;
+    border: 1px solid rgba($secondary-dark-background, 0.15);
+    background: rgba($accent, 0.86);
+    backdrop-filter: blur(6px);
+
+    color: $secondary-text;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none;
+    letter-spacing: 0.01em;
+
+    box-shadow: 0 0.35rem 1.4rem rgba($secondary-dark-background, 0.14);
+    transition: transform 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+
+    &:hover {
+      background: rgba($accent, 0.95);
+      box-shadow: 0 0.45rem 1.6rem rgba($secondary-dark-background, 0.2);
+      transform: translateY(-1px);
+    }
+
+    &:focus-visible {
+      outline: 2px solid rgba($secondary-dark-background, 0.45);
+      outline-offset: 2px;
+    }
+  }
+
   @include min-width(lg) {
     flex-direction: row;
     gap: var(--layout-gap-md);
     @include layout-gap(padding, inline);
     @include layout-gap(padding, vertical);
+
+    >.owner-edit-overlay {
+      top: var(--layout-gap);
+      right: var(--layout-gap);
+    }
   }
 
   &.editor {
+    width: 90vw;
+    height: auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+
+    @include min-width(lg) {
+      flex-direction: row;
+      gap: var(--layout-gap-md);
+      @include layout-gap(padding, all);
+    }
+  }
+
+  &.create-listing {
     width: 90vw;
     height: auto;
     min-height: 0;

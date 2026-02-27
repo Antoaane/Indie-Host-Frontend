@@ -3,6 +3,7 @@
 import { computed, onBeforeUnmount, ref, watch, type Ref } from 'vue'
 import type { RouteLocationNormalizedLoaded } from 'vue-router'
 
+import type { RawListingBundle } from '@/domain/listings/types'
 import { normalizeListingStatus } from '@/domain/listings/status'
 import {
   applyPatchToDraftBundle,
@@ -45,6 +46,14 @@ export function useEditorController(options: EditorControllerOptions) {
     const selectedListing = listingState.listings.value.find((item) => item.listingId === listingId)
     return Boolean(selectedListing?.hasPendingChanges)
   })
+  const pendingListingIds = computed(() =>
+    listingState.listings.value
+      .filter((listing) => listing.hasPendingChanges)
+      .map((listing) => listing.listingId),
+  )
+  const pendingListingsCount = computed(() => pendingListingIds.value.length)
+  const hasAnyPendingChanges = computed(() => pendingListingsCount.value > 0)
+  const hasMultiplePendingListings = computed(() => pendingListingsCount.value > 1)
 
   const draftLifecycle = useEditorDraftLifecycle({
     getSource: () => options.source.value,
@@ -247,6 +256,15 @@ export function useEditorController(options: EditorControllerOptions) {
     stage.value = 'listings'
   }
 
+  function buildDraftPatchFromBundle(bundle: RawListingBundle): DraftPatch {
+    const patch: DraftPatch = {}
+    if (bundle.core) patch.core = bundle.core
+    if (bundle.bookings) patch.bookings = bundle.bookings
+    if (bundle.medias) patch.medias = bundle.medias
+    if (bundle.arrival) patch.arrival = bundle.arrival
+    return patch
+  }
+
   async function publishSelectedDraft() {
     const listingId = selectedListingId.value
     if (!listingId || !draftLifecycle.draft.value) return
@@ -260,6 +278,56 @@ export function useEditorController(options: EditorControllerOptions) {
     listingState.draftSnapshotByListingId[listingId] = snapshotListingDraft(snapshot)
     listingState.syncListingPendingChanges(listingId)
     persistListingDraft(listingId, snapshot)
+  }
+
+  async function publishAllPendingDrafts() {
+    const listingIds = pendingListingIds.value
+    if (!listingIds.length) return
+
+    await patchQueue.drainPatchQueue({ throwOnError: true })
+
+    for (const listingId of listingIds) {
+      const sourceSnapshot = listingId === selectedListingId.value && draftLifecycle.draft.value
+        ? draftLifecycle.draft.value
+        : listingState.draftSnapshotByListingId[listingId]
+      if (!sourceSnapshot) continue
+
+      const snapshot = snapshotListingDraft(sourceSnapshot)
+      await options.source.value.publishListingDraft(listingId, snapshot)
+      listingState.publishedSnapshotByListingId[listingId] = snapshotListingDraft(snapshot)
+      listingState.draftSnapshotByListingId[listingId] = snapshotListingDraft(snapshot)
+      listingState.syncListingPendingChanges(listingId)
+      persistListingDraft(listingId, snapshot)
+
+      if (selectedListingId.value === listingId) {
+        draftLifecycle.draft.value = snapshotListingDraft(snapshot)
+      }
+    }
+  }
+
+  async function cancelSelectedDraftChanges() {
+    const listingId = selectedListingId.value
+    if (!listingId) return
+
+    await patchQueue.drainPatchQueue({ throwOnError: true })
+
+    const publishedSnapshot = listingState.publishedSnapshotByListingId[listingId]
+    if (!publishedSnapshot) return
+
+    const snapshot = snapshotListingDraft(publishedSnapshot)
+    const rollbackPatch = buildDraftPatchFromBundle(snapshot)
+    if (Object.keys(rollbackPatch).length) {
+      await options.source.value.patchListingDraft(listingId, rollbackPatch)
+      listingState.applyPatchToListingCard(listingId, rollbackPatch)
+    }
+
+    listingState.draftSnapshotByListingId[listingId] = snapshotListingDraft(snapshot)
+    listingState.syncListingPendingChanges(listingId)
+    persistListingDraft(listingId, snapshot)
+
+    if (selectedListingId.value === listingId) {
+      draftLifecycle.draft.value = snapshotListingDraft(snapshot)
+    }
   }
 
   watch(
@@ -311,13 +379,18 @@ export function useEditorController(options: EditorControllerOptions) {
   return {
     applyDraftPatch,
     applyListingStatusPatch,
+    cancelSelectedDraftChanges,
     draft: draftLifecycle.draft,
     draftStatus: draftLifecycle.draftStatus,
     handleSelectListing,
+    hasAnyPendingChanges,
+    hasMultiplePendingListings,
     isPatchSyncPending: patchQueue.isPatchSyncPending,
     listings: listingState.listings,
     listingsStatus: listingState.listingsStatus,
+    pendingListingsCount,
     previewRawListing: draftLifecycle.previewRawListing,
+    publishAllPendingDrafts,
     publishSelectedDraft,
     selectedListingId,
     selectedListingHasPendingChanges,

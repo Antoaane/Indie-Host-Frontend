@@ -10,6 +10,19 @@
 .editor-gallery-panel {
   @extend %panel;
 
+  &.is-drop-instant {
+    >.body {
+      >.gallery {
+        >.tile,
+        >.tile::after,
+        >.tile * {
+          transition: none !important;
+          animation: none !important;
+        }
+      }
+    }
+  }
+
   &.is-dragging {
     user-select: none;
 
@@ -32,44 +45,6 @@
 
   >.body {
     @extend %panel-body;
-
-    >.actions {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: var(--layout-gap-sm);
-
-      >.meta {
-        @include little-text($thin: false);
-        color: rgba($secondary-text, 0.7);
-      }
-
-      >.buttons {
-        display: flex;
-        gap: var(--layout-gap-xs);
-
-        &>div {
-          @include buttons.primary($theme: white, $icon-only: true);
-
-          // >.icon {
-          //   &:disabled {
-          //     opacity: 0.4;
-          //     cursor: not-allowed;
-          //   }
-          // }
-
-          // &:has(.icon.danger) {
-          //   >.icon {
-          //     @include buttons.primary($theme: dark, $icon-only: true);
-          //   }
-          // }
-        }
-      }
-
-      >.file-input {
-        display: none;
-      }
-    }
 
     >.hint,
     >.feedback {
@@ -99,7 +74,7 @@
         border-radius: borders.$rounded-md;
         aspect-ratio: 1 / 1;
         overflow: hidden;
-        cursor: pointer;
+        cursor: grab;
         transition: transform 120ms cubic-bezier(0.2, 0.7, 0.2, 1);
         will-change: transform;
 
@@ -139,61 +114,58 @@
           opacity: 1;
         }
 
-        &:hover>.drag-handle,
-        &:focus-within>.drag-handle {
-          opacity: 1;
-          pointer-events: auto;
-        }
-
-        >.selection {
+        >.tile-order {
           position: absolute;
-          top: 0.5rem;
-          left: 0.5rem;
-          z-index: 2;
-          width: 22px;
-          height: 22px;
+          top: 0.35rem;
+          left: 0.35rem;
+          z-index: 3;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.35rem;
+          padding: 0.28rem 0.5rem;
           border-radius: 999px;
-          border: 2px solid rgba($accent, 0.85);
-          background: rgba($secondary-dark-background, 0.6);
-          display: grid;
-          place-items: center;
+          background: $accent;
+          pointer-events: none;
+          white-space: nowrap;
+          @include little-text($thin: false);
 
-          >span {
-            width: 10px;
-            height: 10px;
-            border-radius: 999px;
-            background: rgba($accent, 0.9);
-            opacity: 0;
-            @include animations.transition(160ms);
+          >.order-index {
+            font-weight: 700;
+            line-height: 1;
+            color: $secondary;
+          }
+
+          >.cover-label {
+            line-height: 1;
+            opacity: 0.95;
+            color: $secondary;
           }
         }
 
-        >.drag-handle {
+        >.tile-remove {
           position: absolute;
           bottom: 0.35rem;
-          left: 0.35rem;
+          right: 0.35rem;
           z-index: 2;
-          opacity: 0;
-          pointer-events: none;
 
           button {
             border: none;
-            background-color: $translucent;
-            cursor: grab;
-            touch-action: none;
+            width: 1.9rem;
+            height: 1.9rem;
+            border-radius: 999px;
+            display: grid;
+            place-items: center;
+            background: rgba($secondary-dark-background, 0.72);
+            cursor: pointer;
+            @include animations.transition(160ms);
 
             * {
-              stroke: $accent;
+              stroke: rgba($accent, 0.95);
             }
 
-            svg {
-              @include halo($color: rgba($secondary-text, 0.75), $size: 4px);
+            &:hover {
+              background: rgba($bad, 0.9);
             }
-          }
-
-          >* {
-            font-size: 0.9rem;
-            letter-spacing: -0.08rem;
           }
         }
 
@@ -206,19 +178,6 @@
         &.is-over {
           outline: 2px dashed rgba($secondary, 0.5);
           outline-offset: -4px;
-        }
-
-        &.is-selected {
-          outline: 2px solid rgba($secondary, 0.45);
-          outline-offset: -4px;
-
-          &::after {
-            opacity: 1;
-          }
-
-          >.selection>span {
-            opacity: 1;
-          }
         }
 
         >.placeholder {
@@ -239,8 +198,8 @@
         position: relative;
 
         >.button {
-          width: 50% !important;
-          aspect-ratio: 1 / 1;
+          // width: 50% !important;
+          // aspect-ratio: 1 / 1;
           @include buttons.primary($theme: white, $icon-only: true);
 
           >* {

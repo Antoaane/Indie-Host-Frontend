@@ -5,8 +5,11 @@
     id="create-listing-page"
     class="create-listing"
   >
+  <div class="container">
+
     <div class="layout">
       <slot />
     </div>
+  </div>
   </main>
 </template>

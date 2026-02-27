@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
-import { Grip, Plus, Pen, Trash2 } from 'lucide-vue-next'
+import { Plus, Trash2 } from 'lucide-vue-next'
 import type { RawMedias } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
@@ -27,13 +27,11 @@ const emit = defineEmits<{
 
 const images = computed<DraftImage[]>(() => (props.medias?.images as DraftImage[] | undefined) ?? [])
 const panelContent = editorStatic.panels.listing.gallery
-const dragLabel = 'Reordonner la photo'
 const galleryLimits = editorStatic.validation.listing.gallery
 const titleValidation = editorStatic.validation.listing.title
 const textDefaults = editorStatic.validation.defaults.simpleText
 const imageAltMaxLength = resolveTextMaxLength(titleValidation.max, textDefaults)
 const fileInput = ref<HTMLInputElement | null>(null)
-const replaceInput = ref<HTMLInputElement | null>(null)
 const tileRefs = ref<HTMLElement[]>([])
 const galleryFeedback = ref('')
 const galleryFeedbackLevel = ref<'error' | 'success'>('error')
@@ -50,8 +48,8 @@ const dragState = reactive({
   previousCursor: '',
   previousUserSelect: '',
 })
-const selectedIndices = ref<number[]>([])
-const selectedCount = computed(() => selectedIndices.value.length)
+const disableDropAnimation = ref(false)
+let dropAnimationResetRaf = 0
 const isDragging = computed(() => dragState.active)
 const acceptedMimeTypes = acceptedGalleryMimeTypes(galleryLimits.acceptedMimeTypes)
 const readableFormats = humanizeGalleryMimeTypes(galleryLimits.acceptedMimeTypes)
@@ -82,7 +80,6 @@ const orderedImages = computed(() => {
 watch(
   () => orderedImages.value.length,
   () => {
-    selectedIndices.value = selectedIndices.value.filter((index) => index < orderedImages.value.length)
     tileRefs.value = []
   },
 )
@@ -149,119 +146,59 @@ function readFileAsDataUrl(file: File): Promise<string> {
   })
 }
 
-function openReplacePicker() {
-  if (!selectedCount.value) return
-  const input = replaceInput.value
-  if (!input) return
-  if (typeof input.showPicker === 'function') {
-    input.showPicker()
-  } else {
-    input.click()
-  }
-}
-
 async function onFilePicked(event: Event) {
   const input = event.target as HTMLInputElement | null
-  const file = input?.files?.[0]
+  const files = input?.files ? Array.from(input.files) : []
   if (input) input.value = ''
-  if (!file) return
+  if (!files.length) return
   if (orderedImages.value.length >= galleryLimits.maxImages) {
     setGalleryFeedback(maxImagesErrorMessage())
     return
   }
 
-  const validation = await validateGalleryImageFile(file, galleryLimits)
-  if (!validation.valid) {
-    setGalleryFeedback(validation.message, 'error')
-    return
+  const availableSlots = galleryLimits.maxImages - orderedImages.value.length
+  const filesToAdd = files.slice(0, availableSlots)
+  const selectionExceedsLimit = files.length > filesToAdd.length
+
+  for (const file of filesToAdd) {
+    const validation = await validateGalleryImageFile(file, galleryLimits)
+    if (!validation.valid) {
+      setGalleryFeedback(validation.message, 'error')
+      return
+    }
   }
 
   try {
-    const src = await readFileAsDataUrl(file)
-    const alt = normalizeTextInput(file.name.replace(/\.[^/.]+$/, ''), imageAltMaxLength)
-    const next = normalizePositions([
+    const baseImages = [
       ...orderedImages.value,
-      { src, alt, position: images.value.length } as DraftImage,
+    ]
+    const nextImages = await Promise.all(
+      filesToAdd.map(async (file, index) => {
+        const src = await readFileAsDataUrl(file)
+        const alt = normalizeTextInput(file.name.replace(/\.[^/.]+$/, ''), imageAltMaxLength)
+        return { src, alt, position: baseImages.length + index } as DraftImage
+      }),
+    )
+    const next = normalizePositions([
+      ...baseImages,
+      ...nextImages,
     ])
     setImages(next)
-    clearGalleryFeedback()
+    if (selectionExceedsLimit) {
+      setGalleryFeedback(maxImagesErrorMessage(), 'error')
+    } else {
+      clearGalleryFeedback()
+    }
   } catch (err) {
     console.log('[Editor][Gallery] failed to read file', err)
     setGalleryFeedback(galleryLimits.messages.processError, 'error')
   }
 }
 
-function toggleSelection(index: number) {
-  if (dragState.active) return
-  const current = selectedIndices.value
-  if (current.includes(index)) {
-    selectedIndices.value = current.filter((item) => item !== index)
-  } else {
-    selectedIndices.value = [
-      ...current,
-      index,
-    ]
-  }
-}
-
-function clearSelection() {
-  selectedIndices.value = []
-}
-
-function deleteSelected() {
-  if (!selectedCount.value) return
-  const toRemove = new Set(selectedIndices.value)
-  const next = orderedImages.value.filter((_, idx) => !toRemove.has(idx))
+function removeImage(index: number) {
+  const next = orderedImages.value.filter((_, idx) => idx !== index)
   setImages(normalizePositions(next))
-  clearSelection()
   clearGalleryFeedback()
-}
-
-async function onReplacePicked(event: Event) {
-  const input = event.target as HTMLInputElement | null
-  const files = input?.files ? Array.from(input.files) : []
-  if (input) input.value = ''
-  if (!files.length || !selectedCount.value) return
-
-  const targets = [
-    ...selectedIndices.value,
-  ].sort((a, b) => a - b)
-  const maxReplace = Math.min(files.length, targets.length)
-
-  try {
-    const replacements = await Promise.all(
-      files.slice(0, maxReplace).map(async (file) => {
-        const validation = await validateGalleryImageFile(file, galleryLimits)
-        if (!validation.valid) {
-          throw new Error(validation.message)
-        }
-        const src = await readFileAsDataUrl(file)
-        const alt = normalizeTextInput(file.name.replace(/\.[^/.]+$/, ''), imageAltMaxLength)
-        return { src, alt }
-      }),
-    )
-
-    const next = [
-      ...orderedImages.value,
-    ]
-    replacements.forEach((replacement, idx) => {
-      const targetIndex = targets[idx]
-      const current = next[targetIndex]
-      if (!current) return
-      next[targetIndex] = {
-        ...current,
-        src: replacement.src,
-        alt: replacement.alt,
-      }
-    })
-
-    setImages(normalizePositions(next))
-    clearSelection()
-    clearGalleryFeedback()
-  } catch (err) {
-    console.log('[Editor][Gallery] failed to replace files', err)
-    setGalleryFeedback(err instanceof Error ? err.message : 'Impossible de remplacer les images.', 'error')
-  }
 }
 
 function capturePositions() {
@@ -315,18 +252,7 @@ function updateOverIndex() {
 function applyReorder(order: number[]) {
   if (!order.length) return
   const nextImages = order.map((idx) => orderedImages.value[idx]).filter(Boolean)
-  const selectionSnapshot = selectedIndices.value.map((idx) => orderedImages.value[idx]).filter(Boolean)
-
   setImages(normalizePositions(nextImages))
-
-  if (selectionSnapshot.length) {
-    const nextSelection: number[] = []
-    selectionSnapshot.forEach((img) => {
-      const idx = nextImages.indexOf(img)
-      if (idx >= 0) nextSelection.push(idx)
-    })
-    selectedIndices.value = nextSelection
-  }
 }
 
 function stopDrag() {
@@ -359,16 +285,18 @@ function onPointerUp() {
   if (!dragState.active) return
   const order = virtualOrder.value
   const changed = order.some((value, idx) => value !== idx)
+  disableDropAnimation.value = true
 
   if (changed) {
     applyReorder(order)
   }
-
   stopDrag()
+  scheduleDropAnimationReset()
 }
 
 function startDrag(index: number, event: PointerEvent) {
   if (event.button !== 0) return
+  event.preventDefault()
   const positions = capturePositions()
   if (!positions.length) return
 
@@ -394,8 +322,29 @@ function startDrag(index: number, event: PointerEvent) {
   window.addEventListener('pointerup', onPointerUp)
   window.addEventListener('pointercancel', onPointerUp)
 
-  event.preventDefault()
   updateOverIndex()
+}
+
+function scheduleDropAnimationReset() {
+  if (typeof window === 'undefined') {
+    disableDropAnimation.value = false
+    return
+  }
+
+  if (dropAnimationResetRaf) {
+    window.cancelAnimationFrame(dropAnimationResetRaf)
+  }
+
+  dropAnimationResetRaf = window.requestAnimationFrame(() => {
+    dropAnimationResetRaf = window.requestAnimationFrame(() => {
+      disableDropAnimation.value = false
+      dropAnimationResetRaf = 0
+    })
+  })
+}
+
+function onTilePointerDown(index: number, event: PointerEvent) {
+  startDrag(index, event)
 }
 
 function tileStyle(index: number) {
@@ -425,6 +374,9 @@ function tileStyle(index: number) {
 }
 
 onBeforeUnmount(() => {
+  if (typeof window !== 'undefined' && dropAnimationResetRaf) {
+    window.cancelAnimationFrame(dropAnimationResetRaf)
+  }
   stopDrag()
 })
 </script>
@@ -432,52 +384,12 @@ onBeforeUnmount(() => {
 <template>
   <section
     class="create-gallery-panel"
-    :class="{ 'is-dragging': isDragging }"
+    :class="{
+      'is-dragging': isDragging,
+      'is-drop-instant': disableDropAnimation,
+    }"
   >
-    <div class="header">
-      <h3>{{ panelContent.title }}</h3>
-      <p>{{ panelContent.subtitle }}</p>
-    </div>
-
     <div class="body">
-      <div class="actions">
-        <div class="meta">
-          <span v-if="selectedCount">{{ selectedCount }} sélectionnée(s)</span>
-          <span v-else>Sélectionnez des images pour gérer la galerie.</span>
-        </div>
-        <div class="buttons">
-          <div>
-            <button
-              type="button"
-              class="icon"
-              :disabled="!selectedCount"
-              aria-label="Remplacer les images sélectionnées"
-              @click="openReplacePicker"
-            >
-              <Pen :size="20" />
-            </button>
-          </div>
-          <div>
-            <button
-              type="button"
-              class="icon danger"
-              :disabled="!selectedCount"
-              aria-label="Supprimer les images sélectionnées"
-              @click="deleteSelected"
-            >
-              <Trash2 :size="20" />
-            </button>
-          </div>
-        </div>
-        <input
-          ref="replaceInput"
-          class="file-input"
-          type="file"
-          :accept="acceptedMimeTypes"
-          multiple
-          @change="onReplacePicked"
-        />
-      </div>
       <p class="hint">{{ galleryHint }}</p>
       <p
         v-if="galleryFeedback"
@@ -497,31 +409,39 @@ onBeforeUnmount(() => {
           :class="{
             'is-dragging': dragState.active && dragState.index === index,
             'is-over': dragState.active && dragState.overIndex === index && dragState.index !== index,
-            'is-selected': selectedIndices.includes(index),
           }"
-          @click="toggleSelection(index)"
+          @pointerdown="onTilePointerDown(index, $event)"
+          @dragstart.prevent
         >
           <img
             v-if="img.src"
             :src="img.src"
             :alt="img.alt || ''"
             loading="lazy"
+            draggable="false"
+            @dragstart.prevent
           />
           <div
             v-else
             class="placeholder"
           />
-          <div class="selection">
-            <span />
+          <div class="tile-order">
+            <span class="order-index">{{ index + 1 }}</span>
+            <span
+              v-if="index === 0"
+              class="cover-label"
+            >
+              Couverture
+            </span>
           </div>
-          <div class="drag-handle">
+          <div class="tile-remove">
             <button
               type="button"
-              :aria-label="dragLabel"
-              @pointerdown.stop.prevent="startDrag(index, $event)"
-              @click.stop.prevent
+              aria-label="Supprimer l’image"
+              @pointerdown.stop
+              @click.stop="removeImage(index)"
             >
-              <Grip :size="20" />
+              <Trash2 :size="18" />
             </button>
           </div>
         </div>
@@ -534,7 +454,7 @@ onBeforeUnmount(() => {
               :disabled="orderedImages.length >= galleryLimits.maxImages"
               @click="openFilePicker"
             >
-              <Plus :size="20" />
+              Ajouter des images <Plus :size="20" />
             </button>
           </div>
           <input
@@ -542,6 +462,7 @@ onBeforeUnmount(() => {
             class="file-input"
             type="file"
             :accept="acceptedMimeTypes"
+            multiple
             @change="onFilePicked"
           />
         </div>

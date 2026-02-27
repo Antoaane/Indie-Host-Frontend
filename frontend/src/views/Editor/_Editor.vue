@@ -21,13 +21,18 @@ const route = useRoute()
 const {
   applyDraftPatch,
   applyListingStatusPatch,
+  cancelSelectedDraftChanges,
   draft,
   draftStatus,
   handleSelectListing,
+  hasAnyPendingChanges,
+  hasMultiplePendingListings,
   isPatchSyncPending,
   listings,
   listingsStatus,
+  pendingListingsCount,
   previewRawListing,
+  publishAllPendingDrafts,
   publishSelectedDraft,
   selectedListingId,
   selectedListingHasPendingChanges,
@@ -54,7 +59,12 @@ const {
           :isLoading="draftStatus.isLoading"
           :isPatchSyncing="isPatchSyncPending"
           :hasPendingChanges="selectedListingHasPendingChanges"
+          :hasAnyPendingChanges="hasAnyPendingChanges"
+          :hasMultiplePendingListings="hasMultiplePendingListings"
+          :pendingListingsCount="pendingListingsCount"
+          :publishAllPending="publishAllPendingDrafts"
           :publish="publishSelectedDraft"
+          :cancelPendingChanges="cancelSelectedDraftChanges"
           @patch="applyDraftPatch"
         />
       </Transition>
