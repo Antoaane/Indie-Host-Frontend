@@ -80,7 +80,7 @@
 
     &.is-active {
       > button {
-        background: $secondary-dark-background;
+        background: $background;
         color: $accent;
         outline-color: rgba($secondary-button-reference, 0.9);
 

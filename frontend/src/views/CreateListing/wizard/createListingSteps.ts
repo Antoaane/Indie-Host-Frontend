@@ -1,6 +1,5 @@
 // File: src/views/CreateListing/wizard/createListingSteps.ts
 
-import { editorStatic } from '@/views/Editor/utils/editorContent'
 import type { RawListingBundle } from '@/domain/listings/types'
 import CreateAmenitiesStepPanel from '@/views/CreateListing/components/panels/CreateAmenitiesStepPanel.vue'
 import CreateBasePricingStepPanel from '@/views/CreateListing/components/panels/CreateBasePricingStepPanel.vue'
@@ -8,6 +7,7 @@ import CreateCapacityStepPanel from '@/views/CreateListing/components/panels/Cre
 import CreateDescriptionStepPanel from '@/views/CreateListing/components/panels/CreateDescriptionStepPanel.vue'
 import CreateGalleryStepPanel from '@/views/CreateListing/components/panels/CreateGalleryStepPanel.vue'
 import CreateLocationStepPanel from '@/views/CreateListing/components/panels/CreateLocationStepPanel.vue'
+import CreatePricingDiscountsStepPanel from '@/views/CreateListing/components/panels/CreatePricingDiscountsStepPanel.vue'
 import CreateRoomsStepPanel from '@/views/CreateListing/components/panels/CreateRoomsStepPanel.vue'
 import CreateTitleStepPanel from '@/views/CreateListing/components/panels/CreateTitleStepPanel.vue'
 import type { CreateListingStep } from '@/views/CreateListing/wizard/createListing.types'
@@ -15,7 +15,7 @@ import { asNumber, cleanText, stripHtml } from '@/views/CreateListing/wizard/cre
 
 function validateTitle(bundle: RawListingBundle): string | null {
   const title = cleanText(bundle.core?.title)
-  if (!title) return 'Ajoute un titre pour continuer.'
+  if (!title) return 'Ajoutez un titre à votre annonce pour continuer.'
   if (title.length < 6) return 'Le titre doit contenir au moins 6 caractères.'
   return null
 }
@@ -29,24 +29,24 @@ function validateLocation(bundle: RawListingBundle): string | null {
   const latitude = asNumber(bundle.core?.latitude ?? bundle.core?.lat, Number.NaN)
   const longitude = asNumber(bundle.core?.longitude ?? bundle.core?.lng, Number.NaN)
   if (!type || !preciseAddress || !city || !region || !country) {
-    return 'Renseigne le type de logement et l’adresse précise pour déduire ville, région et pays.'
+    return 'Renseignez le type de logement et l’adresse précise pour générer automatiquement la ville, la région et le pays.'
   }
   if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-    return 'Analyse l’adresse précise pour générer les coordonnées de la carte.'
+    return 'Analysez l’adresse pour générer les coordonnées de la carte.'
   }
   return null
 }
 
 function validateCapacity(bundle: RawListingBundle): string | null {
   const capacity = asNumber(bundle.core?.guest_capacity, 0)
-  if (capacity < 1) return 'Indique une capacité d’accueil d’au moins 1 voyageur.'
+  if (capacity < 1) return 'Indiquez une capacité d’accueil d’au moins 1 voyageur.'
   return null
 }
 
 function validateMedia(bundle: RawListingBundle): string | null {
   const images = bundle.medias?.images
   if (!Array.isArray(images) || !images.some((image) => typeof image?.src === 'string' && image.src.trim())) {
-    return 'Ajoute au moins une photo du logement.'
+    return 'Ajoutez au moins une photo de votre logement.'
   }
   return null
 }
@@ -54,26 +54,23 @@ function validateMedia(bundle: RawListingBundle): string | null {
 function validateDescription(bundle: RawListingBundle): string | null {
   const description = stripHtml(bundle.core?.description ?? '')
   if (description.length < 30) {
-    return 'Ajoute une description plus détaillée (minimum 30 caractères).'
+    return 'Ajoutez une description plus détaillée (minimum 30 caractères).'
   }
   return null
 }
 
 function validatePricing(bundle: RawListingBundle): string | null {
   const price = asNumber(bundle.bookings?.price, 0)
-  if (price <= 0) return 'Indique une tarification de nuit supérieure à 0 €.'
+  if (price <= 0) return 'Indiquez un tarif par nuit supérieur à 0 €.'
   return null
 }
 
 export function createListingSteps(): CreateListingStep[] {
-  const listingContent = editorStatic.panels.listing
-  const pricingContent = editorStatic.panels.pricing
-
   return [
     {
       id: 'location',
-      label: listingContent.location.title,
-      description: listingContent.location.subtitle,
+      label: 'Adresse',
+      description: 'Indiquez l’adresse précise pour préremplir automatiquement la localisation publique.',
       component: CreateLocationStepPanel,
       props: (draft, context) => ({
         core: draft.core,
@@ -85,8 +82,8 @@ export function createListingSteps(): CreateListingStep[] {
     },
     {
       id: 'capacity',
-      label: listingContent.capacity.title,
-      description: listingContent.capacity.subtitle,
+      label: 'Voyageurs',
+      description: 'Définissez la capacité maximale que votre logement peut accueillir.',
       component: CreateCapacityStepPanel,
       props: (draft, context) => ({
         core: draft.core,
@@ -97,8 +94,8 @@ export function createListingSteps(): CreateListingStep[] {
     },
     {
       id: 'rooms',
-      label: listingContent.rooms.title,
-      description: listingContent.rooms.subtitle,
+      label: 'Pièces & lits',
+      description: 'Précisez les pièces disponibles et le détail des couchages.',
       component: CreateRoomsStepPanel,
       props: (draft, context) => ({
         core: draft.core,
@@ -108,8 +105,8 @@ export function createListingSteps(): CreateListingStep[] {
     },
     {
       id: 'amenities',
-      label: listingContent.amenities.title,
-      description: listingContent.amenities.subtitle,
+      label: 'Équipements',
+      description: 'Sélectionnez les équipements qui seront affichés aux voyageurs.',
       component: CreateAmenitiesStepPanel,
       props: (draft, context) => ({
         core: draft.core,
@@ -119,8 +116,8 @@ export function createListingSteps(): CreateListingStep[] {
     },
     {
       id: 'gallery',
-      label: listingContent.gallery.title,
-      description: listingContent.gallery.subtitle,
+      label: 'Photos',
+      description: 'Ajoutez des photos de qualité et choisissez votre image de couverture.',
       component: CreateGalleryStepPanel,
       props: (draft, context) => ({
         medias: draft.medias,
@@ -131,8 +128,8 @@ export function createListingSteps(): CreateListingStep[] {
     },
     {
       id: 'title',
-      label: listingContent.title.title,
-      description: listingContent.title.subtitle,
+      label: 'Titre',
+      description: 'Créez un titre court, clair et mémorable pour votre annonce.',
       component: CreateTitleStepPanel,
       props: (draft, context) => ({
         core: draft.core,
@@ -143,8 +140,8 @@ export function createListingSteps(): CreateListingStep[] {
     },
     {
       id: 'description',
-      label: listingContent.description.title,
-      description: listingContent.description.subtitle,
+      label: 'Description',
+      description: 'Présentez votre logement, son ambiance et ses points forts.',
       component: CreateDescriptionStepPanel,
       props: (draft, context) => ({
         core: draft.core,
@@ -155,8 +152,8 @@ export function createListingSteps(): CreateListingStep[] {
     },
     {
       id: 'pricing',
-      label: pricingContent.base.title,
-      description: pricingContent.base.subtitle,
+      label: 'Tarifs',
+      description: 'Définissez votre prix par nuit et vos frais additionnels.',
       component: CreateBasePricingStepPanel,
       props: (draft, context) => ({
         bookings: draft.bookings,
@@ -164,6 +161,17 @@ export function createListingSteps(): CreateListingStep[] {
       }),
       acceptsPatch: true,
       validate: validatePricing,
+    },
+    {
+      id: 'pricing-discounts',
+      label: 'Réductions',
+      description: 'Ajoutez vos paliers de réduction par durée de séjour et par anticipation de réservation.',
+      component: CreatePricingDiscountsStepPanel,
+      props: (draft, context) => ({
+        bookings: draft.bookings,
+        validationError: context?.validationError ?? null,
+      }),
+      acceptsPatch: true,
     },
   ]
 }

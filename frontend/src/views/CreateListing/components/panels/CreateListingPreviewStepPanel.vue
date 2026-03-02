@@ -92,8 +92,8 @@ onBeforeUnmount(() => {
 <template>
   <section class="create-listing-preview-step-panel">
     <div class="intro">
-      <h2>Félicitations, ton annonce est prête.</h2>
-      <p>Prends une dernière minute pour vérifier l’aperçu avant publication.</p>
+      <h2>Votre annonce est prête à être créée.</h2>
+      <p>Vérifiez une dernière fois l’aperçu avant de finaliser la création.</p>
     </div>
 
     <div
@@ -117,7 +117,7 @@ onBeforeUnmount(() => {
       class="empty"
     >
       <div class="skeleton">
-        Chargement...
+        Chargement de l’aperçu...
       </div>
     </div>
   </section>
@@ -161,7 +161,7 @@ onBeforeUnmount(() => {
     border-radius: borders.$rounded-xl;
     overflow: hidden;
     background-color: $secondary;
-    box-shadow: 0 10px 28px rgba($secondary-dark-background, 0.16);
+    box-shadow: 0 10px 28px rgba($background, 0.16);
 
     > .content {
       height: 100%;

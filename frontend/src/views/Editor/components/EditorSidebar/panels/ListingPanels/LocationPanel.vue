@@ -1,7 +1,7 @@
 <!-- File: src/views/Editor/components/EditorSidebar/panels/ListingPanels/LocationPanel.vue -->
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import type { RawCore } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
@@ -27,6 +27,8 @@ const emit = defineEmits<{
 const panelContent = editorStatic.panels.listing.location
 const locationValidation = editorStatic.validation.listing.location
 const textDefaults = editorStatic.validation.defaults.simpleText
+const CUSTOM_HOUSING_TYPE_VALUE = '__custom__'
+const housingTypeOptions = ['Appartement', 'Maison', 'Villa', 'Studio', 'Loft', 'Chalet', 'Cabane', 'Péniche']
 const locationLimits = {
   type: resolveTextMaxLength(locationValidation.typeMax, textDefaults),
   preciseAddress: resolveTextMaxLength(locationValidation.preciseAddressMax, textDefaults),
@@ -39,6 +41,7 @@ const isResolvingAddress = ref(false)
 const addressResolveError = ref('')
 const hasResolvedAddress = ref(false)
 const lastResolvedAddress = ref('')
+const isCustomTypeSelected = ref(false)
 
 const typeValue = computed(() => String(props.core?.type ?? ''))
 const preciseAddressRaw = computed(() => String(props.core?.precise_address ?? ''))
@@ -46,6 +49,23 @@ const cityValue = computed(() => String(props.core?.city ?? ''))
 const countryValue = computed(() => String(props.core?.country ?? ''))
 const regionValue = computed(() => String(props.core?.region ?? ''))
 const preciseAddress = computed(() => normalizeAddress(preciseAddressRaw.value))
+const selectedHousingType = computed(() => {
+  if (isCustomTypeSelected.value) return CUSTOM_HOUSING_TYPE_VALUE
+  const currentType = typeValue.value.trim()
+  if (!currentType) return ''
+  return housingTypeOptions.includes(currentType) ? currentType : CUSTOM_HOUSING_TYPE_VALUE
+})
+const shouldShowCustomTypeInput = computed(() => selectedHousingType.value === CUSTOM_HOUSING_TYPE_VALUE)
+
+watch(typeValue, (nextType) => {
+  const normalizedType = nextType.trim()
+  if (!normalizedType) return
+  if (housingTypeOptions.includes(normalizedType)) {
+    isCustomTypeSelected.value = false
+    return
+  }
+  isCustomTypeSelected.value = true
+}, { immediate: true })
 
 const geocodeQueryMinLength = locationValidation.geocodeQueryMinLength
 const mapLatitude = computed(() => {
@@ -91,6 +111,10 @@ function inputValue(event: Event): string {
   return (event.target as HTMLInputElement).value
 }
 
+function selectValue(event: Event): string {
+  return (event.target as HTMLSelectElement).value
+}
+
 function fieldLength(value: string, max: number): number {
   return Math.min(value.length, max)
 }
@@ -122,6 +146,19 @@ function patchTextField<K extends keyof RawCore>(key: K, rawValue: string, maxLe
   const current = String(props.core?.[key] ?? '')
   if (next === current) return
   patchCore({ [key]: next } as Partial<RawCore>)
+}
+
+function onHousingTypeChange(event: Event) {
+  const nextValue = selectValue(event)
+  if (nextValue === CUSTOM_HOUSING_TYPE_VALUE) {
+    isCustomTypeSelected.value = true
+    if (housingTypeOptions.includes(typeValue.value.trim())) {
+      patchCore({ type: '' })
+    }
+    return
+  }
+  isCustomTypeSelected.value = false
+  patchTextField('type', nextValue, locationLimits.type)
 }
 
 function pickAddressValue(address: NominatimAddress | undefined, keys: Array<keyof NominatimAddress>): string {
@@ -237,10 +274,36 @@ async function maybeResolvePreciseAddress(rawAddress?: string) {
     <div class="body">
       <div class="field">
         <div class="input">
+          <select
+            :value="selectedHousingType"
+            @change="onHousingTypeChange"
+          >
+            <option value="">
+              {{ panelContent.placeholders.type }}
+            </option>
+            <option
+              v-for="option in housingTypeOptions"
+              :key="option"
+              :value="option"
+            >
+              {{ option }}
+            </option>
+            <option :value="CUSTOM_HOUSING_TYPE_VALUE">
+              Autre
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <div
+        v-if="shouldShowCustomTypeInput"
+        class="field"
+      >
+        <div class="input">
           <input
             :value="typeValue"
             type="text"
-            :placeholder="panelContent.placeholders.type"
+            :placeholder="panelContent.placeholders.customType"
             :maxlength="locationLimits.type"
             autocomplete="off"
             inputmode="text"

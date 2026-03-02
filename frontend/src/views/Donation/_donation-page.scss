@@ -7,7 +7,7 @@
 .donation-page {
   padding-top: $nav-height;
   min-height: calc(100vh - $nav-height);
-  background-color: $secondary-dark-background;
+  background-color: $background;
   color: $accent;
 
   @include layout-gap(padding, bottom, 2);

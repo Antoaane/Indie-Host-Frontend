@@ -6,6 +6,7 @@ import { useRoute } from 'vue-router'
 import { useUser } from '@clerk/vue'
 
 import { vp } from '@/utils/viewport'
+import { orderByIndex } from '@/utils/medias/order'
 import { core } from '@/views/ListingView/utils/useParseContent'
 import { getListingsController } from '@/domain/listings/controller'
 import type { RawListingBundle } from '@/domain/listings/types'
@@ -75,6 +76,17 @@ const { ownershipLookup, canEditListing, editListingRoute } = useListingOwnershi
 })
 
 const { listingView, aspectStyles } = useListingAspect(computed(() => props.aspect))
+
+const listingCoverImage = computed(() => {
+  const images = orderByIndex(listingData.value?.medias?.images ?? [])
+  const cover = images.find((image) => (image.position ?? 0) === 0) ?? images[0]
+  return (cover?.src ?? '').trim()
+})
+
+const listingViewStyles = computed<Record<string, string | number>>(() => ({
+  ...(aspectStyles.value as Record<string, string | number>),
+  '--listing-view-cover-image': listingCoverImage.value ? `url(${JSON.stringify(listingCoverImage.value)})` : 'none',
+}))
 </script>
 
 <template>
@@ -82,7 +94,7 @@ const { listingView, aspectStyles } = useListingAspect(computed(() => props.aspe
     <div
       :class="{ 'listing-view': true, editor: props.aspect, 'is-checkout': isCheckout }"
       ref="listingView"
-      :style="aspectStyles"
+      :style="listingViewStyles"
     >
       <ListingDesktopLayout
         :listing-data="listingData"
@@ -108,7 +120,10 @@ const { listingView, aspectStyles } = useListingAspect(computed(() => props.aspe
   </template>
 
   <template v-else>
-    <div :class="{ 'listing-view': true, 'is-checkout': isCheckout }">
+    <div
+      :class="{ 'listing-view': true, 'is-checkout': isCheckout }"
+      :style="listingViewStyles"
+    >
       <ListingMobileLayout
         :listing-data="listingData"
         :booking-range="bookingRange"

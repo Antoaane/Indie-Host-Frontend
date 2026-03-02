@@ -10,8 +10,8 @@ const props = withDefaults(defineProps<{
   submitLabel?: string
   submitLoadingLabel?: string
 }>(), {
-  submitLabel: 'Créer l’annonce',
-  submitLoadingLabel: 'Création...',
+  submitLabel: 'Créer mon annonce',
+  submitLoadingLabel: 'Création en cours...',
 })
 
 const emit = defineEmits<{
@@ -30,7 +30,7 @@ const emit = defineEmits<{
           :disabled="!props.canGoBack"
           @click="emit('previous')"
         >
-          Précédent
+          Retour
         </button>
       </div>
     </div>
@@ -44,7 +44,7 @@ const emit = defineEmits<{
         :disabled="!props.canGoNext"
         @click="emit('next')"
       >
-        Continuer
+        Suivant
       </button>
     </div>
 

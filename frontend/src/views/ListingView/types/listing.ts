@@ -53,6 +53,7 @@ export type MapModel = {
   latitude: number;
   longitude: number;
   zoom?: number;
+  query?: string;
 };
 
 // -------- ÉQUIPEMENTS --------

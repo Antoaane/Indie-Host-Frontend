@@ -5,6 +5,7 @@ import { computed } from 'vue'
 
 import type { EditorMode, EditorSource } from '@/views/Editor/types/editor'
 import CreateListingFooterNavigation from '@/views/CreateListing/components/wizard/CreateListingFooterNavigation.vue'
+import CreateListingHeader from '@/views/CreateListing/components/wizard/CreateListingHeader.vue'
 import CreateListingLayout from '@/views/CreateListing/components/wizard/CreateListingLayout.vue'
 import CreateListingProgressBar from '@/views/CreateListing/components/wizard/CreateListingProgressBar.vue'
 import CreateListingStage from '@/views/CreateListing/components/wizard/CreateListingStage.vue'
@@ -23,6 +24,7 @@ const {
   stepItems,
   draft,
   currentStep,
+  activeStepIndex,
   isPreviewStage,
   stepError,
   submitState,
@@ -48,18 +50,15 @@ const submitError = computed(() => submitState.error)
 
 <template>
   <CreateListingLayout>
-    <!-- <div
+    <!-- <CreateListingHeader
       v-if="!isPreviewStage"
-      class="btn-primary__white quit-floating"
-    >
-      <button
-        type="button"
-        :disabled="submitState.isSubmitting"
-        @click="cancelCreation"
-      >
-        Quitter
-      </button>
-    </div> -->
+      :active-step-index="activeStepIndex"
+      :steps-count="stepItems.length"
+      :title="currentStep.label"
+      :description="currentStep.description"
+      :is-submitting="submitState.isSubmitting"
+      @cancel="cancelCreation"
+    /> -->
 
     <CreateListingProgressBar
       v-if="!isPreviewStage"
@@ -102,8 +101,8 @@ const submitError = computed(() => submitState.error)
       :can-go-next="canGoNext"
       :can-submit="canSubmit"
       :is-submitting="submitState.isSubmitting"
-      submit-label="Consulter mon annonce"
-      submit-loading-label="Création de l’annonce..."
+      submit-label="Créer mon annonce"
+      submit-loading-label="Création de votre annonce..."
       @previous="goToPreviousStep"
       @next="goToNextStep"
       @submit="submitCreateListing"

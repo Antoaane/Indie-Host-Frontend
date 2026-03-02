@@ -4,11 +4,54 @@
 @use '@/styles/variables/borders' as borders;
 
 .listing-view {
+  --listing-view-cover-image: none;
+
   height: 100%;
   min-height: 0;
   display: flex;
   flex-direction: column;
   position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background-color: $background;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -2.5rem;
+    z-index: 0;
+    pointer-events: none;
+
+    // background-color: rgba($accent-surface-2, 0.6);
+    background-image: var(--listing-view-cover-image);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+
+    filter: blur(100px) saturate(1.05);
+    transform: scale(1.06);
+    opacity: 1;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+
+    // background: linear-gradient(
+    //   180deg,
+    //   rgba($background, 0.25) 0%,
+    //   rgba($background, 0.35) 100%
+    // );
+    // background-color: rgba($accent-surface-3, 1);
+  }
+
+  >* {
+    position: relative;
+    z-index: 1;
+  }
 
   >.owner-edit-overlay {
     position: absolute;
@@ -22,7 +65,7 @@
 
     padding: 0.5rem 0.95rem;
     border-radius: borders.$rounded;
-    border: 1px solid rgba($secondary-dark-background, 0.15);
+    border: 1px solid rgba($background, 0.15);
     background: rgba($accent, 0.86);
     backdrop-filter: blur(6px);
 
@@ -33,17 +76,17 @@
     text-decoration: none;
     letter-spacing: 0.01em;
 
-    box-shadow: 0 0.35rem 1.4rem rgba($secondary-dark-background, 0.14);
+    box-shadow: 0 0.35rem 1.4rem rgba($background, 0.14);
     transition: transform 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
 
     &:hover {
       background: rgba($accent, 0.95);
-      box-shadow: 0 0.45rem 1.6rem rgba($secondary-dark-background, 0.2);
+      box-shadow: 0 0.45rem 1.6rem rgba($background, 0.2);
       transform: translateY(-1px);
     }
 
     &:focus-visible {
-      outline: 2px solid rgba($secondary-dark-background, 0.45);
+      outline: 2px solid rgba($background, 0.45);
       outline-offset: 2px;
     }
   }
@@ -96,6 +139,14 @@
     flex-shrink: 0;
     height: 100%;
     min-height: 0;
+
+    .swiper-pagination-bullets {
+      bottom: 2.5rem !important;
+
+      // @include min-width(lg) {
+      //   bottom: 1.5rem !important;
+      // }
+    }
   }
 
   >.gallery.is-placeholder {
@@ -134,7 +185,12 @@
     overflow-y: scroll;
 
     >.core {
+      position: relative;
       @include layout-gap(padding, inline, 0.5);
+
+      @include min-width(lg) {
+        position: static;
+      }
 
       >.panel {
         background-color: $accent;
@@ -166,7 +222,7 @@
   }
 
   >.footer {
-    background: $secondary-dark-background;
+    background: $background;
     padding-top: var(--layout-gap-sm);
     padding-bottom: var(--layout-gap);
 

@@ -350,7 +350,7 @@
         @include animations.transition(150ms);
 
         &:hover:not(:disabled) {
-          background: $secondary-dark-background;
+          background: $background;
           color: $accent;
           stroke: $accent;
 

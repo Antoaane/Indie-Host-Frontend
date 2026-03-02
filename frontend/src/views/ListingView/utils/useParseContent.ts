@@ -177,15 +177,45 @@ function parseDescription(core: Maybe<Partial<RawCore>>): DescriptionModel {
   };
 }
 
+function normalizeMapText(value: unknown): string {
+  if (typeof value !== 'string') return '';
+  return value.trim();
+}
+
+function parseCoordinate(value: unknown): number | null {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : null;
+  }
+
+  if (typeof value === 'string') {
+    const normalized = value.trim().replace(',', '.');
+    if (!normalized) return null;
+    const parsed = Number(normalized);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 function parseMap(core: Maybe<Partial<RawCore>>): MapModel {
-  const latitude = Number(core?.latitude ?? core?.lat ?? 0);
-  const longitude = Number(core?.longitude ?? core?.lng ?? 0);
+  const latitude = parseCoordinate(core?.latitude ?? core?.lat);
+  const coreRecord = (core ?? {}) as Record<string, unknown>;
+  const longitude = parseCoordinate(core?.longitude ?? core?.lng ?? coreRecord.lon);
   const zoom = typeof core?.zoom === 'number' ? core.zoom : undefined;
+  const preciseAddress = normalizeMapText(core?.precise_address);
+  const city = normalizeMapText(core?.city);
+  const region = normalizeMapText(core?.region);
+  const country = normalizeMapText(core?.country);
+  const query = [preciseAddress, city, region, country]
+    .filter((value, index, list) => Boolean(value) && list.indexOf(value) === index)
+    .join(', ');
 
   return {
-    latitude,
-    longitude,
+    latitude: latitude ?? 0,
+    longitude: longitude ?? 0,
     ...(zoom ? { zoom } : {}),
+    ...(query ? { query } : {}),
   };
 }
 

@@ -2,6 +2,7 @@
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
+@use '@/styles/components/buttons' as buttons;
 @use '@/styles/components/inputs' as inputs;
 @use '@/views/Editor/components/EditorSidebar/panels/panel.scss' as *;
 
@@ -16,31 +17,59 @@
     @extend %panel-body;
     gap: var(--layout-gap-sm);
 
-    > .search {
-      display: flex;
-      flex-direction: column;
-      gap: calc(var(--layout-gap-xs) / 2);
+    > .preview {
+      list-style: none;
+      margin: 0;
+      padding: 0;
 
-      > .search-input {
-        @include inputs.search($theme: accent);
+      display: grid;
+      gap: var(--layout-gap-sm);
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+
+      > .item {
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: var(--layout-gap-sm);
+
+        padding: var(--layout-gap-sm) var(--layout-gap-md);
+
+        border: 1px solid rgba($secondary, 0.08);
+        border-radius: borders.$rounded-md;
+        background: rgba($secondary, 0.03);
+
+        > .icon,
+        > .pin {
+          width: 1.1rem;
+          height: 1.1rem;
+          flex: 0 0 auto;
+          stroke: rgba($secondary-text, 0.72);
+        }
+
+        > .name {
+          margin: 0;
+          min-width: 0;
+          @include little-text($thin: false);
+        }
+
+        > .pin {
+          margin-left: auto;
+          stroke: $secondary;
+        }
+
+        &.is-pinned {
+          border-color: rgba($secondary, 0.2);
+          background: rgba($secondary, 0.06);
+
+          > .icon {
+            stroke: rgba($secondary, 0.85);
+          }
+        }
       }
 
-      > .meta {
-        margin: 0;
-        @include little-text($thin: false);
-        color: rgba($secondary-text, 0.65);
+      @include min-width(md) {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
-    }
-
-    > .catalog {
-      max-height: clamp(20rem, 48vh, 34rem);
-      overflow-y: auto;
-      padding-right: var(--layout-gap-2xs);
-
-      display: flex;
-      flex-direction: column;
-      gap: var(--layout-gap);
-      scrollbar-gutter: stable;
     }
 
     > .empty {
@@ -48,6 +77,101 @@
       opacity: 0.7;
       @include little-text($thin: false);
     }
+
+    > .manage {
+      @include buttons.primary($theme: white, $fullwidth: true);
+    }
+  }
+}
+
+.editor-amenities-overlay {
+  align-items: center !important;
+  justify-content: center !important;
+
+  > .overlay-panel {
+    width: min(100%, calc(100vw - var(--layout-gap)));
+    min-width: 0;
+    max-height: min(96vh, 54rem);
+
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap);
+
+    padding: var(--layout-gap);
+    border-radius: borders.$rounded-xl;
+    border: 1px solid rgba($secondary, 0.12);
+    background: $accent;
+    box-shadow: 0 18px 40px rgba($secondary, 0.2);
+  }
+
+  @include min-width(md) {
+    > .overlay-panel {
+      width: min(66rem, 100%);
+      min-width: min(38rem, calc(100vw - var(--layout-gap)));
+      max-height: min(94vh, 56rem);
+    }
+  }
+
+  .overlay-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--layout-gap-sm);
+
+    > h4 {
+      margin: 0;
+      @include h4-title;
+    }
+
+    > .overlay-close {
+      @include buttons.primary($theme: light, $icon-only: true);
+
+      > * {
+        width: 36px;
+        height: 36px;
+      }
+    }
+  }
+
+  .overlay-body {
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-sm);
+  }
+
+  .search {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--layout-gap-xs) / 2);
+
+    > .search-input {
+      @include inputs.search($theme: accent);
+    }
+
+    > .meta {
+      margin: 0;
+      @include little-text($thin: false);
+      color: rgba($secondary-text, 0.65);
+    }
+  }
+
+  .catalog {
+    min-height: 0;
+    max-height: min(82vh, 42rem);
+    overflow-y: auto;
+    padding-right: var(--layout-gap-2xs);
+
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap);
+    scrollbar-gutter: stable;
+  }
+
+  .empty {
+    margin: 0;
+    opacity: 0.7;
+    @include little-text($thin: false);
   }
 
   .category {
@@ -55,9 +179,15 @@
     flex-direction: column;
     gap: var(--layout-gap-sm);
 
-    > h4 {
+    > h5 {
       margin: 0;
       @include base-text($bigger: true, $thin: false);
+    }
+
+    &.is-pinned-group {
+      > h5 {
+        color: $secondary;
+      }
     }
 
     > ul {
@@ -75,10 +205,13 @@
 
       > .item {
         min-width: 0;
+        position: relative;
 
         > .amenity-card {
           width: 100%;
           padding: var(--layout-gap-md);
+          padding-right: calc(var(--layout-gap-md) + 2.2rem);
+          padding-bottom: calc(var(--layout-gap-md) + 1.2rem);
 
           display: flex;
           align-items: flex-start;
@@ -98,8 +231,8 @@
             box-shadow 180ms ease;
 
           > .icon {
-            height: 1.5rem;
-            width: 1.5rem;
+            height: 1.45rem;
+            width: 1.45rem;
             margin-top: 1px;
             stroke: $secondary-text;
             flex-shrink: 0;
@@ -126,34 +259,99 @@
           }
 
           > .state {
-            margin-left: auto;
-            flex: 0 0 auto;
+            position: absolute;
+            right: 0.6rem;
+            bottom: 0.6rem;
 
             display: inline-flex;
             align-items: center;
-            gap: 0.25rem;
+            justify-content: center;
 
-            padding: 0.2rem 0.45rem;
-            border-radius: borders.$rounded-md;
+            width: 1.75rem;
+            height: 1.75rem;
+            border: 1px solid rgba($secondary, 0.18);
+            border-radius: borders.$rounded;
             background: $secondary;
             color: $accent;
-            @include little-text($thin: false);
+            pointer-events: none;
 
             > .check {
-              width: 0.95rem;
-              height: 0.95rem;
+              width: 1.05rem;
+              height: 1.05rem;
               stroke: currentColor;
             }
+          }
+
+          &:focus-visible {
+            outline: 2px solid rgba($secondary, 0.45);
+            outline-offset: 2px;
           }
 
           &:hover {
             border-color: rgba($secondary, 0.24);
             background-color: rgba($accent, 0.9);
           }
+        }
 
-          &:focus-visible {
-            outline: 2px solid rgba($secondary, 0.45);
-            outline-offset: 2px;
+        > .pin-toggle {
+          position: absolute;
+          top: 0.6rem;
+          right: 0.6rem;
+
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.26rem;
+
+          min-height: 1.75rem;
+          padding: 0 0.45rem 0 0.4rem;
+          border: 1px solid rgba($secondary, 0);
+          border-radius: borders.$rounded;
+          background: $secondary;
+          color: $accent;
+          cursor: pointer;
+
+          opacity: 0;
+          pointer-events: none;
+
+          transition:
+            opacity 140ms ease,
+            border-color 140ms ease,
+            color 140ms ease,
+            background-color 140ms ease;
+
+          > .pin-icon {
+            width: 0.98rem;
+            height: 0.98rem;
+            stroke: currentColor;
+            flex-shrink: 0;
+          }
+
+          > .pin-text {
+            margin: 0;
+            line-height: 1;
+            white-space: nowrap;
+            @include little-text($thin: false);
+            font-size: 0.72rem;
+            color: currentColor;
+          }
+
+          &:hover {
+            border-color: $secondary;
+            background: $accent;
+            color: $secondary;
+          }
+
+          // &:focus-visible {
+          //   opacity: 1;
+          //   pointer-events: auto;
+          //   outline: 2px solid rgba($secondary, 0.45);
+          //   outline-offset: 2px;
+          // }
+
+          &.is-active {
+            background: $secondary;
+            color: $accent;
           }
         }
 
@@ -167,30 +365,63 @@
               stroke: $secondary;
             }
 
+            > .texts {
+              > .name {
+                color: $secondary;
+              }
+            }
+
             > .state {
               background: $secondary;
+              border-color: rgba($secondary, 0.18);
 
               * {
                 stroke: $accent !important;
               }
+            }
+          }
 
-              &>span {
-                color: $accent !important;
-              }
+          &:hover,
+          &:focus-within {
+            > .pin-toggle {
+              opacity: 1;
+              pointer-events: auto;
+            }
+          }
+        }
+
+        &.is-pinned {
+          > .amenity-card {
+            border-color: rgba($secondary, 0.4);
+            background-color: rgba($secondary, 0.1);
+          }
+
+          > .pin-toggle {
+            opacity: 1;
+            pointer-events: auto;
+            background: $secondary;
+            color: $accent;
+
+            &:hover {
+              border-color: $secondary;
+              background: $accent;
+              color: $secondary;
             }
           }
         }
       }
     }
   }
+
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .editor-amenities-panel {
+  .editor-amenities-overlay {
     .category {
       > ul {
         > .item {
-          > .amenity-card {
+          > .amenity-card,
+          > .pin-toggle {
             transition: none;
           }
         }

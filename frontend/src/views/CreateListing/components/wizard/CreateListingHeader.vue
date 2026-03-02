@@ -17,7 +17,7 @@ const emit = defineEmits<{
 <template>
   <div class="header">
     <div class="step-title">
-      <p> Étape {{ props.activeStepIndex + 1 }} / {{ props.stepsCount }} </p>
+      <p>Étape {{ props.activeStepIndex + 1 }} sur {{ props.stepsCount }}</p>
       <h1>{{ props.title }}</h1>
       <small>{{ props.description }}</small>
     </div>
@@ -28,7 +28,7 @@ const emit = defineEmits<{
         :disabled="props.isSubmitting"
         @click="emit('cancel')"
       >
-        Quitter
+        Quitter le brouillon
       </button>
     </div>
   </div>

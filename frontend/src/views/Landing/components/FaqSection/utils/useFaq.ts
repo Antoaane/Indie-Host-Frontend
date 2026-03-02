@@ -4,6 +4,7 @@
 import { ref, computed, watch } from 'vue'
 import { useHead } from '@unhead/vue'
 
+import { normalizeSearchText } from '@/utils/search'
 import type { FaqNode } from '@/views/Landing/types/content'
 export function useFaq(initialNodes: FaqNode[] = []) {
   // → L’arbre complet de la FAQ
@@ -21,10 +22,9 @@ export function useFaq(initialNodes: FaqNode[] = []) {
 
   // 2. Suggestions (en fonction du search)
   const suggestions = computed<FaqNode[]>(() => {
-    const term = search.value.trim().toLowerCase()
+    const term = normalizeSearchText(search.value)
     if (term.length < 2) return []
-    return flatNodes(data.value)
-      .filter((n) => n.question && n.question.toLowerCase().includes(term))
+    return flatNodes(data.value).filter((n) => normalizeSearchText(n.question).includes(term))
   })
 
   function selectSuggestion(node: FaqNode) {
@@ -42,8 +42,8 @@ export function useFaq(initialNodes: FaqNode[] = []) {
         }
         // Si c’est une feuille (question/answer), on check le contenu
         if (
-          node.question?.toLowerCase().includes(term) ||
-          node.answer?.toLowerCase().includes(term)
+          normalizeSearchText(node.question).includes(term) ||
+          normalizeSearchText(node.answer).includes(term)
         ) {
           return node
         }
@@ -53,7 +53,7 @@ export function useFaq(initialNodes: FaqNode[] = []) {
   }
 
   const filteredData = computed<FaqNode[]>(() =>
-    filterTree(data.value, search.value.trim().toLowerCase())
+    filterTree(data.value, normalizeSearchText(search.value))
   )
 
   // 4. Générer le JSON-LD pour le SEO

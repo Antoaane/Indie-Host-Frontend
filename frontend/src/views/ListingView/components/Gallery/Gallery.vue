@@ -39,6 +39,12 @@ function openCoverLightbox() {
   fancyboxShow(lightboxPayload.value, startIndex)
 }
 
+function openSlideLightbox(startIndexRaw: number) {
+  if (!lightboxPayload.value.length) return
+  const startIndex = Math.max(0, Math.min(startIndexRaw, lightboxPayload.value.length - 1))
+  fancyboxShow(lightboxPayload.value, startIndex)
+}
+
 const slides = computed(() => orderedImages.value)
 
 const swiperBaseParams = createListingMediaSwiperParams({
@@ -94,7 +100,7 @@ const swiperParams = swiperBaseParams as unknown as Record<string, unknown>
       v-bind="swiperParams"
     >
       <SwiperSlide
-        v-for="slide in slides"
+        v-for="(slide, slideIndex) in slides"
         :key="slide.position"
       >
         <img
@@ -102,6 +108,7 @@ const swiperParams = swiperBaseParams as unknown as Record<string, unknown>
           loading="lazy"
           :src="slide.src"
           :alt="slide.alt"
+          @click="openSlideLightbox(slideIndex)"
         />
       </SwiperSlide>
     </Swiper>

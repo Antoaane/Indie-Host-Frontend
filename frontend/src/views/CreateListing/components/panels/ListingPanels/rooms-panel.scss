@@ -9,17 +9,37 @@
 .create-rooms-panel {
   @extend %panel;
 
-  >.header {
+  flex: 1 1 auto;
+  min-height: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  > .header {
     @extend %panel-header;
   }
 
-  >.body {
+  > .body {
     @extend %panel-body;
 
-    >.rooms-list {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+
+    > .rooms-list {
+      // height: 100% !important;
+      flex: 1 1 auto;
+      padding: 0 !important;
+
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
       gap: var(--layout-gap-sm);
+
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior-y: contain;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-gutter: stable;
 
       @include min-width(lg) {
         grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
@@ -50,7 +70,7 @@
       gap: 0.45rem;
       min-height: 4.5rem;
 
-      >ul {
+      > ul {
         margin: 0;
         padding: 0;
         list-style: none;
@@ -58,14 +78,14 @@
         gap: 0.35rem;
       }
 
-      >ul>li {
+      > ul > li {
         display: inline-flex;
         align-items: center;
         gap: 0.42rem;
 
         @include little-text($thin: false);
 
-        >svg {
+        > svg {
           width: 1rem;
           height: 1rem;
           stroke: $secondary;
@@ -85,9 +105,8 @@
     }
 
     .room-add-bed {
-      @include buttons.primary($theme: black, $fullwidth: true);
-
-      >* {
+      > button {
+        @include buttons.low-btn($fullwidth: true, $color: $secondary, $hover: $accent, $text-color: $accent, $text-hover-color: $secondary);
         min-height: 2rem;
       }
     }
@@ -104,7 +123,7 @@
       border-color: rgba($secondary, 0.16);
       box-shadow: none;
 
-      >select {
+      > select {
         font-size: 1.28rem;
         font-weight: 700;
         line-height: 1.1;
@@ -129,17 +148,16 @@
     }
 
     .room-remove {
-      >button {
+      > button {
         @include buttons.low-btn($icon-only: true);
         width: 2.35rem;
         height: 2.35rem;
       }
     }
 
-    >.add-room {
-      @include buttons.primary($theme: white, $fullwidth: true);
+    > .add-room {
+      @include buttons.primary($theme: dark, $fullwidth: true);
     }
-
   }
 }
 
@@ -147,7 +165,7 @@
   align-items: center !important;
   justify-content: center !important;
 
-  >.rooms-bed-overlay-panel {
+  > .rooms-bed-overlay-panel {
     width: min(44rem, 100%);
     min-width: min(34rem, calc(100vw - var(--layout-gap)));
     min-height: min(26rem, calc(100vh - (var(--layout-gap) * 2)));
@@ -168,15 +186,15 @@
     align-items: center;
     gap: var(--layout-gap-sm);
 
-    >h4 {
+    > h4 {
       margin: 0;
       @include h4-title();
     }
 
-    >.overlay-close {
+    > .overlay-close {
       @include buttons.primary($theme: light, $icon-only: true);
 
-      >* {
+      > * {
         width: 36px;
         height: 36px;
       }
@@ -219,35 +237,31 @@
     border: 1px solid rgba($secondary, 0.1);
     background: rgba($secondary, 0.02);
 
-    >.stepper {
-      @include inputs.stepper($theme: base);
+    > .create-listing-number-stepper {
       align-self: center;
       flex: 0 0 auto;
-
-      >.value {
-        width: 3rem;
-      }
+      --create-listing-number-stepper-value-width: 3rem;
     }
 
-    >.bed-select {
+    > .bed-select {
       @include inputs.select($theme: base);
       align-self: center;
       flex: 1 1 12rem;
       min-width: 0;
     }
 
-    >.remove {
+    > .remove {
       @include buttons.primary($theme: light, $icon-only: true);
       align-self: center;
       flex: 0 0 auto;
 
-      >* {
+      > * {
         width: 36px;
         height: 36px;
       }
     }
 
-    >.bed-custom {
+    > .bed-custom {
       flex: 1 0 100%;
       display: flex;
       flex-direction: column;
@@ -272,7 +286,7 @@
     flex-direction: column;
     gap: 0.35rem;
 
-    >p {
+    > p {
       margin: 0;
       color: rgba($secondary-text, 0.66);
       @include little-text($thin: false);
@@ -284,7 +298,7 @@
     flex-wrap: wrap;
     gap: 0.35rem;
 
-    >button {
+    > button {
       width: 34px;
       height: 34px;
       display: inline-flex;
@@ -295,9 +309,12 @@
       background: $accent;
       color: rgba($secondary-text, 0.72);
       cursor: pointer;
-      transition: border-color 140ms ease, background-color 140ms ease, color 140ms ease;
+      transition:
+        border-color 140ms ease,
+        background-color 140ms ease,
+        color 140ms ease;
 
-      >svg {
+      > svg {
         width: 16px;
         height: 16px;
       }
@@ -314,12 +331,6 @@
     }
   }
 
-  .custom-capacity {
-    >.stepper {
-      @include inputs.stepper($theme: base);
-    }
-  }
-
   .overlay-submit {
     display: flex;
     flex-direction: column;
@@ -328,7 +339,7 @@
   }
 
   .overlay-submit-add {
-    >button {
+    > button {
       @include buttons.low-btn($icon-only: false, $borders: true, $stroke: false);
       width: 100%;
     }

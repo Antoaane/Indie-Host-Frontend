@@ -15,7 +15,7 @@ html {
   // scroll-behavior: auto;
   scroll-behavior: smooth;
   overflow-x: hidden;
-  background-color: $secondary-dark-background;
+  background-color: $background;
 }
 
 body {
@@ -23,7 +23,7 @@ body {
   padding: 0;
   overflow-x: hidden;
 
-  background-color: $secondary-dark-background;
+  background-color: $background;
 
   main {
     z-index: 1;

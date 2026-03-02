@@ -5,6 +5,7 @@ import { computed, ref } from 'vue'
 import { Search } from 'lucide-vue-next'
 
 import BaseSidebar from '@/components/layouts/BaseSidebar.vue'
+import { normalizeSearchText } from '@/utils/search'
 import type { MessagingConversation } from '@/views/Messaging/types/messaging'
 
 const props = defineProps<{
@@ -37,15 +38,8 @@ function handleSelect(conversationId: string) {
 
 const query = ref('')
 
-function normalizeSearch(value: string) {
-  return value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-}
-
 const filteredConversations = computed(() => {
-  const normalized = normalizeSearch(query.value.trim())
+  const normalized = normalizeSearchText(query.value)
   if (!normalized) return props.conversations
   return props.conversations.filter((conversation) => conversation.searchIndex.includes(normalized))
 })

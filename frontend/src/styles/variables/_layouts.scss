@@ -256,7 +256,7 @@ $selected-sides: map.get($side-map, $sides);
   // overflow-y: scroll;
   scrollbar-width: thin;
   /* auto | thin | none */
-  scrollbar-color: rgba($secondary-dark-background, 0.25) $translucent;
+  scrollbar-color: rgba($background, 0.25) $translucent;
   /* thumb | track */
 
   /* Cible la scrollbar entière */
@@ -274,7 +274,7 @@ $selected-sides: map.get($side-map, $sides);
 
   /* Le "thumb" (curseur qu’on déplace) */
   ::-webkit-scrollbar-thumb {
-    background: rgba($secondary-dark-background, 0.6);
+    background: rgba($background, 0.6);
     border-radius: borders.$rounded;
     border: 2px solid $translucent;
     /* crée un effet d’espace autour */
@@ -282,7 +282,7 @@ $selected-sides: map.get($side-map, $sides);
 
   /* Changement au survol */
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba($secondary-dark-background, 0.8);
+    background: rgba($background, 0.8);
   }
 
   /* Optionnel : boutons de défilement */

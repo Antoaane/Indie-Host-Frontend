@@ -4,6 +4,7 @@
 import { computed } from 'vue'
 import type { RawCore } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
+import CreateListingNumberStepper from '@/views/CreateListing/components/panels/inputs/CreateListingNumberStepper.vue'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 import { clampInteger, formatValidationMessage } from '@/utils/inputValidation'
 
@@ -16,14 +17,7 @@ const emit = defineEmits<{
 }>()
 
 const capacityValidation = editorStatic.validation.listing.capacity
-const capacity = computed(() =>
-  clampInteger(
-    props.core?.guest_capacity,
-    capacityValidation.min,
-    capacityValidation.max,
-    capacityValidation.min,
-  ),
-)
+const capacity = computed(() => clampInteger(props.core?.guest_capacity, capacityValidation.min, capacityValidation.max, capacityValidation.min))
 const capacityHint = computed(() =>
   formatValidationMessage(capacityValidation.messages.hint, {
     min: capacityValidation.min,
@@ -47,36 +41,17 @@ function setCapacity(next: number) {
     </div>
 
     <div class="body">
-      <div class="stepper">
-        <div class="btn">
-          <button
-            type="button"
-            :disabled="capacity <= capacityValidation.min"
-            @click="setCapacity(capacity - 1)"
-          >
-            −
-          </button>
-        </div>
-        <input
-          class="value"
-          type="number"
-          :min="capacityValidation.min"
-          :max="capacityValidation.max"
-          step="1"
-          inputmode="numeric"
-          :value="capacity"
-          @input="setCapacity(($event.target as HTMLInputElement).valueAsNumber)"
-        />
-        <div class="btn">
-          <button
-            type="button"
-            :disabled="capacity >= capacityValidation.max"
-            @click="setCapacity(capacity + 1)"
-          >
-            +
-          </button>
-        </div>
-      </div>
+      <CreateListingNumberStepper
+        variant="hero"
+        :value="capacity"
+        :min="capacityValidation.min"
+        :max="capacityValidation.max"
+        :decrement-disabled="capacity <= capacityValidation.min"
+        :increment-disabled="capacity >= capacityValidation.max"
+        @decrement="setCapacity(capacity - 1)"
+        @input="setCapacity($event.number)"
+        @increment="setCapacity(capacity + 1)"
+      />
       <p class="hint">{{ capacityHint }}</p>
     </div>
   </section>
@@ -86,8 +61,6 @@ function setCapacity(next: number) {
 /* File: src/views/CreateListing/components/panels/ListingPanels/capacity-panel.scss */
 
 @use '@/styles/variables/globals' as *;
-@use '@/styles/variables/borders' as borders;
-@use '@/styles/components/inputs' as inputs;
 @use '@/views/CreateListing/components/panels/panel.scss' as *;
 
 .create-capacity-panel {
@@ -99,10 +72,6 @@ function setCapacity(next: number) {
 
   > .body {
     @extend %panel-body;
-
-    > .stepper {
-      @include inputs.stepper($theme: base);
-    }
 
     > .hint {
       margin: 0;

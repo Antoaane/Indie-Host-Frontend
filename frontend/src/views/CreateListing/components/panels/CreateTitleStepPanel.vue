@@ -18,7 +18,7 @@ const emit = defineEmits<{
 
 <template>
   <CreateWizardStepShell
-    title="Choisis un titre clair et mémorable pour ton annonce"
+    title="Créez un titre clair, attractif et facile à retenir"
     :validation-error="props.validationError"
   >
     <TitlePanel

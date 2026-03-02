@@ -57,7 +57,7 @@
       "description": "Balades et quais à 2 minutes",
       "category": "Vue & accès",
       "relevance": 92,
-      "pinned": true
+      "pinned": false
     },
     {
       "id": "ELEVATOR",
@@ -73,7 +73,7 @@
       "description": "Idéal télétravail et streaming",
       "category": "Confort & travail",
       "relevance": 96,
-      "pinned": true
+      "pinned": false
     },
     {
       "id": "DEDICATED_WORKSPACE",
@@ -105,7 +105,7 @@
       "description": "Plaques, four, vaisselle",
       "category": "Cuisine & boissons",
       "relevance": 88,
-      "pinned": true
+      "pinned": false
     },
     {
       "id": "NESPRESSO_COFFEE_MACHINE",
@@ -137,7 +137,7 @@
       "description": "Boîte à clé sécurisée",
       "category": "Sécurité",
       "relevance": 80,
-      "pinned": false
+      "pinned": true
     },
     {
       "id": "SMOKE_ALARM",
@@ -145,7 +145,7 @@
       "description": "Dans la pièce de vie",
       "category": "Sécurité",
       "relevance": 84,
-      "pinned": false
+      "pinned": true
     },
     {
       "id": "FIRST_AID_KIT",
@@ -175,6 +175,14 @@
       "id": "EASY_METRO_ACCESS",
       "name": "Accès facile métro",
       "description": "Station à proximité",
+      "category": "Arrivée & mobilité",
+      "relevance": 70,
+      "pinned": false
+    },
+    {
+      "id": "PARKING_FOR_TWO_CARS",
+      "name": "Parking 2 voitures",
+      "description": "Sur la propriété",
       "category": "Arrivée & mobilité",
       "relevance": 70,
       "pinned": false

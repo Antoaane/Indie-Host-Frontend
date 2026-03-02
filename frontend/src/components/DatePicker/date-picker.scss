@@ -53,7 +53,7 @@
       &:not(:disabled):hover {
         color: $accent;
         stroke: $secondary-button-reference;
-        background-color: $secondary-dark-background;
+        background-color: $background;
         outline: 3px solid rgba($accent, 0.75);
 
         path {
@@ -179,14 +179,14 @@
               border-radius: 0;
 
               &:is([data-selection-start="true"], [data-selection-start]) {
-                background-color: $secondary-dark-background;
+                background-color: $background;
                 border-radius: borders.$rounded-md;
 
                 color: $accent !important;
               }
 
               &:is([data-selection-end="true"], [data-selection-end]) {
-                background-color: $secondary-dark-background;
+                background-color: $background;
                 border-radius: borders.$rounded-md;
 
                 color: $accent !important;

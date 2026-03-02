@@ -46,14 +46,14 @@
           }
 
           &::-webkit-progress-value {
-            background: $secondary-dark-background;
+            background: $background;
             /* barre noire */
             transition: width 0.25s ease;
           }
 
           /* Firefox */
           &::-moz-progress-bar {
-            background: $secondary-dark-background;
+            background: $background;
             /* barre noire */
             transition: width 0.25s ease;
           }

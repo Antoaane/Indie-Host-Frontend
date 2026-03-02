@@ -2,7 +2,17 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
-import { ChevronDown, ChevronLeft, Lock, Star } from 'lucide-vue-next'
+import {
+  CalendarCheck,
+  ChevronDown,
+  ChevronLeft,
+  Lock,
+  MessageCircle,
+  ShieldCheck,
+  Star,
+  UserRound,
+  Wallet,
+} from 'lucide-vue-next'
 import type {
   Stripe,
   StripeCardCvcElement,
@@ -718,6 +728,11 @@ onBeforeUnmount(() => {
     <section class="checkout-section">
       <h3 class="progress-section-title">
         <span class="progress-step-indicator is-active">1</span>
+        <Wallet
+          :size="16"
+          class="section-title-icon"
+          aria-hidden="true"
+        />
         <span class="section-title-label">Vos préférences</span>
       </h3>
       <div
@@ -819,6 +834,11 @@ onBeforeUnmount(() => {
         >
           {{ canAccessInformationStep ? '✓' : '2' }}
         </span>
+        <ShieldCheck
+          :size="16"
+          class="section-title-icon"
+          aria-hidden="true"
+        />
         <span class="section-title-label">{{ paymentSectionTitle }}</span>
       </h3>
       <div
@@ -986,6 +1006,11 @@ onBeforeUnmount(() => {
           >
             {{ canAccessReminderStep ? '✓' : '3' }}
           </span>
+          <UserRound
+            :size="16"
+            class="section-title-icon"
+            aria-hidden="true"
+          />
           <span class="section-title-label">Informations nécessaires</span>
           <ChevronDown
             :size="16"
@@ -1052,6 +1077,11 @@ onBeforeUnmount(() => {
           >
             {{ canAccessFinalStep ? '✓' : '4' }}
           </span>
+          <MessageCircle
+            :size="16"
+            class="section-title-icon"
+            aria-hidden="true"
+          />
           <span class="section-title-label">Un petit rappel</span>
           <ChevronDown
             :size="16"
@@ -1103,6 +1133,11 @@ onBeforeUnmount(() => {
           >
             5
           </span>
+          <CalendarCheck
+            :size="16"
+            class="section-title-icon"
+            aria-hidden="true"
+          />
           <span class="section-title-label">C'est parti</span>
           <ChevronDown
             :size="16"

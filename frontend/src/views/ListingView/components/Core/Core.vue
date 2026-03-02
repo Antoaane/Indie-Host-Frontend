@@ -133,6 +133,7 @@ const descriptionStatic = {
       :latitude="props.data.map.latitude"
       :longitude="props.data.map.longitude"
       :zoom="props.data.map.zoom"
+      :query="props.data.map.query"
       :static-content="staticContent.listing.headings"
     />
   </section>

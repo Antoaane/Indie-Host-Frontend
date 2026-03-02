@@ -18,8 +18,8 @@ const emit = defineEmits<{
 
 <template>
   <CreateWizardStepShell
-    title="Ajoute des photos qui donnent envie de réserver"
-    hint="Astuce: commence par une photo lumineuse de l’espace principal."
+    title="Ajoutez des photos qui valorisent votre logement"
+    hint="Commencez par votre meilleure photo: elle sera utilisée en couverture."
     :validation-error="props.validationError"
   >
     <GalleryPanel

@@ -7,6 +7,7 @@ const props = defineProps<{
   latitude: number
   longitude: number
   zoom?: number
+  query?: string
   staticContent: {
     features: string
     availability: string
@@ -14,9 +15,23 @@ const props = defineProps<{
   }
 }>()
 
+const mapQuery = computed(() => {
+  const query = String(props.query ?? '').trim()
+  if (query) return query
+
+  if (Number.isFinite(props.latitude) && Number.isFinite(props.longitude)) {
+    return `${props.latitude},${props.longitude}`
+  }
+
+  return ''
+})
+
 const mapSrc = computed(() => {
   const zoom = props.zoom ?? 15
-  return `https://www.google.com/maps?hl=fr&ll=${props.latitude},${props.longitude}&z=${zoom}&output=embed`
+  if (!mapQuery.value) {
+    return `https://www.google.com/maps?hl=fr&z=${zoom}&output=embed`
+  }
+  return `https://www.google.com/maps?hl=fr&q=${encodeURIComponent(mapQuery.value)}&z=${zoom}&output=embed`
 })
 
 const heading = computed(() => props.staticContent.map || props.staticContent.features)

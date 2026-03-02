@@ -7,7 +7,7 @@
     "states": {
       "loading": "Chargement…",
       "listingsLoadError": "Impossible de charger les annonces.",
-      "previewSelect": "Sélectionne une annonce pour afficher la preview."
+      "previewSelect": "Sélectionnez une annonce pour afficher la preview."
     },
     "listings": {
       "searchPlaceholder": "Rechercher une annonce",
@@ -79,7 +79,7 @@
     },
     "preview": {
       "loading": "Chargement…",
-      "empty": "Sélectionne une annonce pour afficher la preview."
+      "empty": "Sélectionnez une annonce pour afficher la preview."
     },
     "panels": {
       "listing": {
@@ -92,17 +92,17 @@
         },
         "title": {
           "title": "Titre de l’annonce",
-          "subtitle": "Donnez un nom original à votre lieu",
+          "subtitle": "Donnez un nom clair et mémorable à votre logement",
           "placeholder": "Maison flottante / Houseboat - …"
         },
         "gallery": {
-          "title": "Galerie de photo",
-          "subtitle": "Montrez votre logement sous son plus beau jour",
+          "title": "Photos",
+          "subtitle": "Montrez votre logement sous son meilleur jour",
           "addLabel": "Ajouter une photo"
         },
         "description": {
-          "title": "Présentation",
-          "subtitle": "Donnez une description unique à votre logement",
+          "title": "Description",
+          "subtitle": "Décrivez votre logement avec précision et personnalité",
           "placeholder": "Décrivez votre logement…",
           "quillPlaceholder": "Décrivez votre logement…",
           "toolbar": {
@@ -114,25 +114,31 @@
           "title": "Équipements",
           "subtitle": "Aperçu des équipements visibles côté voyageurs.",
           "empty": "Aucun équipement renseigné.",
-          "manageCta": "Gérer les équipements",
+          "manageCta": "Gérer mes équipements",
           "overlay": {
             "titleCatalog": "Ajouter un équipement",
             "titleList": "Équipements",
             "addCta": "+ Ajouter un équipement",
             "searchPlaceholder": "Rechercher un équipement...",
             "added": "Ajouté",
-            "empty": "Aucun résultat."
+            "empty": "Aucun résultat.",
+            "ariaLabel": "Gérer les équipements",
+            "close": "Fermer",
+            "pinnedCategory": "Équipements épinglés",
+            "pin": "Épingler cet équipement",
+            "unpin": "Retirer cet équipement des épinglés"
           }
         },
         "capacity": {
           "title": "Capacité d’accueil",
-          "subtitle": "Combien de voyageurs pouvez vous accueillir"
+          "subtitle": "Combien de voyageurs pouvez-vous accueillir ?"
         },
         "location": {
-          "title": "Adresse",
-          "subtitle": "Seule une localisation approximative sera affichée sur l’annonce",
+          "title": "Localisation",
+          "subtitle": "Seule une zone approximative sera visible sur l’annonce",
           "placeholders": {
             "type": "Type (ex: Péniche)",
+            "customType": "Type personnalisé",
             "preciseAddress": "Adresse précise (numéro, rue, code postal, ville)",
             "city": "Ville",
             "country": "Pays",
@@ -145,18 +151,18 @@
             "resolving": "Analyse de l’adresse..."
           },
           "hints": {
-            "preciseAddress": "Adresse privée: Indie Host utilise cette donnée pour extraire ville/région/pays et préparer la zone de carte."
+            "preciseAddress": "Adresse privée : Indie Host utilise cette donnée pour extraire ville, région, pays et préparer la carte."
           },
           "feedback": {
             "resolved": "Ville, région, pays et coordonnées ont été déduits automatiquement.",
-            "partial": "Adresse partiellement reconnue. Vérifie ville, région et pays.",
-            "notFound": "Adresse introuvable. Vérifie la saisie puis réessaie.",
+            "partial": "Adresse partiellement reconnue. Vérifiez ville, région et pays.",
+            "notFound": "Adresse introuvable. Vérifiez la saisie puis réessayez.",
             "resolveError": "Impossible d’analyser l’adresse pour le moment."
           }
         },
         "rooms": {
-          "title": "Couchages",
-          "subtitle": "Indiquez le nombre de couchage par pièce",
+          "title": "Pièces et couchages",
+          "subtitle": "Indiquez le nombre de couchages par pièce",
           "addBed": "+ Ajouter un lit",
           "addRoom": "+ Ajouter une pièce",
           "roomLabelGeneric": "Pièce",
@@ -303,7 +309,7 @@
           },
           "delete": {
             "title": "Suppression",
-            "hint": "Retire l’annonce des listes sans supprimer les données.",
+            "hint": "Retirez l’annonce des listes sans supprimer les données.",
             "cta": "Supprimer l’annonce",
             "current": "Statut actuel :",
             "confirmTitle": "Confirmer la suppression",
@@ -315,8 +321,8 @@
       },
       "pricing": {
         "base": {
-          "title": "Tarification",
-          "subtitle": "Définissez votre tarif principal et vos ajustements automatiques",
+          "title": "Tarifs",
+          "subtitle": "Définissez votre tarif principal et vos ajustements automatiques.",
           "pricePerNightLabel": "Prix par nuit",
           "pricePerNightSuffix": "€ / nuit",
           "weekendToggle": "Prix week-end (vendredi / samedi)",
@@ -327,7 +333,7 @@
           "extraGuestsPlaceholder": "Seuil inclus"
         },
         "stay": {
-          "title": "Durée de séjour",
+          "title": "Durée du séjour",
           "subtitle": "Fixez vos règles de durée et vos paliers de réduction",
           "minNights": "Séjour minimum",
           "maxNights": "Séjour maximum (optionnel)",
@@ -349,6 +355,34 @@
           "customTitle": "Autres frais personnalisés",
           "addCustom": "Ajouter un frais",
           "customPlaceholder": "Libellé"
+        },
+        "createFees": {
+          "title": "Frais additionnels",
+          "subtitle": "Ajoutez uniquement les frais que vous souhaitez facturer.",
+          "empty": "Aucun frais pour le moment.",
+          "addFee": "Ajouter un frais",
+          "namePlaceholder": "Ex : Frais de ménage",
+          "amountLabel": "Montant",
+          "perStaySuffix": "€ / séjour"
+        },
+        "createDiscounts": {
+          "title": "Paliers de réduction",
+          "subtitle": "Configurez vos remises automatiques.",
+          "hint": "Remise entre {discountMin}% et {discountMax}% · maximum {discountTiersMax} paliers actifs par section.",
+          "durationTitle": "Selon la durée du séjour",
+          "durationSubtitle": "Appliquées selon le nombre total de nuits réservées.",
+          "durationDefault7": "-X% pour les résa de 7j ou plus",
+          "durationDefault28": "-X% pour les résa de 28j ou plus",
+          "durationAdd": "Ajouter un palier durée",
+          "durationEmpty": "Aucun palier durée personnalisé.",
+          "durationThresholdSuffix": "nuits min",
+          "bookingTitle": "Selon l’anticipation de réservation",
+          "bookingSubtitle": "Appliquées selon le nombre de jours avant l’arrivée.",
+          "bookingDefault48h": "-X% pour les résa -48h avant",
+          "bookingAdd": "Ajouter un palier anticipation",
+          "bookingEmpty": "Aucun palier anticipation personnalisé.",
+          "bookingThresholdSuffix": "jours max avant arrivée",
+          "discountSuffix": "% de remise"
         },
         "taxes": {
           "title": "Taxes & obligations légales",

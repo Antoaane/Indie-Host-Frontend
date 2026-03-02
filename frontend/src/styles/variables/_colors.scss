@@ -5,9 +5,6 @@
 // MAIN
 $accent: #fcfafa;
 $secondary: #111117;
-$secondary-dark-background: $secondary;
-$secondary-text: $secondary;
-$secondary-button-reference: $secondary;
 $tertiary: #ece8e8;
 $quaternary: #e2dede;
 $quinary: #343339;
@@ -20,15 +17,19 @@ $accent-surface-2: darken($tertiary, 2.5%);
 $accent-surface-3: darken($tertiary, 7.5%);
 $accent-surface-4: darken($tertiary, 15%);
 
-$secondary-surface-0: lighten($secondary-dark-background, 90%);
-$secondary-surface-1: lighten($secondary-dark-background, 85%);
-$secondary-surface-2: lighten($secondary-dark-background, 80%);
-$secondary-surface-3: lighten($secondary-dark-background, 70%);
+$secondary-surface-0: lighten(#111117, 90%);
+$secondary-surface-1: lighten(#111117, 85%);
+$secondary-surface-2: lighten(#111117, 80%);
+$secondary-surface-3: lighten(#111117, 70%);
 
-$translucent-surface-0: rgba($secondary-dark-background, 0.1);
-$translucent-surface-1: rgba($secondary-dark-background, 0.15);
-$translucent-surface-2: rgba($secondary-dark-background, 0.2);
-$translucent-surface-3: rgba($secondary-dark-background, 0.3);
+$translucent-surface-0: rgba(#111117, 0.1);
+$translucent-surface-1: rgba(#111117, 0.15);
+$translucent-surface-2: rgba(#111117, 0.2);
+$translucent-surface-3: rgba(#111117, 0.3);
+
+$background: $accent-surface-3;
+$secondary-text: $secondary;
+$secondary-button-reference: $secondary;
 
 // GRADIENTS
 $primary_gradiant_first: rgb(163, 153, 255);

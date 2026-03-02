@@ -119,10 +119,11 @@ onBeforeUnmount(() => {
   height: 100%;
   min-height: 0;
 
-  background-color: $secondary;
-  border-radius: borders.$rounded-xl;
+  // background-color: $secondary;
+  border-radius: borders.$rounded-xxl;
+  overflow: hidden;
 
-  box-shadow: 0px 0px 20px 0px rgba($accent, 0.3);
+  box-shadow: 0px 0px 20px 0px rgba($secondary, 0.3);
 
   .toolbar {
     position: absolute;

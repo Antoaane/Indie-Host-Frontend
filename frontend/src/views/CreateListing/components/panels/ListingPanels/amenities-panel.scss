@@ -8,6 +8,12 @@
 .create-amenities-panel {
   @extend %panel;
 
+  flex: 1 1 auto;
+  min-height: 0;
+
+  display: flex;
+    flex-direction: column;
+
   > .header {
     @extend %panel-header;
   }
@@ -15,6 +21,12 @@
   > .body {
     @extend %panel-body;
     gap: var(--layout-gap-sm);
+
+    // display: flex;
+    // flex-direction: column;
+    flex: 1 1 auto;
+  min-height: 0;
+
 
     > .search {
       display: flex;
@@ -33,9 +45,15 @@
     }
 
     > .catalog {
-      max-height: clamp(20rem, 48vh, 34rem);
-      overflow-y: auto;
+      flex: 1 1 auto;
+      min-height: 0;
       padding-right: var(--layout-gap-2xs);
+
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior-y: contain;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-gutter: stable;
 
       display: flex;
       flex-direction: column;
@@ -75,10 +93,13 @@
 
       > .item {
         min-width: 0;
+        position: relative;
 
         > .amenity-card {
           width: 100%;
           padding: var(--layout-gap-md);
+          padding-right: calc(var(--layout-gap-md) + 2.2rem);
+          padding-bottom: calc(var(--layout-gap-md) + 1.2rem);
 
           display: flex;
           align-items: flex-start;
@@ -126,22 +147,25 @@
           }
 
           > .state {
-            margin-left: auto;
-            flex: 0 0 auto;
+            position: absolute;
+            right: 0.6rem;
+            bottom: 0.6rem;
 
             display: inline-flex;
             align-items: center;
-            gap: 0.25rem;
+            justify-content: center;
 
-            padding: 0.2rem 0.45rem;
-            border-radius: borders.$rounded-md;
+            width: 1.75rem;
+            height: 1.75rem;
+            border: 1px solid rgba($secondary, 0.18);
+            border-radius: borders.$rounded-sm;
             background: $secondary;
             color: $accent;
-            @include little-text($thin: false);
+            pointer-events: none;
 
             > .check {
-              width: 0.95rem;
-              height: 0.95rem;
+              width: 1.05rem;
+              height: 1.05rem;
               stroke: currentColor;
             }
           }
@@ -161,21 +185,30 @@
           > .amenity-card {
             border-color: rgba($secondary, 0.24);
             background-color: rgba($secondary, 0.08);
+            color: $good;
             box-shadow: 0 6px 14px rgba($secondary, 0.08);
 
             > .icon {
-              stroke: $secondary;
+              stroke: currentColor;
+            }
+
+            > .texts {
+              > .name,
+              > .description {
+                color: currentColor;
+              }
+
+              > .description {
+                opacity: 0.85;
+              }
             }
 
             > .state {
               background: $secondary;
+              border-color: rgba($secondary, 0.18);
 
               * {
                 stroke: $accent !important;
-              }
-
-              &>span {
-                color: $accent !important;
               }
             }
           }

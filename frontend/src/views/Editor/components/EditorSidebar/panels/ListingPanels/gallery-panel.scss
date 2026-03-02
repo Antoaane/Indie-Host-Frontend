@@ -155,7 +155,7 @@
             border-radius: 999px;
             display: grid;
             place-items: center;
-            background: rgba($secondary-dark-background, 0.72);
+            background: rgba($background, 0.72);
             cursor: pointer;
             @include animations.transition(160ms);
 

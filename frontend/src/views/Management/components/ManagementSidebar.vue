@@ -5,6 +5,7 @@ import { computed, ref } from 'vue'
 import { Search } from 'lucide-vue-next'
 
 import BaseSidebar from '@/components/layouts/BaseSidebar.vue'
+import { normalizeSearchText } from '@/utils/search'
 import type { UserListingCard } from '@/views/Editor/utils/listingApi'
 import type { Reservation } from '@/views/Management/utils/managementReservations'
 
@@ -23,9 +24,9 @@ const emit = defineEmits<{
 const query = ref('')
 
 const filtered = computed(() => {
-  const q = query.value.trim().toLowerCase()
+  const q = normalizeSearchText(query.value)
   if (!q) return props.listings
-  return props.listings.filter((item) => (item.title ?? '').toLowerCase().includes(q))
+  return props.listings.filter((item) => normalizeSearchText(item.title).includes(q))
 })
 
 function coverFor(listing: UserListingCard) {

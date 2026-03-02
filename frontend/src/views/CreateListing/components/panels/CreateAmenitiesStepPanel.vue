@@ -18,7 +18,7 @@ const emit = defineEmits<{
 
 <template>
   <CreateWizardStepShell
-    title="Sélectionne les équipements à proposer aux voyageurs"
+    title="Choisissez les équipements mis à disposition"
     :validation-error="props.validationError"
   >
     <AmenitiesPanel

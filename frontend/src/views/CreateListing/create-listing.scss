@@ -7,7 +7,7 @@
 .create-listing#create-listing-page {
   height: 100vh;
 
-  background: $secondary-dark-background;
+  background: $background;
 
   @include min-width(lg) {
     padding-top: $nav-height;
@@ -31,7 +31,8 @@
     >.layout {
       position: relative;
       height: 100%;
-      max-width: 88rem;
+      width: 100%;
+      max-width: 64rem;
       margin-left: auto;
       margin-right: auto;
 
@@ -45,20 +46,55 @@
 
       @include layout-gap(padding, all, 1);
 
-      >.quit-floating {
-        z-index: 4;
+      >.header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: var(--layout-gap-sm);
+
+        >.step-title {
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: calc(var(--layout-gap-xs) / 2);
+
+          >p {
+            margin: 0;
+            @include little-text($thin: false);
+            color: rgba($secondary-text, 0.68);
+          }
+
+          >h1 {
+            margin: 0;
+            @include h2-title();
+          }
+
+          >small {
+            margin: 0;
+            @include little-text($thin: false);
+            color: rgba($secondary-text, 0.78);
+          }
+        }
+
+        @media screen and (max-width: 768px) {
+          flex-direction: column;
+          align-items: stretch;
+        }
       }
 
       >.progress {
-        height: 0.4rem;
+        flex: 0 0 0.4rem;
+        min-width: 0;
+        min-height: 0;
+        // height: 0.4rem;
         border-radius: borders.$rounded;
-        background: rgba($secondary-dark-background, 0.12);
+        background: rgba($background, 0.12);
         overflow: hidden;
 
         >.bar {
           height: 100%;
           border-radius: borders.$rounded;
-          background: $secondary-dark-background;
+          background: $background;
           transition: width 220ms ease;
         }
       }
@@ -99,7 +135,7 @@
             place-items: center;
             font-size: 0.75rem;
             font-weight: 600;
-            background: rgba($secondary-dark-background, 0.08);
+            background: rgba($background, 0.08);
             color: rgba($secondary-text, 0.85);
           }
 
@@ -113,14 +149,14 @@
             border-color: rgba($secondary, 0.22);
 
             >span {
-              background: rgba($secondary-dark-background, 0.9);
+              background: rgba($background, 0.9);
               color: $accent;
             }
           }
 
           &.is-active {
             border-color: rgba($secondary, 0.7);
-            background: $secondary-dark-background;
+            background: $background;
 
             >span {
               background: rgba($accent, 0.95);
@@ -145,6 +181,8 @@
         min-height: 0;
         display: flex;
         flex-direction: column;
+        justify-content: center;
+        align-items: center;
         overflow: hidden;
         border-radius: borders.$rounded-xl;
         // background: rgba($accent, 0.55);
@@ -152,14 +190,16 @@
         // @include effects.big-shadow();
 
         >.slide {
-          flex: 1 1 auto;
+          // flex: 1 1 auto;
+          width: 100%;
+          height: max-content;
           min-width: 0;
           min-height: 0;
-          overflow-x: hidden;
-          overflow-y: auto;
-          overscroll-behavior-y: contain;
-          -webkit-overflow-scrolling: touch;
-          scrollbar-gutter: stable both-edges;
+          // overflow-x: hidden;
+          // overflow-y: auto;
+          // overscroll-behavior-y: contain;
+          // -webkit-overflow-scrolling: touch;
+          // scrollbar-gutter: stable both-edges;
           padding: var(--layout-gap-sm);
 
           display: flex;
@@ -168,7 +208,7 @@
 
           >* {
             width: 100%;
-            max-width: 65rem;
+            // max-width: 65rem;
             margin: 0 auto;
           }
 

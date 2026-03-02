@@ -6,6 +6,7 @@ import { useRoute } from 'vue-router'
 
 import { normalizeListingStatus } from '@/domain/listings/status'
 import { getUserMaxActiveListings } from '@/domain/user/subscription'
+import { normalizeSearchText } from '@/utils/search'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 import type { UserListingCard } from '@/views/Editor/utils/listingApi'
 import EditorListingCard from '@/views/Editor/components/EditorListings/components/EditorListingCard.vue'
@@ -64,9 +65,9 @@ const createListingRoute = computed(() => {
 })
 
 const filtered = computed(() => {
-  const q = query.value.trim().toLowerCase()
+  const q = normalizeSearchText(query.value)
   if (!q) return props.listings
-  return props.listings.filter((item) => (item.title ?? '').toLowerCase().includes(q))
+  return props.listings.filter((item) => normalizeSearchText(item.title).includes(q))
 })
 
 const openCardMenu = ref<OpenCardMenuState | null>(null)

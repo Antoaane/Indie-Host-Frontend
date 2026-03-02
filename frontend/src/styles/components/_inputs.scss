@@ -291,26 +291,51 @@ input[type='number'] {
 }
 
 @mixin stepper($theme: base, $compact: false) {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--layout-gap-xs);
+  width: max-content;
+  display: inline-grid;
+  grid-template-columns: auto auto;
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  column-gap: var(--layout-gap-xs);
+  row-gap: 0;
+  align-items: stretch;
 
   >.btn {
-    @include buttons.primary($theme: black, $icon-only: true);
+    grid-column: 1;
 
     >* {
+      @include buttons.low-btn($icon-only: true,
+        $color: $accent,
+        $hover: $secondary,
+        $text-color: $secondary,
+        $text-hover-color: $accent);
       width: 36px;
-      height: 36px;
-      font-size: 1.1rem;
+      height: 18px;
+      min-height: 18px;
+      padding: 0;
+      border-radius: borders.$rounded-sm;
+      font-size: 0.95rem;
       font-weight: 700;
+      line-height: 1;
     }
+  }
+
+  >.btn:first-of-type {
+    grid-row: 2;
+  }
+
+  >.btn:last-of-type {
+    grid-row: 1;
   }
 
   >.value {
     @extend %input-control;
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: stretch;
     width: 3.5rem;
     flex: 0 0 auto;
-    height: 36px;
+    min-height: 36px;
+    height: 100%;
     text-align: center;
     border: 1px solid input-token($theme, border);
     border-radius: borders.$rounded-md;
@@ -318,6 +343,77 @@ input[type='number'] {
     box-shadow: 0 1px 3px input-token($theme, shadow);
     // padding: input-size($compact, padding-y) input-size($compact, padding-x);
     color: input-token($theme, text);
+  }
+
+  >.suffix {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    align-self: center;
+  }
+}
+
+@mixin stepper-input($theme: base, $compact: false, $value-font-size: 1.75rem, $suffix-font-size: 1rem) {
+  $control-height: input-size($compact, min-height);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  justify-self: start;
+  align-self: flex-start;
+  width: fit-content;
+  max-width: 100%;
+  gap: 0.28rem;
+  min-height: $control-height;
+  padding-inline: 0.35rem;
+  border-radius: borders.$rounded-md;
+  background-color: transparent;
+  @include animations.transition(200ms);
+
+  &:hover {
+    background-color: rgba(input-token($theme, text), 0.06);
+  }
+
+  &:focus-within {
+    background-color: rgba(input-token($theme, text), 0.09);
+  }
+
+  >.value {
+    @extend %input-control;
+    width: var(--stepper-input-width, 6ch);
+    flex: 0 0 auto;
+    height: max-content;
+    min-height: $control-height;
+    text-align: right;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background-color: transparent;
+    box-shadow: none;
+    color: input-token($theme, text);
+    font-size: $value-font-size;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+
+    appearance: textfield;
+    -moz-appearance: textfield;
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      color: rgba(input-token($theme, text), 0.48);
+    }
+  }
+
+  >.suffix {
+    white-space: nowrap;
+    color: rgba(input-token($theme, text), 0.62);
+    font-size: $suffix-font-size;
   }
 }
 

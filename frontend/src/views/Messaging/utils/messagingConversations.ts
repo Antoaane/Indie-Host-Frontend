@@ -2,6 +2,7 @@
 
 import { toUtcDay } from '@/domain/listings/bookings'
 import { getListingStatusFlags } from '@/domain/listings/status'
+import { normalizeSearchText } from '@/utils/search'
 import type { RawBookingReservation, RawHost, RawReservationMessage, RawReservationMessageState, UserListingCard } from '@/domain/listings/types'
 import type { ConversationStatus, MessagingConversation, MessagingMessage, MessagingParticipant } from '@/views/Messaging/types/messaging'
 
@@ -121,13 +122,6 @@ function initials(name: string) {
   return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
 }
 
-function normalizeSearch(value: string) {
-  return value
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-}
-
 function sumGuests(reservation: RawBookingReservation) {
   const guests = reservation.guests
   const pmr = Number(guests?.pmr ?? 0) || 0
@@ -237,25 +231,53 @@ function compareMessagesByDate(a: RawReservationMessage, b: RawReservationMessag
   return toMs(a.sentAt) - toMs(b.sentAt)
 }
 
+function normalizeFutureMessageSentAt(message: RawReservationMessage, referenceDate = new Date()): RawReservationMessage {
+  const sentAtMs = toMs(message.sentAt)
+  if (sentAtMs < 1) return message
+
+  const referenceMs = referenceDate.getTime()
+  if (sentAtMs <= referenceMs) return message
+
+  return {
+    ...message,
+    sentAt: new Date(referenceMs).toISOString(),
+  }
+}
+
 export function ensureReservationThreadMessages(reservation: RawBookingReservation): RawReservationMessage[] {
+  const referenceDate = new Date()
   const persisted = reservation.messaging?.messages ?? []
   if (persisted.length) {
     return [
       ...persisted,
-    ].sort(compareMessagesByDate)
+    ]
+      .map((message) => normalizeFutureMessageSentAt(message, referenceDate))
+      .map((message, index) => ({ message, index }))
+      .sort((left, right) => compareMessagesByDate(left.message, right.message) || left.index - right.index)
+      .map(({ message }) => message)
   }
 
   const seedBody = reservation.message?.trim() ?? ''
   if (!seedBody) return []
 
   const sentAt = toIsoDateTime(reservation.createdAt) ?? toIsoDateMidday(reservation.start) ?? new Date().toISOString()
+  const normalizedSentAt = normalizeFutureMessageSentAt(
+    {
+      id: `seed-${reservation.id}`,
+      author: 'guest',
+      body: seedBody,
+      sentAt,
+      state: 'read',
+    },
+    referenceDate,
+  ).sentAt
 
   return [
     {
       id: `seed-${reservation.id}`,
       author: 'guest',
       body: seedBody,
-      sentAt,
+      sentAt: normalizedSentAt,
       state: 'read',
     },
   ]
@@ -370,7 +392,7 @@ export function buildMessagingConversations({ listings, reservationsByListingId,
       const total = Number(reservation.payment?.total ?? 0) || 0
       const lastPreview = lastMessage?.body?.trim() || reservation.message?.trim() || 'Aucun message'
 
-      const searchIndex = normalizeSearch(
+      const searchIndex = normalizeSearchText(
         [
           guestParticipant.name,
           listing.title ?? '',

@@ -4,9 +4,8 @@
 import type { RawBookings } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import BasePricingPanel from '@/views/CreateListing/components/panels/PricingPanels/BasePricingPanel.vue'
+import CreateFeesPanel from '@/views/CreateListing/components/panels/PricingPanels/CreateFeesPanel.vue'
 import CreateWizardStepShell from '@/views/CreateListing/components/panels/CreateWizardStepShell.vue'
-import StayDurationPanel from '@/views/Editor/components/EditorSidebar/panels/PricingPanels/StayDurationPanel.vue'
-import FeesPanel from '@/views/Editor/components/EditorSidebar/panels/PricingPanels/FeesPanel.vue'
 
 const props = defineProps<{
   bookings?: Partial<RawBookings> | null
@@ -20,7 +19,7 @@ const emit = defineEmits<{
 
 <template>
   <CreateWizardStepShell
-    title="Configure ta tarification"
+    title="Définissez votre tarif de base et vos frais"
     :validation-error="props.validationError"
   >
     <BasePricingPanel
@@ -28,11 +27,7 @@ const emit = defineEmits<{
       :show-extra-guests="false"
       @patch="emit('patch', $event)"
     />
-    <StayDurationPanel
-      :bookings="props.bookings"
-      @patch="emit('patch', $event)"
-    />
-    <FeesPanel
+    <CreateFeesPanel
       :bookings="props.bookings"
       @patch="emit('patch', $event)"
     />

@@ -21,8 +21,8 @@ const emit = defineEmits<{
 
 <template>
   <CreateWizardStepShell
-    title="Renseigne l’adresse précise du logement"
-    hint="Nous utilisons cette adresse pour préparer automatiquement la localisation affichée."
+    title="Indiquez l’adresse précise de votre logement"
+    hint="Cette adresse nous permet de préremplir automatiquement la ville, la région, le pays et la carte."
     :validation-error="props.validationError"
   >
     <LocationPanel

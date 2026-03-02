@@ -9,6 +9,7 @@ import { resolveAmenityIconComponent, resolveLucideComponent } from '@/utils/ame
 import { mockAmenitiesCatalog, type AmenityCatalogItem } from '@/views/Editor/mocks/amenitiesCatalog'
 import { getAmenityPerkDefaults } from '@/domain/listings/perks'
 import { formatValidationMessage, normalizeTextInput, resolveTextMaxLength, shouldDisplayTextLimit } from '@/utils/inputValidation'
+import { normalizeSearchText, tokenizeSearchText } from '@/utils/search'
 
 // TYPES
 import type { RawCore } from '@/domain/listings/types'
@@ -63,10 +64,10 @@ function resolveAmenityId(amenity: AmenityDraft): string | null {
   const raw = normalizeAmenityId((amenity as any)?.id) ?? normalizeAmenityId((amenity as any)?.icon)
   if (raw) return raw
 
-  const name = normalizeAmenityId((amenity as any)?.name)?.toLowerCase()
+  const name = normalizeSearchText((amenity as any)?.name)
   if (!name) return null
 
-  const match = catalog.value.find((item) => item.name.trim().toLowerCase() === name)
+  const match = catalog.value.find((item) => normalizeSearchText(item.name) === name)
   return normalizeAmenityId(match?.id)
 }
 
@@ -147,11 +148,7 @@ function isAmenitySelected(amenityId: string): boolean {
   return selectedAmenityIdSet.value.has(normalized)
 }
 
-function tokenizeSearch(value: string): string[] {
-  return value.trim().toLowerCase().split(/\s+/).filter(Boolean)
-}
-
-const catalogSearchTokens = computed(() => tokenizeSearch(catalogSearch.value))
+const catalogSearchTokens = computed(() => tokenizeSearchText(catalogSearch.value))
 const catalogSearchLength = computed(() => Math.min(catalogSearch.value.length, searchLimit))
 const searchCounter = computed(() =>
   formatValidationMessage(amenitiesValidation.messages.counter, {
@@ -162,7 +159,7 @@ const searchCounter = computed(() =>
 
 function matchesCatalogSearch(item: AmenityCatalogItem, tokens: string[]): boolean {
   if (!tokens.length) return true
-  const haystack = `${item.name ?? ''} ${item.description ?? ''}`.toLowerCase()
+  const haystack = normalizeSearchText(`${item.name ?? ''} ${item.description ?? ''}`)
   return tokens.some((token) => haystack.includes(token))
 }
 
@@ -288,7 +285,6 @@ watch(
                     class="check"
                     aria-hidden="true"
                   />
-                  <span>{{ panelContent.overlay.added }}</span>
                 </span>
               </button>
             </li>

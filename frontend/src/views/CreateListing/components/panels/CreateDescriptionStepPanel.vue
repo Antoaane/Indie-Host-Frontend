@@ -18,8 +18,8 @@ const emit = defineEmits<{
 
 <template>
   <CreateWizardStepShell
-    title="Rédige une présentation claire de ton logement"
-    hint="Explique l’ambiance, les points forts et ce qui rend le séjour unique."
+    title="Rédigez une description utile et convaincante"
+    hint="Parlez de l’ambiance, des points forts et des informations pratiques pour le séjour."
     :validation-error="props.validationError"
   >
     <DescriptionPanel

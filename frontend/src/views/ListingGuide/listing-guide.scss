@@ -33,7 +33,7 @@
 
   >.guide-hero {
     height: 35vh;
-    background: $secondary-dark-background;
+    background: $background;
     color: $accent;
     position: relative;
     overflow: hidden;
@@ -136,7 +136,7 @@
     @include effects.soft-shadow(rgba(0, 0, 0, 0.08));
 
     &--editorial {
-      background: $secondary-dark-background;
+      background: $background;
       color: $accent;
       border: none;
       @include effects.big-shadow(rgba(0, 0, 0, 0.25));
@@ -300,7 +300,7 @@
     bottom: var(--layout-gap-sm);
     left: 50%;
     transform: translateX(-50%);
-    background: rgba($secondary-dark-background, 0.85);
+    background: rgba($background, 0.85);
     color: $accent;
     border-radius: 999px;
     padding: 0.5rem 1rem;

@@ -1,7 +1,7 @@
 <!-- File: src/views/Messaging/components/MessagingThread/MessagingThread.vue -->
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { MoreHorizontal, Paperclip, Send } from 'lucide-vue-next'
 
 import RelativeOverlay from '@/components/overlays/RelativeOverlay.vue'
@@ -51,6 +51,7 @@ const emit = defineEmits<{
 const host = computed(() => props.conversation?.participants.host ?? null)
 const guest = computed(() => props.conversation?.participants.guest ?? null)
 const composerDraft = ref('')
+const threadBody = ref<HTMLElement | null>(null)
 const optionsOpen = ref(false)
 const optionsAnchor = ref<HTMLElement | null>(null)
 
@@ -60,6 +61,13 @@ const hasUnread = computed(() => (props.conversation?.unreadCount ?? 0) > 0)
 
 function closeOptions() {
   optionsOpen.value = false
+}
+
+async function scrollThreadToBottom() {
+  await nextTick()
+  const container = threadBody.value
+  if (!container) return
+  container.scrollTop = container.scrollHeight
 }
 
 function toggleOptions(event: MouseEvent) {
@@ -105,9 +113,18 @@ function handleMarkUnread() {
 
 watch(
   () => props.conversation?.id,
-  () => {
+  async () => {
     composerDraft.value = ''
     closeOptions()
+    await scrollThreadToBottom()
+  },
+)
+
+watch(
+  () => props.conversation?.messages.length ?? 0,
+  async (currentLength, previousLength) => {
+    if (!props.conversation || currentLength === previousLength) return
+    await scrollThreadToBottom()
   },
 )
 </script>
@@ -203,7 +220,10 @@ watch(
         </div>
       </RelativeOverlay>
 
-      <div class="thread-body">
+      <div
+        ref="threadBody"
+        class="thread-body"
+      >
         <div class="message-list">
           <div
             v-for="message in props.conversation.messages"

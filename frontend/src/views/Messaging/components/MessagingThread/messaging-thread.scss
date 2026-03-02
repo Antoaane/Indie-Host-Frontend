@@ -125,6 +125,8 @@
   > .thread-body {
     flex: 1 1 auto;
     min-height: 0;
+    display: flex;
+    flex-direction: column;
     padding: var(--layout-gap-md);
     overflow: auto;
     background: $accent;
@@ -132,6 +134,7 @@
     > .message-list {
       display: flex;
       flex-direction: column;
+      margin-top: auto;
       gap: var(--layout-gap-md);
     }
 
@@ -181,7 +184,7 @@
 
       &.is-outgoing {
         > .bubble {
-          background: $secondary-dark-background;
+          background: $background;
           border-color: rgba($secondary, 0.85);
           color: $accent;
 
@@ -304,7 +307,7 @@
       }
 
       &:hover {
-        background: rgba($secondary-dark-background, 0.06);
+        background: rgba($background, 0.06);
       }
 
       &:focus-visible {
