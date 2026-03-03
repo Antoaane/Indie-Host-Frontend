@@ -1,0 +1,244 @@
+{
+  "id": "listing-1772532331729",
+  "status": "published",
+  "pause_message": "",
+  "title": "Logement entier : appartement - Ax-les-Thermes, France",
+  "type": "Villa",
+  "precise_address": "Savignac les ormeaux",
+  "city": "Savignac-les-Ormeaux",
+  "country": "France",
+  "region": "Occitanie",
+  "guest_capacity": 2,
+  "rooms": [
+    {
+      "room-name": "1 chambre",
+      "type": "bedroom",
+      "beds": [
+        {
+          "type": "double",
+          "quantity": 1,
+          "capacity": 2
+        }
+      ]
+    },
+    {
+      "room-name": "Salle de bain",
+      "type": "bathroom"
+    }
+  ],
+  "amenities": [
+    {
+      "id": "vue_panoramique_sur_la_ville",
+      "name": "Vue panoramique sur la ville",
+      "description": "",
+      "category": "Vues panoramiques"
+    },
+    {
+      "id": "vue_sur_la_montagne",
+      "name": "Vue sur la montagne",
+      "description": "",
+      "category": "Vues panoramiques"
+    },
+    {
+      "id": "vue_sur_la_valle",
+      "name": "Vue sur la vallée",
+      "description": "",
+      "category": "Vues panoramiques"
+    },
+    {
+      "id": "sche-cheveux",
+      "name": "Sèche-cheveux",
+      "description": "",
+      "category": "Salle de bain"
+    },
+    {
+      "id": "shampoing",
+      "name": "Shampoing",
+      "description": "",
+      "category": "Salle de bain"
+    },
+    {
+      "id": "eau_chaude",
+      "name": "Eau chaude",
+      "description": "",
+      "category": "Salle de bain"
+    },
+    {
+      "id": "lave-linge",
+      "name": "Lave-linge",
+      "description": "",
+      "category": "Chambre et linge"
+    },
+    {
+      "id": "fer__repasser",
+      "name": "Fer à repasser",
+      "description": "",
+      "category": "Chambre et linge"
+    },
+    {
+      "id": "tlvision",
+      "name": "Télévision",
+      "description": "",
+      "category": "Divertissement"
+    },
+    {
+      "id": "berceau",
+      "name": "Berceau",
+      "description": "",
+      "category": "Famille"
+    },
+    {
+      "id": "lit_parapluie",
+      "name": "Lit parapluie",
+      "description": "",
+      "category": "Famille"
+    },
+    {
+      "id": "chaise_haute",
+      "name": "Chaise haute",
+      "description": "",
+      "category": "Famille"
+    },
+    {
+      "id": "vaisselle_pour_enfants",
+      "name": "Vaisselle pour enfants",
+      "description": "",
+      "category": "Famille"
+    },
+    {
+      "id": "jeux_de_socit",
+      "name": "Jeux de société",
+      "description": "",
+      "category": "Famille"
+    },
+    {
+      "id": "chauffage",
+      "name": "Chauffage",
+      "description": "",
+      "category": "Chauffage et climatisation"
+    },
+    {
+      "id": "dtecteur_de_fume",
+      "name": "Détecteur de fumée",
+      "description": "",
+      "category": "Sécurité à la maison"
+    },
+    {
+      "id": "extincteur",
+      "name": "Extincteur",
+      "description": "",
+      "category": "Sécurité à la maison"
+    },
+    {
+      "id": "trousse_de_premiers_secours",
+      "name": "Trousse de premiers secours",
+      "description": "",
+      "category": "Sécurité à la maison"
+    },
+    {
+      "id": "wifi",
+      "name": "Wifi",
+      "description": "",
+      "category": "Internet et bureau"
+    },
+    {
+      "id": "cuisine",
+      "name": "Cuisine",
+      "description": "Espace où les voyageurs peuvent cuisiner",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "rfrigrateur",
+      "name": "Réfrigérateur",
+      "description": "",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "quipements_de_cuisine_de_base",
+      "name": "Équipements de cuisine de base",
+      "description": "Casseroles et poêles, huile, sel et poivre",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "vaisselle_et_couverts",
+      "name": "Vaisselle et couverts",
+      "description": "Bols, baguettes, assiettes, tasses, etc.",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "machine__caf",
+      "name": "Machine à café",
+      "description": "",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "commun__patio_ou_balcon",
+      "name": "Commun : patio ou balcon",
+      "description": "",
+      "category": "Extérieur"
+    },
+    {
+      "id": "jardin",
+      "name": "Jardin",
+      "description": "Un espace ouvert du logement généralement recouvert d'herbe",
+      "category": "Extérieur"
+    },
+    {
+      "id": "mobilier_dextrieur",
+      "name": "Mobilier d'extérieur",
+      "description": "",
+      "category": "Extérieur"
+    },
+    {
+      "id": "stationnement_gratuit_sur_place",
+      "name": "Stationnement gratuit sur place",
+      "description": "",
+      "category": "Parking et installations"
+    },
+    {
+      "id": "arrive_autonome",
+      "name": "Arrivée autonome",
+      "description": "",
+      "category": "Services"
+    },
+    {
+      "id": "bote__cl_scurise",
+      "name": "Boîte à clé sécurisée",
+      "description": "",
+      "category": "Services"
+    },
+    {
+      "id": "HEATED_POOL",
+      "name": "Piscine chauffée",
+      "description": "En saison",
+      "category": "Extérieur & détente",
+      "relevance": 90,
+      "pinned": false,
+      "perkEligible": true,
+      "perkScore": 90,
+      "perkPriority": 0
+    },
+    {
+      "id": "ELECTRIC_BARBECUE",
+      "name": "Barbecue",
+      "description": "Ustensiles fournis",
+      "category": "Extérieur & détente",
+      "relevance": 60,
+      "pinned": false
+    },
+    {
+      "id": "PLANCHA_GRILL",
+      "name": "Plancha",
+      "description": "Cuisine extérieure",
+      "category": "Extérieur & détente",
+      "relevance": 60,
+      "pinned": false
+    }
+  ],
+  "latitude": 42.7304497,
+  "longitude": 1.8119938,
+  "lat": 42.7304497,
+  "lng": 1.8119938,
+  "zoom": 13,
+  "description": "Situé sur les hauteurs d’Ax les Thermes , sur la route de la station de ski, à portée de pas du centre ville. Vous disposez d’un parking privé sur place. Une vue sublime sur les montagnes, notamment le pic du Tarbesou, mais aussi sur la ville que vous dominerez. Exceptionnel le jour, différent au fil des saisons, et apaisant la nuit avec les lumières de la ville et l’éclairage de son casino. Méditation garantie..<br /><br /><b>Le logement</b><br />Lumineux, surplombant le village, en léger retrait du centre ville. Très joliment décoré, et bien équipé, il plaît à tous les coups !<br /><br /><br />L'appartement est au 2 ème étage, facile d'accès mais sans ascenseur. L’entrée des lieux peut être autonome au besoin (par exemple en cas d’arrivée tardive), bien que nous fassions le maximum pour être présents, vous saluer, et au besoin, vous orienter dans vos desiderata. Nous prenons contact avant votre arrivée pour convenir des horaires ensemble.<br /><br />Cet appartement est composé d'une pièce principale de 18m2, comprenant une cuisine équipée ( four, micro onde, plaque induction, hotte, cafetière, grille pain, Tassimo, appareil à raclette, pierrade, fondue,frigo et congélateur, lave-vaisselle), avec son coin salon avec canapé, télévision led connectée (pensez à prendre vos codes), enceinte Bluetooth. <br />Vous disposerez d'une chambre avec 1 lit double 140x200, d'une salle de douche, d'un WC séparé . La chambre est équipé d’un matelas et d’oreillers à mémoire de forme et de couettes, pour un sommeil de qualité.<br /> 1 balcon avec table et chaises, donnant sur la ville et la montagne.<br /><br />WI-FI gratuit dans l’appartement.<br /><br />Pour plus de facilités, vous aurez sur place : planche et fer à repasser, étendoir à linge, sèche-cheveux, aspirateur, balai, lit parapluie (gratuit sur demande), chaise haute, jeux de sociétés, informations touristiques….<br /><br />Sont fournis : des produits de base pour la cuisine (sel, poivre, huile et vinaigre, du café même s'il est utile d'apporter des dosettes compatibles Tassimo (nous en fournissons pour amorcer votre séjour), pour le ménage (sacs poubelles, liquide vaisselle, tablettes lave-vaisselle, éponges, divers produits d'entretien, lessive, papier toilette) et pour la toilette (distributeur de gel corps et cheveux) .<br /><br /><b>Accès des voyageurs</b><br />Dans les communs de l'immeuble, vous trouverez 1 local à ski/vélo/poussettes, cannes à pêches…<br /> 1 hall d'entrée avec un banc et une carte IGN d'Ax et de sa région pour préparer vos randonnées ou ballades.<br /><br /><b>Autres remarques</b><br />Le linge de maison ( draps et serviettes de toilette) n'est pas inclus dans la prestation, mais nous proposons des kits : <br />Par lit double: 20 euros ( linge de lit et 2 serviettes par personne)<br />Cette option sera facturée via Airbnb<br /><br /><b>Détails de l'enregistrement</b><br />09032000921AX"
+}

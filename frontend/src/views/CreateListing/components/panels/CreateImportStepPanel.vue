@@ -2,6 +2,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { Download, Loader2 } from 'lucide-vue-next'
 
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import {
@@ -15,6 +16,7 @@ import CreateWizardStepShell from '@/views/CreateListing/components/panels/Creat
 
 const emit = defineEmits<{
   (e: 'patch', patch: DraftPatch): void
+  (e: 'next'): void
 }>()
 
 const url = ref('')
@@ -40,6 +42,7 @@ async function handleImport() {
       data as AirbnbScrapedData
     )
     emit('patch', transformed as DraftPatch)
+    emit('next')
     importError.value = null
   } catch (err) {
     importError.value =
@@ -47,6 +50,12 @@ async function handleImport() {
   } finally {
     isImporting.value = false
   }
+}
+
+function handleCreateManually() {
+  // Pas d'import, on passe simplement à l'étape suivante
+  importError.value = null
+  emit('next')
 }
 </script>
 
@@ -72,8 +81,18 @@ async function handleImport() {
               :disabled="!canImport"
               @click="handleImport"
             >
-              <span v-if="!isImporting">{{ panelContent.cta }}</span>
-              <span v-else>{{ panelContent.importLoading }}</span>
+              <Loader2
+                v-if="isImporting"
+                class="icon is-spinning"
+                :aria-label="panelContent.importLoading"
+                :title="panelContent.importLoading"
+              />
+              <Download
+                v-else
+                class="icon"
+                :aria-label="panelContent.cta"
+                :title="panelContent.cta"
+              />
             </button>
           </div>
         </div>
@@ -86,10 +105,14 @@ async function handleImport() {
         {{ panelContent.bookingNotSupported }}
       </p>
 
-      <p class="create-manually">
+      <button
+        type="button"
+        class="create-manually"
+        @click="handleCreateManually"
+      >
         {{ panelContent.createManually }}
         <slot name="hint" />
-      </p>
+      </button>
     </div>
   </CreateWizardStepShell>
 </template>
@@ -122,6 +145,26 @@ async function handleImport() {
     margin: var(--layout-gap-sm) 0 0 0;
     @include little-text($thin: false);
     color: rgba($secondary-text, 0.65);
+    padding: 0;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+}
+
+.is-spinning {
+  animation: create-import-spin 0.9s linear infinite;
+}
+
+@keyframes create-import-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
   }
 }
 </style>
