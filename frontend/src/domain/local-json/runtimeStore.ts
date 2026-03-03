@@ -139,7 +139,7 @@ function fallbackResource(resource: ListingResourceKey, listingId: string): unkn
     case 'core':
       return {
         id: listingId,
-        status: 'published',
+        status: 'draft',
         title: 'Nouvelle annonce',
       } satisfies Partial<RawCore>
     case 'medias':

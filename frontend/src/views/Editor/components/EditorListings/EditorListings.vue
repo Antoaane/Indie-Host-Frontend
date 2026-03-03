@@ -66,8 +66,17 @@ const createListingRoute = computed(() => {
 
 const filtered = computed(() => {
   const q = normalizeSearchText(query.value)
-  if (!q) return props.listings
-  return props.listings.filter((item) => normalizeSearchText(item.title).includes(q))
+  const base = q
+    ? props.listings.filter((item) => normalizeSearchText(item.title).includes(q))
+    : props.listings
+
+  // Annonces avec modifications en premier
+  return [...base].sort((a, b) => {
+    const ap = Boolean(a.hasPendingChanges)
+    const bp = Boolean(b.hasPendingChanges)
+    if (ap === bp) return 0
+    return ap ? -1 : 1
+  })
 })
 
 const openCardMenu = ref<OpenCardMenuState | null>(null)
