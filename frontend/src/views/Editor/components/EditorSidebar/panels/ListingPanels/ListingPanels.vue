@@ -4,7 +4,7 @@
 import type { RawListingBundle } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 
-import ImportPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/ImportPanel.vue'
+import ImportPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/ImportPanel/ImportPanel.vue'
 import TitlePanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/TitlePanel.vue'
 import VisibilityPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/VisibilityPanel.vue'
 import GalleryPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/GalleryPanel.vue'
@@ -63,7 +63,7 @@ const emit = defineEmits<{
       :core="props.draft.core"
       @patch="emit('patch', $event)"
     />
-    <ImportPanel />
+    <ImportPanel @patch="emit('patch', $event)" />
   </div>
 </template>
 

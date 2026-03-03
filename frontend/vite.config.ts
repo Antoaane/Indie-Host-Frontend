@@ -1,7 +1,8 @@
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import vueDevTools from 'vite-plugin-vue-devtools'
+// Désactivé temporairement : provoque "localStorage.getItem is not a function" au chargement de la config (Node.js)
+// import vueDevTools from 'vite-plugin-vue-devtools'
 import ViteRestart from 'vite-plugin-restart'
 import ui from '@nuxt/ui/vite'
 import svgLoader from 'vite-svg-loader'
@@ -80,7 +81,7 @@ export default defineConfig(({ mode }) => {
       localJsonDataPlugin(),
       vue(),
       ui(),
-      vueDevTools(),
+      // vueDevTools(),
       svgLoader(),
     ],
     resolve: {

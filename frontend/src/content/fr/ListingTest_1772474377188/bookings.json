@@ -1,0 +1,15 @@
+{
+  "price": 120,
+  "fees": [],
+  "booked-days": [],
+  "reservations": [],
+  "pricing": {
+    "deposit": {
+      "type": "info",
+      "amount": 0
+    },
+    "weekend": {
+      "enabled": false
+    }
+  }
+}

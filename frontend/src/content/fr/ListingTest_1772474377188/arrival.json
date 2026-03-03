@@ -1,0 +1,29 @@
+{
+  "intro": {
+    "title": "Bienvenue",
+    "subtitle": "Pour profiter des lieux au maximum, voici votre guide d'arrivée.",
+    "tagline": "Propulsé par IndieHost"
+  },
+  "practical": {
+    "savings": {
+      "message": "Réservez en direct pour éviter les commissions."
+    },
+    "access": {
+      "address": "",
+      "checkIn": "Arrivée flexible",
+      "checkOut": "Départ avant 10:00",
+      "parking": ""
+    },
+    "services": {
+      "wifi": "",
+      "contacts": "Urgences 112 · Médecin 15 · Police 17.",
+      "assistance": ""
+    },
+    "rules": "",
+    "shops": ""
+  },
+  "guide": {
+    "title": "",
+    "content": ""
+  }
+}

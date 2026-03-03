@@ -1,0 +1,40 @@
+{
+  "images": [
+    {
+      "src": "https://a0.muscache.com/im/pictures/hosting/Hosting-1534664931370090770/original/d36d5c77-fd67-4112-a3f8-c087626bc559.jpeg",
+      "alt": "Salon image 1",
+      "position": 0
+    },
+    {
+      "src": "https://a0.muscache.com/im/pictures/hosting/Hosting-1534664931370090770/original/4962500d-734e-4e6f-a705-6f65e5d20cfb.jpeg",
+      "alt": "Cuisine entière image 1",
+      "position": 1
+    },
+    {
+      "src": "https://a0.muscache.com/im/pictures/hosting/Hosting-1534664931370090770/original/35ef2eec-8c61-4ce6-84c7-c89dd1c56e86.jpeg",
+      "alt": "Chambre image 1",
+      "position": 2
+    },
+    {
+      "src": "https://a0.muscache.com/im/pictures/hosting/Hosting-1534664931370090770/original/9d1a1cd2-013e-4f75-ac39-ef55601c768b.jpeg",
+      "alt": "Toilettes avec lavabo image 1",
+      "position": 3
+    },
+    {
+      "src": "https://a0.muscache.com/im/pictures/hosting/Hosting-1534664931370090770/original/e5d57ee0-f675-4e26-a5f9-e45ae057efd9.jpeg",
+      "alt": "Toilettes avec lavabo image 2",
+      "position": 4
+    },
+    {
+      "src": "https://a0.muscache.com/im/pictures/hosting/Hosting-1534664931370090770/original/3f90f6e8-68ad-4c56-98d4-4bb6963c06f6.jpeg",
+      "alt": "Photos supplémentaires image 1",
+      "position": 5
+    },
+    {
+      "src": "https://a0.muscache.com/im/pictures/hosting/Hosting-1534664931370090770/original/0996010d-9d30-47fa-a35e-42d6718e56b3.jpeg",
+      "alt": "Photos supplémentaires image 2",
+      "position": 6
+    }
+  ],
+  "videos": []
+}
