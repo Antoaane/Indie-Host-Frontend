@@ -453,12 +453,12 @@ $editor-listing-card-target-width: 20rem;
 
                 &.is-prev {
                   left: 0;
-                  background: linear-gradient(90deg, rgba($background, 0.42) 0%, rgba($background, 0) 100%);
+                  background: linear-gradient(90deg, rgba($dark, 0.42) 0%, rgba($dark, 0) 100%);
                 }
 
                 &.is-next {
                   right: 0;
-                  background: linear-gradient(270deg, rgba($background, 0.42) 0%, rgba($background, 0) 100%);
+                  background: linear-gradient(270deg, rgba($dark, 0.42) 0%, rgba($dark, 0) 100%);
                 }
 
                 &:hover,

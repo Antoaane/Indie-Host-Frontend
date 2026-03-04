@@ -220,7 +220,7 @@ onBeforeUnmount(() => {
   height: 100%;
 
   display: flex;
-  background-color: rgba($secondary, 0.2);
+  background-color: rgba($dark, 0.2);
 
   @include min-width(lg) {
     backdrop-filter: blur(1px);
