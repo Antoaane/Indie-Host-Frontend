@@ -6,7 +6,7 @@ import { Armchair, Baby, Bed, BedDouble, BedSingle, Minus, Plus, Sofa, Trash2, X
 import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'
 import type { RawCore } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
-import CreateListingNumberStepper from '@/views/CreateListing/components/panels/inputs/CreateListingNumberStepper.vue'
+import NumberStepper from '@/components/inputs/NumberStepper.vue'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 import { clampInteger, normalizeTextInput, resolveTextMaxLength } from '@/utils/inputValidation'
 
@@ -197,10 +197,11 @@ watch(activeBedOverlayRoomIndex, (nextIndex) => {
 
 function setRooms(next: RoomDraftExtended[]) {
   const sanitized = next.map((room) => {
-    const roomName = normalizeTextInput(String(room['room-name'] ?? ''), roomNameMaxLength).trim()
+    const roomName = normalizeTextInput(String(room['room-name'] ?? ''), roomNameMaxLength)
+    const hasRoomName = roomName.trim().length > 0
     const baseRoom = {
       ...room,
-      'room-name': roomName || panelContent.roomLabelGeneric,
+      'room-name': hasRoomName ? roomName : panelContent.roomLabelGeneric,
     } as RoomDraftExtended
 
     if (!isNonSleepingRoomType(baseRoom.type) && Array.isArray(baseRoom.beds)) {
@@ -319,8 +320,8 @@ function setRoomType(index: number, nextType: string) {
 
 function setCustomRoomName(index: number, nextName: string) {
   const fallbackLabel = roomTypeLabels[OTHER_ROOM_TYPE] ?? panelContent.roomLabelGeneric
-  const normalizedName = normalizeTextInput(nextName, roomNameMaxLength).trim()
-  updateRoom(index, { 'room-name': normalizedName || fallbackLabel })
+  const normalizedName = normalizeTextInput(nextName, roomNameMaxLength)
+  updateRoom(index, { 'room-name': normalizedName.trim() ? normalizedName : fallbackLabel })
 }
 
 function setBedType(roomIndex: number, bedIndex: number, nextType: string) {
@@ -464,7 +465,7 @@ function roomDisplayLabel(index: number) {
 }
 
 function roomCustomName(room: RoomDraftExtended) {
-  return normalizeTextInput(String(room['room-name'] ?? ''), roomNameMaxLength).trim()
+  return normalizeTextInput(String(room['room-name'] ?? ''), roomNameMaxLength)
 }
 
 function roomBeds(room: RoomDraftExtended) {
@@ -747,7 +748,7 @@ function createDefaultBedDraft(): BedDraftExtended {
               :key="bedIndex"
               class="bed-row"
             >
-              <CreateListingNumberStepper
+              <NumberStepper
                 class="qty"
                 :value="sanitizeBedQuantity(bed.quantity)"
                 :min="roomsLimits.bedQuantityMin"
@@ -769,7 +770,7 @@ function createDefaultBedDraft(): BedDraftExtended {
                 <template #increment>
                   <Plus :size="18" />
                 </template>
-              </CreateListingNumberStepper>
+              </NumberStepper>
 
               <div class="input select bed-select">
                 <select
@@ -836,7 +837,7 @@ function createDefaultBedDraft(): BedDraftExtended {
 
                 <div class="custom-capacity">
                   <p>{{ customBedContent.capacityLabel }}</p>
-                  <CreateListingNumberStepper
+                  <NumberStepper
                     class="qty"
                     :value="sanitizeBedCapacity(bed.capacity)"
                     :min="customBedCapacityMin"
@@ -858,7 +859,7 @@ function createDefaultBedDraft(): BedDraftExtended {
                     <template #increment>
                       <Plus :size="18" />
                     </template>
-                  </CreateListingNumberStepper>
+                  </NumberStepper>
                 </div>
               </div>
             </div>

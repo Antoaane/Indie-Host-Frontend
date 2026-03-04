@@ -129,8 +129,8 @@ onMounted(() => {
 <template>
   <section class="create-description-panel">
     <div class="header">
-      <h3>{{ panelContent.title }}</h3>
-      <p>{{ panelContent.subtitle }}</p>
+      <h2>{{ panelContent.title }}</h2>
+      <h3>{{ panelContent.subtitle }}</h3>
     </div>
 
     <div
@@ -280,8 +280,8 @@ onMounted(() => {
 
     > .meta {
       margin: 0;
-      @include little-text($thin: false);
-      color: rgba($secondary, 0.7);
+      @include little-text($thin: true);
+      color: rgba($secondary-text, 0.58);
 
       &.is-warning {
         color: #9c6b00;

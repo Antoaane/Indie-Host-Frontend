@@ -22,7 +22,7 @@
   font-weight: 700 !important;
   // color: $secondary;
 
-  @include h3-title();
+  @include h1-title();
 }
 
 %panel-subtitle {
@@ -37,11 +37,11 @@
 %panel-header {
   margin-bottom: var(--layout-gap);
 
-  >h3 {
+  >h2 {
     @extend %panel-title;
   }
 
-  >p {
+  >h3 {
     @extend %panel-subtitle;
   }
 }

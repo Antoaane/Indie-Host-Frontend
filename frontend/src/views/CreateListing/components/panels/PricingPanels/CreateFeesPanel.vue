@@ -4,7 +4,7 @@
 import { computed } from 'vue'
 import type { RawBookings } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
-import CreateListingStepperInput from '@/views/CreateListing/components/panels/inputs/CreateListingStepperInput.vue'
+import StepperInput from '@/components/inputs/StepperInput.vue'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 import { clampInteger, formatValidationMessage, normalizeTextInput, parseOptionalInteger, resolveTextMaxLength, shouldDisplayTextLimit } from '@/utils/inputValidation'
 
@@ -90,8 +90,8 @@ function parseOptionalAmount(raw: string): number | null {
 <template>
   <section class="create-fees-panel">
     <div class="header">
-      <h3>{{ panelContent.title }}</h3>
-      <p>{{ panelContent.subtitle }}</p>
+      <h2>{{ panelContent.title }}</h2>
+      <h3>{{ panelContent.subtitle }}</h3>
     </div>
 
     <div class="body">
@@ -128,7 +128,7 @@ function parseOptionalAmount(raw: string): number | null {
           />
         </div>
 
-        <CreateListingStepperInput
+        <StepperInput
           :value="fee.amount ?? ''"
           :min="pricingLimits.moneyMin"
           :max="pricingLimits.moneyMax"
@@ -227,8 +227,9 @@ function parseOptionalAmount(raw: string): number | null {
 
     .hint {
       margin: 0;
-      @include little-text($thin: false);
-      color: rgba($secondary, 0.65);
+      margin-top: auto;
+      @include little-text($thin: true);
+      color: rgba($secondary-text, 0.58);
     }
   }
 }

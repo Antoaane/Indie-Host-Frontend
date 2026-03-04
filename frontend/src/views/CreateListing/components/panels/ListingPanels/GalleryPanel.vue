@@ -390,15 +390,6 @@ onBeforeUnmount(() => {
     }"
   >
     <div class="body">
-      <p class="hint">{{ galleryHint }}</p>
-      <p
-        v-if="galleryFeedback"
-        class="feedback"
-        :class="{ 'is-error': galleryFeedbackLevel === 'error' }"
-      >
-        {{ galleryFeedback }}
-      </p>
-
       <div class="gallery">
         <div
           v-for="(img, index) in orderedImages"
@@ -467,6 +458,17 @@ onBeforeUnmount(() => {
             @change="onFilePicked"
           />
         </div>
+      </div>
+
+      <div class="footnotes">
+        <p
+          v-if="galleryFeedback"
+          class="feedback"
+          :class="{ 'is-error': galleryFeedbackLevel === 'error' }"
+        >
+          {{ galleryFeedback }}
+        </p>
+        <p class="hint">{{ galleryHint }}</p>
       </div>
     </div>
   </section>

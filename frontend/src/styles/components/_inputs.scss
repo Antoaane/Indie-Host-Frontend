@@ -309,7 +309,7 @@ input[type='number'] {
         $text-color: $secondary,
         $text-hover-color: $accent);
       width: 36px;
-      height: 18px;
+      height: 100%;
       min-height: 18px;
       padding: 0;
       border-radius: borders.$rounded-sm;

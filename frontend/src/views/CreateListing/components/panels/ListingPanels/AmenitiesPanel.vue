@@ -212,8 +212,8 @@ watch(
 <template>
   <section class="create-amenities-panel">
     <div class="header">
-      <h3>{{ panelContent.title }}</h3>
-      <p>{{ panelContent.subtitle }}</p>
+      <h2>{{ panelContent.title }}</h2>
+      <h3>{{ panelContent.subtitle }}</h3>
     </div>
 
     <div class="body">
@@ -228,12 +228,6 @@ watch(
             autocomplete="off"
           />
         </div>
-        <p
-          v-if="showSearchCounter"
-          class="meta"
-        >
-          {{ searchCounter }}
-        </p>
       </div>
       <div
         v-if="catalogGroups.length"
@@ -297,6 +291,13 @@ watch(
         class="empty"
       >
         {{ panelContent.overlay.empty }}
+      </p>
+
+      <p
+        v-if="showSearchCounter"
+        class="meta"
+      >
+        {{ searchCounter }}
       </p>
     </div>
   </section>

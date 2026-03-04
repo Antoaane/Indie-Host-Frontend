@@ -267,8 +267,8 @@ async function maybeResolvePreciseAddress(rawAddress?: string) {
 <template>
   <section class="create-location-panel">
     <div class="header">
-      <h3>{{ panelContent.title }}</h3>
-      <p>{{ panelContent.subtitle }}</p>
+      <h2>{{ panelContent.title }}</h2>
+      <h3>{{ panelContent.subtitle }}</h3>
     </div>
 
     <div class="body">
@@ -356,9 +356,6 @@ async function maybeResolvePreciseAddress(rawAddress?: string) {
         >
           {{ isResolvingAddress ? panelContent.states.resolving : panelContent.actions.resolveAddress }}
         </button>
-        <p class="hint">
-          {{ panelContent.hints.preciseAddress }}
-        </p>
         <p
           v-if="preciseAddressLengthError && !addressResolveError"
           class="feedback is-error"
@@ -376,6 +373,9 @@ async function maybeResolvePreciseAddress(rawAddress?: string) {
           class="feedback is-success"
         >
           {{ panelContent.feedback.resolved }}
+        </p>
+        <p class="hint">
+          {{ panelContent.hints.preciseAddress }}
         </p>
       </div>
 
@@ -485,8 +485,8 @@ async function maybeResolvePreciseAddress(rawAddress?: string) {
 
       > .meta {
         margin: 0;
-        @include little-text($thin: false);
-        color: rgba($secondary, 0.7);
+        @include little-text($thin: true);
+        color: rgba($secondary-text, 0.58);
       }
     }
 
@@ -520,8 +520,8 @@ async function maybeResolvePreciseAddress(rawAddress?: string) {
 
       > .hint {
         margin: 0;
-        @include little-text($thin: false);
-        color: rgba($secondary, 0.65);
+        @include little-text($thin: true);
+        color: rgba($secondary-text, 0.58);
       }
 
       > .feedback {
@@ -554,8 +554,8 @@ async function maybeResolvePreciseAddress(rawAddress?: string) {
 
         > .meta {
           margin: 0;
-          @include little-text($thin: false);
-          color: rgba($secondary, 0.7);
+          @include little-text($thin: true);
+          color: rgba($secondary-text, 0.58);
         }
       }
     }

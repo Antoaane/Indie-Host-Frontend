@@ -2,9 +2,9 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import StepperInput from '@/components/inputs/StepperInput.vue'
 import type { RawCore } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
-import CreateListingNumberStepper from '@/views/CreateListing/components/panels/inputs/CreateListingNumberStepper.vue'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 import { clampInteger, formatValidationMessage } from '@/utils/inputValidation'
 
@@ -24,6 +24,7 @@ const capacityHint = computed(() =>
     max: capacityValidation.max,
   }),
 )
+const capacitySuffix = computed(() => (capacity.value > 1 ? 'voyageurs maximum' : 'voyageur maximum'))
 const panelContent = editorStatic.panels.listing.capacity
 
 function setCapacity(next: number) {
@@ -36,21 +37,19 @@ function setCapacity(next: number) {
 <template>
   <section class="create-capacity-panel">
     <div class="header">
-      <h3>{{ panelContent.title }}</h3>
-      <p>{{ panelContent.subtitle }}</p>
+      <h2>{{ panelContent.title }}</h2>
+      <h3>{{ panelContent.subtitle }}</h3>
     </div>
 
     <div class="body">
-      <CreateListingNumberStepper
-        variant="hero"
+      <StepperInput
         :value="capacity"
         :min="capacityValidation.min"
         :max="capacityValidation.max"
-        :decrement-disabled="capacity <= capacityValidation.min"
-        :increment-disabled="capacity >= capacityValidation.max"
-        @decrement="setCapacity(capacity - 1)"
+        value-font-size="7rem"
+        suffix-font-size="2.5rem"
+        :suffix="capacitySuffix"
         @input="setCapacity($event.number)"
-        @increment="setCapacity(capacity + 1)"
       />
       <p class="hint">{{ capacityHint }}</p>
     </div>
@@ -75,8 +74,8 @@ function setCapacity(next: number) {
 
     > .hint {
       margin: 0;
-      @include little-text($thin: false);
-      color: rgba($secondary, 0.7);
+      @include little-text($thin: true);
+      color: rgba($secondary-text, 0.58);
     }
   }
 }

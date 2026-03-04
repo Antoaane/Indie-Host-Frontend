@@ -82,7 +82,7 @@ const overlayPinnedCategoryLabel = String(overlayContent.pinnedCategory ?? 'Équ
 const pinLabel = String(overlayContent.pin ?? 'Épingler cet équipement')
 const unpinLabel = String(overlayContent.unpin ?? 'Retirer cet équipement des épinglés')
 const pinBadgeLabel = String(overlayContent.pinBadge ?? 'Épingler')
-const pinnedBadgeLabel = String(overlayContent.pinnedBadge ?? 'Épinglé')
+const pinnedBadgeLabel = String(overlayContent.pinnedBadge ?? 'Désépingler')
 const closeOverlayLabel = String(overlayContent.close ?? 'Fermer')
 
 const searchCounter = computed(() =>

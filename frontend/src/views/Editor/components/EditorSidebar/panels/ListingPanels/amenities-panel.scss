@@ -323,8 +323,11 @@
           > .pin-icon {
             width: 0.98rem;
             height: 0.98rem;
-            stroke: currentColor;
             flex-shrink: 0;
+
+            * {
+              stroke: $accent;
+            }
           }
 
           > .pin-text {
@@ -340,6 +343,10 @@
             border-color: $secondary;
             background: $accent;
             color: $secondary;
+
+            * {
+              stroke: $secondary;
+            }
           }
 
           // &:focus-visible {
@@ -351,7 +358,22 @@
 
           &.is-active {
             background: $secondary;
+            border-color: rgba($secondary, 0);
             color: $accent;
+
+            * {
+                stroke: $accent;
+              }
+
+            &:hover {
+              border-color: rgba($secondary, 0);
+              background: $bad;
+              color: $accent;
+
+              * {
+                stroke: $accent;
+              }
+            }
           }
         }
 
@@ -400,12 +422,21 @@
             opacity: 1;
             pointer-events: auto;
             background: $secondary;
+            border-color: rgba($secondary, 0);
             color: $accent;
 
+            * {
+              stroke: $accent;
+            }
+
             &:hover {
-              border-color: $secondary;
-              background: $accent;
-              color: $secondary;
+              border-color: rgba($secondary, 0);
+              background: $bad;
+              color: $accent;
+
+              * {
+                stroke: $accent;
+              }
             }
           }
         }

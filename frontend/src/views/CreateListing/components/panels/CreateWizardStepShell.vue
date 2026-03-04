@@ -11,10 +11,10 @@ const props = defineProps<{
 <template>
   <section class="create-wizard-step-shell">
     <div class="header">
-      <h3>{{ props.title }}</h3>
-      <p v-if="props.hint">
+      <h2>{{ props.title }}</h2>
+      <h3 v-if="props.hint">
         {{ props.hint }}
-      </p>
+      </h3>
     </div>
 
     <div class="content">

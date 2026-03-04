@@ -2,6 +2,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import NumberStepper from '@/components/inputs/NumberStepper.vue'
 import type { RawBookings } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
@@ -29,7 +30,7 @@ const emit = defineEmits<{
   (e: 'patch', patch: DraftPatch): void
 }>()
 
-const pricing = computed<PricingSettings>(() => ((props.bookings as any)?.pricing ?? {}))
+const pricing = computed<PricingSettings>(() => (props.bookings as any)?.pricing ?? {})
 const taxes = computed<PricingTaxes>(() => pricing.value.taxes ?? {})
 const pricingLimits = editorStatic.validation.pricing
 
@@ -59,9 +60,7 @@ function updatePricing(next: Partial<PricingSettings>) {
 function updateTaxes(patch: Partial<PricingTaxes>) {
   const nextPatch = {
     ...patch,
-    ...(Object.prototype.hasOwnProperty.call(patch, 'amount')
-      ? { amount: clampInteger(patch.amount, pricingLimits.moneyMin, pricingLimits.taxAmountMax, pricingLimits.moneyMin) }
-      : {}),
+    ...(Object.prototype.hasOwnProperty.call(patch, 'amount') ? { amount: clampInteger(patch.amount, pricingLimits.moneyMin, pricingLimits.taxAmountMax, pricingLimits.moneyMin) } : {}),
   }
 
   updatePricing({
@@ -95,9 +94,9 @@ function updateTaxes(patch: Partial<PricingTaxes>) {
         class="tax-settings"
       >
         <div class="field">
-        <div class="field-label">
+          <div class="field-label">
             <p>{{ panelContent.modeLabel }}</p>
-        </div>
+          </div>
           <div class="select">
             <select
               :value="mode"
@@ -110,38 +109,18 @@ function updateTaxes(patch: Partial<PricingTaxes>) {
         </div>
 
         <div class="field">
-        <div class="field-label">
-          <p>{{ panelContent.amountLabel }}</p>
-          <span>{{ panelContent.currencySymbol }}</span>
-        </div>
-          <div class="stepper">
-            <div class="btn">
-              <button
-                type="button"
-                @click="updateTaxes({ amount: Math.max(pricingLimits.moneyMin, amount - 1) })"
-              >
-                −
-              </button>
-            </div>
-            <input
-              class="value"
-              type="number"
-              :min="pricingLimits.moneyMin"
-              :max="pricingLimits.taxAmountMax"
-              step="1"
-              inputmode="numeric"
-              :value="amount"
-              @input="updateTaxes({ amount: ($event.target as HTMLInputElement).valueAsNumber })"
-            />
-            <div class="btn">
-              <button
-                type="button"
-                @click="updateTaxes({ amount: amount + 1 })"
-              >
-                +
-              </button>
-            </div>
+          <div class="field-label">
+            <p>{{ panelContent.amountLabel }}</p>
+            <span>{{ panelContent.currencySymbol }}</span>
           </div>
+          <NumberStepper
+            :value="amount"
+            :min="pricingLimits.moneyMin"
+            :max="pricingLimits.taxAmountMax"
+            @decrement="updateTaxes({ amount: Math.max(pricingLimits.moneyMin, amount - 1) })"
+            @input="updateTaxes({ amount: $event.number })"
+            @increment="updateTaxes({ amount: amount + 1 })"
+          />
         </div>
       </div>
 
@@ -218,10 +197,6 @@ function updateTaxes(patch: Partial<PricingTaxes>) {
 
     .select {
       @include inputs.select($theme: base);
-    }
-
-    .stepper {
-      @include inputs.stepper($theme: base);
     }
 
     .radio-group {

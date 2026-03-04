@@ -2,6 +2,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import NumberStepper from '@/components/inputs/NumberStepper.vue'
 import type { RawBookings } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
@@ -42,18 +43,10 @@ const stay = computed<PricingStay>(() => pricing.value.stay ?? {})
 const pricingLimits = editorStatic.validation.pricing
 const panelContent = editorStatic.panels.pricing.stay
 
-const minNights = computed(() =>
-  clampInteger(stay.value.minNights, pricingLimits.minNights, pricingLimits.maxNights, pricingLimits.minNights),
-)
-const maxNights = computed(() =>
-  Number.isFinite(Number(stay.value.maxNights))
-    ? clampInteger(stay.value.maxNights, pricingLimits.minNights, pricingLimits.maxNights, pricingLimits.minNights)
-    : null,
-)
+const minNights = computed(() => clampInteger(stay.value.minNights, pricingLimits.minNights, pricingLimits.maxNights, pricingLimits.minNights))
+const maxNights = computed(() => (Number.isFinite(Number(stay.value.maxNights)) ? clampInteger(stay.value.maxNights, pricingLimits.minNights, pricingLimits.maxNights, pricingLimits.minNights) : null))
 
-const durationDiscounts = computed<NormalizedDurationDiscountTier[]>(() =>
-  normalizeDurationDiscounts(stay.value.durationDiscounts, stay.value),
-)
+const durationDiscounts = computed<NormalizedDurationDiscountTier[]>(() => normalizeDurationDiscounts(stay.value.durationDiscounts, stay.value))
 
 const stayHint = computed(() =>
   formatValidationMessage(pricingLimits.messages.stayHint, {
@@ -134,9 +127,7 @@ function legacyDurationDiscounts(rawStay: PricingStay): NormalizedDurationDiscou
 
 function normalizeDurationDiscounts(input: unknown, rawStay?: PricingStay): NormalizedDurationDiscountTier[] {
   if (Array.isArray(input)) {
-    const configured = input
-      .map((entry) => normalizeDurationDiscountTier(entry))
-      .filter((entry): entry is NormalizedDurationDiscountTier => Boolean(entry))
+    const configured = input.map((entry) => normalizeDurationDiscountTier(entry)).filter((entry): entry is NormalizedDurationDiscountTier => Boolean(entry))
 
     if (configured.length > 0) {
       return dedupeAndSortDurationDiscounts(configured)
@@ -151,25 +142,12 @@ function updateStay(patch: Partial<PricingStay>) {
     ...patch,
     ...(Object.prototype.hasOwnProperty.call(patch, 'minNights')
       ? {
-          minNights: clampInteger(
-            patch.minNights,
-            pricingLimits.minNights,
-            pricingLimits.maxNights,
-            pricingLimits.minNights,
-          ),
+          minNights: clampInteger(patch.minNights, pricingLimits.minNights, pricingLimits.maxNights, pricingLimits.minNights),
         }
       : {}),
     ...(Object.prototype.hasOwnProperty.call(patch, 'maxNights')
       ? {
-          maxNights:
-            patch.maxNights === null
-              ? null
-              : clampInteger(
-                  patch.maxNights,
-                  pricingLimits.minNights,
-                  pricingLimits.maxNights,
-                  pricingLimits.minNights,
-                ),
+          maxNights: patch.maxNights === null ? null : clampInteger(patch.maxNights, pricingLimits.minNights, pricingLimits.maxNights, pricingLimits.minNights),
         }
       : {}),
   }
@@ -179,16 +157,8 @@ function updateStay(patch: Partial<PricingStay>) {
     ...nextPatch,
   }
 
-  const normalizedMinNights = clampInteger(
-    nextStay.minNights,
-    pricingLimits.minNights,
-    pricingLimits.maxNights,
-    pricingLimits.minNights,
-  )
-  const normalizedMaxNights =
-    nextStay.maxNights === null || nextStay.maxNights === undefined
-      ? null
-      : clampInteger(nextStay.maxNights, normalizedMinNights, pricingLimits.maxNights, normalizedMinNights)
+  const normalizedMinNights = clampInteger(nextStay.minNights, pricingLimits.minNights, pricingLimits.maxNights, pricingLimits.minNights)
+  const normalizedMaxNights = nextStay.maxNights === null || nextStay.maxNights === undefined ? null : clampInteger(nextStay.maxNights, normalizedMinNights, pricingLimits.maxNights, normalizedMinNights)
 
   const normalizedDurationDiscounts = normalizeDurationDiscounts(nextStay.durationDiscounts, nextStay)
   const weeklyDiscount = normalizedDurationDiscounts.find((tier) => tier.minNights === 7)?.percent ?? 0
@@ -258,12 +228,8 @@ function updateDurationDiscountTier(index: number, patch: Partial<NormalizedDura
 
   const previous = next[index]
   next[index] = {
-    minNights: Object.prototype.hasOwnProperty.call(patch, 'minNights')
-      ? clampInteger(patch.minNights, pricingLimits.minNights, pricingLimits.maxNights, previous.minNights)
-      : previous.minNights,
-    percent: Object.prototype.hasOwnProperty.call(patch, 'percent')
-      ? clampPercent(patch.percent)
-      : previous.percent,
+    minNights: Object.prototype.hasOwnProperty.call(patch, 'minNights') ? clampInteger(patch.minNights, pricingLimits.minNights, pricingLimits.maxNights, previous.minNights) : previous.minNights,
+    percent: Object.prototype.hasOwnProperty.call(patch, 'percent') ? clampPercent(patch.percent) : previous.percent,
   }
 
   updateStay({ durationDiscounts: next })
@@ -280,12 +246,7 @@ function stepDurationThreshold(index: number, delta: number) {
   if (!tier) return
 
   updateDurationDiscountTier(index, {
-    minNights: clampInteger(
-      tier.minNights + delta,
-      pricingLimits.minNights,
-      pricingLimits.maxNights,
-      pricingLimits.minNights,
-    ),
+    minNights: clampInteger(tier.minNights + delta, pricingLimits.minNights, pricingLimits.maxNights, pricingLimits.minNights),
   })
 }
 
@@ -312,34 +273,14 @@ function stepDurationDiscount(index: number, delta: number) {
           <p>{{ panelContent.minNights }}</p>
           <span>{{ panelContent.nightsUnit }}</span>
         </div>
-        <div class="stepper">
-          <div class="btn">
-            <button
-              type="button"
-              @click="updateStay({ minNights: Math.max(pricingLimits.minNights, minNights - 1) })"
-            >
-              −
-            </button>
-          </div>
-          <input
-            class="value"
-            type="number"
-            :min="pricingLimits.minNights"
-            :max="pricingLimits.maxNights"
-            step="1"
-            inputmode="numeric"
-            :value="minNights"
-            @input="updateStay({ minNights: ($event.target as HTMLInputElement).valueAsNumber })"
-          />
-          <div class="btn">
-            <button
-              type="button"
-              @click="updateStay({ minNights: minNights + 1 })"
-            >
-              +
-            </button>
-          </div>
-        </div>
+        <NumberStepper
+          :value="minNights"
+          :min="pricingLimits.minNights"
+          :max="pricingLimits.maxNights"
+          @decrement="updateStay({ minNights: Math.max(pricingLimits.minNights, minNights - 1) })"
+          @input="updateStay({ minNights: $event.number })"
+          @increment="updateStay({ minNights: minNights + 1 })"
+        />
       </div>
 
       <div class="field">
@@ -347,35 +288,15 @@ function stepDurationDiscount(index: number, delta: number) {
           <p>{{ panelContent.maxNights }}</p>
           <span>{{ panelContent.nightsUnit }}</span>
         </div>
-        <div class="stepper">
-          <div class="btn">
-            <button
-              type="button"
-              @click="stepMaxNights(-1)"
-            >
-              −
-            </button>
-          </div>
-          <input
-            class="value"
-            type="number"
-            :min="minNights"
-            :max="pricingLimits.maxNights"
-            step="1"
-            inputmode="numeric"
-            :value="maxNights ?? ''"
-            :placeholder="panelContent.maxPlaceholder"
-            @input="updateStay({ maxNights: parseOptionalNumber(($event.target as HTMLInputElement).value) })"
-          />
-          <div class="btn">
-            <button
-              type="button"
-              @click="stepMaxNights(1)"
-            >
-              +
-            </button>
-          </div>
-        </div>
+        <NumberStepper
+          :value="maxNights ?? ''"
+          :min="minNights"
+          :max="pricingLimits.maxNights"
+          :placeholder="panelContent.maxPlaceholder"
+          @decrement="stepMaxNights(-1)"
+          @input="updateStay({ maxNights: parseOptionalNumber($event.raw) })"
+          @increment="stepMaxNights(1)"
+        />
       </div>
 
       <div class="discount-tiers">
@@ -406,65 +327,27 @@ function stepDurationDiscount(index: number, delta: number) {
           :key="`tier-${index}-${tier.minNights}`"
           class="discount-row"
         >
-          <div class="stepper with-suffix threshold">
-            <div class="btn">
-              <button
-                type="button"
-                @click="stepDurationThreshold(index, -1)"
-              >
-                −
-              </button>
-            </div>
-            <input
-              class="value"
-              type="number"
-              :min="pricingLimits.minNights"
-              :max="pricingLimits.maxNights"
-              step="1"
-              inputmode="numeric"
-              :value="tier.minNights"
-              @input="updateDurationDiscountTier(index, { minNights: ($event.target as HTMLInputElement).valueAsNumber })"
-            />
-            <span class="suffix">{{ panelContent.thresholdSuffix }}</span>
-            <div class="btn">
-              <button
-                type="button"
-                @click="stepDurationThreshold(index, 1)"
-              >
-                +
-              </button>
-            </div>
-          </div>
+          <NumberStepper
+            class="threshold"
+            :value="tier.minNights"
+            :min="pricingLimits.minNights"
+            :max="pricingLimits.maxNights"
+            :suffix="panelContent.thresholdSuffix"
+            @decrement="stepDurationThreshold(index, -1)"
+            @input="updateDurationDiscountTier(index, { minNights: $event.number })"
+            @increment="stepDurationThreshold(index, 1)"
+          />
 
-          <div class="stepper with-suffix percent">
-            <div class="btn">
-              <button
-                type="button"
-                @click="stepDurationDiscount(index, -1)"
-              >
-                −
-              </button>
-            </div>
-            <input
-              class="value"
-              type="number"
-              :min="pricingLimits.discountMin"
-              :max="pricingLimits.discountMax"
-              step="1"
-              inputmode="numeric"
-              :value="tier.percent"
-              @input="updateDurationDiscountTier(index, { percent: ($event.target as HTMLInputElement).valueAsNumber })"
-            />
-            <span class="suffix">{{ panelContent.discountSuffix }}</span>
-            <div class="btn">
-              <button
-                type="button"
-                @click="stepDurationDiscount(index, 1)"
-              >
-                +
-              </button>
-            </div>
-          </div>
+          <NumberStepper
+            class="percent"
+            :value="tier.percent"
+            :min="pricingLimits.discountMin"
+            :max="pricingLimits.discountMax"
+            :suffix="panelContent.discountSuffix"
+            @decrement="stepDurationDiscount(index, -1)"
+            @input="updateDurationDiscountTier(index, { percent: $event.number })"
+            @increment="stepDurationDiscount(index, 1)"
+          />
 
           <div class="remove">
             <button
@@ -488,7 +371,6 @@ function stepDurationDiscount(index: number, delta: number) {
 /* File: src/views/Editor/components/EditorSidebar/panels/PricingPanels/stay-duration-panel.scss */
 
 @use '@/styles/variables/globals' as *;
-@use '@/styles/components/inputs' as inputs;
 @use '@/views/Editor/components/EditorSidebar/panels/panel.scss' as *;
 
 .editor-stay-duration-panel {
@@ -507,20 +389,6 @@ function stepDurationDiscount(index: number, delta: number) {
 
     .field-label {
       @extend %panel-field-label;
-    }
-
-    .stepper {
-      @include inputs.stepper($theme: base);
-    }
-
-    .stepper.with-suffix {
-      align-items: center;
-
-      > .suffix {
-        font-size: 0.85rem;
-        color: rgba($secondary, 0.6);
-        white-space: nowrap;
-      }
     }
 
     .discount-tiers {

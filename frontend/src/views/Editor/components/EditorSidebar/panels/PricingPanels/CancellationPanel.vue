@@ -2,6 +2,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import NumberStepper from '@/components/inputs/NumberStepper.vue'
 import type { RawBookings } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
@@ -39,19 +40,8 @@ const custom = computed<CancellationCustom>(() => cancellation.value.custom ?? {
 const pricingLimits = editorStatic.validation.pricing
 
 const policy = computed<CancellationPolicy>(() => cancellation.value.policy ?? 'flexible')
-const customDays = computed(() =>
-  Number.isFinite(Number(custom.value.days))
-    ? clampInteger(
-        custom.value.days,
-        pricingLimits.cancellationDaysMin,
-        pricingLimits.cancellationDaysMax,
-        pricingLimits.cancellationDaysMin,
-      )
-    : null,
-)
-const customFee = computed(() =>
-  Number.isFinite(Number(custom.value.feePercent)) ? clampPercent(Number(custom.value.feePercent)) : null,
-)
+const customDays = computed(() => (Number.isFinite(Number(custom.value.days)) ? clampInteger(custom.value.days, pricingLimits.cancellationDaysMin, pricingLimits.cancellationDaysMax, pricingLimits.cancellationDaysMin) : null))
+const customFee = computed(() => (Number.isFinite(Number(custom.value.feePercent)) ? clampPercent(Number(custom.value.feePercent)) : null))
 const panelContent = editorStatic.panels.pricing.cancellation
 const cancellationHint = computed(() =>
   formatValidationMessage(pricingLimits.messages.cancellationHint, {
@@ -118,20 +108,10 @@ function updateCustom(patch: Partial<CancellationCustom>) {
     ...patch,
     ...(Object.prototype.hasOwnProperty.call(patch, 'days')
       ? {
-          days:
-            patch.days === null
-              ? null
-              : clampInteger(
-                  patch.days,
-                  pricingLimits.cancellationDaysMin,
-                  pricingLimits.cancellationDaysMax,
-                  pricingLimits.cancellationDaysMin,
-                ),
+          days: patch.days === null ? null : clampInteger(patch.days, pricingLimits.cancellationDaysMin, pricingLimits.cancellationDaysMax, pricingLimits.cancellationDaysMin),
         }
       : {}),
-    ...(Object.prototype.hasOwnProperty.call(patch, 'feePercent')
-      ? { feePercent: clampPercent(Number(patch.feePercent)) }
-      : {}),
+    ...(Object.prototype.hasOwnProperty.call(patch, 'feePercent') ? { feePercent: clampPercent(Number(patch.feePercent)) } : {}),
   }
 
   updateCancellation({
@@ -148,9 +128,7 @@ function clampPercent(value: number) {
 
 function getPolicyRules(policyKey: CancellationPresetPolicy, values?: Partial<CancellationCustom>) {
   const defaults = POLICY_PRESETS[policyKey]
-  const days = Number.isFinite(Number(values?.days))
-    ? Math.max(pricingLimits.cancellationDaysMin, Number(values?.days))
-    : defaults.days
+  const days = Number.isFinite(Number(values?.days)) ? Math.max(pricingLimits.cancellationDaysMin, Number(values?.days)) : defaults.days
   const feePercent = Number.isFinite(Number(values?.feePercent)) ? clampPercent(Number(values?.feePercent)) : defaults.feePercent
 
   return [
@@ -269,68 +247,28 @@ function parseOptionalNumber(raw: string): number | null {
           <div class="field-label">
             <p>{{ panelContent.daysBefore }}</p>
           </div>
-          <div class="stepper">
-            <div class="btn">
-              <button
-                type="button"
-                @click="updateCustom({ days: Math.max(pricingLimits.cancellationDaysMin, Number(customDays ?? 0) - 1) })"
-              >
-                −
-              </button>
-            </div>
-            <input
-              class="value"
-              type="number"
-              :min="pricingLimits.cancellationDaysMin"
-              :max="pricingLimits.cancellationDaysMax"
-              step="1"
-              inputmode="numeric"
-              :value="customDays ?? ''"
-              @input="updateCustom({ days: parseOptionalNumber(($event.target as HTMLInputElement).value) })"
-            />
-            <div class="btn">
-              <button
-                type="button"
-                @click="updateCustom({ days: Number(customDays ?? 0) + 1 })"
-              >
-                +
-              </button>
-            </div>
-          </div>
+          <NumberStepper
+            :value="customDays ?? ''"
+            :min="pricingLimits.cancellationDaysMin"
+            :max="pricingLimits.cancellationDaysMax"
+            @decrement="updateCustom({ days: Math.max(pricingLimits.cancellationDaysMin, Number(customDays ?? 0) - 1) })"
+            @input="updateCustom({ days: parseOptionalNumber($event.raw) })"
+            @increment="updateCustom({ days: Number(customDays ?? 0) + 1 })"
+          />
         </div>
 
         <div class="field">
           <div class="field-label">
             <p>{{ panelContent.feePercent }}</p>
           </div>
-          <div class="stepper">
-            <div class="btn">
-              <button
-                type="button"
-                @click="updateCustom({ feePercent: clampPercent(Number(customFee ?? 0) - 1) })"
-              >
-                −
-              </button>
-            </div>
-            <input
-              class="value"
-              type="number"
-              :min="pricingLimits.discountMin"
-              :max="pricingLimits.discountMax"
-              step="1"
-              inputmode="numeric"
-              :value="customFee ?? ''"
-              @input="updateCustom({ feePercent: clampPercent(Number(($event.target as HTMLInputElement).value)) })"
-            />
-            <div class="btn">
-              <button
-                type="button"
-                @click="updateCustom({ feePercent: clampPercent(Number(customFee ?? 0) + 1) })"
-              >
-                +
-              </button>
-            </div>
-          </div>
+          <NumberStepper
+            :value="customFee ?? ''"
+            :min="pricingLimits.discountMin"
+            :max="pricingLimits.discountMax"
+            @decrement="updateCustom({ feePercent: clampPercent(Number(customFee ?? 0) - 1) })"
+            @input="updateCustom({ feePercent: clampPercent(Number($event.raw)) })"
+            @increment="updateCustom({ feePercent: clampPercent(Number(customFee ?? 0) + 1) })"
+          />
         </div>
 
         <div class="custom-preview">
@@ -379,10 +317,6 @@ function parseOptionalNumber(raw: string): number | null {
 
     .select {
       @include inputs.select($theme: base);
-    }
-
-    .stepper {
-      @include inputs.stepper($theme: base);
     }
 
     .custom-settings {

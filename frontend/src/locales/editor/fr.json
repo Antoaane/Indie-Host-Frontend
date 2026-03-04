@@ -126,7 +126,9 @@
             "close": "Fermer",
             "pinnedCategory": "Équipements épinglés",
             "pin": "Épingler cet équipement",
-            "unpin": "Retirer cet équipement des épinglés"
+            "unpin": "Retirer cet équipement des épinglés",
+            "pinBadge": "Épingler",
+            "pinnedBadge": "Désépingler"
           }
         },
         "capacity": {
@@ -170,7 +172,7 @@
           "roomCustomNamePlaceholder": "Nom de la pièce",
           "nonSleepingLabel": "Cette pièce n'a pas de couchage.",
           "emptyBedsLabel": "Aucun lit ajouté pour le moment.",
-          "overlayAddTitle": "Ajouter un couchage",
+          "overlayAddTitle": "+ Ajouter un couchage",
           "customBed": {
             "typeValue": "custom",
             "nameLabel": "Nom du lit personnalisé",
@@ -371,14 +373,14 @@
           "hint": "Remise entre {discountMin}% et {discountMax}% · maximum {discountTiersMax} paliers actifs par section.",
           "durationTitle": "Selon la durée du séjour",
           "durationSubtitle": "Appliquées selon le nombre total de nuits réservées.",
-          "durationDefault7": "-X% pour les résa de 7j ou plus",
-          "durationDefault28": "-X% pour les résa de 28j ou plus",
+          "durationDefault7": "Réduction pour les séjours de 7 nuits ou plus",
+          "durationDefault28": "Réduction pour les séjours de 28 nuits ou plus",
           "durationAdd": "Ajouter un palier durée",
           "durationEmpty": "Aucun palier durée personnalisé.",
           "durationThresholdSuffix": "nuits min",
           "bookingTitle": "Selon l’anticipation de réservation",
           "bookingSubtitle": "Appliquées selon le nombre de jours avant l’arrivée.",
-          "bookingDefault48h": "-X% pour les résa -48h avant",
+          "bookingDefault48h": "Réduction pour les réservations effectuées au moins 48 h avant l’arrivée",
           "bookingAdd": "Ajouter un palier anticipation",
           "bookingEmpty": "Aucun palier anticipation personnalisé.",
           "bookingThresholdSuffix": "jours max avant arrivée",

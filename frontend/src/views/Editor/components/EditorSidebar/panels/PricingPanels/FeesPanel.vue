@@ -2,17 +2,11 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import NumberStepper from '@/components/inputs/NumberStepper.vue'
 import type { RawBookings } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
-import {
-  clampInteger,
-  formatValidationMessage,
-  normalizeTextInput,
-  parseOptionalInteger,
-  resolveTextMaxLength,
-  shouldDisplayTextLimit,
-} from '@/utils/inputValidation'
+import { clampInteger, formatValidationMessage, normalizeTextInput, parseOptionalInteger, resolveTextMaxLength, shouldDisplayTextLimit } from '@/utils/inputValidation'
 
 type FeeDraft = {
   name?: string
@@ -29,9 +23,7 @@ const pricingLimits = editorStatic.validation.pricing
 const textDefaults = editorStatic.validation.defaults.simpleText
 const customFeeNameMax = resolveTextMaxLength(pricingLimits.customFeeNameMax, textDefaults)
 const showCustomFeeNameLimit = shouldDisplayTextLimit(customFeeNameMax, textDefaults)
-const feesHintTemplate = showCustomFeeNameLimit
-  ? pricingLimits.messages.feesHint
-  : pricingLimits.messages.feesHintNoTextLimit
+const feesHintTemplate = showCustomFeeNameLimit ? pricingLimits.messages.feesHint : pricingLimits.messages.feesHintNoTextLimit
 const feesHint = computed(() =>
   formatValidationMessage(feesHintTemplate, {
     moneyMin: pricingLimits.moneyMin,
@@ -61,11 +53,7 @@ function isReservedFee(fee: FeeDraft) {
   return fee.name === CLEANING_LABEL || fee.name === LINEN_LABEL
 }
 
-const customFees = computed<FeeEntry[]>(() => (
-  fees.value
-    .map((fee, index) => (isReservedFee(fee) ? null : { fee, index }))
-    .filter((entry): entry is FeeEntry => Boolean(entry))
-))
+const customFees = computed<FeeEntry[]>(() => fees.value.map((fee, index) => (isReservedFee(fee) ? null : { fee, index })).filter((entry): entry is FeeEntry => Boolean(entry)))
 
 function updateFees(next: FeeDraft[]) {
   emit('patch', { bookings: { fees: next } as any })
@@ -78,7 +66,9 @@ function resolveFeeIndex(code: string, fallbackLabel: string) {
 }
 
 function setReservedFee(code: string, label: string, amount: number | null) {
-  const next = [...fees.value]
+  const next = [
+    ...fees.value,
+  ]
   const index = resolveFeeIndex(code, label)
 
   if (amount === null || !Number.isFinite(amount)) {
@@ -126,16 +116,14 @@ function addCustomFee() {
 }
 
 function updateCustomFee(index: number, patch: Partial<FeeDraft>) {
-  const next = [...fees.value]
+  const next = [
+    ...fees.value,
+  ]
   if (!next[index]) return
   const nextPatch = {
     ...patch,
-    ...(typeof patch.name === 'string'
-      ? { name: normalizeTextInput(patch.name, customFeeNameMax) }
-      : {}),
-    ...(Object.prototype.hasOwnProperty.call(patch, 'amount')
-      ? { amount: clampInteger(patch.amount, pricingLimits.moneyMin, pricingLimits.moneyMax, pricingLimits.moneyMin) }
-      : {}),
+    ...(typeof patch.name === 'string' ? { name: normalizeTextInput(patch.name, customFeeNameMax) } : {}),
+    ...(Object.prototype.hasOwnProperty.call(patch, 'amount') ? { amount: clampInteger(patch.amount, pricingLimits.moneyMin, pricingLimits.moneyMax, pricingLimits.moneyMin) } : {}),
   }
   next[index] = {
     ...next[index],
@@ -161,70 +149,30 @@ function removeCustomFee(index: number) {
         <div class="field-label">
           <p>{{ panelContent.cleaning }}</p>
         </div>
-        <div class="stepper with-suffix">
-          <div class="btn">
-            <button
-              type="button"
-              @click="setReservedFee(CLEANING_CODE, CLEANING_LABEL, Math.max(pricingLimits.moneyMin, (cleaningFee ?? 0) - 1))"
-            >
-              −
-            </button>
-          </div>
-          <input
-            class="value"
-            type="number"
-            :min="pricingLimits.moneyMin"
-            :max="pricingLimits.moneyMax"
-            step="1"
-            inputmode="numeric"
-            :value="cleaningFee ?? ''"
-            @input="setReservedFee(CLEANING_CODE, CLEANING_LABEL, parseOptionalNumber(($event.target as HTMLInputElement).value))"
-          />
-          <span class="suffix">{{ panelContent.perStaySuffix }}</span>
-          <div class="btn">
-            <button
-              type="button"
-              @click="setReservedFee(CLEANING_CODE, CLEANING_LABEL, (cleaningFee ?? 0) + 1)"
-            >
-              +
-            </button>
-          </div>
-        </div>
+        <NumberStepper
+          :value="cleaningFee ?? ''"
+          :min="pricingLimits.moneyMin"
+          :max="pricingLimits.moneyMax"
+          :suffix="panelContent.perStaySuffix"
+          @decrement="setReservedFee(CLEANING_CODE, CLEANING_LABEL, Math.max(pricingLimits.moneyMin, (cleaningFee ?? 0) - 1))"
+          @input="setReservedFee(CLEANING_CODE, CLEANING_LABEL, parseOptionalNumber($event.raw))"
+          @increment="setReservedFee(CLEANING_CODE, CLEANING_LABEL, (cleaningFee ?? 0) + 1)"
+        />
       </div>
 
       <div class="field">
         <div class="field-label">
           <p>{{ panelContent.linen }}</p>
         </div>
-        <div class="stepper with-suffix">
-          <div class="btn">
-            <button
-              type="button"
-              @click="setReservedFee(LINEN_CODE, LINEN_LABEL, Math.max(pricingLimits.moneyMin, (linenFee ?? 0) - 1))"
-            >
-              −
-            </button>
-          </div>
-          <input
-            class="value"
-            type="number"
-            :min="pricingLimits.moneyMin"
-            :max="pricingLimits.moneyMax"
-            step="1"
-            inputmode="numeric"
-            :value="linenFee ?? ''"
-            @input="setReservedFee(LINEN_CODE, LINEN_LABEL, parseOptionalNumber(($event.target as HTMLInputElement).value))"
-          />
-          <span class="suffix">{{ panelContent.perStaySuffix }}</span>
-          <div class="btn">
-            <button
-              type="button"
-              @click="setReservedFee(LINEN_CODE, LINEN_LABEL, (linenFee ?? 0) + 1)"
-            >
-              +
-            </button>
-          </div>
-        </div>
+        <NumberStepper
+          :value="linenFee ?? ''"
+          :min="pricingLimits.moneyMin"
+          :max="pricingLimits.moneyMax"
+          :suffix="panelContent.perStaySuffix"
+          @decrement="setReservedFee(LINEN_CODE, LINEN_LABEL, Math.max(pricingLimits.moneyMin, (linenFee ?? 0) - 1))"
+          @input="setReservedFee(LINEN_CODE, LINEN_LABEL, parseOptionalNumber($event.raw))"
+          @increment="setReservedFee(LINEN_CODE, LINEN_LABEL, (linenFee ?? 0) + 1)"
+        />
       </div>
 
       <div class="custom-fees">
@@ -256,34 +204,14 @@ function removeCustomFee(index: number) {
               @input="updateCustomFee(entry.index, { name: ($event.target as HTMLInputElement).value })"
             />
           </div>
-          <div class="stepper">
-            <div class="btn">
-              <button
-                type="button"
-                @click="updateCustomFee(entry.index, { amount: Math.max(pricingLimits.moneyMin, Number(entry.fee.amount ?? 0) - 1) })"
-              >
-                −
-              </button>
-            </div>
-            <input
-              class="value"
-              type="number"
-              :min="pricingLimits.moneyMin"
-              :max="pricingLimits.moneyMax"
-              step="1"
-              inputmode="numeric"
-              :value="entry.fee.amount ?? 0"
-              @input="updateCustomFee(entry.index, { amount: ($event.target as HTMLInputElement).valueAsNumber })"
-            />
-            <div class="btn">
-              <button
-                type="button"
-                @click="updateCustomFee(entry.index, { amount: Number(entry.fee.amount ?? 0) + 1 })"
-              >
-                +
-              </button>
-            </div>
-          </div>
+          <NumberStepper
+            :value="entry.fee.amount ?? 0"
+            :min="pricingLimits.moneyMin"
+            :max="pricingLimits.moneyMax"
+            @decrement="updateCustomFee(entry.index, { amount: Math.max(pricingLimits.moneyMin, Number(entry.fee.amount ?? 0) - 1) })"
+            @input="updateCustomFee(entry.index, { amount: $event.number })"
+            @increment="updateCustomFee(entry.index, { amount: Number(entry.fee.amount ?? 0) + 1 })"
+          />
           <div class="remove">
             <button
               type="button"
@@ -325,20 +253,6 @@ function removeCustomFee(index: number) {
 
     .field-label {
       @extend %panel-field-label;
-    }
-
-    .stepper {
-      @include inputs.stepper($theme: base);
-    }
-
-    .stepper.with-suffix {
-      align-items: center;
-
-      > .suffix {
-        font-size: 0.85rem;
-        color: rgba($secondary, 0.6);
-        white-space: nowrap;
-      }
     }
 
     .custom-fees {

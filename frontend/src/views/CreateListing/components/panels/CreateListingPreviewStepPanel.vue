@@ -93,7 +93,7 @@ onBeforeUnmount(() => {
   <section class="create-listing-preview-step-panel">
     <div class="intro">
       <h2>Votre annonce est prête à être créée.</h2>
-      <p>Vérifiez une dernière fois l’aperçu avant de finaliser la création.</p>
+      <h3>Vérifiez une dernière fois l’aperçu avant de finaliser la création.</h3>
     </div>
 
     <div
@@ -148,7 +148,7 @@ onBeforeUnmount(() => {
       @include h2-title();
     }
 
-    > p {
+    > h3 {
       margin: 0;
       @include little-text($thin: false);
       color: rgba($secondary-text, 0.75);

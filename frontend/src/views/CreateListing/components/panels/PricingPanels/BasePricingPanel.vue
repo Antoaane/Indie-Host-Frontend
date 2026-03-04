@@ -6,7 +6,7 @@ import type { RawBookings } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 import { clampInteger, formatValidationMessage, parseOptionalInteger } from '@/utils/inputValidation'
-import CreateListingStepperInput from '@/views/CreateListing/components/panels/inputs/CreateListingStepperInput.vue'
+import StepperInput from '@/components/inputs/StepperInput.vue'
 
 type PricingWeekend = {
   enabled?: boolean
@@ -115,18 +115,19 @@ function clampMoney(value: unknown): number {
 <template>
   <section class="create-base-pricing-panel">
     <div class="header">
-      <h3>{{ panelContent.title }}</h3>
-      <p>{{ panelContent.subtitle }}</p>
+      <h2>{{ panelContent.title }}</h2>
+      <h3>{{ panelContent.subtitle }}</h3>
     </div>
 
     <div class="body">
       <div class="field">
-        <CreateListingStepperInput
-          variant="hero"
+        <StepperInput
           :value="pricePerNight"
           :min="pricingLimits.moneyMin"
           :max="pricingLimits.moneyMax"
           :suffix="panelContent.pricePerNightSuffix"
+          value-font-size="5rem"
+          suffix-font-size="2rem"
           @input="setPricePerNight($event.number)"
         />
       </div>
@@ -147,12 +148,13 @@ function clampMoney(value: unknown): number {
         <div class="field-label">
           <p>{{ panelContent.weekendPriceLabel }}</p>
         </div>
-        <CreateListingStepperInput
-          variant="hero"
+        <StepperInput
           :value="weekendPrice"
           :min="pricingLimits.moneyMin"
           :max="pricingLimits.moneyMax"
           :suffix="panelContent.weekendPriceSuffix"
+          value-font-size="5rem"
+          suffix-font-size="2rem"
           @input="updateWeekend({ price: $event.number })"
         />
       </div>
@@ -165,12 +167,13 @@ function clampMoney(value: unknown): number {
           <p>{{ panelContent.extraGuestsLabel }}</p>
         </div>
         <div class="row">
-          <CreateListingStepperInput
-            variant="hero"
+          <StepperInput
             :value="extraGuestPrice"
             :min="pricingLimits.moneyMin"
             :max="pricingLimits.moneyMax"
             :suffix="panelContent.extraGuestsSuffix"
+            value-font-size="5rem"
+            suffix-font-size="2rem"
             @input="updateExtraGuests({ price: $event.number })"
           />
           <div class="input">
@@ -238,8 +241,9 @@ function clampMoney(value: unknown): number {
 
     .hint {
       margin: 0;
-      @include little-text($thin: false);
-      color: rgba($secondary, 0.65);
+      margin-top: auto;
+      @include little-text($thin: true);
+      color: rgba($secondary-text, 0.58);
     }
   }
 }

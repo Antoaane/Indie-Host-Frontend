@@ -2,6 +2,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import NumberStepper from '@/components/inputs/NumberStepper.vue'
 import type { RawBookings } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
@@ -26,7 +27,7 @@ const emit = defineEmits<{
   (e: 'patch', patch: DraftPatch): void
 }>()
 
-const pricing = computed<PricingSettings>(() => ((props.bookings as any)?.pricing ?? {}))
+const pricing = computed<PricingSettings>(() => (props.bookings as any)?.pricing ?? {})
 const deposit = computed<PricingDeposit>(() => pricing.value.deposit ?? {})
 const pricingLimits = editorStatic.validation.pricing
 
@@ -54,9 +55,7 @@ function updatePricing(next: Partial<PricingSettings>) {
 function updateDeposit(patch: Partial<PricingDeposit>) {
   const nextPatch = {
     ...patch,
-    ...(Object.prototype.hasOwnProperty.call(patch, 'amount')
-      ? { amount: clampInteger(patch.amount, pricingLimits.moneyMin, pricingLimits.moneyMax, pricingLimits.moneyMin) }
-      : {}),
+    ...(Object.prototype.hasOwnProperty.call(patch, 'amount') ? { amount: clampInteger(patch.amount, pricingLimits.moneyMin, pricingLimits.moneyMax, pricingLimits.moneyMin) } : {}),
   }
 
   updatePricing({
@@ -81,34 +80,14 @@ function updateDeposit(patch: Partial<PricingDeposit>) {
           <p>{{ panelContent.amountLabel }}</p>
           <span>{{ panelContent.currencySymbol }}</span>
         </div>
-        <div class="stepper">
-          <div class="btn">
-            <button
-              type="button"
-              @click="updateDeposit({ amount: Math.max(pricingLimits.moneyMin, amount - 1) })"
-            >
-              −
-            </button>
-          </div>
-          <input
-            class="value"
-            type="number"
-            :min="pricingLimits.moneyMin"
-            :max="pricingLimits.moneyMax"
-            step="1"
-            inputmode="numeric"
-            :value="amount"
-            @input="updateDeposit({ amount: ($event.target as HTMLInputElement).valueAsNumber })"
-          />
-          <div class="btn">
-            <button
-              type="button"
-              @click="updateDeposit({ amount: amount + 1 })"
-            >
-              +
-            </button>
-          </div>
-        </div>
+        <NumberStepper
+          :value="amount"
+          :min="pricingLimits.moneyMin"
+          :max="pricingLimits.moneyMax"
+          @decrement="updateDeposit({ amount: Math.max(pricingLimits.moneyMin, amount - 1) })"
+          @input="updateDeposit({ amount: $event.number })"
+          @increment="updateDeposit({ amount: amount + 1 })"
+        />
       </div>
 
       <div class="field">
@@ -157,10 +136,6 @@ function updateDeposit(patch: Partial<PricingDeposit>) {
 
     .field-label {
       @extend %panel-field-label;
-    }
-
-    .stepper {
-      @include inputs.stepper($theme: base);
     }
 
     .select {

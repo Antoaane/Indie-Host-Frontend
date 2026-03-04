@@ -4,7 +4,7 @@
 import { computed } from 'vue'
 import type { RawBookings } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
-import CreateListingNumberStepper from '@/views/CreateListing/components/panels/inputs/CreateListingNumberStepper.vue'
+import NumberStepper from '@/components/inputs/NumberStepper.vue'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 import { clampInteger, formatValidationMessage } from '@/utils/inputValidation'
 
@@ -452,15 +452,14 @@ function stepCustomBookingPercent(threshold: number, delta: number) {
 <template>
   <section class="create-pricing-discounts-panel">
     <div class="header">
-      <h3>{{ panelContent.title }}</h3>
-      <p>{{ panelContent.subtitle }}</p>
+      <h2>{{ panelContent.title }}</h2>
+      <h3>{{ panelContent.subtitle }}</h3>
     </div>
 
     <div class="body">
       <div class="discount-block">
         <div class="block-header">
-          <p>{{ panelContent.durationTitle }}</p>
-          <span>{{ panelContent.durationSubtitle }}</span>
+          <h3>{{ panelContent.durationTitle }}</h3>
         </div>
 
         <div class="default-row">
@@ -473,7 +472,7 @@ function stepCustomBookingPercent(threshold: number, delta: number) {
             <span>{{ panelContent.durationDefault7 }}</span>
           </label>
 
-          <CreateListingNumberStepper
+          <NumberStepper
             :value="resolveDurationDefaultPercent(7)"
             :min="pricingLimits.discountMin"
             :max="pricingLimits.discountMax"
@@ -497,7 +496,7 @@ function stepCustomBookingPercent(threshold: number, delta: number) {
             <span>{{ panelContent.durationDefault28 }}</span>
           </label>
 
-          <CreateListingNumberStepper
+          <NumberStepper
             :value="resolveDurationDefaultPercent(28)"
             :min="pricingLimits.discountMin"
             :max="pricingLimits.discountMax"
@@ -532,7 +531,7 @@ function stepCustomBookingPercent(threshold: number, delta: number) {
           :key="`duration-${tier.minNights}`"
           class="custom-row"
         >
-          <CreateListingNumberStepper
+          <NumberStepper
             :value="tier.minNights"
             :min="pricingLimits.minNights"
             :max="pricingLimits.maxNights"
@@ -542,7 +541,7 @@ function stepCustomBookingPercent(threshold: number, delta: number) {
             @increment="stepCustomDurationThreshold(tier.minNights, 1)"
           />
 
-          <CreateListingNumberStepper
+          <NumberStepper
             :value="tier.percent"
             :min="pricingLimits.discountMin"
             :max="pricingLimits.discountMax"
@@ -561,12 +560,15 @@ function stepCustomBookingPercent(threshold: number, delta: number) {
             </button>
           </div>
         </div>
+
+        <p class="block-hint">
+          {{ panelContent.durationSubtitle }}
+        </p>
       </div>
 
       <div class="discount-block">
         <div class="block-header">
-          <p>{{ panelContent.bookingTitle }}</p>
-          <span>{{ panelContent.bookingSubtitle }}</span>
+          <h3>{{ panelContent.bookingTitle }}</h3>
         </div>
 
         <div class="default-row">
@@ -579,7 +581,7 @@ function stepCustomBookingPercent(threshold: number, delta: number) {
             <span>{{ panelContent.bookingDefault48h }}</span>
           </label>
 
-          <CreateListingNumberStepper
+          <NumberStepper
             :value="resolveBookingDefaultPercent()"
             :min="pricingLimits.discountMin"
             :max="pricingLimits.discountMax"
@@ -614,7 +616,7 @@ function stepCustomBookingPercent(threshold: number, delta: number) {
           :key="`booking-window-${tier.maxDaysBeforeArrival}`"
           class="custom-row"
         >
-          <CreateListingNumberStepper
+          <NumberStepper
             :value="tier.maxDaysBeforeArrival"
             min="1"
             :max="maxLeadTimeDays"
@@ -624,7 +626,7 @@ function stepCustomBookingPercent(threshold: number, delta: number) {
             @increment="stepCustomBookingThreshold(tier.maxDaysBeforeArrival, 1)"
           />
 
-          <CreateListingNumberStepper
+          <NumberStepper
             :value="tier.percent"
             :min="pricingLimits.discountMin"
             :max="pricingLimits.discountMax"
@@ -643,6 +645,10 @@ function stepCustomBookingPercent(threshold: number, delta: number) {
             </button>
           </div>
         </div>
+
+        <p class="block-hint">
+          {{ panelContent.bookingSubtitle }}
+        </p>
       </div>
 
       <p class="hint">
@@ -672,26 +678,27 @@ function stepCustomBookingPercent(threshold: number, delta: number) {
     .discount-block {
       display: flex;
       flex-direction: column;
-      gap: var(--layout-gap-xs);
-      border: 1px solid rgba($secondary, 0.06);
-      border-radius: 0.75rem;
-      padding: var(--layout-gap-sm);
+      gap: var(--layout-gap-sm);
+      // border: 1px solid rgba($secondary, 0.06);
+      // border-radius: 0.75rem;
+      // padding: var(--layout-gap-sm);
     }
 
     .block-header {
       display: grid;
       gap: 0.25rem;
 
-      > p {
+      > h3 {
         margin: 0;
         @include h4-title();
         color: rgba($secondary, 0.9);
       }
+    }
 
-      > span {
-        @include little-text($thin: false);
-        color: rgba($secondary, 0.65);
-      }
+    .block-hint {
+      margin: 0;
+      @include little-text($thin: true);
+      color: rgba($secondary-text, 0.58);
     }
 
     .toggle {
@@ -755,8 +762,9 @@ function stepCustomBookingPercent(threshold: number, delta: number) {
 
     .hint {
       margin: 0;
-      @include little-text($thin: false);
-      color: rgba($secondary, 0.65);
+      margin-top: auto;
+      @include little-text($thin: true);
+      color: rgba($secondary-text, 0.58);
     }
   }
 }

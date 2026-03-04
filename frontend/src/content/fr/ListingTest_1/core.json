@@ -68,22 +68,6 @@
       "pinned": false
     },
     {
-      "id": "WIFI",
-      "name": "Wifi fibre",
-      "description": "Idéal télétravail et streaming",
-      "category": "Confort & travail",
-      "relevance": 96,
-      "pinned": false
-    },
-    {
-      "id": "DEDICATED_WORKSPACE",
-      "name": "Espace de travail dédié",
-      "description": "Bureau + multiprise",
-      "category": "Confort & travail",
-      "relevance": 86,
-      "pinned": true
-    },
-    {
       "id": "PORTABLE_AIR_CONDITIONING",
       "name": "Climatisation mobile",
       "description": "Pour les fortes chaleurs",
@@ -186,6 +170,28 @@
       "category": "Arrivée & mobilité",
       "relevance": 70,
       "pinned": false
+    },
+    {
+      "id": "DEDICATED_WORKSPACE",
+      "name": "Espace de travail dédié",
+      "description": "Bureau / table + prise",
+      "category": "Confort & travail",
+      "relevance": 85,
+      "pinned": true,
+      "perkEligible": true,
+      "perkScore": 82,
+      "perkPriority": 0
+    },
+    {
+      "id": "WIFI",
+      "name": "Wifi",
+      "description": "Connexion internet",
+      "category": "Confort & travail",
+      "relevance": 95,
+      "pinned": true,
+      "perkEligible": true,
+      "perkScore": 91,
+      "perkPriority": 0
     }
   ],
   "description_dep": [

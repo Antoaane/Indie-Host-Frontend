@@ -24,7 +24,7 @@
 
     flex: 1 1 auto;
     min-height: 0;
-    overflow: auto;
+    // overflow: auto;
 
     > .rooms-list {
       // height: 100% !important;
@@ -106,7 +106,7 @@
 
     .room-add-bed {
       > button {
-        @include buttons.low-btn($fullwidth: true, $color: $secondary, $hover: $accent, $text-color: $accent, $text-hover-color: $secondary);
+        @include buttons.low-btn($fullwidth: true, $color: $accent, $hover: $secondary, $text-color: $secondary, $text-hover-color: $accent, $borders: true, $stroke: false);
         min-height: 2rem;
       }
     }
@@ -206,16 +206,18 @@
     flex-direction: column;
     justify-content: space-between;
     gap: 0.9rem;
+    padding-right: 0.15rem;
     flex: 1 1 auto;
     min-height: 0;
-    overflow-y: auto;
-    padding-right: 0.15rem;
   }
 
   .overlay-beds {
     display: flex;
     flex-direction: column;
     gap: 0.65rem;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
   }
 
   .overlay-empty {
@@ -237,10 +239,10 @@
     border: 1px solid rgba($secondary, 0.1);
     background: rgba($secondary, 0.02);
 
-    > .create-listing-number-stepper {
+    > .ui-number-stepper {
       align-self: center;
       flex: 0 0 auto;
-      --create-listing-number-stepper-value-width: 3rem;
+      --ui-number-stepper-value-width: 3rem;
     }
 
     > .bed-select {

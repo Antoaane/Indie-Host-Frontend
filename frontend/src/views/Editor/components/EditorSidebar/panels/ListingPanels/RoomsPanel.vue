@@ -2,18 +2,8 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import {
-  Armchair,
-  Baby,
-  Bed,
-  BedDouble,
-  BedSingle,
-  Minus,
-  Plus,
-  Sofa,
-  Trash2,
-  X,
-} from 'lucide-vue-next'
+import { Armchair, Baby, Bed, BedDouble, BedSingle, Minus, Plus, Sofa, Trash2, X } from 'lucide-vue-next'
+import NumberStepper from '@/components/inputs/NumberStepper.vue'
 import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'
 import type { RawCore } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
@@ -60,14 +50,15 @@ const customBedContent = (panelContent as Record<string, any>).customBed ?? {
   doneButton: 'Terminé',
   overlayAriaLabel: 'Ajouter un lit',
 }
-const customIconChoices = Array.isArray(customBedContent.iconChoices) && customBedContent.iconChoices.length
-  ? customBedContent.iconChoices
-  : [
-      { value: 'bed-single', label: 'Lit simple' },
-      { value: 'bed-double', label: 'Lit double' },
-      { value: 'bed-bunk', label: 'Lit superposé' },
-      { value: 'bed-sofa', label: 'Canapé-lit' },
-    ]
+const customIconChoices =
+  Array.isArray(customBedContent.iconChoices) && customBedContent.iconChoices.length
+    ? customBedContent.iconChoices
+    : [
+        { value: 'bed-single', label: 'Lit simple' },
+        { value: 'bed-double', label: 'Lit double' },
+        { value: 'bed-bunk', label: 'Lit superposé' },
+        { value: 'bed-sofa', label: 'Canapé-lit' },
+      ]
 
 const roomTypeLabels = Object.fromEntries(
   roomTypeOptions.map((option) => [
@@ -176,9 +167,7 @@ const roomDisplayLabels = computed(() => {
 watch(
   rooms,
   (nextRooms) => {
-    const hasInvalidBeds = nextRooms.some(
-      (room) => isNonSleepingRoomType(room.type) && (room.beds?.length ?? 0) > 0,
-    )
+    const hasInvalidBeds = nextRooms.some((room) => isNonSleepingRoomType(room.type) && (room.beds?.length ?? 0) > 0)
     if (!hasInvalidBeds) return
     setRooms(nextRooms)
   },
@@ -198,16 +187,13 @@ watch(
   { deep: true },
 )
 
-watch(
-  activeBedOverlayRoomIndex,
-  (nextIndex) => {
-    if (nextIndex === null) return
-    const room = rooms.value[nextIndex]
-    if (!room || isBedConfigDisabled(room)) {
-      closeBedOverlay()
-    }
-  },
-)
+watch(activeBedOverlayRoomIndex, (nextIndex) => {
+  if (nextIndex === null) return
+  const room = rooms.value[nextIndex]
+  if (!room || isBedConfigDisabled(room)) {
+    closeBedOverlay()
+  }
+})
 
 function setRooms(next: RoomDraftExtended[]) {
   const sanitized = next.map((room) => {
@@ -291,18 +277,10 @@ function updateBed(roomIndex: number, bedIndex: number, patch: Partial<BedDraftE
 
   const nextPatch: Partial<BedDraftExtended> = {
     ...patch,
-    ...(Object.prototype.hasOwnProperty.call(patch, 'quantity')
-      ? { quantity: sanitizeBedQuantity(patch.quantity) }
-      : {}),
-    ...(Object.prototype.hasOwnProperty.call(patch, 'capacity')
-      ? { capacity: sanitizeBedCapacity(patch.capacity) }
-      : {}),
-    ...(Object.prototype.hasOwnProperty.call(patch, 'customName')
-      ? { customName: normalizeTextInput(String(patch.customName ?? ''), customBedNameMaxLength) }
-      : {}),
-    ...(Object.prototype.hasOwnProperty.call(patch, 'customIcon')
-      ? { customIcon: sanitizeCustomBedIcon(patch.customIcon) }
-      : {}),
+    ...(Object.prototype.hasOwnProperty.call(patch, 'quantity') ? { quantity: sanitizeBedQuantity(patch.quantity) } : {}),
+    ...(Object.prototype.hasOwnProperty.call(patch, 'capacity') ? { capacity: sanitizeBedCapacity(patch.capacity) } : {}),
+    ...(Object.prototype.hasOwnProperty.call(patch, 'customName') ? { customName: normalizeTextInput(String(patch.customName ?? ''), customBedNameMaxLength) } : {}),
+    ...(Object.prototype.hasOwnProperty.call(patch, 'customIcon') ? { customIcon: sanitizeCustomBedIcon(patch.customIcon) } : {}),
   }
 
   next[bedIndex] = {
@@ -354,8 +332,7 @@ function setBedType(roomIndex: number, bedIndex: number, nextType: string) {
     updateBed(roomIndex, bedIndex, {
       type: CUSTOM_BED_TYPE,
       capacity: sanitizeBedCapacity(currentBed?.capacity),
-      customName: normalizeTextInput(String(currentBed?.customName ?? ''), customBedNameMaxLength)
-        || customBedContent.fallbackName,
+      customName: normalizeTextInput(String(currentBed?.customName ?? ''), customBedNameMaxLength) || customBedContent.fallbackName,
       customIcon: sanitizeCustomBedIcon(currentBed?.customIcon),
     })
     return
@@ -394,7 +371,9 @@ function addBedFromOverlay() {
 }
 
 function normalizeText(value: unknown) {
-  return String(value ?? '').trim().toLowerCase()
+  return String(value ?? '')
+    .trim()
+    .toLowerCase()
 }
 
 function normalizeRoomType(value: unknown) {
@@ -455,25 +434,18 @@ function sanitizeBed(bed: BedDraftExtended): BedDraftExtended {
     ...bed,
     type,
     quantity,
-    capacity: type === CUSTOM_BED_TYPE
-      ? sanitizeBedCapacity((bed as any)?.capacity, defaultCapacity)
-      : defaultCapacity,
+    capacity: type === CUSTOM_BED_TYPE ? sanitizeBedCapacity((bed as any)?.capacity, defaultCapacity) : defaultCapacity,
   }
 
   if (type === CUSTOM_BED_TYPE) {
     return {
       ...base,
-      customName: normalizeTextInput(String((bed as any)?.customName ?? ''), customBedNameMaxLength).trim()
-        || customBedContent.fallbackName,
+      customName: normalizeTextInput(String((bed as any)?.customName ?? ''), customBedNameMaxLength).trim() || customBedContent.fallbackName,
       customIcon: sanitizeCustomBedIcon((bed as any)?.customIcon),
     }
   }
 
-  const {
-    customName: _customName,
-    customIcon: _customIcon,
-    ...sanitizedWithoutCustom
-  } = base
+  const { customName: _customName, customIcon: _customIcon, ...sanitizedWithoutCustom } = base
 
   return sanitizedWithoutCustom as BedDraftExtended
 }
@@ -658,7 +630,8 @@ function createDefaultBedDraft(): BedDraftExtended {
                   <button
                     type="button"
                     aria-label="Supprimer la pièce"
-                    @click="removeRoom(roomIndex)" title="Supprimer la pièce"
+                    @click="removeRoom(roomIndex)"
+                    title="Supprimer la pièce"
                   >
                     <Trash2 :size="16" />
                   </button>
@@ -757,7 +730,8 @@ function createDefaultBedDraft(): BedDraftExtended {
             <button
               type="button"
               aria-label="Fermer"
-              @click="closeBedOverlay" title="Fermer"
+              @click="closeBedOverlay"
+              title="Fermer"
             >
               <X :size="18" />
             </button>
@@ -778,41 +752,29 @@ function createDefaultBedDraft(): BedDraftExtended {
               :key="bedIndex"
               class="bed-row"
             >
-              <div class="stepper qty">
-                <div class="btn">
-                  <button
-                    type="button"
-                    aria-label="Augmenter la quantité"
-                    title="Augmenter la quantité"
-                    :disabled="sanitizeBedQuantity(bed.quantity) >= roomsLimits.bedQuantityMax"
-                    @click="incrementBedQuantity(activeOverlayRoomIndex, bedIndex)"
-                  >
-                    <Plus :size="18" />
-                  </button>
-                </div>
+              <NumberStepper
+                class="qty"
+                :value="sanitizeBedQuantity(bed.quantity)"
+                :min="roomsLimits.bedQuantityMin"
+                :max="roomsLimits.bedQuantityMax"
+                :decrement-disabled="sanitizeBedQuantity(bed.quantity) <= roomsLimits.bedQuantityMin"
+                :increment-disabled="sanitizeBedQuantity(bed.quantity) >= roomsLimits.bedQuantityMax"
+                decrement-aria-label="Diminuer la quantité"
+                decrement-title="Diminuer la quantité"
+                increment-aria-label="Augmenter la quantité"
+                increment-title="Augmenter la quantité"
+                @decrement="decrementBedQuantity(activeOverlayRoomIndex, bedIndex)"
+                @input="updateBedQuantityFromInput(activeOverlayRoomIndex, bedIndex, $event.number)"
+                @increment="incrementBedQuantity(activeOverlayRoomIndex, bedIndex)"
+              >
+                <template #decrement>
+                  <Minus :size="18" />
+                </template>
 
-                <input
-                  class="value"
-                  type="number"
-                  :min="roomsLimits.bedQuantityMin"
-                  :max="roomsLimits.bedQuantityMax"
-                  step="1"
-                  inputmode="numeric"
-                  :value="sanitizeBedQuantity(bed.quantity)"
-                  @input="updateBedQuantityFromInput(activeOverlayRoomIndex, bedIndex, ($event.target as HTMLInputElement).valueAsNumber)"
-                />
-
-                <div class="btn">
-                  <button
-                    type="button"
-                    aria-label="Diminuer la quantité"
-                    :disabled="sanitizeBedQuantity(bed.quantity) <= roomsLimits.bedQuantityMin"
-                    @click="decrementBedQuantity(activeOverlayRoomIndex, bedIndex)" title="Diminuer la quantité"
-                  >
-                    <Minus :size="18" />
-                  </button>
-                </div>
-              </div>
+                <template #increment>
+                  <Plus :size="18" />
+                </template>
+              </NumberStepper>
 
               <div class="input select bed-select">
                 <select
@@ -833,7 +795,8 @@ function createDefaultBedDraft(): BedDraftExtended {
                 <button
                   type="button"
                   aria-label="Supprimer le lit"
-                  @click="removeBed(activeOverlayRoomIndex, bedIndex)" title="Supprimer le lit"
+                  @click="removeBed(activeOverlayRoomIndex, bedIndex)"
+                  title="Supprimer le lit"
                 >
                   <Trash2 :size="18" />
                 </button>
@@ -878,41 +841,29 @@ function createDefaultBedDraft(): BedDraftExtended {
 
                 <div class="custom-capacity">
                   <p>{{ customBedContent.capacityLabel }}</p>
-                  <div class="stepper qty">
-                    <div class="btn">
-                      <button
-                        type="button"
-                        aria-label="Augmenter la capacité"
-                        title="Augmenter la capacité"
-                        :disabled="sanitizeBedCapacity(bed.capacity) >= customBedCapacityMax"
-                        @click="incrementBedCapacity(activeOverlayRoomIndex, bedIndex)"
-                      >
-                        <Plus :size="18" />
-                      </button>
-                    </div>
+                  <NumberStepper
+                    class="qty"
+                    :value="sanitizeBedCapacity(bed.capacity)"
+                    :min="customBedCapacityMin"
+                    :max="customBedCapacityMax"
+                    :decrement-disabled="sanitizeBedCapacity(bed.capacity) <= customBedCapacityMin"
+                    :increment-disabled="sanitizeBedCapacity(bed.capacity) >= customBedCapacityMax"
+                    decrement-aria-label="Diminuer la capacité"
+                    decrement-title="Diminuer la capacité"
+                    increment-aria-label="Augmenter la capacité"
+                    increment-title="Augmenter la capacité"
+                    @decrement="decrementBedCapacity(activeOverlayRoomIndex, bedIndex)"
+                    @input="updateBed(activeOverlayRoomIndex, bedIndex, { capacity: $event.number })"
+                    @increment="incrementBedCapacity(activeOverlayRoomIndex, bedIndex)"
+                  >
+                    <template #decrement>
+                      <Minus :size="18" />
+                    </template>
 
-                    <input
-                      class="value"
-                      type="number"
-                      :min="customBedCapacityMin"
-                      :max="customBedCapacityMax"
-                      step="1"
-                      inputmode="numeric"
-                      :value="sanitizeBedCapacity(bed.capacity)"
-                      @input="updateBed(activeOverlayRoomIndex, bedIndex, { capacity: ($event.target as HTMLInputElement).valueAsNumber })"
-                    />
-
-                    <div class="btn">
-                      <button
-                        type="button"
-                        aria-label="Diminuer la capacité"
-                        :disabled="sanitizeBedCapacity(bed.capacity) <= customBedCapacityMin"
-                        @click="decrementBedCapacity(activeOverlayRoomIndex, bedIndex)" title="Diminuer la capacité"
-                      >
-                        <Minus :size="18" />
-                      </button>
-                    </div>
-                  </div>
+                    <template #increment>
+                      <Plus :size="18" />
+                    </template>
+                  </NumberStepper>
                 </div>
               </div>
             </div>
