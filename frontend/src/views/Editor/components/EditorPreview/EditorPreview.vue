@@ -6,11 +6,13 @@ import { ArrowLeft, ExternalLink } from 'lucide-vue-next'
 import ListingView from '@/views/ListingView/_ListingView.vue'
 import type { RawListingBundle } from '@/domain/listings/types'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
+import type { ListingViewportMode } from '@/views/ListingView/composables/useListingViewport'
 
 const props = defineProps<{
   rawListing: RawListingBundle | null
   isShowed: boolean
   isLoading?: boolean
+  displayMode?: ListingViewportMode | null
 }>()
 const emit = defineEmits<{
   (e: 'back'): void
@@ -94,6 +96,7 @@ onBeforeUnmount(() => {
         v-if="aspectRatio"
         :aspect="aspectRatio"
         :rawListing="props.rawListing"
+        :forcedViewportMode="props.displayMode ?? undefined"
       />
     </div>
 

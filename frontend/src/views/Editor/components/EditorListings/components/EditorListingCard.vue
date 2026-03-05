@@ -31,6 +31,7 @@ const props = defineProps<{
   isActionsMenuOpen: boolean
   statusOptions: readonly string[]
   listingContent: ListingContent
+  canPreview?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -417,7 +418,10 @@ function goToImageLabel(index: number) {
           </div>
 
           <div class="actions">
-            <div class="preview">
+            <div
+              v-if="props.canPreview !== false"
+              class="preview"
+            >
               <button
                 type="button"
                 :aria-label="props.listingContent.previewLink"

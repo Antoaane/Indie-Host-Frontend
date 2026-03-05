@@ -2,16 +2,19 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { ArrowLeft } from 'lucide-vue-next'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 
 type SidebarTab = 'listing' | 'pricing' | 'arrival'
 
 const props = defineProps<{
   modelValue: SidebarTab
+  showMobileBack?: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: SidebarTab): void
+  (e: 'mobile-back'): void
 }>()
 
 const activeIndex = computed(() => {
@@ -29,46 +32,66 @@ const tabsStyle = computed(() => ({
 }))
 
 const tabsContent = editorStatic.sidebar.tabs
+const actionsContent = editorStatic.actions
 </script>
 
 <template>
   <nav
     class="editor-sidebar-nav"
-    :style="tabsStyle"
   >
-    <span class="bg-active" />
     <div
-      class="tab"
-      :class="{ 'is-active': props.modelValue === 'listing' }"
+      v-if="props.showMobileBack"
+      class="mobile-back-shell"
     >
       <button
         type="button"
-        @click="emit('update:modelValue', 'listing')"
+        class="mobile-back-btn"
+        :aria-label="actionsContent.backToListings"
+        :title="actionsContent.backToListings"
+        @click="emit('mobile-back')"
       >
-        {{ tabsContent.listing }}
+        <ArrowLeft :size="18" />
       </button>
     </div>
+
     <div
-      class="tab"
-      :class="{ 'is-active': props.modelValue === 'pricing' }"
+      class="tabs-track"
+      :style="tabsStyle"
     >
-      <button
-        type="button"
-        @click="emit('update:modelValue', 'pricing')"
+      <span class="bg-active" />
+      <div
+        class="tab"
+        :class="{ 'is-active': props.modelValue === 'listing' }"
       >
-        {{ tabsContent.pricing }}
-      </button>
-    </div>
-    <div
-      class="tab"
-      :class="{ 'is-active': props.modelValue === 'arrival' }"
-    >
-      <button
-        type="button"
-        @click="emit('update:modelValue', 'arrival')"
+        <button
+          type="button"
+          @click="emit('update:modelValue', 'listing')"
+        >
+          {{ tabsContent.listing }}
+        </button>
+      </div>
+      <div
+        class="tab"
+        :class="{ 'is-active': props.modelValue === 'pricing' }"
       >
-        {{ tabsContent.arrival }}
-      </button>
+        <button
+          type="button"
+          @click="emit('update:modelValue', 'pricing')"
+        >
+          {{ tabsContent.pricing }}
+        </button>
+      </div>
+      <div
+        class="tab"
+        :class="{ 'is-active': props.modelValue === 'arrival' }"
+      >
+        <button
+          type="button"
+          @click="emit('update:modelValue', 'arrival')"
+        >
+          {{ tabsContent.arrival }}
+        </button>
+      </div>
     </div>
   </nav>
 </template>
@@ -78,7 +101,6 @@ const tabsContent = editorStatic.sidebar.tabs
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
-@use '@/styles/components/buttons' as buttons;
 
 .editor-sidebar-nav {
   width: 100%;
@@ -86,56 +108,91 @@ const tabsContent = editorStatic.sidebar.tabs
 
   position: relative;
 
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
+  align-items: stretch;
   gap: var(--layout-gap-xs);
 
   border-radius: borders.$rounded-xl;
   background-color: $accent;
 
-  > .tab {
-    position: relative;
-    z-index: 2;
+  > .mobile-back-shell {
+    flex: 0 0 auto;
+    width: 2.75rem;
+    min-width: 2.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
-    > button {
+    > .mobile-back-btn {
       width: 100%;
-      padding: 0.6rem 1rem 0.6rem 1rem;
+      height: 100%;
+      min-height: 2.75rem;
 
-      font-family: 'Outfit', sans-serif;
-      font-weight: 500;
-      font-size: 1rem;
+      border: 1px solid rgba($secondary, 0.1);
+      border-radius: borders.$rounded-md;
+      background: rgba($accent-surface-2, 1);
+      color: rgba($secondary-text, 0.95);
+      cursor: pointer;
 
-      border: none;
-      background: transparent;
-    }
-
-    &.is-active {
-      > button {
-        color: $accent !important;
-      }
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
   }
 
-  > .bg-active {
-    height: calc(100% - 1.2rem);
-    width: calc((100% - 1.2rem - (var(--layout-gap-xs) * 2)) / 3);
+  > .tabs-track {
+    flex: 1 1 auto;
+    min-width: 0;
+    position: relative;
 
-    position: absolute;
-    z-index: 0;
-    top: 0.6rem;
-    left: 0.6rem;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--layout-gap-xs);
 
-    background-color: $secondary;
-    border-radius: borders.$rounded-md;
+    > .tab {
+      position: relative;
+      z-index: 2;
 
-    transform: translate3d(calc(var(--active-index, 0) * (100% + var(--layout-gap-xs))), 0, 0);
-    transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
-    will-change: transform;
-    pointer-events: none;
+      > button {
+        width: 100%;
+        padding: 0.6rem 1rem 0.6rem 1rem;
+
+        font-family: 'Outfit', sans-serif;
+        font-weight: 500;
+        font-size: 1rem;
+
+        border: none;
+        background: transparent;
+      }
+
+      &.is-active {
+        > button {
+          color: $accent !important;
+        }
+      }
+    }
+
+    > .bg-active {
+      height: calc(100% - 0.2rem);
+      width: calc((100% - (var(--layout-gap-xs) * 2)) / 3);
+
+      position: absolute;
+      z-index: 0;
+      top: 0.1rem;
+      left: 0;
+
+      background-color: $secondary;
+      border-radius: borders.$rounded-md;
+
+      transform: translate3d(calc(var(--active-index, 0) * (100% + var(--layout-gap-xs))), 0, 0);
+      transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      will-change: transform;
+      pointer-events: none;
+    }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    > .bg-active {
+    > .tabs-track > .bg-active {
       transition: none;
     }
   }

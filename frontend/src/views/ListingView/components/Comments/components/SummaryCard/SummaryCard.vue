@@ -5,8 +5,8 @@
 import { computed } from 'vue'
 
 // UTILS
-import { vp } from '@/utils/viewport'
 import { formatRatingValue } from '@/views/ListingView/utils/formatters'
+import { useListingViewport } from '@/views/ListingView/composables/useListingViewport'
 
 // ASSETS
 import { Star } from 'lucide-vue-next'
@@ -18,6 +18,8 @@ const props = defineProps<{
   countLabel: string
   showStars?: boolean
 }>()
+
+const { isLg } = useListingViewport()
 
 const hasScore = computed(() => typeof props.score === 'number' && !Number.isNaN(props.score))
 
@@ -72,7 +74,7 @@ const scoreLabel = computed(() =>
       </svg>
     </div>
     <strong
-      v-if="vp.lg.value"
+      v-if="isLg"
       v-html="countLabel"
     ></strong>
   </section>

@@ -25,6 +25,26 @@
     gap: var(--layout-gap-sm);
     border-bottom: 1px solid rgba($secondary, 0.08);
 
+    > .mobile-back {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      > button {
+        width: 2.35rem;
+        height: 2.35rem;
+        border: 1px solid rgba($secondary, 0.1);
+        border-radius: borders.$rounded-md;
+        background: rgba($accent-surface-1, 1);
+        color: rgba($secondary-text, 0.95);
+        cursor: pointer;
+
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+    }
+
     > .identity {
       display: flex;
       align-items: center;
@@ -268,6 +288,16 @@
     > p {
       @include base-text($thin: true);
       color: rgba($secondary-text, 0.6);
+    }
+  }
+}
+
+@include min-width(lg) {
+  .messaging-thread {
+    > .thread-header {
+      > .mobile-back {
+        display: none;
+      }
     }
   }
 }

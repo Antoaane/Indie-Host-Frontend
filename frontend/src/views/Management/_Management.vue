@@ -3,7 +3,7 @@
 <script setup lang="ts">
 import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowUpRight, Calendar, Pen, Plus } from 'lucide-vue-next'
+import { ArrowLeft, ArrowUpRight, Calendar, Pen, Plus } from 'lucide-vue-next'
 
 import DatePicker from '@/components/DatePicker/DatePicker.vue'
 import ConfirmationDialog from '@/components/overlays/ConfirmationDialog.vue'
@@ -49,6 +49,7 @@ const stage = ref<ManagementStage>('reservations')
 const selectedListingId = ref<string | null>(null)
 const selectedReservationId = ref<string | null>(null)
 const isDeleteOverlayOpen = ref(false)
+const isMobileStageOpen = ref(false)
 
 const listings = ref<UserListingCard[]>([])
 const listingsStatus = reactive({
@@ -104,6 +105,8 @@ const internalNoteTextareaRef = ref<HTMLTextAreaElement | null>(null)
 const reservationsByListingId = reactive<Record<string, Reservation[]>>({})
 
 const selectedListing = computed(() => listings.value.find((listing) => listing.listingId === selectedListingId.value) ?? null)
+const isMobileViewport = computed(() => !vp.lg.value)
+const isMobileManagementStep = computed(() => isMobileViewport.value && isMobileStageOpen.value && Boolean(selectedListingId.value))
 
 const reservationsForListing = computed(() => {
   if (!selectedListingId.value) return []
@@ -222,6 +225,9 @@ function applyRouteSelection() {
   selectedReservationId.value = nextReservationId
   stage.value = 'reservations'
   isDeleteOverlayOpen.value = false
+  if (isMobileViewport.value) {
+    isMobileStageOpen.value = true
+  }
 }
 
 async function loadListings() {
@@ -289,6 +295,9 @@ async function bootstrap() {
 function handleSelectListing(listingId: string) {
   if (!listingId.trim()) return
   isDeleteOverlayOpen.value = false
+  if (isMobileViewport.value) {
+    isMobileStageOpen.value = true
+  }
   selectedListingId.value = listingId
   const fallback = findClosestReservationForListing(reservationsByListingId[listingId] ?? []) ?? reservationsByListingId[listingId]?.[0] ?? null
   selectedReservationId.value = fallback?.id ?? null
@@ -297,7 +306,16 @@ function handleSelectListing(listingId: string) {
 
 function handleSelectReservation(reservationId: string) {
   isDeleteOverlayOpen.value = false
+  if (isMobileViewport.value) {
+    isMobileStageOpen.value = true
+  }
   selectedReservationId.value = reservationId
+  stage.value = 'reservations'
+}
+
+function handleBackToListings() {
+  isDeleteOverlayOpen.value = false
+  isMobileStageOpen.value = false
   stage.value = 'reservations'
 }
 
@@ -777,6 +795,7 @@ watch(
   () => props.source,
   () => {
     isDeleteOverlayOpen.value = false
+    isMobileStageOpen.value = false
     selectedListingId.value = null
     selectedReservationId.value = null
     stage.value = 'reservations'
@@ -837,6 +856,19 @@ watch(
     applyRouteSelection()
   },
 )
+
+watch(
+  isMobileViewport,
+  () => {
+    isMobileStageOpen.value = false
+  },
+  { immediate: true },
+)
+
+watch(selectedListingId, (listingId) => {
+  if (listingId) return
+  isMobileStageOpen.value = false
+})
 
 function formatCurrency(value?: number) {
   if (typeof value !== 'number' || !Number.isFinite(value)) return ''
@@ -942,7 +974,10 @@ const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !nor
     id="management-page"
     class="management"
   >
-    <div class="layout">
+    <div
+      class="layout"
+      :class="{ 'is-mobile-stage': isMobileManagementStep }"
+    >
       <ManagementSidebar
         :listings="listings"
         :isLoading="listingsStatus.isLoading"
@@ -953,267 +988,286 @@ const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !nor
         @select="handleSelectListing"
       />
 
-      <section class="stage">
-        <div class="content">
-          <div class="reservation-toolbar">
-            <div
-              class="icon-btn calendar in-dev-hide"
-              :class="{ 'is-active': stage === 'calendar' }"
-            >
-              <button
-                type="button"
-                aria-label="Basculer vers le calendrier"
-                @click="toggleCalendarMode" title="Basculer vers le calendrier"
-              >
-                <Calendar :size="20" />
-              </button>
-            </div>
-
-            <ManagementReservationSlider
-              :reservations="reservationsForListing"
-              :activeReservationId="selectedReservationId"
-              @select="handleSelectReservation"
-            />
-
-            <div class="icon-btn add in-dev-hide">
-              <button
-                type="button"
-                aria-label="Ajouter une r&eacute;servation" title="Ajouter une r&eacute;servation"
-              >
-                <Plus :size="20" />
-              </button>
-            </div>
-          </div>
-
-          <div class="reservation-body">
-            <Transition name="editor-stage">
+      <div
+        class="stage-shell"
+        :class="{ 'is-mobile-open': isMobileManagementStep }"
+      >
+        <section class="stage">
+          <div class="content">
+            <div class="reservation-toolbar">
               <div
-                v-show="stage === 'reservations'"
-                class="reservation-panel"
+                v-if="isMobileViewport"
+                class="mobile-back-shell"
               >
-                <template v-if="selectedReservation">
-                  <div class="reservation-heading">
-                    <div class="avatar">
-                      <img
-                        v-if="selectedReservation.guestAvatar"
-                        :src="selectedReservation.guestAvatar"
-                        :alt="selectedReservation.guestName"
-                        loading="lazy"
-                      />
-                      <span v-else>{{ selectedReservation.guestName.slice(0, 2).toUpperCase() }}</span>
-                    </div>
-                    <div class="title">
-                      <h2>{{ selectedReservation.guestName }}</h2>
-                      <p>{{ selectedListing?.title }}</p>
-                    </div>
-                  </div>
+                <button
+                  type="button"
+                  aria-label="Retour aux annonces"
+                  title="Retour aux annonces"
+                  @click="handleBackToListings"
+                >
+                  <ArrowLeft :size="18" />
+                </button>
+              </div>
 
-                  <section class="message-card">
-                    <div class="section-title">
-                      <h3>Message du voyageur</h3>
-                      <button
-                        type="button"
-                        class="reply"
-                        @click="handleReplyToTraveler"
-                      >
-                        R&eacute;pondre
-                        <ArrowUpRight :size="20" />
-                      </button>
-                    </div>
-                    <p class="message">{{ selectedReservation.message }}</p>
-                  </section>
+              <div
+                class="icon-btn calendar in-dev-hide"
+                :class="{ 'is-active': stage === 'calendar' }"
+              >
+                <button
+                  type="button"
+                  aria-label="Basculer vers le calendrier"
+                  @click="toggleCalendarMode" title="Basculer vers le calendrier"
+                >
+                  <Calendar :size="20" />
+                </button>
+              </div>
 
-                  <section class="internal-note-card">
-                    <div class="section-title">
-                      <h3>Note interne h&ocirc;te</h3>
-                      <p>Visible uniquement par l&apos;h&ocirc;te.</p>
-                    </div>
+              <ManagementReservationSlider
+                :reservations="reservationsForListing"
+                :activeReservationId="selectedReservationId"
+                @select="handleSelectReservation"
+              />
 
-                    <template v-if="shouldShowInternalNoteEditor">
-                      <textarea
-                        ref="internalNoteTextareaRef"
-                        v-model="noteEditor.value"
-                        class="internal-note-input"
-                        rows="4"
-                        :disabled="noteEditor.isSaving"
-                        placeholder="Ajoutez une note interne sur ce voyageur (preferences, rappels, points de vigilance)."
-                        @input="handleInternalNoteInput"
-                        @blur="handleInternalNoteBlur"
-                      />
-                    </template>
-                    <div
-                      v-else
-                      class="internal-note-preview"
-                    >
-                      <p>{{ selectedReservation.internalNote }}</p>
-                      <button
-                        type="button"
-                        class="edit-note-btn"
-                        aria-label="Modifier la note interne"
-                        @click="openInternalNoteEditor" title="Modifier la note interne"
-                      >
-                        <Pen :size="16" />
-                      </button>
-                    </div>
+              <div class="icon-btn add in-dev-hide">
+                <button
+                  type="button"
+                  aria-label="Ajouter une r&eacute;servation" title="Ajouter une r&eacute;servation"
+                >
+                  <Plus :size="20" />
+                </button>
+              </div>
+            </div>
 
-                    <p
-                      v-if="noteEditor.error"
-                      class="feedback error"
-                    >
-                      {{ noteEditor.error }}
-                    </p>
-                  </section>
-
-                  <section class="stay-section">
-                    <h3>S&eacute;jour</h3>
-                    <div class="stay-container">
-                      <div class="stay-calendar">
-                        <DatePicker
-                          :model-value="stayRange"
-                          :disabled-dates="disabledStayRanges"
-                          :number-of-months="stayMonthsCount"
-                          :read-only="true"
-                          :allow-navigation-in-read-only="true"
-                          :allow-disabled-model-value="true"
-                          :restrict-to-future="true"
+            <div class="reservation-body">
+              <Transition name="editor-stage">
+                <div
+                  v-show="stage === 'reservations'"
+                  class="reservation-panel"
+                >
+                  <template v-if="selectedReservation">
+                    <div class="reservation-heading">
+                      <div class="avatar">
+                        <img
+                          v-if="selectedReservation.guestAvatar"
+                          :src="selectedReservation.guestAvatar"
+                          :alt="selectedReservation.guestName"
+                          loading="lazy"
                         />
+                        <span v-else>{{ selectedReservation.guestName.slice(0, 2).toUpperCase() }}</span>
                       </div>
-                      <div class="stay-cards">
-                        <div>
-                          <div class="value">{{ selectedReservation.nights }}</div>
-                          <div class="label">nuits</div>
-                          <div class="meta">{{ formatDateRange(selectedReservation.start, selectedReservation.end) }}</div>
-                        </div>
-                        <div>
-                          <div class="value">{{ totalGuests }}</div>
-                          <div class="label">{{ guestLabel }}</div>
-                          <ul class="guest-list">
-                            <li
-                              v-for="line in guestLines"
-                              :key="line"
-                            >
-                              {{ line }}
-                            </li>
-                          </ul>
-                        </div>
+                      <div class="title">
+                        <h2>{{ selectedReservation.guestName }}</h2>
+                        <p>{{ selectedListing?.title }}</p>
                       </div>
                     </div>
-                  </section>
 
-                  <section class="schedule-section">
-                    <h3>Paiements</h3>
-                    <template v-if="paymentPreview && paymentSchedule">
-                      <div class="schedule-overview">
-                        <div
-                          class="progress-box"
-                          role="progressbar"
-                          aria-label="Progression totale du paiement"
-                          :aria-valuenow="paymentSchedule.completionPercent"
-                          aria-valuemin="0"
-                          aria-valuemax="100" title="Progression totale du paiement"
+                    <section class="message-card">
+                      <div class="section-title">
+                        <h3>Message du voyageur</h3>
+                        <button
+                          type="button"
+                          class="reply"
+                          @click="handleReplyToTraveler"
                         >
-                          <div class="progress-track">
-                            <span
-                              class="progress-fill"
-                              :class="paymentScheduleProgressClass"
-                              :style="{ width: paymentScheduleProgressWidth }"
-                            />
+                          R&eacute;pondre
+                          <ArrowUpRight :size="20" />
+                        </button>
+                      </div>
+                      <p class="message">{{ selectedReservation.message }}</p>
+                    </section>
+
+                    <section class="internal-note-card">
+                      <div class="section-title">
+                        <h3>Note interne h&ocirc;te</h3>
+                        <p>Visible uniquement par l&apos;h&ocirc;te.</p>
+                      </div>
+
+                      <template v-if="shouldShowInternalNoteEditor">
+                        <textarea
+                          ref="internalNoteTextareaRef"
+                          v-model="noteEditor.value"
+                          class="internal-note-input"
+                          rows="4"
+                          :disabled="noteEditor.isSaving"
+                          placeholder="Ajoutez une note interne sur ce voyageur (preferences, rappels, points de vigilance)."
+                          @input="handleInternalNoteInput"
+                          @blur="handleInternalNoteBlur"
+                        />
+                      </template>
+                      <div
+                        v-else
+                        class="internal-note-preview"
+                      >
+                        <p>{{ selectedReservation.internalNote }}</p>
+                        <button
+                          type="button"
+                          class="edit-note-btn"
+                          aria-label="Modifier la note interne"
+                          @click="openInternalNoteEditor" title="Modifier la note interne"
+                        >
+                          <Pen :size="16" />
+                        </button>
+                      </div>
+
+                      <p
+                        v-if="noteEditor.error"
+                        class="feedback error"
+                      >
+                        {{ noteEditor.error }}
+                      </p>
+                    </section>
+
+                    <section class="stay-section">
+                      <h3>S&eacute;jour</h3>
+                      <div class="stay-container">
+                        <div class="stay-calendar">
+                          <DatePicker
+                            :model-value="stayRange"
+                            :disabled-dates="disabledStayRanges"
+                            :number-of-months="stayMonthsCount"
+                            :read-only="true"
+                            :allow-navigation-in-read-only="true"
+                            :allow-disabled-model-value="true"
+                            :restrict-to-future="true"
+                          />
+                        </div>
+                        <div class="stay-cards">
+                          <div>
+                            <div class="value">{{ selectedReservation.nights }}</div>
+                            <div class="label">nuits</div>
+                            <div class="meta">{{ formatDateRange(selectedReservation.start, selectedReservation.end) }}</div>
+                          </div>
+                          <div>
+                            <div class="value">{{ totalGuests }}</div>
+                            <div class="label">{{ guestLabel }}</div>
+                            <ul class="guest-list">
+                              <li
+                                v-for="line in guestLines"
+                                :key="line"
+                              >
+                                {{ line }}
+                              </li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </section>
+
+                    <section class="schedule-section">
+                      <h3>Paiements</h3>
+                      <template v-if="paymentPreview && paymentSchedule">
+                        <div class="schedule-overview">
+                          <div
+                            class="progress-box"
+                            role="progressbar"
+                            aria-label="Progression totale du paiement"
+                            :aria-valuenow="paymentSchedule.completionPercent"
+                            aria-valuemin="0"
+                            aria-valuemax="100" title="Progression totale du paiement"
+                          >
+                            <div class="progress-track">
+                              <span
+                                class="progress-fill"
+                                :class="paymentScheduleProgressClass"
+                                :style="{ width: paymentScheduleProgressWidth }"
+                              />
+                            </div>
+                          </div>
+
+                          <div class="reference-grid">
+                            <p class="reference-item">
+                              <span>Type de paiement</span>
+                              <strong>{{ paymentSubtitle }}</strong>
+                            </p>
+                            <p class="reference-item">
+                              <span>Montant total</span>
+                              <strong>{{ formatCurrency(paymentPreview.total) }}</strong>
+                            </p>
+                            <p class="reference-item">
+                              <span>Acompte initial</span>
+                              <strong>{{ formatCurrency(paymentPreview.baseDeposit) }}</strong>
+                            </p>
+                            <p class="reference-item">
+                              <span>Paiements restants</span>
+                              <strong>{{ paymentScheduleRemainingCount }} / {{ paymentScheduleExpectedCount }}</strong>
+                            </p>
+                            <p class="reference-item">
+                              <span>Reste a regler</span>
+                              <strong>{{ formatCurrency(paymentSchedule.balance) }}</strong>
+                            </p>
                           </div>
                         </div>
 
-                        <div class="reference-grid">
-                          <p class="reference-item">
-                            <span>Type de paiement</span>
-                            <strong>{{ paymentSubtitle }}</strong>
-                          </p>
-                          <p class="reference-item">
-                            <span>Montant total</span>
-                            <strong>{{ formatCurrency(paymentPreview.total) }}</strong>
-                          </p>
-                          <p class="reference-item">
-                            <span>Acompte initial</span>
-                            <strong>{{ formatCurrency(paymentPreview.baseDeposit) }}</strong>
-                          </p>
-                          <p class="reference-item">
-                            <span>Paiements restants</span>
-                            <strong>{{ paymentScheduleRemainingCount }} / {{ paymentScheduleExpectedCount }}</strong>
-                          </p>
-                          <p class="reference-item">
-                            <span>Reste a regler</span>
-                            <strong>{{ formatCurrency(paymentSchedule.balance) }}</strong>
-                          </p>
-                        </div>
+                        <ManagementScheduleCard
+                          :schedule="paymentSchedule"
+                          :method-label="paymentPreview.method"
+                          :issue-date-iso="selectedReservation.start"
+                          :fallback-payment-date-iso="selectedReservation.end"
+                          :can-remove-manual-entries="canEditManualPayments"
+                          :is-saving="paymentEditor.isSaving"
+                          :format-currency="formatCurrency"
+                          :format-date="formatDate"
+                          @remove-manual-entry="removeManualPaymentEntry"
+                        />
+
+                        <ManagementPaymentEditor
+                          :draft-amount="paymentEditor.draftAmount"
+                          :draft-method="paymentEditor.draftMethod"
+                          :draft-date="paymentEditor.draftDate"
+                          :draft-comment="paymentEditor.draftComment"
+                          :manual-payment-methods="MANUAL_PAYMENT_METHODS"
+                          :is-saving="paymentEditor.isSaving"
+                          :can-edit-manual-payments="canEditManualPayments"
+                          :error="paymentEditor.error"
+                          :success="paymentEditor.success"
+                          @update:draft-amount="updatePaymentEditorDraftAmount"
+                          @update:draft-method="updatePaymentEditorDraftMethod"
+                          @update:draft-date="updatePaymentEditorDraftDate"
+                          @update:draft-comment="updatePaymentEditorDraftComment"
+                          @add-manual-entry="addManualPaymentEntry"
+                        />
+                      </template>
+                    </section>
+
+                    <section class="delete-reservation">
+                      <div class="danger">
+                        <button
+                          type="button"
+                          :disabled="deleteStatus.isDeleting"
+                          @click="openDeleteOverlay"
+                        >
+                          Supprimer la r&eacute;servation
+                        </button>
                       </div>
-
-                      <ManagementScheduleCard
-                        :schedule="paymentSchedule"
-                        :method-label="paymentPreview.method"
-                        :issue-date-iso="selectedReservation.start"
-                        :fallback-payment-date-iso="selectedReservation.end"
-                        :can-remove-manual-entries="canEditManualPayments"
-                        :is-saving="paymentEditor.isSaving"
-                        :format-currency="formatCurrency"
-                        :format-date="formatDate"
-                        @remove-manual-entry="removeManualPaymentEntry"
-                      />
-
-                      <ManagementPaymentEditor
-                        :draft-amount="paymentEditor.draftAmount"
-                        :draft-method="paymentEditor.draftMethod"
-                        :draft-date="paymentEditor.draftDate"
-                        :draft-comment="paymentEditor.draftComment"
-                        :manual-payment-methods="MANUAL_PAYMENT_METHODS"
-                        :is-saving="paymentEditor.isSaving"
-                        :can-edit-manual-payments="canEditManualPayments"
-                        :error="paymentEditor.error"
-                        :success="paymentEditor.success"
-                        @update:draft-amount="updatePaymentEditorDraftAmount"
-                        @update:draft-method="updatePaymentEditorDraftMethod"
-                        @update:draft-date="updatePaymentEditorDraftDate"
-                        @update:draft-comment="updatePaymentEditorDraftComment"
-                        @add-manual-entry="addManualPaymentEntry"
-                      />
-                    </template>
-                  </section>
-
-                  <section class="delete-reservation">
-                    <div class="danger">
-                      <button
-                        type="button"
-                        :disabled="deleteStatus.isDeleting"
-                        @click="openDeleteOverlay"
+                      <p
+                        v-if="deleteStatus.error"
+                        class="error"
                       >
-                        Supprimer la r&eacute;servation
-                      </button>
-                    </div>
-                    <p
-                      v-if="deleteStatus.error"
-                      class="error"
-                    >
-                      {{ deleteStatus.error }}
-                    </p>
-                  </section>
-                </template>
+                        {{ deleteStatus.error }}
+                      </p>
+                    </section>
+                  </template>
 
-                <div
-                  v-else
-                  class="reservation-empty"
-                >
-                  S&eacute;lectionnez une r&eacute;servation pour afficher le d&eacute;tail.
+                  <div
+                    v-else
+                    class="reservation-empty"
+                  >
+                    S&eacute;lectionnez une r&eacute;servation pour afficher le d&eacute;tail.
+                  </div>
                 </div>
-              </div>
-            </Transition>
+              </Transition>
 
-            <Transition name="editor-stage">
-              <div
-                v-show="stage === 'calendar'"
-                class="calendar-panel"
-                aria-hidden="true"
-              />
-            </Transition>
+              <Transition name="editor-stage">
+                <div
+                  v-show="stage === 'calendar'"
+                  class="calendar-panel"
+                  aria-hidden="true"
+                />
+              </Transition>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
     </div>
   </main>
 

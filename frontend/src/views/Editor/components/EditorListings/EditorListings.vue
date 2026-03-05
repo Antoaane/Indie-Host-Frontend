@@ -18,6 +18,7 @@ const props = defineProps<{
   isLoading?: boolean
   error?: unknown
   selectedListingId: string | null
+  canPreview?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -164,6 +165,7 @@ onBeforeUnmount(() => {
           :isActionsMenuOpen="isActionsMenuOpen(listing.listingId)"
           :statusOptions="STATUS_OPTIONS"
           :listingContent="listingContent"
+          :canPreview="props.canPreview !== false"
           @select="handleSelect"
           @preview="handlePreview"
           @toggle-status-menu="toggleStatusMenu"

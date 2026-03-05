@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
-import { MoreHorizontal, Paperclip, Send } from 'lucide-vue-next'
+import { ArrowLeft, MoreHorizontal, Paperclip, Send } from 'lucide-vue-next'
 
 import RelativeOverlay from '@/components/overlays/RelativeOverlay.vue'
 import type { MessagingConversation, MessageState } from '@/views/Messaging/types/messaging'
@@ -37,11 +37,13 @@ const props = defineProps<{
     markRead: string
     markUnread: string
   }
+  showMobileBack?: boolean
   isActionPending?: boolean
   error?: string | null
 }>()
 
 const emit = defineEmits<{
+  (event: 'back'): void
   (event: 'send', payload: { conversationId: string; body: string }): void
   (event: 'open-reservation', conversationId: string): void
   (event: 'mark-read', conversationId: string): void
@@ -133,6 +135,20 @@ watch(
   <section class="messaging-thread">
     <template v-if="props.conversation">
       <div class="thread-header header">
+        <div
+          v-if="props.showMobileBack"
+          class="mobile-back"
+        >
+          <button
+            type="button"
+            aria-label="Retour aux conversations"
+            title="Retour aux conversations"
+            @click="emit('back')"
+          >
+            <ArrowLeft :size="18" />
+          </button>
+        </div>
+
         <div class="identity">
           <div
             class="avatar"

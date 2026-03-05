@@ -1,25 +1,85 @@
 /* File: src/views/Messaging/messaging.scss */
 
 @use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
 
 .messaging#messaging-page {
-  height: 100vh;
+  --editor-mobile-dock-height: calc(60px + (var(--layout-gap-sm) * 2));
+
+  padding-top: var(--layout-gap-sm);
+  padding-bottom: var(--editor-mobile-dock-height);
+  height: calc(100vh - var(--editor-mobile-dock-height) - var(--layout-gap-sm));
+  height: calc(100dvh - var(--editor-mobile-dock-height) - var(--layout-gap-sm));
+  padding-inline: var(--layout-gap-sm);
 
   @include min-width(lg) {
-    padding-top: $nav-height;
-    height: calc(100vh - $nav-height);
+    --editor-mobile-dock-height: calc(60px + var(--layout-gap) + var(--layout-gap-md));
+
+    padding-top: var(--editor-mobile-dock-height);
+    padding-bottom: 0;
+    height: calc(100vh - var(--editor-mobile-dock-height));
     overflow: hidden;
+    padding-inline: 0;
   }
 
-  > .layout {
+  >.layout {
     height: 100%;
+    position: relative;
+    overflow: hidden;
 
     display: flex;
     flex-direction: column;
     gap: var(--layout-gap-md);
+    border-radius: borders.$rounded-xl;
 
-    @include layout-gap(padding, inline, 0.75);
-    @include layout-gap(padding, bottom, 0.75);
+    >.messaging-sidebar {
+      flex: 1 1 auto;
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 1;
+    }
+
+    >.thread-shell {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+
+      background: $accent;
+      border-radius: borders.$rounded-xl;
+      overflow: hidden;
+      box-shadow: 0 18px 36px -18px rgba($secondary, 0.35);
+
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(105%);
+      transition: transform 240ms ease, opacity 200ms ease;
+
+      @include min-width(lg) {
+        background: $translucent;
+      }
+
+      >.messaging-thread {
+        flex: 1 1 auto;
+        min-height: 0;
+        border-radius: 0;
+      }
+    }
+
+    &.is-mobile-thread {
+      >.thread-shell.is-mobile-open {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateX(0);
+      }
+    }
 
     @include min-width(lg) {
       flex-direction: row;
@@ -27,6 +87,29 @@
 
       @include layout-gap(padding, inline, 1);
       @include layout-gap(padding, bottom, 1);
+
+      >.messaging-sidebar {
+        flex: 0 0 auto;
+      }
+
+      >.thread-shell {
+        position: relative;
+        inset: auto;
+        z-index: 2;
+        flex: 1 1 auto;
+
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateX(0);
+
+        box-shadow: none;
+        border-radius: 0;
+        overflow: visible;
+
+        >.messaging-thread {
+          height: 100%;
+        }
+      }
     }
   }
 }

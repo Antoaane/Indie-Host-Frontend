@@ -18,6 +18,10 @@ import { useListingAspect } from '@/views/ListingView/composables/useListingAspe
 import { normalizeListingId, useListingOwnership } from '@/views/ListingView/composables/useListingOwnership'
 import { useListingCheckout } from '@/views/ListingView/composables/useListingCheckout'
 import type { ListingParsed } from '@/views/ListingView/types/listing'
+import {
+  provideListingViewportMode,
+  type ListingViewportMode,
+} from '@/views/ListingView/composables/useListingViewport'
 
 import ListingDesktopLayout from '@/views/ListingView/components/Layout/ListingDesktopLayout.vue'
 import ListingMobileLayout from '@/views/ListingView/components/Layout/ListingMobileLayout.vue'
@@ -28,6 +32,7 @@ const props = defineProps<{
     width: number
     height: number
   }
+  forcedViewportMode?: ListingViewportMode
 }>()
 
 const route = useRoute()
@@ -87,10 +92,21 @@ const listingViewStyles = computed<Record<string, string | number>>(() => ({
   ...(aspectStyles.value as Record<string, string | number>),
   '--listing-view-cover-image': listingCoverImage.value ? `url(${JSON.stringify(listingCoverImage.value)})` : 'none',
 }))
+
+const resolvedViewportMode = computed<ListingViewportMode | null>(() => props.forcedViewportMode ?? null)
+
+const showDesktopLayout = computed(() => {
+  if (resolvedViewportMode.value) {
+    return resolvedViewportMode.value === 'xxl'
+  }
+  return vp.lg.value
+})
+
+provideListingViewportMode(resolvedViewportMode)
 </script>
 
 <template>
-  <template v-if="vp.lg.value">
+  <template v-if="showDesktopLayout">
     <div
       :class="{ 'listing-view': true, editor: props.aspect, 'is-checkout': isCheckout }"
       ref="listingView"

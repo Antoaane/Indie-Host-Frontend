@@ -18,6 +18,7 @@ type SuccessFeedback = 'publish' | 'publishAll' | 'cancel' | null
 const props = defineProps<{
   listingId: string
   draft: RawListingBundle
+  showMobileBack?: boolean
   isLoading?: boolean
   isPatchSyncing?: boolean
   hasPendingChanges?: boolean
@@ -31,6 +32,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'patch', patch: DraftPatch): void
+  (e: 'mobile-back'): void
 }>()
 
 const tab = ref<SidebarTab>('listing')
@@ -166,7 +168,11 @@ onBeforeUnmount(() => {
         </p>
       </Transition>
 
-      <EditorSidebarNav v-model="tab" />
+      <EditorSidebarNav
+        v-model="tab"
+        :showMobileBack="props.showMobileBack"
+        @mobile-back="emit('mobile-back')"
+      />
     </template>
 
     <Transition

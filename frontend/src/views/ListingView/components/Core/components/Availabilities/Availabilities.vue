@@ -5,7 +5,7 @@ import { computed } from 'vue'
 import DatePicker from '@/components/DatePicker/DatePicker.vue'
 import type { BookingsModel } from '@/views/ListingView/types/listing'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
-import { vp } from '@/utils/viewport'
+import { useListingViewport } from '@/views/ListingView/composables/useListingViewport'
 
 const props = withDefaults(
   defineProps<{
@@ -24,6 +24,8 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: RangeISO | null): void
 }>()
 
+const { isLg } = useListingViewport()
+
 const selection = computed<RangeISO | null>({
   get: () => props.modelValue,
   set: (value) => emit('update:modelValue', value),
@@ -40,7 +42,7 @@ const disabledDates = computed<RangeISO[]>(() => (props.data?.bookedDays ?? []).
     <DatePicker
       v-model:model-value="selection"
       :disabled-dates="disabledDates"
-      :numberOfMonths="vp.lg ? 3 : 2"
+      :numberOfMonths="isLg ? 3 : 2"
     />
   </section>
 </template>

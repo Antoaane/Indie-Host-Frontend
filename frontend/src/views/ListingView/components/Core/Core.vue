@@ -5,10 +5,10 @@
 import { computed } from 'vue'
 
 // UTILS
-import { vp } from '@/utils/viewport'
 import staticLocale from '@/locales/_static/fr.json'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
 import type { ListingParsed } from '@/views/ListingView/types/listing'
+import { useListingViewport } from '@/views/ListingView/composables/useListingViewport'
 
 // COMPONENTS
 import Title from '@/views/ListingView/components/Core/components/Title/Title.vue'
@@ -35,6 +35,8 @@ const props = withDefaults(
 const emit = defineEmits<{
   (e: 'update:modelValue', value: RangeISO | null): void
 }>()
+
+const { isLg } = useListingViewport()
 
 const selection = computed<RangeISO | null>({
   get: () => props.modelValue,
@@ -117,14 +119,14 @@ const descriptionStatic = {
     <Amenities
       :data="props.data.amenities"
       :staticContent="staticContent.listing.amenities"
-      :previewCount="vp.lg.value ? 8 : 6"
+      :previewCount="isLg ? 8 : 6"
     />
     <Rooms
       :data="props.data.rooms"
       :staticContent="staticContent.listing.rooms"
     />
     <Availabilities
-      v-if="vp.lg.value"
+      v-if="isLg"
       v-model:model-value="selection"
       :data="props.data.bookings"
       :static-content="staticContent.listing.headings"

@@ -6,6 +6,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { normalizeReservations } from '@/domain/listings/bookings'
 import type { RawBookingReservation, RawBookings, RawHost, RawReservationMessage, UserListingCard } from '@/domain/listings/types'
+import { vp } from '@/utils/viewport'
 import type { EditorMode, EditorSource } from '@/views/Editor/types/editor'
 import MessagingSidebar from '@/views/Messaging/components/MessagingSidebar/MessagingSidebar.vue'
 import MessagingThread from '@/views/Messaging/components/MessagingThread/MessagingThread.vue'
@@ -22,6 +23,7 @@ const route = useRoute()
 const router = useRouter()
 
 const selectedConversationId = ref<string | null>(null)
+const isMobileThreadOpen = ref(false)
 
 const listings = ref<UserListingCard[]>([])
 const reservationsByListingId = reactive<Record<string, RawBookingReservation[]>>({})
@@ -46,6 +48,8 @@ const conversations = computed<MessagingConversation[]>(() =>
 )
 
 const selectedConversation = computed(() => conversations.value.find((conversation) => conversation.id === selectedConversationId.value) ?? null)
+const isMobileViewport = computed(() => !vp.lg.value)
+const isMobileConversationStep = computed(() => isMobileViewport.value && isMobileThreadOpen.value && Boolean(selectedConversation.value))
 
 function resetMessagingMaps() {
   for (const key of Object.keys(reservationsByListingId)) {
@@ -241,8 +245,15 @@ function handleOpenReservation(conversationId: string) {
 }
 
 function handleSelectConversation(conversationId: string) {
+  if (isMobileViewport.value) {
+    isMobileThreadOpen.value = true
+  }
   selectedConversationId.value = conversationId
   void markConversationRead(conversationId, { silent: true })
+}
+
+function handleBackToConversationList() {
+  isMobileThreadOpen.value = false
 }
 
 function normalizeQueryParam(value: unknown): string | null {
@@ -293,6 +304,10 @@ function applyRouteConversationSelection(items: MessagingConversation[]) {
     void markConversationRead(target.id, { silent: true })
   }
 
+  if (isMobileViewport.value) {
+    isMobileThreadOpen.value = true
+  }
+
   clearRouteConversationSelectionQuery()
   return true
 }
@@ -323,6 +338,7 @@ watch(
 watch(conversations, (items) => {
   if (!items.length) {
     selectedConversationId.value = null
+    isMobileThreadOpen.value = false
     return
   }
 
@@ -332,6 +348,19 @@ watch(conversations, (items) => {
     selectedConversationId.value = items[0].id
   }
 })
+
+watch(
+  isMobileViewport,
+  () => {
+    isMobileThreadOpen.value = false
+  },
+  { immediate: true },
+)
+
+watch(selectedConversationId, (conversationId) => {
+  if (conversationId) return
+  isMobileThreadOpen.value = false
+})
 </script>
 
 <template>
@@ -339,7 +368,10 @@ watch(conversations, (items) => {
     id="messaging-page"
     class="messaging"
   >
-    <div class="layout">
+    <div
+      class="layout"
+      :class="{ 'is-mobile-thread': isMobileConversationStep }"
+    >
       <MessagingSidebar
         :conversations="conversations"
         :selectedId="selectedConversationId"
@@ -351,21 +383,28 @@ watch(conversations, (items) => {
         @select="handleSelectConversation"
       />
 
-      <MessagingThread
-        :conversation="selectedConversation"
-        :labels="messagingStatic.labels"
-        :composer="messagingStatic.composer"
-        :emptyState="messagingStatic.emptyState"
-        :conversationStates="messagingStatic.conversationStates"
-        :deliveryStates="messagingStatic.deliveryStates"
-        :options="messagingStatic.options"
-        :isActionPending="actionStatus.isPending"
-        :error="actionStatus.error"
-        @send="handleSendMessage"
-        @open-reservation="handleOpenReservation"
-        @mark-read="markConversationRead"
-        @mark-unread="handleMarkConversationUnread"
-      />
+      <div
+        class="thread-shell"
+        :class="{ 'is-mobile-open': isMobileConversationStep }"
+      >
+        <MessagingThread
+          :conversation="selectedConversation"
+          :labels="messagingStatic.labels"
+          :composer="messagingStatic.composer"
+          :emptyState="messagingStatic.emptyState"
+          :conversationStates="messagingStatic.conversationStates"
+          :deliveryStates="messagingStatic.deliveryStates"
+          :options="messagingStatic.options"
+          :showMobileBack="isMobileViewport"
+          :isActionPending="actionStatus.isPending"
+          :error="actionStatus.error"
+          @back="handleBackToConversationList"
+          @send="handleSendMessage"
+          @open-reservation="handleOpenReservation"
+          @mark-read="markConversationRead"
+          @mark-unread="handleMarkConversationUnread"
+        />
+      </div>
     </div>
   </main>
 </template>

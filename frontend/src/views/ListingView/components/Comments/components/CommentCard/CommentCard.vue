@@ -5,8 +5,8 @@
 import { computed } from 'vue'
 
 // UTILS
-import { vp } from '@/utils/viewport'
 import { formatRatingValue } from '@/views/ListingView/utils/formatters'
+import { useListingViewport } from '@/views/ListingView/composables/useListingViewport'
 
 // TYPES
 import type { CommentItem } from '@/views/ListingView/types/listing'
@@ -30,6 +30,8 @@ const props = withDefaults(
 const emit = defineEmits<{
   (event: 'read-more', index: number): void
 }>()
+
+const { isLg } = useListingViewport()
 
 const ratingLabel = computed(() =>
   formatRatingValue(props.comment.note, 'fr-FR', {
@@ -102,7 +104,7 @@ function handleReadMoreClick() {
         <div class="info">
           <h4 v-html="comment.name"></h4>
           <div
-            v-if="vp.lg.value"
+            v-if="isLg"
             class="note"
           >
             <p
@@ -112,14 +114,14 @@ function handleReadMoreClick() {
             <div>
               <Star
                 v-for="star in comment.note"
-                :size="vp.lg.value ? 12 : 10"
+                :size="isLg ? 12 : 10"
               />
             </div>
           </div>
         </div>
       </div>
       <div
-        v-if="!vp.lg.value"
+        v-if="!isLg"
         class="note"
       >
         <p
@@ -129,14 +131,14 @@ function handleReadMoreClick() {
         <div>
           <Star
             v-for="star in comment.note"
-            :size="vp.lg.value ? 12 : 10"
+            :size="isLg ? 12 : 10"
           />
         </div>
       </div>
     </div>
     <blockquote v-html="comment.comment"></blockquote>
     <span
-      v-if="!vp.lg.value && props.seeMore"
+      v-if="!isLg && props.seeMore"
       class="more"
     >
       <button

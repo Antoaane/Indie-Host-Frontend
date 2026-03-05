@@ -14,9 +14,9 @@ import DistributionList from './components/DistributionList/DistributionList.vue
 import CommentCard from './components/CommentCard/CommentCard.vue'
 
 // UTILS
-import { vp } from '@/utils/viewport'
 import { formatICUMessage } from '@/utils/i18n'
 import { buildDistributionFromComments, computePercentage } from '@/views/ListingView/utils/formatters'
+import { useListingViewport } from '@/views/ListingView/composables/useListingViewport'
 
 // TYPES
 import type { CommentsModel, NotesModel } from '@/views/ListingView/types/listing'
@@ -59,6 +59,7 @@ interface StaticContentRoot {
 }
 
 const content = (staticLocale as StaticContentRoot).listing.commentsWidget
+const { isLg } = useListingViewport()
 
 const props = withDefaults(
   defineProps<{
@@ -267,7 +268,7 @@ const swiperParams = computed(
     <div class="top">
       <div class="header">
         <h2
-          v-if="!vp.lg.value"
+          v-if="!isLg"
           v-html="`${content.title} — ${countLabel}`"
         />
         <!-- <p v-if="commentsCount">{{ countLabel }}</p> -->
@@ -287,7 +288,7 @@ const swiperParams = computed(
         class="list"
       >
         <CommentCard
-          v-if="vp.lg.value"
+          v-if="isLg"
           v-for="comment in previewComments"
           :key="`${comment.name}-${comment.comment}`"
           :comment="comment"
@@ -295,7 +296,7 @@ const swiperParams = computed(
           :rating-unit="content.summary.ratingUnit"
         />
         <Swiper
-          v-if="!vp.lg.value"
+          v-if="!isLg"
           ref="swiperWrapper"
           v-bind="swiperParams"
         >

@@ -5,8 +5,10 @@ import { useAuth } from '@clerk/vue'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import type { Component } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { CalendarClock, LayoutGrid, MessageSquareMore, PlusSquare } from 'lucide-vue-next'
 
 import HostReservationOverlay from '@/components/navs/HostReservationOverlay.vue'
+import BackOfficeDockNav from '@/components/navs/Nav/BackOfficeDockNav.vue'
 import NavHostVariant from '@/components/navs/Nav/NavHostVariant.vue'
 import NavLandingVariant from '@/components/navs/Nav/NavLandingVariant.vue'
 import NavPublicVariant from '@/components/navs/Nav/NavPublicVariant.vue'
@@ -29,12 +31,15 @@ const navVariant = computed<NavVariant>(() => {
   return 'public'
 })
 const isNavHidden = computed(() => Boolean(route.meta?.hideNav))
-const isNavVisible = computed(() => {
-  if (isNavHidden.value) return false
-  if (navVariant.value === 'landing') return true
-  return vp.lg.value
-})
+const isNavVisible = computed(() => !isNavHidden.value)
 const isHost = computed(() => navVariant.value === 'host')
+const isBackOfficeDockMode = computed(() => isHost.value && !vp.lg.value)
+
+const currentRouteName = computed(() => {
+  const value = route.name
+  if (typeof value === 'string') return value
+  return ''
+})
 
 function toggleReservation(event?: MouseEvent) {
   if (!reservationOpen.value) {
@@ -123,13 +128,66 @@ const navVariantComponentMap: Record<NavVariant, Component> = {
 
 const activeNavComponent = computed(() => navVariantComponentMap[navVariant.value])
 
+const backOfficeDockItems = computed(() => {
+  const routeName = currentRouteName.value
+  const isEditorRoute = routeName === 'editor' || routeName === 'editor-user'
+  const isCreateRoute = routeName === 'create-listing' || routeName === 'create-listing-user'
+  const isManagementRoute = routeName === 'management' || routeName === 'management-user'
+  const isMessagingRoute = routeName === 'messaging' || routeName === 'messaging-user'
+
+  return [
+    {
+      id: 'dock-listings',
+      label: 'Annonces',
+      icon: LayoutGrid,
+      link: resolveRouteLink('editor'),
+      isActive: isEditorRoute,
+    },
+    {
+      id: 'dock-management',
+      label: 'Réserv.',
+      icon: CalendarClock,
+      link: resolveRouteLink('management'),
+      isActive: isManagementRoute,
+    },
+    {
+      id: 'dock-add-reservation',
+      label: 'Ajout résa',
+      icon: PlusSquare,
+      isPrimary: true,
+      action: toggleReservation,
+      attrs: {
+        'aria-expanded': reservationOpen.value,
+        'aria-controls': 'host-reservation-overlay',
+        'aria-haspopup': 'dialog',
+      },
+    },
+    {
+      id: 'dock-messaging',
+      label: 'Messages',
+      icon: MessageSquareMore,
+      link: resolveRouteLink('messaging'),
+      isActive: isMessagingRoute,
+    },
+    {
+      id: 'dock-create',
+      label: 'Créer',
+      icon: PlusSquare,
+      link: resolveRouteLink('create-listing'),
+      isActive: isCreateRoute,
+    },
+  ]
+})
+
 function animateNavIn() {
-  const navElement = navRoot.value?.querySelector<HTMLElement>('.navbar')
+  const navElement = navRoot.value?.querySelector<HTMLElement>('.navbar, .back-office-dock-nav')
   if (!navElement) return
+
+  const isDock = navElement.classList.contains('back-office-dock-nav')
 
   navElement.style.setProperty('transition', 'none')
   navElement.style.setProperty('opacity', '0')
-  navElement.style.setProperty('transform', 'translateY(-100px)')
+  navElement.style.setProperty('transform', isDock ? 'translateY(100px)' : 'translateY(-100px)')
 
   window.setTimeout(() => {
     navElement.style.setProperty('transition', 'all 1s cubic-bezier(0.75, 0, 0.25, 1)')
@@ -160,8 +218,15 @@ onMounted(async () => {
     v-if="isNavVisible"
     ref="navRoot"
     class="layout-header"
+    :class="{ 'is-backoffice-dock': isBackOfficeDockMode }"
   >
+    <BackOfficeDockNav
+      v-if="isBackOfficeDockMode"
+      :items="backOfficeDockItems"
+    />
+
     <component
+      v-else
       :is="activeNavComponent"
       :items="navItems"
     />

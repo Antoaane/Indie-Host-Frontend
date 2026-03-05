@@ -8,16 +8,18 @@ import { Swiper, SwiperSlide } from 'swiper/vue'
 // COMPONENTS
 import Mosaic from './components/Mosaic/Mosaic.vue'
 // UTILS
-import { vp } from '@/utils/viewport'
 import { createListingMediaSwiperParams } from '@/utils/swiper/listingMedia'
 import { fancyboxShow } from '@/views/ListingView/components/Gallery/utils/fancybox'
 import { orderByIndex } from '@/views/ListingView/components/Gallery/utils/order'
 import type { Item } from '@/views/ListingView/components/Gallery/utils/types'
 import type { MediasModel } from '@/views/ListingView/types/listing'
+import { useListingViewport } from '@/views/ListingView/composables/useListingViewport'
 
 const props = defineProps<{
   medias: MediasModel
 }>()
+
+const { isLg } = useListingViewport()
 
 const orderedImages = computed(() => orderByIndex(props.medias.images))
 
@@ -63,7 +65,7 @@ const swiperParams = swiperBaseParams as unknown as Record<string, unknown>
 
 <template>
   <section
-    v-if="vp.lg.value"
+    v-if="isLg"
     class="listing-gallery"
   >
     <div
@@ -92,7 +94,7 @@ const swiperParams = swiperBaseParams as unknown as Record<string, unknown>
   </section>
 
   <section
-    v-if="!vp.lg.value"
+    v-if="!isLg"
     class="listing-gallery"
   >
     <Swiper
