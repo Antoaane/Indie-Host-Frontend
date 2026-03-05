@@ -20,3 +20,30 @@ IndieHost-Scraping/.env
 frontend/package-lock.json
 frontend/package.json
 
+############################
+# Backend CMS (Next.js / Payload)
+############################
+
+# Dépendances
+backend/cms/node_modules/
+
+# Build Next.js
+backend/cms/.next/
+backend/cms/out/
+
+# Cache & outils
+backend/cms/.turbo
+backend/cms/.vercel
+backend/cms/.swc/
+
+# Environnement / secrets
+backend/cms/.env
+backend/cms/.env.local
+backend/cms/.env.*.local
+
+# Logs et debug
+backend/cms/npm-debug.log*
+backend/cms/yarn-debug.log*
+backend/cms/yarn-error.log*
+backend/cms/.pnpm-debug.log*
+
