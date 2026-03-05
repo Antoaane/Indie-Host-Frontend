@@ -1,48 +1,25 @@
 {
   "id": "736014540319508555",
   "status": "published",
-  "title": "Chalet cosy ★ Vue Mont-Blanc · Chamonix",
-  "type": "Chalet",
-  "description": "Chalet chaleureux avec vue sur les sommets, à quelques minutes de Chamonix. Idéal pour un séjour ski, rando et raclette.<br><br><h2>Le logement</h2>Deux chambres, un salon avec poêle, une cuisine équipée et un balcon. Local à skis, sèche-chaussures et grande table pour les repas.<br><br><h2>Accès des voyageurs</h2>Parking privé devant le chalet. Arrivée autonome possible. Les navettes passent à proximité pour rejoindre les pistes.<br><br><h2>Autres remarques</h2>En hiver, pneus neige/chaînes fortement recommandés. Le chalet est sur une route de montagne, déneigée mais parfois glissante.",
-  "guest_capacity": 6,
-  "city": "Chamonix-Mont-Blanc",
-  "region": "Auvergne-Rhône-Alpes",
+  "title": "Logement entier : appartement - Ax-les-Thermes, France",
+  "type": "Entire home/apt",
+  "description": "<p>Situé sur les hauteurs d’Ax les Thermes , sur la route de la station de ski, à portée de pas du centre ville. Vous disposez d’un parking privé sur place. Une vue sublime sur les montagnes, notamment le pic du Tarbesou, mais aussi sur la ville que vous dominerez. Exceptionnel le jour, différent au fil des saisons, et apaisant la nuit avec les lumières de la ville et l’éclairage de son casino. Méditation garantie..</p><p><br></p><p><strong>Le logement</strong></p><p>Lumineux, surplombant le village, en léger retrait du centre ville. Très joliment décoré, et bien équipé, il plaît à tous les coups !</p><p><br></p><p><br></p><p>L'appartement est au 2 ème étage, facile d'accès mais sans ascenseur. L’entrée des lieux peut être autonome au besoin (par exemple en cas d’arrivée tardive), bien que nous fassions le maximum pour être présents, vous saluer, et au besoin, vous orienter dans vos desiderata. Nous prenons contact avant votre arrivée pour convenir des horaires ensemble.</p><p><br></p><p>Cet appartement est composé d'une pièce principale de 18m2, comprenant une cuisine équipée ( four, micro onde, plaque induction, hotte, cafetière, grille pain, Tassimo, appareil à raclette, pierrade, fondue,frigo et congélateur, lave-vaisselle), avec son coin salon avec canapé, télévision led connectée (pensez à prendre vos codes), enceinte Bluetooth. </p><p>Vous disposerez d'une chambre avec 1 lit double 140x200, d'une salle de douche, d'un WC séparé . La chambre est équipé d’un matelas et d’oreillers à mémoire de forme et de couettes, pour un sommeil de qualité.</p><p> 1 balcon avec table et chaises, donnant sur la ville et la montagne.</p><p><br></p><p>WI-FI gratuit dans l’appartement.</p><p><br></p><p>Pour plus de facilités, vous aurez sur place : planche et fer à repasser, étendoir à linge, sèche-cheveux, aspirateur, balai, lit parapluie (gratuit sur demande), chaise haute, jeux de sociétés, informations touristiques….</p><p><br></p><p>Sont fournis : des produits de base pour la cuisine (sel, poivre, huile et vinaigre, du café même s'il est utile d'apporter des dosettes compatibles Tassimo (nous en fournissons pour amorcer votre séjour), pour le ménage (sacs poubelles, liquide vaisselle, tablettes lave-vaisselle, éponges, divers produits d'entretien, lessive, papier toilette) et pour la toilette (distributeur de gel corps et cheveux) .</p><p><br></p><p><strong>Accès des voyageurs</strong></p><p>Dans les communs de l'immeuble, vous trouverez 1 local à ski/vélo/poussettes, cannes à pêches…</p><p> 1 hall d'entrée avec un banc et une carte IGN d'Ax et de sa région pour préparer vos randonnées ou ballades.</p><p><br></p><p><strong>Autres remarques</strong></p><p>Le linge de maison ( draps et serviettes de toilette) n'est pas inclus dans la prestation, mais nous proposons des kits : </p><p>Par lit double: 20 euros ( linge de lit et 2 serviettes par personne)</p><p>Cette option sera facturée via Airbnb</p><p><br></p><p><strong>Détails de l'enregistrement</strong></p><p>09032000921AX</p>",
+  "guest_capacity": 2,
+  "city": "Ax-les-Thermes",
+  "region": "France",
   "country": "France",
-  "latitude": 45.9237,
-  "longitude": 6.8694,
+  "latitude": 42.7209,
+  "longitude": 1.8336,
   "rooms": [
     {
-      "room-name": "Chambre 1",
+      "room-name": "1 chambre",
       "type": "bedroom",
-      "beds": [
-        {
-          "type": "double",
-          "capacity": 2,
-          "quantity": 1
-        }
-      ]
+      "beds": []
     },
     {
-      "room-name": "Chambre 2",
+      "room-name": "1 lit",
       "type": "bedroom",
-      "beds": [
-        {
-          "type": "simple",
-          "capacity": 1,
-          "quantity": 2
-        }
-      ]
-    },
-    {
-      "room-name": "Salon",
-      "type": "livingroom",
-      "beds": [
-        {
-          "type": "double",
-          "capacity": 2,
-          "quantity": 1
-        }
-      ]
+      "beds": []
     },
     {
       "room-name": "Salle de bain",
@@ -63,84 +40,184 @@
   ],
   "amenities": [
     {
-      "id": "MONT_BLANC_VIEW",
-      "name": "Vue Mont‑Blanc",
-      "description": "Balcon avec panorama",
-      "category": "Vue & accès",
-      "relevance": 98,
-      "pinned": true
+      "id": "vue_panoramique_sur_la_ville",
+      "name": "Vue panoramique sur la ville",
+      "description": "",
+      "category": "Vues panoramiques"
     },
     {
-      "id": "WOOD_STOVE",
-      "name": "Poêle à bois",
-      "description": "Ambiance chalet garantie",
-      "category": "Confort & travail",
-      "relevance": 90,
-      "pinned": true
+      "id": "vue_sur_la_montagne",
+      "name": "Vue sur la montagne",
+      "description": "",
+      "category": "Vues panoramiques"
     },
     {
-      "id": "SKI_STORAGE",
-      "name": "Local à skis",
-      "description": "Sèche-chaussures inclus",
-      "category": "Arrivée & mobilité",
-      "relevance": 88,
-      "pinned": true
+      "id": "vue_sur_la_valle",
+      "name": "Vue sur la vallée",
+      "description": "",
+      "category": "Vues panoramiques"
     },
     {
-      "id": "PRIVATE_PARKING",
-      "name": "Parking privé",
-      "description": "1 place devant le chalet",
-      "category": "Arrivée & mobilité",
-      "relevance": 82,
-      "pinned": true
+      "id": "sche-cheveux",
+      "name": "Sèche-cheveux",
+      "description": "",
+      "category": "Salle de bain"
     },
     {
-      "id": "WIFI",
-      "name": "Wifi",
-      "description": "Stable pour télétravail",
-      "category": "Confort & travail",
-      "relevance": 80,
-      "pinned": false
+      "id": "shampoing",
+      "name": "Shampoing",
+      "description": "",
+      "category": "Salle de bain"
     },
     {
-      "id": "EQUIPPED_KITCHEN",
-      "name": "Cuisine équipée",
-      "description": "Four, plaques, raclette",
-      "category": "Cuisine & boissons",
-      "relevance": 86,
-      "pinned": true
+      "id": "eau_chaude",
+      "name": "Eau chaude",
+      "description": "",
+      "category": "Salle de bain"
     },
     {
-      "id": "FILTER_COFFEE_MAKER",
-      "name": "Machine à café filtre",
-      "description": "Café moulu de bienvenue",
-      "category": "Cuisine & boissons",
-      "relevance": 66,
-      "pinned": false
+      "id": "lave-linge",
+      "name": "Lave-linge",
+      "description": "",
+      "category": "Chambre et linge"
     },
     {
-      "id": "LINENS_PROVIDED",
-      "name": "Linge de lit et de bain",
-      "description": "Draps et serviettes fournis",
-      "category": "Confort & travail",
-      "relevance": 74,
-      "pinned": false
+      "id": "fer__repasser",
+      "name": "Fer à repasser",
+      "description": "",
+      "category": "Chambre et linge"
     },
     {
-      "id": "BOARD_GAMES",
+      "id": "tlvision",
+      "name": "Télévision",
+      "description": "",
+      "category": "Divertissement"
+    },
+    {
+      "id": "berceau",
+      "name": "Berceau",
+      "description": "",
+      "category": "Famille"
+    },
+    {
+      "id": "lit_parapluie",
+      "name": "Lit parapluie",
+      "description": "",
+      "category": "Famille"
+    },
+    {
+      "id": "chaise_haute",
+      "name": "Chaise haute",
+      "description": "",
+      "category": "Famille"
+    },
+    {
+      "id": "vaisselle_pour_enfants",
+      "name": "Vaisselle pour enfants",
+      "description": "",
+      "category": "Famille"
+    },
+    {
+      "id": "jeux_de_socit",
       "name": "Jeux de société",
-      "description": "Pour les soirées neige",
-      "category": "Vie à bord",
-      "relevance": 58,
-      "pinned": false
+      "description": "",
+      "category": "Famille"
     },
     {
-      "id": "SMOKE_ALARM",
+      "id": "chauffage",
+      "name": "Chauffage",
+      "description": "",
+      "category": "Chauffage et climatisation"
+    },
+    {
+      "id": "dtecteur_de_fume",
       "name": "Détecteur de fumée",
-      "description": "Dans le couloir",
-      "category": "Sécurité",
-      "relevance": 84,
-      "pinned": false
+      "description": "",
+      "category": "Sécurité à la maison"
+    },
+    {
+      "id": "extincteur",
+      "name": "Extincteur",
+      "description": "",
+      "category": "Sécurité à la maison"
+    },
+    {
+      "id": "trousse_de_premiers_secours",
+      "name": "Trousse de premiers secours",
+      "description": "",
+      "category": "Sécurité à la maison"
+    },
+    {
+      "id": "wifi",
+      "name": "Wifi",
+      "description": "",
+      "category": "Internet et bureau"
+    },
+    {
+      "id": "cuisine",
+      "name": "Cuisine",
+      "description": "Espace où les voyageurs peuvent cuisiner",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "rfrigrateur",
+      "name": "Réfrigérateur",
+      "description": "",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "quipements_de_cuisine_de_base",
+      "name": "Équipements de cuisine de base",
+      "description": "Casseroles et poêles, huile, sel et poivre",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "vaisselle_et_couverts",
+      "name": "Vaisselle et couverts",
+      "description": "Bols, baguettes, assiettes, tasses, etc.",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "machine__caf",
+      "name": "Machine à café",
+      "description": "",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "commun__patio_ou_balcon",
+      "name": "Commun : patio ou balcon",
+      "description": "",
+      "category": "Extérieur"
+    },
+    {
+      "id": "jardin",
+      "name": "Jardin",
+      "description": "Un espace ouvert du logement généralement recouvert d'herbe",
+      "category": "Extérieur"
+    },
+    {
+      "id": "mobilier_dextrieur",
+      "name": "Mobilier d'extérieur",
+      "description": "",
+      "category": "Extérieur"
+    },
+    {
+      "id": "stationnement_gratuit_sur_place",
+      "name": "Stationnement gratuit sur place",
+      "description": "",
+      "category": "Parking et installations"
+    },
+    {
+      "id": "arrive_autonome",
+      "name": "Arrivée autonome",
+      "description": "",
+      "category": "Services"
+    },
+    {
+      "id": "bote__cl_scurise",
+      "name": "Boîte à clé sécurisée",
+      "description": "",
+      "category": "Services"
     }
   ],
   "description_dep": [
@@ -157,5 +234,8 @@
       "content": "En hiver, pneus neige ou chaînes recommandés. La route est déneigée mais peut rester glissante tôt le matin."
     }
   ],
-  "pause_message": ""
+  "pause_message": "",
+  "lat": 42.7209,
+  "lng": 1.8336,
+  "zoom": 13
 }

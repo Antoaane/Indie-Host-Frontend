@@ -15,13 +15,26 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'patch', patch: DraftPatch): void
+  (e: 'next'): void
 }>()
 
 function forwardPatch(patch: DraftPatch) {
   emit('patch', patch)
 }
 
-const listeners = computed(() => (props.step.acceptsPatch ? { patch: forwardPatch } : {}))
+function forwardNext() {
+  emit('next')
+}
+
+const listeners = computed(() => {
+  const base: Record<string, any> = {}
+  if (props.step.acceptsPatch) {
+    base.patch = forwardPatch
+  }
+  // Permet à un panneau (ex. import) de déclencher le passage automatique à l'étape suivante
+  base.next = forwardNext
+  return base
+})
 const stepProps = computed(() =>
   props.step.props(props.draft, {
     validationError: props.stepError ?? null,

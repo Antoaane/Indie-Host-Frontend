@@ -6,11 +6,11 @@ export type ListingStatus =
   | 'blocked'
   | 'paused'
   | 'deleted'
+  | 'draft'
   | string
 
 export function normalizeListingStatus(status?: string | null): string {
   const normalized = (status ?? '').trim().toLowerCase()
-  if (normalized === 'draft') return 'published'
   return normalized
 }
 

@@ -1,0 +1,22 @@
+############################
+# Racine Indie-Host-Frontend
+############################
+
+# Environnements virtuels Python (scraper)
+IndieHost-Scraping/.venv/
+IndieHost-Scraping/venv/
+
+# Fichiers Python générés
+IndieHost-Scraping/**/*.pyc
+IndieHost-Scraping/**/__pycache__/
+
+# Fichiers de sortie du scraper (non versionnés)
+IndieHost-Scraping/annonce.json
+
+# Config locale / secrets éventuels
+IndieHost-Scraping/.env
+
+# Fichiers Node à ne pas sur-pister localement
+frontend/package-lock.json
+frontend/package.json
+

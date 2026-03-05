@@ -1,0 +1,170 @@
+{
+  "id": "listing-1772474377188",
+  "status": "deleted",
+  "pause_message": "",
+  "title": "Chambre privée dans : appartement - Marseille, France",
+  "type": "Private room",
+  "precise_address": "5 rue claude bernard",
+  "city": "Marseille",
+  "country": "France",
+  "region": "France",
+  "guest_capacity": 2,
+  "rooms": [
+    {
+      "room-name": "1 chambre",
+      "type": "bedroom",
+      "beds": []
+    },
+    {
+      "room-name": "1 lit",
+      "type": "bedroom",
+      "beds": []
+    }
+  ],
+  "amenities": [
+    {
+      "id": "sche-cheveux",
+      "name": "Sèche-cheveux",
+      "description": "",
+      "category": "Salle de bain"
+    },
+    {
+      "id": "eau_chaude",
+      "name": "Eau chaude",
+      "description": "",
+      "category": "Salle de bain"
+    },
+    {
+      "id": "lave-linge",
+      "name": "Lave-linge",
+      "description": "",
+      "category": "Chambre et linge"
+    },
+    {
+      "id": "linge_de_lit",
+      "name": "Linge de lit",
+      "description": "",
+      "category": "Chambre et linge"
+    },
+    {
+      "id": "fer__repasser",
+      "name": "Fer à repasser",
+      "description": "",
+      "category": "Chambre et linge"
+    },
+    {
+      "id": "livres_et_jouets_pour_enfants_jusqu_2_ans_entre_2_et_5_ans_et_entre_5_et_10_ans",
+      "name": "Livres et jouets pour enfants (Jusqu'à 2 ans, Entre 2 et 5 ans et Entre 5 et 10 ans)",
+      "description": "",
+      "category": "Famille"
+    },
+    {
+      "id": "chaise_haute_de_type_rehausseur__toujours_dans_le_logement",
+      "name": "Chaise haute de type rehausseur : toujours dans le logement",
+      "description": "",
+      "category": "Famille"
+    },
+    {
+      "id": "baignoire_pour_bb",
+      "name": "Baignoire pour bébé",
+      "description": "",
+      "category": "Famille"
+    },
+    {
+      "id": "dtecteur_de_fume",
+      "name": "Détecteur de fumée",
+      "description": "",
+      "category": "Sécurité à la maison"
+    },
+    {
+      "id": "dtecteur_de_monoxyde_de_carbone",
+      "name": "Détecteur de monoxyde de carbone",
+      "description": "",
+      "category": "Sécurité à la maison"
+    },
+    {
+      "id": "wifi",
+      "name": "Wifi",
+      "description": "",
+      "category": "Internet et bureau"
+    },
+    {
+      "id": "cuisine",
+      "name": "Cuisine",
+      "description": "Espace où les voyageurs peuvent cuisiner",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "rfrigrateur",
+      "name": "Réfrigérateur",
+      "description": "",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "quipements_de_cuisine_de_base",
+      "name": "Équipements de cuisine de base",
+      "description": "Casseroles et poêles, huile, sel et poivre",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "vaisselle_et_couverts",
+      "name": "Vaisselle et couverts",
+      "description": "Bols, baguettes, assiettes, tasses, etc.",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "conglateur",
+      "name": "Congélateur",
+      "description": "",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "cuisinire__gaz_other",
+      "name": "Cuisinière à gaz Other",
+      "description": "",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "four",
+      "name": "Four",
+      "description": "",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "bouilloire_lectrique",
+      "name": "Bouilloire électrique",
+      "description": "",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "cafetire__cafetire_filtre_machine__expresso",
+      "name": "Cafetière : cafetière filtre, machine à expresso",
+      "description": "",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "plaques_de_cuisson",
+      "name": "Plaques de cuisson",
+      "description": "",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "cuiseur__riz",
+      "name": "Cuiseur à riz",
+      "description": "",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "table__manger",
+      "name": "Table à manger",
+      "description": "",
+      "category": "Cuisine et salle à manger"
+    }
+  ],
+  "latitude": 43.3099,
+  "longitude": 5.3806,
+  "lat": 43.3099,
+  "lng": 5.3806,
+  "zoom": 13,
+  "description": "<p>Chambre spacieuse dans un appartement confortable et lumineux.</p><p><br></p><p>Maman avec 4 enfants, je me ferai un plaisir d'accueillir quelqu'un qui a envie d'échanger des expériences.</p>"
+}

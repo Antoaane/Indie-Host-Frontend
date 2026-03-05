@@ -88,7 +88,10 @@
           "subtitle": "Vous pouvez récupérer les informations d’un logement existant sur l’une de ces plateformes",
           "airbnbPlaceholder": "https://www.airbnb.fr/rooms/…",
           "bookingPlaceholder": "https://www.booking.com/hotel/…",
-          "cta": "Importer"
+          "cta": "Importer",
+          "createManually": "Créer manuellement",
+          "importLoading": "Récupération de l'annonce en cours…",
+          "bookingNotSupported": "L'import Booking n'est pas encore disponible. Utilisez un lien Airbnb ou créez manuellement."
         },
         "title": {
           "title": "Titre de l’annonce",

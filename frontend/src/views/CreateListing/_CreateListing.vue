@@ -77,6 +77,7 @@ const submitError = computed(() => submitState.error)
       :draft="draft"
       :step-error="stepError"
       @patch="applyDraftPatch"
+      @next="goToNextStep"
     />
 
     <section

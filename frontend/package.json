@@ -36,10 +36,10 @@
     "lucide-vue-next": "^0.511.0",
     "pinia": "^3.0.1",
     "prettier-plugin-multiline-arrays": "^3.0.6",
-    "quill": "^2.0.3",
-    "swiper": "^11.2.7",
+    "quill": "^2.0.2",
+    "swiper": "^12.1.2",
     "vue": "^3.5.13",
-    "vue-quilly": "^1.1.6",
+    "vue-quilly": "^1.1.2",
     "vue-router": "^4.5.0"
   },
   "devDependencies": {
