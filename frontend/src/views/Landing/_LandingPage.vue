@@ -120,3 +120,11 @@ onBeforeUnmount(() => {
   </main>
   <!-- </VueLenis> -->
 </template>
+
+<style lang="scss">
+@use '@/styles/variables/globals' as *;
+
+#landing-page {
+  background: $secondary !important;
+}
+</style>

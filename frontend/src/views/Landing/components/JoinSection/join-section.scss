@@ -204,7 +204,7 @@
 
     transform: translate(-50%, -50%);
     opacity: 0;
-    background-color: rgba($background, 0.85);
+    background-color: rgba($secondary, 0.85);
 
     &:has(svg),
     &:has(img) {
