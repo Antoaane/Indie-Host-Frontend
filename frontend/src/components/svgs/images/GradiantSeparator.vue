@@ -75,10 +75,10 @@
       </filter>
       <linearGradient
         :id="ids.paint0_linear_1349_29685"
-        x1="1104.14"
-        x2="1104"
-        y1="0.0106902"
-        y2="193.5"
+        x1="0"
+        x2="2208"
+        y1="454"
+        y2="454"
         gradientUnits="userSpaceOnUse"
       >
         <stop stop-color="#FCFAFA" />

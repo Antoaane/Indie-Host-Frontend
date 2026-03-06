@@ -1,0 +1,121 @@
+:root {
+  --font-mono: 'Roboto Mono', monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 18px;
+  line-height: 32px;
+
+  background: rgb(0, 0, 0);
+  -webkit-font-smoothing: antialiased;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  font-family: system-ui;
+  font-size: 18px;
+  line-height: 32px;
+
+  margin: 0;
+  color: rgb(1000, 1000, 1000);
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+h1 {
+  margin: 40px 0;
+  font-size: 64px;
+  line-height: 70px;
+  font-weight: bold;
+}
+
+p {
+  margin: 24px 0;
+}
+
+a {
+  color: currentColor;
+}
+
+svg {
+  vertical-align: middle;
+}
+
+.home {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  height: 100vh;
+  padding: 45px;
+  max-width: 1024px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.home .content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 1;
+}
+
+.home .content h1 {
+  text-align: center;
+}
+
+.home .links {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.home .links a {
+  text-decoration: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.home .links .admin {
+  color: rgb(0, 0, 0);
+  background: rgb(1000, 1000, 1000);
+  border: 1px solid rgb(0, 0, 0);
+}
+
+.home .links .docs {
+  color: rgb(1000, 1000, 1000);
+  background: rgb(0, 0, 0);
+  border: 1px solid rgb(1000, 1000, 1000);
+}
+
+.home .footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.home .footer p {
+  margin: 0;
+}
+
+.home .footer .codeLink {
+  text-decoration: none;
+  padding: 0 0.5rem;
+  background: rgb(60, 60, 60);
+  border-radius: 4px;
+}
+

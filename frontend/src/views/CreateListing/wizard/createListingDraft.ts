@@ -5,6 +5,9 @@ import { normalizeListingStatus } from '@/domain/listings/status'
 
 export const CREATE_LISTING_STORAGE_PREFIX = 'indiehost:create-listing:draft:v1'
 
+/** Clé sessionStorage pour un brouillon d’annonce venant de la landing (import prévisualisé). */
+export const LANDING_CREATE_DRAFT_KEY = 'indiehost:landing:create-draft'
+
 export function cleanText(value: unknown): string {
   if (typeof value !== 'string') return ''
   return value.trim()

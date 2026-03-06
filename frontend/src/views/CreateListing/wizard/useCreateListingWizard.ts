@@ -15,6 +15,7 @@ import {
   normalizeBundleForCreate,
   normalizeDraft,
   CREATE_LISTING_STORAGE_PREFIX,
+  LANDING_CREATE_DRAFT_KEY,
 } from '@/views/CreateListing/wizard/createListingDraft'
 import { buildEditorRoute } from '@/views/CreateListing/wizard/createListingRouting'
 import type { CreateListingStep, CreateListingStepItem, PersistedCreateDraft } from '@/views/CreateListing/wizard/createListing.types'
@@ -234,6 +235,29 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
     }
 
     try {
+      const landingRaw = window.sessionStorage.getItem(LANDING_CREATE_DRAFT_KEY)
+      if (landingRaw) {
+        const landingParsed = JSON.parse(landingRaw)
+        if (landingParsed && typeof landingParsed === 'object') {
+          draft.value = normalizeDraft(landingParsed)
+          const skipImportStepIndex = clampStepIndex(1)
+          activeStepIndex.value = skipImportStepIndex
+          furthestVisitedStepIndex.value = skipImportStepIndex
+          isPreviewStage.value = false
+          window.sessionStorage.removeItem(LANDING_CREATE_DRAFT_KEY)
+          const payload: PersistedCreateDraft = {
+            stepIndex: skipImportStepIndex,
+            furthestStepIndex: skipImportStepIndex,
+            isPreviewStage: false,
+            draft: draft.value,
+            updatedAt: new Date().toISOString(),
+          }
+          window.localStorage.setItem(storageKey.value, JSON.stringify(payload))
+        }
+        hasHydratedStorage.value = true
+        return
+      }
+
       const raw = window.localStorage.getItem(storageKey.value)
       if (!raw) {
         hasHydratedStorage.value = true

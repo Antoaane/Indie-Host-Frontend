@@ -26,14 +26,18 @@ import {
 import ListingDesktopLayout from '@/views/ListingView/components/Layout/ListingDesktopLayout.vue'
 import ListingMobileLayout from '@/views/ListingView/components/Layout/ListingMobileLayout.vue'
 
-const props = defineProps<{
-  rawListing?: RawListingBundle | null
-  aspect?: {
-    width: number
-    height: number
-  }
-  forcedViewportMode?: ListingViewportMode
-}>()
+const props = withDefaults(
+  defineProps<{
+    rawListing?: RawListingBundle | null
+    aspect?: {
+      width: number
+      height: number
+    }
+    forcedViewportMode?: ListingViewportMode
+    previewOnly?: boolean
+  }>(),
+  { previewOnly: false },
+)
 
 const route = useRoute()
 const controller = getListingsController()
@@ -127,6 +131,7 @@ provideListingViewportMode(resolvedViewportMode)
         :can-edit-listing="canEditListing"
         :ownership-loading="ownershipLookup.isLoading"
         :edit-listing-route="editListingRoute"
+        :preview-only="props.previewOnly"
         @update:booking-range="bookingRange = $event"
         @reserve="onReserve"
         @cancel-checkout="cancelCheckout"
@@ -155,6 +160,7 @@ provideListingViewportMode(resolvedViewportMode)
         :can-edit-listing="canEditListing"
         :ownership-loading="ownershipLookup.isLoading"
         :edit-listing-route="editListingRoute"
+        :preview-only="props.previewOnly"
         @update:booking-range="bookingRange = $event"
         @reserve="onReserve"
         @cancel-checkout="cancelCheckout"
