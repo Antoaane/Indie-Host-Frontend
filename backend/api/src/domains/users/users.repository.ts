@@ -1,0 +1,107 @@
+import type { PrismaClient, User } from '@prisma/client';
+
+import type { RequestAuth } from '../../types/auth.js';
+
+function readString(payload: Record<string, unknown>, key: string): string | null {
+  const value = payload[key];
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed || null;
+}
+
+function toHostProfile(user: Partial<User>) {
+  const fallbackName = [user.firstName, user.lastName].filter(Boolean).join(' ').trim() || 'Hote';
+  const displayName = user.displayName ?? fallbackName;
+
+  return {
+    name: displayName,
+    status: 'Host',
+    seniority: 0,
+    'global-note': 5,
+    avatar: user.avatarUrl ?? '',
+    'catalog-link': '',
+  };
+}
+
+export async function upsertUserFromAuth(prisma: PrismaClient, auth: RequestAuth | null): Promise<User | null> {
+  if (!auth) return null;
+
+  const payload = auth.payload as Record<string, unknown>;
+  const email = readString(payload, 'email') ?? readString(payload, 'email_address');
+  const firstName = readString(payload, 'given_name') ?? readString(payload, 'first_name');
+  const lastName = readString(payload, 'family_name') ?? readString(payload, 'last_name');
+  const nameFromPayload = readString(payload, 'name');
+  const fallbackDisplayName = [firstName, lastName].filter(Boolean).join(' ').trim();
+  const displayName = nameFromPayload ?? (fallbackDisplayName || null);
+  const avatarUrl =
+    readString(payload, 'picture') ??
+    readString(payload, 'image_url') ??
+    null;
+
+  return prisma.user.upsert({
+    where: {
+      clerkUserId: auth.userId,
+    },
+    update: {
+      externalUserId: auth.userId,
+      email,
+      firstName,
+      lastName,
+      displayName,
+      avatarUrl,
+      hostProfile: toHostProfile({
+        firstName: firstName ?? undefined,
+        lastName: lastName ?? undefined,
+        displayName: displayName ?? undefined,
+        avatarUrl: avatarUrl ?? undefined,
+      }),
+    },
+    create: {
+      clerkUserId: auth.userId,
+      externalUserId: auth.userId,
+      email,
+      firstName,
+      lastName,
+      displayName,
+      avatarUrl,
+      hostProfile: toHostProfile({
+        firstName: firstName ?? undefined,
+        lastName: lastName ?? undefined,
+        displayName: displayName ?? undefined,
+        avatarUrl: avatarUrl ?? undefined,
+      }),
+    },
+  });
+}
+
+export async function resolveUserByIdentifier(prisma: PrismaClient, userId: string): Promise<User | null> {
+  const trimmed = userId.trim();
+  if (!trimmed) return null;
+
+  const [byInternalId, byExternalId, byClerkId] = await Promise.all([
+    prisma.user.findUnique({ where: { id: trimmed } }),
+    prisma.user.findUnique({ where: { externalUserId: trimmed } }),
+    prisma.user.findUnique({ where: { clerkUserId: trimmed } }),
+  ]);
+
+  return byInternalId ?? byExternalId ?? byClerkId;
+}
+
+export function buildHostProfileFromUser(user: User | null | undefined): Record<string, unknown> {
+  if (!user) {
+    return {
+      name: '',
+      status: '',
+      seniority: 0,
+      'global-note': 0,
+      avatar: '',
+      'catalog-link': '',
+    };
+  }
+
+  if (user.hostProfile && typeof user.hostProfile === 'object' && !Array.isArray(user.hostProfile)) {
+    return user.hostProfile as Record<string, unknown>;
+  }
+
+  return toHostProfile(user);
+}

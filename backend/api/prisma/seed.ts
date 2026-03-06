@@ -1,260 +1,285 @@
-import { PrismaClient, ListingStatus, MessageAuthorRole, MessageState, ReservationStatus, ReservationSource } from '@prisma/client'
+import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 async function main() {
-  const owner = await prisma.user.upsert({
-    where: { clerkUserId: 'user_demo_owner_001' },
-    update: {},
-    create: {
-      clerkUserId: 'user_demo_owner_001',
-      email: 'owner@indiehost.local',
+  const demoUser = await prisma.user.upsert({
+    where: {
+      externalUserId: 'user_demo_owner_001',
+    },
+    update: {
+      displayName: 'Delphine',
       firstName: 'Delphine',
-      lastName: 'Demo',
-      role: 'HOST',
-      billingProfile: {
-        stripeConnect: {
-          accountId: 'acct_demo_owner_001',
-          onboardingStatus: 'completed',
-          chargesEnabled: true,
-          payoutsEnabled: true,
-        },
-      },
-    },
-  })
-
-  const listing = await prisma.listing.upsert({
-    where: { publicId: '53028879' },
-    update: {
-      ownerId: owner.id,
-      status: ListingStatus.ACTIVE,
-      hasPendingChanges: false,
-    },
-    create: {
-      publicId: '53028879',
-      ownerId: owner.id,
-      status: ListingStatus.ACTIVE,
-      hasPendingChanges: false,
-    },
-  })
-
-  await prisma.listingCore.upsert({
-    where: { listingId: listing.id },
-    update: {
-      data: {
-        id: '53028879',
-        status: 'active',
-        title: 'Maison flottante / Houseboat',
-        city: 'Baurech',
-        region: 'Nouvelle-Aquitaine',
-        country: 'France',
-        guest_capacity: 3,
-      },
-    },
-    create: {
-      listingId: listing.id,
-      data: {
-        id: '53028879',
-        status: 'active',
-        title: 'Maison flottante / Houseboat',
-        city: 'Baurech',
-        region: 'Nouvelle-Aquitaine',
-        country: 'France',
-        guest_capacity: 3,
-      },
-    },
-  })
-
-  await prisma.listingBookings.upsert({
-    where: { listingId: listing.id },
-    update: {
-      data: {
-        price: 174,
-        fees: [{ name: 'Frais de ménage', amount: 35 }],
-        'booked-days': [{ start: '2026-04-07', end: '2026-04-11' }],
-        reservations: [],
-      },
-    },
-    create: {
-      listingId: listing.id,
-      data: {
-        price: 174,
-        fees: [{ name: 'Frais de ménage', amount: 35 }],
-        'booked-days': [{ start: '2026-04-07', end: '2026-04-11' }],
-        reservations: [],
-      },
-    },
-  })
-
-  await prisma.listingMedias.upsert({
-    where: { listingId: listing.id },
-    update: {
-      data: {
-        images: [{ src: '/assets/media/images/listing-test-0/image0.jpg', alt: 'Vue lac', position: 0 }],
-        videos: [],
-      },
-    },
-    create: {
-      listingId: listing.id,
-      data: {
-        images: [{ src: '/assets/media/images/listing-test-0/image0.jpg', alt: 'Vue lac', position: 0 }],
-        videos: [],
-      },
-    },
-  })
-
-  await prisma.listingArrival.upsert({
-    where: { listingId: listing.id },
-    update: {
-      data: {
-        intro: { title: 'Bienvenue', subtitle: 'Guide d’arrivée', tagline: 'Propulsé par IndieHost' },
-        practical: {
-          access: {
-            address: 'Baurech, Nouvelle-Aquitaine',
-            checkIn: 'À partir de 16h',
-            checkOut: 'Avant 11h',
-          },
-        },
-      },
-    },
-    create: {
-      listingId: listing.id,
-      data: {
-        intro: { title: 'Bienvenue', subtitle: 'Guide d’arrivée', tagline: 'Propulsé par IndieHost' },
-        practical: {
-          access: {
-            address: 'Baurech, Nouvelle-Aquitaine',
-            checkIn: 'À partir de 16h',
-            checkOut: 'Avant 11h',
-          },
-        },
-      },
-    },
-  })
-
-  await prisma.listingNotes.upsert({
-    where: { listingId: listing.id },
-    update: { data: { note: { note: 4.95, distribution: { 1: 0, 2: 0, 3: 1, 4: 3, 5: 48 } } } },
-    create: { listingId: listing.id, data: { note: { note: 4.95, distribution: { 1: 0, 2: 0, 3: 1, 4: 3, 5: 48 } } } },
-  })
-
-  await prisma.listingComments.upsert({
-    where: { listingId: listing.id },
-    update: { data: { comments: [[{ name: 'Camille', note: 5, comment: 'Séjour parfait.' }]] } },
-    create: { listingId: listing.id, data: { comments: [[{ name: 'Camille', note: 5, comment: 'Séjour parfait.' }]] } },
-  })
-
-  await prisma.listingHost.upsert({
-    where: { listingId: listing.id },
-    update: {
-      data: {
+      lastName: 'Dupont',
+      email: 'delphine.dupont@example.com',
+      hostProfile: {
         name: 'Delphine',
         status: 'SuperHost',
         seniority: 48,
         'global-note': 4.95,
+        avatar: 'https://a0.muscache.com/im/pictures/user/abb92beb-fd44-4562-9fff-45a19adddd23.jpg?im_w=720',
+        'catalog-link': 'https://www.airbnb.fr/rooms/53028879#host-profile',
+      },
+      stripeConnectAccountId: 'acct_demo_owner_001',
+      stripeConnectProfile: {
+        accountId: 'acct_demo_owner_001',
+        onboardingStatus: 'completed',
+        chargesEnabled: true,
+        payoutsEnabled: true,
+        defaultCurrency: 'eur',
+        transferSchedule: 'daily',
       },
     },
     create: {
-      listingId: listing.id,
-      data: {
+      externalUserId: 'user_demo_owner_001',
+      displayName: 'Delphine',
+      firstName: 'Delphine',
+      lastName: 'Dupont',
+      email: 'delphine.dupont@example.com',
+      hostProfile: {
         name: 'Delphine',
         status: 'SuperHost',
         seniority: 48,
         'global-note': 4.95,
+        avatar: 'https://a0.muscache.com/im/pictures/user/abb92beb-fd44-4562-9fff-45a19adddd23.jpg?im_w=720',
+        'catalog-link': 'https://www.airbnb.fr/rooms/53028879#host-profile',
+      },
+      stripeConnectAccountId: 'acct_demo_owner_001',
+      stripeConnectProfile: {
+        accountId: 'acct_demo_owner_001',
+        onboardingStatus: 'completed',
+        chargesEnabled: true,
+        payoutsEnabled: true,
+        defaultCurrency: 'eur',
+        transferSchedule: 'daily',
       },
     },
-  })
+  });
 
-  const reservation = await prisma.reservation.upsert({
-    where: { publicId: 'reservation-listing-53028879-2026-04-07-2026-04-11' },
+  await prisma.listing.upsert({
+    where: {
+      id: '53028879',
+    },
     update: {
-      listingId: listing.id,
-      startDate: new Date('2026-04-07T00:00:00.000Z'),
-      endDate: new Date('2026-04-11T00:00:00.000Z'),
-      nights: 4,
-      guestName: 'Clara Garcia',
-      guestMessage: 'Séjour anniversaire',
-      status: ReservationStatus.CONFIRMED,
-      source: ReservationSource.DIRECT,
-      guests: { adults: 2, children: 0, infants: 0, pets: 0, pmr: 0 },
-      payment: { total: 731, deposit: 731, balance: 0, status: 'paid', method: 'Carte' },
-      contact: { firstName: 'Clara', lastName: 'Garcia', email: 'clara@example.com' },
+      ownerId: demoUser.id,
+      status: 'published',
+      core: {
+        id: '53028879',
+        status: 'published',
+        title: 'Maison flottante / Houseboat ★ Baurechinsolite',
+        type: 'Peniche',
+        description: 'Logement insolite a 20km de Bordeaux.',
+        guest_capacity: 3,
+        city: 'Baurech',
+        region: 'Nouvelle-Aquitaine',
+        country: 'France',
+      },
+      bookings: {
+        price: 174,
+        fees: [
+          { name: 'Frais de menage', amount: 35 },
+        ],
+        'booked-days': [
+          { start: '2026-04-01', end: '2026-04-06' },
+        ],
+        reservations: [
+          {
+            id: 'reservation-53028879-001',
+            start: '2026-04-01',
+            end: '2026-04-06',
+            nights: 5,
+            guestName: 'Thomas Nguyen',
+            message: 'Sejour calme prevu.',
+            guests: {
+              adults: 2,
+              children: 0,
+              infants: 0,
+              pets: 0,
+              pmr: 0,
+            },
+            payment: {
+              total: 905,
+              deposit: 905,
+              balance: 0,
+              status: 'paid',
+              method: 'SEPA',
+            },
+            contact: {
+              firstName: 'Thomas',
+              lastName: 'Nguyen',
+              email: 'thomas.nguyen@example.com',
+              phone: '+33600000000',
+            },
+            createdAt: '2026-03-05T09:30:00Z',
+          },
+        ],
+      },
+      medias: {
+        images: [
+          { src: '/assets/media/images/listing-test-0/image0.jpg', alt: 'Maison flottante', position: 0 },
+        ],
+        videos: [],
+      },
+      arrival: {
+        intro: {
+          title: 'Bienvenue',
+          subtitle: 'Pour profiter des lieux au maximum, voici votre guide d\'arrivee.',
+          tagline: 'Propulse par IndieHost',
+        },
+        practical: {
+          savings: { message: 'Reservez en direct pour eviter les commissions.' },
+          access: {
+            address: 'Baurech, Nouvelle-Aquitaine',
+            checkIn: 'A partir de 16h',
+            checkOut: 'Avant 11h',
+            parking: 'Gratuit sur place',
+          },
+          services: {
+            wifi: 'Disponible',
+            contacts: 'Urgences 112',
+            assistance: 'Assistance hote 9h-21h',
+          },
+          rules: '',
+          shops: '',
+        },
+        guide: {
+          title: 'Decouvertes locales',
+          content: '<p>Guide local.</p>',
+        },
+      },
+      notes: {
+        note: {
+          note: 4.68,
+          distribution: { '1': 0, '2': 0, '3': 1, '4': 21, '5': 28 },
+        },
+      },
+      comments: {
+        comments: [],
+      },
+      host: {
+        name: 'Delphine',
+        status: 'SuperHost',
+        seniority: 48,
+        'global-note': 4.95,
+        avatar: 'https://a0.muscache.com/im/pictures/user/abb92beb-fd44-4562-9fff-45a19adddd23.jpg?im_w=720',
+        'catalog-link': 'https://www.airbnb.fr/rooms/53028879#host-profile',
+      },
     },
     create: {
-      publicId: 'reservation-listing-53028879-2026-04-07-2026-04-11',
-      listingId: listing.id,
-      startDate: new Date('2026-04-07T00:00:00.000Z'),
-      endDate: new Date('2026-04-11T00:00:00.000Z'),
-      nights: 4,
-      guestName: 'Clara Garcia',
-      guestMessage: 'Séjour anniversaire',
-      status: ReservationStatus.CONFIRMED,
-      source: ReservationSource.DIRECT,
-      guests: { adults: 2, children: 0, infants: 0, pets: 0, pmr: 0 },
-      payment: { total: 731, deposit: 731, balance: 0, status: 'paid', method: 'Carte' },
-      contact: { firstName: 'Clara', lastName: 'Garcia', email: 'clara@example.com' },
+      id: '53028879',
+      ownerId: demoUser.id,
+      status: 'published',
+      core: {
+        id: '53028879',
+        status: 'published',
+        title: 'Maison flottante / Houseboat ★ Baurechinsolite',
+        type: 'Peniche',
+        description: 'Logement insolite a 20km de Bordeaux.',
+        guest_capacity: 3,
+        city: 'Baurech',
+        region: 'Nouvelle-Aquitaine',
+        country: 'France',
+      },
+      bookings: {
+        price: 174,
+        fees: [
+          { name: 'Frais de menage', amount: 35 },
+        ],
+        'booked-days': [
+          { start: '2026-04-01', end: '2026-04-06' },
+        ],
+        reservations: [
+          {
+            id: 'reservation-53028879-001',
+            start: '2026-04-01',
+            end: '2026-04-06',
+            nights: 5,
+            guestName: 'Thomas Nguyen',
+            message: 'Sejour calme prevu.',
+            guests: {
+              adults: 2,
+              children: 0,
+              infants: 0,
+              pets: 0,
+              pmr: 0,
+            },
+            payment: {
+              total: 905,
+              deposit: 905,
+              balance: 0,
+              status: 'paid',
+              method: 'SEPA',
+            },
+            contact: {
+              firstName: 'Thomas',
+              lastName: 'Nguyen',
+              email: 'thomas.nguyen@example.com',
+              phone: '+33600000000',
+            },
+            createdAt: '2026-03-05T09:30:00Z',
+          },
+        ],
+      },
+      medias: {
+        images: [
+          { src: '/assets/media/images/listing-test-0/image0.jpg', alt: 'Maison flottante', position: 0 },
+        ],
+        videos: [],
+      },
+      arrival: {
+        intro: {
+          title: 'Bienvenue',
+          subtitle: 'Pour profiter des lieux au maximum, voici votre guide d\'arrivee.',
+          tagline: 'Propulse par IndieHost',
+        },
+        practical: {
+          savings: { message: 'Reservez en direct pour eviter les commissions.' },
+          access: {
+            address: 'Baurech, Nouvelle-Aquitaine',
+            checkIn: 'A partir de 16h',
+            checkOut: 'Avant 11h',
+            parking: 'Gratuit sur place',
+          },
+          services: {
+            wifi: 'Disponible',
+            contacts: 'Urgences 112',
+            assistance: 'Assistance hote 9h-21h',
+          },
+          rules: '',
+          shops: '',
+        },
+        guide: {
+          title: 'Decouvertes locales',
+          content: '<p>Guide local.</p>',
+        },
+      },
+      notes: {
+        note: {
+          note: 4.68,
+          distribution: { '1': 0, '2': 0, '3': 1, '4': 21, '5': 28 },
+        },
+      },
+      comments: {
+        comments: [],
+      },
+      host: {
+        name: 'Delphine',
+        status: 'SuperHost',
+        seniority: 48,
+        'global-note': 4.95,
+        avatar: 'https://a0.muscache.com/im/pictures/user/abb92beb-fd44-4562-9fff-45a19adddd23.jpg?im_w=720',
+        'catalog-link': 'https://www.airbnb.fr/rooms/53028879#host-profile',
+      },
     },
-  })
-
-  const conversation = await prisma.conversation.upsert({
-    where: { publicId: '53028879::reservation-listing-53028879-2026-04-07-2026-04-11' },
-    update: {
-      listingId: listing.id,
-      reservationId: reservation.id,
-    },
-    create: {
-      publicId: '53028879::reservation-listing-53028879-2026-04-07-2026-04-11',
-      listingId: listing.id,
-      reservationId: reservation.id,
-    },
-  })
-
-  await prisma.conversationParticipant.upsert({
-    where: { id: `${conversation.id}:host:${owner.id}` },
-    update: {
-      role: 'HOST',
-      userId: owner.id,
-      displayName: 'Delphine',
-    },
-    create: {
-      id: `${conversation.id}:host:${owner.id}`,
-      conversationId: conversation.id,
-      role: 'HOST',
-      userId: owner.id,
-      displayName: 'Delphine',
-    },
-  })
-
-  await prisma.message.upsert({
-    where: { publicId: 'seed-message-53028879-001' },
-    update: {
-      conversationId: conversation.id,
-      reservationId: reservation.id,
-      authorRole: MessageAuthorRole.HOST,
-      userId: owner.id,
-      body: 'Bonjour Clara, merci pour votre réservation.',
-      state: MessageState.READ,
-      sentAt: new Date('2026-03-06T09:30:00.000Z'),
-    },
-    create: {
-      publicId: 'seed-message-53028879-001',
-      conversationId: conversation.id,
-      reservationId: reservation.id,
-      authorRole: MessageAuthorRole.HOST,
-      userId: owner.id,
-      body: 'Bonjour Clara, merci pour votre réservation.',
-      state: MessageState.READ,
-      sentAt: new Date('2026-03-06T09:30:00.000Z'),
-    },
-  })
+  });
 }
 
 main()
   .then(async () => {
-    await prisma.$disconnect()
+    await prisma.$disconnect();
   })
   .catch(async (error) => {
-    console.error(error)
-    await prisma.$disconnect()
-    process.exit(1)
-  })
+    console.error(error);
+    await prisma.$disconnect();
+    process.exit(1);
+  });

@@ -7,405 +7,212 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum UserRole {
-  HOST
-  ADMIN
-  GUEST
-}
-
-enum ListingStatus {
-  DRAFT
-  ACTIVE
-  PAUSED
-  ARCHIVED
-  DELETED
-  BLOCKED
-}
-
-enum ReservationStatus {
-  PENDING
-  CONFIRMED
-  CANCELLED
-  COMPLETED
-}
-
-enum ReservationSource {
-  DIRECT
-  OTA
-  IMPORTED
-  MANUAL
-}
-
 enum MessageAuthorRole {
-  HOST
-  GUEST
-  SYSTEM
+  host
+  guest
+  system
 }
 
 enum MessageState {
-  SENT
-  DELIVERED
-  READ
-}
-
-enum ConversationParticipantRole {
-  HOST
-  GUEST
-}
-
-enum PaymentChoice {
-  FULL
-  SPLIT
-  CASH
-}
-
-enum DeferredMode {
-  NONE
-  ONLINE
-  CASH
-}
-
-enum CalendarProvider {
-  ICAL
-  AIRBNB
-  BOOKING
-  VRBO
-  MANUAL
-}
-
-enum CalendarDirection {
-  IMPORT
-  EXPORT
-  BIDIRECTIONAL
-}
-
-enum CalendarEventSource {
-  INTERNAL
-  IMPORTED
-  OTA
-  BLOCKED
-}
-
-enum MediaType {
-  IMAGE
-  VIDEO
-  DOCUMENT
+  sent
+  delivered
+  read
 }
 
 model User {
-  id             String   @id @default(cuid())
-  clerkUserId    String?  @unique
-  email          String?  @unique
-  firstName      String?
-  lastName       String?
-  avatarUrl      String?
-  role           UserRole @default(HOST)
-  billingProfile Json?    @default("{}")
-  hostingProfile Json?    @default("{}")
-  settings       Json?    @default("{}")
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id                     String         @id @default(cuid())
+  clerkUserId            String?        @unique
+  externalUserId         String?        @unique
+  email                  String?
+  firstName              String?
+  lastName               String?
+  displayName            String?
+  avatarUrl              String?
+  hostProfile            Json?
+  stripeConnectAccountId String?
+  stripeConnectProfile   Json?
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
 
-  ownedListings       Listing[]       @relation("ListingOwner")
-  guestReservations   Reservation[]   @relation("ReservationGuestUser")
-  createdMessages     Message[]       @relation("MessageAuthorUser")
-  createdPayments     PaymentIntent[] @relation("PaymentCreatedBy")
-  conversationMembers ConversationParticipant[]
-}
-
-model GuestIdentity {
-  id          String   @id @default(cuid())
-  publicId    String   @unique
-  displayName String?
-  email       String?
-  phone       String?
-  metadata    Json?    @default("{}")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  reservations         Reservation[]
-  authoredMessages     Message[]                 @relation("MessageAuthorGuestIdentity")
-  conversationMembers  ConversationParticipant[]
-
-  @@index([email])
+  listings               Listing[]      @relation("OwnerListings")
+  hostConversations      Conversation[] @relation("HostConversations")
+  guestConversations     Conversation[] @relation("GuestConversations")
+  messagesAuthored       Message[]      @relation("AuthorMessages")
+  payments               Payment[]      @relation("UserPayments")
 }
 
 model Listing {
-  id                String       @id @default(cuid())
-  publicId          String       @unique
+  id                String         @id
   ownerId           String?
-  status            ListingStatus @default(DRAFT)
-  hasPendingChanges Boolean      @default(true)
-  publishedAt       DateTime?
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
+  owner             User?          @relation("OwnerListings", fields: [ownerId], references: [id], onDelete: SetNull)
+  status            String         @default("draft")
+  hasPendingChanges Boolean        @default(false)
+  core              Json
+  bookings          Json
+  medias            Json
+  arrival           Json
+  notes             Json
+  comments          Json
+  host              Json?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 
-  owner         User?      @relation("ListingOwner", fields: [ownerId], references: [id], onDelete: SetNull)
-  core          ListingCore?
-  bookings      ListingBookings?
-  medias        ListingMedias?
-  arrival       ListingArrival?
-  notes         ListingNotes?
-  comments      ListingComments?
-  host          ListingHost?
-
-  reservations  Reservation[]
-  mediaAssets   MediaAsset[]
-  conversations Conversation[]
-  paymentIntents PaymentIntent[]
-  calendarSyncs CalendarSync[]
-  calendarEvents CalendarEvent[]
+  reservations      Reservation[]
+  conversations     Conversation[]
+  messages          Message[]
+  payments          Payment[]
+  calendarSyncs     CalendarSync[]
+  calendarEvents    CalendarEvent[]
 
   @@index([ownerId])
   @@index([status])
 }
 
-model ListingCore {
-  id        String   @id @default(cuid())
-  listingId String   @unique
-  data      Json     @default("{}")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-}
-
-model ListingBookings {
-  id        String   @id @default(cuid())
-  listingId String   @unique
-  data      Json     @default("{}")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-}
-
-model ListingMedias {
-  id        String   @id @default(cuid())
-  listingId String   @unique
-  data      Json     @default("{}")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-}
-
-model ListingArrival {
-  id        String   @id @default(cuid())
-  listingId String   @unique
-  data      Json     @default("{}")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-}
-
-model ListingNotes {
-  id        String   @id @default(cuid())
-  listingId String   @unique
-  data      Json     @default("{}")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-}
-
-model ListingComments {
-  id        String   @id @default(cuid())
-  listingId String   @unique
-  data      Json     @default("{}")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-}
-
-model ListingHost {
-  id        String   @id @default(cuid())
-  listingId String   @unique
-  data      Json     @default("{}")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-}
-
 model Reservation {
-  id              String            @id @default(cuid())
-  publicId        String            @unique
-  listingId       String
-  guestUserId     String?
-  guestIdentityId String?
-  source          ReservationSource @default(DIRECT)
-  status          ReservationStatus @default(PENDING)
-  startDate       DateTime
-  endDate         DateTime
-  nights          Int
-  guestName       String
-  guestAvatarUrl  String?
-  guestMessage    String?
-  internalNote    String?
-  guests          Json              @default("{}")
-  payment         Json              @default("{}")
-  contact         Json              @default("{}")
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  id          String        @id
+  listingId   String
+  listing     Listing       @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  guestName   String
+  guestAvatar String?
+  startDate   DateTime
+  endDate     DateTime
+  nights      Int
+  message     String?
+  internalNote String?
+  guests      Json
+  payment     Json
+  contact     Json
+  messaging   Json
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 
-  listing        Listing       @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  guestUser      User?         @relation("ReservationGuestUser", fields: [guestUserId], references: [id], onDelete: SetNull)
-  guestIdentity  GuestIdentity? @relation(fields: [guestIdentityId], references: [id], onDelete: SetNull)
-  conversation   Conversation?
-  messages       Message[]
-  paymentIntents PaymentIntent[]
+  conversation Conversation?
+  messages     Message[]
+  payments     Payment[]
   calendarEvents CalendarEvent[]
 
   @@index([listingId])
-  @@index([startDate, endDate])
-  @@index([guestIdentityId])
+  @@index([startDate])
+  @@index([endDate])
 }
 
 model Conversation {
-  id            String   @id @default(cuid())
-  publicId      String   @unique
-  listingId     String
-  reservationId String?  @unique
-  subject       String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String       @id @default(cuid())
+  listingId    String
+  listing      Listing      @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  reservationId String?     @unique
+  reservation  Reservation? @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+  hostUserId   String?
+  hostUser     User?        @relation("HostConversations", fields: [hostUserId], references: [id], onDelete: SetNull)
+  guestUserId  String?
+  guestUser    User?        @relation("GuestConversations", fields: [guestUserId], references: [id], onDelete: SetNull)
+  guestTempId  String?
+  subject      String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
-  listing     Listing      @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  reservation Reservation? @relation(fields: [reservationId], references: [id], onDelete: SetNull)
-  participants ConversationParticipant[]
   messages     Message[]
 
   @@index([listingId])
-}
-
-model ConversationParticipant {
-  id              String                      @id @default(cuid())
-  conversationId  String
-  role            ConversationParticipantRole
-  userId          String?
-  guestIdentityId String?
-  displayName     String?
-  createdAt       DateTime                    @default(now())
-  updatedAt       DateTime                    @updatedAt
-
-  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  user         User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
-  guestIdentity GuestIdentity? @relation(fields: [guestIdentityId], references: [id], onDelete: SetNull)
-
-  @@index([conversationId])
-  @@index([userId])
-  @@index([guestIdentityId])
+  @@index([hostUserId])
+  @@index([guestTempId])
 }
 
 model Message {
-  id              String          @id @default(cuid())
-  publicId        String          @unique
-  conversationId  String
-  reservationId   String?
-  authorRole      MessageAuthorRole
-  userId          String?
-  guestIdentityId String?
-  body            String
-  state           MessageState    @default(SENT)
-  sentAt          DateTime        @default(now())
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  id            String            @id
+  conversationId String
+  conversation  Conversation      @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  listingId     String
+  listing       Listing           @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  reservationId String?
+  reservation   Reservation?      @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+  authorRole    MessageAuthorRole
+  authorUserId  String?
+  authorUser    User?             @relation("AuthorMessages", fields: [authorUserId], references: [id], onDelete: SetNull)
+  guestTempId   String?
+  body          String
+  state         MessageState      @default(sent)
+  sentAt        DateTime
+  metadata      Json?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
 
-  conversation  Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  reservation   Reservation?  @relation(fields: [reservationId], references: [id], onDelete: SetNull)
-  authorUser    User?         @relation("MessageAuthorUser", fields: [userId], references: [id], onDelete: SetNull)
-  authorGuestIdentity GuestIdentity? @relation("MessageAuthorGuestIdentity", fields: [guestIdentityId], references: [id], onDelete: SetNull)
-
-  @@index([conversationId, sentAt])
+  @@index([conversationId])
+  @@index([listingId])
   @@index([reservationId])
+  @@index([sentAt])
 }
 
-model PaymentIntent {
-  id                   String      @id @default(cuid())
-  stripePaymentIntentId String?    @unique
-  listingId            String
-  reservationId        String?
-  createdByUserId      String?
-  connectedAccountId   String
-  currency             String      @default("eur")
-  paymentChoice        PaymentChoice @default(FULL)
-  amountTotal          Int
-  amountChargeNow      Int
-  amountDeferred       Int
-  deferredMode         DeferredMode @default(NONE)
-  deferredDueDate      DateTime?
-  status               String      @default("requires_payment_method")
-  clientSecret         String?
-  metadata             Json?       @default("{}")
-  createdAt            DateTime    @default(now())
-  updatedAt            DateTime    @updatedAt
-
-  listing      Listing      @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  reservation  Reservation? @relation(fields: [reservationId], references: [id], onDelete: SetNull)
-  createdBy    User?        @relation("PaymentCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+model Payment {
+  id                     String       @id @default(cuid())
+  listingId              String
+  listing                Listing      @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  reservationId          String?
+  reservation            Reservation? @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+  userId                 String?
+  user                   User?        @relation("UserPayments", fields: [userId], references: [id], onDelete: SetNull)
+  stripePaymentIntentId  String?      @unique
+  stripeConnectedAccountId String?
+  currency               String       @default("eur")
+  amountMinor            Int
+  status                 String
+  paymentChoice          String?
+  chargeNowAmountMinor   Int?
+  deferredAmountMinor    Int?
+  deferredMode           String?
+  deferredDueDate        DateTime?
+  metadata               Json?
+  rawRequest             Json?
+  rawResponse            Json?
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
 
   @@index([listingId])
-  @@index([status])
+  @@index([reservationId])
+  @@index([userId])
 }
 
 model CalendarSync {
-  id           String            @id @default(cuid())
-  listingId    String
-  provider     CalendarProvider  @default(ICAL)
-  direction    CalendarDirection @default(BIDIRECTIONAL)
-  externalUrl  String
-  isActive     Boolean           @default(true)
+  id          String        @id @default(cuid())
+  listingId   String
+  listing     Listing       @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  name        String?
+  sourceUrl   String?
+  rawIcs      String?
+  timezone    String?
+  lastStatus  String?
+  lastError   String?
   lastSyncedAt DateTime?
-  lastStatus   String?
-  metadata     Json?             @default("{}")
-  createdAt    DateTime          @default(now())
-  updatedAt    DateTime          @updatedAt
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 
-  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  events  CalendarEvent[]
+  events      CalendarEvent[]
 
   @@index([listingId])
 }
 
 model CalendarEvent {
-  id               String              @id @default(cuid())
-  listingId        String
-  reservationId    String?
-  calendarSyncId   String?
-  externalEventUid String?
-  source           CalendarEventSource @default(INTERNAL)
-  summary          String?
-  description      String?
-  startDate        DateTime
-  endDate          DateTime
-  payload          Json?               @default("{}")
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
-
-  listing      Listing      @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  reservation  Reservation? @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+  id           String        @id @default(cuid())
+  listingId    String
+  listing      Listing       @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  calendarSyncId String?
   calendarSync CalendarSync? @relation(fields: [calendarSyncId], references: [id], onDelete: SetNull)
+  reservationId String?
+  reservation  Reservation?  @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+  externalUid  String?
+  source       String        @default("internal")
+  startDate    DateTime
+  endDate      DateTime
+  summary      String?
+  description  String?
+  status       String        @default("confirmed")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 
-  @@index([listingId, startDate, endDate])
+  @@index([listingId])
   @@index([calendarSyncId])
-  @@unique([calendarSyncId, externalEventUid])
-}
-
-model MediaAsset {
-  id        String    @id @default(cuid())
-  listingId String
-  type      MediaType @default(IMAGE)
-  url       String
-  alt       String?
-  position  Int?
-  metadata  Json?     @default("{}")
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-
-  @@index([listingId, type])
+  @@index([reservationId])
+  @@index([startDate])
+  @@index([endDate])
+  @@unique([listingId, externalUid, source])
 }
