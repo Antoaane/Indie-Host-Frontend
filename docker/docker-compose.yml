@@ -1,0 +1,51 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: indiehost-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: indiehost
+      POSTGRES_PASSWORD: indiehost_dev_password
+      POSTGRES_DB: indiehost_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend-api:
+    build:
+      context: ../backend/api
+      dockerfile: Dockerfile
+    container_name: indiehost-api
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      NODE_ENV: development
+      PORT: 4000
+      API_PREFIX: v1
+      CORS_ORIGINS: http://localhost:5179,http://localhost:3000
+      DATABASE_URL: postgresql://indiehost:indiehost_dev_password@postgres:5432/indiehost_db?schema=public
+      CLERK_JWKS_URL: ${CLERK_JWKS_URL:-}
+      CLERK_ISSUER: ${CLERK_ISSUER:-}
+      CLERK_AUDIENCE: ${CLERK_AUDIENCE:-}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_CONNECT_PLATFORM_FEE_BPS: ${STRIPE_CONNECT_PLATFORM_FEE_BPS:-0}
+      STRIPE_CONNECT_DEFAULT_APPLICATION_FEE_BPS: ${STRIPE_CONNECT_DEFAULT_APPLICATION_FEE_BPS:-0}
+      ICAL_EXPORT_DEFAULT_PRODID: IndieHost//Calendar//FR
+    ports:
+      - "4000:4000"
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: indiehost-pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@indiehost.fr
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+
+volumes:
+  postgres_data:
