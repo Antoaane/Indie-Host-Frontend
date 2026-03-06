@@ -1,7 +1,7 @@
 <!-- File: src/views/CreateListing/components/panels/CreateImportStepPanel.vue -->
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { Download, Loader2 } from 'lucide-vue-next'
 
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
@@ -13,6 +13,7 @@ import {
 import type { AirbnbScrapedData } from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/ImportPanel'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 import CreateWizardStepShell from '@/views/CreateListing/components/panels/CreateWizardStepShell.vue'
+import { LANDING_IMPORT_URL_KEY } from '@/views/Landing/components/IntroSection/landingImportUrlKey'
 
 const emit = defineEmits<{
   (e: 'patch', patch: DraftPatch): void
@@ -20,6 +21,18 @@ const emit = defineEmits<{
 }>()
 
 const url = ref('')
+
+onMounted(() => {
+  try {
+    const stored = sessionStorage.getItem(LANDING_IMPORT_URL_KEY)
+    if (stored?.trim()) {
+      url.value = stored.trim()
+      sessionStorage.removeItem(LANDING_IMPORT_URL_KEY)
+    }
+  } catch {
+    // ignore
+  }
+})
 const isImporting = ref(false)
 const importError = ref<string | null>(null)
 const panelContent = editorStatic.panels.listing.import

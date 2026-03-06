@@ -1,0 +1,154 @@
+/* File: src/views/Landing/components/IntroSection/intro-section.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/components/buttons' as buttons;
+@use '@/styles/components/inputs' as inputs;
+
+#intro-section {
+  position: relative;
+  min-height: 0;
+
+  @include layout-gap(padding, top, 4);
+  @include layout-gap(padding, bottom, 4);
+
+  @include min-width(lg) {
+    @include layout-gap(padding, top, 6);
+    @include layout-gap(padding, bottom, 6);
+  }
+
+  .gradiant-separator {
+    width: 125%;
+    height: auto;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    z-index: 0;
+    transform-origin: top center;
+    transform: translate(-50%, var(--layout-gap-sm)) scaleY(1.2) rotate(-2deg);
+
+    @include min-width(lg) {
+      transform: translate(-50%, calc(var(--layout-gap) * 3)) scaleY(0.7) rotate(-3deg);
+    }
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    @include layout-gap(padding, inline, 2);
+  }
+
+  .block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: var(--layout-gap-md);
+    max-width: 36rem;
+    margin-inline: auto;
+
+    padding: var(--layout-gap-2xl) var(--layout-gap-lg);
+    border-radius: borders.$rounded-xl;
+    background: $translucent-surface-1;
+    backdrop-filter: blur(8px);
+
+    @include min-width(md) {
+      padding: var(--layout-gap-3xl) var(--layout-gap-2xl);
+      border-radius: borders.$rounded-xxl;
+    }
+
+    @include min-width(lg) {
+      max-width: 42rem;
+      padding: var(--layout-gap-4xl) var(--layout-gap-3xl);
+    }
+
+    h2 {
+      margin: 0;
+      @include lp-h2-title($accent, true, true, false);
+
+      @include min-width(lg) {
+        @include lp-h2-title($accent, true, true, false);
+      }
+    }
+
+    p {
+      margin: 0;
+      @include base-text($accent, $bigger: true);
+      line-height: 1.5;
+    }
+
+    .input-row {
+      width: 100%;
+      max-width: 28rem;
+
+      .url-input {
+        width: 100%;
+        @include inputs.field($theme: accent);
+      }
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: var(--layout-gap-md);
+      margin-top: var(--layout-gap-sm);
+    }
+
+    .cta {
+      width: max-content;
+      @include buttons.primary(true, light);
+
+      &.cta-preview {
+        @include buttons.low-btn($icon-only: false);
+      }
+    }
+
+    .preview-error {
+      margin: var(--layout-gap-sm) 0 0;
+      @include little-text($thin: false);
+      color: rgba($bad, 0.95);
+    }
+  }
+
+  .embed-preview {
+    width: 100%;
+    max-width: 56rem;
+    margin-top: var(--layout-gap-3xl);
+    min-height: 480px;
+    border-radius: borders.$rounded-xxl;
+    overflow: hidden;
+    background: $translucent-surface-1;
+    box-shadow: 0 8px 32px rgba($secondary, 0.2);
+
+    .embed-skeleton {
+      display: grid;
+      place-items: center;
+      min-height: 480px;
+      padding: var(--layout-gap-2xl);
+      @include base-text($accent, $bigger: true);
+    }
+
+    .listing-view {
+      width: 100%;
+      height: 100%;
+      min-height: 480px;
+    }
+  }
+
+  .create-account-row {
+    width: 100%;
+    max-width: 56rem;
+    margin-top: var(--layout-gap-2xl);
+    display: flex;
+    justify-content: center;
+
+    .cta-create-account {
+      @include buttons.primary(true, light);
+    }
+  }
+}

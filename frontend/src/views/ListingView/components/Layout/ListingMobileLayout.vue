@@ -32,11 +32,13 @@ const props = withDefaults(
     canEditListing: boolean
     ownershipLoading: boolean
     editListingRoute: RouteLocationRaw
+    previewOnly?: boolean
   }>(),
   {
     bookingRange: null,
     checkoutSubmitting: false,
     checkoutError: null,
+    previewOnly: false,
   },
 )
 
@@ -67,7 +69,7 @@ function onConfirmCheckout(payload: CheckoutConfirmationPayload) {
 
 <template>
   <RouterLink
-    v-if="props.canEditListing && !props.ownershipLoading"
+    v-if="!props.previewOnly && props.canEditListing && !props.ownershipLoading"
     class="owner-edit-overlay"
     :to="props.editListingRoute"
     aria-label="Éditer cette annonce" title="Éditer cette annonce"
@@ -149,7 +151,7 @@ function onConfirmCheckout(payload: CheckoutConfirmationPayload) {
   </div>
 
   <div
-    v-if="!props.isCheckout"
+    v-if="!props.previewOnly && !props.isCheckout"
     class="footer"
   >
     <span class="shape-container is-right">

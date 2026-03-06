@@ -30,6 +30,15 @@ export interface BenefitsContent {
   title: string
 }
 
+export interface IntroSectionContent {
+  title: string
+  body: string
+  inputPlaceholder: string
+  previewCtaLabel: string
+  createAccountCtaLabel: string
+  primaryCta: CtaLink
+}
+
 export interface UsageStep {
   id: string
   title: string
@@ -170,6 +179,7 @@ export interface FaqContent {
 
 export interface LandingContent {
   hero: HeroContent
+  introSection: IntroSectionContent
   benefits: BenefitsContent
   usage: { steps: UsageStep[] }
   features: FeaturesContent

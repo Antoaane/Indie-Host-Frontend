@@ -15,6 +15,7 @@ import landingLocale from '@/locales/landing/fr.json'
 import type { LandingContent } from '@/views/Landing/types/content'
 // COMPONENTS
 import HeroSection from '@/views/Landing/components/HeroSection/HeroSection.vue'
+import IntroSection from '@/views/Landing/components/IntroSection/IntroSection.vue'
 import BenefitsSection from '@/views/Landing/components/BenefitsSection/BenefitsSection.vue'
 import HowSection from '@/views/Landing/components/HowSection/HowSection.vue'
 // import HabitsSection from '@/views/Landing/components/HabitsSection/HabitsSection.vue'
@@ -100,10 +101,13 @@ onBeforeUnmount(() => {
   <!-- <VueLenis root> -->
   <main id="landing-page">
     <HeroSection :content="content.hero" />
+    <IntroSection :content="content.introSection" />
+    <!-- Section « Tout est pour vous » désactivée
     <BenefitsSection
       v-if="vp.lg.value"
       :content="content.benefits"
     />
+    -->
     <FeaturesSection :items="content.features.items" />
     <HowSection :content="content.how" />
     <!-- <HabitsSection

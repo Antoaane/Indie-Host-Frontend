@@ -15,6 +15,18 @@
       }
     ]
   },
+  "introSection": {
+    "title": "Importez votre annonce en <strong>1 clic</strong> depuis Airbnb ou Booking",
+    "body": "Collez le lien de votre annonce Airbnb (ou Booking bientôt) : nous récupérons pour vous photos, description, équipements et avis. Ensuite, personnalisez et publiez sur votre page IndieHost sans commission.",
+    "inputPlaceholder": "https://www.airbnb.fr/rooms/… ou lien Booking",
+    "previewCtaLabel": "Prévisualiser",
+    "createAccountCtaLabel": "Créer un compte",
+    "primaryCta": {
+      "label": "Essayer l'import gratuit",
+      "href": "#join-section",
+      "target": "_self"
+    }
+  },
   "benefits": {
     "title": "<strong>Tout</strong> est pour <strong>vous</strong>"
   },
