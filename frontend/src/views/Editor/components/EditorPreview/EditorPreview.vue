@@ -154,7 +154,7 @@ onBeforeUnmount(() => {
   > .content {
     height: 100%;
     min-height: 0;
-    overflow: hidden;
+    // overflow: hidden;
     position: relative;
   }
 

@@ -1,0 +1,218 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum MessageAuthorRole {
+  host
+  guest
+  system
+}
+
+enum MessageState {
+  sent
+  delivered
+  read
+}
+
+model User {
+  id                     String         @id @default(cuid())
+  clerkUserId            String?        @unique
+  externalUserId         String?        @unique
+  email                  String?
+  firstName              String?
+  lastName               String?
+  displayName            String?
+  avatarUrl              String?
+  hostProfile            Json?
+  stripeConnectAccountId String?
+  stripeConnectProfile   Json?
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+
+  listings               Listing[]      @relation("OwnerListings")
+  hostConversations      Conversation[] @relation("HostConversations")
+  guestConversations     Conversation[] @relation("GuestConversations")
+  messagesAuthored       Message[]      @relation("AuthorMessages")
+  payments               Payment[]      @relation("UserPayments")
+}
+
+model Listing {
+  id                String         @id
+  ownerId           String?
+  owner             User?          @relation("OwnerListings", fields: [ownerId], references: [id], onDelete: SetNull)
+  status            String         @default("draft")
+  hasPendingChanges Boolean        @default(false)
+  core              Json
+  bookings          Json
+  medias            Json
+  arrival           Json
+  notes             Json
+  comments          Json
+  host              Json?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  reservations      Reservation[]
+  conversations     Conversation[]
+  messages          Message[]
+  payments          Payment[]
+  calendarSyncs     CalendarSync[]
+  calendarEvents    CalendarEvent[]
+
+  @@index([ownerId])
+  @@index([status])
+}
+
+model Reservation {
+  id          String        @id
+  listingId   String
+  listing     Listing       @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  guestName   String
+  guestAvatar String?
+  startDate   DateTime
+  endDate     DateTime
+  nights      Int
+  message     String?
+  internalNote String?
+  guests      Json
+  payment     Json
+  contact     Json
+  messaging   Json
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  conversation Conversation?
+  messages     Message[]
+  payments     Payment[]
+  calendarEvents CalendarEvent[]
+
+  @@index([listingId])
+  @@index([startDate])
+  @@index([endDate])
+}
+
+model Conversation {
+  id           String       @id @default(cuid())
+  listingId    String
+  listing      Listing      @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  reservationId String?     @unique
+  reservation  Reservation? @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+  hostUserId   String?
+  hostUser     User?        @relation("HostConversations", fields: [hostUserId], references: [id], onDelete: SetNull)
+  guestUserId  String?
+  guestUser    User?        @relation("GuestConversations", fields: [guestUserId], references: [id], onDelete: SetNull)
+  guestTempId  String?
+  subject      String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  messages     Message[]
+
+  @@index([listingId])
+  @@index([hostUserId])
+  @@index([guestTempId])
+}
+
+model Message {
+  id            String            @id
+  conversationId String
+  conversation  Conversation      @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  listingId     String
+  listing       Listing           @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  reservationId String?
+  reservation   Reservation?      @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+  authorRole    MessageAuthorRole
+  authorUserId  String?
+  authorUser    User?             @relation("AuthorMessages", fields: [authorUserId], references: [id], onDelete: SetNull)
+  guestTempId   String?
+  body          String
+  state         MessageState      @default(sent)
+  sentAt        DateTime
+  metadata      Json?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([conversationId])
+  @@index([listingId])
+  @@index([reservationId])
+  @@index([sentAt])
+}
+
+model Payment {
+  id                     String       @id @default(cuid())
+  listingId              String
+  listing                Listing      @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  reservationId          String?
+  reservation            Reservation? @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+  userId                 String?
+  user                   User?        @relation("UserPayments", fields: [userId], references: [id], onDelete: SetNull)
+  stripePaymentIntentId  String?      @unique
+  stripeConnectedAccountId String?
+  currency               String       @default("eur")
+  amountMinor            Int
+  status                 String
+  paymentChoice          String?
+  chargeNowAmountMinor   Int?
+  deferredAmountMinor    Int?
+  deferredMode           String?
+  deferredDueDate        DateTime?
+  metadata               Json?
+  rawRequest             Json?
+  rawResponse            Json?
+  createdAt              DateTime     @default(now())
+  updatedAt              DateTime     @updatedAt
+
+  @@index([listingId])
+  @@index([reservationId])
+  @@index([userId])
+}
+
+model CalendarSync {
+  id          String        @id @default(cuid())
+  listingId   String
+  listing     Listing       @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  name        String?
+  sourceUrl   String?
+  rawIcs      String?
+  timezone    String?
+  lastStatus  String?
+  lastError   String?
+  lastSyncedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  events      CalendarEvent[]
+
+  @@index([listingId])
+}
+
+model CalendarEvent {
+  id           String        @id @default(cuid())
+  listingId    String
+  listing      Listing       @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  calendarSyncId String?
+  calendarSync CalendarSync? @relation(fields: [calendarSyncId], references: [id], onDelete: SetNull)
+  reservationId String?
+  reservation  Reservation?  @relation(fields: [reservationId], references: [id], onDelete: SetNull)
+  externalUid  String?
+  source       String        @default("internal")
+  startDate    DateTime
+  endDate      DateTime
+  summary      String?
+  description  String?
+  status       String        @default("confirmed")
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([listingId])
+  @@index([calendarSyncId])
+  @@index([reservationId])
+  @@index([startDate])
+  @@index([endDate])
+  @@unique([listingId, externalUid, source])
+}

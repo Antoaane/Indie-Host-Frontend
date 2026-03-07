@@ -47,3 +47,11 @@ backend/cms/yarn-debug.log*
 backend/cms/yarn-error.log*
 backend/cms/.pnpm-debug.log*
 
+############################
+# Backend API NestJS
+############################
+
+backend/api/node_modules/
+backend/api/dist/
+backend/api/.env
+

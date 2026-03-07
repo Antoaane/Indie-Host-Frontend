@@ -1,0 +1,43 @@
+{
+  "name": "@indiehost/api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "IndieHost Fastify API",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/server.js",
+    "start:docker": "prisma generate && prisma db push && node dist/server.js",
+    "typecheck": "tsc --noEmit",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy",
+    "prisma:push": "prisma db push",
+    "prisma:studio": "prisma studio",
+    "prisma:seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@fastify/cors": "^10.0.2",
+    "@fastify/sensible": "^6.0.3",
+    "@prisma/client": "^6.6.0",
+    "date-fns": "^4.1.0",
+    "dotenv": "^16.5.0",
+    "fastify": "^5.2.2",
+    "fastify-plugin": "^5.0.1",
+    "ical-generator": "^9.0.0",
+    "jose": "^6.0.11",
+    "node-ical": "^0.20.1",
+    "stripe": "^17.7.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.13",
+    "prisma": "^6.6.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  }
+}
