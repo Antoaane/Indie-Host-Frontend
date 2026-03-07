@@ -239,24 +239,6 @@
     }
   }
 
-  .create-account-row {
-    width: 100%;
-    max-width: 64rem;
-    margin-top: var(--layout-gap-lg);
-    display: flex;
-    justify-content: center;
-    position: relative;
-    z-index: 2;
-
-    @include min-width(lg) {
-      max-width: 80rem;
-    }
-
-    .cta-create-account {
-      @include buttons.primary(true, light);
-    }
-  }
-
   .is-spinning {
     animation: intro-import-spin 0.9s linear infinite;
   }

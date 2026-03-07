@@ -17,7 +17,6 @@ import {
 } from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/ImportPanel'
 import type { AirbnbScrapedData, BookingScrapedData } from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/ImportPanel'
 import { buildPreviewBundle } from '@/views/Landing/components/IntroSection/buildPreviewBundle'
-import { LANDING_CREATE_DRAFT_KEY } from '@/views/CreateListing/wizard/createListingDraft'
 import { LANDING_IMPORT_URL_KEY } from '@/views/Landing/components/IntroSection/landingImportUrlKey'
 import { useLandingImport } from '@/views/Landing/composables/useLandingImport'
 
@@ -113,30 +112,6 @@ onMounted(() => {
 })
 
 
-/** Enregistre lâ€™URL et le brouillon (si prÃ©visualisÃ©) en cache puis envoie vers la section inscription. */
-function saveDraftAndNavigateToSignup(e?: Event) {
-  const trimmed = url.value.trim()
-  if (trimmed) {
-    try {
-      sessionStorage.setItem(LANDING_IMPORT_URL_KEY, trimmed)
-    } catch {
-      // ignore
-    }
-  }
-  const bundle = previewBundle.value
-  if (bundle) {
-    try {
-      sessionStorage.setItem(LANDING_CREATE_DRAFT_KEY, JSON.stringify(bundle))
-    } catch {
-      // ignore
-    }
-  }
-  const href = props.content.primaryCta.href
-  if (href.startsWith('#')) {
-    e?.preventDefault()
-    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' })
-  }
-}
 </script>
 
 <template>
@@ -235,17 +210,6 @@ function saveDraftAndNavigateToSignup(e?: Event) {
         </div>
       </div>
 
-      <div
-        class="create-account-row"
-      >
-        <button
-          type="button"
-          class="cta cta-create-account"
-          @click="saveDraftAndNavigateToSignup"
-        >
-          {{ content.createAccountCtaLabel }}
-        </button>
-      </div>
     </div>
   </section>
 </template>

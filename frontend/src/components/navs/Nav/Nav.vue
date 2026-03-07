@@ -96,7 +96,7 @@ const resolveRouteLink = (name?: string) => {
 }
 
 const landingNavItems: NavItem[] = [
-  { id: 'join-section', name: 'Essayer gratuitement', link: '#join-section', target: true, cta: true },
+  { id: 'intro-section', name: 'Essayer gratuitement', link: '#intro-section', target: true, cta: true },
   { id: 'features-section', name: 'Fonctionnalités', link: '#features-section', target: true },
   { id: 'how-section', name: 'Comment ça marche ?', link: '#how-section', target: true },
   { id: 'strengths-section', name: 'Nos valeurs', link: '#strengths-section', target: true },
