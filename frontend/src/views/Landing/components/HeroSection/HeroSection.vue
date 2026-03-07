@@ -127,6 +127,9 @@ onMounted(() => {
         <div>
           <img
             fetchpriority="high"
+            decoding="async"
+            width="960"
+            height="1080"
             :src="content.images[0]?.webp"
             :onerror="content.images[0]?.png ? `this.onerror=null; this.src='${content.images[0]?.png}';` : undefined"
             :alt="content.images[0]?.alt"

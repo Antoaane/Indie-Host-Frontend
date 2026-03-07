@@ -50,6 +50,12 @@
       flex-direction: column;
       justify-content: center;
 
+      /* Promouvoir h1/p/form sur leur propre couche avant l'animation GSAP.
+         Évite le composite stutter sur iOS Safari au démarrage de la page. */
+      h1, p, .hero-form {
+        will-change: transform, opacity;
+      }
+
       &>div {
         display: flex;
         flex-direction: column;
@@ -108,7 +114,7 @@
 
         .hero-search {
           width: 100%;
-          max-width: 28rem;
+          max-width: 42rem;
           display: flex;
           align-items: center;
           gap: 0.75rem;
@@ -198,6 +204,7 @@
         }
 
         .hero-image {
+          will-change: transform, opacity;
           width: auto;
           height: 60vh;
 
@@ -269,18 +276,25 @@
   }
 
   .shapes-bg {
-    min-width: 1280px;
-    width: 100%;
-    height: auto;
+    /* Masqué sur mobile : le filtre feTurbulence est calculé sur le CPU d'iOS
+       et bloque le rendu même à faible opacité. Invisible sur petit écran de toute façon. */
+    display: none;
 
-    position: absolute;
-    top: 0;
-    left: 50%;
-    z-index: 0;
+    @include min-width(lg) {
+      display: block;
+      min-width: 1280px;
+      width: 100%;
+      height: auto;
 
-    transform: translateX(-50%);
-    opacity: 0.075;
-    pointer-events: none;
+      position: absolute;
+      top: 0;
+      left: 50%;
+      z-index: 0;
+
+      transform: translateX(-50%);
+      opacity: 0.075;
+      pointer-events: none;
+    }
   }
 
   .wrapper {
