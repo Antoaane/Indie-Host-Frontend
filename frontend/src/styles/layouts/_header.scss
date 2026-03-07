@@ -15,6 +15,11 @@
   justify-content: flex-end;
 
   transform: translateX(-50%);
+  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.is-nav-hidden {
+    transform: translateX(-50%) translateY(-140%);
+  }
 
   // @include layout-gap(padding, all, 0.75);
 

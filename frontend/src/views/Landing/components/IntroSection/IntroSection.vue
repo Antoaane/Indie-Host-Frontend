@@ -1,61 +1,51 @@
 <!-- File: src/views/Landing/components/IntroSection/IntroSection.vue -->
 
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import gsap from 'gsap'
+import { Loader2, Search } from 'lucide-vue-next'
 import GradiantSeparator from '@/components/svgs/images/GradiantSeparator.vue'
 import ListingView from '@/views/ListingView/_ListingView.vue'
+import PreviewSkeleton from '@/views/Landing/components/IntroSection/PreviewSkeleton.vue'
 import type { IntroSectionContent } from '@/views/Landing/types/content'
 import type { RawListingBundle } from '@/domain/listings/types'
 import {
   detectListingSource,
   scrapeListing,
   transformAirbnbToRawListingBundle,
+  transformBookingToRawListingBundle,
 } from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/ImportPanel'
-import type { AirbnbScrapedData } from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/ImportPanel'
+import type { AirbnbScrapedData, BookingScrapedData } from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/ImportPanel'
 import { buildPreviewBundle } from '@/views/Landing/components/IntroSection/buildPreviewBundle'
 import { LANDING_CREATE_DRAFT_KEY } from '@/views/CreateListing/wizard/createListingDraft'
 import { LANDING_IMPORT_URL_KEY } from '@/views/Landing/components/IntroSection/landingImportUrlKey'
+import { useLandingImport } from '@/views/Landing/composables/useLandingImport'
 
 const props = defineProps<{
   content: IntroSectionContent
 }>()
 
+const { pendingUrl } = useLandingImport()
 const url = ref('')
 const previewBundle = ref<RawListingBundle | null>(null)
 const isPreviewLoading = ref(false)
 const previewError = ref<string | null>(null)
 const previewContainerRef = ref<HTMLElement | null>(null)
-const previewAspect = ref<{ width: number; height: number }>({ width: 800, height: 480 })
 
-function saveUrlAndNavigate(e?: Event) {
-  const trimmed = url.value.trim()
-  if (trimmed) {
-    try {
-      sessionStorage.setItem(LANDING_IMPORT_URL_KEY, trimmed)
-    } catch {
-      // ignore storage errors
-    }
-  }
-  const href = props.content.primaryCta.href
-  if (href.startsWith('#')) {
-    e?.preventDefault()
-    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' })
-  }
-}
+const displayedPreviewBundle = computed(() => previewBundle.value)
+
+const canGenerate = computed(() => url.value.trim().length > 0 && !isPreviewLoading.value)
 
 async function runPreview() {
   const trimmed = url.value.trim()
   if (!trimmed) {
-    previewError.value = 'Collez un lien d’annonce pour prévisualiser.'
+    previewError.value = "Collez un lien d'annonce pour prévisualiser."
     return
   }
   const source = detectListingSource(trimmed)
-  if (source === 'booking') {
-    previewError.value = "L'import Booking n'est pas encore disponible. Utilisez un lien Airbnb."
-    return
-  }
-  if (source !== 'airbnb') {
-    previewError.value = "Lien non reconnu. Utilisez un lien Airbnb du type https://www.airbnb.fr/rooms/…"
+  if (source !== 'airbnb' && source !== 'booking') {
+    previewError.value =
+      "Lien non reconnu. Utilisez un lien Airbnb (https://www.airbnb.fr/rooms/…) ou Booking (https://www.booking.com/hotel/…)"
     return
   }
   previewError.value = null
@@ -63,31 +53,67 @@ async function runPreview() {
   previewBundle.value = null
   try {
     const data = await scrapeListing({ url: trimmed })
-    const partial = transformAirbnbToRawListingBundle(data as AirbnbScrapedData)
+    const partial =
+      source === 'airbnb'
+        ? transformAirbnbToRawListingBundle(data as AirbnbScrapedData)
+        : transformBookingToRawListingBundle(data as BookingScrapedData)
     previewBundle.value = buildPreviewBundle(partial)
   } catch (err) {
-    previewError.value = err instanceof Error ? err.message : "Impossible de récupérer l'annonce."
+    const msg = err instanceof Error ? err.message : "Impossible de récupérer l'annonce."
+    // Message spécifique si Booking.com bloque le scraping
+    if (source === 'booking' && msg.toLowerCase().includes('bloque')) {
+      previewError.value = "Booking.com bloque l'import automatique. Essayez avec un lien Airbnb."
+    } else {
+      previewError.value = msg
+    }
   } finally {
     isPreviewLoading.value = false
   }
 }
 
-function updatePreviewAspect() {
-  nextTick(() => {
-    const el = previewContainerRef.value
-    if (el) {
-      previewAspect.value = { width: el.clientWidth || 800, height: Math.min(520, el.clientHeight || 480) }
-    }
-  })
-}
+watch(previewBundle, async (val) => {
+  if (!val) return
+  await nextTick()
 
-watch(previewBundle, (value) => {
-  if (value) {
-    updatePreviewAspect()
+  const container = previewContainerRef.value
+  if (!container) return
+
+  const core    = container.querySelector<HTMLElement>('#core, .core')
+  const gallery = container.querySelector<HTMLElement>('.listing-gallery')
+  const stay    = container.querySelector<HTMLElement>('.stay, .footer')
+
+  if (!core && !gallery && !stay) return
+
+  const els = [core, gallery, stay].filter(Boolean) as HTMLElement[]
+  gsap.set(els, { opacity: 0, y: 16 })
+
+  const tl = gsap.timeline({ defaults: { ease: 'power2.out' } })
+  // 1. Description / Core en premier
+  if (core)    tl.to(core,    { opacity: 1, y: 0, duration: 1.1 })
+  // 2. Photos
+  if (gallery) tl.to(gallery, { opacity: 1, y: 0, duration: 1.0 }, '-=0.5')
+  // 3. Booking + commentaires
+  if (stay)    tl.to(stay,    { opacity: 1, y: 0, duration: 1.0 }, '-=0.5')
+})
+
+watch(pendingUrl, (newUrl) => {
+  if (newUrl.trim()) {
+    url.value = newUrl.trim()
+    runPreview()
   }
 })
 
-/** Enregistre l’URL et le brouillon (si prévisualisé) en cache puis envoie vers la section inscription. */
+onMounted(() => {
+
+  const storedUrl = sessionStorage.getItem(LANDING_IMPORT_URL_KEY)
+  if (storedUrl?.trim()) {
+    url.value = storedUrl.trim()
+    runPreview()
+  }
+})
+
+
+/** Enregistre lâ€™URL et le brouillon (si prÃ©visualisÃ©) en cache puis envoie vers la section inscription. */
 function saveDraftAndNavigateToSignup(e?: Event) {
   const trimmed = url.value.trim()
   if (trimmed) {
@@ -115,11 +141,13 @@ function saveDraftAndNavigateToSignup(e?: Event) {
 
 <template>
   <section id="intro-section">
-    <GradiantSeparator
-      class="gradiant-separator"
-      title="Décoration du fond"
-      desc="Séparateur décoratif"
-    />
+    <div class="gradiant-separator-wrapper">
+      <GradiantSeparator
+        class="gradiant-separator"
+        title="DÃ©coration du fond"
+        desc="SÃ©parateur dÃ©coratif"
+      />
+    </div>
     <div class="wrapper">
       <div class="block">
         <h2
@@ -133,11 +161,12 @@ function saveDraftAndNavigateToSignup(e?: Event) {
           v-html="content.body"
         />
         <div
-          class="input-row"
+          class="import-row"
           data-sr
           data-sr-y="15"
         >
-          <div class="url-input">
+          <div class="import-input">
+            <Search class="icon" />
             <input
               v-model="url"
               type="url"
@@ -147,29 +176,19 @@ function saveDraftAndNavigateToSignup(e?: Event) {
               @keydown.enter.prevent="runPreview"
             />
           </div>
-        </div>
-        <div
-          class="actions"
-          data-sr
-          data-sr-y="15"
-        >
-          <button
-            type="button"
-            class="cta cta-preview"
-            :disabled="isPreviewLoading"
-            @click="runPreview"
-          >
-            <span v-if="isPreviewLoading">Chargement…</span>
-            <span v-else v-html="content.previewCtaLabel" />
-          </button>
-          <a
-            class="cta"
-            :href="content.primaryCta.href"
-            :target="content.primaryCta.target"
-            :rel="content.primaryCta.rel || (content.primaryCta.target === '_blank' ? 'noopener noreferrer' : undefined)"
-            v-html="content.primaryCta.label"
-            @click="saveUrlAndNavigate"
-          />
+          <div class="generate-btn">
+            <button
+              type="button"
+              :disabled="isPreviewLoading"
+              @click="runPreview"
+            >
+              <Loader2
+                v-if="isPreviewLoading"
+                class="icon is-spinning"
+              />
+              <span v-else>{{ content.previewCtaLabel }}</span>
+            </button>
+          </div>
         </div>
         <p
           v-if="previewError"
@@ -180,7 +199,6 @@ function saveDraftAndNavigateToSignup(e?: Event) {
       </div>
 
       <div
-        v-if="previewBundle || isPreviewLoading"
         ref="previewContainerRef"
         class="embed-preview"
       >
@@ -190,17 +208,34 @@ function saveDraftAndNavigateToSignup(e?: Event) {
         >
           Récupération de votre annonce…
         </div>
-        <ListingView
-          v-else-if="previewBundle"
-          :raw-listing="previewBundle"
-          :aspect="previewAspect"
-          :forced-viewport-mode="'xxl'"
-          :preview-only="true"
-        />
+        <div
+          v-else
+          class="embed-stage"
+        >
+          <div
+            class="embed-scale"
+          >
+            <Transition
+              name="preview-reveal"
+              mode="out-in"
+            >
+              <PreviewSkeleton
+                v-if="!displayedPreviewBundle"
+                key="skeleton"
+              />
+              <ListingView
+                v-else
+                key="listing"
+                :raw-listing="displayedPreviewBundle"
+                :forced-viewport-mode="'xxl'"
+                :preview-only="true"
+              />
+            </Transition>
+          </div>
+        </div>
       </div>
 
       <div
-        v-if="previewBundle || isPreviewLoading"
         class="create-account-row"
       >
         <button

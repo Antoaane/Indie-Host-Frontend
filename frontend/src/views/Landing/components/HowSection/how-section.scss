@@ -7,6 +7,7 @@
   // margin-bottom: -25vw;
 
   position: relative;
+  overflow-x: clip;
 
   justify-content: flex-start !important; //temp
 
@@ -38,12 +39,14 @@
     top: 0;
     left: 50%;
     z-index: -1;
+    pointer-events: none;
+    user-select: none;
 
     transform-origin: top center;
-    transform: translate(-50%, var(--layout-gap-sm)) scaleX(-1) scaleY(1.5) rotate(3.5deg);
+    transform: translate(-50%, calc(var(--layout-gap-sm) * -1.5)) scaleX(-1) scaleY(1.5) rotate(3.5deg);
 
     @include min-width(lg) {
-      transform: translate(-50%, calc(var(--layout-gap) * 5)) scaleX(-1) scaleY(0.6) rotate(10deg);
+      transform: translate(-50%, calc(var(--layout-gap) * -0.5)) scaleX(-1) scaleY(0.75) rotate(10deg);
     }
   }
 

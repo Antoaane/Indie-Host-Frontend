@@ -3,17 +3,32 @@
 <script setup lang="ts">
 // DEPS
 import gsap from 'gsap'
+import { Search } from 'lucide-vue-next'
 // ASSETS
 import ShapesBgCroped from '@/components/svgs/images/ShapesBgCroped.vue'
 // CONTENT
 import type { HeroContent } from '@/views/Landing/types/content'
-import { onMounted } from 'vue'
+import { useLandingImport } from '@/views/Landing/composables/useLandingImport'
+import { onMounted, ref } from 'vue'
 
 const props = defineProps<{
   content: HeroContent
 }>()
 
 const sectionId = 'hero-section'
+const url = ref('')
+const { submitUrl } = useLandingImport()
+
+function onSubmit(e?: Event) {
+  e?.preventDefault()
+  const trimmed = url.value.trim()
+  submitUrl(trimmed)
+  if (trimmed) {
+    document.querySelector('#intro-section')?.scrollIntoView({ behavior: 'smooth' })
+  } else {
+    document.querySelector(props.content.primaryCta.href)?.scrollIntoView({ behavior: 'smooth' })
+  }
+}
 
 onMounted(() => {
   gsap.from(`#${sectionId} h1`, {
@@ -75,14 +90,37 @@ onMounted(() => {
         <div>
           <h1 v-html="content.title" />
           <p v-html="content.description" />
-          <div class="cta">
-            <a
-              :href="content.primaryCta.href"
-              :target="content.primaryCta.target"
-              :rel="content.primaryCta.rel || (content.primaryCta.target === '_blank' ? 'noopener noreferrer' : undefined)"
-              v-html="content.primaryCta.label"
-            />
-          </div>
+          <form
+            class="hero-form"
+            @submit.prevent="onSubmit"
+          >
+            <div class="hero-search">
+              <Search class="icon" />
+              <input
+                v-model="url"
+                type="url"
+                :placeholder="content.inputPlaceholder"
+                autocomplete="url"
+              />
+              <div class="platform-logos">
+                <img
+                  src="/assets/media/icons/airbnb-logo.svg"
+                  alt="Airbnb"
+                  class="platform-logo"
+                />
+                <img
+                  src="/assets/media/icons/booking-logo.svg"
+                  alt="Booking.com"
+                  class="platform-logo"
+                />
+              </div>
+            </div>
+            <div class="cta">
+              <button type="submit">
+                <span v-html="content.primaryCta.label" />
+              </button>
+            </div>
+          </form>
         </div>
       </div>
       <div class="illustration">

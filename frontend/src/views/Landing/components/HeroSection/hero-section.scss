@@ -1,6 +1,7 @@
 /* File: src/views/Landing/components/HeroSection/hero-section.scss */
 
 @use "@/styles/variables/globals" as *;
+@use "@/styles/variables/colors" as colors;
 @use '@/styles/components/buttons' as buttons;
 
 #hero-section {
@@ -53,6 +54,7 @@
         display: flex;
         flex-direction: column;
         align-items: center;
+        gap: 24px;
 
         @include min-width(lg) {
           max-width: 40rem;
@@ -61,6 +63,7 @@
 
         h1 {
           width: 100%;
+          margin: 0;
           padding-inline: 0 !important;
 
           text-align: center;
@@ -73,7 +76,7 @@
 
         p {
           width: 100%;
-          margin-bottom: 2rem;
+          margin: 0;
 
           text-align: center;
           @include base-text($accent, $bigger: true);
@@ -91,11 +94,83 @@
           }
         }
 
-        .cta {
-          width: max-content;
-          margin-top: 2rem;
+        .hero-form {
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 24px;
 
-          @include buttons.primary(true, light);
+          @include min-width(lg) {
+            align-items: flex-start;
+          }
+        }
+
+        .hero-search {
+          width: 100%;
+          max-width: 28rem;
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.75rem 1rem;
+          margin: 0;
+
+          background: transparent;
+          border: 1px solid colors.$primary_gradiant_first;
+          border-radius: 13px;
+
+          .icon {
+            flex-shrink: 0;
+            width: 1.25rem;
+            height: 1.25rem;
+            color: colors.$primary_gradiant_first;
+            stroke: colors.$primary_gradiant_first;
+          }
+
+          input {
+            flex: 1;
+            min-width: 0;
+            background: transparent;
+            border: none;
+            outline: none;
+            font: inherit;
+            color: $accent;
+
+            &::placeholder {
+              color: rgba($accent, 0.6);
+            }
+          }
+
+          .platform-logos {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            flex-shrink: 0;
+
+            .platform-logo {
+              width: 1.25rem;
+              height: 1.25rem;
+              object-fit: contain;
+              opacity: 0.35;
+              filter: invert(1);
+            }
+          }
+        }
+
+        .hero-form .cta {
+          margin: 0;
+
+          @include buttons.primary(false, light);
+
+          &>* {
+            box-shadow: none !important;
+
+            & > span,
+            & > svg {
+              box-shadow: none !important;
+              text-shadow: none !important;
+            }
+          }
         }
       }
     }
@@ -205,5 +280,11 @@
 
     transform: translateX(-50%);
     opacity: 0.075;
+    pointer-events: none;
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
   }
 }

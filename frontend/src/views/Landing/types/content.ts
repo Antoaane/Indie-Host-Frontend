@@ -22,6 +22,7 @@ export interface CtaLink {
 export interface HeroContent {
   title: string
   description: string
+  inputPlaceholder: string
   primaryCta: CtaLink
   images: MediaAsset[]
 }

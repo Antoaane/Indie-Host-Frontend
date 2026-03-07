@@ -10,8 +10,8 @@
     },
     "access": {
       "address": "",
-      "checkIn": "Arrivée : entre 17:00 et 23:00",
-      "checkOut": "Départ avant 12:00",
+      "checkIn": "Arrivée à partir de 15:00",
+      "checkOut": "Départ avant 11:00",
       "parking": ""
     },
     "services": {

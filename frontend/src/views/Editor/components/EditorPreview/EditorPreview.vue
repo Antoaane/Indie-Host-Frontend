@@ -39,9 +39,10 @@ function updateScale() {
 }
 
 watch(
-  () => props.isShowed,
-  async (value) => {
-    if (!value) return
+  [() => props.isShowed, () => props.rawListing],
+  async ([isShowed, rawListing]) => {
+    // Important: wrapper n'existe que si rawListing est non-null.
+    if (!isShowed || !rawListing) return
     await nextTick()
     updateScale()
   },

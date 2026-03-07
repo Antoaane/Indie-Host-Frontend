@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { useAuth } from '@clerk/vue'
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { Component } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { CalendarClock, LayoutGrid, MessageSquareMore, PlusSquare } from 'lucide-vue-next'
@@ -24,6 +24,20 @@ const { getToken } = useAuth()
 const navRoot = ref<HTMLElement | null>(null)
 const reservationAnchor = ref<HTMLElement | null>(null)
 const reservationOpen = ref(false)
+const isNavHiddenByScroll = ref(false)
+
+let lastScrollY = 0
+const SCROLL_THRESHOLD = 80
+
+function onScroll() {
+  const currentY = window.scrollY
+  if (currentY > lastScrollY && currentY > SCROLL_THRESHOLD) {
+    isNavHiddenByScroll.value = true
+  } else if (currentY < lastScrollY) {
+    isNavHiddenByScroll.value = false
+  }
+  lastScrollY = currentY
+}
 
 const navVariant = computed<NavVariant>(() => {
   const variant = route.meta?.navVariant
@@ -207,9 +221,14 @@ watch(isNavVisible, (visible) => {
 
 onMounted(async () => {
   if (isNavVisible.value) animateNavIn()
+  window.addEventListener('scroll', onScroll, { passive: true })
 
   clerkToken.value = await getToken.value()
   console.log('✅[clerkToken] fetched new token :', clerkToken.value)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', onScroll)
 })
 </script>
 
@@ -218,7 +237,7 @@ onMounted(async () => {
     v-if="isNavVisible"
     ref="navRoot"
     class="layout-header"
-    :class="{ 'is-backoffice-dock': isBackOfficeDockMode }"
+    :class="{ 'is-backoffice-dock': isBackOfficeDockMode, 'is-nav-hidden': isNavHiddenByScroll }"
   >
     <BackOfficeDockNav
       v-if="isBackOfficeDockMode"

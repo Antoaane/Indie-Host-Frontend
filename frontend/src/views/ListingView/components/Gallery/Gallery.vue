@@ -15,9 +15,13 @@ import type { Item } from '@/views/ListingView/components/Gallery/utils/types'
 import type { MediasModel } from '@/views/ListingView/types/listing'
 import { useListingViewport } from '@/views/ListingView/composables/useListingViewport'
 
-const props = defineProps<{
-  medias: MediasModel
-}>()
+const props = withDefaults(
+  defineProps<{
+    medias: MediasModel
+    previewOnly?: boolean
+  }>(),
+  { previewOnly: false },
+)
 
 const { isLg } = useListingViewport()
 
@@ -86,10 +90,10 @@ const swiperParams = swiperBaseParams as unknown as Record<string, unknown>
       :items="mosaicImages"
       :lightbox-items="lightboxItems"
       :intervalMs="10000"
-      :minSlots="2"
-      :maxSlots="3"
-      :minTileW="45"
-      :minTileH="45"
+      :minSlots="props.previewOnly ? Math.min(6, mosaicImages.length || 2) : 2"
+      :maxSlots="props.previewOnly ? Math.max(6, mosaicImages.length || 3) : 3"
+      :minTileW="20"
+      :minTileH="20"
     />
   </section>
 

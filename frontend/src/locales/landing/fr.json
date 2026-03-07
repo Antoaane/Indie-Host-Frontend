@@ -2,6 +2,7 @@
   "hero": {
     "title": "Votre page de réservation avec <strong>0%</strong> de commissions",
     "description": "IndieHost permet aux hôtes de gérer leurs réservations en toute autonomie grâce à une page d’annonces personnalisable, des outils intégrés et une visibilité en ligne optimale, sans commission, pour augmenter leurs marges <strong>jusqu’à +20 %.</strong>",
+    "inputPlaceholder": "Collez le lien de votre logement",
     "primaryCta": {
       "label": "Essayez en premier !",
       "href": "#join-section",
@@ -16,10 +17,10 @@
     ]
   },
   "introSection": {
-    "title": "Importez votre annonce en <strong>1 clic</strong> depuis Airbnb ou Booking",
-    "body": "Collez le lien de votre annonce Airbnb (ou Booking bientôt) : nous récupérons pour vous photos, description, équipements et avis. Ensuite, personnalisez et publiez sur votre page IndieHost sans commission.",
-    "inputPlaceholder": "https://www.airbnb.fr/rooms/… ou lien Booking",
-    "previewCtaLabel": "Prévisualiser",
+    "title": "Créez votre site depuis une annonce existante",
+    "body": "Copiez le lien Airbnb ou Booking d’un de vos logements et nous créez votre page de réservation instantanément.",
+    "inputPlaceholder": "Collez le lien de votre logement",
+    "previewCtaLabel": "Générer mon site !",
     "createAccountCtaLabel": "Créer un compte",
     "primaryCta": {
       "label": "Essayer l'import gratuit",

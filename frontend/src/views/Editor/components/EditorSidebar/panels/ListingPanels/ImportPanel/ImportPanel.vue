@@ -11,8 +11,9 @@ import {
   detectListingSource,
   scrapeListing,
   transformAirbnbToRawListingBundle,
+  transformBookingToRawListingBundle,
 } from './index'
-import type { AirbnbScrapedData } from './index'
+import type { AirbnbScrapedData, BookingScrapedData } from './index'
 
 const url = ref('')
 const isImporting = ref(false)
@@ -32,7 +33,7 @@ const placeholder = computed(() =>
 const canImport = computed(
   () =>
     url.value.trim().length > 0 &&
-    detectedSource.value === 'airbnb' &&
+    (detectedSource.value === 'airbnb' || detectedSource.value === 'booking') &&
     !isImporting.value,
 )
 
@@ -47,20 +48,19 @@ async function handleImport() {
   }
 
   const source = detectListingSource(trimmedUrl)
-  if (source === 'booking') {
-    importError.value = panelContent.bookingNotSupported
-    return
-  }
-  if (source !== 'airbnb') {
+  if (source !== 'airbnb' && source !== 'booking') {
     importError.value =
-      "Lien non reconnu. Utilisez un lien Airbnb du type https://www.airbnb.fr/rooms/…"
+      "Lien non reconnu. Utilisez un lien Airbnb (https://www.airbnb.fr/rooms/…) ou Booking (https://www.booking.com/hotel/…)"
     return
   }
 
   isImporting.value = true
   try {
     const data = await scrapeListing({ url: trimmedUrl })
-    const transformed = transformAirbnbToRawListingBundle(data as AirbnbScrapedData)
+    const transformed =
+      source === 'airbnb'
+        ? transformAirbnbToRawListingBundle(data as AirbnbScrapedData)
+        : transformBookingToRawListingBundle(data as BookingScrapedData)
     const patch: DraftPatch = {
       ...(transformed.core ? { core: transformed.core } : {}),
       ...(transformed.medias ? { medias: transformed.medias } : {}),

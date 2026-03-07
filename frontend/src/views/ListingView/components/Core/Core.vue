@@ -26,9 +26,11 @@ const props = withDefaults(
   defineProps<{
     data: ListingParsed
     modelValue?: RangeISO | null
+    previewOnly?: boolean
   }>(),
   {
     modelValue: null,
+    previewOnly: false,
   },
 )
 
@@ -113,6 +115,7 @@ const descriptionStatic = {
       :staticContent="descriptionStatic"
     />
     <HostProfile
+      v-if="!props.previewOnly"
       :data="props.data.hostProfile"
       :staticContent="staticContent.listing.host"
     />

@@ -34,6 +34,21 @@ body {
   }
 }
 
+// Failsafe route-level: forcer le scroll quand une page l'exige.
+// (Utile si un lock global reste coincé suite à un overlay / lib externe.)
+html.force-scroll,
+body.force-scroll {
+  overflow: auto !important;
+}
+
+body.force-scroll {
+  position: static !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  width: auto !important;
+}
+
 div,
 section,
 article,

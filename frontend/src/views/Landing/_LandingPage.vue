@@ -10,6 +10,7 @@ import gsap from 'gsap'
 import { sr } from '@/utils/scrollReveal'
 import { vp } from '@/utils/viewport'
 import detectOS from '@/utils/detectOs'
+import { forceReleaseScrollLock } from '@/components/overlays/scrollLock'
 // CONTENT
 import landingLocale from '@/locales/landing/fr.json'
 import type { LandingContent } from '@/views/Landing/types/content'
@@ -52,6 +53,18 @@ detectOS().then((res) => {
 // let smoother: ReturnType<typeof ScrollSmoother.create>
 
 onMounted(() => {
+  document.documentElement.classList.add('force-scroll')
+  document.body.classList.add('force-scroll')
+
+  // Failsafe: si un overlay a laissé un scroll-lock actif, on le libère sur la landing.
+  // Sans ça, la page peut devenir impossible à scroller.
+  forceReleaseScrollLock()
+  // Certains scroll-locks (ou libs) réappliquent l'état sur le tick suivant.
+  // On retente sur quelques frames pour stabiliser.
+  requestAnimationFrame(() => forceReleaseScrollLock())
+  setTimeout(() => forceReleaseScrollLock(), 0)
+  setTimeout(() => forceReleaseScrollLock(), 250)
+
   // if (vp.lg.value) {
   //   smoother = ScrollSmoother.create({
   //     wrapper: '#app',
@@ -91,6 +104,8 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  document.documentElement.classList.remove('force-scroll')
+  document.body.classList.remove('force-scroll')
   // if (vp.lg.value) {
   //   smoother.kill()
   // }
