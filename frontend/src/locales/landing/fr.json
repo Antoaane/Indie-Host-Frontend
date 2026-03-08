@@ -1,7 +1,7 @@
 {
   "hero": {
-    "title": "Votre page de réservation avec <strong>0%</strong> de commissions",
-    "description": "IndieHost permet aux hôtes de gérer leurs réservations en toute autonomie grâce à une page d’annonces personnalisable, des outils intégrés et une visibilité en ligne optimale, sans commission, pour augmenter leurs marges <strong>jusqu’à +20 %.</strong>",
+    "title": "Créez votre site de réservation,<br>avec <strong>0%</strong> de commissions",
+    "description": "Créez votre site de location saisonnière avec nom de domaine inclus. Acceptez les réservations directes et encaissez vos paiements en ligne sans aucune commission.",
     "inputPlaceholder": "Collez le lien de votre logement",
     "primaryCta": {
       "label": "Essayez en premier !",

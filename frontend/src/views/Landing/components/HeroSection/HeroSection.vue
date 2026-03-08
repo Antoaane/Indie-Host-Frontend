@@ -9,7 +9,7 @@ import ShapesBgCroped from '@/components/svgs/images/ShapesBgCroped.vue'
 // CONTENT
 import type { HeroContent } from '@/views/Landing/types/content'
 import { useLandingImport } from '@/views/Landing/composables/useLandingImport'
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 const props = defineProps<{
   content: HeroContent
@@ -18,6 +18,15 @@ const props = defineProps<{
 const sectionId = 'hero-section'
 const url = ref('')
 const { submitUrl } = useLandingImport()
+
+// Compteur animé : part de 20% et descend à 0%
+const counterValue = ref(20)
+const animatedTitle = computed(() =>
+  props.content.title.replace(
+    '<strong>0%</strong>',
+    `<strong><span class="hero-counter">${counterValue.value}%</span></strong>`,
+  ),
+)
 
 function onSubmit(e?: Event) {
   e?.preventDefault()
@@ -37,6 +46,18 @@ onMounted(() => {
     delay: 0.25,
     duration: 1,
     ease: 'power2.inOut',
+  })
+
+  // Lancer le compteur après l'animation d'entrée du h1
+  const proxy = { value: 20 }
+  gsap.to(proxy, {
+    value: 0,
+    duration: 2.6,
+    delay: 1.4,
+    ease: 'power2.out',
+    onUpdate() {
+      counterValue.value = Math.round(proxy.value)
+    },
   })
 
   gsap.from(`#${sectionId} p`, {
@@ -88,7 +109,7 @@ onMounted(() => {
     <div class="wrapper">
       <div class="content">
         <div>
-          <h1 v-html="content.title" />
+          <h1 v-html="animatedTitle" />
           <p v-html="content.description" />
           <form
             class="hero-form"

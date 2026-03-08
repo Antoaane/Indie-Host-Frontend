@@ -32,7 +32,7 @@
       padding-top: 2rem;
 
       &:first-child {
-        padding-top: 0.5rem;
+        padding-top: 0;
       }
 
       @include min-width(lg) {
@@ -63,13 +63,13 @@
         gap: 24px;
 
         @include min-width(lg) {
-          max-width: 40rem;
+          max-width: 54rem;
           align-items: flex-start;
         }
 
         h1 {
           width: 100%;
-          margin: 0;
+          margin: 0 !important;
           padding-inline: 0 !important;
 
           text-align: center;
@@ -77,6 +77,15 @@
 
           @include min-width(lg) {
             text-align: left;
+          }
+
+          // Conteneur du compteur animé : largeur fixe = valeur la plus large ("20%")
+          // pour éviter que le titre reflue quand le chiffre change
+          .hero-counter {
+            display: inline-block;
+            min-width: 2.2ch;
+            font-variant-numeric: tabular-nums;
+            text-align: right;
           }
         }
 
@@ -121,9 +130,12 @@
           padding: 0.75rem 1rem;
           margin: 0;
 
-          background: transparent;
-          border: 1px solid colors.$primary_gradiant_first;
+          background: rgba(163, 153, 255, 0.07);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(163, 153, 255, 0.35);
           border-radius: 13px;
+          box-shadow: 0 4px 24px rgba(163, 153, 255, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 
           .icon {
             flex-shrink: 0;
