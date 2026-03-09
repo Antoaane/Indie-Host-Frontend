@@ -3,7 +3,8 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import gsap from 'gsap'
-import { Loader2, Search } from 'lucide-vue-next'
+import { ArrowRight, Loader2, Search } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
 import GradiantSeparator from '@/components/svgs/images/GradiantSeparator.vue'
 import ListingView from '@/views/ListingView/_ListingView.vue'
 import PreviewSkeleton from '@/views/Landing/components/IntroSection/PreviewSkeleton.vue'
@@ -19,11 +20,13 @@ import type { AirbnbScrapedData, BookingScrapedData } from '@/views/Editor/compo
 import { buildPreviewBundle } from '@/views/Landing/components/IntroSection/buildPreviewBundle'
 import { LANDING_IMPORT_URL_KEY } from '@/views/Landing/components/IntroSection/landingImportUrlKey'
 import { useLandingImport } from '@/views/Landing/composables/useLandingImport'
+import { LANDING_CREATE_DRAFT_KEY } from '@/views/CreateListing/wizard/createListingDraft'
 
 const props = defineProps<{
   content: IntroSectionContent
 }>()
 
+const router = useRouter()
 const { pendingUrl } = useLandingImport()
 const url = ref('')
 const previewBundle = ref<RawListingBundle | null>(null)
@@ -102,6 +105,16 @@ watch(pendingUrl, (newUrl) => {
   }
 })
 
+function activateSite() {
+  if (!previewBundle.value) return
+  try {
+    sessionStorage.setItem(LANDING_CREATE_DRAFT_KEY, JSON.stringify(previewBundle.value))
+  } catch {
+    // ignore storage errors (private mode, quota)
+  }
+  void router.push({ name: 'sign-in', query: { redirect_url: '/editor/create' } })
+}
+
 onMounted(() => {
 
   const storedUrl = sessionStorage.getItem(LANDING_IMPORT_URL_KEY)
@@ -171,6 +184,29 @@ onMounted(() => {
         >
           {{ previewError }}
         </p>
+
+        <Transition name="activate-reveal">
+          <div
+            v-if="previewBundle && !isPreviewLoading"
+            class="activate-cta"
+          >
+            <div class="activate-btn">
+              <button
+                type="button"
+                @click="activateSite"
+              >
+                {{ content.createAccountCtaLabel }}
+                <ArrowRight class="icon" />
+              </button>
+            </div>
+            <p
+              v-if="content.createAccountCtaHint"
+              class="activate-hint"
+            >
+              {{ content.createAccountCtaHint }}
+            </p>
+          </div>
+        </Transition>
       </div>
 
       <div

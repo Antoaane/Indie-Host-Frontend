@@ -21,7 +21,8 @@
     "body": "Copiez le lien Airbnb ou Booking d’un de vos logements et nous créez votre page de réservation instantanément.",
     "inputPlaceholder": "Collez le lien de votre logement",
     "previewCtaLabel": "Générer mon site !",
-    "createAccountCtaLabel": "Créer un compte",
+    "createAccountCtaLabel": "Activer mon site gratuitement",
+    "createAccountCtaHint": "Gratuit · Sans engagement · Sans commission",
     "primaryCta": {
       "label": "Essayer l'import gratuit",
       "href": "#join-section",

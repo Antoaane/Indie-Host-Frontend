@@ -42,8 +42,7 @@
     inset: 0;
     z-index: 0;
     pointer-events: none;
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow: hidden;
     // Limite le gradient à la section Intro (s'arrête au début de FeaturesSection)
 
     // Fondu très smooth en bas pour éviter une bordure nette
@@ -189,6 +188,49 @@
       @include little-text($thin: false);
       color: rgba($bad, 0.95);
     }
+
+    .activate-cta {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--layout-gap-sm);
+      width: 100%;
+      margin-top: var(--layout-gap-md);
+      padding-top: var(--layout-gap-md);
+      border-top: 1px solid rgba($accent, 0.12);
+    }
+
+    .activate-btn {
+      width: 100%;
+      @include buttons.primary($cta: true, $theme: light, $fullwidth: true);
+
+      > button {
+        gap: 0.6rem;
+
+        > .icon {
+          width: 1.1rem;
+          height: 1.1rem;
+          flex-shrink: 0;
+          transition: transform 200ms ease;
+        }
+
+        &:hover > .icon {
+          transform: translateX(3px);
+        }
+      }
+
+      @include min-width(md) {
+        width: max-content;
+        min-width: 22rem;
+      }
+    }
+
+    .activate-hint {
+      margin: 0;
+      @include little-text($thin: false);
+      color: rgba($accent, 0.55);
+      letter-spacing: 0.01em;
+    }
   }
 
   .embed-preview {
@@ -251,6 +293,27 @@
     to {
       transform: rotate(360deg);
     }
+  }
+
+  // Transition apparition bouton "Activer mon site"
+  // opacity démarre à 0.3s, transform attend 0.55s (petit délai avant le glissement)
+  .activate-reveal-enter-active {
+    transition:
+      opacity 0.45s ease 0.3s,
+      transform 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.55s;
+  }
+
+  .activate-reveal-leave-active {
+    transition: opacity 0.2s ease;
+  }
+
+  .activate-reveal-enter-from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  .activate-reveal-leave-to {
+    opacity: 0;
   }
 
   // Transition skeleton → ListingView

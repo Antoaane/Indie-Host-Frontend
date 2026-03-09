@@ -48,12 +48,12 @@ onMounted(() => {
     ease: 'power2.inOut',
   })
 
-  // Lancer le compteur après l'animation d'entrée du h1
+  // Lancer le compteur après l'animation d'entrée du h1 (petit délai avant 20% → 0%)
   const proxy = { value: 20 }
   gsap.to(proxy, {
     value: 0,
     duration: 2.6,
-    delay: 1.4,
+    delay: 2,
     ease: 'power2.out',
     onUpdate() {
       counterValue.value = Math.round(proxy.value)

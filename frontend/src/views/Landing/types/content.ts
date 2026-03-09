@@ -37,6 +37,7 @@ export interface IntroSectionContent {
   inputPlaceholder: string
   previewCtaLabel: string
   createAccountCtaLabel: string
+  createAccountCtaHint?: string
   primaryCta: CtaLink
 }
 

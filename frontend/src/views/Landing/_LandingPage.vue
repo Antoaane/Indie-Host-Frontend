@@ -23,7 +23,7 @@ const FeaturesSection  = defineAsyncComponent(() => import('./components/Feature
 const HowSection       = defineAsyncComponent(() => import('./components/HowSection/HowSection.vue'))
 const UsageSection     = defineAsyncComponent(() => import('./components/UsageSection/UsageSection.vue'))
 const StrengthsSection = defineAsyncComponent(() => import('./components/StrengthsSection/StrengthsSection.vue'))
-const JoinSection      = defineAsyncComponent(() => import('./components/JoinSection/JoinSection.vue'))
+// const JoinSection      = defineAsyncComponent(() => import('./components/JoinSection/JoinSection.vue'))
 const FaqSection       = defineAsyncComponent(() => import('./components/FaqSection/FaqSection.vue'))
 
 const content = landingLocale as LandingContent
@@ -121,10 +121,12 @@ onBeforeUnmount(() => {
     /> -->
     <UsageSection :steps="content.usage.steps" />
     <StrengthsSection :content="content.strengths" />
+    <!-- JoinSection désactivée
     <JoinSection
       :content="content.join"
       :slides="content.habits.slides"
     />
+    -->
     <FaqSection :content="content.faq" />
   </main>
   <!-- </VueLenis> -->
