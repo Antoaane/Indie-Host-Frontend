@@ -83,8 +83,8 @@ const video = props.feature.videos?.[0]
           />
         </video>
         <img
-          v-else-if="media?.webp"
-          :src="media.webp"
+          v-else-if="media?.webp || media?.png"
+          :src="media?.webp || media?.png"
           :onerror="media?.png ? `this.onerror=null; this.src='${media.png}';` : undefined"
           :alt="media?.alt || 'Feature image'"
           loading="lazy"

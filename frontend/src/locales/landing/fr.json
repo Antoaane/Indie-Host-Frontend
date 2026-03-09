@@ -81,6 +81,19 @@
   "features": {
     "items": [
       {
+        "id": "paiementEnLigneIntegreSansCommissions",
+        "title": "Paiement en ligne intégré<br><strong>sans</strong> <strong>commissions</strong>",
+        "description": "Recevez des paiements en direct de vos clients sans payer de commissions. Faites vous payer en avance, même avec des clients direct. Donnez à vos clients la possibilité de payer par tous les moyens de paiements actuellement disponibles.",
+        "layout": "hzt",
+        "images": [
+          {
+            "webp": "/assets/media/images/png/paiement-en-ligne.png",
+            "png": "/assets/media/images/png/paiement-en-ligne.png",
+            "alt": "Confirmation et paiement en ligne intégré"
+          }
+        ]
+      },
+      {
         "id": "modifiezEtPersonnalisezVosAnnonces",
         "title": "Modifiez et <strong>personnalisez</strong> vos annonces",
         "description": "Personnalisez librement vos annonces avec un éditeur visuel simple et intuitif. Prévisualisez chaque modification en temps réel, et modifiez vos contenus en un clic : cliquez sur un élément dans l’aperçu, vous êtes instantanément redirigé vers le bon champ.",

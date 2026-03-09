@@ -143,11 +143,20 @@
   // last child
   &>:first-child {
     &>div {
-      direction: ltr;
+      direction: rtl;
 
       // &::after {
       //   display: none;
       // }
+
+      .media.hzt {
+        justify-content: center;
+
+        img {
+          max-width: 75%;
+          width: 100%;
+        }
+      }
 
       .glow-right,
       .glow-left,
