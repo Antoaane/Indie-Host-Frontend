@@ -5,7 +5,7 @@ import { useAuth } from '@clerk/vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { Component } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { CalendarClock, LayoutGrid, MessageSquareMore, PlusSquare } from 'lucide-vue-next'
+import { CalendarClock, Globe, LayoutGrid, MessageSquareMore, PlusSquare } from 'lucide-vue-next'
 
 import HostReservationOverlay from '@/components/navs/HostReservationOverlay.vue'
 import BackOfficeDockNav from '@/components/navs/Nav/BackOfficeDockNav.vue'
@@ -118,8 +118,8 @@ const hostNavItems = computed<NavItem[]>(() => [
   },
   { id: 'listings', name: 'Mes annonces', link: resolveRouteLink('editor') },
   { id: 'reservations', name: 'Réservations', link: resolveRouteLink('management') },
+  { id: 'domains', name: 'Domaines', link: resolveRouteLink('domains') },
   { id: 'messagery', name: 'Messagerie', link: resolveRouteLink('messaging') },
-  { id: 'dashboard', name: 'Tableau de bord', link: resolveRouteLink('dashboard') },
 ])
 
 const publicNavItems = computed<NavItem[]>(() => [
@@ -147,6 +147,7 @@ const backOfficeDockItems = computed(() => {
   const isEditorRoute = routeName === 'editor' || routeName === 'editor-user'
   const isCreateRoute = routeName === 'create-listing' || routeName === 'create-listing-user'
   const isManagementRoute = routeName === 'management' || routeName === 'management-user'
+  const isDomainsRoute = routeName === 'domains' || routeName === 'domains-user'
   const isMessagingRoute = routeName === 'messaging' || routeName === 'messaging-user'
 
   return [
@@ -163,6 +164,13 @@ const backOfficeDockItems = computed(() => {
       icon: CalendarClock,
       link: resolveRouteLink('management'),
       isActive: isManagementRoute,
+    },
+    {
+      id: 'dock-domains',
+      label: 'Domaines',
+      icon: Globe,
+      link: resolveRouteLink('domains'),
+      isActive: isDomainsRoute,
     },
     {
       id: 'dock-add-reservation',
