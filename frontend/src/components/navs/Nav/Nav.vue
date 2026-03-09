@@ -82,7 +82,7 @@ const resolveRouteLink = (name?: string) => {
 }
 
 const landingNavItems: NavItem[] = [
-  { id: 'join-section', name: 'Essayer gratuitement', link: '#join-section', target: true, cta: true },
+  { id: 'pricing', name: 'Essayer gratuitement', link: '/pricing', cta: true },
   { id: 'features-section', name: 'Fonctionnalités', link: '#features-section', target: true },
   { id: 'how-section', name: 'Comment ça marche ?', link: '#how-section', target: true },
   { id: 'strengths-section', name: 'Nos valeurs', link: '#strengths-section', target: true },
@@ -111,7 +111,7 @@ const hostNavItems = computed<NavItem[]>(() => [
 const publicNavItems = computed<NavItem[]>(() => [
   { id: 'messagery', name: 'Messagerie', link: resolveRouteLink('messaging') },
   { id: 'reservations', name: 'Réservations', link: resolveRouteLink('management') },
-  { id: 'become-host', name: 'Devenir hôte', link: route.fullPath, target: true, cta: true },
+  { id: 'become-host', name: 'Devenir hôte', link: '/pricing', cta: true },
 ])
 
 const navItems = computed<NavItem[]>(() => {

@@ -51,13 +51,10 @@ export class UsersService {
     return resolveUserByIdentifier(this.prisma, userId);
   }
 
-  async listUserListings(userId: string) {
-    const resolvedUser = await this.resolveUserById(userId);
-    if (!resolvedUser) return [];
-
+  private async listListingsByOwnerId(ownerId: string) {
     const listings = await this.prisma.listing.findMany({
       where: {
-        ownerId: resolvedUser.id,
+        ownerId,
       },
       orderBy: {
         updatedAt: 'desc',
@@ -65,5 +62,23 @@ export class UsersService {
     });
 
     return this.listingsService.listUserCards(listings);
+  }
+
+  async listAuthenticatedUserListings(auth: RequestAuth | null) {
+    const actor = await upsertUserFromAuth(this.prisma, auth);
+    if (!actor) return [];
+
+    return this.listListingsByOwnerId(actor.id);
+  }
+
+  async listUserListingsForAuth(userId: string, auth: RequestAuth | null) {
+    const actor = await upsertUserFromAuth(this.prisma, auth);
+    if (!actor) return 'forbidden' as const;
+
+    const resolvedUser = await this.resolveUserById(userId);
+    if (!resolvedUser) return [];
+    if (resolvedUser.id !== actor.id) return 'forbidden' as const;
+
+    return this.listListingsByOwnerId(resolvedUser.id);
   }
 }

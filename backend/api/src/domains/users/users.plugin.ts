@@ -11,7 +11,18 @@ export const usersPlugin = fp(async (fastify) => {
     preHandler: fastify.authenticate,
   }, async (request, reply) => {
     const { userId } = userIdParamsSchema.parse(request.params);
-    const listings = await service.listUserListings(userId);
+    const listings = await service.listUserListingsForAuth(userId, request.auth);
+    if (listings === 'forbidden') {
+      reply.code(403).send({ message: 'You cannot access listings for this user.' });
+      return;
+    }
+    reply.send(listings);
+  });
+
+  fastify.get('/users/me/listings', {
+    preHandler: fastify.authenticate,
+  }, async (request, reply) => {
+    const listings = await service.listAuthenticatedUserListings(request.auth);
     reply.send(listings);
   });
 

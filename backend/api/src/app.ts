@@ -20,6 +20,7 @@ export async function buildApp() {
     logger: {
       level: env.LOG_LEVEL,
     },
+    bodyLimit: env.API_BODY_LIMIT_BYTES,
   });
 
   await app.register(sensible);

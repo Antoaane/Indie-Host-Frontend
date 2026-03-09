@@ -25,6 +25,11 @@ export function stripHtml(value: string): string {
     .trim()
 }
 
+function asRecordOrUndefined<T extends Record<string, unknown>>(value: unknown): T | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined
+  return value as T
+}
+
 export function deepMerge(target: any, source: any): any {
   if (source === null || source === undefined) return source
   if (Array.isArray(source)) return source
@@ -151,10 +156,21 @@ export function normalizeBundleForCreate(bundle: RawListingBundle): RawListingBu
     videos: Array.isArray(sourceMedias.videos) ? sourceMedias.videos : [],
   }
 
-  return {
-    ...bundle,
+  const payload: RawListingBundle = {
     core: normalizedCore,
     bookings: normalizedBookings,
     medias: normalizedMedias,
   }
+
+  const arrival = asRecordOrUndefined(bundle.arrival)
+  const notes = asRecordOrUndefined(bundle.notes)
+  const comments = asRecordOrUndefined(bundle.comments)
+  const host = asRecordOrUndefined(bundle.host)
+
+  if (arrival) payload.arrival = arrival
+  if (notes) payload.notes = notes
+  if (comments) payload.comments = comments
+  if (host) payload.host = host
+
+  return payload
 }

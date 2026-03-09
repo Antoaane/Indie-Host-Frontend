@@ -54,6 +54,7 @@ npm run dev   # http://localhost:5179
 ```env
 # .env
 VITE_DONATION_LINK=https://votre-lien
+VITE_LISTINGS_DATA_MODE=api
 VITE_API_BASE_URL=https://api-staging.indiehost.fr/v1
 VITE_API_PROXY_TARGET=https://api-staging.indiehost.fr
 VITE_CLERK_PUBLISHABLE_KEY=pk_test_XXXXXXXXXXXXXXXX

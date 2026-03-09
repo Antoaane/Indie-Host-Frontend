@@ -5,6 +5,7 @@ import { z } from 'zod';
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().positive().default(4000),
+  API_BODY_LIMIT_BYTES: z.coerce.number().int().positive().default(50 * 1024 * 1024),
   API_PREFIX: z.string().trim().min(1).default('v1'),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   CORS_ORIGINS: z.string().default('http://localhost:5179,http://localhost:3000'),
@@ -16,6 +17,9 @@ const envSchema = z.object({
   STRIPE_WEBHOOK_SECRET: z.string().trim().optional().default(''),
   STRIPE_CONNECT_PLATFORM_FEE_BPS: z.coerce.number().int().min(0).max(10000).default(0),
   STRIPE_CONNECT_DEFAULT_APPLICATION_FEE_BPS: z.coerce.number().int().min(0).max(10000).default(0),
+  STRIPE_BILLING_PRICE_INDIEHOST: z.string().trim().optional().default(''),
+  STRIPE_BILLING_PRICE_SUPERHOST: z.string().trim().optional().default(''),
+  STRIPE_BILLING_PRICE_MEGAHOST: z.string().trim().optional().default(''),
   ICAL_EXPORT_DEFAULT_PRODID: z.string().trim().min(1).default('IndieHost//Calendar//FR'),
 });
 

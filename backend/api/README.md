@@ -30,6 +30,10 @@ Serveur: `http://localhost:4000`
 - `PATCH /v1/listings/:resource/:listingId`
 - `POST /v1/listings`
 - `POST /v1/payments/stripe/payment-intents`
+- `GET /v1/payments/stripe/subscriptions/plans`
+- `GET /v1/payments/stripe/subscriptions/me`
+- `POST /v1/payments/stripe/subscriptions/activate`
+- `POST /v1/payments/stripe/subscriptions/checkout/confirm`
 
 ## Domaines supplémentaires
 

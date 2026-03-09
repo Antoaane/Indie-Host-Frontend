@@ -3,11 +3,32 @@
 <!-- src/views/SignInView.vue -->
 <script setup lang="ts">
 import { SignIn } from '@clerk/vue'
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+
+const route = useRoute()
+
+function readQueryValue(value: unknown): string | null {
+  if (typeof value === 'string' && value.trim()) return value.trim()
+  if (Array.isArray(value)) {
+    const first = value[0]
+    if (typeof first === 'string' && first.trim()) return first.trim()
+  }
+  return null
+}
+
+const redirectUrl = computed(() => {
+  return readQueryValue(route.query.redirect_url) ?? '/pricing'
+})
 </script>
 
 <template>
   <div class="sign-in-view">
-    <SignIn path="/sign-in" routing="path" />
+    <SignIn
+      path="/sign-in"
+      routing="path"
+      :force-redirect-url="redirectUrl"
+    />
   </div>
 </template>
 

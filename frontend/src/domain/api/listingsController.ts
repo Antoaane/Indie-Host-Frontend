@@ -7,6 +7,7 @@ import type {
   RawBookings,
   RawComments,
   RawCore,
+  RawHost,
   RawListingBundle,
   RawArrival,
   RawMedias,
@@ -20,6 +21,13 @@ import { getCanonicalHost } from '@/domain/listings/host'
 
 const RAW_BASE_API_URL = (import.meta.env.VITE_API_BASE_URL ?? '').trim()
 const BASE_API_URL = normalizeApiBaseUrl(RAW_BASE_API_URL)
+const API_REQUEST_TIMEOUT_MS = resolveRequestTimeoutMs(import.meta.env.VITE_API_REQUEST_TIMEOUT_MS, 20000)
+
+function resolveRequestTimeoutMs(rawValue: unknown, fallback: number): number {
+  const parsed = Number(rawValue)
+  if (Number.isFinite(parsed) && parsed > 0) return Math.round(parsed)
+  return fallback
+}
 
 function normalizeApiBaseUrl(baseUrl: string): string {
   const trimmed = baseUrl.replace(/\/$/, '')
@@ -46,6 +54,8 @@ const buildListingUrl = (resource: ListingResourceKey, listingId: string) =>
   `${BASE_API_URL}/listings/${resource}/${listingId}`
 
 const buildUserListingsUrl = (userId: string) => `${BASE_API_URL}/user/${userId}/listings`
+const buildMyListingsUrl = () => `${BASE_API_URL}/users/me/listings`
+const buildListingBundleUrl = (listingId: string) => `${BASE_API_URL}/listings/bundle/${listingId}`
 const buildCreateListingUrl = () => `${BASE_API_URL}/listings`
 
 function waitForClerkToken({ timeoutMs, pollEveryMs }: { timeoutMs: number; pollEveryMs: number }): Promise<string | null> {
@@ -68,46 +78,73 @@ async function getAxios() {
   return axios
 }
 
-async function getAuthToken(): Promise<string | null> {
+function readToken(): string | null {
   const token = (clerkToken.value ?? '').trim()
   if (token) return token
+  return null
+}
+
+async function getAuthToken(options?: { waitForReady?: boolean }): Promise<string | null> {
+  const token = readToken()
+  if (token) return token
+  if (!options?.waitForReady) return null
   return waitForClerkToken({ timeoutMs: 2000, pollEveryMs: 50 })
 }
 
-async function fetchRemote<T>(url: string): Promise<T> {
+function buildAuthHeaders(token: string | null) {
+  return token ? { Authorization: `Bearer ${token}` } : undefined
+}
+
+function readHttpStatus(error: unknown): number | null {
+  const status = (error as { response?: { status?: unknown } })?.response?.status
+  if (typeof status === 'number' && Number.isFinite(status)) return status
+  return null
+}
+
+async function fetchRemoteWithToken<T>(url: string, token: string | null): Promise<T> {
   const axios = await getAxios()
-  const token = await getAuthToken()
 
   const { data } = await axios.get<T>(url, {
     withCredentials: false,
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    timeout: API_REQUEST_TIMEOUT_MS,
+    headers: buildAuthHeaders(token),
   })
 
   return data
 }
 
-async function patchRemote<T>(url: string, payload: unknown): Promise<T> {
-  const axios = await getAxios()
+async function fetchRemote<T>(url: string): Promise<T> {
   const token = await getAuthToken()
+  return fetchRemoteWithToken<T>(url, token)
+}
+
+async function patchRemoteWithToken<T>(url: string, payload: unknown, token: string | null): Promise<T> {
+  const axios = await getAxios()
 
   const { data } = await axios.patch<T>(url, payload, {
     withCredentials: false,
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    timeout: API_REQUEST_TIMEOUT_MS,
+    headers: buildAuthHeaders(token),
+  })
+
+  return data
+}
+
+async function postRemoteWithToken<T>(url: string, payload: unknown, token: string | null): Promise<T> {
+  const axios = await getAxios()
+
+  const { data } = await axios.post<T>(url, payload, {
+    withCredentials: false,
+    timeout: API_REQUEST_TIMEOUT_MS,
+    headers: buildAuthHeaders(token),
   })
 
   return data
 }
 
 async function postRemote<T>(url: string, payload: unknown): Promise<T> {
-  const axios = await getAxios()
-  const token = await getAuthToken()
-
-  const { data } = await axios.post<T>(url, payload, {
-    withCredentials: false,
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-  })
-
-  return data
+  const token = await getAuthToken({ waitForReady: true })
+  return postRemoteWithToken<T>(url, payload, token)
 }
 
 function fallbackEditableBundle(listingId: string): RawListingBundle {
@@ -166,11 +203,20 @@ export function createApiListingsController(): ListingsController {
       console.log('[Domain][api] fetchListings', { userId })
 
       if (!apiEnabled) return []
-      if (!userId) return []
+      const token = await getAuthToken({ waitForReady: true })
+      if (!token) return []
 
-      const url = resolveUrl(buildUserListingsUrl(userId))
-      const listings = await fetchRemote<UserListingCard[]>(url)
-      return filterDeletedListings(listings, options?.includeDeleted)
+      try {
+        const listings = await fetchRemoteWithToken<UserListingCard[]>(resolveUrl(buildMyListingsUrl()), token)
+        return filterDeletedListings(listings, options?.includeDeleted)
+      } catch (error) {
+        const status = readHttpStatus(error)
+        if (status === 404 && userId) {
+          const listings = await fetchRemoteWithToken<UserListingCard[]>(resolveUrl(buildUserListingsUrl(userId)), token)
+          return filterDeletedListings(listings, options?.includeDeleted)
+        }
+        throw error
+      }
     },
     fetchListingBundle: async (listingId: string): Promise<RawListingBundle> => {
       console.log('[Domain][api] fetchListingBundle', { listingId })
@@ -183,16 +229,17 @@ export function createApiListingsController(): ListingsController {
         }
       }
 
-      const [core, bookings, medias, arrival, notes, comments] = await Promise.all([
-        fetchRemote<RawCore>(resolveUrl(buildListingUrl('core', listingId))),
-        fetchRemote<RawBookings>(resolveUrl(buildListingUrl('bookings', listingId))),
-        fetchRemote<RawMedias>(resolveUrl(buildListingUrl('medias', listingId))),
-        fetchRemote<RawArrival>(resolveUrl(buildListingUrl('arrival', listingId))),
-        fetchRemote<RawNotes>(resolveUrl(buildListingUrl('notes', listingId))),
-        fetchRemote<RawComments>(resolveUrl(buildListingUrl('comments', listingId))),
-      ])
-
-      return { core, bookings, medias, arrival, notes, comments, host: getCanonicalHost() }
+      const bundle = await fetchRemote<RawListingBundle>(resolveUrl(buildListingBundleUrl(listingId)))
+      const fallback = fallbackEditableBundle(listingId)
+      return {
+        core: bundle.core ?? { id: listingId },
+        bookings: bundle.bookings ?? { price: 0, fees: [], 'booked-days': [], reservations: [] },
+        medias: bundle.medias ?? { images: [], videos: [] },
+        arrival: bundle.arrival ?? fallback.arrival ?? null,
+        notes: bundle.notes ?? null,
+        comments: bundle.comments ?? null,
+        host: bundle.host ?? getCanonicalHost(),
+      }
     },
     fetchEditableListingBundle: async (listingId: string): Promise<RawListingBundle> => {
       console.log('[Domain][api] fetchEditableListingBundle', { listingId })
@@ -211,34 +258,36 @@ export function createApiListingsController(): ListingsController {
       console.log('[Domain][api] fetchVolatileListingBundle', { listingId })
       if (!apiEnabled) return fallbackVolatileBundle()
 
-      const [bookings, notes, comments] = await Promise.all([
+      const [bookings, notes, comments, host] = await Promise.all([
         fetchRemote<RawBookings>(resolveUrl(buildListingUrl('bookings', listingId))),
         fetchRemote<RawNotes>(resolveUrl(buildListingUrl('notes', listingId))),
         fetchRemote<RawComments>(resolveUrl(buildListingUrl('comments', listingId))),
+        fetchRemote<RawHost>(resolveUrl(buildListingUrl('host', listingId))),
       ])
 
-      return { bookings, notes, comments, host: getCanonicalHost() }
+      return { bookings, notes, comments, host: host ?? getCanonicalHost() }
     },
     patchListingDraft: async (listingId: string, patch: DraftPatch): Promise<void> => {
       console.log('[Domain][api] patchListingDraft', { listingId, patch })
       if (!apiEnabled) return
+      const token = await getAuthToken({ waitForReady: true })
 
       const requests: Promise<unknown>[] = []
 
       if (patch.core) {
-        requests.push(patchRemote(resolveUrl(buildListingUrl('core', listingId)), patch.core))
+        requests.push(patchRemoteWithToken(resolveUrl(buildListingUrl('core', listingId)), patch.core, token))
       }
 
       if (patch.bookings) {
-        requests.push(patchRemote(resolveUrl(buildListingUrl('bookings', listingId)), patch.bookings))
+        requests.push(patchRemoteWithToken(resolveUrl(buildListingUrl('bookings', listingId)), patch.bookings, token))
       }
 
       if (patch.medias) {
-        requests.push(patchRemote(resolveUrl(buildListingUrl('medias', listingId)), patch.medias))
+        requests.push(patchRemoteWithToken(resolveUrl(buildListingUrl('medias', listingId)), patch.medias, token))
       }
 
       if (patch.arrival) {
-        requests.push(patchRemote(resolveUrl(buildListingUrl('arrival', listingId)), patch.arrival))
+        requests.push(patchRemoteWithToken(resolveUrl(buildListingUrl('arrival', listingId)), patch.arrival, token))
       }
 
       if (requests.length) {
@@ -248,23 +297,24 @@ export function createApiListingsController(): ListingsController {
     publishListingDraft: async (listingId: string, draft: RawListingBundle): Promise<void> => {
       console.log('[Domain][api] publishListingDraft', { listingId, draft })
       if (!apiEnabled) return
+      const token = await getAuthToken({ waitForReady: true })
 
       const requests: Promise<unknown>[] = []
 
       if (draft.core) {
-        requests.push(patchRemote(resolveUrl(buildListingUrl('core', listingId)), draft.core))
+        requests.push(patchRemoteWithToken(resolveUrl(buildListingUrl('core', listingId)), draft.core, token))
       }
 
       if (draft.bookings) {
-        requests.push(patchRemote(resolveUrl(buildListingUrl('bookings', listingId)), draft.bookings))
+        requests.push(patchRemoteWithToken(resolveUrl(buildListingUrl('bookings', listingId)), draft.bookings, token))
       }
 
       if (draft.medias) {
-        requests.push(patchRemote(resolveUrl(buildListingUrl('medias', listingId)), draft.medias))
+        requests.push(patchRemoteWithToken(resolveUrl(buildListingUrl('medias', listingId)), draft.medias, token))
       }
 
       if (draft.arrival) {
-        requests.push(patchRemote(resolveUrl(buildListingUrl('arrival', listingId)), draft.arrival))
+        requests.push(patchRemoteWithToken(resolveUrl(buildListingUrl('arrival', listingId)), draft.arrival, token))
       }
 
       if (requests.length) {

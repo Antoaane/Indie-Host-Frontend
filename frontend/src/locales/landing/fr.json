@@ -4,7 +4,7 @@
     "description": "IndieHost permet aux hôtes de gérer leurs réservations en toute autonomie grâce à une page d’annonces personnalisable, des outils intégrés et une visibilité en ligne optimale, sans commission, pour augmenter leurs marges <strong>jusqu’à +20 %.</strong>",
     "primaryCta": {
       "label": "Essayez en premier !",
-      "href": "#join-section",
+      "href": "/pricing",
       "target": "_self"
     },
     "images": [
@@ -23,7 +23,7 @@
     "createAccountCtaLabel": "Créer un compte",
     "primaryCta": {
       "label": "Essayer l'import gratuit",
-      "href": "#join-section",
+      "href": "/pricing",
       "target": "_self"
     }
   },
