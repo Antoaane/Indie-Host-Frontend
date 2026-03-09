@@ -38,38 +38,56 @@ export async function upsertUserFromAuth(prisma: PrismaClient, auth: RequestAuth
     readString(payload, 'image_url') ??
     null;
 
-  return prisma.user.upsert({
-    where: {
+  const hostProfile = toHostProfile({
+    firstName: firstName ?? undefined,
+    lastName: lastName ?? undefined,
+    displayName: displayName ?? undefined,
+    avatarUrl: avatarUrl ?? undefined,
+  });
+
+  const [byClerkUserId, byExternalUserId] = await Promise.all([
+    prisma.user.findUnique({
+      where: {
+        clerkUserId: auth.userId,
+      },
+    }),
+    prisma.user.findUnique({
+      where: {
+        externalUserId: auth.userId,
+      },
+    }),
+  ]);
+
+  const targetUser = byClerkUserId ?? byExternalUserId;
+
+  if (targetUser) {
+    return prisma.user.update({
+      where: {
+        id: targetUser.id,
+      },
+      data: {
+        ...(byClerkUserId?.id === targetUser.id || !byClerkUserId ? { clerkUserId: auth.userId } : {}),
+        ...(byExternalUserId?.id === targetUser.id || !byExternalUserId ? { externalUserId: auth.userId } : {}),
+        email,
+        firstName,
+        lastName,
+        displayName,
+        avatarUrl,
+        hostProfile,
+      },
+    });
+  }
+
+  return prisma.user.create({
+    data: {
       clerkUserId: auth.userId,
-    },
-    update: {
       externalUserId: auth.userId,
       email,
       firstName,
       lastName,
       displayName,
       avatarUrl,
-      hostProfile: toHostProfile({
-        firstName: firstName ?? undefined,
-        lastName: lastName ?? undefined,
-        displayName: displayName ?? undefined,
-        avatarUrl: avatarUrl ?? undefined,
-      }),
-    },
-    create: {
-      clerkUserId: auth.userId,
-      externalUserId: auth.userId,
-      email,
-      firstName,
-      lastName,
-      displayName,
-      avatarUrl,
-      hostProfile: toHostProfile({
-        firstName: firstName ?? undefined,
-        lastName: lastName ?? undefined,
-        displayName: displayName ?? undefined,
-        avatarUrl: avatarUrl ?? undefined,
-      }),
+      hostProfile,
     },
   });
 }

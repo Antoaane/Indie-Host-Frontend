@@ -1,8 +1,10 @@
 // File: src/router/index.ts
 
 import SignInView from '@/views/SignInView.vue'
+import SignUpView from '@/views/SignUpView.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 const LandingPage = () => import('@/views/Landing/_LandingPage.vue')
+const PricingView = () => import('@/views/PricingView.vue')
 const Listing = () => import('@/views/Listing/_Listing.vue')
 const ListingGuide = () => import('@/views/ListingGuide/_ListingGuide.vue')
 const EditorRoute = () => import('@/views/Editor/EditorRoute.vue')
@@ -24,6 +26,18 @@ const router = createRouter({
       path: '/sign-in/:step(.*)*',
       name: 'sign-in',
       component: SignInView,
+      meta: { navVariant: 'public' },
+    },
+    {
+      path: '/sign-up/:step(.*)*',
+      name: 'sign-up',
+      component: SignUpView,
+      meta: { navVariant: 'public' },
+    },
+    {
+      path: '/pricing',
+      name: 'pricing',
+      component: PricingView,
       meta: { navVariant: 'public' },
     },
     {

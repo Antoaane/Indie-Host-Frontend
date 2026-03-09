@@ -34,3 +34,34 @@ export const createConnectOnboardingLinkSchema = z.object({
   returnUrl: z.string().url(),
   country: z.string().trim().length(2).optional().default('FR'),
 });
+
+export const subscriptionPlanCodeSchema = z.enum([
+  'indiehost',
+  'superhost',
+  'megahost',
+]);
+
+export const activateSubscriptionSchema = z.object({
+  planCode: subscriptionPlanCodeSchema,
+  successUrl: z.string().url(),
+  cancelUrl: z.string().url(),
+});
+
+export const confirmCheckoutSessionSchema = z.object({
+  sessionId: z.string().trim().min(1),
+  planCode: subscriptionPlanCodeSchema.optional(),
+});
+
+const queryBooleanSchema = z.preprocess((value) => {
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (['1', 'true', 'yes', 'on'].includes(normalized)) return true;
+    if (['0', 'false', 'no', 'off', ''].includes(normalized)) return false;
+  }
+
+  return value;
+}, z.boolean().default(false));
+
+export const getMySubscriptionQuerySchema = z.object({
+  sync: queryBooleanSchema.optional().default(false),
+});

@@ -6,7 +6,7 @@
     "inputPlaceholder": "Collez le lien de votre logement",
     "primaryCta": {
       "label": "Essayez en premier !",
-      "href": "#join-section",
+      "href": "/pricing",
       "target": "_self"
     },
     "images": [
@@ -27,7 +27,7 @@
     "backButtonAriaLabel": "Retour à la page d'accueil",
     "primaryCta": {
       "label": "Essayer l'import gratuit",
-      "href": "#join-section",
+      "href": "/pricing",
       "target": "_self"
     }
   },

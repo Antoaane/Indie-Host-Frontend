@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { LISTING_RESOURCES } from './listings.constants.js';
 
 const rawJsonSchema = z.record(z.any());
+const nullableRawJsonSchema = rawJsonSchema.nullable();
 
 export const listingResourceParamsSchema = z.object({
   resource: z.enum(LISTING_RESOURCES),
@@ -10,13 +11,13 @@ export const listingResourceParamsSchema = z.object({
 });
 
 export const createListingSchema = z.object({
-  core: rawJsonSchema.optional(),
-  bookings: rawJsonSchema.optional(),
-  medias: rawJsonSchema.optional(),
-  arrival: rawJsonSchema.optional(),
-  notes: rawJsonSchema.optional(),
-  comments: rawJsonSchema.optional(),
-  host: rawJsonSchema.optional(),
+  core: nullableRawJsonSchema.optional(),
+  bookings: nullableRawJsonSchema.optional(),
+  medias: nullableRawJsonSchema.optional(),
+  arrival: nullableRawJsonSchema.optional(),
+  notes: nullableRawJsonSchema.optional(),
+  comments: nullableRawJsonSchema.optional(),
+  host: nullableRawJsonSchema.optional(),
 });
 
 export const patchListingResourceSchema = rawJsonSchema;

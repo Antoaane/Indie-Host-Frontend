@@ -97,15 +97,28 @@ export class ListingsService {
   }
 
   async getListingResource(resource: ListingResourceKey, listingId: string) {
+    const select = {
+      id: true,
+      [resource]: true,
+    } as Prisma.ListingSelect;
+
+    if (resource === 'host') {
+      select.owner = true;
+    }
+
     const listing = await this.prisma.listing.findUnique({
       where: { id: listingId },
-      include: { owner: true },
+      select,
     });
 
     if (!listing) return null;
 
-    const sections = this.toSections(listing);
-    return sections[resource] ?? buildDefaultResource(resource, listingId);
+    const owner = (listing as { owner?: User | null }).owner ?? null;
+    const fallback = resource === 'host'
+      ? buildHostProfileFromUser(owner)
+      : buildDefaultResource(resource, listingId);
+    const rawValue = (listing as Record<string, unknown>)[resource];
+    return asObject(rawValue, fallback);
   }
 
   async getListingBundle(listingId: string) {
@@ -126,22 +139,35 @@ export class ListingsService {
     auth: RequestAuth | null;
   }) {
     const { listingId, resource, patch, auth } = args;
+    const select = {
+      id: true,
+      ownerId: true,
+      [resource]: true,
+    } as Prisma.ListingSelect;
+
+    if (resource === 'host') {
+      select.owner = true;
+    }
 
     const listing = await this.prisma.listing.findUnique({
       where: { id: listingId },
-      include: { owner: true },
+      select,
     });
 
     if (!listing) return null;
 
     const actor = await upsertUserFromAuth(this.prisma, auth);
 
-    if (listing.ownerId && actor && listing.ownerId !== actor.id) {
+    if (listing.ownerId && (!actor || listing.ownerId !== actor.id)) {
       return 'forbidden' as const;
     }
 
-    const sections = this.toSections(listing);
-    const currentValue = sections[resource] ?? buildDefaultResource(resource, listingId);
+    const owner = (listing as { owner?: User | null }).owner ?? null;
+    const fallback = resource === 'host'
+      ? buildHostProfileFromUser(owner)
+      : buildDefaultResource(resource, listingId);
+    const rawValue = (listing as Record<string, unknown>)[resource];
+    const currentValue = asObject(rawValue, fallback);
     const merged = deepMerge(currentValue, patch);
 
     const data: Prisma.ListingUpdateInput = {

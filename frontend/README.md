@@ -67,6 +67,7 @@ npm run dev
 ## Variables d'environnement frontend (`frontend/.env`)
 
 ```env
+VITE_LISTINGS_DATA_MODE=api
 VITE_API_BASE_URL=http://localhost:4000/v1
 
 VITE_SCRAPING_API_URL=http://localhost:8000

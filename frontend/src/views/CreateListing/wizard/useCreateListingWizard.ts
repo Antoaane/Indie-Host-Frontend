@@ -20,6 +20,8 @@ import {
 import { buildEditorRoute } from '@/views/CreateListing/wizard/createListingRouting'
 import type { CreateListingStep, CreateListingStepItem, PersistedCreateDraft } from '@/views/CreateListing/wizard/createListing.types'
 
+const MAX_PERSISTED_IMAGE_SRC_LENGTH = 12_000
+
 type UseCreateListingWizardOptions = {
   mode: MaybeRefOrGetter<EditorMode>
   source: MaybeRefOrGetter<EditorSource>
@@ -83,6 +85,86 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
     stepError.value = null
   }
 
+  function isRecord(value: unknown): value is Record<string, unknown> {
+    return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+  }
+
+  function cloneDraftForStorage(value: RawListingBundle): RawListingBundle {
+    return JSON.parse(JSON.stringify(value)) as RawListingBundle
+  }
+
+  function buildPersistedPayload(nextDraft: RawListingBundle): PersistedCreateDraft {
+    return {
+      stepIndex: activeStepIndex.value,
+      furthestStepIndex: furthestVisitedStepIndex.value,
+      isPreviewStage: isPreviewStage.value,
+      draft: nextDraft,
+      updatedAt: new Date().toISOString(),
+    }
+  }
+
+  function sanitizeDraftForStorage(
+    source: RawListingBundle,
+    strategy: 'strip-inline-images' | 'drop-medias',
+  ): RawListingBundle {
+    const draftSnapshot = cloneDraftForStorage(source)
+
+    if (strategy === 'drop-medias') {
+      draftSnapshot.medias = { images: [], videos: [] }
+      return draftSnapshot
+    }
+
+    if (!isRecord(draftSnapshot.medias)) return draftSnapshot
+    const medias = draftSnapshot.medias as Record<string, unknown>
+    const rawImages = medias.images
+    if (!Array.isArray(rawImages)) return draftSnapshot
+
+    const images = rawImages
+      .map((image) => {
+        if (!isRecord(image)) return null
+        const imageRecord: Record<string, unknown> = { ...image }
+        const src = typeof imageRecord.src === 'string' ? imageRecord.src.trim() : ''
+        const isInlineData = src.startsWith('data:')
+        if (!src || isInlineData || src.length > MAX_PERSISTED_IMAGE_SRC_LENGTH) return null
+        imageRecord.src = src
+        return imageRecord
+      })
+      .filter((image): image is Record<string, unknown> => Boolean(image))
+
+    medias.images = images
+    return draftSnapshot
+  }
+
+  function isQuotaExceededError(err: unknown): boolean {
+    if (!err || typeof err !== 'object') return false
+    const name = (err as { name?: unknown }).name
+    const code = (err as { code?: unknown }).code
+    return name === 'QuotaExceededError' || code === 22
+  }
+
+  function persistStoragePayload(payload: PersistedCreateDraft) {
+    const attempts: PersistedCreateDraft[] = [
+      payload,
+      buildPersistedPayload(sanitizeDraftForStorage(payload.draft, 'strip-inline-images')),
+      buildPersistedPayload(sanitizeDraftForStorage(payload.draft, 'drop-medias')),
+    ]
+
+    let lastError: unknown = null
+
+    for (const candidate of attempts) {
+      try {
+        window.localStorage.setItem(storageKey.value, JSON.stringify(candidate))
+        return
+      } catch (err) {
+        lastError = err
+        if (!isQuotaExceededError(err)) break
+      }
+    }
+
+    console.log('[CreateListing] failed to persist draft', lastError)
+    disableStoragePersistence()
+  }
+
   function applyDraftPatch(patch: DraftPatch) {
     draft.value = {
       ...draft.value,
@@ -141,6 +223,30 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
     return true
   }
 
+  function resolveSubmitErrorMessage(err: unknown): string {
+    const responseStatus = (err as { response?: { status?: unknown } })?.response?.status
+    if (responseStatus === 401) return 'Session expirée. Reconnectez-vous puis réessayez.'
+    if (responseStatus === 403) return "Vous n'avez pas les droits pour créer cette annonce."
+    if (responseStatus === 413) return "Le contenu envoyé est trop volumineux. Réduisez la taille ou le nombre d'images."
+    if (typeof responseStatus === 'number' && responseStatus >= 500) {
+      return "Le serveur a rencontré une erreur. Réessayez dans quelques instants."
+    }
+
+    const errorCode = (err as { code?: unknown })?.code
+    if (errorCode === 'ECONNABORTED') return "Le serveur met trop de temps à répondre. Vérifiez l'API puis réessayez."
+    if (errorCode === 'ERR_NETWORK') return 'API indisponible. Vérifiez que le backend est démarré.'
+
+    const message = typeof (err as { message?: unknown })?.message === 'string'
+      ? String((err as { message?: unknown }).message).trim()
+      : ''
+
+    if (message.toLowerCase().includes('timeout')) {
+      return "Le serveur met trop de temps à répondre. Vérifiez l'API puis réessayez."
+    }
+
+    return message || 'Impossible de créer votre annonce pour le moment.'
+  }
+
   function goToStep(index: number) {
     if (submitState.isSubmitting) return
     const safeIndex = clampStepIndex(index)
@@ -181,19 +287,8 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
       persistTimer.value = null
     }
 
-    const payload: PersistedCreateDraft = {
-      stepIndex: activeStepIndex.value,
-      furthestStepIndex: furthestVisitedStepIndex.value,
-      isPreviewStage: isPreviewStage.value,
-      draft: draft.value,
-      updatedAt: new Date().toISOString(),
-    }
-
-    try {
-      window.localStorage.setItem(storageKey.value, JSON.stringify(payload))
-    } catch (err) {
-      console.log('[CreateListing] failed to persist draft', err)
-    }
+    const payload = buildPersistedPayload(draft.value)
+    persistStoragePayload(payload)
   }
 
   function queueStorageDraft() {
@@ -246,13 +341,12 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
           isPreviewStage.value = false
           window.sessionStorage.removeItem(LANDING_CREATE_DRAFT_KEY)
           const payload: PersistedCreateDraft = {
+            ...buildPersistedPayload(draft.value),
             stepIndex: skipImportStepIndex,
             furthestStepIndex: skipImportStepIndex,
             isPreviewStage: false,
-            draft: draft.value,
-            updatedAt: new Date().toISOString(),
           }
-          window.localStorage.setItem(storageKey.value, JSON.stringify(payload))
+          persistStoragePayload(payload)
         }
         hasHydratedStorage.value = true
         return
@@ -310,7 +404,7 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
         }),
       )
     } catch (err: any) {
-      submitState.error = err?.message ?? 'Impossible de créer votre annonce pour le moment.'
+      submitState.error = resolveSubmitErrorMessage(err)
     } finally {
       submitState.isSubmitting = false
     }
