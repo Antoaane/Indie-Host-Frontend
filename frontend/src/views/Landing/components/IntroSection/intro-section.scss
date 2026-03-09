@@ -125,6 +125,14 @@
       @include min-width(lg) {
         @include lp-h2-title($accent, true, true, false);
       }
+
+      .text-gradiant {
+        background: linear-gradient(to bottom, $secondary_text_gradiant_first 0%, $secondary_text_gradiant_second 100%);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        color: transparent;
+      }
     }
 
     p {

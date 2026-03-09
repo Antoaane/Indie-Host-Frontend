@@ -17,7 +17,7 @@
     ]
   },
   "introSection": {
-    "title": "Créez votre site depuis une annonce existante",
+    "title": "Créez <span class=\"text-gradiant\">votre site</span> depuis une annonce existante",
     "body": "Copiez le lien Airbnb ou Booking d’un de vos logements et nous créez votre page de réservation instantanément.",
     "inputPlaceholder": "Collez le lien de votre logement",
     "previewCtaLabel": "Générer mon site !",
