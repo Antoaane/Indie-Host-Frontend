@@ -12,8 +12,8 @@ import { vp } from '@/utils/viewport'
 import detectOS from '@/utils/detectOs'
 import { forceReleaseScrollLock } from '@/components/overlays/scrollLock'
 // CONTENT
-import landingLocale from '@/locales/landing/fr.json'
 import type { LandingContent } from '@/views/Landing/types/content'
+import { useLandingLocale } from '@/views/Landing/composables/useLandingLocale'
 // COMPONENTS — above the fold : chargement synchrone (LCP critique)
 import HeroSection from '@/views/Landing/components/HeroSection/HeroSection.vue'
 import IntroSection from '@/views/Landing/components/IntroSection/IntroSection.vue'
@@ -26,7 +26,7 @@ const StrengthsSection = defineAsyncComponent(() => import('./components/Strengt
 // const JoinSection      = defineAsyncComponent(() => import('./components/JoinSection/JoinSection.vue'))
 const FaqSection       = defineAsyncComponent(() => import('./components/FaqSection/FaqSection.vue'))
 
-const content = landingLocale as LandingContent
+const { content } = useLandingLocale()
 
 if (vp.lg.value) {
   gsap.registerPlugin(ScrollTrigger, ScrollSmoother)

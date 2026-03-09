@@ -55,7 +55,7 @@
       {
         "id": "pricingSetup",
         "title": "Tarifez et conditionnez",
-        "description": "Modulez vos conditions de paiement (cash, acompte et paiement en ligne) ainsi que vos conditions d’annulation sur chaque annonce de manière distincte.<br /><br />Nous certifions hôtes et voyageurs avant chaque transaction afin de garantir la meilleure expérience.",
+        "description": "Modulez vos conditions de paiement (cash, acompte et paiement en ligne) ainsi que vos conditions d’annulation sur chaque annonce de manière distincte.",
         "images": [
           {
             "webp": "/assets/media/images/webp/annonce-reservation-2.webp",
@@ -67,7 +67,7 @@
       {
         "id": "goLive",
         "title": "C’est en ligne, recevez vos premières réservations !",
-        "description": "Décidez de l’URL qu’aura votre annonce et c’est bon, votre annonce est en ligne sur les <strong>moteurs de recherche</strong> et référencée sur IndieHost.<br /><br />Vous pouvez commencer à la <strong>partager à vos voyageurs</strong>, IndieHost ne prendra pas de commissions !",
+        "description": "Décidez de l’URL qu’aura votre annonce et c’est bon, votre annonce est en ligne sur les <strong>moteurs de recherche.</strong><br /><br />Vous pouvez commencer à la <strong>partager à vos voyageurs</strong>, IndieHost ne prendra pas de commissions !",
         "images": [
           {
             "webp": "/assets/media/images/webp/auto-generated.webp",
@@ -83,7 +83,7 @@
       {
         "id": "paiementEnLigneIntegreSansCommissions",
         "title": "Paiement en ligne intégré<br><strong>sans</strong> <strong>commissions</strong>",
-        "description": "Recevez des paiements en direct de vos clients sans payer de commissions. Faites vous payer en avance, même avec des clients direct. Donnez à vos clients la possibilité de payer par tous les moyens de paiements actuellement disponibles.",
+        "description": "Recevez des paiements en direct de vos clients sans payer de commissions.<br>Faites vous payer en avance, même avec des clients direct.<br>Donnez à vos clients la possibilité de payer par tous les moyens de paiements actuellement disponibles.",
         "layout": "hzt",
         "images": [
           {
@@ -211,7 +211,7 @@
   },
   "how": {
     "title": "Comment ça marche ?",
-    "body": "Notre volonté avec IndieHost est de favoriser l’autonomie dans la location en ligne courte durée pour vous et votre clientèle. De ce fait, nous remplaçons les commissions gourmandes des plateformes traditionnelles par un abonnement fixe raisonnable qui vous avantage."
+    "body": "Notre volonté avec IndieHost est de favoriser l’autonomie dans la location en ligne courte durée pour vous et votre clientèle. De ce fait, ne ferons tout pour vous libérer des commissions excessives des plateformes traditionnelles."
   },
   "habits": {
     "title": "Gardez les mêmes <strong>habitudes</strong>",
@@ -284,8 +284,8 @@
     "pillars": [
       {
         "id": "pillar1",
-        "title": "Pas assez de réservations ? Gelez !",
-        "description": "Anticipez les périodes creuses, IndieHost vous permet de <strong>geler votre abonnement</strong> pendant <strong>3 mois</strong> quand vous le voulez durant l’année. Ce gel sauvegarde vos données et l’accès à nos outils."
+        "title": "Une offre gratuite pour les <strong>loueurs indépendants</strong>",
+        "description": "Nous pensons aux loueurs qui veulent garder leur indépendance. Notre formule gratuite répond aux besoins de <strong>70 % du marché</strong> : créez votre site, recevez des réservations directes, sans abonnement ni engagement."
       },
       {
         "id": "pillar2",

@@ -1,0 +1,666 @@
+{
+  "hero": {
+    "title": "Tu sitio de reservas directas,<br><strong>0%</strong> de comisiones",
+    "description": "Crea tu web de alquiler vacacional con dominio incluido. Acepta reservas directas y cobra online—sin comisiones de OTAs, nunca.",
+    "inputPlaceholder": "Pega el enlace de tu anuncio",
+    "primaryCta": {
+      "label": "Probar gratis",
+      "href": "#join-section",
+      "target": "_self"
+    },
+    "images": [
+      {
+        "webp": "/assets/media/images/webp/hero-image.webp",
+        "png": "/assets/media/images/png/hero-image.png",
+        "alt": "Anuncio IndieHost en móvil para reservar online, más panel de control del anfitrión en escritorio"
+      }
+    ]
+  },
+  "introSection": {
+    "title": "Crea <span class=\"text-gradiant\">tu sitio</span> desde un anuncio existente",
+    "body": "Pega el enlace de Airbnb o Booking.com de cualquiera de tus propiedades—generamos tu página de reservas en segundos.",
+    "inputPlaceholder": "Pega el enlace de tu anuncio",
+    "previewCtaLabel": "Genera mi sitio",
+    "createAccountCtaLabel": "Activar mi sitio gratis",
+    "createAccountCtaHint": "Gratis · Sin tarjeta de crédito · Cero comisiones",
+    "primaryCta": {
+      "label": "Probar la importación gratuita",
+      "href": "#join-section",
+      "target": "_self"
+    }
+  },
+  "benefits": {
+    "title": "<strong>Todo</strong> es para <strong>ti</strong>"
+  },
+  "usage": {
+    "steps": [
+      {
+        "id": "importListing",
+        "title": "Importa tu anuncio desde Airbnb o Booking.com",
+        "description": "Un clic para importar tu anuncio de forma segura—fotos, descripción, valoraciones y equipamientos. Nos encargamos de todo.<br /><br />Destaca tu anuncio o empieza desde cero con el <strong>editor en vivo de IndieHost</strong>.",
+        "videos": [
+          {
+            "webm": "/assets/media/videos/import-auto.webm",
+            "mp4": "/assets/media/videos/import-auto.mp4"
+          }
+        ],
+        "images": [
+          {
+            "webp": "/assets/media/images/webp/auto-import.webp",
+            "png": "/assets/media/images/png/auto-import.png",
+            "alt": "Ilustración de importación de anuncio desde Airbnb o Booking"
+          }
+        ]
+      },
+      {
+        "id": "pricingSetup",
+        "title": "Configura tarifas y políticas",
+        "description": "Define las opciones de pago (efectivo, depósito o pago íntegro online) y las políticas de cancelación por anuncio—todo desde un solo panel.",
+        "images": [
+          {
+            "webp": "/assets/media/images/webp/annonce-reservation-2.webp",
+            "png": "/assets/media/images/png/annonce-reservation-2.png",
+            "alt": "Ilustración de la generación automática de tu página"
+          }
+        ]
+      },
+      {
+        "id": "goLive",
+        "title": "En vivo. Tus primeras reservas directas.",
+        "description": "Elige tu URL y estás en los <strong>buscadores</strong>—sin complicaciones.<br /><br />Empieza a <strong>compartir con huéspedes</strong> desde ya. IndieHost se queda con el 100% de tus ingresos.",
+        "images": [
+          {
+            "webp": "/assets/media/images/webp/auto-generated.webp",
+            "png": "/assets/media/images/png/auto-generated.png",
+            "alt": "Folleto con la guía de llegada y el código QR que lleva a tu mensajería"
+          }
+        ]
+      }
+    ]
+  },
+  "features": {
+    "items": [
+      {
+        "id": "paiementEnLigneIntegreSansCommissions",
+        "title": "Pagos integrados,<br><strong>cero</strong> <strong>comisiones</strong>",
+        "description": "Cobra directamente a tus huéspedes—sin comisiones de OTAs ni recortes ocultos.<br>Exige pagos por adelantado, también en reservas directas.<br>Acepta todos los métodos de pago que prefieran tus huéspedes.",
+        "layout": "hzt",
+        "images": [
+          {
+            "webp": "/assets/media/images/png/paiement-en-ligne.png",
+            "png": "/assets/media/images/png/paiement-en-ligne.png",
+            "alt": "Confirmación y pago en línea integrado"
+          }
+        ]
+      },
+      {
+        "id": "modifiezEtPersonnalisezVosAnnonces",
+        "title": "Edita y <strong>personaliza</strong> tus anuncios",
+        "description": "Personaliza tus anuncios con nuestro editor visual intuitivo. Previsualiza cambios en tiempo real—haz clic en cualquier elemento para editarlo al instante. Sencillo, rápido, sin conocimientos técnicos.",
+        "layout": "hzt",
+        "videos": [
+          {
+            "webm": "/assets/media/videos/annonces.webm",
+            "mp4": "/assets/media/videos/annonces.mp4"
+          }
+        ],
+        "images": [
+          {
+            "webp": "/assets/media/images/webp/editeur.webp",
+            "png": "/assets/media/images/png/editeur.png",
+            "alt": "Página de edición de un anuncio"
+          }
+        ]
+      },
+      {
+        "id": "ameliorezVotreVisibiliteSurGoogle",
+        "title": "Impulsa tu <strong>visibilidad</strong> en Google",
+        "description": "Herramientas SEO integradas y subdominio personal para posicionarte en Google. Optimizamos tu anuncio para que los viajeros te encuentren—sin pagar comisiones a OTAs.",
+        "layout": "vtc",
+        "videos": [
+          {
+            "webm": "/assets/media/videos/seo.webm",
+            "mp4": "/assets/media/videos/seo.mp4"
+          }
+        ],
+        "images": [
+          {
+            "webp": "/assets/media/images/webp/seo.webp",
+            "png": "/assets/media/images/png/seo.png",
+            "alt": "Página de edición de un anuncio"
+          }
+        ]
+      },
+      {
+        "id": "toutesVosReservationsDansUnCalendrierCentralise",
+        "title": "Todas las reservas en un <strong>calendario centralizado</strong>",
+        "description": "Sincroniza Airbnb, Booking.com y más en un solo lugar. Evita dobles reservas, haz seguimiento de check-ins y check-outs, y consulta el estado de los pagos de un vistazo.",
+        "layout": "hzt",
+        "videos": [
+          {
+            "webm": "/assets/media/videos/calendrier.webm",
+            "mp4": "/assets/media/videos/calendrier.mp4"
+          }
+        ],
+        "images": [
+          {
+            "webp": "/assets/media/images/webp/calendrier.webp",
+            "png": "/assets/media/images/png/calendrier.png",
+            "alt": "Página de edición de un anuncio"
+          }
+        ]
+      },
+      {
+        "id": "desMessagesProgrammesPourVosReservations",
+        "title": "Mensajería <strong>automatizada</strong> con huéspedes",
+        "description": "Programa SMS, emails o notificaciones de app con datos de check-in, código de la caja fuerte, recordatorios de salida y más. Configúralo una vez—nosotros lo enviamos cada vez.",
+        "layout": "vtc",
+        "videos": [
+          {
+            "webm": "/assets/media/videos/notification.webm",
+            "mp4": "/assets/media/videos/notification.mp4"
+          }
+        ],
+        "images": [
+          {
+            "webp": "/assets/media/images/webp/notification.webp",
+            "png": "/assets/media/images/png/notification.png",
+            "alt": "Página de edición de un anuncio"
+          }
+        ]
+      },
+      {
+        "id": "personnalisezVosAnnoncesAVotreImage",
+        "title": "Anuncios que <strong>reflejan tu marca</strong>",
+        "description": "Elige entre temas de diseñador o crea un look único. Diferentes estilos para diferentes propiedades—moderno, rústico, lujo. Destaca con una página de reservas que refleje el carácter de tu alojamiento.",
+        "layout": "vtc",
+        "videos": [
+          {
+            "webm": "/assets/media/videos/glass-theme.webm",
+            "mp4": "/assets/media/videos/glass-theme.mp4"
+          }
+        ],
+        "images": [
+          {
+            "webp": "/assets/media/images/webp/glass-theme.webp",
+            "png": "/assets/media/images/png/glass-theme.png",
+            "alt": "Página de edición de un anuncio"
+          }
+        ]
+      },
+      {
+        "id": "transformezChaqueVisiteEnProchaineReservation",
+        "title": "Convierte cada estancia en tu <strong>próxima reserva directa</strong>",
+        "description": "Folleto de bienvenida gratis con código QR—los huéspedes de Airbnb o Booking pueden contactarte vía IndieHost sin crear cuenta.<br /><br />Añade códigos de acceso, equipamiento, consejos locales y recomendaciones. Un escaneo te conecta con cada huésped.<br /><br />Simplifica la comunicación y convierte cada estancia en una oportunidad de reserva directa.",
+        "layout": "vtc",
+        "videos": [
+          {
+            "webm": "/assets/media/videos/guide-accueil.webm",
+            "mp4": "/assets/media/videos/guide-accueil.mp4"
+          }
+        ],
+        "images": [
+          {
+            "webp": "/assets/media/images/webp/guide.webp",
+            "png": "/assets/media/images/png/guide.png",
+            "alt": "Página de edición de un anuncio"
+          }
+        ]
+      }
+    ]
+  },
+  "how": {
+    "title": "¿Cómo funciona?",
+    "body": "IndieHost empodera a los anfitriones independientes para gestionar sus alquileres vacacionales a su manera. Lo hemos creado para librarte de las comisiones de las OTAs—así conservas más ingresos y controlas la relación con tus huéspedes."
+  },
+  "habits": {
+    "title": "Conserva los mismos <strong>hábitos</strong>",
+    "slides": [
+      {
+        "id": "modifiezEtPersonnalisezVosAnnonces",
+        "title": "Edita y <strong>personaliza</strong> tus anuncios",
+        "description": "Una vez importado tu anuncio, personalízalo libremente con un editor visual simple e intuitivo. Previsualiza cada cambio en tiempo real y edita tu contenido con un clic: haz clic en un elemento en la vista previa y te redirigirás instantáneamente al campo correcto.<br /><br />Un anuncio creado y no publicado permanecerá como borrador; siempre conservarás tus modificaciones.",
+        "images": [
+          {
+            "webp": "/assets/media/images/webp/editeur.webp",
+            "png": "/assets/media/images/png/editeur.png",
+            "alt": "Página de edición de un anuncio"
+          }
+        ]
+      },
+      {
+        "id": "vosFacturesEtVosPerformancesAuMemeEndroit",
+        "title": "Resultados y facturas <strong>en un solo lugar</strong>",
+        "description": "Consulta ingresos, ocupación y fidelidad de huéspedes de un vistazo. Exporta estadísticas mensuales y accede a todas tus facturas con un clic. Simplifica la administración.",
+        "images": [
+          {
+            "webp": "/assets/media/images/webp/dashboard-vue-ensemble.webp",
+            "png": "/assets/media/images/png/dashboard-vue-ensemble.png",
+            "alt": "Página Panel de control"
+          }
+        ]
+      },
+      {
+        "id": "vosReservationsSynchroniseesEtTrieesDansUnEspaceIntuitif",
+        "title": "Reservas sincronizadas en un <strong>panel intuitivo</strong>",
+        "description": "Añade tus enlaces de calendario de Airbnb o Booking—las fechas bloqueadas ahí se bloquean aquí automáticamente. Evita dobles reservas.<br /><br />Consulta el historial de reservas por propiedad, datos de huéspedes y estado de pagos. Gestiona todo desde un solo lugar.",
+        "images": [
+          {
+            "webp": "/assets/media/images/webp/dashboard-detail-logement.webp",
+            "png": "/assets/media/images/png/dashboard-detail-logement.png",
+            "alt": "Página de gestión de un alojamiento"
+          }
+        ]
+      },
+      {
+        "id": "desPaiementsPratiquesFlexiblesEtSecurisees",
+        "title": "Pagos flexibles y <strong>seguros</strong>",
+        "description": "No pierdas huéspedes por opciones de pago limitadas. Acepta pago íntegro online, depósito + saldo o efectivo—lo que encaje con tu negocio. Seguridad con Stripe para que reserven con confianza.",
+        "images": [
+          {
+            "webp": "/assets/media/images/webp/annonce-reservation.webp",
+            "png": "/assets/media/images/png/annonce-reservation.png",
+            "alt": "Página de pago"
+          }
+        ]
+      },
+      {
+        "id": "communiquezSimplement",
+        "title": "Comunica <strong>sencillamente</strong>",
+        "description": "Mensajea a tus huéspedes de forma segura con IndieHost—instantáneo, organizado, todo en un buzón. Los visitantes que escanean tu guía pueden contactarte sin crear cuenta. Reconecta con huéspedes aunque reservaron por Airbnb o Booking.",
+        "images": [
+          {
+            "webp": "/assets/media/images/webp/messagerie.webp",
+            "png": "/assets/media/images/png/messagerie.png",
+            "alt": "Página de mensajería"
+          }
+        ]
+      }
+    ]
+  },
+  "strengths": {
+    "title": "Construido sobre <strong>transparencia</strong>, <strong>respeto</strong>, <strong>confianza</strong>",
+    "subtitle": "Tres valores que protegen tus ingresos, tus datos y tu tranquilidad.",
+    "pillars": [
+      {
+        "id": "pillar1",
+        "title": "Plan gratis para <strong>anfitriones independientes</strong>",
+        "description": "Diseñado para anfitriones que valoran su independencia. Nuestro plan gratuito cubre el <strong>70% de los casos de uso</strong>: crea tu sitio, acepta reservas directas—sin suscripción ni gastos ocultos."
+      },
+      {
+        "id": "pillar2",
+        "title": "Saber dónde están tus datos.",
+        "description": "Alojados en Francia, protegidos por el <strong>RGPD</strong>. Nunca vendemos tus datos—nuestros ingresos vienen de suscripciones, no de tu privacidad. Así de simple."
+      },
+      {
+        "id": "pillar3",
+        "title": "Hecho para durar—y para apoyarte",
+        "description": "Construimos herramientas en las que puedes confiar. Nuestro equipo escucha el feedback de los anfitriones y te acompaña en cada paso—cuando lo necesites."
+      }
+    ]
+  },
+  "join": {
+    "title": "¿No está mal, verdad? ¡Es francés!",
+    "description": "<strong>IndieHost</strong> está hecho <strong>por anfitriones, para anfitriones</strong>. Creado con ❤️ entre la montaña, el mar y el wifi inestable.",
+    "flagIcon": "IconFrenchFlag",
+    "cta": {
+      "label": "Probar gratis",
+      "href": "#join-section",
+      "target": "_self",
+      "rel": "nofollow",
+      "ariaLabel": "Ir al formulario de registro"
+    },
+    "form": {
+      "title": "<strong>Unirse a la lista de espera</strong>",
+      "description": "También odiamos el spam: <strong>un solo email</strong> para mantenerte informado—o <a href='/donation'>apoya el proyecto con un donativo</a> si lo prefieres.",
+      "variant": "NewsletterForm",
+      "fields": [
+        {
+          "type": "email",
+          "name": "email",
+          "placeholder": "Tu dirección de email",
+          "required": true
+        }
+      ],
+      "groups": [
+        {
+          "type": "checkbox-group",
+          "name": "platforms",
+          "legend": "Ya alquilo en…",
+          "options": [
+            {
+              "label": "Airbnb",
+              "value": "airbnb"
+            },
+            {
+              "label": "Booking",
+              "value": "booking"
+            },
+            {
+              "label": "Abritel",
+              "value": "abritel"
+            },
+            {
+              "label": "Expedia Grp.",
+              "value": "expedia"
+            },
+            {
+              "label": "Mi propio sitio web",
+              "value": "website"
+            },
+            {
+              "label": "Otro",
+              "value": "autre"
+            },
+            {
+              "label": "Estoy empezando",
+              "value": "debutant"
+            }
+          ]
+        }
+      ],
+      "consents": [
+        {
+          "type": "checkbox",
+          "name": "early_access",
+          "label": "Quiero mantenerme informado/a del lanzamiento y probar en primicia",
+          "required": true
+        }
+      ],
+      "validation": {
+        "defaults": {
+          "simpleText": {
+            "maxLength": 255,
+            "hideIndicatorAt": 255
+          }
+        },
+        "fields": {
+          "text": {
+            "maxLength": 80,
+            "autocomplete": "off",
+            "inputMode": "text"
+          },
+          "email": {
+            "minLength": 5,
+            "maxLength": 160,
+            "autocomplete": "email",
+            "inputMode": "email",
+            "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+            "patternTitle": "Formato esperado: nombre@dominio.tld"
+          },
+          "tel": {
+            "minLength": 6,
+            "maxLength": 25,
+            "autocomplete": "tel",
+            "inputMode": "tel",
+            "pattern": "^\\+?[0-9().\\s-]{6,25}$",
+            "patternTitle": "Usa solo números, espacios, paréntesis, + o -"
+          },
+          "zip": {
+            "maxLength": 12,
+            "autocomplete": "postal-code",
+            "inputMode": "numeric",
+            "pattern": "^[0-9A-Za-z\\s-]{3,12}$",
+            "patternTitle": "Código postal inválido"
+          }
+        },
+        "nameAutocomplete": {
+          "first": "given-name",
+          "last": "family-name",
+          "name": "name",
+          "default": "off"
+        }
+      },
+      "submit": {
+        "label": "Enviar",
+        "icon": "SendIcon"
+      }
+    }
+  },
+  "faq": {
+    "title": "Preguntas frecuentes",
+    "searchPlaceholder": "Buscar por palabra clave",
+    "searchLabel": "Búsqueda FAQ",
+    "nodes": [
+      {
+        "id": "cat-comprendre",
+        "title": "Entender IndieHost",
+        "children": [
+          {
+            "id": "q-1",
+            "question": "¿Qué es IndieHost?",
+            "answer": "IndieHost es una plataforma todo en uno para alquiler vacacional que devuelve el poder a los anfitriones. Te liberamos de las comisiones de las OTAs ofreciéndote todo lo que necesitas: tu web, motor de reservas, pagos y calendario—todo bajo tu control, con cero comisión sobre tus ingresos."
+          },
+          {
+            "id": "q-2",
+            "question": "¿En qué se diferencia IndieHost de Airbnb o Booking.com?",
+            "answer": "A diferencia de las OTAs, IndieHost cobra cero comisión por tus reservas. La relación con los huéspedes, tu marca y tus tarifas son tuyas. Personaliza tu página, usa tu propio dominio y mantente sin comisiones—algo que las plataformas tradicionales no permiten."
+          },
+          {
+            "id": "q-3",
+            "question": "Si no cobráis comisiones, ¿cómo os remuneráis?",
+            "answer": "Nuestro modelo es transparente. Ofrecemos un Plan 'IndieHost' 100% gratuito que cubre todas las necesidades esenciales (pago, calendario, 2 anuncios). Generamos ingresos mediante suscripciones mensuales opcionales (SuperHost y MegaHost) para propietarios que necesitan funciones más avanzadas (más anuncios, conexión PMS, personalización avanzada) y mediante opciones a la carta (como la integración Google Travel o la verificación KYC)."
+          },
+          {
+            "id": "q-4",
+            "question": "¿A qué tipo de anfitrión se dirige IndieHost?",
+            "answer": "IndieHost está diseñado para todos los tipos de anfitriones:<br /><br />Particulares (Plan Gratuito): Quienes alquilan ocasionalmente su residencia principal.<br /><br />Semi-profesionales (Plan SuperHost): Propietarios de segundas residencias, casas rurales o alojamientos inusuales que gestionan unos pocos inmuebles.<br /><br />Profesionales (Plan MegaHost): Gestores de alojamientos rurales, pequeños hoteles o conserjerías que necesitan herramientas de gestión completas.<br /><br />Cada plan se adapta a tu nivel de actividad y profesionalización."
+          },
+          {
+            "id": "q-5",
+            "question": "¿Qué significa reserva directa?",
+            "answer": "La reserva directa significa que el viajero reserva directamente contigo, el propietario, sin intermediario. IndieHost te proporciona la tecnología para que puedas aceptar estas reservas en tu propia página. La ventaja es doble: no pagas comisión y controlas toda la relación con el cliente (datos, comunicación, fidelización)."
+          }
+        ]
+      },
+      {
+        "id": "cat-nos-offres",
+        "title": "Precios y Suscripciones",
+        "children": [
+          {
+            "id": "q-7",
+            "question": "¿El plan 'IndieHost' es realmente gratuito? ¿Hay gastos ocultos?",
+            "answer": "Sí, el plan 'IndieHost' es 0€/mes, sin gastos ocultos por nuestra parte. Incluye 2 anuncios, pago en línea (vía Stripe), facturación, sincronización iCal, mensajería y panel de control. Los únicos gastos que se aplican son las comisiones de transacción estándar de nuestro socio de pago Stripe (como en cualquier transacción en línea), sobre las cuales no tomamos margen."
+          },
+          {
+            "id": "q-8",
+            "question": "¿Puedo cancelar mi suscripción de pago (SuperHost/MegaHost) en cualquier momento?",
+            "answer": "Nuestras suscripciones de pago no tienen compromiso y pueden cancelarse en cualquier momento, sin gastos de cancelación. La cancelación se hace simplemente desde tu panel de control. Tu suscripción permanecerá activa hasta el final de tu período de facturación en curso (mensual o anual), y no se te facturará por el período siguiente."
+          },
+          {
+            "id": "q-9",
+            "question": "¿Puedo añadir opciones específicas sin cambiar de plan?",
+            "answer": "Sí. Por ejemplo, si estás en el plan Gratuito, puedes suscribirte a opciones de pago específicas sin pasar al plan SuperHost, como: la integración Google Travel, la compra o vinculación de un dominio personalizado, la posibilidad de aceptar depósitos."
+          },
+          {
+            "id": "q-10",
+            "question": "¿Qué pasa si tengo varios alojamientos en distintos lugares?",
+            "answer": "Nuestra regla es que los anuncios de una misma cuenta deben pertenecer a la misma persona (física o jurídica). Si gestionas propiedades para distintos propietarios, cada propietario deberá crear su propia cuenta IndieHost."
+          }
+        ]
+      },
+      {
+        "id": "cat-paiements-en-ligne",
+        "title": "Pagos en línea",
+        "children": [
+          {
+            "id": "q-12",
+            "question": "¿Cómo me pagan los viajeros?",
+            "answer": "Utilizamos Stripe Connect, la referencia mundial del pago en línea seguro. Al registrarte, conectas tu cuenta bancaria a Stripe. Cuando un viajero paga, el dinero es procesado por Stripe y transferido directamente a tu cuenta. IndieHost nunca actúa como intermediario financiero ni retiene tu dinero."
+          },
+          {
+            "id": "q-13",
+            "question": "¿IndieHost cobra comisión sobre el pago?",
+            "answer": "No, nunca. Recibes el 100% del importe pagado por el viajero (menos las comisiones de transacción estándar de Stripe, inevitables para cualquier pago con tarjeta)."
+          },
+          {
+            "id": "q-14",
+            "question": "¿Puedo pedir un depósito en lugar del pago total?",
+            "answer": "Sí. Puedes configurar tus propias reglas de pago. La posibilidad de aceptar depósitos (en lugar del 100% en la reserva) es una opción de pago a 5€/mes en el plan Gratuito, e incluida por defecto en los planes SuperHost y MegaHost."
+          },
+          {
+            "id": "q-15",
+            "question": "¿Es seguro el pago para mis clientes?",
+            "answer": "Totalmente. Stripe Connect gestiona miles de millones de transacciones y cumple las normativas de seguridad más estrictas (PCI DSS). Los viajeros pueden pagar con total confianza, sabiendo que su información bancaria está cifrada y protegida."
+          },
+          {
+            "id": "q-16",
+            "question": "¿Cuándo recibo el dinero de la reserva?",
+            "answer": "Para asegurar la transacción tanto para el anfitrión como para el viajero, el pago se retiene de forma segura por nuestro socio Stripe tras la confirmación de la reserva. El importe se transfiere luego a tu cuenta una vez que el cliente ha validado su entrada en el alojamiento (check-in). Este sistema de depósito en garantía asegura que el alojamiento cumple lo acordado y que el viajero ha llegado, estableciendo confianza mutua. Una vez liberado el pago, aparece en tu cuenta Stripe y luego se ingresa en tu cuenta bancaria según el calendario habitual de Stripe (generalmente unos días)."
+          }
+        ]
+      },
+      {
+        "id": "cat-start",
+        "title": "Empezar en IndieHost",
+        "children": [
+          {
+            "id": "q-17",
+            "question": "¿Cómo creo mi anuncio en IndieHost?",
+            "answer": "Con nuestro editor en vivo. A la izquierda, rellenas tu información (título, fotos, equipamientos); a la derecha, visualizas al instante el resultado final. En pocos minutos, tu página está lista para compartir."
+          },
+          {
+            "id": "q-18",
+            "question": "¿Cuántos anuncios puedo crear?",
+            "answer": "Con el plan gratuito puedes crear hasta dos alojamientos; con el plan SuperHost, cinco; y con el plan MegaHost, hasta quince (ampliables bajo solicitud)."
+          },
+          {
+            "id": "q-19",
+            "question": "¿Qué información se solicita en el registro?",
+            "answer": "Al registrarte, te pediremos la información administrativa básica. Esto es necesario para garantizar la conformidad legal de la plataforma, en particular la gestión de pagos vía Stripe y, si eres particular, la redistribución futura de las tasas turísticas."
+          },
+          {
+            "id": "q-20",
+            "question": "¿La herramienta es complicada para alguien con poca experiencia técnica?",
+            "answer": "No, la herramienta está diseñada para ser intuitiva. El editor en vivo te guía paso a paso. Además, tu panel de control centraliza toda la información clave (remuneración, viajeros) de forma clara y visual. Para una gestión aún más simple en el día a día, una aplicación móvil está disponible, permitiéndote gestionar tus anuncios y reservas directamente desde tu teléfono."
+          }
+        ]
+      },
+      {
+        "id": "cat-synchronisation",
+        "title": "Gestión de Reservas y Sincronización",
+        "children": [
+          {
+            "id": "q-21",
+            "question": "¿Cómo funciona la sincronización del calendario iCAL?",
+            "answer": "La sincronización es bidireccional. Proporcionas a IndieHost tus enlaces iCAL (Airbnb, Booking, etc.) para importar tus reservas externas, e IndieHost te proporciona un enlace iCAL para copiar en tus otras plataformas. En cuanto se realiza una reserva en una plataforma, bloquea las fechas en todas las demás, evitando así dobles reservas."
+          },
+          {
+            "id": "q-22",
+            "question": "¿Puedo añadir manualmente una reserva hecha por teléfono?",
+            "answer": "Sí, esta función está incluida en los planes SuperHost y MegaHost. Te permite añadir o modificar reservas manualmente (por ejemplo, un habitual que reserva por teléfono) directamente en tu calendario IndieHost para bloquear las fechas."
+          },
+          {
+            "id": "q-23",
+            "question": "¿Cómo muestra el calendario mis reservas?",
+            "answer": "Tu calendario IndieHost centraliza todo. Muestra tus reservas con una visualización clara de su procedencia (IndieHost, Airbnb, Booking, Manual…). Dispones de varias vistas (mensual, semanal) para una gestión más fácil."
+          },
+          {
+            "id": "q-24",
+            "question": "¿Cómo soy notificado de una nueva reserva?",
+            "answer": "Recibes notificaciones en tiempo real vía la app, SMS o email por cualquier nueva solicitud de reserva o confirmación de pago, permitiéndote ser muy reactivo con tus viajeros."
+          },
+          {
+            "id": "q-25",
+            "question": "¿Puedo automatizar la comunicación con mis viajeros (SMS, notificaciones)?",
+            "answer": "Sí. Para ahorrarte tiempo y profesionalizar la acogida, nuestros planes avanzados (SuperHost y MegaHost) incluyen un sistema de mensajería automatizada. Puedes programar el envío de SMS y notificaciones en momentos clave del recorrido del viajero (ej.: confirmación de reserva, recordatorio D-7, instrucciones de llegada la víspera, mensaje de bienvenida a la llegada, instrucciones de salida)."
+          }
+        ]
+      },
+      {
+        "id": "cat-attirer-voyageurs",
+        "title": "Atraer más viajeros sin comisión",
+        "children": [
+          {
+            "id": "q-28",
+            "question": "Si no estoy en Airbnb, ¿cómo me encontrarán los viajeros?",
+            "answer": "IndieHost te da las herramientas para la adquisición directa. Puedes compartir el enlace de tu página IndieHost en tus redes sociales, Google Maps, etc. Además, ofrecemos una potente opción de pago: la integración en Google Travel (Google Hotels)."
+          },
+          {
+            "id": "q-29",
+            "question": "¿Qué es la integración Google Travel?",
+            "answer": "Es una opción (de pago para los planes Gratuito/SuperHost, incluida para MegaHost) que referencia tu anuncio directamente en los resultados de búsqueda de Google Travel / Google Hotels. Es un canal de adquisición extremadamente potente que llega a millones de viajeros."
+          },
+          {
+            "id": "q-30",
+            "question": "¿Cuál es el interés de estar en Google Travel con IndieHost?",
+            "answer": "El argumento es simple: como no pagas comisión en IndieHost, puedes mostrar en Google Travel un precio entre un 15% y un 20% inferior al de tus anuncios en Booking o Airbnb. Te conviertes así en la oferta más competitiva y captas las reservas directas."
+          },
+          {
+            "id": "q-31",
+            "question": "¿IndieHost tiene un motor de búsqueda para los viajeros?",
+            "answer": "Sí. Además de tu página de anuncio individual, IndieHost dispone de un motor de búsqueda (por lugar, fecha, número de personas) que permite a los viajeros que visitan nuestro sitio descubrir tu alojamiento."
+          },
+          {
+            "id": "q-32",
+            "question": "¿Ayudáis a fidelizar clientes y crear una relación directa?",
+            "answer": "Sí, es un pilar de la oferta IndieHost. La fidelización comienza desde la primera estancia gracias al folleto de bienvenida digital.<br /><br />Canal de Comunicación Directa: Mediante un código QR colocado en el alojamiento, el viajero accede a una guía digital completa. Esta guía integra una mensajería instantánea dedicada, ofreciéndote un canal de comunicación directo y profesional con tu viajero (para toda la información de la estancia) que te pertenece, a diferencia de las mensajerías de las OTA.<br /><br />Experiencia Premium: Este folleto centraliza toda la información necesaria para el buen desarrollo de la estancia (guías, contactos, etc.). Mejora la experiencia del viajero, lo que favorece las buenas valoraciones (ayudando tu futura adquisición) y las reservas directas (fidelización).<br /><br />Herramientas de Remarketing: Para los planes avanzados (MegaHost), dispones además de herramientas de campañas de email para recontactar a tus antiguos clientes con ofertas especiales e incitarlos a reservar de nuevo contigo."
+          }
+        ]
+      },
+      {
+        "id": "cat-url-thèmes",
+        "title": "Dominio y Temas",
+        "children": [
+          {
+            "id": "q-38",
+            "question": "¿Puedo usar mi propio dominio (ej.: www.mi-casa-rural.es)?",
+            "answer": "Por supuesto. Es una de nuestras grandes ventajas para tu independencia. Puedes comprar o vincular un dominio existente a tu cuenta/anuncio IndieHost. Esta función está incluida en el plan MegaHost y disponible como opción de pago para el plan SuperHost."
+          },
+          {
+            "id": "q-39",
+            "question": "¿Qué pasa si no tengo dominio?",
+            "answer": "No hay problema. Si no tienes un dominio personalizado, obtienes una URL estándar IndieHost (por ejemplo indiehost.com/tu-propiedad) que puedes compartir inmediatamente."
+          },
+          {
+            "id": "q-40",
+            "question": "¿Qué es el 'banco de temas'?",
+            "answer": "Son diseños gráficos para tu página de reservas. En lugar de tener la misma apariencia que todos, puedes elegir un tema (diseño, colores, tipografía) que corresponda al ambiente de tu alojamiento (moderno, rústico, lujo...)."
+          },
+          {
+            "id": "q-41",
+            "question": "¿Hasta qué punto puedo personalizar mi anuncio?",
+            "answer": "Tienes un control avanzado. Entre el editor en vivo (para el contenido: fotos, textos, equipamientos, reglas) y la elección de temas (para el diseño), puedes crear una página de reservas única y profesional que refleje realmente tu marca."
+          }
+        ]
+      },
+      {
+        "id": "cat-sécurité",
+        "title": "Seguridad y Cumplimiento Legal",
+        "children": [
+          {
+            "id": "q-42",
+            "question": "¿Qué es la verificación KYC?",
+            "answer": "El KYC (Know Your Customer) es un proceso de verificación de identidad esencial para evitar fraudes y tranquilizar a los viajeros. Verificamos tu identidad (que debe corresponder al nombre de la cuenta), un justificante de propiedad del inmueble y tu número de declaración de alquiler en el ayuntamiento."
+          },
+          {
+            "id": "q-43",
+            "question": "¿Es obligatoria la verificación KYC?",
+            "answer": "Está incluida y recomendada para los planes SuperHost y MegaHost. Para el plan Gratuito es una opción de pago. Superar el KYC te otorga una insignia de tranquilidad (badge 'Verificado') en tu anuncio, lo que aumenta considerablemente la confianza de los viajeros y tu tasa de conversión."
+          },
+          {
+            "id": "q-44",
+            "question": "¿Cómo gestiona IndieHost la tasa turística?",
+            "answer": "Para los anfitriones particulares, nuestro sistema está diseñado para gestionar la redistribución automática de las tasas turísticas a las entidades competentes. Esto te libera de una compleja carga administrativa."
+          },
+          {
+            "id": "q-45",
+            "question": "¿Es posible la verificación de los viajeros?",
+            "answer": "Sí, prevemos una opción de verificación de la identidad del viajero. Es particularmente útil si tú, como anfitrión, emites contratos de alquiler y necesitas certificar la identidad de tu inquilino."
+          }
+        ]
+      },
+      {
+        "id": "cat-pms",
+        "title": "Integraciones técnicas con PMS y RMS",
+        "children": [
+          {
+            "id": "q-43",
+            "question": "¿Es IndieHost compatible con mi Channel Manager (PMS) o mi RMS (Revenue Management System)?",
+            "answer": "Sí. Sabemos que los SuperHosts y profesionales usan herramientas como SuperHote (PMS) o RMS (software de tarificación dinámica). La integración de herramientas de gestión de terceros está incluida en los planes SuperHost y MegaHost. Te permite sincronizar tus anuncios, tarifas, disponibilidades y reservas IndieHost directamente desde tu herramienta de gestión centralizada, para una máxima eficiencia."
+          }
+        ]
+      }
+    ]
+  }
+}
