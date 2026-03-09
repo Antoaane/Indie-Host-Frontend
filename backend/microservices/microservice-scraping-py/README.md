@@ -51,10 +51,16 @@ Endpoints :
 | GET | `/health` | Health check |
 | POST | `/scrape` | Scrape une annonce (body: `{"url": "https://...", "currency": "EUR"}`) |
 
-Exemple :
+Sources supportées : **Airbnb** et **Booking.com**. L'API détecte automatiquement la source depuis l'URL.
+
+Exemples :
 
 ```powershell
+# Airbnb
 curl -X POST http://localhost:8000/scrape -H "Content-Type: application/json" -d "{\"url\": \"https://www.airbnb.fr/rooms/47198811\"}"
+
+# Booking.com
+curl -X POST http://localhost:8000/scrape -H "Content-Type: application/json" -d "{\"url\": \"https://www.booking.com/hotel/fr/xxx.html\"}"
 ```
 
 ## Compatibilité Airbnb

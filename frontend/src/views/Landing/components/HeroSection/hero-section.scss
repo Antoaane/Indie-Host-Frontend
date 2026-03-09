@@ -1,6 +1,7 @@
 /* File: src/views/Landing/components/HeroSection/hero-section.scss */
 
 @use "@/styles/variables/globals" as *;
+@use "@/styles/variables/colors" as colors;
 @use '@/styles/components/buttons' as buttons;
 
 #hero-section {
@@ -31,7 +32,7 @@
       padding-top: 2rem;
 
       &:first-child {
-        padding-top: 0.5rem;
+        padding-top: 0;
       }
 
       @include min-width(lg) {
@@ -49,18 +50,26 @@
       flex-direction: column;
       justify-content: center;
 
+      /* Promouvoir h1/p/form sur leur propre couche avant l'animation GSAP.
+         Évite le composite stutter sur iOS Safari au démarrage de la page. */
+      h1, p, .hero-form {
+        will-change: transform, opacity;
+      }
+
       &>div {
         display: flex;
         flex-direction: column;
         align-items: center;
+        gap: 24px;
 
         @include min-width(lg) {
-          max-width: 40rem;
+          max-width: 54rem;
           align-items: flex-start;
         }
 
         h1 {
           width: 100%;
+          margin: 0 !important;
           padding-inline: 0 !important;
 
           text-align: center;
@@ -69,11 +78,20 @@
           @include min-width(lg) {
             text-align: left;
           }
+
+          // Conteneur du compteur animé : largeur fixe = valeur la plus large ("20%")
+          // pour éviter que le titre reflue quand le chiffre change
+          .hero-counter {
+            display: inline-block;
+            min-width: 2.2ch;
+            font-variant-numeric: tabular-nums;
+            text-align: right;
+          }
         }
 
         p {
           width: 100%;
-          margin-bottom: 2rem;
+          margin: 0;
 
           text-align: center;
           @include base-text($accent, $bigger: true);
@@ -91,11 +109,86 @@
           }
         }
 
-        .cta {
-          width: max-content;
-          margin-top: 2rem;
+        .hero-form {
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 24px;
 
-          @include buttons.primary(true, light);
+          @include min-width(lg) {
+            align-items: flex-start;
+          }
+        }
+
+        .hero-search {
+          width: 100%;
+          max-width: 42rem;
+          display: flex;
+          align-items: center;
+          gap: 0.75rem;
+          padding: 0.75rem 1rem;
+          margin: 0;
+
+          background: rgba(163, 153, 255, 0.07);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(163, 153, 255, 0.35);
+          border-radius: 13px;
+          box-shadow: 0 4px 24px rgba(163, 153, 255, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+          .icon {
+            flex-shrink: 0;
+            width: 1.25rem;
+            height: 1.25rem;
+            color: colors.$primary_gradiant_first;
+            stroke: colors.$primary_gradiant_first;
+          }
+
+          input {
+            flex: 1;
+            min-width: 0;
+            background: transparent;
+            border: none;
+            outline: none;
+            font: inherit;
+            color: $accent;
+
+            &::placeholder {
+              color: rgba($accent, 0.6);
+            }
+          }
+
+          .platform-logos {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            flex-shrink: 0;
+
+            .platform-logo {
+              width: 1.25rem;
+              height: 1.25rem;
+              object-fit: contain;
+              opacity: 0.35;
+              filter: invert(1);
+            }
+          }
+        }
+
+        .hero-form .cta {
+          margin: 0;
+
+          @include buttons.primary(false, light);
+
+          &>* {
+            box-shadow: none !important;
+
+            & > span,
+            & > svg {
+              box-shadow: none !important;
+              text-shadow: none !important;
+            }
+          }
         }
       }
     }
@@ -123,6 +216,7 @@
         }
 
         .hero-image {
+          will-change: transform, opacity;
           width: auto;
           height: 60vh;
 
@@ -194,16 +288,29 @@
   }
 
   .shapes-bg {
-    min-width: 1280px;
-    width: 100%;
-    height: auto;
+    /* Masqué sur mobile : le filtre feTurbulence est calculé sur le CPU d'iOS
+       et bloque le rendu même à faible opacité. Invisible sur petit écran de toute façon. */
+    display: none;
 
-    position: absolute;
-    top: 0;
-    left: 50%;
-    z-index: 0;
+    @include min-width(lg) {
+      display: block;
+      min-width: 1280px;
+      width: 100%;
+      height: auto;
 
-    transform: translateX(-50%);
-    opacity: 0.075;
+      position: absolute;
+      top: 0;
+      left: 50%;
+      z-index: 0;
+
+      transform: translateX(-50%);
+      opacity: 0.075;
+      pointer-events: none;
+    }
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
   }
 }

@@ -23,6 +23,12 @@
       content="width=device-width, initial-scale=1.0"
     />
 
+    <!-- Preload ressources critiques : polices + image LCP hero -->
+    <!-- Sans ces hints, iOS Safari découvre ces fichiers trop tard (après parse JS) -->
+    <link rel="preload" as="font" href="/assets/fonts/fustat-latin.woff2" type="font/woff2" crossorigin="anonymous" />
+    <link rel="preload" as="font" href="/assets/fonts/outfit-latin.woff2" type="font/woff2" crossorigin="anonymous" />
+    <link rel="preload" as="image" href="/assets/media/images/webp/hero-image.webp" type="image/webp" />
+
     <title>IndieHost | Plateforme de Location Saisonnière à 0% Commission</title>
     <meta
       name="description"

@@ -84,6 +84,7 @@ function onConfirmCheckout(payload: CheckoutConfirmationPayload) {
       <Gallery
         v-if="props.listingData"
         :medias="props.listingData.medias"
+        :preview-only="props.previewOnly"
       />
       <template v-else><div class="skeleton">Chargement…</div></template>
     </div>
@@ -105,6 +106,7 @@ function onConfirmCheckout(payload: CheckoutConfirmationPayload) {
         key="core"
         v-model:model-value="selection"
         :data="props.listingData"
+        :preview-only="props.previewOnly"
       />
       <Checkout
         v-else-if="props.listingData && props.checkoutPayload"
@@ -128,10 +130,7 @@ function onConfirmCheckout(payload: CheckoutConfirmationPayload) {
     </Transition>
   </div>
 
-  <div
-    v-if="!props.previewOnly"
-    class="stay"
-  >
+  <div class="stay">
     <Booking
       v-if="props.listingData"
       v-model:model-value="selection"

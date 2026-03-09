@@ -8,27 +8,80 @@
 #intro-section {
   position: relative;
   min-height: 0;
+  overflow: clip;
 
-  @include layout-gap(padding, top, 4);
+  // Dégradé très doux en haut (jonction avec la section précédente)
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: clamp(120px, 20vh, 280px);
+    pointer-events: none;
+    z-index: 0;
+    background: linear-gradient(
+      to bottom,
+      rgba($secondary, 1) 0%,
+      rgba($secondary, 0.7) 30%,
+      rgba($secondary, 0.3) 60%,
+      rgba($secondary, 0) 100%
+    );
+  }
+
+  padding-top: 150px;
   @include layout-gap(padding, bottom, 4);
 
   @include min-width(lg) {
-    @include layout-gap(padding, top, 6);
+    padding-top: 150px;
     @include layout-gap(padding, bottom, 6);
   }
 
+  .gradiant-separator-wrapper {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+    // Limite le gradient à la section Intro (s'arrête au début de FeaturesSection)
+
+    // Fondu très smooth en bas pour éviter une bordure nette
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 45%;
+      min-height: 200px;
+      pointer-events: none;
+      background: linear-gradient(
+        to top,
+        $secondary 0%,
+        rgba($secondary, 0.95) 10%,
+        rgba($secondary, 0.7) 25%,
+        rgba($secondary, 0.4) 45%,
+        rgba($secondary, 0.1) 70%,
+        transparent 100%
+      );
+    }
+  }
+
   .gradiant-separator {
-    width: 125%;
+    width: 160%;
     height: auto;
     position: absolute;
     top: 0;
     left: 50%;
-    z-index: 0;
+    pointer-events: none;
+    user-select: none;
     transform-origin: top center;
-    transform: translate(-50%, var(--layout-gap-sm)) scaleY(1.2) rotate(-2deg);
+    // Place le décor sur la jonction avec la section précédente (Hero)
+    // On étire le dégradé pour couvrir la section, sans déborder sur FeaturesSection
+    transform: translate(-50%, 0) scaleY(2.4);
 
     @include min-width(lg) {
-      transform: translate(-50%, calc(var(--layout-gap) * 3)) scaleY(0.7) rotate(-3deg);
+      transform: translate(-50%, 0) scaleY(1.9);
     }
   }
 
@@ -47,22 +100,22 @@
     align-items: center;
     text-align: center;
     gap: var(--layout-gap-md);
-    max-width: 36rem;
+    max-width: 56rem;
     margin-inline: auto;
 
-    padding: var(--layout-gap-2xl) var(--layout-gap-lg);
-    border-radius: borders.$rounded-xl;
-    background: $translucent-surface-1;
-    backdrop-filter: blur(8px);
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    backdrop-filter: none;
 
     @include min-width(md) {
-      padding: var(--layout-gap-3xl) var(--layout-gap-2xl);
-      border-radius: borders.$rounded-xxl;
+      padding: 0;
+      border-radius: 0;
     }
 
     @include min-width(lg) {
-      max-width: 42rem;
-      padding: var(--layout-gap-4xl) var(--layout-gap-3xl);
+      max-width: 56rem;
+      padding: 0;
     }
 
     h2 {
@@ -80,31 +133,53 @@
       line-height: 1.5;
     }
 
-    .input-row {
+    .import-row {
       width: 100%;
-      max-width: 28rem;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--layout-gap-sm);
+      margin-top: var(--layout-gap-sm);
+      position: relative;
+      z-index: 10;
 
-      .url-input {
-        width: 100%;
-        @include inputs.field($theme: accent);
+      @include min-width(md) {
+        grid-template-columns: 1fr auto;
+        align-items: center;
       }
     }
 
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: center;
-      gap: var(--layout-gap-md);
-      margin-top: var(--layout-gap-sm);
+    .import-input {
+      width: 100%;
+      @include inputs.search($theme: accent);
+      box-shadow: none;
     }
 
-    .cta {
-      width: max-content;
+    .generate-btn {
+      width: 100%;
       @include buttons.primary(true, light);
+      white-space: nowrap;
+      position: relative;
+      z-index: 1;
 
-      &.cta-preview {
-        @include buttons.low-btn($icon-only: false);
+      &::before,
+      &::after {
+        pointer-events: none;
+      }
+
+      & > button {
+        position: relative;
+        z-index: 2;
+        pointer-events: auto;
+      }
+
+      @include min-width(md) {
+        width: max-content;
+      }
+
+      .icon {
+        width: 1.1rem;
+        height: 1.1rem;
+        margin-right: 0.5rem;
       }
     }
 
@@ -113,42 +188,149 @@
       @include little-text($thin: false);
       color: rgba($bad, 0.95);
     }
+
+    .activate-cta {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--layout-gap-sm);
+      width: 100%;
+      margin-top: var(--layout-gap-md);
+      padding-top: var(--layout-gap-md);
+      border-top: 1px solid rgba($accent, 0.12);
+    }
+
+    .activate-btn {
+      width: 100%;
+      @include buttons.primary($cta: true, $theme: light, $fullwidth: true);
+
+      > button {
+        gap: 0.6rem;
+
+        > .icon {
+          width: 1.1rem;
+          height: 1.1rem;
+          flex-shrink: 0;
+          transition: transform 200ms ease;
+        }
+
+        &:hover > .icon {
+          transform: translateX(3px);
+        }
+      }
+
+      @include min-width(md) {
+        width: max-content;
+        min-width: 22rem;
+      }
+    }
+
+    .activate-hint {
+      margin: 0;
+      @include little-text($thin: false);
+      color: rgba($accent, 0.55);
+      letter-spacing: 0.01em;
+    }
   }
 
   .embed-preview {
     width: 100%;
-    max-width: 56rem;
+    max-width: 72rem;
+    height: 80vh;
     margin-top: var(--layout-gap-3xl);
-    min-height: 480px;
     border-radius: borders.$rounded-xxl;
     overflow: hidden;
     background: $translucent-surface-1;
     box-shadow: 0 8px 32px rgba($secondary, 0.2);
+    position: relative;
+    z-index: 2;
+
+    @include min-width(lg) {
+      max-width: 90rem;
+      height: 85vh;
+    }
+
+    .embed-stage {
+      width: 100%;
+      height: 100%;
+    }
+
+    .embed-scale {
+      width: 100%;
+      height: 100%;
+    }
 
     .embed-skeleton {
       display: grid;
       place-items: center;
-      min-height: 480px;
+      width: 100%;
+      height: 100%;
       padding: var(--layout-gap-2xl);
       @include base-text($accent, $bigger: true);
     }
 
+    // La listing-view doit avoir une hauteur définie pour que la chaîne
+    // height:100% arrive jusqu'au .listing-gallery-mosaic.
+    // Sans ça, les tuiles absolute du Mosaic resolvent à height:0 → images invisibles.
     .listing-view {
       width: 100%;
       height: 100%;
-      min-height: 480px;
+      min-height: 0;
+      flex-shrink: 0;
+      pointer-events: auto;
     }
   }
 
-  .create-account-row {
-    width: 100%;
-    max-width: 56rem;
-    margin-top: var(--layout-gap-2xl);
-    display: flex;
-    justify-content: center;
+  .is-spinning {
+    animation: intro-import-spin 0.9s linear infinite;
+  }
 
-    .cta-create-account {
-      @include buttons.primary(true, light);
+  @keyframes intro-import-spin {
+    from {
+      transform: rotate(0deg);
     }
+
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  // Transition apparition bouton "Activer mon site"
+  // opacity démarre à 0.3s, transform attend 0.55s (petit délai avant le glissement)
+  .activate-reveal-enter-active {
+    transition:
+      opacity 0.45s ease 0.3s,
+      transform 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.55s;
+  }
+
+  .activate-reveal-leave-active {
+    transition: opacity 0.2s ease;
+  }
+
+  .activate-reveal-enter-from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  .activate-reveal-leave-to {
+    opacity: 0;
+  }
+
+  // Transition skeleton → ListingView
+  .preview-reveal-enter-active {
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+
+  .preview-reveal-leave-active {
+    transition: opacity 0.4s ease;
+  }
+
+  .preview-reveal-enter-from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  .preview-reveal-leave-to {
+    opacity: 0;
   }
 }

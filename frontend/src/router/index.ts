@@ -11,6 +11,7 @@ const EditorRoute = () => import('@/views/Editor/EditorRoute.vue')
 const CreateListingRoute = () => import('@/views/CreateListing/CreateListingRoute.vue')
 const MessagingRoute = () => import('@/views/Messaging/MessagingRoute.vue')
 const ManagementRoute = () => import('@/views/Management/ManagementRoute.vue')
+const DomainsRoute = () => import('@/views/Domains/DomainsRoute.vue')
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -91,6 +92,18 @@ const router = createRouter({
       path: '/management/:userId',
       name: 'management-user',
       component: ManagementRoute,
+      meta: { navVariant: 'host' },
+    },
+    {
+      path: '/domains',
+      name: 'domains',
+      component: DomainsRoute,
+      meta: { navVariant: 'host' },
+    },
+    {
+      path: '/domains/:userId',
+      name: 'domains-user',
+      component: DomainsRoute,
       meta: { navVariant: 'host' },
     },
     {

@@ -1,107 +1,135 @@
 <!-- File: README.md -->
 
-# ihf — Setup rapide
+# IndieHost Frontend
 
-Vite + Vue 3 + TS.
-Plugins internes :
-
-- `file-path-comment` (entêtes automatiques)
-- `svg-to-vue` (SVG → SFC + extraction d’images + SVGO/Prettier).
+Vite + Vue 3 + TypeScript — interface hôte pour la gestion d'annonces, réservations, messagerie et noms de domaine.
 
 ---
 
-## 1) Prérequis
+## Architecture — Services à lancer
 
-- [**Node.js ≥ 18** + **npm**](https://nodejs.org/en/download)
-- [**Python 3.10+**](https://www.python.org/downloads/release/python-3100/)
-- [**Git**](https://git-scm.com/downloads)
-- [**Prettier**](https://prettier.io/docs/en/install.html)
+Le projet nécessite **3 services** pour fonctionner complètement en local :
+
+| # | Service | Commande | Port | Requis |
+|---|---|---|---|---|
+| 1 | **PostgreSQL** (Docker) | `docker compose up -d postgres` | `5432` | ✅ Obligatoire |
+| 2 | **Backend API** (Fastify) | `npm run dev` dans `backend/api/` | `4000` | ✅ Obligatoire |
+| 3 | **Frontend** (Vite) | `npm run dev` dans `frontend/` | `5179` | ✅ Obligatoire |
+
+> Le microservice scraping Python (`backend/microservices/`) est optionnel — uniquement pour l'import d'annonces Airbnb/Booking.
 
 ---
 
-## 2) Installation
+## Démarrage complet (ordre à respecter)
 
-### macOS / Linux
+### 1. PostgreSQL via Docker
 
 ```bash
-cp .env.example .env
-npm install
-
-python -m pip install --upgrade pip
-pip install -r requirement.txt
-
-npm run dev   # http://localhost:5179
+cd docker/
+docker compose up -d postgres
 ```
 
-### Windows (PowerShell)
+### 2. Backend API
+
+```bash
+cd backend/api/
+cp .env.example .env
+# → Renseignez DATABASE_URL, GRANDI_API_TOKEN, etc.
+npm install
+npm run prisma:generate
+npm run prisma:push
+npm run dev
+# → http://localhost:4000
+```
+
+### 3. Frontend
 
 ```powershell
+# Windows (PowerShell)
+cd frontend/
 Copy-Item .env.example .env
+# → Vérifiez VITE_API_BASE_URL=http://localhost:4000/v1
 npm install
-
-python -m pip install --upgrade pip
-pip install -r requirement.txt
-
-npm run dev   # http://localhost:5179
+npm run dev
+# → http://localhost:5179
 ```
-
-> Si seul `py` fonctionne sous Windows, remplacez `python` par `py -3`, ou adaptez l’appel dans `plugins/svg-to-vue/vite-plugin-svg-to-vue.ts`.
-
----
-
-## 3) Variables d’environnement
-
-```env
-# .env
-VITE_DONATION_LINK=https://votre-lien
-VITE_LISTINGS_DATA_MODE=api
-VITE_API_BASE_URL=https://api-staging.indiehost.fr/v1
-VITE_API_PROXY_TARGET=https://api-staging.indiehost.fr
-VITE_CLERK_PUBLISHABLE_KEY=pk_test_XXXXXXXXXXXXXXXX
-VITE_STRIPE_PUBLISHABLE_KEY=pk_test_XXXXXXXXXXXXXXXX
-VITE_STRIPE_API_BASE_URL=https://api-staging.indiehost.fr/v1
-VITE_STRIPE_PAYMENT_INTENT_PATH=/payments/stripe/payment-intents
-VITE_STRIPE_PAYMENT_RETURN_URL=http://localhost:5179
-STRIPE_SECRET_KEY=sk_test_XXXXXXXXXXXXXXXX
-STRIPE_CONNECT_CLIENT_ID=ca_XXXXXXXXXXXXXXXX
-STRIPE_PLATFORM_ACCOUNT_ID=acct_XXXXXXXXXXXXXXXX
-STRIPE_WEBHOOK_SECRET=whsec_XXXXXXXXXXXXXXXX
-```
-
-Notes:
-
-- En dev, l’app proxifie automatiquement les appels API via Vite (pas de CORS) si `VITE_API_BASE_URL` est une URL absolue (ex: `https://…/v1`).
-- Du coup dans l’onglet Network, tu verras souvent `http://localhost:5179/v1/...` : c’est normal, c’est le proxy Vite qui forward vers ton backend distant.
-- Si vous mettez `VITE_API_BASE_URL=/v1`, renseignez aussi `VITE_API_PROXY_TARGET` (ex: `https://api-staging.indiehost.fr`) pour que le proxy Vite sache où forward.
-
----
-
-## 4) Scripts utiles
 
 ```bash
-npm run dev         # Lance Vite (5179) + pipeline SVG (auto)
-npm run build       # type-check + build
-npm run preview     # sert le build
-npm run type-check  # vue-tsc
-npm run format      # Prettier sur src/
-npm run tag:files   # Entête "File: <path>" normalisé dans /src
-npm run svg:convert # Lancement manuel du convertisseur SVG
-npm run watch       # SASS input.scss -> output.css
+# macOS / Linux
+cd frontend/
+cp .env.example .env
+npm install
+npm run dev
 ```
 
 ---
 
-## 5) Plugins (résumé)
+## Variables d'environnement frontend (`frontend/.env`)
 
-- **file-path-comment** : ajoute/synchronise la première ligne `File: <path>` (styles adaptés), nettoie les lignes vides en trop.
-- **svg-to-vue** :
-  - Parcourt `public/assets/media/**/*.svg`
-  - Extrait les images base64 → `public/assets/media/images/` (dédup par perceptual hash)
-  - Scope dynamiquement les `id` + réécrit `url(#id)` / `href="#id"` en bindings Vue
-  - Injecte des bindings a11y (`role`, `aria-hidden`, `aria-labelledby`)
-  - Génère des SFC dans `src/components/svgs/**`
-  - **SVGO** si dispo, **Prettier** ensuite
+```env
+VITE_LISTINGS_DATA_MODE=api
+VITE_API_BASE_URL=http://localhost:4000/v1
 
-> Le script cherche `plugins/svg-to-vue/svgo.config.js`. Copiez `plugins/svgo.config.js` à cet emplacement (cf. Installation).
+VITE_SCRAPING_API_URL=http://localhost:8000
+
+VITE_CLERK_PUBLISHABLE_KEY=pk_test_XXXXXXXXXXXXXXXX
+
+VITE_STRIPE_PUBLISHABLE_KEY=pk_test_XXXXXXXXXXXXXXXX
+VITE_STRIPE_API_BASE_URL=http://localhost:4000/v1
+VITE_STRIPE_PAYMENT_INTENT_PATH=/payments/stripe/payment-intents
+VITE_STRIPE_PAYMENT_RETURN_URL=http://localhost:5179
+VITE_STRIPE_CHECKOUT_OFFLINE_MODE=false
+```
+
+> En développement, Vite proxifie automatiquement `/v1/*` vers `http://localhost:4000`. Les requêtes apparaissent sous `localhost:5179/v1/...` dans le Network — c'est normal.
 
 ---
+
+## Variables d'environnement backend (`backend/api/.env`)
+
+```env
+DATABASE_URL=postgresql://indiehost:indiehost_dev_password@localhost:5432/indiehost_db?schema=public
+
+# Gandi.net — noms de domaine (DomainPanel)
+# Générez un PAT sur https://account.gandi.net → Sécurité → Personal Access Tokens
+# Scope requis : domain:read
+GRANDI_API_TOKEN=pat_votre-token-gandi
+GRANDI_API_BASE_URL=https://api.gandi.net/v5
+GRANDI_CHECKOUT_BASE_URL=https://www.gandi.net/en/domain/checkout
+```
+
+---
+
+## Fonctionnalités
+
+### DomainPanel (sidebar éditeur)
+
+Le `DomainPanel` est intégré dans la sidebar de l'éditeur, juste sous "Titre de l'annonce".
+Il permet de :
+1. **Vérifier la disponibilité** d'un nom de domaine via l'API Gandi v5
+2. **Lancer le paiement** — redirige vers la page d'achat Gandi pré-remplie
+
+**Backend requis :** `GET /v1/domains/grandi/availability` et `POST /v1/domains/grandi/checkout`
+**Token requis :** Personal Access Token Gandi avec le scope `domain:read`
+
+---
+
+## Scripts utiles
+
+```bash
+npm run dev         # Lance Vite (5179)
+npm run build       # type-check + build production
+npm run type-check  # vue-tsc --build
+npm run format      # Prettier sur src/
+npm run tag:files   # Synchronise les entêtes "File: <path>"
+npm run svg:convert # Convertisseur SVG → composants Vue
+npm run watch       # SASS input.scss → output.css
+```
+
+---
+
+## Plugins internes
+
+- **file-path-comment** : ajoute/synchronise la première ligne `// File: <path>` dans chaque fichier source.
+- **svg-to-vue** : convertit les SVG de `public/assets/media/` en composants Vue SFC avec bindings a11y.
+- **local-json-data** : expose les fichiers JSON de `src/content/` via `/__local-json/*` (mode statique sans backend).

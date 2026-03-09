@@ -2,10 +2,10 @@
 
 <script setup lang="ts">
 import { useAuth } from '@clerk/vue'
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { Component } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { CalendarClock, LayoutGrid, MessageSquareMore, PlusSquare } from 'lucide-vue-next'
+import { CalendarClock, Globe, LayoutGrid, MessageSquareMore, PlusSquare } from 'lucide-vue-next'
 
 import HostReservationOverlay from '@/components/navs/HostReservationOverlay.vue'
 import BackOfficeDockNav from '@/components/navs/Nav/BackOfficeDockNav.vue'
@@ -24,6 +24,20 @@ const { getToken } = useAuth()
 const navRoot = ref<HTMLElement | null>(null)
 const reservationAnchor = ref<HTMLElement | null>(null)
 const reservationOpen = ref(false)
+const isNavHiddenByScroll = ref(false)
+
+let lastScrollY = 0
+const SCROLL_THRESHOLD = 80
+
+function onScroll() {
+  const currentY = window.scrollY
+  if (currentY > lastScrollY && currentY > SCROLL_THRESHOLD) {
+    isNavHiddenByScroll.value = true
+  } else if (currentY < lastScrollY) {
+    isNavHiddenByScroll.value = false
+  }
+  lastScrollY = currentY
+}
 
 const navVariant = computed<NavVariant>(() => {
   const variant = route.meta?.navVariant
@@ -104,8 +118,8 @@ const hostNavItems = computed<NavItem[]>(() => [
   },
   { id: 'listings', name: 'Mes annonces', link: resolveRouteLink('editor') },
   { id: 'reservations', name: 'Réservations', link: resolveRouteLink('management') },
+  { id: 'domains', name: 'Domaines', link: resolveRouteLink('domains') },
   { id: 'messagery', name: 'Messagerie', link: resolveRouteLink('messaging') },
-  { id: 'dashboard', name: 'Tableau de bord', link: resolveRouteLink('dashboard') },
 ])
 
 const publicNavItems = computed<NavItem[]>(() => [
@@ -133,6 +147,7 @@ const backOfficeDockItems = computed(() => {
   const isEditorRoute = routeName === 'editor' || routeName === 'editor-user'
   const isCreateRoute = routeName === 'create-listing' || routeName === 'create-listing-user'
   const isManagementRoute = routeName === 'management' || routeName === 'management-user'
+  const isDomainsRoute = routeName === 'domains' || routeName === 'domains-user'
   const isMessagingRoute = routeName === 'messaging' || routeName === 'messaging-user'
 
   return [
@@ -149,6 +164,13 @@ const backOfficeDockItems = computed(() => {
       icon: CalendarClock,
       link: resolveRouteLink('management'),
       isActive: isManagementRoute,
+    },
+    {
+      id: 'dock-domains',
+      label: 'Domaines',
+      icon: Globe,
+      link: resolveRouteLink('domains'),
+      isActive: isDomainsRoute,
     },
     {
       id: 'dock-add-reservation',
@@ -207,9 +229,14 @@ watch(isNavVisible, (visible) => {
 
 onMounted(async () => {
   if (isNavVisible.value) animateNavIn()
+  window.addEventListener('scroll', onScroll, { passive: true })
 
   clerkToken.value = await getToken.value()
   console.log('✅[clerkToken] fetched new token :', clerkToken.value)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', onScroll)
 })
 </script>
 
@@ -218,7 +245,7 @@ onMounted(async () => {
     v-if="isNavVisible"
     ref="navRoot"
     class="layout-header"
-    :class="{ 'is-backoffice-dock': isBackOfficeDockMode }"
+    :class="{ 'is-backoffice-dock': isBackOfficeDockMode, 'is-nav-hidden': isNavHiddenByScroll }"
   >
     <BackOfficeDockNav
       v-if="isBackOfficeDockMode"

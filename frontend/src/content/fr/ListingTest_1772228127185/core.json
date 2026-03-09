@@ -2,13 +2,13 @@
   "id": "listing-1772228127185",
   "status": "published",
   "pause_message": "",
-  "title": "Logement entier : appartement - Ax-les-Thermes, France",
+  "title": "Logement entier : appartement - Bezons, France",
   "type": "Entire home/apt",
   "precise_address": "7 Carriera Castelet Roman",
-  "city": "Ax-les-Thermes",
+  "city": "Bezons",
   "country": "France",
   "region": "France",
-  "guest_capacity": 2,
+  "guest_capacity": 4,
   "rooms": [
     {
       "room-name": "1 chambre",
@@ -16,7 +16,7 @@
       "beds": []
     },
     {
-      "room-name": "1 lit",
+      "room-name": "2 lits",
       "type": "bedroom",
       "beds": []
     },
@@ -27,26 +27,20 @@
   ],
   "amenities": [
     {
-      "id": "vue_panoramique_sur_la_ville",
-      "name": "Vue panoramique sur la ville",
+      "id": "baignoire",
+      "name": "Baignoire",
       "description": "",
-      "category": "Vues panoramiques"
-    },
-    {
-      "id": "vue_sur_la_montagne",
-      "name": "Vue sur la montagne",
-      "description": "",
-      "category": "Vues panoramiques"
-    },
-    {
-      "id": "vue_sur_la_valle",
-      "name": "Vue sur la vallée",
-      "description": "",
-      "category": "Vues panoramiques"
+      "category": "Salle de bain"
     },
     {
       "id": "sche-cheveux",
       "name": "Sèche-cheveux",
+      "description": "",
+      "category": "Salle de bain"
+    },
+    {
+      "id": "produits_de_nettoyage",
+      "name": "Produits de nettoyage",
       "description": "",
       "category": "Salle de bain"
     },
@@ -57,8 +51,20 @@
       "category": "Salle de bain"
     },
     {
+      "id": "savon_pour_le_corps",
+      "name": "Savon pour le corps",
+      "description": "",
+      "category": "Salle de bain"
+    },
+    {
       "id": "eau_chaude",
       "name": "Eau chaude",
+      "description": "",
+      "category": "Salle de bain"
+    },
+    {
+      "id": "gel_douche",
+      "name": "Gel douche",
       "description": "",
       "category": "Salle de bain"
     },
@@ -69,10 +75,52 @@
       "category": "Chambre et linge"
     },
     {
+      "id": "cintres",
+      "name": "Cintres",
+      "description": "",
+      "category": "Chambre et linge"
+    },
+    {
+      "id": "linge_de_lit",
+      "name": "Linge de lit",
+      "description": "",
+      "category": "Chambre et linge"
+    },
+    {
+      "id": "oreillers_et_couvertures_supplmentaires",
+      "name": "Oreillers et couvertures supplémentaires",
+      "description": "",
+      "category": "Chambre et linge"
+    },
+    {
+      "id": "stores_occultants",
+      "name": "Stores occultants",
+      "description": "",
+      "category": "Chambre et linge"
+    },
+    {
       "id": "fer__repasser",
       "name": "Fer à repasser",
       "description": "",
       "category": "Chambre et linge"
+    },
+    {
+      "id": "tendoir__linge",
+      "name": "Étendoir à linge",
+      "description": "",
+      "category": "Chambre et linge"
+    },
+    {
+      "id": "espace_de_rangement_pour_les_vtements",
+      "name": "Espace de rangement pour les vêtements",
+      "description": "",
+      "category": "Chambre et linge"
+    },
+    {
+      "id": "connexion_ethernet",
+      "name": "Connexion Ethernet",
+      "description": "",
+      "category": "Divertissement"
     },
     {
       "id": "tlvision",
@@ -81,21 +129,9 @@
       "category": "Divertissement"
     },
     {
-      "id": "berceau",
-      "name": "Berceau",
-      "description": "",
-      "category": "Famille"
-    },
-    {
-      "id": "lit_parapluie",
-      "name": "Lit parapluie",
-      "description": "",
-      "category": "Famille"
-    },
-    {
-      "id": "chaise_haute",
-      "name": "Chaise haute",
-      "description": "",
+      "id": "lit_parapluie__toujours_dans_le_logement",
+      "name": "Lit parapluie : toujours dans le logement",
+      "description": "Draps fournis",
       "category": "Famille"
     },
     {
@@ -105,10 +141,22 @@
       "category": "Famille"
     },
     {
-      "id": "jeux_de_socit",
-      "name": "Jeux de société",
+      "id": "grilles_de_fentre",
+      "name": "Grilles de fenêtre",
       "description": "",
       "category": "Famille"
+    },
+    {
+      "id": "caches-prises",
+      "name": "Caches-prises",
+      "description": "",
+      "category": "Famille"
+    },
+    {
+      "id": "climatisation",
+      "name": "Climatisation",
+      "description": "",
+      "category": "Chauffage et climatisation"
     },
     {
       "id": "chauffage",
@@ -119,12 +167,6 @@
     {
       "id": "dtecteur_de_fume",
       "name": "Détecteur de fumée",
-      "description": "",
-      "category": "Sécurité à la maison"
-    },
-    {
-      "id": "extincteur",
-      "name": "Extincteur",
       "description": "",
       "category": "Sécurité à la maison"
     },
@@ -141,6 +183,12 @@
       "category": "Internet et bureau"
     },
     {
+      "id": "espace_de_travail_ddi",
+      "name": "Espace de travail dédié",
+      "description": "",
+      "category": "Internet et bureau"
+    },
+    {
       "id": "cuisine",
       "name": "Cuisine",
       "description": "Espace où les voyageurs peuvent cuisiner",
@@ -149,6 +197,12 @@
     {
       "id": "rfrigrateur",
       "name": "Réfrigérateur",
+      "description": "",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "four__micro-ondes",
+      "name": "Four à micro-ondes",
       "description": "",
       "category": "Cuisine et salle à manger"
     },
@@ -165,26 +219,38 @@
       "category": "Cuisine et salle à manger"
     },
     {
+      "id": "conglateur",
+      "name": "Congélateur",
+      "description": "",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "bouilloire_lectrique",
+      "name": "Bouilloire électrique",
+      "description": "",
+      "category": "Cuisine et salle à manger"
+    },
+    {
       "id": "machine__caf",
       "name": "Machine à café",
       "description": "",
       "category": "Cuisine et salle à manger"
     },
     {
-      "id": "commun__patio_ou_balcon",
-      "name": "Commun : patio ou balcon",
+      "id": "table__manger",
+      "name": "Table à manger",
       "description": "",
-      "category": "Extérieur"
+      "category": "Cuisine et salle à manger"
     },
     {
-      "id": "jardin",
-      "name": "Jardin",
-      "description": "Un espace ouvert du logement généralement recouvert d'herbe",
-      "category": "Extérieur"
+      "id": "caf",
+      "name": "Café",
+      "description": "",
+      "category": "Cuisine et salle à manger"
     },
     {
-      "id": "mobilier_dextrieur",
-      "name": "Mobilier d'extérieur",
+      "id": "espace_repas_en_plein_air",
+      "name": "Espace repas en plein air",
       "description": "",
       "category": "Extérieur"
     },
@@ -195,22 +261,52 @@
       "category": "Parking et installations"
     },
     {
+      "id": "stationnement_gratuit_dans_la_rue",
+      "name": "Stationnement gratuit dans la rue",
+      "description": "",
+      "category": "Parking et installations"
+    },
+    {
+      "id": "stationnement_payant__lextrieur_de_la_proprit",
+      "name": "Stationnement payant à l'extérieur de la propriété",
+      "description": "",
+      "category": "Parking et installations"
+    },
+    {
+      "id": "animaux_accepts",
+      "name": "Animaux acceptés",
+      "description": "Les animaux d'assistance sont toujours autorisés",
+      "category": "Services"
+    },
+    {
+      "id": "logement_fumeur",
+      "name": "Logement fumeur",
+      "description": "",
+      "category": "Services"
+    },
+    {
+      "id": "sjours_longue_dure_autoriss",
+      "name": "Séjours longue durée autorisés",
+      "description": "Séjours de 28 jours ou plus autorisés",
+      "category": "Services"
+    },
+    {
       "id": "arrive_autonome",
       "name": "Arrivée autonome",
       "description": "",
       "category": "Services"
     },
     {
-      "id": "bote__cl_scurise",
-      "name": "Boîte à clé sécurisée",
-      "description": "",
+      "id": "serrure_numrique",
+      "name": "Serrure numérique",
+      "description": "Accédez à la maison avec un code",
       "category": "Services"
     }
   ],
-  "latitude": 42.7209,
-  "longitude": 1.8336,
-  "lat": 42.7209,
-  "lng": 1.8336,
+  "latitude": 48.9265,
+  "longitude": 2.2162,
+  "lat": 48.9265,
+  "lng": 2.2162,
   "zoom": 13,
-  "description": "<p>Situé sur les hauteurs d’Ax les Thermes , sur la route de la station de ski, à portée de pas du centre ville. Vous disposez d’un parking privé sur place. Une vue sublime sur les montagnes, notamment le pic du Tarbesou, mais aussi sur la ville que vous dominerez. Exceptionnel le jour, différent au fil des saisons, et apaisant la nuit avec les lumières de la ville et l’éclairage de son casino. Méditation garantie..</p><p><br></p><p><strong>Le logement</strong></p><p>Lumineux, surplombant le village, en léger retrait du centre ville. Très joliment décoré, et bien équipé, il plaît à tous les coups !</p><p><br></p><p><br></p><p>L'appartement est au 2 ème étage, facile d'accès mais sans ascenseur. L’entrée des lieux peut être autonome au besoin (par exemple en cas d’arrivée tardive), bien que nous fassions le maximum pour être présents, vous saluer, et au besoin, vous orienter dans vos desiderata. Nous prenons contact avant votre arrivée pour convenir des horaires ensemble.</p><p><br></p><p>Cet appartement est composé d'une pièce principale de 18m2, comprenant une cuisine équipée ( four, micro onde, plaque induction, hotte, cafetière, grille pain, Tassimo, appareil à raclette, pierrade, fondue,frigo et congélateur, lave-vaisselle), avec son coin salon avec canapé, télévision led connectée (pensez à prendre vos codes), enceinte Bluetooth. </p><p>Vous disposerez d'une chambre avec 1 lit double 140x200, d'une salle de douche, d'un WC séparé . La chambre est équipé d’un matelas et d’oreillers à mémoire de forme et de couettes, pour un sommeil de qualité.</p><p> 1 balcon avec table et chaises, donnant sur la ville et la montagne.</p><p><br></p><p>WI-FI gratuit dans l’appartement.</p><p><br></p><p>Pour plus de facilités, vous aurez sur place : planche et fer à repasser, étendoir à linge, sèche-cheveux, aspirateur, balai, lit parapluie (gratuit sur demande), chaise haute, jeux de sociétés, informations touristiques….</p><p><br></p><p>Sont fournis : des produits de base pour la cuisine (sel, poivre, huile et vinaigre, du café même s'il est utile d'apporter des dosettes compatibles Tassimo (nous en fournissons pour amorcer votre séjour), pour le ménage (sacs poubelles, liquide vaisselle, tablettes lave-vaisselle, éponges, divers produits d'entretien, lessive, papier toilette) et pour la toilette (distributeur de gel corps et cheveux) .</p><p><br></p><p><strong>Accès des voyageurs</strong></p><p>Dans les communs de l'immeuble, vous trouverez 1 local à ski/vélo/poussettes, cannes à pêches…</p><p> 1 hall d'entrée avec un banc et une carte IGN d'Ax et de sa région pour préparer vos randonnées ou ballades.</p><p><br></p><p><strong>Autres remarques</strong></p><p>Le linge de maison ( draps et serviettes de toilette) n'est pas inclus dans la prestation, mais nous proposons des kits : </p><p>Par lit double: 20 euros ( linge de lit et 2 serviettes par personne)</p><p>Cette option sera facturée via Airbnb</p><p><br></p><p><strong>Détails de l'enregistrement</strong></p><p>09032000921AX</p>"
+  "description": "<p>✨ Confort et sérénité aux portes de Paris ✨</p><p><br></p><p>T2 lumineux de 45m² avec grand balcon, situé dans une résidence récente et sécurisée à Bezons.</p><p><br></p><p>🚊 Tramway T2 à 2 minutes à pied</p><p>🏢 La Défense en 15 min</p><p>🗼 Paris centre en 30 min</p><p><br></p><p>Idéal pour 1 à 4 voyageurs, avec parking privé sécurisé inclus — un véritable atout en région parisienne.</p><p><br></p><p><strong>Le logement</strong></p><p>Appartement de 45m² comprenant :</p><p><br></p><p>🛏 Chambre indépendante avec lit double confortable</p><p>🛋 Salon avec canapé-lit 2 personnes de qualité</p><p>🌿 Grand balcon privatif</p><p>🍽 Cuisine entièrement équipée</p><p>🚿 Salle de bain moderne</p><p><br></p><p>📶 WIFI haut débit</p><p>📺 TV avec chaînes &amp; Netflix</p><p>🚗 Parking privé sécurisé gratuit</p><p><br></p><p>Logement entièrement privatisé, fonctionnel et confortable.</p><p><br></p><p><strong>Accès des voyageurs</strong></p><p>L’accès au logement se fait de manière autonome et sécurisée grâce à une serrure à digicode.</p><p><br></p><p>Dès votre réservation confirmée, vous recevrez toutes les instructions détaillées pour une arrivée simple et fluide.</p><p><br></p><p>Vous pourrez entrer et sortir librement, à votre rythme, 24h/24, en toute tranquillité.</p><p><br></p><p>🚗 Le parking sécurisé (si utilisé) est accessible avec un badge fourni lors de votre séjour.</p><p><br></p><p>Nous restons bien entendu disponibles sur la messagerie Airbnb pour toute question afin de vous garantir un accueil serein et agréable.✨</p><p><br></p><p><strong>Autres remarques</strong></p><p>⚠️ Note importante – Arrivée du 4 mars</p><p>Nous vous informons qu’exceptionnellement, l’heure d’arrivée prévue le 4 mars est décalée à 19h au lieu de 15h.</p>"
 }

@@ -1,0 +1,364 @@
+{
+  "id": "listing-1773049901670",
+  "status": "paused",
+  "pause_message": "",
+  "title": "Logement entier : chalet - Compreignac, France",
+  "type": "Maison",
+  "precise_address": "7 rue jean",
+  "city": "Compreignac",
+  "country": "France",
+  "region": "France",
+  "guest_capacity": 4,
+  "rooms": [
+    {
+      "room-name": "1 chambre",
+      "type": "bedroom",
+      "beds": [
+        {
+          "type": "double",
+          "quantity": 1,
+          "capacity": 2
+        }
+      ]
+    },
+    {
+      "room-name": "2 lits",
+      "type": "bedroom",
+      "beds": [
+        {
+          "type": "bunk",
+          "quantity": 1,
+          "capacity": 2
+        }
+      ]
+    },
+    {
+      "room-name": "Salle de bain",
+      "type": "bathroom"
+    },
+    {
+      "room-name": "Cuisine",
+      "type": "kitchen",
+      "beds": []
+    }
+  ],
+  "amenities": [
+    {
+      "id": "sche-cheveux",
+      "name": "Sèche-cheveux",
+      "description": "",
+      "category": "Salle de bain"
+    },
+    {
+      "id": "produits_de_nettoyage",
+      "name": "Produits de nettoyage",
+      "description": "",
+      "category": "Salle de bain"
+    },
+    {
+      "id": "eau_chaude",
+      "name": "Eau chaude",
+      "description": "",
+      "category": "Salle de bain"
+    },
+    {
+      "id": "cintres",
+      "name": "Cintres",
+      "description": "",
+      "category": "Chambre et linge"
+    },
+    {
+      "id": "linge_de_lit",
+      "name": "Linge de lit",
+      "description": "Linge de lit en coton",
+      "category": "Chambre et linge"
+    },
+    {
+      "id": "espace_de_rangement_pour_les_vtements__armoire",
+      "name": "Espace de rangement pour les vêtements : armoire",
+      "description": "",
+      "category": "Chambre et linge"
+    },
+    {
+      "id": "connexion_ethernet",
+      "name": "Connexion Ethernet",
+      "description": "",
+      "category": "Divertissement"
+    },
+    {
+      "id": "tlvision",
+      "name": "Télévision",
+      "description": "",
+      "category": "Divertissement"
+    },
+    {
+      "id": "livres_et_de_quoi_lire",
+      "name": "Livres et de quoi lire",
+      "description": "",
+      "category": "Divertissement"
+    },
+    {
+      "id": "jeux_de_socit",
+      "name": "Jeux de société",
+      "description": "",
+      "category": "Famille"
+    },
+    {
+      "id": "chauffage_radiant",
+      "name": "Chauffage radiant",
+      "description": "",
+      "category": "Chauffage et climatisation"
+    },
+    {
+      "id": "wifi",
+      "name": "Wifi",
+      "description": "",
+      "category": "Internet et bureau"
+    },
+    {
+      "id": "espace_de_travail_ddi",
+      "name": "Espace de travail dédié",
+      "description": "",
+      "category": "Internet et bureau"
+    },
+    {
+      "id": "routeur_wifi_portable",
+      "name": "Routeur wifi portable",
+      "description": "",
+      "category": "Internet et bureau"
+    },
+    {
+      "id": "cuisine",
+      "name": "Cuisine",
+      "description": "Espace où les voyageurs peuvent cuisiner",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "rfrigrateur",
+      "name": "Réfrigérateur",
+      "description": "",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "four__micro-ondes",
+      "name": "Four à micro-ondes",
+      "description": "",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "quipements_de_cuisine_de_base",
+      "name": "Équipements de cuisine de base",
+      "description": "Casseroles et poêles, huile, sel et poivre",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "vaisselle_et_couverts",
+      "name": "Vaisselle et couverts",
+      "description": "Bols, baguettes, assiettes, tasses, etc.",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "conglateur",
+      "name": "Congélateur",
+      "description": "",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "cuisinire__induction_other",
+      "name": "Cuisinière à induction Other",
+      "description": "",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "four",
+      "name": "Four",
+      "description": "",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "bouilloire_lectrique",
+      "name": "Bouilloire électrique",
+      "description": "",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "machine__caf",
+      "name": "Machine à café",
+      "description": "",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "grille-pain",
+      "name": "Grille-pain",
+      "description": "",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "table__manger",
+      "name": "Table à manger",
+      "description": "",
+      "category": "Cuisine et salle à manger"
+    },
+    {
+      "id": "accs_au_lac",
+      "name": "Accès au lac",
+      "description": "Les voyageurs peuvent se rendre à un lac en empruntant un sentier ou un quai",
+      "category": "Caractéristiques de l'emplacement"
+    },
+    {
+      "id": "entre_prive",
+      "name": "Entrée privée",
+      "description": "Entrée par une rue différente ou un immeuble séparé",
+      "category": "Caractéristiques de l'emplacement"
+    },
+    {
+      "id": "espace_repas_en_plein_air",
+      "name": "Espace repas en plein air",
+      "description": "",
+      "category": "Extérieur"
+    },
+    {
+      "id": "chaises_longues",
+      "name": "Chaises longues",
+      "description": "",
+      "category": "Extérieur"
+    },
+    {
+      "id": "stationnement_gratuit_sur_place",
+      "name": "Stationnement gratuit sur place",
+      "description": "",
+      "category": "Parking et installations"
+    },
+    {
+      "id": "arrive_autonome",
+      "name": "Arrivée autonome",
+      "description": "",
+      "category": "Services"
+    },
+    {
+      "id": "bote__cl_scurise",
+      "name": "Boîte à clé sécurisée",
+      "description": "",
+      "category": "Services"
+    },
+    {
+      "id": "EASY_METRO_ACCESS",
+      "name": "Accès facile métro",
+      "description": "Station à proximité",
+      "category": "Arrivée & mobilité",
+      "relevance": 70,
+      "pinned": false
+    },
+    {
+      "id": "PORTABLE_AIR_CONDITIONING",
+      "name": "Climatisation mobile",
+      "description": "Pour les fortes chaleurs",
+      "category": "Confort & travail",
+      "relevance": 70,
+      "pinned": false
+    },
+    {
+      "id": "LINENS_PROVIDED",
+      "name": "Linge de lit et de bain",
+      "description": "Draps et serviettes fournis",
+      "category": "Confort & travail",
+      "relevance": 75,
+      "pinned": false
+    },
+    {
+      "id": "WIFI",
+      "name": "Wifi",
+      "description": "Connexion internet",
+      "category": "Confort & travail",
+      "relevance": 95,
+      "pinned": false,
+      "perkEligible": true,
+      "perkScore": 91,
+      "perkPriority": 0
+    },
+    {
+      "id": "PRIVATE_PARKING",
+      "name": "Parking privé",
+      "description": "Sur la propriété",
+      "category": "Arrivée & mobilité",
+      "relevance": 70,
+      "pinned": false,
+      "perkEligible": true,
+      "perkScore": 78,
+      "perkPriority": 0
+    },
+    {
+      "id": "HEATED_POOL",
+      "name": "Piscine chauffée",
+      "description": "En saison",
+      "category": "Extérieur & détente",
+      "relevance": 90,
+      "pinned": false,
+      "perkEligible": true,
+      "perkScore": 90,
+      "perkPriority": 0
+    },
+    {
+      "id": "ELECTRIC_BARBECUE",
+      "name": "Barbecue",
+      "description": "Ustensiles fournis",
+      "category": "Extérieur & détente",
+      "relevance": 60,
+      "pinned": false
+    },
+    {
+      "id": "FIRE_EXTINGUISHER",
+      "name": "Extincteur",
+      "description": "Accessible",
+      "category": "Sécurité",
+      "relevance": 55,
+      "pinned": false
+    },
+    {
+      "id": "FIRST_AID_KIT",
+      "name": "Kit de secours",
+      "description": "Premiers soins",
+      "category": "Sécurité",
+      "relevance": 60,
+      "pinned": false
+    },
+    {
+      "id": "BOARD_GAMES",
+      "name": "Jeux de société",
+      "description": "Pour les soirées",
+      "category": "Vie à bord",
+      "relevance": 50,
+      "pinned": false
+    },
+    {
+      "id": "BLUETOOTH_SPEAKER",
+      "name": "Enceinte Bluetooth",
+      "description": "Pour la musique",
+      "category": "Vie à bord",
+      "relevance": 55,
+      "pinned": false
+    },
+    {
+      "id": "NESPRESSO_COFFEE_MACHINE",
+      "name": "Machine à café Nespresso",
+      "description": "Capsules incluses",
+      "category": "Cuisine & boissons",
+      "relevance": 70,
+      "pinned": false
+    },
+    {
+      "id": "KETTLE_AND_TEA",
+      "name": "Bouilloire + thés",
+      "description": "Sélection de thés",
+      "category": "Cuisine & boissons",
+      "relevance": 55,
+      "pinned": false
+    }
+  ],
+  "latitude": 46.0048,
+  "longitude": 1.2764,
+  "lat": 46.0048,
+  "lng": 1.2764,
+  "zoom": 13,
+  "description": "<p>Bienvenue dans notre charmant chalet en bois situé à deux pas du magnifique lac de Saint-Pardoux. Ce havre de paix vous offre un cadre idéal pour vous ressourcer en pleine nature tout en profitant des nombreuses activités et commodités à proximité.</p><p><br></p><p><strong>Le logement</strong></p><p>Situé dans un hameau, notre chalet cosy vous offre ;</p><p><br></p><p>Une pièce principale avec une table à manger extensible / télévision / canapé convertible. Jeux de sociétés, wi-fi, doc touristique et livres sont à votre disposition.</p><p><br></p><p>Une chambre individuelle composée d'1 couchage pour 2 personnes / une armoire et des tiroirs de rangement sous le lit. Les draps sont fournis.</p><p><br></p><p>Une cuisine équipée d'une plaque de cuisson / hotte / four / ustensiles / éponges / torchons / produits ménagers / rangements multiples / cafetière senseo / bouilloire / grille pain.</p><p><br></p><p>Une salle de bain avec douche / wc / grand miroir. Les serviettes et gants sont fournis.</p><p><br></p><p>Le chalet est entouré d'un jardin calme et reposant avec une table extérieure permettant de profiter du beau temps. Une place de parking privée est également accessible, le terrain est clôturé.</p><p><br></p><p>Ambiance apaisante, chaleureuse et cadre douillet assuré 🌿🌞</p><p><br></p><p><strong>Autres remarques</strong></p><p>Le lac de Saint-Pardoux, situé en Haute-Vienne, est un véritable écrin de nature offrant une multitude d’activités pour tous les âges et tous les goûts. Voici une liste des principales activités que vous pouvez y pratiquer :</p><p><br></p><p>🌊 Activités nautiques :</p><p><br></p><p>•\tBaignade : Profitez des plages aménagées pour vous détendre et vous rafraîchir en toute sécurité.</p><p><br></p><p>•\tPiscine aqualudique : Située sur le site de Santrop, cette piscine offre divers espaces ludiques et de bien-être avec une vue imprenable sur le lac.</p><p><br></p><p>•\tVoile : L’école de voile du site de Chabannes propose des cours et des locations de catamarans, mini catamarans, planches à voile et funboards.</p><p><br></p><p>•\tCanoë et kayak : Disponibles sur les sites de Chabannes et de Santrop, ces activités sont idéales pour explorer le lac à votre rythme.</p><p><br></p><p>•\tPaddle : Testez votre équilibre en stand-up paddle sur les eaux calmes du lac.</p><p><br></p><p>•\tPédalo : Louez un pédalo sur le site de Santrop pour une balade en famille ou entre amis.</p><p><br></p><p>•\tSki nautique et wakeboard : Le téléski nautique du “Lake Wakepark” sur le site de Fréaudour vous permet de vous initier ou de vous perfectionner à ces disciplines.</p><p><br></p><p>•\tBouées tractées : Pour des sensations fortes, essayez les bouées tractées sur le site de Fréaudour.</p><p><br></p><p><br></p><p>🥾 Activités terrestres :</p><p><br></p><p>•\tRandonnée : De nombreux sentiers balisés entourent le lac, offrant des parcours adaptés à tous les niveaux.</p><p><br></p><p>•\tVTT : Des circuits dédiés aux amateurs de vélo tout-terrain sont disponibles autour du lac.</p><p><br></p><p>•\tParc Aventure : Situé sur le site de Santrop, ce parc acrobatique en forêt propose des parcours d’accrobranche pour petits et grands, avec une tyrolienne traversant le lac.</p><p><br></p><p>•\tTir à l’arc : Initiez-vous au tir à l’arc sur le pas de tir aménagé du site de Chabannes.</p><p><br></p><p>•\tEscalade : Un mur d’escalade est accessible sur le site de</p>"
+}

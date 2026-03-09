@@ -6,7 +6,6 @@ export type ListingStatus =
   | 'blocked'
   | 'paused'
   | 'deleted'
-  | 'draft'
   | string
 
 export function normalizeListingStatus(status?: string | null): string {

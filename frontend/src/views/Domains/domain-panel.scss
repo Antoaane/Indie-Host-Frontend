@@ -1,0 +1,107 @@
+.domain-panel {
+  width: min(860px, 100%);
+  margin: 5rem auto 3rem;
+  padding: 1.5rem;
+  border: 1px solid rgba(10, 21, 41, 0.08);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 14px 36px rgba(8, 15, 35, 0.08);
+
+  &__header {
+    margin-bottom: 1.25rem;
+
+    h1 {
+      margin: 0 0 0.35rem;
+      font-size: clamp(1.2rem, 2.5vw, 1.65rem);
+      line-height: 1.2;
+      color: #0b1220;
+    }
+
+    p {
+      margin: 0;
+      color: #41506b;
+    }
+  }
+
+  &__form {
+    display: grid;
+    gap: 0.6rem;
+    margin-bottom: 1rem;
+
+    label {
+      font-weight: 600;
+      color: #0b1220;
+    }
+
+    input {
+      border: 1px solid #c6d0e3;
+      border-radius: 12px;
+      min-height: 44px;
+      padding: 0 0.85rem;
+      font-size: 0.98rem;
+
+      &:focus-visible {
+        outline: 2px solid #4f7ef7;
+        outline-offset: 1px;
+      }
+    }
+
+    button {
+      justify-self: start;
+      border: 0;
+      border-radius: 999px;
+      min-height: 42px;
+      padding: 0 1rem;
+      font-weight: 600;
+      color: #fff;
+      background: #2758f4;
+      cursor: pointer;
+
+      &:disabled {
+        opacity: 0.56;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  &__feedback {
+    margin: 0 0 0.85rem;
+    color: #1f2d43;
+
+    &.is-success {
+      color: #147d4f;
+    }
+
+    &.is-error {
+      color: #c02237;
+    }
+  }
+
+  &__result {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e6ebf4;
+
+    p {
+      margin: 0.2rem 0;
+      color: #1f2d43;
+    }
+  }
+
+  &__checkout {
+    margin-top: 0.9rem;
+    border: 0;
+    border-radius: 999px;
+    min-height: 42px;
+    padding: 0 1rem;
+    font-weight: 600;
+    color: #fff;
+    background: #06a56b;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.56;
+      cursor: not-allowed;
+    }
+  }
+}

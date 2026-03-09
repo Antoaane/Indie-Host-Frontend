@@ -21,6 +21,9 @@ const envSchema = z.object({
   STRIPE_BILLING_PRICE_SUPERHOST: z.string().trim().optional().default(''),
   STRIPE_BILLING_PRICE_MEGAHOST: z.string().trim().optional().default(''),
   ICAL_EXPORT_DEFAULT_PRODID: z.string().trim().min(1).default('IndieHost//Calendar//FR'),
+  GRANDI_API_TOKEN: z.string().trim().optional().default(''),
+  GRANDI_API_BASE_URL: z.string().trim().optional().default('https://api.gandi.net/v5'),
+  GRANDI_CHECKOUT_BASE_URL: z.string().trim().optional().default('https://www.gandi.net/en/domain/checkout'),
 });
 
 const parsed = envSchema.safeParse(process.env);

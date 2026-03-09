@@ -3,17 +3,41 @@
 <script setup lang="ts">
 // DEPS
 import gsap from 'gsap'
+import { Search } from 'lucide-vue-next'
 // ASSETS
 import ShapesBgCroped from '@/components/svgs/images/ShapesBgCroped.vue'
 // CONTENT
 import type { HeroContent } from '@/views/Landing/types/content'
-import { onMounted } from 'vue'
+import { useLandingImport } from '@/views/Landing/composables/useLandingImport'
+import { computed, onMounted, ref } from 'vue'
 
 const props = defineProps<{
   content: HeroContent
 }>()
 
 const sectionId = 'hero-section'
+const url = ref('')
+const { submitUrl } = useLandingImport()
+
+// Compteur animé : part de 20% et descend à 0%
+const counterValue = ref(20)
+const animatedTitle = computed(() =>
+  props.content.title.replace(
+    '<strong>0%</strong>',
+    `<strong><span class="hero-counter">${counterValue.value}%</span></strong>`,
+  ),
+)
+
+function onSubmit(e?: Event) {
+  e?.preventDefault()
+  const trimmed = url.value.trim()
+  submitUrl(trimmed)
+  if (trimmed) {
+    document.querySelector('#intro-section')?.scrollIntoView({ behavior: 'smooth' })
+  } else {
+    document.querySelector(props.content.primaryCta.href)?.scrollIntoView({ behavior: 'smooth' })
+  }
+}
 
 onMounted(() => {
   gsap.from(`#${sectionId} h1`, {
@@ -22,6 +46,18 @@ onMounted(() => {
     delay: 0.25,
     duration: 1,
     ease: 'power2.inOut',
+  })
+
+  // Lancer le compteur après l'animation d'entrée du h1 (petit délai avant 20% → 0%)
+  const proxy = { value: 20 }
+  gsap.to(proxy, {
+    value: 0,
+    duration: 2.6,
+    delay: 2,
+    ease: 'power2.out',
+    onUpdate() {
+      counterValue.value = Math.round(proxy.value)
+    },
   })
 
   gsap.from(`#${sectionId} p`, {
@@ -73,22 +109,48 @@ onMounted(() => {
     <div class="wrapper">
       <div class="content">
         <div>
-          <h1 v-html="content.title" />
+          <h1 v-html="animatedTitle" />
           <p v-html="content.description" />
-          <div class="cta">
-            <a
-              :href="content.primaryCta.href"
-              :target="content.primaryCta.target"
-              :rel="content.primaryCta.rel || (content.primaryCta.target === '_blank' ? 'noopener noreferrer' : undefined)"
-              v-html="content.primaryCta.label"
-            />
-          </div>
+          <form
+            class="hero-form"
+            @submit.prevent="onSubmit"
+          >
+            <div class="hero-search">
+              <Search class="icon" />
+              <input
+                v-model="url"
+                type="url"
+                :placeholder="content.inputPlaceholder"
+                autocomplete="url"
+              />
+              <div class="platform-logos">
+                <img
+                  src="/assets/media/icons/airbnb-logo.svg"
+                  alt="Airbnb"
+                  class="platform-logo"
+                />
+                <img
+                  src="/assets/media/icons/booking-logo.svg"
+                  alt="Booking.com"
+                  class="platform-logo"
+                />
+              </div>
+            </div>
+            <div class="cta">
+              <button type="submit">
+                <span v-html="content.primaryCta.label" />
+              </button>
+            </div>
+          </form>
         </div>
       </div>
       <div class="illustration">
         <div>
           <img
             fetchpriority="high"
+            decoding="async"
+            width="960"
+            height="1080"
             :src="content.images[0]?.webp"
             :onerror="content.images[0]?.png ? `this.onerror=null; this.src='${content.images[0]?.png}';` : undefined"
             :alt="content.images[0]?.alt"

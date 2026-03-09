@@ -6,6 +6,7 @@ import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 
 import ImportPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/ImportPanel/ImportPanel.vue'
 import TitlePanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/TitlePanel.vue'
+import DomainPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/DomainPanel.vue'
 import VisibilityPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/VisibilityPanel.vue'
 import GalleryPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/GalleryPanel.vue'
 import DescriptionPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/DescriptionPanel.vue'
@@ -30,6 +31,7 @@ const emit = defineEmits<{
       :core="props.draft.core"
       @patch="emit('patch', $event)"
     />
+    <DomainPanel />
     <GalleryPanel
       :medias="props.draft.medias"
       @patch="emit('patch', $event)"

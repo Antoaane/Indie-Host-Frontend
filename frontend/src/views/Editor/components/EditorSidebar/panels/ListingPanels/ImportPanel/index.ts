@@ -8,3 +8,6 @@ export { scrapeListing } from './scrapingClient';
 
 export type { AirbnbScrapedData } from './transformAirbnbToRawListingBundle';
 export { transformAirbnbToRawListingBundle } from './transformAirbnbToRawListingBundle';
+
+export type { BookingScrapedData } from './transformBookingToRawListingBundle';
+export { transformBookingToRawListingBundle } from './transformBookingToRawListingBundle';
