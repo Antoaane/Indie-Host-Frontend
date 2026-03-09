@@ -112,7 +112,7 @@ provideListingViewportMode(resolvedViewportMode)
 <template>
   <template v-if="showDesktopLayout">
     <div
-      :class="{ 'listing-view': true, editor: props.aspect, 'is-checkout': isCheckout }"
+      :class="{ 'listing-view': true, editor: props.aspect, 'is-checkout': isCheckout, 'preview-only': props.previewOnly }"
       ref="listingView"
       :style="listingViewStyles"
     >
@@ -142,7 +142,7 @@ provideListingViewportMode(resolvedViewportMode)
 
   <template v-else>
     <div
-      :class="{ 'listing-view': true, 'is-checkout': isCheckout }"
+      :class="{ 'listing-view': true, 'is-checkout': isCheckout, 'preview-only': props.previewOnly }"
       :style="listingViewStyles"
     >
       <ListingMobileLayout

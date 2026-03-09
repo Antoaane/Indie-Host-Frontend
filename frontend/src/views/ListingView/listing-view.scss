@@ -269,6 +269,20 @@
       }
     }
   }
+
+  &.preview-only {
+    @media (max-width: 1024px) {
+      >.footer {
+        >.shape-container {
+          >.shape {
+            >path {
+              fill: $background;
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 .listing-swap-enter-active,

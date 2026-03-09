@@ -10,6 +10,7 @@ import ShapesBgCroped from '@/components/svgs/images/ShapesBgCroped.vue'
 import type { HeroContent } from '@/views/Landing/types/content'
 import { useLandingImport } from '@/views/Landing/composables/useLandingImport'
 import { computed, onMounted, ref } from 'vue'
+import { vp } from '@/utils/viewport'
 
 const props = defineProps<{
   content: HeroContent
@@ -19,14 +20,18 @@ const sectionId = 'hero-section'
 const url = ref('')
 const { submitUrl } = useLandingImport()
 
-// Compteur animé : part de 20% et descend à 0%
+// Compteur animé : part de 20% et descend à 0% — désactivé sur mobile
 const counterValue = ref(20)
-const animatedTitle = computed(() =>
-  props.content.title.replace(
+const isMobile = () => !vp.lg.value
+const animatedTitle = computed(() => {
+  // Sur mobile : titre brut avec "0%" (évite tout problème d'affichage du span)
+  if (isMobile()) return props.content.title
+  const displayValue = counterValue.value
+  return props.content.title.replace(
     '<strong>0%</strong>',
-    `<strong><span class="hero-counter">${counterValue.value}%</span></strong>`,
-  ),
-)
+    `<strong><span class="hero-counter">${displayValue}%</span></strong>`,
+  )
+})
 
 function onSubmit(e?: Event) {
   e?.preventDefault()
@@ -48,17 +53,21 @@ onMounted(() => {
     ease: 'power2.inOut',
   })
 
-  // Lancer le compteur après l'animation d'entrée du h1 (petit délai avant 20% → 0%)
-  const proxy = { value: 20 }
-  gsap.to(proxy, {
-    value: 0,
-    duration: 2.6,
-    delay: 2,
-    ease: 'power2.out',
-    onUpdate() {
-      counterValue.value = Math.round(proxy.value)
-    },
-  })
+  // Lancer le compteur après l'animation d'entrée du h1 — uniquement desktop (mobile = 0% fixe)
+  if (vp.lg.value) {
+    const proxy = { value: 20 }
+    gsap.to(proxy, {
+      value: 0,
+      duration: 2.6,
+      delay: 2,
+      ease: 'power2.out',
+      onUpdate() {
+        counterValue.value = Math.round(proxy.value)
+      },
+    })
+  } else {
+    counterValue.value = 0
+  }
 
   gsap.from(`#${sectionId} p`, {
     x: -50,
@@ -110,7 +119,15 @@ onMounted(() => {
       <div class="content">
         <div>
           <h1 v-html="animatedTitle" />
-          <p v-html="content.description" />
+          <p
+            class="hero-desc hero-desc-mobile"
+            v-html="content.description"
+          />
+          <p
+            v-if="content.descriptionDesktop"
+            class="hero-desc hero-desc-desktop"
+            v-html="content.descriptionDesktop"
+          />
           <form
             class="hero-form"
             @submit.prevent="onSubmit"

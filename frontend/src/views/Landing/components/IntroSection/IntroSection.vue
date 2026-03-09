@@ -1,9 +1,11 @@
 <!-- File: src/views/Landing/components/IntroSection/IntroSection.vue -->
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import gsap from 'gsap'
-import { ArrowRight, Loader2, Search } from 'lucide-vue-next'
+import { vp } from '@/utils/viewport'
+import { orderByIndex } from '@/utils/medias/order'
+import { ArrowLeft, ArrowRight, Loader2, Search } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
 import GradiantSeparator from '@/components/svgs/images/GradiantSeparator.vue'
 import ListingView from '@/views/ListingView/_ListingView.vue'
@@ -35,6 +37,19 @@ const previewError = ref<string | null>(null)
 const previewContainerRef = ref<HTMLElement | null>(null)
 
 const displayedPreviewBundle = computed(() => previewBundle.value)
+const isMobilePreviewFullscreen = computed(() => Boolean(previewBundle.value) && !vp.lg.value)
+const showInlinePreview = computed(() => vp.lg.value)
+const showInlineActivateCta = computed(() => Boolean(previewBundle.value) && !isPreviewLoading.value && vp.lg.value)
+const showMobileLoadingHint = computed(() => isPreviewLoading.value && !vp.lg.value)
+const showMobileTeaser = computed(() => !vp.lg.value && !isPreviewLoading.value && !previewBundle.value)
+const mobilePreviewTopbarStyle = computed<Record<string, string>>(() => {
+  const images = orderByIndex([...(displayedPreviewBundle.value?.medias?.images ?? [])])
+  const coverSrc = images.find((image) => typeof image?.src === 'string' && image.src.trim())?.src?.trim()
+
+  return {
+    '--mobile-preview-cover-image': coverSrc ? `url(${JSON.stringify(coverSrc)})` : 'none',
+  }
+})
 
 const canGenerate = computed(() => url.value.trim().length > 0 && !isPreviewLoading.value)
 
@@ -115,6 +130,16 @@ function activateSite() {
   void router.push({ name: 'sign-in', query: { redirect_url: '/editor/create' } })
 }
 
+function closeMobilePreview() {
+  previewBundle.value = null
+  previewError.value = null
+}
+
+watch(isMobilePreviewFullscreen, (isFullscreen) => {
+  if (typeof document === 'undefined') return
+  document.body.style.overflow = isFullscreen ? 'hidden' : ''
+})
+
 onMounted(() => {
 
   const storedUrl = sessionStorage.getItem(LANDING_IMPORT_URL_KEY)
@@ -124,6 +149,11 @@ onMounted(() => {
   }
 })
 
+onBeforeUnmount(() => {
+  if (typeof document !== 'undefined') {
+    document.body.style.overflow = ''
+  }
+})
 
 </script>
 
@@ -185,9 +215,26 @@ onMounted(() => {
           {{ previewError }}
         </p>
 
+        <div
+          v-if="showMobileLoadingHint"
+          class="mobile-loading-hint"
+        >
+          <Loader2 class="icon is-spinning" />
+          <span>Récupération de votre annonce…</span>
+        </div>
+
+        <div
+          v-if="showMobileTeaser"
+          class="mobile-import-teaser"
+        >
+          <span class="teaser-badge">Airbnb</span>
+          <span class="teaser-sep">·</span>
+          <span class="teaser-badge">Booking.com</span>
+        </div>
+
         <Transition name="activate-reveal">
           <div
-            v-if="previewBundle && !isPreviewLoading"
+            v-if="showInlineActivateCta"
             class="activate-cta"
           >
             <div class="activate-btn">
@@ -210,6 +257,7 @@ onMounted(() => {
       </div>
 
       <div
+        v-if="showInlinePreview"
         ref="previewContainerRef"
         class="embed-preview"
       >
@@ -238,13 +286,54 @@ onMounted(() => {
                 v-else
                 key="listing"
                 :raw-listing="displayedPreviewBundle"
-                :forced-viewport-mode="'xxl'"
+                :forced-viewport-mode="vp.lg ? 'xxl' : 'sm'"
                 :preview-only="true"
               />
             </Transition>
           </div>
         </div>
       </div>
+
+      <Transition name="mobile-preview-fullscreen">
+        <div
+          v-if="isMobilePreviewFullscreen"
+          ref="previewContainerRef"
+          class="mobile-preview-fullscreen"
+        >
+          <div
+            class="mobile-preview-topbar"
+            :style="mobilePreviewTopbarStyle"
+          >
+            <div class="mobile-preview-back">
+              <button
+                type="button"
+                @click="closeMobilePreview"
+                :aria-label="content.backButtonAriaLabel ?? 'Retour'"
+              >
+                <ArrowLeft class="icon" />
+              </button>
+            </div>
+
+            <div class="mobile-preview-cta">
+              <button
+                type="button"
+                @click="activateSite"
+              >
+                {{ content.createAccountCtaLabel }}
+                <ArrowRight class="icon" />
+              </button>
+            </div>
+          </div>
+
+          <div class="mobile-preview-stage">
+            <ListingView
+              :raw-listing="displayedPreviewBundle"
+              :forced-viewport-mode="'sm'"
+              :preview-only="true"
+            />
+          </div>
+        </div>
+      </Transition>
 
     </div>
   </section>

@@ -1,7 +1,8 @@
 {
   "hero": {
-    "title": "Tu sitio de reservas directas,<br><strong>0%</strong> de comisiones",
-    "description": "Crea tu web de alquiler vacacional con dominio incluido. Acepta reservas directas y cobra online—sin comisiones de OTAs, nunca.",
+    "title": "Tu sitio de reservas directas<br><strong>0%</strong> de comisiones",
+    "description": "Dominio incluido. Reservas directas. Pagos online.",
+    "descriptionDesktop": "Crea tu web de alquiler vacacional con dominio incluido. Acepta reservas directas y cobra online—sin comisiones de OTAs, nunca.",
     "inputPlaceholder": "Pega el enlace de tu anuncio",
     "primaryCta": {
       "label": "Probar gratis",
@@ -23,6 +24,7 @@
     "previewCtaLabel": "Genera mi sitio",
     "createAccountCtaLabel": "Activar mi sitio gratis",
     "createAccountCtaHint": "Gratis · Sin tarjeta de crédito · Cero comisiones",
+    "backButtonAriaLabel": "Volver a la página principal",
     "primaryCta": {
       "label": "Probar la importación gratuita",
       "href": "#join-section",

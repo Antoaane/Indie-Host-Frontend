@@ -22,6 +22,7 @@ export interface CtaLink {
 export interface HeroContent {
   title: string
   description: string
+  descriptionDesktop?: string
   inputPlaceholder: string
   primaryCta: CtaLink
   images: MediaAsset[]
@@ -38,6 +39,7 @@ export interface IntroSectionContent {
   previewCtaLabel: string
   createAccountCtaLabel: string
   createAccountCtaHint?: string
+  backButtonAriaLabel?: string
   primaryCta: CtaLink
 }
 

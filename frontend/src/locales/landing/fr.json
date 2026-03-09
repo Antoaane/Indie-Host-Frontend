@@ -1,7 +1,8 @@
 {
   "hero": {
-    "title": "Créez votre site de réservation,<br>avec <strong>0%</strong> de commissions",
-    "description": "Créez votre site de location saisonnière avec nom de domaine inclus. Acceptez les réservations directes et encaissez vos paiements en ligne sans aucune commission.",
+    "title": "Votre site de réservation<br><strong>0%</strong> de commissions",
+    "description": "Domaine inclus. Réservations directes. Paiements en ligne.",
+    "descriptionDesktop": "Créez votre site de location saisonnière avec nom de domaine inclus. Acceptez les réservations directes et encaissez vos paiements en ligne sans aucune commission.",
     "inputPlaceholder": "Collez le lien de votre logement",
     "primaryCta": {
       "label": "Essayez en premier !",
@@ -23,6 +24,7 @@
     "previewCtaLabel": "Générer mon site !",
     "createAccountCtaLabel": "Activer mon site gratuitement",
     "createAccountCtaHint": "Gratuit · Sans engagement · Sans commission",
+    "backButtonAriaLabel": "Retour à la page d'accueil",
     "primaryCta": {
       "label": "Essayer l'import gratuit",
       "href": "#join-section",

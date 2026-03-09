@@ -1,7 +1,8 @@
 {
   "hero": {
-    "title": "Your direct booking site,<br><strong>0%</strong> commission",
-    "description": "Build your vacation rental website with a custom domain included. Accept direct bookings and get paid online—no OTA commissions, ever.",
+    "title": "Your direct booking site<br><strong>0%</strong> commission",
+    "description": "Domain included. Direct bookings. Online payments.",
+    "descriptionDesktop": "Build your vacation rental website with a custom domain included. Accept direct bookings and get paid online—no OTA commissions, ever.",
     "inputPlaceholder": "Paste your listing link",
     "primaryCta": {
       "label": "Try for free",
@@ -23,6 +24,7 @@
     "previewCtaLabel": "Generate my site",
     "createAccountCtaLabel": "Activate my site for free",
     "createAccountCtaHint": "Free · No credit card required · Zero commission",
+    "backButtonAriaLabel": "Back to homepage",
     "primaryCta": {
       "label": "Try the free import",
       "href": "#join-section",
