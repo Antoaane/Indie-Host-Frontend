@@ -233,6 +233,8 @@ export type VolatileBundle = Pick<RawListingBundle, 'bookings' | 'notes' | 'comm
 
 export type UserListingCard = {
   listingId: string
+  subdomainSlug?: string
+  publicUrl?: string
   title?: string
   status?: string
   hasPendingChanges?: boolean

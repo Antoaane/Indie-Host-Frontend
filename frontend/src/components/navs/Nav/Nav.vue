@@ -14,6 +14,7 @@ import NavLandingVariant from '@/components/navs/Nav/NavLandingVariant.vue'
 import NavPublicVariant from '@/components/navs/Nav/NavPublicVariant.vue'
 import type { NavItem, NavVariant } from '@/components/navs/Nav/navTypes'
 import { closeMobileMenu, isMobileMenuOpen, isNavForcedHidden } from '@/components/navs/navUtils'
+import { isManagedListingHostname } from '@/domain/listings/publicDomain'
 import { vp } from '@/utils/viewport'
 import clerkToken from '@/utils/clerkToken'
 
@@ -61,7 +62,8 @@ const navVariant = computed<NavVariant>(() => {
   if (variant === 'landing' || variant === 'host' || variant === 'public') return variant
   return 'public'
 })
-const isNavHidden = computed(() => Boolean(route.meta?.hideNav))
+const isPublicListingHost = computed(() => typeof window !== 'undefined' && isManagedListingHostname(window.location.hostname))
+const isNavHidden = computed(() => Boolean(route.meta?.hideNav) || isPublicListingHost.value)
 const isNavVisible = computed(() => !isNavHidden.value)
 const isNavActuallyHidden = computed(() => isNavForcedHidden.value || isNavHiddenByScroll.value)
 const isHost = computed(() => navVariant.value === 'host')

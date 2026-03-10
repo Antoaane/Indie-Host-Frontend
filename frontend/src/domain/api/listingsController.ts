@@ -57,6 +57,8 @@ const buildUserListingsUrl = (userId: string) => `${BASE_API_URL}/user/${userId}
 const buildMyListingsUrl = () => `${BASE_API_URL}/users/me/listings`
 const buildListingBundleUrl = (listingId: string) => `${BASE_API_URL}/listings/bundle/${listingId}`
 const buildCreateListingUrl = () => `${BASE_API_URL}/listings`
+const buildResolveListingHostnameUrl = (hostname: string) =>
+  `${BASE_API_URL}/listings/domains/resolve?hostname=${encodeURIComponent(hostname.trim())}`
 
 function waitForClerkToken({ timeoutMs, pollEveryMs }: { timeoutMs: number; pollEveryMs: number }): Promise<string | null> {
   const startedAt = Date.now()
@@ -190,6 +192,10 @@ function fallbackVolatileBundle(): VolatileBundle {
   return { bookings: null, notes: null, comments: null, host: getCanonicalHost() }
 }
 
+type ListingHostnameResolution = {
+  listingId: string
+}
+
 export function createApiListingsController(): ListingsController {
   const apiEnabled = Boolean(BASE_API_URL)
   if (!apiEnabled) {
@@ -215,6 +221,17 @@ export function createApiListingsController(): ListingsController {
           const listings = await fetchRemoteWithToken<UserListingCard[]>(resolveUrl(buildUserListingsUrl(userId)), token)
           return filterDeletedListings(listings, options?.includeDeleted)
         }
+        throw error
+      }
+    },
+    resolveListingIdByHostname: async (hostname: string): Promise<string | null> => {
+      if (!apiEnabled || !hostname.trim()) return null
+
+      try {
+        const result = await fetchRemote<ListingHostnameResolution>(resolveUrl(buildResolveListingHostnameUrl(hostname)))
+        return typeof result?.listingId === 'string' && result.listingId.trim() ? result.listingId.trim() : null
+      } catch (error) {
+        if (readHttpStatus(error) === 404) return null
         throw error
       }
     },

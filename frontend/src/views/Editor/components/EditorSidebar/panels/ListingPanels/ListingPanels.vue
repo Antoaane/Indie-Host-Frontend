@@ -17,6 +17,7 @@ import RoomsPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPa
 import ReviewsPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/ReviewsPanel.vue'
 
 const props = defineProps<{
+  listingId: string
   draft: RawListingBundle
 }>()
 
@@ -31,7 +32,7 @@ const emit = defineEmits<{
       :core="props.draft.core"
       @patch="emit('patch', $event)"
     />
-    <DomainPanel />
+    <DomainPanel :listing-id="props.listingId" />
     <GalleryPanel
       :medias="props.draft.medias"
       @patch="emit('patch', $event)"

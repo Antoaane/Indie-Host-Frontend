@@ -96,6 +96,9 @@ export function createLocalJsonListingsController(): ListingsController {
         runtime: () => filterDeletedListings(runtimeStore.listListings(), options?.includeDeleted),
       })
     },
+    resolveListingIdByHostname: async (): Promise<string | null> => {
+      return null
+    },
     fetchListingBundle: async (listingId: string): Promise<RawListingBundle> => {
       console.log('[Domain][local-json] fetchListingBundle', { listingId })
       return runWithRuntimeFallback({
