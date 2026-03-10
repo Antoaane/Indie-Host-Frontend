@@ -13,7 +13,7 @@ import NavHostVariant from '@/components/navs/Nav/NavHostVariant.vue'
 import NavLandingVariant from '@/components/navs/Nav/NavLandingVariant.vue'
 import NavPublicVariant from '@/components/navs/Nav/NavPublicVariant.vue'
 import type { NavItem, NavVariant } from '@/components/navs/Nav/navTypes'
-import { closeMobileMenu } from '@/components/navs/navUtils'
+import { closeMobileMenu, isMobileMenuOpen, isNavForcedHidden } from '@/components/navs/navUtils'
 import { vp } from '@/utils/viewport'
 import clerkToken from '@/utils/clerkToken'
 
@@ -28,14 +28,31 @@ const isNavHiddenByScroll = ref(false)
 
 let lastScrollY = 0
 const SCROLL_THRESHOLD = 80
+const SCROLL_HIDE_DELTA = 10
+const SCROLL_SHOW_DELTA = 8
 
 function onScroll() {
   const currentY = window.scrollY
-  if (currentY > lastScrollY && currentY > SCROLL_THRESHOLD) {
+  const delta = currentY - lastScrollY
+
+  if (currentY <= SCROLL_THRESHOLD) {
+    isNavHiddenByScroll.value = false
+    lastScrollY = currentY
+    return
+  }
+
+  if (isMobileMenuOpen.value) {
+    isNavHiddenByScroll.value = false
+    lastScrollY = currentY
+    return
+  }
+
+  if (delta >= SCROLL_HIDE_DELTA) {
     isNavHiddenByScroll.value = true
-  } else if (currentY < lastScrollY) {
+  } else if (delta <= -SCROLL_SHOW_DELTA) {
     isNavHiddenByScroll.value = false
   }
+
   lastScrollY = currentY
 }
 
@@ -46,6 +63,7 @@ const navVariant = computed<NavVariant>(() => {
 })
 const isNavHidden = computed(() => Boolean(route.meta?.hideNav))
 const isNavVisible = computed(() => !isNavHidden.value)
+const isNavActuallyHidden = computed(() => isNavForcedHidden.value || isNavHiddenByScroll.value)
 const isHost = computed(() => navVariant.value === 'host')
 const isBackOfficeDockMode = computed(() => isHost.value && !vp.lg.value)
 
@@ -82,6 +100,8 @@ watch(
   () => {
     closeReservation()
     closeMobileMenu()
+    isNavHiddenByScroll.value = false
+    lastScrollY = window.scrollY
   },
 )
 
@@ -204,6 +224,8 @@ const backOfficeDockItems = computed(() => {
 function animateNavIn() {
   const navElement = navRoot.value?.querySelector<HTMLElement>('.navbar, .back-office-dock-nav')
   if (!navElement) return
+  if (document.documentElement.classList.contains('is-ios') && !vp.lg.value) return
+  if (document.documentElement.classList.contains('ios-landing-lite')) return
 
   const isDock = navElement.classList.contains('back-office-dock-nav')
 
@@ -229,6 +251,7 @@ watch(isNavVisible, (visible) => {
 
 onMounted(async () => {
   if (isNavVisible.value) animateNavIn()
+  lastScrollY = window.scrollY
   window.addEventListener('scroll', onScroll, { passive: true })
 
   clerkToken.value = await getToken.value()
@@ -245,7 +268,7 @@ onBeforeUnmount(() => {
     v-if="isNavVisible"
     ref="navRoot"
     class="layout-header"
-    :class="{ 'is-backoffice-dock': isBackOfficeDockMode, 'is-nav-hidden': isNavHiddenByScroll }"
+    :class="{ 'is-backoffice-dock': isBackOfficeDockMode, 'is-nav-hidden': isNavActuallyHidden }"
   >
     <BackOfficeDockNav
       v-if="isBackOfficeDockMode"

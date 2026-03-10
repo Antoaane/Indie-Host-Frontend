@@ -78,6 +78,14 @@
         position: relative;
 
         backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+
+        @media (max-width: 1024px) {
+          html.is-ios & {
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+          }
+        }
 
         @include min-width(lg) {
           flex: 1 0;
@@ -95,6 +103,12 @@
           display: block;
 
           opacity: 0;
+
+          @media (max-width: 1024px) {
+            html.is-ios & {
+              display: none;
+            }
+          }
 
           >span {
             width: 100%;
@@ -129,6 +143,7 @@
           height: 100%;
           padding: 1rem 1.5rem;
           gap: 0rem;
+          transition: gap 0.25s ease;
 
           display: flex;
           flex-direction: column;
@@ -184,6 +199,7 @@
 
             opacity: 0;
             background: linear-gradient(90deg, rgba($accent, 0.00) 0%, $accent 50%, rgba($accent, 0.00) 100%);
+            transition: opacity 0.2s ease, height 0.2s ease;
 
             @include min-width(lg) {
               height: 1px;
@@ -194,6 +210,7 @@
             max-height: 0;
             height: 100%;
             overflow: hidden;
+            transition: max-height 0.3s ease;
 
             @include base-text($accent, $bigger: true);
 
@@ -213,6 +230,7 @@
               max-height: 1.5rem;
               padding-top: 0.5rem;
               margin-bottom: 0.25rem !important;
+              transition: max-height 0.2s ease, padding-top 0.2s ease, margin-bottom 0.2s ease;
 
               background: linear-gradient(87deg, $primary_gradiant_second 0%, $primary_gradiant_third 100%);
               background-clip: text;
@@ -226,6 +244,34 @@
             .chevron-down {
               stroke: $accent;
               transform: rotate(0deg);
+              transition: transform 0.25s ease;
+            }
+          }
+        }
+
+        &.active {
+          >div {
+            gap: 1.5rem;
+
+            >span {
+              opacity: 1;
+              height: 1px;
+            }
+
+            >p {
+              max-height: 150vh;
+            }
+
+            >.trigger {
+              >p {
+                max-height: 0;
+                padding-top: 0;
+                margin-bottom: 0 !important;
+              }
+
+              >.chevron-down {
+                transform: rotate(180deg);
+              }
             }
           }
         }

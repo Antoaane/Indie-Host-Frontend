@@ -63,6 +63,7 @@ async function handleImport() {
         : transformBookingToRawListingBundle(data as BookingScrapedData)
     const patch: DraftPatch = {
       ...(transformed.core ? { core: transformed.core } : {}),
+      ...(transformed.bookings ? { bookings: transformed.bookings } : {}),
       ...(transformed.medias ? { medias: transformed.medias } : {}),
       ...(transformed.arrival ? { arrival: transformed.arrival } : {}),
     }

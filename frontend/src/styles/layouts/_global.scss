@@ -11,17 +11,26 @@
   @extend .scrollbar;
 }
 
+:root {
+  --safe-area-top: 0px;
+  --safe-area-right: 0px;
+  --safe-area-bottom: 0px;
+  --safe-area-left: 0px;
+}
+
 html {
   // scroll-behavior: auto;
   scroll-behavior: smooth;
   overflow-x: hidden;
   background-color: $background;
+  min-height: 100dvh;
 }
 
 body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
+  min-height: 100dvh;
 
   background-color: $background;
 
@@ -29,9 +38,31 @@ body {
     z-index: 1;
     // height: 100vh;
     // overflow-y: auto;
+    min-height: 100dvh;
     overflow-x: hidden;
     scroll-behavior: auto;
+    padding-right: var(--safe-area-right);
+    padding-bottom: var(--safe-area-bottom);
+    padding-left: var(--safe-area-left);
   }
+}
+
+body.is-ios {
+  --safe-area-top: env(safe-area-inset-top);
+  --safe-area-right: env(safe-area-inset-right);
+  --safe-area-bottom: env(safe-area-inset-bottom);
+  --safe-area-left: env(safe-area-inset-left);
+}
+
+html.is-ios.ios-landing-surface,
+body.is-ios.ios-landing-surface,
+body.is-ios.ios-landing-surface #app,
+body.is-ios.ios-landing-surface main {
+  background-color: $secondary;
+}
+
+#app {
+  min-height: 100dvh;
 }
 
 // Failsafe route-level: forcer le scroll quand une page l'exige.

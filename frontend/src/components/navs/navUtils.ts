@@ -7,6 +7,7 @@ import { ref } from 'vue'
 import { vp } from '@/utils/viewport'
 
 export const isMobileMenuOpen = ref(false)
+export const isNavForcedHidden = ref(false)
 
 export const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value
@@ -14,6 +15,10 @@ export const toggleMobileMenu = () => {
 
 export const closeMobileMenu = () => {
   isMobileMenuOpen.value = false
+}
+
+export const setNavForcedHidden = (hidden: boolean) => {
+  isNavForcedHidden.value = hidden
 }
 
 export function scrollToTarget(e: MouseEvent, isDropdown: boolean = true) {

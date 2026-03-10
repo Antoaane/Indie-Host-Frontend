@@ -23,6 +23,7 @@ import { buildPreviewBundle } from '@/views/Landing/components/IntroSection/buil
 import { LANDING_IMPORT_URL_KEY } from '@/views/Landing/components/IntroSection/landingImportUrlKey'
 import { useLandingImport } from '@/views/Landing/composables/useLandingImport'
 import { LANDING_CREATE_DRAFT_KEY } from '@/views/CreateListing/wizard/createListingDraft'
+import { setNavForcedHidden } from '@/components/navs/navUtils'
 
 const props = defineProps<{
   content: IntroSectionContent
@@ -102,6 +103,13 @@ watch(previewBundle, async (val) => {
   if (!core && !gallery && !stay) return
 
   const els = [core, gallery, stay].filter(Boolean) as HTMLElement[]
+  const shouldReduceMotion = !vp.lg.value && document.documentElement.classList.contains('is-ios')
+
+  if (shouldReduceMotion) {
+    gsap.set(els, { clearProps: 'all' })
+    return
+  }
+
   gsap.set(els, { opacity: 0, y: 16 })
 
   const tl = gsap.timeline({ defaults: { ease: 'power2.out' } })
@@ -137,6 +145,7 @@ function closeMobilePreview() {
 
 watch(isMobilePreviewFullscreen, (isFullscreen) => {
   if (typeof document === 'undefined') return
+  setNavForcedHidden(isFullscreen)
   document.body.style.overflow = isFullscreen ? 'hidden' : ''
 })
 
@@ -150,6 +159,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  setNavForcedHidden(false)
   if (typeof document !== 'undefined') {
     document.body.style.overflow = ''
   }
@@ -299,6 +309,7 @@ onBeforeUnmount(() => {
           v-if="isMobilePreviewFullscreen"
           ref="previewContainerRef"
           class="mobile-preview-fullscreen"
+          :style="mobilePreviewTopbarStyle"
         >
           <div
             class="mobile-preview-topbar"

@@ -4,6 +4,7 @@
 // DEPS
 import { onMounted } from 'vue'
 // UTILS
+import detectOS from '@/utils/detectOs'
 import { vp } from '@/utils/viewport'
 import { useStrengthsAnim } from '@/views/Landing/components/StrengthsSection/utils/useStrengthsAnim'
 import { useDropDown } from '@/views/Landing/components/StrengthsSection/utils/useDropDown'
@@ -17,9 +18,15 @@ const props = defineProps<{
   content: StrengthsContent
 }>()
 
-useStrengthsAnim()
+onMounted(async () => {
+  const osInfo = await detectOS().catch(() => null)
+  const normalizedOs = String(osInfo?.os ?? '').toLowerCase()
+  const isIosMobile = !vp.lg.value && (normalizedOs === 'ios' || normalizedOs === 'ipados')
 
-onMounted(() => {
+  if (!isIosMobile) {
+    useStrengthsAnim()
+  }
+
   if (!vp.lg.value) {
     useDropDown()
   }

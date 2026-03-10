@@ -1,7 +1,10 @@
 <!-- File: src/views/Landing/components/FeaturesSection/components/Feature/Feature.vue -->
 
 <script setup lang="ts">
+import { onMounted, ref } from 'vue'
+
 // UTILS
+import detectOS from '@/utils/detectOs'
 import { vp } from '@/utils/viewport'
 // ASSETS
 import GlowTopRight from '@/components/svgs/images/GlowTopRight.vue'
@@ -22,6 +25,13 @@ const props = defineProps<{
 
 const media = props.feature.images?.[0]
 const video = props.feature.videos?.[0]
+const isIosMobile = ref(false)
+
+onMounted(async () => {
+  const osInfo = await detectOS().catch(() => null)
+  const normalizedOs = String(osInfo?.os ?? '').toLowerCase()
+  isIosMobile.value = !vp.lg.value && (normalizedOs === 'ios' || normalizedOs === 'ipados')
+})
 </script>
 
 <template>
@@ -50,7 +60,7 @@ const video = props.feature.videos?.[0]
         :class="'media ' + (props.feature.layout || 'hzt')"
       >
         <video
-          v-if="video?.webm || video?.mp4"
+          v-if="(video?.webm || video?.mp4) && !isIosMobile"
           autoplay
           loop
           muted

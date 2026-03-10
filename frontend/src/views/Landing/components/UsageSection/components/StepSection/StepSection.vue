@@ -2,9 +2,10 @@
 
 <script setup lang="ts">
 // DEPS
-import type { Component } from 'vue'
+import { onMounted, ref, type Component } from 'vue'
 
 // UTILS
+import detectOS from '@/utils/detectOs'
 import { vp } from '@/utils/viewport'
 
 const props = defineProps<{
@@ -29,6 +30,14 @@ const props = defineProps<{
   /** Class de l'illustration. */
   illustrationClass?: string
 }>()
+
+const isIosMobile = ref(false)
+
+onMounted(async () => {
+  const osInfo = await detectOS().catch(() => null)
+  const normalizedOs = String(osInfo?.os ?? '').toLowerCase()
+  isIosMobile.value = !vp.lg.value && (normalizedOs === 'ios' || normalizedOs === 'ipados')
+})
 </script>
 
 <template>
@@ -78,7 +87,7 @@ const props = defineProps<{
         />
         <!-- Illustration passée en paramètre avec nom de classe {nom du fichier} -->
         <video
-          v-if="props.video1 && props.video2"
+          v-if="props.video1 && props.video2 && !isIosMobile"
           :class="[{ image: true }, props.illustrationClass]"
           autoplay
           loop

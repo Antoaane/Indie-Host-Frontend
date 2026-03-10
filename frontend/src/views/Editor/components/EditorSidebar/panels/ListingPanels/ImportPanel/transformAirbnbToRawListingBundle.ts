@@ -1,12 +1,19 @@
+// File: src/views/Editor/components/EditorSidebar/panels/ListingPanels/ImportPanel/transformAirbnbToRawListingBundle.ts
+
 import type { RawAmenity, RawArrival, RawCore, RawListingBundle } from '@/domain/listings/types'
 
 export type AirbnbScrapedData = {
   coordinates?: { latitude?: number; longitude?: number }
   room_type?: string
   person_capacity?: number
+  price?: number
   sub_description?: { title?: string; items?: string[] }
   description?: string
   title?: string
+  precise_address?: string
+  city?: string
+  region?: string
+  country?: string
   amenities?: Array<{
     title: string
     values: Array<{
@@ -129,13 +136,26 @@ export function transformAirbnbToRawListingBundle(scraped: AirbnbScrapedData): P
 
   const locFromSub = parseLocationFromTitle(scraped.sub_description?.title)
   const locFromDesc = parseLocationFromDescriptions(scraped.location_descriptions)
-  const location = locFromSub ?? locFromDesc ?? {}
+  const location = {
+    city: scraped.city ?? locFromSub?.city ?? locFromDesc?.city,
+    region: scraped.region ?? locFromSub?.region ?? locFromDesc?.region,
+    country: scraped.country ?? locFromSub?.country ?? locFromDesc?.country ?? 'France',
+  }
 
   const description = scraped.description
     ? scraped.description.includes('<')
       ? scraped.description
       : `<p>${scraped.description}</p>`
     : ''
+
+  const arrival = buildArrivalFromHouseRules(scraped.house_rules)
+  if (arrival?.practical?.access) {
+    arrival.practical.access.address = scraped.precise_address ?? [
+      location.city,
+      location.region,
+      location.country,
+    ].filter(Boolean).join(', ')
+  }
 
   return {
     core: {
@@ -147,12 +167,16 @@ export function transformAirbnbToRawListingBundle(scraped: AirbnbScrapedData): P
       lng: scraped.coordinates?.longitude,
       zoom: 13,
       guest_capacity: scraped.person_capacity ?? 1,
+      precise_address: scraped.precise_address ?? '',
       city: location.city,
       region: location.region,
-      country: location.country ?? 'France',
+      country: location.country,
       description,
       amenities,
       rooms: buildRoomsFromSubDescription(scraped.sub_description),
+    },
+    bookings: {
+      price: typeof scraped.price === 'number' && Number.isFinite(scraped.price) ? Math.max(0, Math.round(scraped.price)) : 0,
     },
     medias: {
       images: (scraped.images ?? []).map((img, i) => ({
@@ -162,6 +186,6 @@ export function transformAirbnbToRawListingBundle(scraped: AirbnbScrapedData): P
       })),
       videos: [],
     },
-    arrival: buildArrivalFromHouseRules(scraped.house_rules),
+    arrival,
   }
 }

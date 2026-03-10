@@ -41,6 +41,8 @@ export function sr(
   }: ScrollRevealOptions = {}
 ): void {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (document.documentElement.classList.contains('is-ios') && window.matchMedia('(max-width: 1024px)').matches) return;
+  if (document.documentElement.classList.contains('ios-landing-lite')) return;
 
   const elements = gsap.utils.toArray<HTMLElement>(targets);
 
