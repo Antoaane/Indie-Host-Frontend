@@ -408,7 +408,43 @@
     z-index: 10001;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+    isolation: isolate;
     background: $secondary;
+
+    &::before,
+    &::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      pointer-events: none;
+    }
+
+    &::before {
+      top: 0;
+      height: min(58vh, 34rem);
+      z-index: -2;
+      background-image: var(--mobile-preview-cover-image);
+      background-position: center top;
+      background-repeat: no-repeat;
+      background-size: cover;
+      transform: scale(1.03);
+      transform-origin: center top;
+    }
+
+    &::after {
+      inset: 0;
+      z-index: -1;
+      background: linear-gradient(
+        180deg,
+        rgba($secondary, 0.1) 0%,
+        rgba($secondary, 0.18) 16%,
+        rgba($background, 0.78) 42%,
+        rgba($background, 0.94) 56%,
+        $background 70%
+      );
+    }
 
     @include min-width(lg) {
       display: none;
@@ -427,36 +463,11 @@
       calc(env(safe-area-inset-top) + 0.75rem)
       var(--layout-gap-sm)
       var(--layout-gap-sm);
-    background: rgba($secondary, 0.72);
+    z-index: 1;
+    background: linear-gradient(180deg, rgba($secondary, 0.18) 0%, rgba($secondary, 0.42) 100%);
     border-bottom: 1px solid rgba($accent, 0.08);
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
-
-    &::before,
-    &::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-    }
-
-    &::before {
-      z-index: -2;
-      background-image: var(--mobile-preview-cover-image);
-      background-position: center top;
-      background-repeat: no-repeat;
-      background-size: cover;
-      filter: blur(28px) saturate(1.1);
-      transform: scale(1.18);
-      opacity: 0.95;
-    }
-
-    &::after {
-      z-index: -1;
-      background:
-        linear-gradient(180deg, rgba($secondary, 0.22) 0%, rgba($secondary, 0.7) 100%),
-        rgba($secondary, 0.22);
-    }
   }
 
   .mobile-preview-back {
@@ -495,13 +506,25 @@
   .mobile-preview-stage {
     min-height: 0;
     flex: 1;
+    position: relative;
+    z-index: 1;
     padding-bottom: env(safe-area-inset-bottom);
+    background: transparent;
 
     .listing-view {
       width: 100%;
       height: 100%;
       min-height: 0;
       border-radius: 0;
+      background-color: transparent;
+    }
+
+    .listing-view > .main {
+      background: transparent;
+    }
+
+    .listing-view > .main > .core {
+      background: $background;
     }
   }
 

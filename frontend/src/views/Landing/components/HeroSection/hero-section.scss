@@ -18,12 +18,12 @@
     }
 
     .content h1 {
-      font-size: clamp(1.25rem, 4.5vw, 1.6rem) !important;
-      line-height: 1.3 !important;
+      font-size: 1.5rem !important;
+      line-height: 2rem !important;
       margin-bottom: 0.4rem !important;
 
       strong {
-        font-size: clamp(1.35rem, 5vw, 1.75rem) !important;
+        font-size: 2.25rem !important;
       }
     }
 
@@ -35,6 +35,7 @@
     .hero-counter {
       min-width: 1.8ch !important;
     }
+
   }
 
   @include min-width(lg) {
@@ -82,6 +83,16 @@
          Évite le composite stutter sur iOS Safari au démarrage de la page. */
       h1, p, .hero-form {
         will-change: transform, opacity;
+      }
+
+      @media (max-width: 1024px) {
+        html.is-ios & {
+          h1,
+          p,
+          .hero-form {
+            will-change: auto;
+          }
+        }
       }
 
       &>div {
@@ -276,6 +287,12 @@
           will-change: transform, opacity;
           width: auto;
           height: 60vh;
+
+          @media (max-width: 1024px) {
+            html.is-ios & {
+              will-change: auto;
+            }
+          }
 
           @include min-width(lg) {
             height: 80vh;

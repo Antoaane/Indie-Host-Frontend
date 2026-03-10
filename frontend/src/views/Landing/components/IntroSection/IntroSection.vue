@@ -103,6 +103,13 @@ watch(previewBundle, async (val) => {
   if (!core && !gallery && !stay) return
 
   const els = [core, gallery, stay].filter(Boolean) as HTMLElement[]
+  const shouldReduceMotion = !vp.lg.value && document.documentElement.classList.contains('is-ios')
+
+  if (shouldReduceMotion) {
+    gsap.set(els, { clearProps: 'all' })
+    return
+  }
+
   gsap.set(els, { opacity: 0, y: 16 })
 
   const tl = gsap.timeline({ defaults: { ease: 'power2.out' } })
@@ -302,6 +309,7 @@ onBeforeUnmount(() => {
           v-if="isMobilePreviewFullscreen"
           ref="previewContainerRef"
           class="mobile-preview-fullscreen"
+          :style="mobilePreviewTopbarStyle"
         >
           <div
             class="mobile-preview-topbar"

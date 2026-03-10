@@ -4,7 +4,10 @@
 
 .layout-header {
   width: 100%;
-  padding: var(--layout-gap-sm);
+  padding-top: calc(var(--layout-gap-sm) + var(--safe-area-top));
+  padding-right: calc(var(--layout-gap-sm) + var(--safe-area-right));
+  padding-bottom: var(--layout-gap-sm);
+  padding-left: calc(var(--layout-gap-sm) + var(--safe-area-left));
 
   position: fixed;
   top: 0;
@@ -40,11 +43,11 @@
   }
 
   @include min-width(lg) {
+    padding-top: calc(var(--layout-gap) + var(--safe-area-top));
+    padding-right: calc(var(--layout-gap) + var(--safe-area-right));
     padding-bottom: var(--layout-gap-md);
+    padding-left: calc(var(--layout-gap) + var(--safe-area-left));
     justify-content: center;
-
-    @include layout-gap(padding, inline);
-    @include layout-gap(padding, top);
   }
 
   &.is-backoffice-dock {

@@ -11,6 +11,7 @@ import type { HeroContent } from '@/views/Landing/types/content'
 import { useLandingImport } from '@/views/Landing/composables/useLandingImport'
 import { computed, onMounted, ref } from 'vue'
 import { vp } from '@/utils/viewport'
+import detectOS from '@/utils/detectOs'
 
 const props = defineProps<{
   content: HeroContent
@@ -19,6 +20,7 @@ const props = defineProps<{
 const sectionId = 'hero-section'
 const url = ref('')
 const { submitUrl } = useLandingImport()
+const isIosMobile = ref(typeof document !== 'undefined' && document.documentElement.classList.contains('is-ios') && !vp.lg.value)
 
 // Compteur animé : part de 20% et descend à 0% — désactivé sur mobile
 const counterValue = ref(20)
@@ -37,14 +39,27 @@ function onSubmit(e?: Event) {
   e?.preventDefault()
   const trimmed = url.value.trim()
   submitUrl(trimmed)
-  if (trimmed) {
+  if (trimmed || isIosMobile.value) {
     document.querySelector('#intro-section')?.scrollIntoView({ behavior: 'smooth' })
   } else {
     document.querySelector(props.content.primaryCta.href)?.scrollIntoView({ behavior: 'smooth' })
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  if (!vp.lg.value) {
+    counterValue.value = 0
+    return
+  }
+
+  const osInfo = await detectOS().catch(() => null)
+  const normalizedOs = String(osInfo?.os ?? '').toLowerCase()
+  isIosMobile.value = !vp.lg.value && (normalizedOs === 'ios' || normalizedOs === 'ipados')
+  if (!vp.lg.value) {
+    counterValue.value = 0
+    return
+  }
+
   gsap.from(`#${sectionId} h1`, {
     x: -50,
     opacity: 0,

@@ -224,6 +224,8 @@ const backOfficeDockItems = computed(() => {
 function animateNavIn() {
   const navElement = navRoot.value?.querySelector<HTMLElement>('.navbar, .back-office-dock-nav')
   if (!navElement) return
+  if (document.documentElement.classList.contains('is-ios') && !vp.lg.value) return
+  if (document.documentElement.classList.contains('ios-landing-lite')) return
 
   const isDock = navElement.classList.contains('back-office-dock-nav')
 

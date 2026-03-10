@@ -17,6 +17,7 @@ import 'swiper/css/navigation'
 
 import App from './App.vue'
 import router from './router'
+import detectOS from '@/utils/detectOs'
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 const IN_DEV_UTILITIES_ROOT_CLASS = 'in-dev-utilities-enabled'
@@ -30,6 +31,28 @@ if (!PUBLISHABLE_KEY) {
 if (IN_DEV_UTILITIES_ENABLED) {
   document.documentElement.classList.add(IN_DEV_UTILITIES_ROOT_CLASS)
 }
+
+const syncIosDetection = () => {
+  const ua = (navigator.userAgent || '').toLowerCase()
+  const platform = (navigator.platform || '').toLowerCase()
+  return /iphone|ipad|ipod/.test(ua) || (platform === 'macintel' && navigator.maxTouchPoints > 1)
+}
+
+const isProbablyIos = syncIosDetection()
+document.documentElement.classList.toggle('is-ios', isProbablyIos)
+document.body.classList.toggle('is-ios', isProbablyIos)
+
+void detectOS()
+  .then((info) => {
+    const normalizedOs = String(info?.os ?? '').toLowerCase()
+    const isIos = normalizedOs === 'ios' || normalizedOs === 'ipados'
+    document.documentElement.classList.toggle('is-ios', isIos)
+    document.body.classList.toggle('is-ios', isIos)
+  })
+  .catch(() => {
+    document.documentElement.classList.remove('is-ios')
+    document.body.classList.remove('is-ios')
+  })
 
 const app = createApp(App)
 
