@@ -8,6 +8,7 @@ import CreateWizardStepShell from '@/views/CreateListing/components/panels/Creat
 
 const props = defineProps<{
   medias?: Partial<RawMedias> | null
+  listingId?: string | null
   validationError?: string | null
 }>()
 
@@ -24,6 +25,7 @@ const emit = defineEmits<{
   >
     <GalleryPanel
       :medias="props.medias"
+      :listing-id="props.listingId"
       @patch="emit('patch', $event)"
     />
   </CreateWizardStepShell>

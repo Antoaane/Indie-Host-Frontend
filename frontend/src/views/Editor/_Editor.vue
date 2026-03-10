@@ -144,6 +144,7 @@ watch(selectedListingId, (listingId) => {
             <EditorPreview
               v-show="stage === 'preview' && isPreviewAvailable"
               :rawListing="previewRawListing"
+              :listingId="selectedListingId"
               :isLoading="draftStatus.isLoading"
               :isShowed="stage === 'preview' && isPreviewAvailable"
               :displayMode="isPreviewAvailable ? previewDisplayMode : null"

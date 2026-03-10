@@ -16,6 +16,7 @@ import type {
   VolatileBundle,
 } from '@/domain/listings/types'
 import type { FetchListingsOptions, ListingsController } from '@/domain/listings/controller'
+import { normalizeListingCardsMedia } from '@/domain/listings/cards'
 import { filterDeletedListings } from '@/domain/listings/status'
 import { getCanonicalHost } from '@/domain/listings/host'
 
@@ -205,26 +206,60 @@ async function fetchRemote<T>(url: string): Promise<T> {
 
 async function patchRemoteWithToken<T>(url: string, payload: unknown, token: string | null): Promise<T> {
   const axios = await getAxios()
+  const requestToken = token ?? await readFreshTokenFromClerkRuntime()
 
-  const { data } = await axios.patch<T>(url, payload, {
-    withCredentials: false,
-    timeout: API_REQUEST_TIMEOUT_MS,
-    headers: buildAuthHeaders(token),
-  })
+  try {
+    const { data } = await axios.patch<T>(url, payload, {
+      withCredentials: false,
+      timeout: API_REQUEST_TIMEOUT_MS,
+      headers: buildAuthHeaders(requestToken),
+    })
 
-  return data
+    return data
+  } catch (error) {
+    if (readHttpStatus(error) === 401) {
+      const refreshedToken = await readFreshTokenFromClerkRuntime()
+      if (refreshedToken && refreshedToken !== requestToken) {
+        const { data } = await axios.patch<T>(url, payload, {
+          withCredentials: false,
+          timeout: API_REQUEST_TIMEOUT_MS,
+          headers: buildAuthHeaders(refreshedToken),
+        })
+        return data
+      }
+    }
+
+    throw error
+  }
 }
 
 async function postRemoteWithToken<T>(url: string, payload: unknown, token: string | null): Promise<T> {
   const axios = await getAxios()
+  const requestToken = token ?? await readFreshTokenFromClerkRuntime()
 
-  const { data } = await axios.post<T>(url, payload, {
-    withCredentials: false,
-    timeout: API_REQUEST_TIMEOUT_MS,
-    headers: buildAuthHeaders(token),
-  })
+  try {
+    const { data } = await axios.post<T>(url, payload, {
+      withCredentials: false,
+      timeout: API_REQUEST_TIMEOUT_MS,
+      headers: buildAuthHeaders(requestToken),
+    })
 
-  return data
+    return data
+  } catch (error) {
+    if (readHttpStatus(error) === 401) {
+      const refreshedToken = await readFreshTokenFromClerkRuntime()
+      if (refreshedToken && refreshedToken !== requestToken) {
+        const { data } = await axios.post<T>(url, payload, {
+          withCredentials: false,
+          timeout: API_REQUEST_TIMEOUT_MS,
+          headers: buildAuthHeaders(refreshedToken),
+        })
+        return data
+      }
+    }
+
+    throw error
+  }
 }
 
 async function postRemote<T>(url: string, payload: unknown): Promise<T> {
@@ -293,7 +328,7 @@ export function createApiListingsController(): ListingsController {
 
       try {
         const listings = await fetchRemoteWithToken<UserListingCard[]>(resolveUrl(buildMyListingsUrl()), token)
-        return filterDeletedListings(listings, options?.includeDeleted)
+        return filterDeletedListings(normalizeListingCardsMedia(listings), options?.includeDeleted)
       } catch (error) {
         const status = readHttpStatus(error)
         if (status === 404) {
@@ -304,7 +339,7 @@ export function createApiListingsController(): ListingsController {
                 resolveUrl(buildUserListingsUrl(fallbackUserId)),
                 token,
               )
-              return filterDeletedListings(listings, options?.includeDeleted)
+              return filterDeletedListings(normalizeListingCardsMedia(listings), options?.includeDeleted)
             } catch (fallbackByUserIdError) {
               const fallbackByUserIdStatus = readHttpStatus(fallbackByUserIdError)
               if (fallbackByUserIdStatus !== 404 && fallbackByUserIdStatus !== 401 && fallbackByUserIdStatus !== 403) {
@@ -318,7 +353,7 @@ export function createApiListingsController(): ListingsController {
               resolveUrl(buildLegacyMyListingsUrl()),
               token,
             )
-            return filterDeletedListings(listings, options?.includeDeleted)
+            return filterDeletedListings(normalizeListingCardsMedia(listings), options?.includeDeleted)
           } catch (legacyError) {
             const legacyStatus = readHttpStatus(legacyError)
             if (legacyStatus !== 404) throw legacyError

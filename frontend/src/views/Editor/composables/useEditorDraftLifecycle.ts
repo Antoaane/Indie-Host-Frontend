@@ -3,8 +3,14 @@
 import { computed, reactive, ref, type Ref } from 'vue'
 
 import type { RawListingBundle } from '@/domain/listings/types'
-import { fetchListingDraft } from '@/views/Editor/utils/fetchListingDraft'
-import { persistListingDraft } from '@/views/Editor/utils/persistListingDraft'
+import {
+  fetchListingDraft,
+  fetchListingPublishedSnapshot,
+} from '@/views/Editor/utils/fetchListingDraft'
+import {
+  persistListingDraft,
+  persistListingPublishedSnapshot,
+} from '@/views/Editor/utils/persistListingDraft'
 import type { EditorSource } from '@/views/Editor/types/editor'
 import type { VolatileBundle } from '@/views/Editor/utils/listingApi'
 import {
@@ -64,26 +70,45 @@ export function useEditorDraftLifecycle(options: DraftLifecycleOptions) {
     try {
       const fetched = await options.getSource().fetchEditableListingBundle(listingId)
       const fetchedSnapshot = snapshotListingDraft(fetched)
+      const localDraft = fetchListingDraft(listingId)
+      const localSnapshot = localDraft ? snapshotListingDraft(localDraft) : null
+      const localPublished = fetchListingPublishedSnapshot(listingId)
+      const localPublishedSnapshot = localPublished ? snapshotListingDraft(localPublished) : null
       const previousDraftSnapshot = options.draftSnapshotByListingId[listingId]
       const publishedSnapshot = options.publishedSnapshotByListingId[listingId]
+      const previousPublishedSnapshot = publishedSnapshot ? snapshotListingDraft(publishedSnapshot) : null
 
-      if (!publishedSnapshot || areListingDraftsEqual(previousDraftSnapshot, publishedSnapshot)) {
-        options.publishedSnapshotByListingId[listingId] = snapshotListingDraft(fetchedSnapshot)
-      }
-      options.draftSnapshotByListingId[listingId] = fetchedSnapshot
+      const nextPublishedSnapshot = localPublishedSnapshot
+        ?? ((!previousPublishedSnapshot || areListingDraftsEqual(previousDraftSnapshot, previousPublishedSnapshot))
+          ? snapshotListingDraft(fetchedSnapshot)
+          : previousPublishedSnapshot)
+      options.publishedSnapshotByListingId[listingId] = nextPublishedSnapshot
+      persistListingPublishedSnapshot(listingId, nextPublishedSnapshot)
+
+      const nextDraftSnapshot = snapshotListingDraft(localSnapshot ?? fetchedSnapshot)
+      options.draftSnapshotByListingId[listingId] = nextDraftSnapshot
       options.syncListingPendingChanges(listingId)
 
       if (options.selectedListingId.value === listingId) {
-        draft.value = fetchedSnapshot
-        persistListingDraft(listingId, fetchedSnapshot)
+        draft.value = snapshotListingDraft(nextDraftSnapshot)
+        persistListingDraft(listingId, nextDraftSnapshot)
+      }
+
+      if (localSnapshot) {
+        console.log('[Editor] ensureDraft keep local draft', { listingId })
       }
     } catch (err) {
       const localDraft = fetchListingDraft(listingId)
+      const localPublished = fetchListingPublishedSnapshot(listingId)
       if (localDraft && options.selectedListingId.value === listingId) {
         const localSnapshot = snapshotListingDraft(localDraft)
-        if (!options.publishedSnapshotByListingId[listingId]) {
-          options.publishedSnapshotByListingId[listingId] = snapshotListingDraft(localSnapshot)
-        }
+        const nextPublishedSnapshot = snapshotListingDraft(
+          options.publishedSnapshotByListingId[listingId]
+          ?? localPublished
+          ?? localSnapshot,
+        )
+        options.publishedSnapshotByListingId[listingId] = nextPublishedSnapshot
+        persistListingPublishedSnapshot(listingId, nextPublishedSnapshot)
         options.draftSnapshotByListingId[listingId] = localSnapshot
         options.syncListingPendingChanges(listingId)
         draft.value = localSnapshot
@@ -98,6 +123,7 @@ export function useEditorDraftLifecycle(options: DraftLifecycleOptions) {
   }
 
   async function ensureVolatile(listingId: string) {
+    if (volatileCache[listingId]) return
     console.log('[Editor] ensureVolatile', { listingId })
     volatileCache[listingId] = await options.getSource().fetchVolatileListingBundle(listingId)
   }

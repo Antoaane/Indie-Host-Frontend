@@ -2,16 +2,14 @@
 
 import { computed, ref } from 'vue'
 
-import type { EditorSource } from '@/views/Editor/types/editor'
 import { mergeDraftPatch } from '@/views/Editor/composables/editorDraftTools'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 
 export type PatchDrainOptions = {
   throwOnError?: boolean
-  source?: EditorSource
 }
 
-export function useEditorPatchQueue(options: { getSource: () => EditorSource }) {
+export function useEditorPatchQueue() {
   const patchQueue = ref<DraftPatch | null>(null)
   const patchTimer = ref<number | null>(null)
   const patchListingId = ref<string | null>(null)
@@ -31,7 +29,6 @@ export function useEditorPatchQueue(options: { getSource: () => EditorSource }) 
 
   async function flushPatchQueueOnce(drainOptions?: PatchDrainOptions): Promise<boolean> {
     const shouldThrow = drainOptions?.throwOnError === true
-    const source = drainOptions?.source ?? options.getSource()
     clearPatchTimer()
 
     if (patchSyncTask.value) {
@@ -51,13 +48,13 @@ export function useEditorPatchQueue(options: { getSource: () => EditorSource }) 
     if (!queued || !listingId) return false
 
     const task = (async () => {
-      console.log('[Editor] persist draft patch', { listingId, patch: queued })
+      console.log('[Editor] flush local draft patch queue', { listingId, patch: queued })
       isPatchSyncing.value = true
       try {
-        await source.patchListingDraft(listingId, queued)
-      } catch (err) {
-        console.log('[Editor] patch persistence error', err)
-        if (shouldThrow) throw err
+        // Local-first draft lifecycle: snapshots and local storage are updated at patch time.
+        // The queue only debounces UI sync state and serializes patch batches.
+      } catch (error) {
+        if (shouldThrow) throw error
       } finally {
         isPatchSyncing.value = false
       }

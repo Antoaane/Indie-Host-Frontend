@@ -166,16 +166,17 @@
           }
         },
         "rooms": {
-          "title": "Pièces et couchages",
-          "subtitle": "Indiquez le nombre de couchages par pièce",
+          "title": "Pièces et lits",
+          "subtitle": "Indiquez le nombre de lits par pièce",
           "addBed": "+ Ajouter un lit",
+          "manageBeds": "Gérer les lits",
           "addRoom": "+ Ajouter une pièce",
           "roomLabelGeneric": "Pièce",
           "roomLabelFallback": "Pièce {index}",
           "roomCustomNamePlaceholder": "Nom de la pièce",
-          "nonSleepingLabel": "Cette pièce n'a pas de couchage.",
+          "nonSleepingLabel": "Cette pièce n'a pas de lit.",
           "emptyBedsLabel": "Aucun lit ajouté pour le moment.",
-          "overlayAddTitle": "+ Ajouter un couchage",
+          "overlayAddTitle": "+ Ajouter un lit",
           "customBed": {
             "typeValue": "custom",
             "nameLabel": "Nom du lit personnalisé",

@@ -9,7 +9,7 @@ import { vp } from '@/utils/viewport'
 // ICONS
 import { Search, Plane, UserRound, MessageCircle } from 'lucide-vue-next'
 
-const LISTING_PATH = '/listing-test/33333333-3333-3333-3333-333333333333'
+const LISTING_PATH = '/listing/33333333-3333-3333-3333-333333333333'
 
 const navItems = [
   { id: 'search', label: 'Rechercher', icon: Search },

@@ -1,7 +1,7 @@
 <!-- File: src/views/Editor/components/EditorPreview/EditorPreview.vue -->
 
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue'
+import { computed, onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue'
 import { ArrowLeft, ExternalLink } from 'lucide-vue-next'
 import ListingView from '@/views/ListingView/_ListingView.vue'
 import type { RawListingBundle } from '@/domain/listings/types'
@@ -10,6 +10,7 @@ import type { ListingViewportMode } from '@/views/ListingView/composables/useLis
 
 const props = defineProps<{
   rawListing: RawListingBundle | null
+  listingId?: string | null
   isShowed: boolean
   isLoading?: boolean
   displayMode?: ListingViewportMode | null
@@ -22,6 +23,12 @@ const wrapper = ref<HTMLElement | null>(null)
 const aspectRatio = ref<{ width: number; height: number } | null>(null)
 const previewContent = editorStatic.preview
 const previewActions = editorStatic.actions
+const publicListingId = computed(() => {
+  const fromCore = typeof props.rawListing?.core?.id === 'string' ? props.rawListing.core.id.trim() : ''
+  if (fromCore) return fromCore
+  const fromSelection = typeof props.listingId === 'string' ? props.listingId.trim() : ''
+  return fromSelection || null
+})
 
 function updateScale() {
   const container = wrapper.value
@@ -74,8 +81,8 @@ onBeforeUnmount(() => {
 
       <div class="show-online">
         <RouterLink
-          v-if="props.rawListing"
-          :to="{ name: 'listing', params: { id: props.rawListing.core?.id } }"
+          v-if="props.rawListing && publicListingId"
+          :to="{ name: 'listing', params: { id: publicListingId } }"
           target="_blank"
           rel="noopener noreferrer"
           :aria-label="editorStatic.listings.externalLink"

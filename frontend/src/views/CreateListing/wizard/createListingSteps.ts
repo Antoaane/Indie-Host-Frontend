@@ -14,6 +14,13 @@ import CreateTitleStepPanel from '@/views/CreateListing/components/panels/Create
 import type { CreateListingStep } from '@/views/CreateListing/wizard/createListing.types'
 import { asNumber, cleanText, stripHtml } from '@/views/CreateListing/wizard/createListingDraft'
 
+function resolveDraftListingId(bundle: RawListingBundle): string | null {
+  const value = bundle.core?.id
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  return trimmed || null
+}
+
 function validateTitle(bundle: RawListingBundle): string | null {
   const title = cleanText(bundle.core?.title)
   if (!title) return 'Ajoutez un titre à votre annonce pour continuer.'
@@ -41,6 +48,18 @@ function validateLocation(bundle: RawListingBundle): string | null {
 function validateCapacity(bundle: RawListingBundle): string | null {
   const capacity = asNumber(bundle.core?.guest_capacity, 0)
   if (capacity < 1) return 'Indiquez une capacité d’accueil d’au moins 1 voyageur.'
+  return null
+}
+
+function validateRooms(bundle: RawListingBundle): string | null {
+  const rooms = bundle.core?.rooms
+  const hasAtLeastOneBed = Array.isArray(rooms) && rooms.some((room) => {
+    const roomRecord = room as Record<string, unknown> | null | undefined
+    const beds = roomRecord?.beds
+    return Array.isArray(beds) && beds.some((bed) => asNumber((bed as Record<string, unknown> | null | undefined)?.quantity, 0) > 0)
+  })
+
+  if (!hasAtLeastOneBed) return 'Ajoutez au moins une pièce avec au moins un lit.'
   return null
 }
 
@@ -74,7 +93,9 @@ export function createListingSteps(): CreateListingStep[] {
       description:
         'Importez une annonce existante depuis Airbnb ou créez manuellement.',
       component: CreateImportStepPanel,
-      props: () => ({}),
+      props: (draft) => ({
+        listingId: resolveDraftListingId(draft),
+      }),
       acceptsPatch: true,
     },
     {
@@ -105,13 +126,14 @@ export function createListingSteps(): CreateListingStep[] {
     {
       id: 'rooms',
       label: 'Pièces & lits',
-      description: 'Précisez les pièces disponibles et le détail des couchages.',
+      description: 'Précisez les pièces disponibles et le détail des lits.',
       component: CreateRoomsStepPanel,
       props: (draft, context) => ({
         core: draft.core,
         validationError: context?.validationError ?? null,
       }),
       acceptsPatch: true,
+      validate: validateRooms,
     },
     {
       id: 'amenities',
@@ -131,6 +153,7 @@ export function createListingSteps(): CreateListingStep[] {
       component: CreateGalleryStepPanel,
       props: (draft, context) => ({
         medias: draft.medias,
+        listingId: resolveDraftListingId(draft),
         validationError: context?.validationError ?? null,
       }),
       acceptsPatch: true,

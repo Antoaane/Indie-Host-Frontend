@@ -99,6 +99,79 @@ function Ensure-PortService {
     Write-Ok $StartedMessage
 }
 
+function Test-PrismaClientNeedsGeneration {
+    param(
+        [string]$ApiDir
+    )
+
+    $schemaPath = Join-Path $ApiDir "prisma\schema.prisma"
+    $clientPath = Join-Path $ApiDir "node_modules\.prisma\client\index.js"
+
+    if (-not (Test-Path $clientPath)) {
+        return $true
+    }
+
+    if (-not (Test-Path $schemaPath)) {
+        return $false
+    }
+
+    $schemaTime = (Get-Item $schemaPath).LastWriteTimeUtc
+    $clientTime = (Get-Item $clientPath).LastWriteTimeUtc
+
+    return $schemaTime -gt $clientTime
+}
+
+function Test-PythonModuleAvailable {
+    param(
+        [string]$PythonExe,
+        [string]$ModuleName
+    )
+
+    & $PythonExe -c "import $ModuleName" 1>$null 2>$null
+    return ($LASTEXITCODE -eq 0)
+}
+
+function Ensure-ScrapingPythonDependencies {
+    param(
+        [string]$ScrapDir,
+        [string]$PythonExe
+    )
+
+    $requirementsPath = Join-Path $ScrapDir "requirements.txt"
+    if (-not (Test-Path $requirementsPath)) {
+        Write-Fail "requirements.txt introuvable pour le service de scraping."
+        exit 1
+    }
+
+    $depsStampPath = Join-Path $ScrapDir ".venv\.deps-installed"
+    $needInstall = -not (Test-PythonModuleAvailable -PythonExe $PythonExe -ModuleName "uvicorn")
+
+    if (-not $needInstall) {
+        if (-not (Test-Path $depsStampPath)) {
+            $needInstall = $true
+        } else {
+            $requirementsTime = (Get-Item $requirementsPath).LastWriteTimeUtc
+            $stampTime = (Get-Item $depsStampPath).LastWriteTimeUtc
+            $needInstall = $requirementsTime -gt $stampTime
+        }
+    }
+
+    if (-not $needInstall) {
+        Write-Ok "Dependances Python du scraping deja a jour."
+        return
+    }
+
+    Write-Warn "Installation des dependances Python du scraping..."
+    & $PythonExe -m pip install -r $requirementsPath
+    if ($LASTEXITCODE -ne 0) {
+        Write-Fail "L'installation des dependances Python a echoue."
+        exit 1
+    }
+
+    Set-Content -Path $depsStampPath -Value (Get-Date).ToString("o")
+    Write-Ok "Dependances Python du scraping a jour."
+}
+
 function Start-ApiInfraServices {
     # ── 1. Docker Desktop ────────────────────────────────────────
     Write-Step "Verification de Docker Desktop..."
@@ -150,6 +223,12 @@ function Start-ApiInfraServices {
 }
 
 function Start-BackendApiService {
+    Write-Step "Demarrage du Backend API..."
+    if (Get-ListeningPid 4000) {
+        Write-Ok "Backend API deja actif (localhost:4000)."
+        return
+    }
+
     $apiDir = Join-Path $ROOT "backend\api"
     $apiEnvFile = Join-Path $apiDir ".env"
     $apiEnvExampleFile = Join-Path $apiDir ".env.example"
@@ -166,13 +245,32 @@ function Start-BackendApiService {
             Write-Ok "Fichier .env cree pour le backend API."
         }
 
-        Write-Warn "Generation du client Prisma pour le backend..."
-        & npm run prisma:generate
-        if ($LASTEXITCODE -ne 0) {
-            Write-Fail "La generation du client Prisma a echoue."
-            exit 1
+        if (Test-PrismaClientNeedsGeneration -ApiDir $apiDir) {
+            Write-Warn "Generation du client Prisma pour le backend..."
+            $prismaOk = $false
+            for ($attempt = 1; $attempt -le 2; $attempt++) {
+                & npm run prisma:generate
+                if ($LASTEXITCODE -eq 0) {
+                    $prismaOk = $true
+                    break
+                }
+
+                if ($attempt -lt 2) {
+                    Write-Warn "Generation Prisma en echec (tentative $attempt/2). Nouvelle tentative dans 2s..."
+                    Start-Sleep 2
+                }
+            }
+
+            if (-not $prismaOk) {
+                Write-Fail "La generation du client Prisma a echoue."
+                Write-Warn "Si tu vois une erreur EPERM sur query_engine-windows.dll.node, ferme les process Node/Prisma deja ouverts puis relance."
+                exit 1
+            }
+
+            Write-Ok "Client Prisma genere pour le backend."
+        } else {
+            Write-Ok "Client Prisma deja a jour pour le backend."
         }
-        Write-Ok "Client Prisma genere pour le backend."
     } finally {
         Pop-Location
     }
@@ -222,18 +320,13 @@ if (Get-ListeningPid 8000) {
                 Write-Fail "La creation du .venv a echoue pour le service de scraping."
                 exit 1
             }
-
-            Write-Warn "Installation des dependances Python du scraping..."
-            & $pythonExe -m pip install -r requirements.txt
-            if ($LASTEXITCODE -ne 0) {
-                Write-Fail "L'installation des dependances Python a echoue."
-                exit 1
-            }
-            Write-Ok "Environnement Python initialise pour le service de scraping."
         } finally {
             Pop-Location
         }
     }
+
+    Ensure-ScrapingPythonDependencies -ScrapDir $scrapDir -PythonExe $pythonExe
+
     $scrapCmd  = "& '$pythonExe' -m uvicorn api:app --reload --port 8000"
     Open-Service -Title "IndieHost Scraping :8000" -WorkDir $scrapDir -Command $scrapCmd
     Start-Sleep 1

@@ -87,14 +87,15 @@ const { ownershipLookup, canEditListing, editListingRoute } = useListingOwnershi
 const { listingView, aspectStyles } = useListingAspect(computed(() => props.aspect))
 
 const listingCoverImage = computed(() => {
-  const images = orderByIndex(listingData.value?.medias?.images ?? [])
+  const images = orderByIndex(listingData.value?.medias?.images ?? []).filter((image) => {
+    return typeof image?.src === 'string' && image.src.trim().length > 0
+  })
   const cover = images.find((image) => (image.position ?? 0) === 0) ?? images[0]
   return (cover?.src ?? '').trim()
 })
 
 const listingViewStyles = computed<Record<string, string | number>>(() => ({
   ...(aspectStyles.value as Record<string, string | number>),
-  '--listing-view-cover-image': listingCoverImage.value ? `url(${JSON.stringify(listingCoverImage.value)})` : 'none',
 }))
 
 const resolvedViewportMode = computed<ListingViewportMode | null>(() => props.forcedViewportMode ?? null)
@@ -116,6 +117,19 @@ provideListingViewportMode(resolvedViewportMode)
       ref="listingView"
       :style="listingViewStyles"
     >
+      <div
+        v-if="listingCoverImage"
+        class="listing-view-cover"
+        aria-hidden="true"
+      >
+        <img
+          :src="listingCoverImage"
+          alt=""
+          loading="eager"
+          decoding="async"
+        />
+      </div>
+
       <ListingDesktopLayout
         :listing-data="listingData"
         :booking-range="bookingRange"
@@ -145,6 +159,19 @@ provideListingViewportMode(resolvedViewportMode)
       :class="{ 'listing-view': true, 'is-checkout': isCheckout, 'preview-only': props.previewOnly }"
       :style="listingViewStyles"
     >
+      <div
+        v-if="listingCoverImage"
+        class="listing-view-cover"
+        aria-hidden="true"
+      >
+        <img
+          :src="listingCoverImage"
+          alt=""
+          loading="eager"
+          decoding="async"
+        />
+      </div>
+
       <ListingMobileLayout
         :listing-data="listingData"
         :booking-range="bookingRange"

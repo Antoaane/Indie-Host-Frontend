@@ -12,6 +12,9 @@ interface ImportMetaEnv {
   readonly VITE_LISTINGS_DATA_MODE?: 'local-json' | 'api' | string
   readonly VITE_API_BASE_URL?: string
   readonly VITE_API_PROXY_TARGET?: string
+  readonly VITE_IMAGEKIT_UPLOAD_PATH?: string
+  readonly VITE_IMAGEKIT_IMPORT_PATH?: string
+  readonly VITE_IMAGEKIT_ENDPOINT?: string
   readonly VITE_IN_DEV_UTILITIES_ENABLED?: string
   readonly VITE_STRIPE_PUBLISHABLE_KEY?: string
   readonly VITE_STRIPE_API_BASE_URL?: string

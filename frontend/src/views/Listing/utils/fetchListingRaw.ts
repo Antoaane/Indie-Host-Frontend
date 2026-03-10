@@ -20,7 +20,7 @@ async function resolveListingId(explicitId?: string): Promise<string> {
 
   if (typeof window !== 'undefined') {
     const currentPath = window.location.pathname
-    const listingIdFromRoute = currentPath.match(/^\/listing-test\/([^/]+)\/?$/)?.[1]
+    const listingIdFromRoute = currentPath.match(/^\/listing\/([^/]+)\/?$/)?.[1]
     if (listingIdFromRoute) return listingIdFromRoute
   }
 

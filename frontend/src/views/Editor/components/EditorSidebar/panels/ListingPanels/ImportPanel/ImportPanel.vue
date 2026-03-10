@@ -4,6 +4,7 @@
 import { computed, ref } from 'vue'
 import { Download, Loader2 } from 'lucide-vue-next'
 
+import { ensureDraftMediasStoredInImageKit } from '@/domain/api/imagekit'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 
@@ -14,6 +15,10 @@ import {
   transformBookingToRawListingBundle,
 } from './index'
 import type { AirbnbScrapedData, BookingScrapedData } from './index'
+
+const props = defineProps<{
+  listingId?: string | null
+}>()
 
 const url = ref('')
 const isImporting = ref(false)
@@ -61,10 +66,13 @@ async function handleImport() {
       source === 'airbnb'
         ? transformAirbnbToRawListingBundle(data as AirbnbScrapedData)
         : transformBookingToRawListingBundle(data as BookingScrapedData)
+    const medias = await ensureDraftMediasStoredInImageKit(transformed.medias, {
+      listingId: props.listingId,
+    })
     const patch: DraftPatch = {
       ...(transformed.core ? { core: transformed.core } : {}),
       ...(transformed.bookings ? { bookings: transformed.bookings } : {}),
-      ...(transformed.medias ? { medias: transformed.medias } : {}),
+      ...(medias ? { medias } : {}),
       ...(transformed.arrival ? { arrival: transformed.arrival } : {}),
     }
     emit('patch', patch)
