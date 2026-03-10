@@ -4,7 +4,7 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref, toValue, watch } f
 import type { MaybeRefOrGetter } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { ensureDraftMediasStoredInImageKit, isApiImageStorageEnabled } from '@/domain/api/imagekit'
+import { ensurePublishedMediasStoredInImageKit, isApiImageStorageEnabled } from '@/domain/api/imagekit'
 import type { RawListingBundle } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import type { EditorMode, EditorSource } from '@/views/Editor/types/editor'
@@ -402,8 +402,9 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
     try {
       let nextDraft = draft.value
       if (isApiImageStorageEnabled()) {
-        const medias = await ensureDraftMediasStoredInImageKit(nextDraft.medias, {
+        const medias = await ensurePublishedMediasStoredInImageKit(nextDraft.medias, {
           listingId: resolveDraftListingId(nextDraft),
+          listingStatus: typeof nextDraft.core?.status === 'string' ? nextDraft.core.status : null,
         })
         if (medias) {
           nextDraft = {

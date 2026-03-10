@@ -3,6 +3,7 @@
 import clerkToken from '@/utils/clerkToken'
 import type { RawMedias } from '@/domain/listings/types'
 import { readOptimizedImageDataUrl } from '@/utils/imageDataUrl'
+import { normalizeListingStatus } from '@/domain/listings/status'
 
 type ApiUploadResponse = {
   image?: {
@@ -32,6 +33,7 @@ type ImageKitCopyInput = {
 
 type UploadImageOptions = {
   listingId?: string | null
+  listingStatus?: string | null
   folder?: string
   fileName?: string
 }
@@ -93,12 +95,23 @@ function normalizeListingId(value: unknown): string {
     .replace(/^-+|-+$/g, '')
 }
 
-function resolveImageFolder(options?: { listingId?: string | null; category?: 'gallery' | 'scraped' | 'draft' }): string {
-  if (options?.category === 'draft') return '/listings/draft'
+function resolveImageFolder(options?: { listingId?: string | null; category?: 'gallery' | 'scraped' }): string {
   const listingId = normalizeListingId(options?.listingId ?? '')
   const category = options?.category ?? 'gallery'
-  if (!listingId) return `/listings/draft/${category}`
+  if (!listingId) {
+    throw new Error("L'identifiant de l'annonce est requis pour envoyer des médias vers ImageKit.")
+  }
   return `/listings/${listingId}/${category}`
+}
+
+function isPublishedStatus(status?: string | null): boolean {
+  return normalizeListingStatus(status) === 'published'
+}
+
+function assertCanUploadToImageKit(options?: UploadImageOptions) {
+  if (!isPublishedStatus(options?.listingStatus)) {
+    throw new Error("ImageKit est disponible uniquement après une première publication de l'annonce.")
+  }
 }
 
 function extensionFromMimeType(mimeType: string): string | null {
@@ -271,6 +284,7 @@ async function uploadDataUrlImageToImageKit(
 
   const fallbackExtension = extensionFromDataUrl(trimmedFileData) ?? 'webp'
   const fallbackBaseName = normalizeListingId(options?.fallbackBaseName ?? '') || `image-${Date.now()}`
+  assertCanUploadToImageKit(options)
   const fileName = sanitizeFileName(
     options?.fileName ?? `${fallbackBaseName}.${fallbackExtension}`,
     fallbackBaseName,
@@ -321,6 +335,7 @@ export async function uploadGalleryImageToImageKit(
     throw new Error('ImageKit upload is disabled outside API mode.')
   }
 
+  assertCanUploadToImageKit(options)
   const optimizedDataUrl = await readOptimizedImageDataUrl(file, {
     maxDimension: 2560,
     preferredMimeType: 'image/webp',
@@ -361,10 +376,15 @@ export async function uploadGalleryImageToImageKit(
 
 export async function copyScrapedImagesToImageKit(
   images: ImageKitCopyInput[],
-  options?: { listingId?: string | null; folder?: string },
+  options?: { listingId?: string | null; listingStatus?: string | null; folder?: string },
 ): Promise<ImageKitCopyInput[]> {
   if (!isApiImageStorageEnabled()) return images
   if (!Array.isArray(images) || !images.length) return images
+  assertCanUploadToImageKit({
+    listingId: options?.listingId,
+    listingStatus: options?.listingStatus,
+    folder: options?.folder,
+  })
 
   const normalized = images
     .map((image, index) => normalizeImportImage(image, index))
@@ -431,12 +451,13 @@ export async function copyScrapedImagesToImageKit(
   return next
 }
 
-export async function ensureDraftMediasStoredInImageKit(
+export async function ensurePublishedMediasStoredInImageKit(
   medias: Partial<RawMedias> | null | undefined,
-  options?: { listingId?: string | null },
+  options?: { listingId?: string | null; listingStatus?: string | null },
 ): Promise<Partial<RawMedias> | null | undefined> {
   if (!isApiImageStorageEnabled()) return medias
   if (!medias || typeof medias !== 'object' || Array.isArray(medias)) return medias
+  if (!isPublishedStatus(options?.listingStatus)) return medias
 
   const sourceImages = Array.isArray(medias.images)
     ? medias.images.map((image, index) => normalizeImportImage(image, index)).filter((image): image is ImageKitCopyInput => Boolean(image))
@@ -446,6 +467,7 @@ export async function ensureDraftMediasStoredInImageKit(
 
   let nextImages = await copyScrapedImagesToImageKit(sourceImages, {
     listingId: options?.listingId,
+    listingStatus: options?.listingStatus,
   })
 
   const dataUrlCandidates = nextImages
@@ -460,8 +482,9 @@ export async function ensureDraftMediasStoredInImageKit(
       dataUrlCandidates.map(async ({ image, index }) => {
         const uploadedUrl = await uploadDataUrlImageToImageKit(image.src, {
           listingId: options?.listingId,
-          fallbackBaseName: `draft-${index + 1}`,
-          fileName: `draft-${index + 1}.${extensionFromDataUrl(image.src) ?? 'webp'}`,
+          listingStatus: options?.listingStatus,
+          fallbackBaseName: `image-${index + 1}`,
+          fileName: `image-${index + 1}.${extensionFromDataUrl(image.src) ?? 'webp'}`,
         })
         return {
           index,

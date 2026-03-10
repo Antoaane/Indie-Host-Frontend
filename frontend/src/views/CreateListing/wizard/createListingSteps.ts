@@ -95,6 +95,7 @@ export function createListingSteps(): CreateListingStep[] {
       component: CreateImportStepPanel,
       props: (draft) => ({
         listingId: resolveDraftListingId(draft),
+        listingStatus: draft.core?.status,
       }),
       acceptsPatch: true,
     },
@@ -154,6 +155,7 @@ export function createListingSteps(): CreateListingStep[] {
       props: (draft, context) => ({
         medias: draft.medias,
         listingId: resolveDraftListingId(draft),
+        listingStatus: draft.core?.status,
         validationError: context?.validationError ?? null,
       }),
       acceptsPatch: true,

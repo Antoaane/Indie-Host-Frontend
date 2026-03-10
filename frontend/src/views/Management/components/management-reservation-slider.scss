@@ -25,10 +25,18 @@
   .slider-corner-1 {
     left: -1px;
     transform: rotate(180deg);
+
+    * {
+      fill: $background;
+    }
   }
 
   .slider-corner-2 {
     right: -1px;
+
+    * {
+      fill: $background;
+    }
   }
 
   >.swiper {

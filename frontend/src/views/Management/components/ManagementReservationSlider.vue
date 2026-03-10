@@ -134,7 +134,10 @@ function handleSelect(reservationId: string) {
 
 <template>
   <div class="management-reservation-slider">
-    <SliderCorner class="slider-corner-1" />
+    <SliderCorner
+      v-if="displayedReservations.length > 0"
+      class="slider-corner-1"
+    />
     <Swiper
       class="swiper"
       v-bind="sliderParams"
@@ -173,7 +176,10 @@ function handleSelect(reservationId: string) {
         </button>
       </SwiperSlide>
     </Swiper>
-    <SliderCorner class="slider-corner-2" />
+    <SliderCorner
+      v-if="displayedReservations.length > 0"
+      class="slider-corner-2"
+    />
   </div>
 </template>
 

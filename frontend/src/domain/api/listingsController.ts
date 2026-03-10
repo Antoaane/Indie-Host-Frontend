@@ -19,6 +19,7 @@ import type { FetchListingsOptions, ListingsController } from '@/domain/listings
 import { normalizeListingCardsMedia } from '@/domain/listings/cards'
 import { filterDeletedListings } from '@/domain/listings/status'
 import { getCanonicalHost } from '@/domain/listings/host'
+import { ensurePublishedMediasStoredInImageKit } from '@/domain/api/imagekit'
 
 const RAW_BASE_API_URL = (import.meta.env.VITE_API_BASE_URL ?? '').trim()
 const BASE_API_URL = normalizeApiBaseUrl(RAW_BASE_API_URL)
@@ -442,6 +443,10 @@ export function createApiListingsController(): ListingsController {
       console.log('[Domain][api] publishListingDraft', { listingId, draft })
       if (!apiEnabled) return
       const token = await getAuthToken({ waitForReady: true })
+      const medias = await ensurePublishedMediasStoredInImageKit(draft.medias, {
+        listingId,
+        listingStatus: typeof draft.core?.status === 'string' ? draft.core.status : null,
+      })
 
       const requests: Promise<unknown>[] = []
 
@@ -453,8 +458,8 @@ export function createApiListingsController(): ListingsController {
         requests.push(patchRemoteWithToken(resolveUrl(buildListingUrl('bookings', listingId)), draft.bookings, token))
       }
 
-      if (draft.medias) {
-        requests.push(patchRemoteWithToken(resolveUrl(buildListingUrl('medias', listingId)), draft.medias, token))
+      if (medias) {
+        requests.push(patchRemoteWithToken(resolveUrl(buildListingUrl('medias', listingId)), medias, token))
       }
 
       if (draft.arrival) {

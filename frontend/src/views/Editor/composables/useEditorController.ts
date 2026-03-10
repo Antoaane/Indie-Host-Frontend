@@ -37,7 +37,11 @@ export function useEditorController(options: EditorControllerOptions) {
     getSource: () => options.source.value,
   })
 
-  const patchQueue = useEditorPatchQueue()
+  const patchQueue = useEditorPatchQueue({
+    persistPatch: async (listingId, patch) => {
+      await options.source.value.patchListingDraft(listingId, patch)
+    },
+  })
 
   const selectedListingHasPendingChanges = computed(() => {
     const listingId = selectedListingId.value

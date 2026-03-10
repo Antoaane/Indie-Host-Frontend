@@ -9,7 +9,11 @@ export type PatchDrainOptions = {
   throwOnError?: boolean
 }
 
-export function useEditorPatchQueue() {
+type UseEditorPatchQueueOptions = {
+  persistPatch?: (listingId: string, patch: DraftPatch) => Promise<void>
+}
+
+export function useEditorPatchQueue(options?: UseEditorPatchQueueOptions) {
   const patchQueue = ref<DraftPatch | null>(null)
   const patchTimer = ref<number | null>(null)
   const patchListingId = ref<string | null>(null)
@@ -51,9 +55,11 @@ export function useEditorPatchQueue() {
       console.log('[Editor] flush local draft patch queue', { listingId, patch: queued })
       isPatchSyncing.value = true
       try {
-        // Local-first draft lifecycle: snapshots and local storage are updated at patch time.
-        // The queue only debounces UI sync state and serializes patch batches.
+        if (options?.persistPatch) {
+          await options.persistPatch(listingId, queued)
+        }
       } catch (error) {
+        console.log('[Editor] flush patch queue failed', { listingId, error })
         if (shouldThrow) throw error
       } finally {
         isPatchSyncing.value = false

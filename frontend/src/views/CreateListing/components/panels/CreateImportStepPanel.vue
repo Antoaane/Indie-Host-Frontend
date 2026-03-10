@@ -4,7 +4,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { Download, Loader2 } from 'lucide-vue-next'
 
-import { ensureDraftMediasStoredInImageKit } from '@/domain/api/imagekit'
+import { ensurePublishedMediasStoredInImageKit } from '@/domain/api/imagekit'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import {
   detectListingSource,
@@ -18,6 +18,7 @@ import { LANDING_IMPORT_URL_KEY } from '@/views/Landing/components/IntroSection/
 
 const props = defineProps<{
   listingId?: string | null
+  listingStatus?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -58,8 +59,9 @@ async function handleImport() {
     const transformed = transformAirbnbToRawListingBundle(
       data as AirbnbScrapedData
     )
-    const medias = await ensureDraftMediasStoredInImageKit(transformed.medias, {
+    const medias = await ensurePublishedMediasStoredInImageKit(transformed.medias, {
       listingId: props.listingId,
+      listingStatus: props.listingStatus,
     })
     const patch: DraftPatch = {
       ...(transformed.core ? { core: transformed.core } : {}),

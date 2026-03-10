@@ -36,6 +36,7 @@ const emit = defineEmits<{
     <GalleryPanel
       :medias="props.draft.medias"
       :listing-id="props.listingId"
+      :listing-status="props.draft.core?.status"
       @patch="emit('patch', $event)"
     />
     <DescriptionPanel
@@ -69,6 +70,7 @@ const emit = defineEmits<{
     />
     <ImportPanel
       :listing-id="props.listingId"
+      :listing-status="props.draft.core?.status"
       @patch="emit('patch', $event)"
     />
   </div>

@@ -4,6 +4,7 @@
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { Plus, Trash2 } from 'lucide-vue-next'
 import type { RawMedias } from '@/domain/listings/types'
+import { normalizeListingStatus } from '@/domain/listings/status'
 import { isApiImageStorageEnabled, uploadGalleryImageToImageKit } from '@/domain/api/imagekit'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
@@ -22,6 +23,7 @@ type DraftImage = NonNullable<RawMedias['images']>[number]
 const props = defineProps<{
   medias?: Partial<RawMedias> | null
   listingId?: string | null
+  listingStatus?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -60,6 +62,7 @@ const readableFormats = humanizeGalleryMimeTypes(galleryLimits.acceptedMimeTypes
 const maxFileSizeMb = (galleryLimits.maxFileSizeBytes / (1024 * 1024)).toFixed(1)
 const optimizedImageMaxDimension = Math.min(2560, Math.max(galleryLimits.maxWidth, galleryLimits.maxHeight))
 const apiImageStorageEnabled = isApiImageStorageEnabled()
+const canUploadToImageKit = computed(() => apiImageStorageEnabled && normalizeListingStatus(props.listingStatus) === 'published')
 const galleryHint = computed(() =>
   formatValidationMessage(galleryLimits.messages.hint, {
     formats: readableFormats,
@@ -174,9 +177,10 @@ async function onFilePicked(event: Event) {
     ]
     const nextImages = await Promise.all(
       filesToAdd.map(async (file, index) => {
-        const src = apiImageStorageEnabled
+        const src = canUploadToImageKit.value
           ? (await uploadGalleryImageToImageKit(file, {
               listingId: props.listingId,
+              listingStatus: props.listingStatus,
             })).url
           : await readOptimizedImageDataUrl(file, {
               maxDimension: optimizedImageMaxDimension,
@@ -199,7 +203,7 @@ async function onFilePicked(event: Event) {
     }
   } catch (err) {
     console.log('[Editor][Gallery] failed to read file', err)
-    if (apiImageStorageEnabled) {
+    if (canUploadToImageKit.value) {
       const message = err instanceof Error
         ? err.message
         : "Impossible d'envoyer l'image vers ImageKit."
