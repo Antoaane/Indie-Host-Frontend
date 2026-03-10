@@ -9,7 +9,7 @@
   h2 {
     text-align: center;
     @include lp-h2-title($accent, false);
-    @include layout-gap(margin, bottom, 3);
+    margin-bottom: calc(var(--layout-gap) * 3);
   }
 
   .faq-search {
@@ -27,7 +27,7 @@
     background-color: rgba($accent, 0.1);
 
     transform: translateY(-0.5rem);
-    @include layout-gap(padding, bottom, 0.25);
+    padding-bottom: var(--layout-gap-xs);
 
     li {
       padding: 0.5rem 0.75rem;

@@ -94,8 +94,10 @@
   @include min-width(lg) {
     flex-direction: row;
     gap: var(--layout-gap-md);
-    @include layout-gap(padding, inline);
-    @include layout-gap(padding, vertical);
+    padding-left: var(--layout-gap);
+    padding-right: var(--layout-gap);
+    padding-top: var(--layout-gap);
+    padding-bottom: var(--layout-gap);
 
     >.owner-edit-overlay {
       top: var(--layout-gap);
@@ -114,7 +116,7 @@
     @include min-width(lg) {
       flex-direction: row;
       gap: var(--layout-gap-md);
-      @include layout-gap(padding, all);
+      padding: var(--layout-gap);
     }
   }
 
@@ -129,7 +131,7 @@
     @include min-width(lg) {
       flex-direction: row;
       gap: var(--layout-gap-md);
-      @include layout-gap(padding, all);
+      padding: var(--layout-gap);
     }
   }
 
@@ -186,7 +188,8 @@
 
     >.core {
       position: relative;
-      @include layout-gap(padding, inline, 0.5);
+      padding-left: var(--layout-gap-sm);
+      padding-right: var(--layout-gap-sm);
 
       @include min-width(lg) {
         position: static;
@@ -198,13 +201,14 @@
 
         >#core {
           background-color: $translucent !important;
-          @include layout-gap(padding, all, 1.5, $important: true);
+          padding: var(--layout-gap-2xl) !important;
         }
 
         >#comments {
           background-color: $translucent !important;
-          @include layout-gap(padding, inline, 1.5, $important: true);
-          @include layout-gap(padding, top, 1.5, $important: true);
+          padding-left: var(--layout-gap-2xl) !important;
+          padding-right: var(--layout-gap-2xl) !important;
+          padding-top: var(--layout-gap-2xl) !important;
         }
 
         &.is-checkout {
@@ -231,7 +235,8 @@
 
     position: relative;
 
-    @include layout-gap(padding, inline);
+    padding-left: var(--layout-gap);
+    padding-right: var(--layout-gap);
 
     >.shape-container {
       width: borders.$rounded-xl;

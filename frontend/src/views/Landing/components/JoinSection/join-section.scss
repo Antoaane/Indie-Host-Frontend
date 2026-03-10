@@ -21,7 +21,8 @@
     flex-direction: column;
     align-items: center;
 
-    @include layout-gap(padding, inline, 2);
+    padding-left: var(--layout-gap-4xl);
+    padding-right: var(--layout-gap-4xl);
     // @include layout-gap(margin, vertical, 1);
 
     @include min-width(lg) {
@@ -103,7 +104,8 @@
       flex-direction: column;
       align-items: center;
 
-      @include layout-gap(padding, inline, 2);
+      padding-left: var(--layout-gap-4xl);
+      padding-right: var(--layout-gap-4xl);
 
       @include min-width(lg) {
         gap: 4rem;
@@ -129,7 +131,8 @@
           align-items: center;
           justify-content: center;
 
-          @include layout-gap();
+          padding-left: var(--layout-gap);
+          padding-right: var(--layout-gap);
 
           @include min-width(lg) {
             // grid-column: span 6 / span 6;

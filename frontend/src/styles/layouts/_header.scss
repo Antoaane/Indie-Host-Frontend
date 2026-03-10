@@ -43,8 +43,9 @@
     padding-bottom: var(--layout-gap-md);
     justify-content: center;
 
-    @include layout-gap(padding, inline);
-    @include layout-gap(padding, top);
+    padding-left: var(--layout-gap);
+    padding-right: var(--layout-gap);
+    padding-top: var(--layout-gap);
   }
 
   &.is-backoffice-dock {

@@ -201,7 +201,7 @@ function handleCancel() {
     max-height: max-content;
     gap: var(--layout-gap);
 
-    @include layout-gap(padding, bottom, 2);
+    padding-bottom: var(--layout-gap-4xl);
 
     > .header {
       display: flex;

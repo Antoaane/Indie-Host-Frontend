@@ -30,7 +30,7 @@ export type ListingsController = {
 let cachedController: ListingsController | null = null
 
 function resolveListingsDataMode(): ListingsDataMode {
-  const raw = (import.meta.env.VITE_LISTINGS_DATA_MODE ?? 'api').toString().trim().toLowerCase()
+  const raw = (import.meta.env.VITE_LISTINGS_DATA_MODE ?? 'local-json').toString().trim().toLowerCase()
   if (raw === 'api') return 'api'
   return 'local-json'
 }

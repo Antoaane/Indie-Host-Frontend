@@ -10,12 +10,12 @@
 
   h3 {
     @include lp-h3-title($accent, true);
-    @include layout-gap(margin, bottom, 0.5);
+    margin-bottom: var(--layout-gap-sm);
   }
 
   p {
     @include base-text($accent, $bold: false, $bigger: true);
-    @include layout-gap(margin, bottom, 2);
+    margin-bottom: var(--layout-gap-4xl);
     @include container(md);
 
     a {
@@ -30,7 +30,7 @@
     gap: 1.25rem;
     width: 100%;
 
-    @include layout-gap(padding, bottom);
+    padding-bottom: var(--layout-gap);
 
     > .input {
       @include inputs.field($theme: accent);

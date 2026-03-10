@@ -17,8 +17,9 @@
   border-top-right-radius: borders.$rounded-lg;
 
   @include container($max: md);
-  @include layout-gap(padding, horizontal, 2);
-  @include layout-gap(padding, top, 2);
+  padding-left: var(--layout-gap-4xl);
+  padding-right: var(--layout-gap-4xl);
+  padding-top: var(--layout-gap-4xl);
 
   @include min-width(lg) {
     border-radius: borders.$rounded-lg;

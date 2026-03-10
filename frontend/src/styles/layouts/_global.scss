@@ -79,7 +79,8 @@ ul {
   margin-inline: auto;
 
   // d'abord toutes les déclarations, ensuite les mixins à @media
-  @include layout-gap();
+  padding-left: var(--layout-gap);
+  padding-right: var(--layout-gap);
   @include container(); // toujours après les déclarations
 }
 
@@ -102,13 +103,14 @@ ul {
     justify-content: center;
     align-items: center;
 
-    @include layout-gap(padding, vertical, 4);
+    padding-top: calc(var(--layout-gap) * 4);
+    padding-bottom: calc(var(--layout-gap) * 4);
 
     @include min-width(lg) {
       min-height: 100vh;
       margin-bottom: 0;
       padding-top: calc(var(--layout-gap) + 70px);
-      @include layout-gap(padding, bottom, 2);
+      padding-bottom: var(--layout-gap-4xl);
     }
   }
 }

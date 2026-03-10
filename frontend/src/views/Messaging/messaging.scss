@@ -85,8 +85,9 @@
       flex-direction: row;
       align-items: stretch;
 
-      @include layout-gap(padding, inline, 1);
-      @include layout-gap(padding, bottom, 1);
+      padding-left: var(--layout-gap);
+      padding-right: var(--layout-gap);
+      padding-bottom: var(--layout-gap);
 
       >.messaging-sidebar {
         flex: 0 0 auto;

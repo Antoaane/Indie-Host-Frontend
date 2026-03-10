@@ -16,7 +16,8 @@
     position: relative;
     z-index: 1;
 
-    @include layout-gap(padding, inline, 2);
+    padding-left: var(--layout-gap-4xl);
+    padding-right: var(--layout-gap-4xl);
 
     @include min-width(lg) {
       width: 50%;

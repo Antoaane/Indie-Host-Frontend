@@ -46,7 +46,8 @@
     display: flex;
     flex-direction: column;
 
-    @include layout-gap(padding, inline, 2);
+    padding-left: var(--layout-gap-4xl);
+    padding-right: var(--layout-gap-4xl);
 
     @include min-width(lg) {
       flex-direction: row;

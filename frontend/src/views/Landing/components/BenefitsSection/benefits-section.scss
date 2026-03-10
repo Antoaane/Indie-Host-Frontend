@@ -17,8 +17,8 @@
 
   @include min-width(lg) {
     // padding-top: calc(var(--layout-gap) + 70px);
-    @include layout-gap(margin, top, 3);
-    @include layout-gap(margin, bottom, 6);
+    margin-top: calc(var(--layout-gap) * 3);
+    margin-bottom: calc(var(--layout-gap) * 6);
   }
 
   .wrapper {

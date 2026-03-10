@@ -32,16 +32,6 @@ function resolveRequestTimeoutMs(rawValue: unknown, fallback: number): number {
 function normalizeApiBaseUrl(baseUrl: string): string {
   const trimmed = baseUrl.replace(/\/$/, '')
   if (!trimmed) return ''
-
-  if (import.meta.env.DEV) {
-    try {
-      const parsed = new URL(trimmed)
-      return parsed.pathname.replace(/\/$/, '') || '/'
-    } catch {
-      // ignore: base URL may be relative (e.g. /v1)
-    }
-  }
-
   return trimmed
 }
 
@@ -54,6 +44,7 @@ const buildListingUrl = (resource: ListingResourceKey, listingId: string) =>
   `${BASE_API_URL}/listings/${resource}/${listingId}`
 
 const buildUserListingsUrl = (userId: string) => `${BASE_API_URL}/user/${userId}/listings`
+const buildLegacyMyListingsUrl = () => `${BASE_API_URL}/user/me/listings`
 const buildMyListingsUrl = () => `${BASE_API_URL}/users/me/listings`
 const buildListingBundleUrl = (listingId: string) => `${BASE_API_URL}/listings/bundle/${listingId}`
 const buildCreateListingUrl = () => `${BASE_API_URL}/listings`
@@ -78,17 +69,87 @@ async function getAxios() {
   return axios
 }
 
+function readJwtPayload(token: string): Record<string, unknown> | null {
+  const encodedPayload = token.split('.')[1]
+  if (!encodedPayload) return null
+
+  try {
+    const padded = encodedPayload
+      .replace(/-/g, '+')
+      .replace(/_/g, '/')
+      .padEnd(Math.ceil(encodedPayload.length / 4) * 4, '=')
+
+    const payload = JSON.parse(window.atob(padded))
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null
+    return payload as Record<string, unknown>
+  } catch {
+    return null
+  }
+}
+
+function hasValidLifetime(token: string, minValidityMs = 10_000): boolean {
+  if (typeof window === 'undefined' || typeof window.atob !== 'function') return true
+
+  const payload = readJwtPayload(token)
+  if (!payload) return true
+
+  const exp = payload.exp
+  if (typeof exp !== 'number' || !Number.isFinite(exp)) return true
+
+  const remainingMs = exp * 1000 - Date.now()
+  return remainingMs > minValidityMs
+}
+
 function readToken(): string | null {
   const token = (clerkToken.value ?? '').trim()
-  if (token) return token
-  return null
+  if (!token) return null
+  if (!hasValidLifetime(token)) {
+    clerkToken.value = null
+    return null
+  }
+  return token
+}
+
+async function readFreshTokenFromClerkRuntime(): Promise<string | null> {
+  if (typeof window === 'undefined') return null
+
+  const clerk = (window as Window & {
+    Clerk?: {
+      session?: {
+        getToken?: () => Promise<string | null>
+      }
+    }
+  }).Clerk
+
+  const getSessionToken = clerk?.session?.getToken
+  if (typeof getSessionToken !== 'function') return null
+
+  try {
+    const token = (await getSessionToken())?.trim() ?? ''
+    if (!token || !hasValidLifetime(token)) return null
+    clerkToken.value = token
+    return token
+  } catch {
+    return null
+  }
 }
 
 async function getAuthToken(options?: { waitForReady?: boolean }): Promise<string | null> {
   const token = readToken()
   if (token) return token
+
+  const freshToken = await readFreshTokenFromClerkRuntime()
+  if (freshToken) return freshToken
+
   if (!options?.waitForReady) return null
-  return waitForClerkToken({ timeoutMs: 2000, pollEveryMs: 50 })
+
+  const waitedToken = await waitForClerkToken({ timeoutMs: 2000, pollEveryMs: 50 })
+  if (!waitedToken) return null
+  if (!hasValidLifetime(waitedToken)) {
+    clerkToken.value = null
+    return readFreshTokenFromClerkRuntime()
+  }
+  return waitedToken
 }
 
 function buildAuthHeaders(token: string | null) {
@@ -101,16 +162,40 @@ function readHttpStatus(error: unknown): number | null {
   return null
 }
 
+function readJwtSubject(token: string | null): string | null {
+  if (!token || typeof window === 'undefined' || typeof window.atob !== 'function') return null
+
+  const payload = readJwtPayload(token)
+  const subject = typeof payload?.sub === 'string' ? payload.sub.trim() : ''
+  return subject || null
+}
+
 async function fetchRemoteWithToken<T>(url: string, token: string | null): Promise<T> {
   const axios = await getAxios()
 
-  const { data } = await axios.get<T>(url, {
-    withCredentials: false,
-    timeout: API_REQUEST_TIMEOUT_MS,
-    headers: buildAuthHeaders(token),
-  })
+  try {
+    const { data } = await axios.get<T>(url, {
+      withCredentials: false,
+      timeout: API_REQUEST_TIMEOUT_MS,
+      headers: buildAuthHeaders(token),
+    })
 
-  return data
+    return data
+  } catch (error) {
+    if (readHttpStatus(error) === 401) {
+      const refreshedToken = await readFreshTokenFromClerkRuntime()
+      if (refreshedToken && refreshedToken !== token) {
+        const { data } = await axios.get<T>(url, {
+          withCredentials: false,
+          timeout: API_REQUEST_TIMEOUT_MS,
+          headers: buildAuthHeaders(refreshedToken),
+        })
+        return data
+      }
+    }
+
+    throw error
+  }
 }
 
 async function fetchRemote<T>(url: string): Promise<T> {
@@ -211,9 +296,33 @@ export function createApiListingsController(): ListingsController {
         return filterDeletedListings(listings, options?.includeDeleted)
       } catch (error) {
         const status = readHttpStatus(error)
-        if (status === 404 && userId) {
-          const listings = await fetchRemoteWithToken<UserListingCard[]>(resolveUrl(buildUserListingsUrl(userId)), token)
-          return filterDeletedListings(listings, options?.includeDeleted)
+        if (status === 404) {
+          const fallbackUserId = userId ?? readJwtSubject(token)
+          if (fallbackUserId) {
+            try {
+              const listings = await fetchRemoteWithToken<UserListingCard[]>(
+                resolveUrl(buildUserListingsUrl(fallbackUserId)),
+                token,
+              )
+              return filterDeletedListings(listings, options?.includeDeleted)
+            } catch (fallbackByUserIdError) {
+              const fallbackByUserIdStatus = readHttpStatus(fallbackByUserIdError)
+              if (fallbackByUserIdStatus !== 404 && fallbackByUserIdStatus !== 401 && fallbackByUserIdStatus !== 403) {
+                throw fallbackByUserIdError
+              }
+            }
+          }
+
+          try {
+            const listings = await fetchRemoteWithToken<UserListingCard[]>(
+              resolveUrl(buildLegacyMyListingsUrl()),
+              token,
+            )
+            return filterDeletedListings(listings, options?.includeDeleted)
+          } catch (legacyError) {
+            const legacyStatus = readHttpStatus(legacyError)
+            if (legacyStatus !== 404) throw legacyError
+          }
         }
         throw error
       }

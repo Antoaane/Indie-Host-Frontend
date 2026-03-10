@@ -155,7 +155,7 @@ function closePopup() {
 .listing-description-overlay {
   > .panel {
     @extend %overlay-panel;
-    @include layout-gap(padding, all, 2);
+    padding: var(--layout-gap-4xl);
     padding-bottom: calc(var(--layout-gap) * 2) !important;
     min-height: 0;
     overflow: hidden;

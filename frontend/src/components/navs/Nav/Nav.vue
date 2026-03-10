@@ -232,7 +232,7 @@ onMounted(async () => {
   window.addEventListener('scroll', onScroll, { passive: true })
 
   clerkToken.value = await getToken.value()
-  console.log('✅[clerkToken] fetched new token :', clerkToken.value)
+  console.log('✅[clerkToken] fetched new token')
 })
 
 onBeforeUnmount(() => {

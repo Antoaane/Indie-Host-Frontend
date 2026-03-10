@@ -11,7 +11,8 @@
 
     text-align: center;
     @include lp-h3-title($accent);
-    @include layout-gap(padding, inline, 1);
+    padding-left: var(--layout-gap);
+    padding-right: var(--layout-gap);
   }
 
   p {
