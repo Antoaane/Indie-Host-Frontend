@@ -80,6 +80,48 @@
       }
     ]
   },
+  "proofSection": {
+    "eyebrow": "Preuve produit",
+    "title": "Une base <strong>concrète</strong> pour vendre en direct sans repartir de zéro",
+    "subtitle": "Nous n’affichons pas ici de faux témoignages clients. À la place, cette section montre des résultats de démonstration et des usages types permis par le produit dès aujourd’hui.",
+    "metrics": [
+      {
+        "id": "proof-metric-1",
+        "value": "15 min",
+        "label": "pour importer, personnaliser puis publier une première page dans un scénario type",
+        "detail": "Estimation illustrative pour une annonce déjà structurée"
+      },
+      {
+        "id": "proof-metric-2",
+        "value": "0 %",
+        "label": "de commission prélevée par IndieHost sur vos réservations directes",
+        "detail": "Hors frais standards de paiement Stripe"
+      },
+      {
+        "id": "proof-metric-3",
+        "value": "1 URL",
+        "label": "à partager pour recevoir vos premières réservations directes",
+        "detail": "Sous-domaine IndieHost inclus sur les premiers plans"
+      }
+    ],
+    "cards": [
+      {
+        "id": "proof-card-1",
+        "title": "Import guidé depuis Airbnb ou Booking",
+        "description": "Vous partez d’une annonce existante au lieu de recréer tout votre contenu à la main. Photos, description, informations clés et structure de page sont déjà amorcées."
+      },
+      {
+        "id": "proof-card-2",
+        "title": "Paiement en ligne immédiatement exploitable",
+        "description": "Le parcours de réservation s’appuie sur Stripe pour accepter CB, SEPA et Apple Pay. Vous pouvez donc ouvrir un canal direct sans bricoler votre stack de paiement."
+      },
+      {
+        "id": "proof-card-3",
+        "title": "Page publiable et partageable dès le départ",
+        "description": "Votre logement obtient une URL dédiée, personnalisable selon votre plan. C’est assez simple pour être utilisé vite, et assez propre pour être partagé ou indexé."
+      }
+    ]
+  },
   "features": {
     "items": [
       {
@@ -299,6 +341,28 @@
         "title": "Être libre, c’est aussi pouvoir compter sur son outil",
         "description": "Notre priorité est de vous garantir un outil sur lequel vous pouvez compter dans le temps. Nous restons à votre écoute pour recueillir vos retours et vous accompagner à chaque étape, dès que vous en avez besoin."
       }
+    ]
+  },
+  "roiSection": {
+    "eyebrow": "ROI",
+    "title": "Quand vous reprenez la vente en direct, vous reprenez aussi votre <strong>marge</strong>",
+    "subtitle": "Exemple purement illustratif pour visualiser l’écart entre une diffusion uniquement OTA et un canal direct IndieHost.",
+    "scenario": {
+      "title": "Scénario type : 1 logement, 10 réservations / mois, panier moyen 420 EUR",
+      "revenueLabel": "Chiffre d'affaires annuel estimé",
+      "revenueValue": "50 400 EUR",
+      "otaCostLabel": "Commission OTA estimée à 15 %",
+      "otaCostValue": "7 560 EUR / an",
+      "indiehostCostLabel": "Abonnement SuperHost sur 12 mois",
+      "indiehostCostValue": "468 EUR / an",
+      "savingsLabel": "Écart annuel théorique",
+      "savingsValue": "7 092 EUR",
+      "note": "Scénario indicatif hors frais de paiement et hors dépenses marketing. L’objectif est d’illustrer le poids des commissions dans un cas simple."
+    },
+    "bullets": [
+      "Même un faible volume de réservations directes peut amortir très vite l’abonnement.",
+      "Vous gardez la relation client, l’URL, les contenus et la possibilité de fidéliser vos voyageurs.",
+      "Le canal direct devient un actif, pas seulement un flux de réservations dépendant d’une plateforme tierce."
     ]
   },
   "join": {
@@ -664,5 +728,21 @@
         ]
       }
     ]
+  },
+  "finalCtaSection": {
+    "eyebrow": "Passez à l'action",
+    "title": "Importez votre annonce, activez votre page et commencez à tester votre <strong>canal direct</strong>",
+    "body": "Vous pouvez démarrer simplement avec une annonce existante, publier vite, puis affiner votre page, vos tarifs et votre stratégie au fur et à mesure.",
+    "primaryCta": {
+      "label": "Essayer gratuitement",
+      "href": "#intro-section",
+      "target": "_self"
+    },
+    "secondaryCta": {
+      "label": "Voir les tarifs",
+      "href": "#pricing-section",
+      "target": "_self"
+    },
+    "note": "Sans commission IndieHost sur vos réservations directes. Parcours simple et pensé pour mobile."
   }
 }

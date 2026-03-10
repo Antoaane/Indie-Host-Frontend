@@ -91,6 +91,51 @@ export interface StrengthsContent {
   }>
 }
 
+export interface ProofSectionContent {
+  eyebrow: string
+  title: string
+  subtitle: string
+  metrics: Array<{
+    id: string
+    value: string
+    label: string
+    detail?: string
+  }>
+  cards: Array<{
+    id: string
+    title: string
+    description: string
+  }>
+}
+
+export interface RoiSectionContent {
+  eyebrow: string
+  title: string
+  subtitle: string
+  scenario: {
+    title: string
+    revenueLabel: string
+    revenueValue: string
+    otaCostLabel: string
+    otaCostValue: string
+    indiehostCostLabel: string
+    indiehostCostValue: string
+    savingsLabel: string
+    savingsValue: string
+    note: string
+  }
+  bullets: string[]
+}
+
+export interface FinalCtaSectionContent {
+  eyebrow: string
+  title: string
+  body: string
+  primaryCta: CtaLink
+  secondaryCta: CtaLink
+  note?: string
+}
+
 export interface JoinFormField {
   name: string
   placeholder: string
@@ -189,7 +234,10 @@ export interface LandingContent {
   features: FeaturesContent
   how: HowContent
   habits: HabitsContent
+  proofSection: ProofSectionContent
   strengths: StrengthsContent
+  roiSection: RoiSectionContent
   join: JoinContent
   faq: FaqContent
+  finalCtaSection: FinalCtaSectionContent
 }

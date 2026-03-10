@@ -20,9 +20,12 @@ import IntroSection from '@/views/Landing/components/IntroSection/IntroSection.v
 import FeaturesSection from '@/views/Landing/components/FeaturesSection/FeaturesSection.vue'
 import HowSection from '@/views/Landing/components/HowSection/HowSection.vue'
 import UsageSection from '@/views/Landing/components/UsageSection/UsageSection.vue'
+import ProofSection from '@/views/Landing/components/ProofSection/ProofSection.vue'
 import StrengthsSection from '@/views/Landing/components/StrengthsSection/StrengthsSection.vue'
 import PricingSection from '@/views/Landing/components/PricingSection/PricingSection.vue'
+import RoiSection from '@/views/Landing/components/RoiSection/RoiSection.vue'
 import FaqSection from '@/views/Landing/components/FaqSection/FaqSection.vue'
+import FinalCtaSection from '@/views/Landing/components/FinalCtaSection/FinalCtaSection.vue'
 
 const { content } = useLandingLocale()
 
@@ -174,8 +177,10 @@ onBeforeUnmount(() => {
     :slides="content.habits.slides"
     /> -->
     <UsageSection :steps="content.usage.steps" />
+    <ProofSection :content="content.proofSection" />
     <StrengthsSection :content="content.strengths" />
     <PricingSection />
+    <RoiSection :content="content.roiSection" />
     <!-- JoinSection désactivée
     <JoinSection
       :content="content.join"
@@ -183,6 +188,7 @@ onBeforeUnmount(() => {
     />
     -->
     <FaqSection :content="content.faq" />
+    <FinalCtaSection :content="content.finalCtaSection" />
   </main>
   <!-- </VueLenis> -->
 </template>

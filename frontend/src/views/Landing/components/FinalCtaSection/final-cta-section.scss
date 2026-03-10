@@ -1,0 +1,88 @@
+/* File: src/views/Landing/components/FinalCtaSection/final-cta-section.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+
+#final-cta-section {
+  @include layout-gap(padding, top, 3);
+  @include layout-gap(padding, bottom, 5);
+  @include layout-gap(padding, inline, 1.25);
+
+  .wrapper {
+    max-width: 58rem;
+    margin: 0 auto;
+    padding: 1.5rem;
+    border: 1px solid rgba($accent, 0.12);
+    border-radius: borders.$rounded-xxl;
+    background: linear-gradient(180deg, rgba($accent, 0.08) 0%, rgba($accent, 0.04) 100%);
+    text-align: center;
+
+    @include min-width(lg) {
+      padding: 2.5rem;
+    }
+  }
+
+  .eyebrow {
+    margin: 0 0 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba($accent, 0.68);
+    @include little-text($accent, $thin: false);
+  }
+
+  h2 {
+    margin: 0;
+    @include lp-h2-title($accent, false);
+  }
+
+  .body {
+    max-width: 44rem;
+    margin: 1rem auto 0;
+    color: rgba($accent, 0.8);
+    @include base-text($accent, $bigger: true, $bold: false);
+  }
+
+  .actions {
+    margin-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: center;
+
+    @include min-width(md) {
+      flex-direction: row;
+      justify-content: center;
+    }
+  }
+
+  button {
+    min-height: 3rem;
+    padding: 0.8rem 1.1rem;
+    border-radius: borders.$rounded-sm;
+    border: none;
+    cursor: pointer;
+    transition: transform 180ms ease, opacity 180ms ease, background-color 180ms ease, color 180ms ease;
+    @include base-text($secondary-button-reference, $bigger: false, $bold: true);
+
+    &:hover {
+      transform: translateY(-1px);
+    }
+  }
+
+  .primary {
+    color: $secondary-button-reference;
+    background: $accent;
+  }
+
+  .secondary {
+    color: $accent;
+    background: rgba($accent, 0.06);
+    border: 1px solid rgba($accent, 0.16);
+  }
+
+  .note {
+    margin: 1rem 0 0;
+    color: rgba($accent, 0.56);
+    @include little-text($accent, $thin: false);
+  }
+}
