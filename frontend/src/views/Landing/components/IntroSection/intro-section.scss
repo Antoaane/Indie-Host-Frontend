@@ -295,6 +295,28 @@
       }
     }
 
+    .mobile-import-demo {
+      width: 100%;
+      max-width: 22rem;
+      margin-top: var(--layout-gap-xl);
+      padding: 0.7rem;
+      border-radius: borders.$rounded-xl;
+      background: rgba($accent, 0.94);
+      box-shadow: 0 14px 36px rgba($secondary, 0.2);
+
+      @include min-width(lg) {
+        display: none;
+      }
+
+      video {
+        display: block;
+        width: 100%;
+        height: auto;
+        border-radius: borders.$rounded-md;
+        background: $accent;
+      }
+    }
+
     .activate-cta {
       display: flex;
       flex-direction: column;

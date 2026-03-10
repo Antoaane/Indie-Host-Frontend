@@ -36,17 +36,28 @@ const animatedTitle = computed(() => {
   )
 })
 
+function scrollToIntroTop() {
+  const target = document.querySelector<HTMLElement>('#intro-section')
+  if (!target) return
+
+  const top = window.scrollY + target.getBoundingClientRect().top
+  window.scrollTo({
+    top: Math.max(0, top),
+    behavior: 'smooth',
+  })
+}
+
 function onSubmit(e?: Event) {
   e?.preventDefault()
   const trimmed = url.value.trim()
-  if (!trimmed) {
+  if (!trimmed && vp.lg.value) {
     submitError.value = "Veuillez renseigner le lien Airbnb ou Booking de votre annonce pour lancer l'import automatique et créer votre site."
     return
   }
 
   submitError.value = ''
   submitUrl(trimmed)
-  document.querySelector('#intro-section')?.scrollIntoView({ behavior: 'smooth' })
+  scrollToIntroTop()
 }
 
 onMounted(async () => {

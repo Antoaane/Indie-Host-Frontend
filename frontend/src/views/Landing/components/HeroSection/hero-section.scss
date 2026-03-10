@@ -184,6 +184,10 @@
             color: #ffb4b4;
             @include base-text($accent, $bigger: false);
 
+            @media (max-width: 1024px) {
+              display: none;
+            }
+
             @include min-width(lg) {
               text-align: left;
             }

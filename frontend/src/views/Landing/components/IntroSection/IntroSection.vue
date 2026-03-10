@@ -30,12 +30,13 @@ const props = defineProps<{
 }>()
 
 const router = useRouter()
-const { pendingUrl } = useLandingImport()
+const { pendingUrl, pendingRequestId } = useLandingImport()
 const url = ref('')
 const previewBundle = ref<RawListingBundle | null>(null)
 const isPreviewLoading = ref(false)
 const previewError = ref<string | null>(null)
 const previewContainerRef = ref<HTMLElement | null>(null)
+const mobileImportVideoSrc = '/assets/media/videos/import-auto-video.webm'
 
 const displayedPreviewBundle = computed(() => previewBundle.value)
 const isMobilePreviewFullscreen = computed(() => Boolean(previewBundle.value) && !vp.lg.value)
@@ -56,6 +57,8 @@ const canGenerate = computed(() => url.value.trim().length > 0 && !isPreviewLoad
 
 async function runPreview() {
   const trimmed = url.value.trim()
+  previewBundle.value = null
+
   if (!trimmed) {
     previewError.value = "Collez un lien d'annonce pour prévisualiser."
     return
@@ -121,11 +124,9 @@ watch(previewBundle, async (val) => {
   if (stay)    tl.to(stay,    { opacity: 1, y: 0, duration: 1.0 }, '-=0.5')
 })
 
-watch(pendingUrl, (newUrl) => {
-  if (newUrl.trim()) {
-    url.value = newUrl.trim()
-    runPreview()
-  }
+watch(pendingRequestId, () => {
+  url.value = pendingUrl.value.trim()
+  void runPreview()
 })
 
 function activateSite() {
@@ -240,6 +241,24 @@ onBeforeUnmount(() => {
           <span class="teaser-badge">Airbnb</span>
           <span class="teaser-sep">·</span>
           <span class="teaser-badge">Booking.com</span>
+        </div>
+
+        <div
+          v-if="showMobileTeaser"
+          class="mobile-import-demo"
+        >
+          <video
+            autoplay
+            loop
+            muted
+            playsinline
+            preload="metadata"
+          >
+            <source
+              :src="mobileImportVideoSrc"
+              type="video/webm"
+            />
+          </video>
         </div>
 
         <Transition name="activate-reveal">
