@@ -54,6 +54,10 @@
 
     padding-top: var(--layout-gap-sm);
     padding-bottom: calc(var(--layout-gap-sm) + env(safe-area-inset-bottom));
+
+    &.is-nav-hidden {
+      transform: translateX(-50%) translateY(140%);
+    }
   }
 
   &:has(.bottom-nav) {

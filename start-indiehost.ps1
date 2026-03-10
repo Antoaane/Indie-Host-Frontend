@@ -82,6 +82,31 @@ if (Get-ListeningPid 4000) {
     Write-Ok "Backend API deja actif (localhost:4000)."
 } else {
     $apiDir = Join-Path $ROOT "backend\api"
+    $apiEnvFile = Join-Path $apiDir ".env"
+    $apiEnvExampleFile = Join-Path $apiDir ".env.example"
+    Push-Location $apiDir
+    try {
+        if (-not (Test-Path $apiEnvFile)) {
+            if (-not (Test-Path $apiEnvExampleFile)) {
+                Write-Fail "Fichier .env.example introuvable pour le backend API."
+                exit 1
+            }
+
+            Write-Warn "Fichier .env introuvable pour le backend. Copie depuis .env.example..."
+            Copy-Item $apiEnvExampleFile $apiEnvFile
+            Write-Ok "Fichier .env cree pour le backend API."
+        }
+
+        Write-Warn "Generation du client Prisma pour le backend..."
+        & npm run prisma:generate
+        if ($LASTEXITCODE -ne 0) {
+            Write-Fail "La generation du client Prisma a echoue."
+            exit 1
+        }
+        Write-Ok "Client Prisma genere pour le backend."
+    } finally {
+        Pop-Location
+    }
     Open-Service -Title "IndieHost API :4000" -WorkDir $apiDir -Command "npm run dev"
     Start-Sleep 1
     Write-Ok "Backend API lance dans un nouvel onglet (localhost:4000)."
@@ -95,6 +120,35 @@ if (Get-ListeningPid 8000) {
 } else {
     $scrapDir  = Join-Path $ROOT "backend\microservices\microservice-scraping-py"
     $pythonExe = Join-Path $scrapDir ".venv\Scripts\python.exe"
+    if (-not (Test-Path $pythonExe)) {
+        Write-Warn "Environnement Python introuvable. Initialisation automatique du .venv..."
+        Push-Location $scrapDir
+        try {
+            if (Get-Command python -ErrorAction SilentlyContinue) {
+                & python -m venv .venv
+            } elseif (Get-Command py -ErrorAction SilentlyContinue) {
+                & py -3 -m venv .venv
+            } else {
+                Write-Fail "Python est introuvable. Installe Python 3.10+ puis relance le script."
+                exit 1
+            }
+
+            if (-not (Test-Path $pythonExe)) {
+                Write-Fail "La creation du .venv a echoue pour le service de scraping."
+                exit 1
+            }
+
+            Write-Warn "Installation des dependances Python du scraping..."
+            & $pythonExe -m pip install -r requirements.txt
+            if ($LASTEXITCODE -ne 0) {
+                Write-Fail "L'installation des dependances Python a echoue."
+                exit 1
+            }
+            Write-Ok "Environnement Python initialise pour le service de scraping."
+        } finally {
+            Pop-Location
+        }
+    }
     $scrapCmd  = "& '$pythonExe' -m uvicorn api:app --reload --port 8000"
     Open-Service -Title "IndieHost Scraping :8000" -WorkDir $scrapDir -Command $scrapCmd
     Start-Sleep 1

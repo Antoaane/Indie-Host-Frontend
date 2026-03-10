@@ -23,6 +23,7 @@ import { buildPreviewBundle } from '@/views/Landing/components/IntroSection/buil
 import { LANDING_IMPORT_URL_KEY } from '@/views/Landing/components/IntroSection/landingImportUrlKey'
 import { useLandingImport } from '@/views/Landing/composables/useLandingImport'
 import { LANDING_CREATE_DRAFT_KEY } from '@/views/CreateListing/wizard/createListingDraft'
+import { setNavForcedHidden } from '@/components/navs/navUtils'
 
 const props = defineProps<{
   content: IntroSectionContent
@@ -137,6 +138,7 @@ function closeMobilePreview() {
 
 watch(isMobilePreviewFullscreen, (isFullscreen) => {
   if (typeof document === 'undefined') return
+  setNavForcedHidden(isFullscreen)
   document.body.style.overflow = isFullscreen ? 'hidden' : ''
 })
 
@@ -150,6 +152,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  setNavForcedHidden(false)
   if (typeof document !== 'undefined') {
     document.body.style.overflow = ''
   }

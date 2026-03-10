@@ -1,32 +1,579 @@
 """
-Scraper Airbnb basé sur gobnb (https://github.com/johnbalvin/pybnb).
-Récupère un maximum d'informations sur une annonce et les enregistre en JSON.
+Scraper Airbnb base sur gobnb (https://github.com/johnbalvin/pybnb).
+Retourne un format normalise pour l'import frontend, meme en fallback.
 """
 import argparse
 import json
+import random
 import re
 import sys
 import time
-import random
 from collections import deque
+from typing import Any
+
 import gobnb
 
 try:
     from curl_cffi import requests as cffi_requests
     from bs4 import BeautifulSoup
+
     HAS_FALLBACK = True
 except ImportError:
     HAS_FALLBACK = False
 
-# Clés possibles pour les données embarquées (Airbnb change parfois le nom)
+# Cles possibles pour les donnees embarquees (Airbnb change parfois le nom)
 EMBEDDED_DATA_KEYS = ("niobeClientData", "niobeMinimalClientData", "niobeFullClientData", "bootstrapData")
+LD_LISTING_TYPES = {
+    "lodgingbusiness",
+    "house",
+    "apartment",
+    "residence",
+    "touristattraction",
+    "product",
+    "hotel",
+}
+SUMMARY_ITEM_RE = re.compile(
+    r"(?:\d+|studio)[^,;|\n]{0,40}(?:guest|voyageur|person|bedroom|chambre|bed|lit|bath|salle de bain)",
+    re.IGNORECASE,
+)
+IMAGE_URL_RE = re.compile(r"^https?://", re.IGNORECASE)
+PRICE_NUMBER_RE = re.compile(r"(-?\d+(?:[.,]\d+)?)")
 
-# File d'attente globale pour séquencer les scrapes
+# File d'attente globale pour sequencer les scrapes
 REQUEST_QUEUE = deque()
 
 
+def _clean_text(value: Any) -> str:
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return re.sub(r"\s+", " ", value).strip()
+    return re.sub(r"\s+", " ", str(value)).strip()
+
+
+def _coerce_float(value: Any) -> float | None:
+    if isinstance(value, bool) or value is None:
+        return None
+    if isinstance(value, (int, float)):
+        return float(value) if float(value) == float(value) else None
+    if isinstance(value, str):
+        normalized = value.strip().replace(",", ".")
+        if not normalized:
+            return None
+        try:
+            return float(normalized)
+        except ValueError:
+            return None
+    return None
+
+
+def _coerce_price(value: Any) -> int | None:
+    number = _coerce_float(value)
+    if number is None:
+        if isinstance(value, str):
+            match = PRICE_NUMBER_RE.search(value.replace("\xa0", " ").replace(" ", ""))
+            if not match:
+                return None
+            number = _coerce_float(match.group(1))
+        if number is None:
+            return None
+    if number <= 0:
+        return None
+    return int(round(number))
+
+
+def _walk(value: Any):
+    yield value
+    if isinstance(value, dict):
+        for child in value.values():
+            yield from _walk(child)
+    elif isinstance(value, list):
+        for child in value:
+            yield from _walk(child)
+
+
+def _dedupe_texts(values: list[str]) -> list[str]:
+    out: list[str] = []
+    seen: set[str] = set()
+    for value in values:
+        clean = _clean_text(value)
+        if not clean:
+            continue
+        key = clean.casefold()
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(clean)
+    return out
+
+
+def _normalize_image_entries(values: list[str]) -> list[dict]:
+    out: list[dict] = []
+    seen: set[str] = set()
+    for idx, url in enumerate(values, start=1):
+        clean = _clean_text(url)
+        if not clean or clean in seen or not IMAGE_URL_RE.match(clean):
+            continue
+        seen.add(clean)
+        out.append({"title": f"Photo {idx}", "url": clean})
+    return out
+
+
+def _extract_embedded_payload(data: dict) -> tuple[Any, Any]:
+    embedded_data = None
+    raw_deferred = None
+    for tag_data in _walk(data):
+        if not isinstance(tag_data, dict):
+            continue
+        for key in EMBEDDED_DATA_KEYS:
+            entries = tag_data.get(key)
+            if not isinstance(entries, list) or not entries:
+                continue
+            entry = entries[0]
+            if isinstance(entry, (list, tuple)) and len(entry) > 1:
+                embedded_data = entry[1]
+            else:
+                embedded_data = entry
+            return embedded_data, raw_deferred
+        if raw_deferred is None and tag_data:
+            raw_deferred = tag_data
+    return embedded_data, raw_deferred
+
+
+def _flatten_ld_nodes(value: Any) -> list[dict]:
+    nodes: list[dict] = []
+    if isinstance(value, dict):
+        if isinstance(value.get("@graph"), list):
+            for item in value["@graph"]:
+                nodes.extend(_flatten_ld_nodes(item))
+        nodes.append(value)
+    elif isinstance(value, list):
+        for item in value:
+            nodes.extend(_flatten_ld_nodes(item))
+    return nodes
+
+
+def _extract_ld_nodes(soup: "BeautifulSoup") -> list[dict]:
+    nodes: list[dict] = []
+    for script in soup.select("script[type='application/ld+json']"):
+        raw = script.string or script.get_text(strip=True)
+        if not raw:
+            continue
+        try:
+            payload = json.loads(raw)
+        except json.JSONDecodeError:
+            continue
+        nodes.extend(_flatten_ld_nodes(payload))
+    return nodes
+
+
+def _pick_listing_ld_node(nodes: list[dict]) -> dict:
+    best: dict = {}
+    best_score = -1
+    for node in nodes:
+        if not isinstance(node, dict):
+            continue
+        raw_type = node.get("@type")
+        types = raw_type if isinstance(raw_type, list) else [raw_type]
+        normalized_types = {_clean_text(item).lower() for item in types if item}
+        score = 0
+        if normalized_types & LD_LISTING_TYPES:
+            score += 5
+        if node.get("name"):
+            score += 2
+        if node.get("image"):
+            score += 2
+        if node.get("address"):
+            score += 2
+        if node.get("geo"):
+            score += 1
+        if score > best_score:
+            best = node
+            best_score = score
+    return best
+
+
+def _extract_meta_content(soup: "BeautifulSoup", *selectors: tuple[str, str]) -> str:
+    for attr, value in selectors:
+        tag = soup.find("meta", attrs={attr: value})
+        if tag and tag.get("content"):
+            return _clean_text(tag["content"])
+    return ""
+
+
+def _extract_location_from_address(address: Any) -> dict:
+    if not isinstance(address, dict):
+        return {}
+    city = _clean_text(
+        address.get("addressLocality")
+        or address.get("city")
+        or address.get("locality")
+        or address.get("cityName")
+    )
+    region = _clean_text(
+        address.get("addressRegion")
+        or address.get("region")
+        or address.get("state")
+        or address.get("province")
+    )
+    country = _clean_text(address.get("addressCountry") or address.get("country"))
+    street = _clean_text(
+        address.get("streetAddress")
+        or address.get("addressLine1")
+        or address.get("line1")
+        or address.get("formattedStreetAddress")
+    )
+    parts = [part for part in (street, city, region, country) if part]
+    return {
+        "precise_address": ", ".join(parts) if parts else "",
+        "city": city,
+        "region": region,
+        "country": country,
+    }
+
+
+def _extract_coordinates_from_value(value: Any) -> tuple[float | None, float | None]:
+    if isinstance(value, dict):
+        latitude = _coerce_float(
+            value.get("latitude")
+            or value.get("lat")
+            or value.get("centerLat")
+        )
+        longitude = _coerce_float(
+            value.get("longitude")
+            or value.get("lng")
+            or value.get("lon")
+            or value.get("centerLng")
+        )
+        if latitude is not None and longitude is not None:
+            return latitude, longitude
+    return None, None
+
+
+def _extract_coordinates(*roots: Any) -> tuple[float | None, float | None]:
+    for root in roots:
+        for node in _walk(root):
+            latitude, longitude = _extract_coordinates_from_value(node)
+            if latitude is not None and longitude is not None:
+                return latitude, longitude
+    return None, None
+
+
+def _extract_images_from_value(value: Any) -> list[dict]:
+    urls: list[str] = []
+    if isinstance(value, str):
+        clean = _clean_text(value)
+        if IMAGE_URL_RE.match(clean) and any(token in clean.lower() for token in ("jpg", "jpeg", "png", "webp", "picture", "image", "photo", "muscache")):
+            urls.append(clean)
+    elif isinstance(value, dict):
+        for key, child in value.items():
+            key_name = _clean_text(key).lower()
+            if key_name in {"url", "image", "src", "picture", "pictureurl", "thumbnailurl"}:
+                urls.extend(item["url"] for item in _extract_images_from_value(child))
+            elif any(token in key_name for token in ("image", "photo", "picture", "gallery")):
+                urls.extend(item["url"] for item in _extract_images_from_value(child))
+    elif isinstance(value, list):
+        for child in value:
+            urls.extend(item["url"] for item in _extract_images_from_value(child))
+    return _normalize_image_entries(urls)
+
+
+def _extract_amenities_from_value(value: Any, default_title: str = "Equipements") -> list[dict]:
+    groups: list[dict] = []
+    if isinstance(value, dict):
+        possible_list = value.get("values") or value.get("items") or value.get("amenities")
+        if isinstance(possible_list, list):
+            entries = []
+            for item in possible_list:
+                if not isinstance(item, dict):
+                    continue
+                title = _clean_text(item.get("title") or item.get("name") or item.get("label"))
+                if not title:
+                    continue
+                subtitle = _clean_text(item.get("subtitle") or item.get("description"))
+                available = item.get("available")
+                entry = {"title": title}
+                if subtitle:
+                    entry["subtitle"] = subtitle
+                if isinstance(available, bool):
+                    entry["available"] = available
+                entries.append(entry)
+            if entries:
+                group_title = _clean_text(value.get("title") or value.get("name") or default_title) or default_title
+                groups.append({"title": group_title, "values": entries})
+        for key, child in value.items():
+            key_name = _clean_text(key).lower()
+            if "amenit" in key_name:
+                groups.extend(_extract_amenities_from_value(child, default_title))
+    elif isinstance(value, list):
+        flat_entries = []
+        nested_groups = []
+        for child in value:
+            if isinstance(child, dict) and any(k in child for k in ("title", "name", "label")) and not any(k in child for k in ("values", "items", "amenities")):
+                title = _clean_text(child.get("title") or child.get("name") or child.get("label"))
+                if title:
+                    entry = {"title": title}
+                    subtitle = _clean_text(child.get("subtitle") or child.get("description"))
+                    available = child.get("available")
+                    if subtitle:
+                        entry["subtitle"] = subtitle
+                    if isinstance(available, bool):
+                        entry["available"] = available
+                    flat_entries.append(entry)
+            nested_groups.extend(_extract_amenities_from_value(child, default_title))
+        if flat_entries:
+            nested_groups.insert(0, {"title": default_title, "values": flat_entries})
+        groups.extend(nested_groups)
+    deduped_groups: list[dict] = []
+    seen: set[str] = set()
+    for group in groups:
+        title = _clean_text(group.get("title") or default_title) or default_title
+        values = []
+        for item in group.get("values", []):
+            item_title = _clean_text(item.get("title"))
+            if not item_title:
+                continue
+            key = f"{title.casefold()}::{item_title.casefold()}"
+            if key in seen:
+                continue
+            seen.add(key)
+            normalized_item = {"title": item_title}
+            subtitle = _clean_text(item.get("subtitle"))
+            if subtitle:
+                normalized_item["subtitle"] = subtitle
+            if isinstance(item.get("available"), bool):
+                normalized_item["available"] = item["available"]
+            values.append(normalized_item)
+        if values:
+            deduped_groups.append({"title": title, "values": values})
+    return deduped_groups
+
+
+def _extract_summary_items(*roots: Any) -> list[str]:
+    matches: list[str] = []
+    for root in roots:
+        for node in _walk(root):
+            if not isinstance(node, str):
+                continue
+            text = _clean_text(node)
+            if not text or len(text) > 80:
+                continue
+            if SUMMARY_ITEM_RE.search(text):
+                matches.append(text)
+    return _dedupe_texts(matches)
+
+
+def _extract_house_rules(*roots: Any) -> dict:
+    check_in_values: list[str] = []
+    check_out_values: list[str] = []
+    for root in roots:
+        for node in _walk(root):
+            if isinstance(node, dict):
+                for key, value in node.items():
+                    key_name = _clean_text(key).lower()
+                    text = _clean_text(value)
+                    if not text:
+                        continue
+                    if "checkin" in key_name or "check_in" in key_name:
+                        check_in_values.append(text)
+                    elif "checkout" in key_name or "check_out" in key_name:
+                        check_out_values.append(text)
+            elif isinstance(node, str):
+                text = _clean_text(node)
+                if "check-in" in text.lower() or "check in" in text.lower() or "arriv" in text.lower():
+                    check_in_values.append(text)
+                if "check-out" in text.lower() or "check out" in text.lower() or "depart" in text.lower():
+                    check_out_values.append(text)
+    general = []
+    deduped_check_in = _dedupe_texts(check_in_values)
+    deduped_check_out = _dedupe_texts(check_out_values)
+    if deduped_check_in:
+        general.append({"title": "Arrivee", "values": [{"title": deduped_check_in[0]}]})
+    if deduped_check_out:
+        general.append({"title": "Depart", "values": [{"title": deduped_check_out[0]}]})
+    return {"general": general} if general else {}
+
+
+def _extract_price(*roots: Any) -> int | None:
+    preferred_key_fragments = ("night", "nightly", "avg", "rate", "price", "amount")
+    for root in roots:
+        if isinstance(root, dict):
+            top_price = _coerce_price(root.get("price"))
+            if top_price is not None:
+                return top_price
+        for node in _walk(root):
+            if not isinstance(node, dict):
+                continue
+            keys = {_clean_text(key).lower() for key in node.keys()}
+            if "price" in keys and ("pricecurrency" in keys or "currency" in keys or "formattedprice" in keys):
+                parsed = _coerce_price(node.get("price"))
+                if parsed is not None:
+                    return parsed
+            for key, value in node.items():
+                key_name = _clean_text(key).lower()
+                if not any(fragment in key_name for fragment in preferred_key_fragments):
+                    continue
+                parsed = _coerce_price(value)
+                if parsed is not None:
+                    return parsed
+    return None
+
+
+def _first_non_empty(*values: Any) -> str:
+    for value in values:
+        clean = _clean_text(value)
+        if clean:
+            return clean
+    return ""
+
+
+def _normalize_scraped_data(
+    raw_data: Any,
+    *,
+    url: str,
+    source: str,
+    soup: "BeautifulSoup | None" = None,
+    embedded_data: Any = None,
+    raw_deferred: Any = None,
+) -> dict:
+    result = dict(raw_data) if isinstance(raw_data, dict) else {"raw": raw_data}
+    result["listing_url"] = url
+    result["source"] = source
+    if embedded_data is not None and "embedded_data" not in result:
+        result["embedded_data"] = embedded_data
+    if raw_deferred is not None and "raw_deferred" not in result:
+        result["raw_deferred"] = raw_deferred
+
+    roots = [result]
+    if embedded_data is not None:
+        roots.append(embedded_data)
+    if raw_deferred is not None:
+        roots.append(raw_deferred)
+
+    ld_listing: dict = {}
+    meta_title = ""
+    meta_description = ""
+    meta_image = ""
+    if soup is not None:
+        ld_nodes = _extract_ld_nodes(soup)
+        ld_listing = _pick_listing_ld_node(ld_nodes)
+        roots.append(ld_listing)
+        meta_title = _extract_meta_content(soup, ("property", "og:title"), ("name", "twitter:title"))
+        meta_description = _extract_meta_content(soup, ("name", "description"), ("property", "og:description"))
+        meta_image = _extract_meta_content(soup, ("property", "og:image"), ("name", "twitter:image"))
+
+    location = {}
+    for candidate in (
+        result.get("address"),
+        result.get("location"),
+        ld_listing.get("address"),
+    ):
+        extracted = _extract_location_from_address(candidate)
+        if any(extracted.values()):
+            location = extracted
+            break
+
+    if not location:
+        for node in roots:
+            for value in _walk(node):
+                extracted = _extract_location_from_address(value)
+                if any(extracted.values()):
+                    location = extracted
+                    break
+            if location:
+                break
+
+    latitude, longitude = _extract_coordinates(*roots, ld_listing.get("geo"))
+    images = result.get("images")
+    if not isinstance(images, list) or not images:
+        image_urls = []
+        if meta_image:
+            image_urls.append(meta_image)
+        for root in roots:
+            image_urls.extend(item["url"] for item in _extract_images_from_value(root))
+        images = _normalize_image_entries(image_urls)
+
+    amenities = result.get("amenities")
+    if not isinstance(amenities, list) or not amenities:
+        for root in roots:
+            extracted = _extract_amenities_from_value(root)
+            if extracted:
+                amenities = extracted
+                break
+        if not isinstance(amenities, list):
+            amenities = []
+
+    summary_items = _extract_summary_items(*roots)
+    room_type = _first_non_empty(result.get("room_type"), ld_listing.get("@type"))
+    if room_type and room_type.lower() in {"lodgingbusiness", "product", "house", "apartment", "hotel"}:
+        room_type = "Logement entier"
+    person_capacity = result.get("person_capacity")
+    if person_capacity is None:
+        for item in summary_items:
+            lowered = item.lower()
+            if any(token in lowered for token in ("guest", "voyageur", "person")):
+                match = re.search(r"\d+", lowered)
+                if match:
+                    person_capacity = int(match.group(0))
+                    break
+
+    house_rules = result.get("house_rules")
+    if not isinstance(house_rules, dict) or not house_rules.get("general"):
+        house_rules = _extract_house_rules(*roots)
+
+    title = _first_non_empty(result.get("title"), ld_listing.get("name"), meta_title)
+    description = _first_non_empty(result.get("description"), ld_listing.get("description"), meta_description)
+    precise_address = _first_non_empty(result.get("precise_address"), location.get("precise_address"))
+    city = _first_non_empty(result.get("city"), location.get("city"))
+    region = _first_non_empty(result.get("region"), location.get("region"))
+    country = _first_non_empty(result.get("country"), location.get("country"), "France")
+    price = _coerce_price(result.get("price"))
+    if price is None:
+        price = _extract_price(*roots, ld_listing.get("offers"))
+
+    location_title_parts = [part for part in (city, region, country) if part]
+    location_title = ", ".join(location_title_parts)
+    sub_description = result.get("sub_description")
+    if not isinstance(sub_description, dict):
+        sub_description = {}
+    if location_title and not _clean_text(sub_description.get("title")):
+        if room_type:
+            sub_description["title"] = f"{room_type} - {location_title}"
+        else:
+            sub_description["title"] = location_title
+    if summary_items and not isinstance(sub_description.get("items"), list):
+        sub_description["items"] = summary_items
+
+    location_descriptions = result.get("location_descriptions")
+    if (not isinstance(location_descriptions, list) or not location_descriptions) and location_title:
+        location_descriptions = [{"title": location_title, "content": precise_address or location_title}]
+
+    normalized = {
+        **result,
+        "listing_url": url,
+        "source": source,
+        "title": title,
+        "description": description,
+        "coordinates": {"latitude": latitude, "longitude": longitude} if latitude is not None and longitude is not None else {},
+        "person_capacity": person_capacity if isinstance(person_capacity, int) and person_capacity > 0 else result.get("person_capacity"),
+        "room_type": room_type or result.get("room_type") or "Logement entier",
+        "amenities": amenities,
+        "images": images,
+        "house_rules": house_rules,
+        "sub_description": sub_description,
+        "location_descriptions": location_descriptions,
+        "precise_address": precise_address,
+        "city": city,
+        "region": region,
+        "country": country,
+    }
+    if price is not None:
+        normalized["price"] = price
+    return normalized
+
+
 def add_request(client_id: str, url: str) -> None:
-    """Ajoute une demande de scraping à la file d'attente."""
+    """Ajoute une demande de scraping a la file d'attente."""
     REQUEST_QUEUE.append((client_id, url))
 
 
@@ -39,7 +586,7 @@ def process_queue(
     min_delay: float,
     max_delay: float,
 ) -> None:
-    """Traite la file d'attente séquentiellement en espaçant les requêtes."""
+    """Traite la file d'attente sequentiellement en espaçant les requetes."""
     while REQUEST_QUEUE:
         client_id, url = REQUEST_QUEUE.popleft()
         print(f"Traitement de {url} pour le client {client_id}...")
@@ -61,19 +608,18 @@ def process_queue(
             with open(output_path, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
         except OSError as e:  # pragma: no cover
-            print(f"Impossible d'écrire dans {output_path}: {e}", file=sys.stderr)
+            print(f"Impossible d'ecrire dans {output_path}: {e}", file=sys.stderr)
             continue
 
-        print(f"Données enregistrées dans {output_path}")
+        print(f"Donnees enregistrees dans {output_path}")
 
-        # Délai aléatoire pour "humaniser" le scraping
         delay = random.uniform(min_delay, max_delay)
         print(f"Attente de {delay:.1f} s avant la prochaine annonce...")
         time.sleep(delay)
 
 
 def _fetch_page_fallback(url: str, proxy_url: str) -> dict:
-    """Récupère la page et extrait le JSON embarqué (#data-deferred-state-*) quand gobnb échoue."""
+    """Recupere la page, extrait les donnees HTML/JSON-LD et normalise le resultat."""
     headers = {
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "en",
@@ -85,8 +631,9 @@ def _fetch_page_fallback(url: str, proxy_url: str) -> dict:
     resp = cffi_requests.get(url, headers=headers, proxies=proxies, timeout=30)
     resp.raise_for_status()
     soup = BeautifulSoup(resp.text, "html.parser")
-    out = {"listing_url": url, "source": "fallback_embedded_json"}
 
+    embedded_data = None
+    raw_deferred = None
     for tag in soup.select("[id^='data-deferred-state-']"):
         raw = tag.get_text(strip=True).replace("\n", " ")
         raw = re.sub(r"\s+", " ", raw)
@@ -94,21 +641,30 @@ def _fetch_page_fallback(url: str, proxy_url: str) -> dict:
             continue
         try:
             data = json.loads(raw)
-            for key in EMBEDDED_DATA_KEYS:
-                if key not in data or not isinstance(data[key], list) or len(data[key]) == 0:
-                    continue
-                entry = data[key][0]
-                if isinstance(entry, (list, tuple)) and len(entry) > 1:
-                    out["embedded_data"] = entry[1]
-                else:
-                    out["embedded_data"] = entry
-                return out
-            out["raw_deferred"] = data
-            return out
         except json.JSONDecodeError:
             continue
-    out["error"] = "Aucun JSON différé trouvé dans la page."
-    return out
+        embedded_data, raw_deferred = _extract_embedded_payload(data)
+        if embedded_data is not None or raw_deferred is not None:
+            break
+        if raw_deferred is None:
+            raw_deferred = data
+
+    base = {"listing_url": url, "source": "fallback_embedded_json"}
+    if embedded_data is not None:
+        base["embedded_data"] = embedded_data
+    if raw_deferred is not None:
+        base["raw_deferred"] = raw_deferred
+    if embedded_data is None and raw_deferred is None:
+        base["error"] = "Aucun JSON differe trouve dans la page."
+
+    return _normalize_scraped_data(
+        base,
+        url=url,
+        source="fallback_embedded_json",
+        soup=soup,
+        embedded_data=embedded_data,
+        raw_deferred=raw_deferred,
+    )
 
 
 def scrape_listing(
@@ -119,9 +675,9 @@ def scrape_listing(
     proxy_url: str = "",
 ) -> dict:
     """
-    Scrape une annonce Airbnb par URL et retourne toutes les données en dict.
+    Scrape une annonce Airbnb par URL et retourne un format normalise.
     Si check_in/check_out sont fournis, les prix pour ces dates sont inclus.
-    En cas d'échec du parsing gobnb (ex. Airbnb a changé la page), tente un fallback.
+    En cas d'echec du parsing gobnb, tente un fallback HTML/JSON-LD.
     """
     url = url.strip()
     if not url.startswith("http"):
@@ -131,15 +687,14 @@ def scrape_listing(
         data = gobnb.Get_from_room_url(url, currency, check_in, check_out, proxy_url or "")
     except (KeyError, TypeError, IndexError) as e:
         if HAS_FALLBACK:
-            print(f"gobnb a échoué ({e}), tentative de récupération du JSON embarqué...", file=sys.stderr)
-            data = _fetch_page_fallback(url, proxy_url or "")
-        else:
-            raise
-    else:
-        if not isinstance(data, dict):
-            data = {"raw": data}
-        data["listing_url"] = url
-    return data
+            print(f"gobnb a echoue ({e}), tentative de recuperation fallback...", file=sys.stderr)
+            return _fetch_page_fallback(url, proxy_url or "")
+        raise
+
+    if not isinstance(data, dict):
+        data = {"raw": data}
+
+    return _normalize_scraped_data(data, url=url, source="gobnb")
 
 
 def main() -> None:
