@@ -127,10 +127,11 @@ function scrollToIntroOnDesktop() {
 }
 
 const landingNavItems: NavItem[] = [
-  { id: 'pricing', name: 'Essayer gratuitement', link: '/pricing', cta: true, action: scrollToIntroOnDesktop },
+  { id: 'trial-intro', name: 'Essayer gratuitement', link: '/pricing', cta: true, action: scrollToIntroOnDesktop },
   { id: 'features-section', name: 'Fonctionnalités', link: '#features-section', target: true },
   { id: 'how-section', name: 'Comment ça marche ?', link: '#how-section', target: true },
   { id: 'strengths-section', name: 'Nos valeurs', link: '#strengths-section', target: true },
+  { id: 'pricing-section', name: 'Tarifs', link: '#pricing-section', target: true },
 ]
 
 const hostNavItems = computed<NavItem[]>(() => [

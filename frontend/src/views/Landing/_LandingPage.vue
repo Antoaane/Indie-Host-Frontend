@@ -21,6 +21,7 @@ import FeaturesSection from '@/views/Landing/components/FeaturesSection/Features
 import HowSection from '@/views/Landing/components/HowSection/HowSection.vue'
 import UsageSection from '@/views/Landing/components/UsageSection/UsageSection.vue'
 import StrengthsSection from '@/views/Landing/components/StrengthsSection/StrengthsSection.vue'
+import PricingSection from '@/views/Landing/components/PricingSection/PricingSection.vue'
 import FaqSection from '@/views/Landing/components/FaqSection/FaqSection.vue'
 
 const { content } = useLandingLocale()
@@ -174,6 +175,7 @@ onBeforeUnmount(() => {
     /> -->
     <UsageSection :steps="content.usage.steps" />
     <StrengthsSection :content="content.strengths" />
+    <PricingSection />
     <!-- JoinSection désactivée
     <JoinSection
       :content="content.join"
