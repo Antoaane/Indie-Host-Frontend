@@ -21,6 +21,7 @@ const sectionId = 'hero-section'
 const url = ref('')
 const { submitUrl } = useLandingImport()
 const isIosMobile = ref(typeof document !== 'undefined' && document.documentElement.classList.contains('is-ios') && !vp.lg.value)
+const submitError = ref('')
 
 // Compteur animé : part de 20% et descend à 0% — désactivé sur mobile
 const counterValue = ref(20)
@@ -38,12 +39,14 @@ const animatedTitle = computed(() => {
 function onSubmit(e?: Event) {
   e?.preventDefault()
   const trimmed = url.value.trim()
-  submitUrl(trimmed)
-  if (trimmed || isIosMobile.value) {
-    document.querySelector('#intro-section')?.scrollIntoView({ behavior: 'smooth' })
-  } else {
-    document.querySelector(props.content.primaryCta.href)?.scrollIntoView({ behavior: 'smooth' })
+  if (!trimmed) {
+    submitError.value = "Veuillez renseigner le lien Airbnb ou Booking de votre annonce pour lancer l'import automatique et créer votre site."
+    return
   }
+
+  submitError.value = ''
+  submitUrl(trimmed)
+  document.querySelector('#intro-section')?.scrollIntoView({ behavior: 'smooth' })
 }
 
 onMounted(async () => {
@@ -154,6 +157,7 @@ onMounted(async () => {
                 type="url"
                 :placeholder="content.inputPlaceholder"
                 autocomplete="url"
+                @input="submitError = ''"
               />
               <div class="platform-logos">
                 <img
@@ -173,6 +177,12 @@ onMounted(async () => {
                 <span v-html="content.primaryCta.label" />
               </button>
             </div>
+            <p
+              v-if="submitError"
+              class="hero-submit-error"
+            >
+              {{ submitError }}
+            </p>
           </form>
         </div>
       </div>

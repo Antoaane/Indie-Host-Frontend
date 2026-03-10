@@ -115,8 +115,17 @@ const resolveRouteLink = (name?: string) => {
   }
 }
 
+function scrollToIntroOnDesktop() {
+  if (vp.lg.value) {
+    document.querySelector('#intro-section')?.scrollIntoView({ behavior: 'smooth' })
+    return
+  }
+
+  void router.push('/pricing')
+}
+
 const landingNavItems: NavItem[] = [
-  { id: 'pricing', name: 'Essayer gratuitement', link: '/pricing', cta: true },
+  { id: 'pricing', name: 'Essayer gratuitement', link: '/pricing', cta: true, action: scrollToIntroOnDesktop },
   { id: 'features-section', name: 'Fonctionnalités', link: '#features-section', target: true },
   { id: 'how-section', name: 'Comment ça marche ?', link: '#how-section', target: true },
   { id: 'strengths-section', name: 'Nos valeurs', link: '#strengths-section', target: true },

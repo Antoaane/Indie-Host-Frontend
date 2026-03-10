@@ -19,6 +19,11 @@ function readQueryValue(value: unknown): string | null {
 const redirectUrl = computed(() => {
   return readQueryValue(route.query.redirect_url) ?? '/pricing'
 })
+
+const signInUrl = computed(() => {
+  const redirect = encodeURIComponent(redirectUrl.value)
+  return `/sign-in?redirect_url=${redirect}`
+})
 </script>
 
 <template>
@@ -27,6 +32,7 @@ const redirectUrl = computed(() => {
       path="/sign-up"
       routing="path"
       :force-redirect-url="redirectUrl"
+      :sign-in-url="signInUrl"
     />
   </div>
 </template>

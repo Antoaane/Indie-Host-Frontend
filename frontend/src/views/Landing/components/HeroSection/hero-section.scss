@@ -176,6 +176,18 @@
           @include min-width(lg) {
             align-items: flex-start;
           }
+
+          .hero-submit-error {
+            width: 100%;
+            margin: -0.5rem 0 0;
+            text-align: center;
+            color: #ffb4b4;
+            @include base-text($accent, $bigger: false);
+
+            @include min-width(lg) {
+              text-align: left;
+            }
+          }
         }
 
         .hero-search {
