@@ -4,6 +4,7 @@ Expose un endpoint POST /scrape pour récupérer les données d'une annonce Airb
 Service stateless : aucune donnée n'est stockée.
 """
 import asyncio
+import re
 from contextlib import asynccontextmanager
 
 # Chargement automatique du fichier .env (SCRAPFLY_KEY, etc.)
@@ -19,6 +20,26 @@ from pydantic import BaseModel, Field
 
 from airbnb_scraper import scrape_listing as scrape_airbnb
 from booking_scraper import scrape_listing as scrape_booking
+
+
+def _normalize_listing_url(url: str) -> str:
+    """
+    Normalise les liens partagés (ex. mobile iPhone sans https, avec query params)
+    en URL canonique reconnue par la détection et les scrapers.
+    """
+    u = url.strip()
+    # Airbnb: airbnb.fr/rooms/123?unique_share_id=... ou www.airbnb.fr/rooms/123
+    m = re.match(
+        r"(?i)(?:https?://)?(?:www\.)?(airbnb\.(?:fr|com|co\.uk|es|de|it))/rooms/(\d+)",
+        u,
+    )
+    if m:
+        return f"https://www.{m.group(1)}/rooms/{m.group(2)}"
+    # Booking: booking.com/hotel/...
+    m = re.match(r"(?i)(?:https?://)?(?:www\.)?(booking\.com/hotel/[^?#]+)", u)
+    if m:
+        return f"https://www.{m.group(1)}"
+    return u
 
 
 def _detect_source(url: str) -> str | None:
@@ -83,6 +104,7 @@ async def scrape(request: ScrapeRequest):
     if not url:
         raise HTTPException(status_code=400, detail="L'URL est requise")
 
+    url = _normalize_listing_url(url)
     source = _detect_source(url)
     if not source:
         raise HTTPException(

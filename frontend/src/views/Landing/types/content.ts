@@ -25,6 +25,7 @@ export interface HeroContent {
   descriptionDesktop?: string
   inputPlaceholder: string
   primaryCta: CtaLink
+  secondaryCta: CtaLink
   images: MediaAsset[]
 }
 
@@ -59,6 +60,7 @@ export interface FeatureItem {
   id: string
   title: string
   description: string
+  descriptionTablet?: string
   layout?: 'hzt' | 'vtc' | 'sqr'
   videos?: VideoAsset[]
   images?: MediaAsset[]
@@ -124,7 +126,27 @@ export interface RoiSectionContent {
     savingsValue: string
     note: string
   }
-  bullets: string[]
+  bullets?: string[]
+  interactive?: {
+    helper: string
+    revenueHint: string
+    directShareLabel: string
+    directShareNote: string
+    directRevenueLabel: string
+    netGainLabel: string
+    breakEvenTemplate: string
+  }
+  compare?: {
+    title: string
+    intro: string
+    freeTitle: string
+    freePrice: string
+    freePoints: string[]
+    superhostTitle: string
+    superhostPrice: string
+    superhostPoints: string[]
+    note: string
+  }
 }
 
 export interface FinalCtaSectionContent {

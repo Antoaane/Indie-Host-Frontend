@@ -13,6 +13,7 @@
   &>div {
     position: relative;
     overflow: hidden;
+    isolation: isolate;
 
     display: grid;
     grid-template-columns: repeat(12, 1fr);
@@ -47,6 +48,8 @@
     }
 
     .text {
+      position: relative;
+      z-index: 1;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -70,6 +73,12 @@
 
         &:has(+ .vtc) {
           grid-column: span 6 / span 6;
+        }
+
+        .feature--media-left & {
+          @include min-width(lg) {
+            grid-column: span 6 / span 6;
+          }
         }
       }
 
@@ -98,6 +107,8 @@
     }
 
     .media {
+      position: relative;
+      z-index: 1;
       height: auto;
 
       // @include layout-gap(padding, inline, 1.5);
@@ -216,7 +227,8 @@
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
-      z-index: -1;
+      z-index: 0;
+      pointer-events: none;
 
       &.glow-right,
       &.glow-bottom-right,
@@ -229,6 +241,7 @@
       &.glow-top-left {
         left: 0;
       }
+
     }
   }
 }

@@ -299,10 +299,14 @@
       width: 100%;
       max-width: 22rem;
       margin-top: var(--layout-gap-xl);
-      padding: 0.7rem;
+      padding: 0;
       border-radius: borders.$rounded-xl;
-      background: rgba($accent, 0.94);
-      box-shadow: 0 14px 36px rgba($secondary, 0.2);
+      background: transparent;
+      box-shadow: none;
+
+      @media (min-width: 510px) and (max-width: 1023px) {
+        max-width: 30rem;
+      }
 
       @include min-width(lg) {
         display: none;
@@ -314,6 +318,7 @@
         height: auto;
         border-radius: borders.$rounded-md;
         background: $accent;
+        @include halo(sm, true, white, 0.5);
       }
     }
 
@@ -384,6 +389,13 @@
       height: min(60vh, 420px);
       margin-top: var(--layout-gap-xl);
       border-radius: borders.$rounded-lg;
+    }
+
+    @media (min-width: 768px) and (max-width: 1024px) {
+      height: min(74vh, 860px);
+      max-width: 56rem;
+      margin-top: var(--layout-gap-2xl);
+      border-radius: borders.$rounded-xl;
     }
 
     @include min-width(lg) {

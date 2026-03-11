@@ -9,6 +9,7 @@ import { editorStatic } from '@/views/Editor/utils/editorContent'
 
 import {
   detectListingSource,
+  normalizeListingUrl,
   scrapeListing,
   transformAirbnbToRawListingBundle,
   transformBookingToRawListingBundle,
@@ -47,7 +48,8 @@ async function handleImport() {
     return
   }
 
-  const source = detectListingSource(trimmedUrl)
+  const normalizedUrl = normalizeListingUrl(trimmedUrl)
+  const source = detectListingSource(normalizedUrl)
   if (source !== 'airbnb' && source !== 'booking') {
     importError.value =
       "Lien non reconnu. Utilisez un lien Airbnb (https://www.airbnb.fr/rooms/…) ou Booking (https://www.booking.com/hotel/…)"
@@ -56,7 +58,7 @@ async function handleImport() {
 
   isImporting.value = true
   try {
-    const data = await scrapeListing({ url: trimmedUrl })
+    const data = await scrapeListing({ url: normalizedUrl })
     const transformed =
       source === 'airbnb'
         ? transformAirbnbToRawListingBundle(data as AirbnbScrapedData)

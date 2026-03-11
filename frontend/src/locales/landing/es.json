@@ -5,8 +5,13 @@
     "descriptionDesktop": "Crea tu web de alquiler vacacional con dominio incluido. Acepta reservas directas y cobra online—sin comisiones de OTAs, nunca.",
     "inputPlaceholder": "Pega el enlace de tu anuncio",
     "primaryCta": {
-      "label": "Probar gratis",
-      "href": "#join-section",
+      "label": "Importar mi anuncio existente",
+      "href": "#intro-section",
+      "target": "_self"
+    },
+    "secondaryCta": {
+      "label": "Crear mi sitio gratis",
+      "href": "/editor/create",
       "target": "_self"
     },
     "images": [
@@ -363,7 +368,16 @@
       "Incluso un volumen moderado de reservas directas puede amortizar muy rápido la suscripción.",
       "Conservas la relación con el cliente, la URL, los contenidos y la capacidad de fidelización.",
       "Tu canal directo se convierte en un activo, no en un flujo totalmente dependiente de una plataforma externa."
-    ]
+    ],
+    "interactive": {
+      "helper": "Elige un tramo de ingresos o introduce tu estimación. No se guarda ningún dato.",
+      "revenueHint": "Por tramos, para que sea más simple",
+      "directShareLabel": "Parte estimada que pasa a reserva directa",
+      "directShareNote": "Incluso una pequeña parte de venta directa puede rentabilizar SuperHost rápidamente.",
+      "directRevenueLabel": "Volumen anual estimado en directo",
+      "netGainLabel": "Ganancia neta teórica después de SuperHost",
+      "breakEvenTemplate": "SuperHost se amortiza a partir de aproximadamente {value} en ventas directas."
+    }
   },
   "join": {
     "title": "¿No está mal, verdad? ¡Es francés!",

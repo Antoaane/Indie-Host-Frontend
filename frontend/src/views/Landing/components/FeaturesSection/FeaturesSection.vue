@@ -16,6 +16,7 @@ const props = defineProps<{
       v-for="(feature, i) in props.items"
       :feature="feature"
       :index="i"
+      :is-last="i === props.items.length - 1"
     />
   </section>
 </template>

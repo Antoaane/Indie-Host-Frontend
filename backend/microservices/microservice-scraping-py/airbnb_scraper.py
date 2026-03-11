@@ -681,7 +681,16 @@ def scrape_listing(
     """
     url = url.strip()
     if not url.startswith("http"):
-        url = f"https://www.airbnb.com/rooms/{url}"
+        # Lien mobile sans protocole (ex. airbnb.fr/rooms/123?unique_share_id=...)
+        m = re.match(
+            r"(?i)(?:www\.)?(airbnb\.(?:fr|com|co\.uk|es|de|it))/rooms/(\d+)",
+            url,
+        )
+        if m:
+            url = f"https://www.{m.group(1)}/rooms/{m.group(2)}"
+        else:
+            # ID seul (chiffres)
+            url = f"https://www.airbnb.com/rooms/{url}"
 
     try:
         data = gobnb.Get_from_room_url(url, currency, check_in, check_out, proxy_url or "")

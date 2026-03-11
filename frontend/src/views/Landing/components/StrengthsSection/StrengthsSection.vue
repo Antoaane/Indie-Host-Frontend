@@ -2,12 +2,11 @@
 
 <script setup lang="ts">
 // DEPS
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 // UTILS
 import detectOS from '@/utils/detectOs'
 import { vp } from '@/utils/viewport'
 import { useStrengthsAnim } from '@/views/Landing/components/StrengthsSection/utils/useStrengthsAnim'
-import { useDropDown } from '@/views/Landing/components/StrengthsSection/utils/useDropDown'
 // ASSETS
 import { Wallet, ShieldCheck, Users, ChevronDown } from 'lucide-vue-next'
 import ShapesCircle from '@/components/svgs/images/ShapesCircle.vue'
@@ -18,17 +17,20 @@ const props = defineProps<{
   content: StrengthsContent
 }>()
 
+const openPillarId = ref<string | null>(null)
+
+function togglePillar(id: string) {
+  if (vp.lg.value) return
+  openPillarId.value = openPillarId.value === id ? null : id
+}
+
 onMounted(async () => {
   const osInfo = await detectOS().catch(() => null)
   const normalizedOs = String(osInfo?.os ?? '').toLowerCase()
   const isIosMobile = !vp.lg.value && (normalizedOs === 'ios' || normalizedOs === 'ipados')
 
-  if (!isIosMobile) {
+  if (vp.lg.value && !isIosMobile) {
     useStrengthsAnim()
-  }
-
-  if (!vp.lg.value) {
-    useDropDown()
   }
 })
 </script>
@@ -59,10 +61,17 @@ onMounted(async () => {
           v-for="(pillar, index) in content.pillars"
           :key="pillar.id"
           :id="'strength_' + pillar.id"
+          role="button"
+          tabindex="0"
+          :aria-expanded="openPillarId === pillar.id"
+          aria-label="Voir plus"
           data-sr
           data-sr-y="50"
           :data-sr-delay="index * 0.25"
-          class="strength"
+          :class="['strength', { active: openPillarId === pillar.id }]"
+          @click="togglePillar(pillar.id)"
+          @keydown.enter.prevent="togglePillar(pillar.id)"
+          @keydown.space.prevent="togglePillar(pillar.id)"
         >
           <span>
             <span>

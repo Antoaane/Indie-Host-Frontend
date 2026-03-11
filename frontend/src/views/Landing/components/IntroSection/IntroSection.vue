@@ -14,6 +14,7 @@ import type { IntroSectionContent } from '@/views/Landing/types/content'
 import type { RawListingBundle } from '@/domain/listings/types'
 import {
   detectListingSource,
+  normalizeListingUrl,
   scrapeListing,
   transformAirbnbToRawListingBundle,
   transformBookingToRawListingBundle,
@@ -39,10 +40,10 @@ const previewContainerRef = ref<HTMLElement | null>(null)
 const mobileImportVideoSrc = '/assets/media/videos/import-auto-video.webm'
 
 const displayedPreviewBundle = computed(() => previewBundle.value)
-const isMobilePreviewFullscreen = computed(() => Boolean(previewBundle.value) && !vp.lg.value)
-const showInlinePreview = computed(() => vp.lg.value)
-const showInlineActivateCta = computed(() => Boolean(previewBundle.value) && !isPreviewLoading.value && vp.lg.value)
-const showMobileLoadingHint = computed(() => isPreviewLoading.value && !vp.lg.value)
+const isMobilePreviewFullscreen = computed(() => Boolean(previewBundle.value) && !vp.md.value)
+const showInlinePreview = computed(() => vp.lg.value || (vp.md.value && Boolean(previewBundle.value)))
+const showInlineActivateCta = computed(() => Boolean(previewBundle.value) && !isPreviewLoading.value && vp.md.value)
+const showMobileLoadingHint = computed(() => isPreviewLoading.value && !vp.md.value)
 const showMobileTeaser = computed(() => !vp.lg.value && !isPreviewLoading.value && !previewBundle.value)
 const mobilePreviewTopbarStyle = computed<Record<string, string>>(() => {
   const images = orderByIndex([...(displayedPreviewBundle.value?.medias?.images ?? [])])
@@ -63,7 +64,8 @@ async function runPreview() {
     previewError.value = "Collez un lien d'annonce pour prévisualiser."
     return
   }
-  const source = detectListingSource(trimmed)
+  const normalizedUrl = normalizeListingUrl(trimmed)
+  const source = detectListingSource(normalizedUrl)
   if (source !== 'airbnb' && source !== 'booking') {
     previewError.value =
       "Lien non reconnu. Utilisez un lien Airbnb (https://www.airbnb.fr/rooms/…) ou Booking (https://www.booking.com/hotel/…)"
@@ -73,7 +75,7 @@ async function runPreview() {
   isPreviewLoading.value = true
   previewBundle.value = null
   try {
-    const data = await scrapeListing({ url: trimmed })
+    const data = await scrapeListing({ url: normalizedUrl })
     const partial =
       source === 'airbnb'
         ? transformAirbnbToRawListingBundle(data as AirbnbScrapedData)
@@ -315,7 +317,7 @@ onBeforeUnmount(() => {
                 v-else
                 key="listing"
                 :raw-listing="displayedPreviewBundle"
-                :forced-viewport-mode="vp.lg ? 'xxl' : 'sm'"
+                :forced-viewport-mode="vp.md ? 'xxl' : 'sm'"
                 :preview-only="true"
               />
             </Transition>
@@ -358,7 +360,7 @@ onBeforeUnmount(() => {
           <div class="mobile-preview-stage">
             <ListingView
               :raw-listing="displayedPreviewBundle"
-              :forced-viewport-mode="'sm'"
+              :forced-viewport-mode="vp.md ? 'xxl' : 'sm'"
               :preview-only="true"
             />
           </div>

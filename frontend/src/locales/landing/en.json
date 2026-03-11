@@ -5,8 +5,13 @@
     "descriptionDesktop": "Build your vacation rental website with a custom domain included. Accept direct bookings and get paid online—no OTA commissions, ever.",
     "inputPlaceholder": "Paste your listing link",
     "primaryCta": {
-      "label": "Try for free",
-      "href": "#join-section",
+      "label": "Import my existing listing",
+      "href": "#intro-section",
+      "target": "_self"
+    },
+    "secondaryCta": {
+      "label": "Create my site for free",
+      "href": "/editor/create",
       "target": "_self"
     },
     "images": [
@@ -363,7 +368,16 @@
       "Even a modest direct-booking volume can offset the subscription quickly.",
       "You keep the customer relationship, the URL, the content, and the ability to build loyalty.",
       "Your direct channel becomes an asset, not just a revenue stream controlled by a third-party platform."
-    ]
+    ],
+    "interactive": {
+      "helper": "Choose a revenue range or enter your own estimate. No data is stored.",
+      "revenueHint": "Use a range to keep it simple",
+      "directShareLabel": "Estimated share shifted to direct bookings",
+      "directShareNote": "Even a small direct-booking share can make SuperHost pay for itself quickly.",
+      "directRevenueLabel": "Estimated annual revenue in direct bookings",
+      "netGainLabel": "Theoretical net gain after SuperHost",
+      "breakEvenTemplate": "SuperHost pays for itself from around {value} in direct bookings."
+    }
   },
   "join": {
     "title": "Not bad, right? It's French!",

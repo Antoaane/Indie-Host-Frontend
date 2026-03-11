@@ -5,8 +5,13 @@
     "descriptionDesktop": "Créez votre site de location saisonnière avec nom de domaine inclus. Acceptez les réservations directes et encaissez vos paiements en ligne sans aucune commission.",
     "inputPlaceholder": "Collez le lien de votre logement",
     "primaryCta": {
-      "label": "Essayez en premier !",
-      "href": "/pricing",
+      "label": "Importer mon annonce existante",
+      "href": "#intro-section",
+      "target": "_self"
+    },
+    "secondaryCta": {
+      "label": "Créer mon site gratuitement",
+      "href": "/editor/create",
       "target": "_self"
     },
     "images": [
@@ -236,6 +241,7 @@
         "id": "transformezChaqueVisiteEnProchaineReservation",
         "title": "Transformez chaque visite en <strong>prochaine réservation</strong>",
         "description": "Nous vous fournissons gratuitement un livret d’accueil physique, personnalisable et destiné à être installé dans votre logement. Ce support intègre un QR  code permettant à vos voyageurs provenant d'autres plateformes d'échanger avec vous via IndieHost, sans inscription. <br /><br /> Vous pouvez y intégrer toutes les informations pratiques (accès, équipements, consignes, etc.) ainsi que vos recommandations locales (restaurants, activités, transports…). <br /><br /> Avec cet outil, facilitez la communication et transformez chaque séjour en opportunité de réservation directe.",
+        "descriptionTablet": "Nous vous fournissons un livret d’accueil physique personnalisable à installer dans votre logement. Son QR code permet à vos voyageurs d’échanger avec vous sans inscription, tout en retrouvant les infos utiles du séjour et vos bonnes adresses. Vous facilitez ainsi la communication et favorisez la réservation directe.",
         "layout": "vtc",
         "videos": [
           {
@@ -346,24 +352,47 @@
   "roiSection": {
     "eyebrow": "ROI",
     "title": "Quand vous reprenez la vente en direct, vous reprenez aussi votre <strong>marge</strong>",
-    "subtitle": "Exemple purement illustratif pour visualiser l’écart entre une diffusion uniquement OTA et un canal direct IndieHost.",
+    "subtitle": "Estimez en quelques secondes ce que quelques réservations en direct peuvent vous rapporter face au coût de SuperHost.",
     "scenario": {
-      "title": "Scénario type : 1 logement, 10 réservations / mois, panier moyen 420 EUR",
-      "revenueLabel": "Chiffre d'affaires annuel estimé",
+      "title": "Faites une estimation simple",
+      "revenueLabel": "Votre chiffre d'affaires annuel",
       "revenueValue": "50 400 EUR",
-      "otaCostLabel": "Commission OTA estimée à 15 %",
+      "otaCostLabel": "Commissions OTA évitées",
       "otaCostValue": "7 560 EUR / an",
       "indiehostCostLabel": "Abonnement SuperHost sur 12 mois",
       "indiehostCostValue": "468 EUR / an",
       "savingsLabel": "Écart annuel théorique",
       "savingsValue": "7 092 EUR",
-      "note": "Scénario indicatif hors frais de paiement et hors dépenses marketing. L’objectif est d’illustrer le poids des commissions dans un cas simple."
+      "note": "Estimation indicative, hors frais de paiement et hors marketing. Le but est surtout de visualiser à quel point SuperHost reste rentable dès que le direct progresse."
     },
-    "bullets": [
-      "Même un faible volume de réservations directes peut amortir très vite l’abonnement.",
-      "Vous gardez la relation client, l’URL, les contenus et la possibilité de fidéliser vos voyageurs.",
-      "Le canal direct devient un actif, pas seulement un flux de réservations dépendant d’une plateforme tierce."
-    ]
+    "interactive": {
+      "helper": "Choisissez votre niveau de chiffre d'affaires, puis estimez la part de réservations qui passe en direct. Aucune donnée n'est enregistrée.",
+      "revenueHint": "Choisissez une tranche",
+      "directShareLabel": "Part des réservations en direct",
+      "directShareNote": "Le plus important n'est pas de tout basculer, mais de gagner progressivement des réservations sans commission.",
+      "directRevenueLabel": "Volume annuel estimé en direct",
+      "netGainLabel": "Gain net après SuperHost",
+      "breakEvenTemplate": "SuperHost est amorti dès environ {value} de ventes en direct."
+    },
+    "compare": {
+      "title": "Commencer gratuitement ou accélérer avec SuperHost",
+      "intro": "L'offre gratuite sert à lancer votre canal direct. SuperHost sert à le rendre vraiment rentable, visible et plus facile à exploiter au quotidien.",
+      "freeTitle": "Offre gratuite",
+      "freePrice": "0 EUR / mois",
+      "freePoints": [
+        "Lancer votre première page de réservation sans risque",
+        "Tester vos premiers paiements et séjours en direct",
+        "Valider votre potentiel avant d'investir davantage"
+      ],
+      "superhostTitle": "SuperHost",
+      "superhostPrice": "39 EUR / mois TTC",
+      "superhostPoints": [
+        "Passer à un vrai canal d'acquisition directe",
+        "Gagner du temps avec plus d'outils et d'automatisation",
+        "Transformer quelques réservations directes en marge nette"
+      ],
+      "note": "La rupture de valeur est là : le gratuit permet de démarrer. SuperHost permet d'accélérer sans rester dépendant des commissions OTA."
+    }
   },
   "join": {
     "title": "Pas mal non ? C’est français !",

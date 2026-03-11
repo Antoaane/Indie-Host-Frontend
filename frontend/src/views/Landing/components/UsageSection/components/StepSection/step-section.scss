@@ -38,8 +38,6 @@ div:has(> .step-section) {
 
       .content {
         display: flex;
-        // align-items: center;
-
         position: relative;
 
         @include min-width(xxs) {
@@ -47,6 +45,7 @@ div:has(> .step-section) {
         }
 
         @include min-width(lg) {
+          display: flex;
           flex: 0.55 0;
           height: 100%;
 
@@ -61,8 +60,8 @@ div:has(> .step-section) {
         }
 
         .step {
+          display: none;
           position: relative;
-          // bottom: 1rem;
 
           font-family: 'Fustat', sans-serif;
           font-size: 3.5rem;
@@ -82,6 +81,7 @@ div:has(> .step-section) {
           }
 
           @include min-width(lg) {
+            display: flex;
             margin: 0;
 
             position: absolute;

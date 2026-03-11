@@ -75,7 +75,25 @@ if ($pgId) {
     Write-Ok "PostgreSQL demarre (localhost:5432)."
 }
 
-# ── 3. Backend API (:4000) ────────────────────────────────────
+# ── 3. Dependances npm (frontend + backend/api) ─────────────────
+Write-Step "Installation des paquets npm (frontend et backend/api)..."
+$frontDir = Join-Path $ROOT "frontend"
+Push-Location $frontDir
+try {
+    npm install
+    if ($LASTEXITCODE -ne 0) { Write-Fail "Echec de npm install dans frontend."; exit 1 }
+    Write-Ok "Paquets frontend installes."
+} finally { Pop-Location }
+
+$apiDir = Join-Path $ROOT "backend\api"
+Push-Location $apiDir
+try {
+    npm install
+    if ($LASTEXITCODE -ne 0) { Write-Fail "Echec de npm install dans backend/api."; exit 1 }
+    Write-Ok "Paquets backend/api installes."
+} finally { Pop-Location }
+
+# ── 4. Backend API (:4000) ────────────────────────────────────
 Write-Step "Demarrage du Backend API..."
 
 if (Get-ListeningPid 4000) {
@@ -112,7 +130,7 @@ if (Get-ListeningPid 4000) {
     Write-Ok "Backend API lance dans un nouvel onglet (localhost:4000)."
 }
 
-# ── 4. Scraping (:8000) ───────────────────────────────────────
+# ── 5. Scraping (:8000) ───────────────────────────────────────
 Write-Step "Demarrage du serveur de scraping..."
 
 if (Get-ListeningPid 8000) {
@@ -155,7 +173,7 @@ if (Get-ListeningPid 8000) {
     Write-Ok "Serveur de scraping lance dans un nouvel onglet (localhost:8000)."
 }
 
-# ── 5. Frontend (:5179) ───────────────────────────────────────
+# ── 6. Frontend (:5179) ───────────────────────────────────────
 Write-Step "Demarrage du Frontend..."
 
 if (Get-ListeningPid 5179) {
