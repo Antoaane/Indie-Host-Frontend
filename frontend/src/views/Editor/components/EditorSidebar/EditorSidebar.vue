@@ -183,7 +183,6 @@ onBeforeUnmount(() => {
         v-if="tab === 'listing'"
         :listing-id="props.listingId"
         :draft="props.draft"
-        :listing-id="props.listingId"
         @patch="handlePatch"
       />
       <PricingPanels

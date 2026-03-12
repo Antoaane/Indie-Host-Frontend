@@ -13,9 +13,18 @@
   min-width: 0;
   width: 100%;
 
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+
   position: relative;
 
-  overflow: hidden;
+  .slider-track {
+    min-width: 0;
+    flex: 1 1 auto;
+    position: relative;
+    overflow: hidden;
+  }
 
   // fonctionne pas (les pourcentages sont pas gérés sur clip-path)
   // clip-path: path("M #{$radius} #{$gap} H calc(100% - #{$radius}) A #{$radius} #{$radius} 0 0 1 calc(100% - #{$radius}) calc(100% - #{$gap}) H #{$radius} A #{$radius} #{$radius} 0 0 1 #{$radius} #{$gap} Z");
@@ -63,7 +72,53 @@
     }
   }
 
-  >.swiper {
+  .slider-nav {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    // border: 1px solid rgba($secondary, 0.16);
+    border: none;
+    background: $accent;
+    color: rgba($secondary-text, 0.88);
+    box-shadow: 0 8px 16px -12px rgba($secondary, 0.6);
+    backdrop-filter: blur(6px);
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    z-index: 120;
+
+    cursor: pointer;
+    transition: border-color 140ms ease, transform 140ms ease, color 140ms ease, background 140ms ease, opacity 140ms ease;
+
+    &:hover:enabled {
+      transform: scale(1.03);
+      border-color: rgba($secondary, 0.28);
+      color: rgba($secondary-text, 0.98);
+    }
+
+    &:focus-visible {
+      outline: 2px solid rgba($secondary-button-reference, 0.7);
+      outline-offset: 2px;
+    }
+
+    &:active:enabled {
+      transform: scale(0.98);
+    }
+
+    &:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    >svg {
+      flex: 0 0 auto;
+      stroke-width: 2.3;
+    }
+  }
+
+  .slider-track > .swiper {
     width: 100%;
     --gap: 3.7px;
     // height: 43.19px;

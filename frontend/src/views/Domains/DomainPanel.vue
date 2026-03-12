@@ -5,6 +5,7 @@ import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { createGrandiDomainCheckoutSession, fetchGrandiDomainAvailability } from '@/domain/api/grandiDomains'
+import { readRouteUserId } from '@/router/backOfficeUser'
 
 const route = useRoute()
 
@@ -23,11 +24,7 @@ const availability = ref<{
   reason: string | null
 } | null>(null)
 
-const userId = computed(() => {
-  const value = route.params.userId
-  if (typeof value === 'string' && value.trim()) return value.trim()
-  return null
-})
+const userId = computed(() => readRouteUserId(route.params.userId))
 
 const normalizedDomain = computed(() => domainInput.value.trim().toLowerCase())
 const canCheck = computed(() => normalizedDomain.value.length >= 4 && normalizedDomain.value.includes('.'))
@@ -81,15 +78,21 @@ async function startCheckout() {
   const candidate = availability.value
   if (!candidate?.available || isCreatingCheckout.value) return
 
+  const activeUserId = userId.value
+  if (!activeUserId) {
+    errorMessage.value = "Impossible de demarrer le paiement: userId manquant."
+    return
+  }
+
   resetFeedback()
   isCreatingCheckout.value = true
 
   try {
-    const successUrl = typeof window !== 'undefined' ? `${window.location.origin}/domains${userId.value ? `/${userId.value}` : ''}?checkout=success` : undefined
-    const cancelUrl = typeof window !== 'undefined' ? `${window.location.origin}/domains${userId.value ? `/${userId.value}` : ''}?checkout=cancel` : undefined
+    const successUrl = typeof window !== 'undefined' ? `${window.location.origin}/domains/${activeUserId}?checkout=success` : undefined
+    const cancelUrl = typeof window !== 'undefined' ? `${window.location.origin}/domains/${activeUserId}?checkout=cancel` : undefined
     const session = await createGrandiDomainCheckoutSession({
       domain: candidate.domain,
-      userId: userId.value,
+      userId: activeUserId,
       successUrl,
       cancelUrl,
     })

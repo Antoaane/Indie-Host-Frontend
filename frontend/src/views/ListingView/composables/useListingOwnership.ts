@@ -55,9 +55,13 @@ export function useListingOwnership(options: UseListingOwnershipOptions) {
       }
     }
 
+    const fallbackRedirectUrl = targetListingId
+      ? `/editor?listingId=${encodeURIComponent(targetListingId)}`
+      : '/editor'
+
     return {
-      name: 'editor',
-      query,
+      name: 'sign-in',
+      query: { redirect_url: fallbackRedirectUrl },
     }
   })
 
