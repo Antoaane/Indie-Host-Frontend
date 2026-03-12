@@ -295,7 +295,23 @@ if ($apiMode) {
 
 Start-BackendApiService
 
-# ── 4. Scraping (:8000) ───────────────────────────────────────
+$listingsMode = Resolve-ListingsDataMode
+$apiMode = $listingsMode -eq $LISTINGS_MODE_API
+
+Write-Step "Mode de donnees annonces: $listingsMode"
+if ($apiMode) {
+    Write-Ok "Mode API detecte: PostgreSQL + Backend API seront demarres."
+} else {
+    Write-Ok "Mode local-json detecte: PostgreSQL ignore, Backend API lance pour la console."
+}
+
+if ($apiMode) {
+    Start-ApiInfraServices
+}
+
+Start-BackendApiService
+
+# ── 5. Scraping (:8000) ───────────────────────────────────────
 Write-Step "Demarrage du serveur de scraping..."
 
 if (Get-ListeningPid 8000) {

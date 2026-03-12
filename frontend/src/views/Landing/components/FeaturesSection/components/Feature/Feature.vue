@@ -1,7 +1,7 @@
 <!-- File: src/views/Landing/components/FeaturesSection/components/Feature/Feature.vue -->
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 // UTILS
 import detectOS from '@/utils/detectOs'
@@ -21,11 +21,44 @@ import type { FeatureItem } from '@/views/Landing/types/content'
 const props = defineProps<{
   feature: FeatureItem
   index: number
+  isLast?: boolean
 }>()
 
 const media = props.feature.images?.[0]
 const video = props.feature.videos?.[0]
 const isIosMobile = ref(false)
+const mobileDescriptionCharLimit = 220
+
+function stripHtml(value: string) {
+  return value
+    .replace(/<br\s*\/?>/gi, ' ')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+const displayDescription = computed(() => {
+  if (props.feature.id !== 'transformezChaqueVisiteEnProchaineReservation') {
+    return props.feature.description
+  }
+
+  const isTablet = vp.md.value && !vp.lg.value
+  if (isTablet && props.feature.descriptionTablet) {
+    return props.feature.descriptionTablet
+  }
+
+  if (vp.md.value) {
+    return props.feature.description
+  }
+
+  const plainDescription = stripHtml(props.feature.description)
+
+  if (plainDescription.length <= mobileDescriptionCharLimit) {
+    return plainDescription
+  }
+
+  return `${plainDescription.slice(0, mobileDescriptionCharLimit).trimEnd()}...`
+})
 
 onMounted(async () => {
   const osInfo = await detectOS().catch(() => null)
@@ -35,8 +68,80 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="feature wrapper">
+  <div
+    class="feature wrapper"
+    :class="{
+      'feature--media-left': props.isLast,
+      'feature--halo-like-messages': props.feature.id === 'transformezChaqueVisiteEnProchaineReservation',
+    }"
+  >
     <div>
+      <!-- Dernier bloc : vidéo à gauche, texte à droite -->
+      <div
+        v-if="props.isLast"
+        data-sr
+        :data-sr-x="index % 2 !== 0 ? -50 : 50"
+        :class="'media ' + (props.feature.layout || 'hzt')"
+      >
+        <video
+          v-if="(video?.webm || video?.mp4) && !isIosMobile"
+          autoplay
+          loop
+          muted
+          playsinline
+        >
+          <source
+            v-if="video?.webm"
+            :src="video.webm"
+            type="video/webm"
+          />
+          <source
+            v-if="video?.mp4"
+            :src="video.mp4"
+            type="video/mp4"
+          />
+          <img
+            v-if="media?.webp"
+            :src="media.webp"
+            :alt="media?.alt || 'Feature image'"
+            loading="lazy"
+          />
+          <img
+            v-if="media?.png"
+            :src="media.png"
+            :alt="media?.alt || 'Feature image'"
+            loading="lazy"
+          />
+        </video>
+        <img
+          v-else-if="media?.webp || media?.png"
+          :src="media?.webp || media?.png"
+          :onerror="media?.png ? `this.onerror=null; this.src='${media.png}';` : undefined"
+          :alt="media?.alt || 'Feature image'"
+          loading="lazy"
+        />
+      </div>
+
+      <div
+        v-if="props.isLast"
+        class="text"
+      >
+        <div>
+          <h2
+            data-sr
+            :data-sr-x="index % 2 !== 0 ? 50 : -50"
+            v-html="feature.title"
+          />
+          <p
+            data-sr
+            :data-sr-x="index % 2 !== 0 ? 50 : -50"
+            data-sr-delay="0.3"
+            v-html="displayDescription"
+          />
+        </div>
+      </div>
+
+      <template v-if="!props.isLast">
       <div class="text">
         <div>
           <h2
@@ -49,7 +154,7 @@ onMounted(async () => {
             data-sr
             :data-sr-x="index % 2 !== 0 ? 50 : -50"
             data-sr-delay="0.3"
-            v-html="feature.description"
+            v-html="displayDescription"
           />
         </div>
       </div>
@@ -100,6 +205,7 @@ onMounted(async () => {
           loading="lazy"
         />
       </div>
+      </template>
 
       <template v-if="vp.md.value">
         <GlowTopRight

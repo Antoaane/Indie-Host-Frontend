@@ -3,7 +3,13 @@
 import SignInView from '@/views/SignInView.vue'
 import SignUpView from '@/views/SignUpView.vue'
 import { createRouter, createWebHistory } from 'vue-router'
-const LandingPage = () => import('@/views/Landing/_LandingPage.vue')
+import { isManagedListingHostname } from '@/domain/listings/publicDomain'
+const HomePage = () => {
+  if (typeof window !== 'undefined' && isManagedListingHostname(window.location.hostname)) {
+    return import('@/views/Listing/_Listing.vue')
+  }
+  return import('@/views/Landing/_LandingPage.vue')
+}
 const PricingView = () => import('@/views/PricingView.vue')
 const Listing = () => import('@/views/Listing/_Listing.vue')
 const ListingGuide = () => import('@/views/ListingGuide/_ListingGuide.vue')
@@ -19,7 +25,7 @@ const router = createRouter({
     {
       path: '/',
       name: 'home',
-      component: LandingPage,
+      component: HomePage,
       meta: { navVariant: 'landing' },
     },
     {
@@ -119,6 +125,13 @@ const router = createRouter({
       meta: { navVariant: 'host' },
     },
   ],
+})
+
+router.beforeEach((to) => {
+  if (typeof window === 'undefined') return true
+  if (!isManagedListingHostname(window.location.hostname)) return true
+  if (to.name === 'home' || to.name === 'listing' || to.name === 'listing-guide') return true
+  return { name: 'home' }
 })
 
 export default router

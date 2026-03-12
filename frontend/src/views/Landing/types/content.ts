@@ -25,6 +25,7 @@ export interface HeroContent {
   descriptionDesktop?: string
   inputPlaceholder: string
   primaryCta: CtaLink
+  secondaryCta: CtaLink
   images: MediaAsset[]
 }
 
@@ -59,6 +60,7 @@ export interface FeatureItem {
   id: string
   title: string
   description: string
+  descriptionTablet?: string
   layout?: 'hzt' | 'vtc' | 'sqr'
   videos?: VideoAsset[]
   images?: MediaAsset[]
@@ -89,6 +91,71 @@ export interface StrengthsContent {
     title: string
     description: string
   }>
+}
+
+export interface ProofSectionContent {
+  eyebrow: string
+  title: string
+  subtitle: string
+  metrics: Array<{
+    id: string
+    value: string
+    label: string
+    detail?: string
+  }>
+  cards: Array<{
+    id: string
+    title: string
+    description: string
+  }>
+}
+
+export interface RoiSectionContent {
+  eyebrow: string
+  title: string
+  subtitle: string
+  scenario: {
+    title: string
+    revenueLabel: string
+    revenueValue: string
+    otaCostLabel: string
+    otaCostValue: string
+    indiehostCostLabel: string
+    indiehostCostValue: string
+    savingsLabel: string
+    savingsValue: string
+    note: string
+  }
+  bullets?: string[]
+  interactive?: {
+    helper: string
+    revenueHint: string
+    directShareLabel: string
+    directShareNote: string
+    directRevenueLabel: string
+    netGainLabel: string
+    breakEvenTemplate: string
+  }
+  compare?: {
+    title: string
+    intro: string
+    freeTitle: string
+    freePrice: string
+    freePoints: string[]
+    superhostTitle: string
+    superhostPrice: string
+    superhostPoints: string[]
+    note: string
+  }
+}
+
+export interface FinalCtaSectionContent {
+  eyebrow: string
+  title: string
+  body: string
+  primaryCta: CtaLink
+  secondaryCta: CtaLink
+  note?: string
 }
 
 export interface JoinFormField {
@@ -189,7 +256,10 @@ export interface LandingContent {
   features: FeaturesContent
   how: HowContent
   habits: HabitsContent
+  proofSection: ProofSectionContent
   strengths: StrengthsContent
+  roiSection: RoiSectionContent
   join: JoinContent
   faq: FaqContent
+  finalCtaSection: FinalCtaSectionContent
 }

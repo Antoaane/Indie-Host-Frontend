@@ -5,8 +5,13 @@
     "descriptionDesktop": "Build your vacation rental website with a custom domain included. Accept direct bookings and get paid online—no OTA commissions, ever.",
     "inputPlaceholder": "Paste your listing link",
     "primaryCta": {
-      "label": "Try for free",
-      "href": "#join-section",
+      "label": "Import my existing listing",
+      "href": "#intro-section",
+      "target": "_self"
+    },
+    "secondaryCta": {
+      "label": "Create my site for free",
+      "href": "/editor/create",
       "target": "_self"
     },
     "images": [
@@ -77,6 +82,48 @@
             "alt": "Brochure containing the arrival guide and QR code leading to your messaging"
           }
         ]
+      }
+    ]
+  },
+  "proofSection": {
+    "eyebrow": "Product proof",
+    "title": "A <strong>practical</strong> foundation for direct bookings without starting from scratch",
+    "subtitle": "We are not showing fake customer testimonials here. Instead, this section highlights demo outcomes and typical workflows already enabled by the product.",
+    "metrics": [
+      {
+        "id": "proof-metric-1",
+        "value": "15 min",
+        "label": "to import, customize, and publish a first booking page in a typical scenario",
+        "detail": "Illustrative estimate for a listing that is already structured"
+      },
+      {
+        "id": "proof-metric-2",
+        "value": "0%",
+        "label": "commission taken by IndieHost on direct bookings",
+        "detail": "Excluding standard Stripe payment fees"
+      },
+      {
+        "id": "proof-metric-3",
+        "value": "1 URL",
+        "label": "to share and start receiving direct bookings",
+        "detail": "IndieHost subdomain included on early plans"
+      }
+    ],
+    "cards": [
+      {
+        "id": "proof-card-1",
+        "title": "Guided import from Airbnb or Booking",
+        "description": "You start from an existing listing instead of rebuilding everything manually. Photos, copy, key details, and page structure are already initialized."
+      },
+      {
+        "id": "proof-card-2",
+        "title": "Online payments ready from day one",
+        "description": "The booking flow relies on Stripe to accept cards, SEPA, and Apple Pay. You can therefore open a direct channel without stitching your own payment stack together."
+      },
+      {
+        "id": "proof-card-3",
+        "title": "A page you can publish and share immediately",
+        "description": "Your property gets its own URL, with more flexibility depending on your plan. Simple enough to launch quickly, clean enough to share or index."
       }
     ]
   },
@@ -300,6 +347,37 @@
         "description": "We build tools you can rely on. Our team listens to host feedback and supports you at every step—whenever you need it."
       }
     ]
+  },
+  "roiSection": {
+    "eyebrow": "ROI",
+    "title": "When you take direct bookings back, you also take your <strong>margin</strong> back",
+    "subtitle": "Illustrative example to visualize the gap between an OTA-only model and a direct channel powered by IndieHost.",
+    "scenario": {
+      "title": "Typical scenario: 1 property, 10 bookings / month, average basket 420 EUR",
+      "revenueLabel": "Estimated annual revenue",
+      "revenueValue": "50,400 EUR",
+      "otaCostLabel": "Estimated OTA commission at 15%",
+      "otaCostValue": "7,560 EUR / year",
+      "indiehostCostLabel": "SuperHost subscription over 12 months",
+      "indiehostCostValue": "468 EUR / year",
+      "savingsLabel": "Theoretical yearly gap",
+      "savingsValue": "7,092 EUR",
+      "note": "Illustrative scenario excluding payment fees and marketing spend. The goal is to make the weight of commissions visible in a simple case."
+    },
+    "bullets": [
+      "Even a modest direct-booking volume can offset the subscription quickly.",
+      "You keep the customer relationship, the URL, the content, and the ability to build loyalty.",
+      "Your direct channel becomes an asset, not just a revenue stream controlled by a third-party platform."
+    ],
+    "interactive": {
+      "helper": "Choose a revenue range or enter your own estimate. No data is stored.",
+      "revenueHint": "Use a range to keep it simple",
+      "directShareLabel": "Estimated share shifted to direct bookings",
+      "directShareNote": "Even a small direct-booking share can make SuperHost pay for itself quickly.",
+      "directRevenueLabel": "Estimated annual revenue in direct bookings",
+      "netGainLabel": "Theoretical net gain after SuperHost",
+      "breakEvenTemplate": "SuperHost pays for itself from around {value} in direct bookings."
+    }
   },
   "join": {
     "title": "Not bad, right? It's French!",
@@ -664,5 +742,21 @@
         ]
       }
     ]
+  },
+  "finalCtaSection": {
+    "eyebrow": "Take action",
+    "title": "Import your listing, activate your page, and start testing your <strong>direct channel</strong>",
+    "body": "You can start with an existing listing, launch fast, then refine your page, pricing, and strategy over time.",
+    "primaryCta": {
+      "label": "Try for free",
+      "href": "#intro-section",
+      "target": "_self"
+    },
+    "secondaryCta": {
+      "label": "See pricing",
+      "href": "#pricing-section",
+      "target": "_self"
+    },
+    "note": "No IndieHost commission on direct bookings. Simple flow designed for mobile too."
   }
 }

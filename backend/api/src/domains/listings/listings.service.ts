@@ -1,5 +1,6 @@
 import type { Listing, Prisma, PrismaClient, User } from '@prisma/client';
 
+import { env } from '../../config/env.js';
 import { deepMerge, asObject, toNumber } from '../../lib/json.js';
 import { buildListingId } from '../../lib/id.js';
 import type { RequestAuth } from '../../types/auth.js';
@@ -19,11 +20,77 @@ type ListingSectionBundle = {
   host: Record<string, unknown>;
 };
 
+export type ListingDomainRecord = {
+  listingId: string;
+  subdomainSlug: string | null;
+  hostname: string | null;
+  publicUrl: string | null;
+};
+
+export type ListingDomainAvailability = {
+  slug: string;
+  available: boolean;
+  hostname: string;
+  publicUrl: string;
+  reason: string | null;
+};
+
+export type ListingHostnameResolution = {
+  listingId: string;
+  subdomainSlug: string;
+  hostname: string;
+  publicUrl: string;
+};
+
+export type ListingSitemapEntry = {
+  listingId: string;
+  publicUrl: string;
+  updatedAt: string;
+};
+
 function toJsonInput(value: Record<string, unknown>): Prisma.InputJsonValue {
   return value as Prisma.InputJsonValue;
 }
 
+function normalizeRootDomain(value: string): string {
+  return value.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^\*\./, '').replace(/\/+$/, '');
+}
+
+function normalizeSlug(value: string): string {
+  return value.trim().toLowerCase();
+}
+
+function sanitizeHostname(input: string): string {
+  const trimmed = input.trim().toLowerCase();
+  if (!trimmed) return '';
+
+  try {
+    return new URL(trimmed).hostname.toLowerCase();
+  } catch {
+    return trimmed.replace(/^https?:\/\//, '').split('/')[0]?.split(':')[0]?.trim().toLowerCase() ?? '';
+  }
+}
+
 export class ListingsService {
+  private readonly rootDomain = normalizeRootDomain(env.PUBLIC_LISTING_ROOT_DOMAIN);
+  private readonly reservedSlugs = new Set([
+    'www',
+    'app',
+    'api',
+    'admin',
+    'pricing',
+    'editor',
+    'management',
+    'domains',
+    'messagerie',
+    'sign-in',
+    'sign-up',
+    'donation',
+    'listing',
+    'listing-guide',
+    'health',
+  ]);
+
   constructor(private readonly prisma: PrismaClient) {}
 
   private extractStatus(core: Record<string, unknown>): string {
@@ -42,6 +109,58 @@ export class ListingsService {
       comments: buildDefaultResource('comments', listingId),
       host: buildDefaultResource('host', listingId),
     };
+  }
+
+  private buildListingHostname(slug: string): string {
+    return `${normalizeSlug(slug)}.${this.rootDomain}`;
+  }
+
+  private buildListingPublicUrl(slug: string): string {
+    return `https://${this.buildListingHostname(slug)}`;
+  }
+
+  private toDomainRecord(listing: { id: string; subdomainSlug: string | null }): ListingDomainRecord {
+    const slug = typeof listing.subdomainSlug === 'string' && listing.subdomainSlug.trim()
+      ? normalizeSlug(listing.subdomainSlug)
+      : null;
+
+    return {
+      listingId: listing.id,
+      subdomainSlug: slug,
+      hostname: slug ? this.buildListingHostname(slug) : null,
+      publicUrl: slug ? this.buildListingPublicUrl(slug) : null,
+    };
+  }
+
+  private extractManagedSlug(hostname: string): string | null {
+    const normalizedHostname = sanitizeHostname(hostname);
+    if (!normalizedHostname || !this.rootDomain) return null;
+    if (normalizedHostname === this.rootDomain || normalizedHostname === `www.${this.rootDomain}`) return null;
+    if (!normalizedHostname.endsWith(`.${this.rootDomain}`)) return null;
+
+    const slug = normalizedHostname.slice(0, -(this.rootDomain.length + 1));
+    if (!slug || slug.includes('.')) return null;
+    return normalizeSlug(slug);
+  }
+
+  private async findOwnedListing(listingId: string, auth: RequestAuth | null) {
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      select: {
+        id: true,
+        ownerId: true,
+        subdomainSlug: true,
+      },
+    });
+
+    if (!listing) return null;
+
+    const actor = await upsertUserFromAuth(this.prisma, auth);
+    if (listing.ownerId && (!actor || listing.ownerId !== actor.id)) {
+      return 'forbidden' as const;
+    }
+
+    return { listing, actor };
   }
 
   private toSections(listing: ListingRecord): ListingSectionBundle {
@@ -132,6 +251,151 @@ export class ListingsService {
     return this.toSections(listing);
   }
 
+  async getListingDomain(listingId: string, auth: RequestAuth | null) {
+    const access = await this.findOwnedListing(listingId, auth);
+    if (!access) return null;
+    if (access === 'forbidden') return 'forbidden' as const;
+    return this.toDomainRecord(access.listing);
+  }
+
+  async checkSubdomainAvailability(slug: string, excludeListingId?: string): Promise<ListingDomainAvailability> {
+    const normalizedSlug = normalizeSlug(slug);
+    const hostname = this.buildListingHostname(normalizedSlug);
+    const publicUrl = this.buildListingPublicUrl(normalizedSlug);
+
+    if (this.reservedSlugs.has(normalizedSlug)) {
+      return {
+        slug: normalizedSlug,
+        available: false,
+        hostname,
+        publicUrl,
+        reason: 'Ce sous-domaine est réservé.',
+      };
+    }
+
+    const existing = await this.prisma.listing.findUnique({
+      where: { subdomainSlug: normalizedSlug },
+      select: { id: true },
+    });
+
+    const isOwnedByExcludedListing = Boolean(existing && excludeListingId && existing.id === excludeListingId);
+
+    return {
+      slug: normalizedSlug,
+      available: !existing || isOwnedByExcludedListing,
+      hostname,
+      publicUrl,
+      reason: !existing || isOwnedByExcludedListing ? null : 'Ce sous-domaine est déjà pris.',
+    };
+  }
+
+  async upsertListingDomain(args: {
+    listingId: string;
+    slug: string;
+    auth: RequestAuth | null;
+  }) {
+    const access = await this.findOwnedListing(args.listingId, args.auth);
+    if (!access) return null;
+    if (access === 'forbidden') return 'forbidden' as const;
+
+    const normalizedSlug = normalizeSlug(args.slug);
+    const availability = await this.checkSubdomainAvailability(normalizedSlug, args.listingId);
+    if (!availability.available) {
+      return 'conflict' as const;
+    }
+
+    const updated = await this.prisma.listing.update({
+      where: { id: args.listingId },
+      data: {
+        subdomainSlug: normalizedSlug,
+        ...(access.listing.ownerId || !access.actor
+          ? {}
+          : {
+              owner: {
+                connect: { id: access.actor.id },
+              },
+            }),
+      },
+      select: {
+        id: true,
+        subdomainSlug: true,
+      },
+    });
+
+    return this.toDomainRecord(updated);
+  }
+
+  async deleteListingDomain(args: {
+    listingId: string;
+    auth: RequestAuth | null;
+  }) {
+    const access = await this.findOwnedListing(args.listingId, args.auth);
+    if (!access) return null;
+    if (access === 'forbidden') return 'forbidden' as const;
+
+    const updated = await this.prisma.listing.update({
+      where: { id: args.listingId },
+      data: {
+        subdomainSlug: null,
+      },
+      select: {
+        id: true,
+        subdomainSlug: true,
+      },
+    });
+
+    return this.toDomainRecord(updated);
+  }
+
+  async resolveListingByHostname(hostname: string): Promise<ListingHostnameResolution | null> {
+    const slug = this.extractManagedSlug(hostname);
+    if (!slug) return null;
+
+    const listing = await this.prisma.listing.findUnique({
+      where: { subdomainSlug: slug },
+      select: {
+        id: true,
+        subdomainSlug: true,
+      },
+    });
+
+    if (!listing?.subdomainSlug) return null;
+
+    return {
+      listingId: listing.id,
+      subdomainSlug: listing.subdomainSlug,
+      hostname: this.buildListingHostname(listing.subdomainSlug),
+      publicUrl: this.buildListingPublicUrl(listing.subdomainSlug),
+    };
+  }
+
+  async listSitemapEntries(): Promise<ListingSitemapEntry[]> {
+    const listings = await this.prisma.listing.findMany({
+      where: {
+        status: 'published',
+        NOT: {
+          subdomainSlug: null,
+        },
+      },
+      select: {
+        id: true,
+        subdomainSlug: true,
+        updatedAt: true,
+      },
+      orderBy: {
+        updatedAt: 'desc',
+      },
+    });
+
+    return listings
+      .filter((listing): listing is typeof listing & { subdomainSlug: string } => Boolean(listing.subdomainSlug))
+      .map((listing) => ({
+        listingId: listing.id,
+        publicUrl: this.buildListingPublicUrl(listing.subdomainSlug),
+        updatedAt: listing.updatedAt.toISOString(),
+      }));
+  }
+
   async patchListingResource(args: {
     listingId: string;
     resource: ListingResourceKey;
@@ -215,6 +479,8 @@ export class ListingsService {
 
       return {
         listingId: listing.id,
+        subdomainSlug: listing.subdomainSlug ?? undefined,
+        publicUrl: listing.subdomainSlug ? this.buildListingPublicUrl(listing.subdomainSlug) : undefined,
         title: typeof core.title === 'string' ? core.title : undefined,
         status: typeof core.status === 'string' ? core.status : listing.status,
         hasPendingChanges: Boolean(listing.hasPendingChanges),

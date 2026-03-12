@@ -5,8 +5,13 @@
     "descriptionDesktop": "Crea tu web de alquiler vacacional con dominio incluido. Acepta reservas directas y cobra online—sin comisiones de OTAs, nunca.",
     "inputPlaceholder": "Pega el enlace de tu anuncio",
     "primaryCta": {
-      "label": "Probar gratis",
-      "href": "#join-section",
+      "label": "Importar mi anuncio existente",
+      "href": "#intro-section",
+      "target": "_self"
+    },
+    "secondaryCta": {
+      "label": "Crear mi sitio gratis",
+      "href": "/editor/create",
       "target": "_self"
     },
     "images": [
@@ -77,6 +82,48 @@
             "alt": "Folleto con la guía de llegada y el código QR que lleva a tu mensajería"
           }
         ]
+      }
+    ]
+  },
+  "proofSection": {
+    "eyebrow": "Prueba de producto",
+    "title": "Una base <strong>práctica</strong> para vender en directo sin empezar desde cero",
+    "subtitle": "No mostramos testimonios falsos ni cifras ficticias como si fueran reales. Aquí destacamos resultados de demostración y recorridos tipo que el producto ya permite.",
+    "metrics": [
+      {
+        "id": "proof-metric-1",
+        "value": "15 min",
+        "label": "para importar, personalizar y publicar una primera página en un escenario tipo",
+        "detail": "Estimación ilustrativa para un anuncio ya estructurado"
+      },
+      {
+        "id": "proof-metric-2",
+        "value": "0%",
+        "label": "de comisión cobrada por IndieHost en reservas directas",
+        "detail": "Excluye las tarifas estándar de pago de Stripe"
+      },
+      {
+        "id": "proof-metric-3",
+        "value": "1 URL",
+        "label": "para compartir y empezar a recibir reservas directas",
+        "detail": "Subdominio IndieHost incluido en los primeros planes"
+      }
+    ],
+    "cards": [
+      {
+        "id": "proof-card-1",
+        "title": "Importación guiada desde Airbnb o Booking",
+        "description": "Partes de un anuncio existente en lugar de rehacerlo todo manualmente. Fotos, textos, datos clave y estructura ya quedan iniciados."
+      },
+      {
+        "id": "proof-card-2",
+        "title": "Pago online listo desde el primer día",
+        "description": "El recorrido de reserva se apoya en Stripe para aceptar tarjeta, SEPA y Apple Pay. Así puedes abrir un canal directo sin montar tu propia infraestructura de pago."
+      },
+      {
+        "id": "proof-card-3",
+        "title": "Página publicable y compartible desde el inicio",
+        "description": "Tu alojamiento obtiene su propia URL, con mayor personalización según el plan. Suficientemente simple para lanzar rápido y suficientemente limpia para compartir o indexar."
       }
     ]
   },
@@ -300,6 +347,37 @@
         "description": "Construimos herramientas en las que puedes confiar. Nuestro equipo escucha el feedback de los anfitriones y te acompaña en cada paso—cuando lo necesites."
       }
     ]
+  },
+  "roiSection": {
+    "eyebrow": "ROI",
+    "title": "Cuando recuperas la venta directa, también recuperas tu <strong>margen</strong>",
+    "subtitle": "Ejemplo puramente ilustrativo para visualizar la diferencia entre depender solo de OTAs y disponer de un canal directo con IndieHost.",
+    "scenario": {
+      "title": "Escenario tipo: 1 alojamiento, 10 reservas / mes, ticket medio 420 EUR",
+      "revenueLabel": "Facturación anual estimada",
+      "revenueValue": "50 400 EUR",
+      "otaCostLabel": "Comisión OTA estimada al 15%",
+      "otaCostValue": "7 560 EUR / año",
+      "indiehostCostLabel": "Suscripción SuperHost durante 12 meses",
+      "indiehostCostValue": "468 EUR / año",
+      "savingsLabel": "Diferencia anual teórica",
+      "savingsValue": "7 092 EUR",
+      "note": "Escenario orientativo, sin incluir costes de pago ni gasto de marketing. El objetivo es hacer visible el peso de las comisiones en un caso simple."
+    },
+    "bullets": [
+      "Incluso un volumen moderado de reservas directas puede amortizar muy rápido la suscripción.",
+      "Conservas la relación con el cliente, la URL, los contenidos y la capacidad de fidelización.",
+      "Tu canal directo se convierte en un activo, no en un flujo totalmente dependiente de una plataforma externa."
+    ],
+    "interactive": {
+      "helper": "Elige un tramo de ingresos o introduce tu estimación. No se guarda ningún dato.",
+      "revenueHint": "Por tramos, para que sea más simple",
+      "directShareLabel": "Parte estimada que pasa a reserva directa",
+      "directShareNote": "Incluso una pequeña parte de venta directa puede rentabilizar SuperHost rápidamente.",
+      "directRevenueLabel": "Volumen anual estimado en directo",
+      "netGainLabel": "Ganancia neta teórica después de SuperHost",
+      "breakEvenTemplate": "SuperHost se amortiza a partir de aproximadamente {value} en ventas directas."
+    }
   },
   "join": {
     "title": "¿No está mal, verdad? ¡Es francés!",
@@ -664,5 +742,21 @@
         ]
       }
     ]
+  },
+  "finalCtaSection": {
+    "eyebrow": "Pasa a la acción",
+    "title": "Importa tu anuncio, activa tu página y empieza a probar tu <strong>canal directo</strong>",
+    "body": "Puedes empezar con un anuncio existente, publicar rápido y después afinar tu página, tus precios y tu estrategia con el tiempo.",
+    "primaryCta": {
+      "label": "Probar gratis",
+      "href": "#intro-section",
+      "target": "_self"
+    },
+    "secondaryCta": {
+      "label": "Ver precios",
+      "href": "#pricing-section",
+      "target": "_self"
+    },
+    "note": "Sin comisión IndieHost en las reservas directas. Flujo simple y pensado también para móvil."
   }
 }

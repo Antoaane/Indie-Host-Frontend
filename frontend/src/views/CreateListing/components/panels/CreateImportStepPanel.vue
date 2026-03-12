@@ -8,6 +8,7 @@ import { ensurePublishedMediasStoredInImageKit } from '@/domain/api/imagekit'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import {
   detectListingSource,
+  normalizeListingUrl,
   scrapeListing,
   transformAirbnbToRawListingBundle,
 } from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/ImportPanel'
@@ -55,7 +56,8 @@ async function handleImport() {
   importError.value = null
   isImporting.value = true
   try {
-    const data = await scrapeListing({ url: url.value.trim() })
+    const normalizedUrl = normalizeListingUrl(url.value.trim())
+    const data = await scrapeListing({ url: normalizedUrl })
     const transformed = transformAirbnbToRawListingBundle(
       data as AirbnbScrapedData
     )

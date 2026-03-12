@@ -3,6 +3,7 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import { clerkPlugin } from '@clerk/vue'
+import { createHead } from '@unhead/vue/client'
 import ui from '@nuxt/ui/vue-plugin'
 import '@/externalUI.css'
 import '@/main.scss'
@@ -57,7 +58,7 @@ void detectOS()
 const app = createApp(App)
 
 app.use(ui)
-// app.use(createHead())
+app.use(createHead())
 app.use(clerkPlugin, {
   publishableKey: PUBLISHABLE_KEY,
 })

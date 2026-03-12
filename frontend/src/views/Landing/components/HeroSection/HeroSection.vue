@@ -12,15 +12,18 @@ import { useLandingImport } from '@/views/Landing/composables/useLandingImport'
 import { computed, onMounted, ref } from 'vue'
 import { vp } from '@/utils/viewport'
 import detectOS from '@/utils/detectOs'
+import { useRouter } from 'vue-router'
 
 const props = defineProps<{
   content: HeroContent
 }>()
 
 const sectionId = 'hero-section'
+const router = useRouter()
 const url = ref('')
 const { submitUrl } = useLandingImport()
 const isIosMobile = ref(typeof document !== 'undefined' && document.documentElement.classList.contains('is-ios') && !vp.lg.value)
+const submitError = ref('')
 
 // Compteur animé : part de 20% et descend à 0% — désactivé sur mobile
 const counterValue = ref(20)
@@ -35,15 +38,34 @@ const animatedTitle = computed(() => {
   )
 })
 
+function scrollToIntroTop() {
+  const target = document.querySelector<HTMLElement>('#intro-section')
+  if (!target) return
+
+  const top = window.scrollY + target.getBoundingClientRect().top
+  window.scrollTo({
+    top: Math.max(0, top),
+    behavior: 'smooth',
+  })
+}
+
 function onSubmit(e?: Event) {
   e?.preventDefault()
   const trimmed = url.value.trim()
-  submitUrl(trimmed)
-  if (trimmed || isIosMobile.value) {
-    document.querySelector('#intro-section')?.scrollIntoView({ behavior: 'smooth' })
-  } else {
-    document.querySelector(props.content.primaryCta.href)?.scrollIntoView({ behavior: 'smooth' })
+  if (!trimmed && vp.lg.value) {
+    submitError.value = "Veuillez renseigner le lien Airbnb ou Booking de votre annonce pour lancer l'import automatique et créer votre site."
+    return
   }
+
+  submitError.value = ''
+  submitUrl(trimmed)
+  scrollToIntroTop()
+}
+
+function handleCreateSite() {
+  submitError.value = ''
+  submitUrl(url.value.trim())
+  void router.push(props.content.secondaryCta.href || '/editor/create')
 }
 
 onMounted(async () => {
@@ -154,6 +176,7 @@ onMounted(async () => {
                 type="url"
                 :placeholder="content.inputPlaceholder"
                 autocomplete="url"
+                @input="submitError = ''"
               />
               <div class="platform-logos">
                 <img
@@ -169,10 +192,26 @@ onMounted(async () => {
               </div>
             </div>
             <div class="cta">
-              <button type="submit">
-                <span v-html="content.primaryCta.label" />
-              </button>
+              <div class="cta-primary">
+                <button type="submit">
+                  <span v-html="content.primaryCta.label" />
+                </button>
+              </div>
+              <div class="cta-secondary">
+                <button
+                  type="button"
+                  @click="handleCreateSite"
+                >
+                  <span v-html="content.secondaryCta.label" />
+                </button>
+              </div>
             </div>
+            <p
+              v-if="submitError"
+              class="hero-submit-error"
+            >
+              {{ submitError }}
+            </p>
           </form>
         </div>
       </div>

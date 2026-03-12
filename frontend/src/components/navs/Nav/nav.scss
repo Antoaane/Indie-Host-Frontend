@@ -38,6 +38,10 @@
     }
   }
 
+  @media (min-width: 1024px) and (max-width: 1279px) {
+    padding: 0 1rem;
+  }
+
   >.logo {
     width: min-content;
     height: 100%;
@@ -56,6 +60,10 @@
       @include min-width(lg) {
         height: 3.125rem;
       }
+
+      @media (min-width: 1024px) and (max-width: 1279px) {
+        height: 2.65rem;
+      }
     }
   }
 
@@ -70,11 +78,24 @@
     display: flex;
     gap: 1.5rem;
 
+    @media (min-width: 1024px) and (max-width: 1279px) {
+      gap: 0.6rem;
+    }
+
     >li {
       @include buttons.secondary;
 
+      @media (min-width: 1024px) and (max-width: 1279px) {
+        font-size: 0.9rem;
+      }
+
       &.cta {
         @include buttons.primary(true);
+      }
+
+      >button,
+      >a {
+        white-space: nowrap;
       }
 
       >.cl-rootBox {

@@ -6,8 +6,12 @@ import type { LandingContent } from '@/views/Landing/types/content'
 import fr from '@/locales/landing/fr.json'
 import en from '@/locales/landing/en.json'
 import es from '@/locales/landing/es.json'
+import de from '@/locales/landing/de.json'
+import pt from '@/locales/landing/pt.json'
+import zh from '@/locales/landing/zh.json'
+import ja from '@/locales/landing/ja.json'
 
-const SUPPORTED_LOCALES = ['fr', 'en', 'es'] as const
+const SUPPORTED_LOCALES = ['fr', 'en', 'es', 'de', 'pt', 'zh', 'ja'] as const
 type SupportedLocale = (typeof SUPPORTED_LOCALES)[number]
 
 const FALLBACK_LOCALE: SupportedLocale = 'en'
@@ -16,6 +20,10 @@ const LOCALE_CONTENT: Record<SupportedLocale, LandingContent> = {
   fr: fr as LandingContent,
   en: en as LandingContent,
   es: es as LandingContent,
+  de: de as LandingContent,
+  pt: pt as LandingContent,
+  zh: zh as LandingContent,
+  ja: ja as LandingContent,
 }
 
 const localeMap: Record<string, SupportedLocale> = {
@@ -29,6 +37,20 @@ const localeMap: Record<string, SupportedLocale> = {
   'es-ES': 'es',
   'es-MX': 'es',
   'es-AR': 'es',
+  de: 'de',
+  'de-DE': 'de',
+  'de-AT': 'de',
+  'de-CH': 'de',
+  pt: 'pt',
+  'pt-BR': 'pt',
+  'pt-PT': 'pt',
+  zh: 'zh',
+  'zh-CN': 'zh',
+  'zh-Hans': 'zh',
+  'zh-TW': 'zh',
+  'zh-Hant': 'zh',
+  ja: 'ja',
+  'ja-JP': 'ja',
 }
 
 function getBrowserLocale(): SupportedLocale {

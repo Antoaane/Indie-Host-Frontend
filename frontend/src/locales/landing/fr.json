@@ -5,8 +5,13 @@
     "descriptionDesktop": "Créez votre site de location saisonnière avec nom de domaine inclus. Acceptez les réservations directes et encaissez vos paiements en ligne sans aucune commission.",
     "inputPlaceholder": "Collez le lien de votre logement",
     "primaryCta": {
-      "label": "Essayez en premier !",
-      "href": "/pricing",
+      "label": "Importer mon annonce existante",
+      "href": "#intro-section",
+      "target": "_self"
+    },
+    "secondaryCta": {
+      "label": "Créer mon site gratuitement",
+      "href": "/editor/create",
       "target": "_self"
     },
     "images": [
@@ -77,6 +82,48 @@
             "alt": "Borchure comportant le guide d'arrivée et le QR code menant vers votre messagerie"
           }
         ]
+      }
+    ]
+  },
+  "proofSection": {
+    "eyebrow": "Preuve produit",
+    "title": "Une base <strong>concrète</strong> pour vendre en direct sans repartir de zéro",
+    "subtitle": "Nous n’affichons pas ici de faux témoignages clients. À la place, cette section montre des résultats de démonstration et des usages types permis par le produit dès aujourd’hui.",
+    "metrics": [
+      {
+        "id": "proof-metric-1",
+        "value": "15 min",
+        "label": "pour importer, personnaliser puis publier une première page dans un scénario type",
+        "detail": "Estimation illustrative pour une annonce déjà structurée"
+      },
+      {
+        "id": "proof-metric-2",
+        "value": "0 %",
+        "label": "de commission prélevée par IndieHost sur vos réservations directes",
+        "detail": "Hors frais standards de paiement Stripe"
+      },
+      {
+        "id": "proof-metric-3",
+        "value": "1 URL",
+        "label": "à partager pour recevoir vos premières réservations directes",
+        "detail": "Sous-domaine IndieHost inclus sur les premiers plans"
+      }
+    ],
+    "cards": [
+      {
+        "id": "proof-card-1",
+        "title": "Import guidé depuis Airbnb ou Booking",
+        "description": "Vous partez d’une annonce existante au lieu de recréer tout votre contenu à la main. Photos, description, informations clés et structure de page sont déjà amorcées."
+      },
+      {
+        "id": "proof-card-2",
+        "title": "Paiement en ligne immédiatement exploitable",
+        "description": "Le parcours de réservation s’appuie sur Stripe pour accepter CB, SEPA et Apple Pay. Vous pouvez donc ouvrir un canal direct sans bricoler votre stack de paiement."
+      },
+      {
+        "id": "proof-card-3",
+        "title": "Page publiable et partageable dès le départ",
+        "description": "Votre logement obtient une URL dédiée, personnalisable selon votre plan. C’est assez simple pour être utilisé vite, et assez propre pour être partagé ou indexé."
       }
     ]
   },
@@ -194,6 +241,7 @@
         "id": "transformezChaqueVisiteEnProchaineReservation",
         "title": "Transformez chaque visite en <strong>prochaine réservation</strong>",
         "description": "Nous vous fournissons gratuitement un livret d’accueil physique, personnalisable et destiné à être installé dans votre logement. Ce support intègre un QR  code permettant à vos voyageurs provenant d'autres plateformes d'échanger avec vous via IndieHost, sans inscription. <br /><br /> Vous pouvez y intégrer toutes les informations pratiques (accès, équipements, consignes, etc.) ainsi que vos recommandations locales (restaurants, activités, transports…). <br /><br /> Avec cet outil, facilitez la communication et transformez chaque séjour en opportunité de réservation directe.",
+        "descriptionTablet": "Nous vous fournissons un livret d’accueil physique personnalisable à installer dans votre logement. Son QR code permet à vos voyageurs d’échanger avec vous sans inscription, tout en retrouvant les infos utiles du séjour et vos bonnes adresses. Vous facilitez ainsi la communication et favorisez la réservation directe.",
         "layout": "vtc",
         "videos": [
           {
@@ -300,6 +348,51 @@
         "description": "Notre priorité est de vous garantir un outil sur lequel vous pouvez compter dans le temps. Nous restons à votre écoute pour recueillir vos retours et vous accompagner à chaque étape, dès que vous en avez besoin."
       }
     ]
+  },
+  "roiSection": {
+    "eyebrow": "ROI",
+    "title": "Quand vous reprenez la vente en direct, vous reprenez aussi votre <strong>marge</strong>",
+    "subtitle": "Estimez en quelques secondes ce que quelques réservations en direct peuvent vous rapporter face au coût de SuperHost.",
+    "scenario": {
+      "title": "Faites une estimation simple",
+      "revenueLabel": "Votre chiffre d'affaires annuel",
+      "revenueValue": "50 400 EUR",
+      "otaCostLabel": "Commissions OTA évitées",
+      "otaCostValue": "7 560 EUR / an",
+      "indiehostCostLabel": "Abonnement SuperHost sur 12 mois",
+      "indiehostCostValue": "468 EUR / an",
+      "savingsLabel": "Écart annuel théorique",
+      "savingsValue": "7 092 EUR",
+      "note": "Estimation indicative, hors frais de paiement et hors marketing. Le but est surtout de visualiser à quel point SuperHost reste rentable dès que le direct progresse."
+    },
+    "interactive": {
+      "helper": "Choisissez votre niveau de chiffre d'affaires, puis estimez la part de réservations qui passe en direct. Aucune donnée n'est enregistrée.",
+      "revenueHint": "Choisissez une tranche",
+      "directShareLabel": "Part des réservations en direct",
+      "directShareNote": "Le plus important n'est pas de tout basculer, mais de gagner progressivement des réservations sans commission.",
+      "directRevenueLabel": "Volume annuel estimé en direct",
+      "netGainLabel": "Gain net après SuperHost",
+      "breakEvenTemplate": "SuperHost est amorti dès environ {value} de ventes en direct."
+    },
+    "compare": {
+      "title": "Commencer gratuitement ou accélérer avec SuperHost",
+      "intro": "L'offre gratuite sert à lancer votre canal direct. SuperHost sert à le rendre vraiment rentable, visible et plus facile à exploiter au quotidien.",
+      "freeTitle": "Offre gratuite",
+      "freePrice": "0 EUR / mois",
+      "freePoints": [
+        "Lancer votre première page de réservation sans risque",
+        "Tester vos premiers paiements et séjours en direct",
+        "Valider votre potentiel avant d'investir davantage"
+      ],
+      "superhostTitle": "SuperHost",
+      "superhostPrice": "39 EUR / mois TTC",
+      "superhostPoints": [
+        "Passer à un vrai canal d'acquisition directe",
+        "Gagner du temps avec plus d'outils et d'automatisation",
+        "Transformer quelques réservations directes en marge nette"
+      ],
+      "note": "La rupture de valeur est là : le gratuit permet de démarrer. SuperHost permet d'accélérer sans rester dépendant des commissions OTA."
+    }
   },
   "join": {
     "title": "Pas mal non ? C’est français !",
@@ -664,5 +757,21 @@
         ]
       }
     ]
+  },
+  "finalCtaSection": {
+    "eyebrow": "Passez à l'action",
+    "title": "Importez votre annonce, activez votre page et commencez à tester votre <strong>canal direct</strong>",
+    "body": "Vous pouvez démarrer simplement avec une annonce existante, publier vite, puis affiner votre page, vos tarifs et votre stratégie au fur et à mesure.",
+    "primaryCta": {
+      "label": "Essayer gratuitement",
+      "href": "#intro-section",
+      "target": "_self"
+    },
+    "secondaryCta": {
+      "label": "Voir les tarifs",
+      "href": "#pricing-section",
+      "target": "_self"
+    },
+    "note": "Sans commission IndieHost sur vos réservations directes. Parcours simple et pensé pour mobile."
   }
 }

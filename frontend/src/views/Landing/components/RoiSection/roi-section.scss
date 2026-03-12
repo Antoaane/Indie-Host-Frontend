@@ -1,0 +1,362 @@
+/* File: src/views/Landing/components/RoiSection/roi-section.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+
+#roi-section {
+  @include layout-gap(padding, top, 4);
+  @include layout-gap(padding, bottom, 2.5);
+
+  .wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+
+    @include layout-gap(padding, inline, 1.25);
+
+    @include min-width(lg) {
+      gap: 2rem;
+    }
+  }
+
+  .title {
+    max-width: 54rem;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  .eyebrow {
+    margin: 0;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba($accent, 0.68);
+    @include little-text($accent, $thin: false);
+  }
+
+  h2 {
+    margin: 0;
+    @include lp-h2-title($accent, false);
+  }
+
+  .subtitle {
+    margin: 0;
+    max-width: 44rem;
+    color: rgba($accent, 0.8);
+    @include base-text($accent, $bigger: true, $bold: false);
+  }
+
+  .grid {
+    display: grid;
+    gap: 1rem;
+
+    @include min-width(lg) {
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+    }
+  }
+
+  .scenario,
+  .compare {
+    padding: 1.25rem;
+    border: 1px solid rgba($accent, 0.1);
+    border-radius: borders.$rounded-xl;
+    background: rgba($accent, 0.04);
+  }
+
+  .scenario {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .scenario-title {
+    margin: 0;
+    color: $accent;
+    @include lp-h3-title($accent, false);
+  }
+
+  .scenario-helper {
+    margin: -0.25rem 0 0;
+    color: rgba($accent, 0.72);
+    @include base-text($accent, $bigger: false, $bold: false);
+  }
+
+  .simulator {
+    display: grid;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid rgba($accent, 0.08);
+    border-radius: borders.$rounded-lg;
+    background: rgba($accent, 0.03);
+
+    @include min-width(lg) {
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      align-items: start;
+    }
+  }
+
+  .field {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .field-heading {
+    display: grid;
+    gap: 0.25rem;
+
+    label,
+    strong {
+      color: $accent;
+      @include base-text($accent, $bigger: false, $bold: true);
+    }
+
+    span {
+      color: rgba($accent, 0.58);
+      @include little-text($accent, $thin: false);
+    }
+
+    &.is-inline {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+      gap: 0.75rem;
+
+      span {
+        grid-column: 1 / -1;
+      }
+    }
+  }
+
+  .preset-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .preset {
+    padding: 0.55rem 0.8rem;
+    border: 1px solid rgba($accent, 0.12);
+    border-radius: borders.$rounded;
+    color: rgba($accent, 0.78);
+    background: rgba($accent, 0.04);
+    cursor: pointer;
+    transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease, color 180ms ease;
+    @include little-text($accent, $thin: false);
+
+    &:hover {
+      transform: translateY(-1px);
+      border-color: rgba($accent, 0.24);
+      color: $accent;
+    }
+
+    &.is-active {
+      border-color: rgba($secondary_gradiant_first, 0.5);
+      color: $accent;
+      background: rgba($secondary_gradiant_first, 0.12);
+    }
+  }
+
+  .range {
+    width: 100%;
+    accent-color: $secondary_gradiant_first;
+    cursor: pointer;
+  }
+
+  .range-legend {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    @include little-text($accent, $thin: false);
+
+    span {
+      color: $accent;
+    }
+  }
+
+  .field-note {
+    margin: 0;
+    color: rgba($accent, 0.62);
+    @include little-text($accent, $thin: false);
+  }
+
+  .profit-banner {
+    padding: 0.85rem 0.95rem;
+    border-radius: borders.$rounded;
+    background: rgba($good, 0.12);
+    color: rgba($good, 0.96);
+
+    span {
+      display: block;
+      @include base-text($good, $bigger: false, $bold: true);
+    }
+
+    small {
+      display: block;
+      margin-top: 0.25rem;
+      color: rgba($good, 0.82);
+      @include little-text($good, $thin: false);
+    }
+  }
+
+  .scenario-rows {
+    display: grid;
+    gap: 0.65rem;
+  }
+
+  .row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.8rem 0;
+    border-top: 1px solid rgba($accent, 0.08);
+
+    &:first-child {
+      border-top: none;
+      padding-top: 0;
+    }
+
+    span,
+    strong {
+      @include base-text($accent, $bigger: false, $bold: false);
+    }
+
+    span {
+      color: rgba($accent, 0.72);
+    }
+
+    strong {
+      color: $accent;
+      text-align: right;
+      font-weight: 700;
+    }
+
+    @media (max-width: 640px) {
+      flex-direction: column;
+      align-items: flex-start;
+
+      strong {
+        text-align: left;
+      }
+    }
+  }
+
+  .row.is-highlight {
+    padding-top: 1rem;
+    margin-top: 0.2rem;
+    border-top-color: rgba($accent, 0.18);
+  }
+
+  .is-negative {
+    color: rgba($bad, 0.96) !important;
+  }
+
+  .is-positive {
+    color: rgba($good, 0.96) !important;
+  }
+
+  .scenario-note {
+    margin: 0;
+    color: rgba($accent, 0.56);
+    @include little-text($accent, $thin: false);
+
+    &.is-soft {
+      color: rgba($accent, 0.68);
+    }
+  }
+
+  .compare {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .compare-intro {
+    margin: 0;
+    color: rgba($accent, 0.76);
+    @include base-text($accent, $bigger: false, $bold: false);
+  }
+
+  .compare-cards {
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .compare-card {
+    display: grid;
+    gap: 0.85rem;
+    padding: 1rem;
+    border: 1px solid rgba($accent, 0.1);
+    border-radius: borders.$rounded-lg;
+    background: rgba($accent, 0.03);
+
+    &.is-free {
+      border-color: rgba($primary_gradiant_second, 0.18);
+      background: rgba($primary_gradiant_second, 0.06);
+    }
+
+    &.is-superhost {
+      border-color: rgba($secondary_gradiant_first, 0.22);
+      background: rgba($secondary_gradiant_first, 0.08);
+    }
+
+    ul {
+      gap: 0.6rem;
+    }
+  }
+
+  .compare-card-title,
+  .compare-card-price {
+    margin: 0;
+  }
+
+  .compare-card-title {
+    color: $accent;
+    @include lp-h3-title($accent, false);
+  }
+
+  .compare-card-price {
+    color: rgba($accent, 0.92);
+    @include base-text($accent, $bigger: true, $bold: true);
+  }
+
+  .compare-note {
+    margin: 0;
+    padding-top: 0.25rem;
+    border-top: 1px solid rgba($accent, 0.08);
+    color: rgba($accent, 0.72);
+    @include base-text($accent, $bigger: false, $bold: false);
+  }
+
+  h3 {
+    margin: 0;
+    @include lp-h3-title($accent, false);
+  }
+
+  ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  li {
+    position: relative;
+    padding-left: 1rem;
+    color: rgba($accent, 0.84);
+    @include base-text($accent, $bigger: false, $bold: false);
+
+    &::before {
+      content: '';
+      width: 0.42rem;
+      height: 0.42rem;
+      position: absolute;
+      top: 0.58rem;
+      left: 0;
+      border-radius: borders.$rounded;
+      background: $primary_gradiant_second;
+    }
+  }
+}

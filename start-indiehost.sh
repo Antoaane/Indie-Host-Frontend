@@ -95,7 +95,14 @@ if [ "$LISTINGS_MODE" = "api" ]; then
 
 fi
 
-# ── 3. Backend API (:4000) ────────────────────────────────────
+# ── 3. Dépendances npm (frontend + backend/api) ─────────────────
+step "Installation des paquets npm (frontend et backend/api)..."
+(cd "$ROOT/frontend" && npm install) || fail "Échec de npm install dans frontend."
+ok "Paquets frontend installés."
+(cd "$ROOT/backend/api" && npm install) || fail "Échec de npm install dans backend/api."
+ok "Paquets backend/api installés."
+
+# ── 4. Backend API (:4000) ────────────────────────────────────
 step "Démarrage du Backend API..."
 if port_in_use 4000; then
     ok "Backend API déjà actif (localhost:4000)."
@@ -108,7 +115,7 @@ else
     fi
 fi
 
-# ── 4. Scraping (:8000) ───────────────────────────────────────
+# ── 5. Scraping (:8000) ───────────────────────────────────────
 step "Démarrage du serveur de scraping..."
 if port_in_use 8000; then
     ok "Serveur de scraping déjà actif (localhost:8000)."
@@ -118,7 +125,7 @@ else
     ok "Serveur de scraping démarré en arrière-plan (localhost:8000)."
 fi
 
-# ── 5. Frontend (:5179) ───────────────────────────────────────
+# ── 6. Frontend (:5179) ───────────────────────────────────────
 step "Démarrage du Frontend..."
 if port_in_use 5179; then
     ok "Frontend déjà actif (localhost:5179)."

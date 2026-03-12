@@ -14,6 +14,7 @@ import type { IntroSectionContent } from '@/views/Landing/types/content'
 import type { RawListingBundle } from '@/domain/listings/types'
 import {
   detectListingSource,
+  normalizeListingUrl,
   scrapeListing,
   transformAirbnbToRawListingBundle,
   transformBookingToRawListingBundle,
@@ -30,18 +31,19 @@ const props = defineProps<{
 }>()
 
 const router = useRouter()
-const { pendingUrl } = useLandingImport()
+const { pendingUrl, pendingRequestId } = useLandingImport()
 const url = ref('')
 const previewBundle = ref<RawListingBundle | null>(null)
 const isPreviewLoading = ref(false)
 const previewError = ref<string | null>(null)
 const previewContainerRef = ref<HTMLElement | null>(null)
+const mobileImportVideoSrc = '/assets/media/videos/import-auto-video.webm'
 
 const displayedPreviewBundle = computed(() => previewBundle.value)
-const isMobilePreviewFullscreen = computed(() => Boolean(previewBundle.value) && !vp.lg.value)
-const showInlinePreview = computed(() => vp.lg.value)
-const showInlineActivateCta = computed(() => Boolean(previewBundle.value) && !isPreviewLoading.value && vp.lg.value)
-const showMobileLoadingHint = computed(() => isPreviewLoading.value && !vp.lg.value)
+const isMobilePreviewFullscreen = computed(() => Boolean(previewBundle.value) && !vp.md.value)
+const showInlinePreview = computed(() => vp.lg.value || (vp.md.value && Boolean(previewBundle.value)))
+const showInlineActivateCta = computed(() => Boolean(previewBundle.value) && !isPreviewLoading.value && vp.md.value)
+const showMobileLoadingHint = computed(() => isPreviewLoading.value && !vp.md.value)
 const showMobileTeaser = computed(() => !vp.lg.value && !isPreviewLoading.value && !previewBundle.value)
 const mobilePreviewTopbarStyle = computed<Record<string, string>>(() => {
   const images = orderByIndex([...(displayedPreviewBundle.value?.medias?.images ?? [])])
@@ -56,11 +58,14 @@ const canGenerate = computed(() => url.value.trim().length > 0 && !isPreviewLoad
 
 async function runPreview() {
   const trimmed = url.value.trim()
+  previewBundle.value = null
+
   if (!trimmed) {
     previewError.value = "Collez un lien d'annonce pour prévisualiser."
     return
   }
-  const source = detectListingSource(trimmed)
+  const normalizedUrl = normalizeListingUrl(trimmed)
+  const source = detectListingSource(normalizedUrl)
   if (source !== 'airbnb' && source !== 'booking') {
     previewError.value =
       "Lien non reconnu. Utilisez un lien Airbnb (https://www.airbnb.fr/rooms/…) ou Booking (https://www.booking.com/hotel/…)"
@@ -70,7 +75,7 @@ async function runPreview() {
   isPreviewLoading.value = true
   previewBundle.value = null
   try {
-    const data = await scrapeListing({ url: trimmed })
+    const data = await scrapeListing({ url: normalizedUrl })
     const partial =
       source === 'airbnb'
         ? transformAirbnbToRawListingBundle(data as AirbnbScrapedData)
@@ -121,11 +126,9 @@ watch(previewBundle, async (val) => {
   if (stay)    tl.to(stay,    { opacity: 1, y: 0, duration: 1.0 }, '-=0.5')
 })
 
-watch(pendingUrl, (newUrl) => {
-  if (newUrl.trim()) {
-    url.value = newUrl.trim()
-    runPreview()
-  }
+watch(pendingRequestId, () => {
+  url.value = pendingUrl.value.trim()
+  void runPreview()
 })
 
 function activateSite() {
@@ -135,7 +138,7 @@ function activateSite() {
   } catch {
     // ignore storage errors (private mode, quota)
   }
-  void router.push({ name: 'sign-in', query: { redirect_url: '/editor/create' } })
+  void router.push({ name: 'sign-up', query: { redirect_url: '/editor/create' } })
 }
 
 function closeMobilePreview() {
@@ -242,6 +245,24 @@ onBeforeUnmount(() => {
           <span class="teaser-badge">Booking.com</span>
         </div>
 
+        <div
+          v-if="showMobileTeaser"
+          class="mobile-import-demo"
+        >
+          <video
+            autoplay
+            loop
+            muted
+            playsinline
+            preload="metadata"
+          >
+            <source
+              :src="mobileImportVideoSrc"
+              type="video/webm"
+            />
+          </video>
+        </div>
+
         <Transition name="activate-reveal">
           <div
             v-if="showInlineActivateCta"
@@ -296,7 +317,7 @@ onBeforeUnmount(() => {
                 v-else
                 key="listing"
                 :raw-listing="displayedPreviewBundle"
-                :forced-viewport-mode="vp.lg ? 'xxl' : 'sm'"
+                :forced-viewport-mode="vp.md ? 'xxl' : 'sm'"
                 :preview-only="true"
               />
             </Transition>
@@ -339,7 +360,7 @@ onBeforeUnmount(() => {
           <div class="mobile-preview-stage">
             <ListingView
               :raw-listing="displayedPreviewBundle"
-              :forced-viewport-mode="'sm'"
+              :forced-viewport-mode="vp.md ? 'xxl' : 'sm'"
               :preview-only="true"
             />
           </div>

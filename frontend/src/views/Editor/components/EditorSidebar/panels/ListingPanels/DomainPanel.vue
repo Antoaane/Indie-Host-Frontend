@@ -1,129 +1,189 @@
 <!-- File: src/views/Editor/components/EditorSidebar/panels/ListingPanels/DomainPanel.vue -->
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 
-import { createGrandiDomainCheckoutSession, fetchGrandiDomainAvailability } from '@/domain/api/grandiDomains'
+import {
+  fetchListingDomain,
+  fetchListingSubdomainAvailability,
+  removeListingDomain,
+  saveListingDomain,
+  type ListingDomainRecord,
+  type ListingSubdomainAvailability,
+} from '@/domain/api/listingDomains'
+import { getPublicListingRootDomain } from '@/domain/listings/publicDomain'
 
-const domainInput = ref('')
+const props = defineProps<{
+  listingId: string
+}>()
+
+const subdomainInput = ref('')
+const currentDomain = ref<ListingDomainRecord | null>(null)
+const availability = ref<ListingSubdomainAvailability | null>(null)
+const isLoadingCurrent = ref(false)
 const isCheckingAvailability = ref(false)
-const isCreatingCheckout = ref(false)
+const isSaving = ref(false)
+const isDeleting = ref(false)
 const errorMessage = ref<string | null>(null)
 const successMessage = ref<string | null>(null)
-const checkoutStatus = ref<string | null>(null)
-const availability = ref<{
-  domain: string
-  available: boolean
-  premium: boolean
-  priceCents: number | null
-  currency: string
-  reason: string | null
-} | null>(null)
 
-const normalizedDomain = computed(() => domainInput.value.trim().toLowerCase())
-const canCheckout = computed(() => Boolean(availability.value?.available && availability.value?.domain))
-
-function formatPrice(priceCents: number | null, currency = 'EUR') {
-  if (priceCents === null) return 'Prix communiqué au paiement'
-  return new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency,
-  }).format(priceCents / 100)
-}
+const normalizedSlug = computed(() => subdomainInput.value.trim().toLowerCase())
+const rootDomain = getPublicListingRootDomain()
+const previewHostname = computed(() => normalizedSlug.value ? `${normalizedSlug.value}.${rootDomain}` : '')
+const previewUrl = computed(() => previewHostname.value ? `https://${previewHostname.value}` : '')
+const canSave = computed(() => Boolean(availability.value?.available && normalizedSlug.value))
 
 function resetFeedback() {
   errorMessage.value = null
   successMessage.value = null
-  checkoutStatus.value = null
+}
+
+function resetState() {
+  subdomainInput.value = ''
+  currentDomain.value = null
+  availability.value = null
+  resetFeedback()
+}
+
+function isValidSlug(slug: string) {
+  return /^[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])?$/.test(slug)
+}
+
+async function loadCurrentDomain() {
+  if (!props.listingId.trim()) return
+
+  resetState()
+  isLoadingCurrent.value = true
+
+  try {
+    const domain = await fetchListingDomain(props.listingId)
+    currentDomain.value = domain
+    subdomainInput.value = domain.subdomainSlug ?? ''
+  } catch (error) {
+    console.error('[EditorDomainPanel] failed to load current domain', error)
+    errorMessage.value = 'Impossible de charger le sous-domaine actuel.'
+  } finally {
+    isLoadingCurrent.value = false
+  }
 }
 
 async function checkAvailability() {
   if (isCheckingAvailability.value) return
 
   resetFeedback()
+  availability.value = null
 
-  if (!normalizedDomain.value || !normalizedDomain.value.includes('.') || normalizedDomain.value.length < 4) {
-    errorMessage.value = 'Saisissez un nom de domaine valide (ex: mon-site.fr).'
+  if (!normalizedSlug.value || !isValidSlug(normalizedSlug.value)) {
+    errorMessage.value = 'Utilisez un slug valide: lettres, chiffres et tirets uniquement.'
     return
   }
-  availability.value = null
-  isCheckingAvailability.value = true
 
+  isCheckingAvailability.value = true
   try {
-    const result = await fetchGrandiDomainAvailability(normalizedDomain.value)
+    const result = await fetchListingSubdomainAvailability(normalizedSlug.value, props.listingId)
     availability.value = result
 
-    if (!result.domain) {
-      errorMessage.value = 'Réponse API invalide: domaine absent.'
-      return
-    }
-
     if (result.available) {
-      successMessage.value = `Le domaine ${result.domain} est disponible.`
+      successMessage.value = `Le sous-domaine ${result.hostname} est disponible.`
       return
     }
 
-    errorMessage.value = result.reason || `Le domaine ${result.domain} n'est pas disponible.`
+    errorMessage.value = result.reason || 'Ce sous-domaine n’est pas disponible.'
   } catch (error) {
     console.error('[EditorDomainPanel] availability check failed', error)
-    errorMessage.value = 'Impossible de vérifier la disponibilité pour le moment.'
+    errorMessage.value = 'Impossible de vérifier la disponibilité du sous-domaine.'
   } finally {
     isCheckingAvailability.value = false
   }
 }
 
-async function startCheckout() {
-  const candidate = availability.value
-  if (!candidate?.available || isCreatingCheckout.value) return
+async function saveDomain() {
+  if (!canSave.value || isSaving.value) return
 
   resetFeedback()
-  isCreatingCheckout.value = true
+  isSaving.value = true
 
   try {
-    const successUrl = typeof window !== 'undefined' ? `${window.location.origin}/editor?domainCheckout=success` : undefined
-    const cancelUrl = typeof window !== 'undefined' ? `${window.location.origin}/editor?domainCheckout=cancel` : undefined
-    const session = await createGrandiDomainCheckoutSession({
-      domain: candidate.domain,
-      successUrl,
-      cancelUrl,
-    })
-
-    checkoutStatus.value = 'Redirection vers le paiement sécurisé...'
-    if (typeof window !== 'undefined') {
-      window.location.assign(session.checkoutUrl)
-    }
+    const domain = await saveListingDomain(props.listingId, normalizedSlug.value)
+    currentDomain.value = domain
+    availability.value = null
+    subdomainInput.value = domain.subdomainSlug ?? ''
+    successMessage.value = domain.subdomainSlug
+      ? `Le sous-domaine ${domain.subdomainSlug}.${rootDomain} est réservé pour cette annonce.`
+      : 'Sous-domaine mis à jour.'
   } catch (error) {
-    console.error('[EditorDomainPanel] checkout creation failed', error)
-    errorMessage.value = 'Impossible de démarrer le paiement du domaine.'
+    console.error('[EditorDomainPanel] failed to save subdomain', error)
+    errorMessage.value = 'Impossible d’enregistrer ce sous-domaine.'
   } finally {
-    isCreatingCheckout.value = false
+    isSaving.value = false
   }
 }
+
+async function deleteDomain() {
+  if (isDeleting.value || !currentDomain.value?.subdomainSlug) return
+
+  resetFeedback()
+  isDeleting.value = true
+
+  try {
+    const domain = await removeListingDomain(props.listingId)
+    currentDomain.value = domain
+    availability.value = null
+    subdomainInput.value = ''
+    successMessage.value = 'Le sous-domaine a été libéré.'
+  } catch (error) {
+    console.error('[EditorDomainPanel] failed to delete subdomain', error)
+    errorMessage.value = 'Impossible de libérer ce sous-domaine.'
+  } finally {
+    isDeleting.value = false
+  }
+}
+
+watch(
+  () => props.listingId,
+  () => {
+    void loadCurrentDomain()
+  },
+)
+
+watch(subdomainInput, () => {
+  availability.value = null
+  errorMessage.value = null
+  successMessage.value = null
+})
+
+onMounted(() => {
+  void loadCurrentDomain()
+})
 </script>
 
 <template>
   <section class="editor-domain-panel">
     <div class="header">
-      <h3>Nom de domaine</h3>
-      <p>Vérifiez et faites payer un domaine via l'API Grandi.net.</p>
+      <h3>Sous-domaine IndieHost</h3>
+      <p>Réservez gratuitement un sous-domaine `*.{{ rootDomain }}` pour cette annonce.</p>
     </div>
 
     <div class="body">
       <div class="input">
         <input
-          v-model="domainInput"
+          v-model="subdomainInput"
           type="text"
-          placeholder="ex: mon-logement.fr"
+          placeholder="ex: mon-logement"
           autocomplete="off"
           @keydown.enter.prevent="checkAvailability"
         />
       </div>
 
+      <p class="hint">
+        URL publique : <strong>{{ previewUrl || `https://mon-logement.${rootDomain}` }}</strong>
+      </p>
+
       <div class="actions">
         <div class="manage">
           <button
             type="button"
-            :disabled="isCheckingAvailability"
+            :disabled="isCheckingAvailability || isLoadingCurrent"
             @click="checkAvailability"
           >
             {{ isCheckingAvailability ? 'Vérification...' : 'Vérifier la disponibilité' }}
@@ -133,21 +193,50 @@ async function startCheckout() {
         <div class="checkout">
           <button
             type="button"
-            :disabled="!canCheckout || isCreatingCheckout"
-            @click="startCheckout"
+            :disabled="!canSave || isSaving"
+            @click="saveDomain"
           >
-            {{ isCreatingCheckout ? 'Redirection...' : 'Payer le domaine' }}
+            {{ isSaving ? 'Enregistrement...' : 'Réserver ce sous-domaine' }}
           </button>
         </div>
+
+        <div class="checkout">
+          <button
+            type="button"
+            :disabled="!currentDomain?.subdomainSlug || isDeleting"
+            @click="deleteDomain"
+          >
+            {{ isDeleting ? 'Suppression...' : 'Libérer le sous-domaine' }}
+          </button>
+        </div>
+      </div>
+
+      <div
+        v-if="currentDomain?.subdomainSlug"
+        class="availability"
+      >
+        <p><strong>Actuel :</strong> {{ currentDomain.subdomainSlug }}</p>
+        <p><strong>Hostname :</strong> {{ currentDomain.hostname }}</p>
+        <p>
+          <strong>URL :</strong>
+          <a
+            v-if="currentDomain.publicUrl"
+            :href="currentDomain.publicUrl"
+            target="_blank"
+            rel="noreferrer"
+          >
+            {{ currentDomain.publicUrl }}
+          </a>
+        </p>
       </div>
 
       <div
         v-if="availability"
         class="availability"
       >
-        <p><strong>Domaine:</strong> {{ availability.domain }}</p>
-        <p><strong>Statut:</strong> {{ availability.available ? 'Disponible' : 'Indisponible' }}</p>
-        <p><strong>Prix:</strong> {{ formatPrice(availability.priceCents, availability.currency) }}</p>
+        <p><strong>Slug :</strong> {{ availability.slug }}</p>
+        <p><strong>Statut :</strong> {{ availability.available ? 'Disponible' : 'Indisponible' }}</p>
+        <p><strong>Hostname :</strong> {{ availability.hostname }}</p>
       </div>
 
       <p
@@ -157,10 +246,10 @@ async function startCheckout() {
         {{ successMessage }}
       </p>
       <p
-        v-if="checkoutStatus"
+        v-if="isLoadingCurrent"
         class="meta"
       >
-        {{ checkoutStatus }}
+        Chargement du sous-domaine actuel...
       </p>
       <p
         v-if="errorMessage"
@@ -191,6 +280,13 @@ async function startCheckout() {
 
     > .input {
       @include inputs.field($theme: base);
+    }
+
+    > .hint {
+      margin: 0;
+      @include little-text($thin: false);
+      color: rgba($secondary, 0.72);
+      word-break: break-word;
     }
 
     > .actions {

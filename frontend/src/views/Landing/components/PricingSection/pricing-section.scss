@@ -1,0 +1,305 @@
+/* File: src/views/Landing/components/PricingSection/pricing-section.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+
+#pricing-section {
+  position: relative;
+  overflow-x: clip;
+
+  @include layout-gap(padding, top, 4.5);
+  @include layout-gap(padding, bottom, 3.5);
+
+  @include min-width(lg) {
+    @include layout-gap(padding, top, 6.5);
+    @include layout-gap(padding, bottom, 4.5);
+  }
+
+  .wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+
+    @include layout-gap(padding, inline, 1.25);
+
+    @include min-width(lg) {
+      gap: 4rem;
+    }
+  }
+
+  .title {
+    max-width: 54rem;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    text-align: center;
+
+    .eyebrow {
+      margin: 0;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba($accent, 0.72);
+      @include little-text($accent, $thin: false);
+    }
+
+    h2 {
+      margin: 0;
+      @include lp-h2-title($accent, false);
+    }
+
+    .subtitle {
+      margin: 0;
+      max-width: 44rem;
+      color: rgba($accent, 0.82);
+      @include base-text($accent, $bigger: true, $bold: false);
+    }
+  }
+
+  .plans {
+    display: grid;
+    gap: 1rem;
+
+    @include min-width(lg) {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1.25rem;
+      align-items: stretch;
+    }
+  }
+
+  .plan {
+    position: relative;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    border-radius: borders.$rounded-xl;
+    border: 1px solid rgba($accent, 0.12);
+    background:
+      linear-gradient(180deg, rgba($accent, 0.08) 0%, rgba($accent, 0.04) 100%),
+      rgba($accent, 0.03);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.22);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    overflow: hidden;
+
+    @media (max-width: 1024px) {
+      html.is-ios & {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
+    }
+
+    &.is-featured {
+      transform: translateY(-0.15rem);
+
+      @include min-width(lg) {
+        transform: translateY(-0.75rem);
+      }
+    }
+
+    .plan-topline {
+      width: 100%;
+      height: 0.25rem;
+      flex: 0 0 auto;
+      background: linear-gradient(90deg, $primary_gradiant_first 0%, $primary_gradiant_second 50%, $primary_gradiant_third 100%);
+    }
+
+    &.is-gold .plan-topline {
+      background: linear-gradient(90deg, $secondary_gradiant_first 0%, $secondary_gradiant_second 100%);
+    }
+
+    &.is-red .plan-topline {
+      background: linear-gradient(90deg, rgba($bad, 0.85) 0%, rgba(255, 163, 109, 0.95) 100%);
+    }
+
+    .plan-head,
+    .plan-body {
+      padding: 1.25rem;
+
+      @include min-width(lg) {
+        padding: 1.5rem;
+      }
+    }
+
+    .plan-head {
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      padding-bottom: 1rem;
+    }
+
+    .plan-badge {
+      display: inline-flex;
+      width: max-content;
+      padding: 0.35rem 0.7rem;
+      border-radius: borders.$rounded;
+      border: 1px solid rgba($accent, 0.14);
+      background: rgba($accent, 0.08);
+    }
+
+    .plan-tier {
+      @include little-text($accent, $thin: false);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .plan-highlight {
+      width: max-content;
+      margin: -0.2rem 0 0;
+      padding: 0.35rem 0.7rem;
+      border-radius: borders.$rounded;
+      background: rgba($secondary_gradiant_first, 0.16);
+      color: $accent;
+      @include little-text($accent, $thin: false);
+    }
+
+    h3 {
+      margin: 0;
+      @include lp-h3-title($accent, false);
+    }
+
+    .price {
+      margin: 0;
+      font-size: clamp(1.65rem, 4.5vw, 2.5rem);
+      line-height: 1.05;
+      font-weight: 700;
+      color: $accent;
+    }
+
+    .summary {
+      margin: 0;
+      color: rgba($accent, 0.76);
+      @include base-text($accent, $bigger: false, $bold: false);
+    }
+
+    .plan-body {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      padding-top: 0;
+    }
+
+    .block {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .block-label {
+      margin: 0;
+      color: rgba($accent, 0.58);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      @include little-text($accent, $thin: false);
+    }
+
+    ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+
+    li {
+      position: relative;
+      padding-left: 1.15rem;
+      color: rgba($accent, 0.88);
+      @include base-text($accent, $bigger: false, $bold: false);
+
+      &::before {
+        content: '';
+        width: 0.45rem;
+        height: 0.45rem;
+        position: absolute;
+        top: 0.6rem;
+        left: 0;
+        border-radius: borders.$rounded;
+        background: rgba($accent, 0.82);
+      }
+    }
+
+    &.is-indigo li::before {
+      background: $primary_gradiant_second;
+    }
+
+    &.is-gold li::before {
+      background: $secondary_gradiant_first;
+    }
+
+    &.is-red li::before {
+      background: $bad;
+    }
+
+    .block-options {
+      padding-top: 0.25rem;
+      border-top: 1px solid rgba($accent, 0.08);
+    }
+
+    .positioning {
+      margin: auto 0 0;
+      padding-top: 1rem;
+      border-top: 1px solid rgba($accent, 0.08);
+      color: rgba($accent, 0.96);
+      @include base-text($accent, $bigger: false, $bold: false);
+    }
+
+    .plan-actions {
+      margin-top: 0.35rem;
+      display: grid;
+      gap: 0.65rem;
+    }
+
+    .cl-rootBox {
+      display: block;
+    }
+
+    .plan-cta {
+      width: 100%;
+      min-height: 3rem;
+      padding: 0.8rem 1rem;
+      border: none;
+      border-radius: borders.$rounded-sm;
+      outline: 3px solid rgba($secondary-button-reference, 0.1);
+      box-shadow: 0px 1px 3px 2px rgba(0, 0, 0, 0.1);
+      color: $secondary-button-reference;
+      background-color: $accent;
+      cursor: pointer;
+      transition: transform 180ms ease, opacity 180ms ease, background-color 180ms ease, color 180ms ease, outline-color 180ms ease;
+
+      &:hover:not(:disabled) {
+        transform: translateY(-1px);
+        color: $accent;
+        background-color: $secondary-button-reference;
+        outline-color: rgba($accent, 0.75);
+      }
+    }
+
+    .plan-helper {
+      margin: 0;
+      text-align: center;
+      color: rgba($accent, 0.58);
+      @include little-text($accent, $thin: false);
+    }
+  }
+
+  .account-link {
+    margin: 0;
+    text-align: center;
+    color: rgba($accent, 0.62);
+    @include base-text($accent, $bigger: false, $bold: false);
+
+    a {
+      color: $accent;
+      text-decoration: underline;
+      text-underline-offset: 0.18rem;
+
+      &:hover {
+        color: $primary_gradiant_second;
+      }
+    }
+  }
+}

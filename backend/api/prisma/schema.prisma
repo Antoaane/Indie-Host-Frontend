@@ -43,6 +43,7 @@ model User {
 
 model Listing {
   id                String         @id
+  subdomainSlug     String?        @unique
   ownerId           String?
   owner             User?          @relation("OwnerListings", fields: [ownerId], references: [id], onDelete: SetNull)
   status            String         @default("draft")
@@ -64,6 +65,7 @@ model Listing {
   calendarSyncs     CalendarSync[]
   calendarEvents    CalendarEvent[]
 
+  @@index([subdomainSlug])
   @@index([ownerId])
   @@index([status])
 }

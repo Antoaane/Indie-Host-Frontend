@@ -19,6 +19,9 @@ async function resolveListingId(explicitId?: string): Promise<string> {
   if (explicitId && explicitId.trim()) return explicitId.trim()
 
   if (typeof window !== 'undefined') {
+    const hostnameListingId = await controller.resolveListingIdByHostname(window.location.hostname)
+    if (hostnameListingId) return hostnameListingId
+
     const currentPath = window.location.pathname
     const listingIdFromRoute = currentPath.match(/^\/listing\/([^/]+)\/?$/)?.[1]
     if (listingIdFromRoute) return listingIdFromRoute

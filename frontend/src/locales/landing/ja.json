@@ -1,0 +1,400 @@
+{
+  "hero": {
+    "title": "予約ページは<br><strong>手数料0%</strong>",
+    "description": "ドメイン付き。直接予約。オンライン決済。",
+    "descriptionDesktop": "ドメイン込みで民泊・宿泊の予約サイトを作成。直接予約を受け付け、オンラインで收款。OTA手数料なし。",
+    "inputPlaceholder": "リスティングのリンクを貼り付け",
+    "primaryCta": {
+      "label": "既存のリスティングを取り込む",
+      "href": "#intro-section",
+      "target": "_self"
+    },
+    "secondaryCta": {
+      "label": "無料でサイトを作成",
+      "href": "/editor/create",
+      "target": "_self"
+    },
+    "images": [
+      {
+        "webp": "/assets/media/images/webp/hero-image.webp",
+        "png": "/assets/media/images/png/hero-image.png",
+        "alt": "オンライン予約用IndieHostリスティング（スマホ）とホスト用ダッシュボード（PC）"
+      }
+    ]
+  },
+  "introSection": {
+    "title": "既存のリスティングから<span class=\"text-gradiant\">予約ページ</span>を作成",
+    "body": "AirbnbまたはBookingの物件リンクを貼るだけで、数秒で予約ページを生成します。",
+    "inputPlaceholder": "リスティングのリンクを貼り付け",
+    "previewCtaLabel": "ページを生成",
+    "createAccountCtaLabel": "無料でページを有効化",
+    "createAccountCtaHint": "無料・契約なし・手数料なし",
+    "backButtonAriaLabel": "ホームに戻る",
+    "primaryCta": {
+      "label": "無料インポートを試す",
+      "href": "/pricing",
+      "target": "_self"
+    }
+  },
+  "benefits": {
+    "title": "<strong>すべて</strong>が<strong>ホスト</strong>のため"
+  },
+  "usage": {
+    "steps": [
+      {
+        "id": "importListing",
+        "title": "AirbnbまたはBookingからリスティングをインポート",
+        "description": "ワンクリックで写真・説明・評価・設備を安全にインポート。すべてお任せください。<br /><br /><strong>IndieHostのライブエディター</strong>で差別化したり、ゼロから作ったり。",
+        "videos": [
+          { "webm": "/assets/media/videos/import-auto.webm", "mp4": "/assets/media/videos/import-auto.mp4" }
+        ],
+        "images": [
+          { "webp": "/assets/media/images/webp/auto-import.webp", "png": "/assets/media/images/png/auto-import.png", "alt": "Airbnb/Bookingからのリスティングインポート図" }
+        ]
+      },
+      {
+        "id": "pricingSetup",
+        "title": "料金と条件を設定",
+        "description": "現金・手付金・一括オンライン決済やキャンセルポリシーを、リスティングごとに1つのダッシュボードで設定。",
+        "images": [
+          { "webp": "/assets/media/images/webp/annonce-reservation-2.webp", "png": "/assets/media/images/png/annonce-reservation-2.png", "alt": "ページ自動生成の図" }
+        ]
+      },
+      {
+        "id": "goLive",
+        "title": "公開して、最初の直接予約を受けよう",
+        "description": "URLを決めれば<strong>検索エンジン</strong>に表示。<br /><br />すぐに<strong>ゲストとシェア</strong>。IndieHostは手数料を取りません。",
+        "images": [
+          { "webp": "/assets/media/images/webp/auto-generated.webp", "png": "/assets/media/images/png/auto-generated.png", "alt": "到着ガイドとメッセージQRコード付き冊子" }
+        ]
+      }
+    ]
+  },
+  "proofSection": {
+    "eyebrow": "製品の証明",
+    "title": "ゼロからやり直さず<strong>直接予約</strong>するための土台",
+    "subtitle": "架空の口コミではなく、本製品で既に可能なデモ結果と典型的なフローをご紹介します。",
+    "metrics": [
+      { "id": "proof-metric-1", "value": "15分", "label": "典型的なシナリオでインポート・編集・公開まで", "detail": "既に構成されたリスティングの目安" },
+      { "id": "proof-metric-2", "value": "0%", "label": "IndieHostが直接予約に取る手数料", "detail": "Stripeの標準決済手数料を除く" },
+      { "id": "proof-metric-3", "value": "1URL", "label": "シェアして直接予約を受け始める", "detail": "初期プランにIndieHostサブドメイン付き" }
+    ],
+    "cards": [
+      { "id": "proof-card-1", "title": "Airbnb/Bookingからのガイド付きインポート", "description": "既存リスティングからスタート。写真・文案・ページ構成がすぐに用意されます。" },
+      { "id": "proof-card-2", "title": "初日から使えるオンライン決済", "description": "予約フローはStripeでカード・SEPA・Apple Payに対応。自前で決済基盤を組む必要はありません。" },
+      { "id": "proof-card-3", "title": "すぐ公開・シェアできるページ", "description": "物件ごとに専用URL。プランに応じて柔軟に。シンプルで公開も早く、シェアや検索にも適した仕上がりです。" }
+    ]
+  },
+  "features": {
+    "items": [
+      {
+        "id": "paiementEnLigneIntegreSansCommissions",
+        "title": "オンライン決済を組み込み<br><strong>手数料</strong><strong>ゼロ</strong>",
+        "description": "ゲストから直接お支払いを。OTA手数料なし。<br>直接予約でも前払い対応。<br>ゲストの希望する決済方法を利用可能に。",
+        "layout": "hzt",
+        "images": [
+          { "webp": "/assets/media/images/png/paiement-en-ligne.png", "png": "/assets/media/images/png/paiement-en-ligne.png", "alt": "組み込みオンライン確認・決済" }
+        ]
+      },
+      {
+        "id": "modifiezEtPersonnalisezVosAnnonces",
+        "title": "リスティングを<strong>編集</strong>・<strong>カスタマイズ</strong>",
+        "description": "直感的なビジュアルエディターで編集。リアルタイムプレビュー、クリックで即編集。シンプルで速い。",
+        "layout": "hzt",
+        "videos": [{ "webm": "/assets/media/videos/annonces.webm", "mp4": "/assets/media/videos/annonces.mp4" }],
+        "images": [
+          { "webp": "/assets/media/images/webp/editeur.webp", "png": "/assets/media/images/png/editeur.png", "alt": "リスティング編集ページ" }
+        ]
+      },
+      {
+        "id": "ameliorezVotreVisibiliteSurGoogle",
+        "title": "Googleでの<strong>表示</strong>を強化",
+        "description": "組み込みSEOと専用サブドメインで検索に載りやすく。リスティングを最適化し、ゲストに見つけてもらう。OTA手数料なし。",
+        "layout": "vtc",
+        "videos": [{ "webm": "/assets/media/videos/seo.webm", "mp4": "/assets/media/videos/seo.mp4" }],
+        "images": [
+          { "webp": "/assets/media/images/webp/seo.webp", "png": "/assets/media/images/png/seo.png", "alt": "リスティング編集ページ" }
+        ]
+      },
+      {
+        "id": "toutesVosReservationsDansUnCalendrierCentralise",
+        "title": "予約を<strong>1つのカレンダー</strong>で一元管理",
+        "description": "Airbnb・Booking.comなどを1か所で同期。二重予約を防ぎ、チェックイン・アウトや決済状況を一覧で。",
+        "layout": "hzt",
+        "videos": [{ "webm": "/assets/media/videos/calendrier.webm", "mp4": "/assets/media/videos/calendrier.mp4" }],
+        "images": [
+          { "webp": "/assets/media/images/webp/calendrier.webp", "png": "/assets/media/images/png/calendrier.png", "alt": "リスティング編集ページ" }
+        ]
+      },
+      {
+        "id": "desMessagesProgrammesPourVosReservations",
+        "title": "ゲストへの<strong>自動</strong>メッセージ",
+        "description": "SMS・メール・アプリ通知をスケジュール：チェックイン案内、鍵コード、退去リマインドなど。1度設定すれば毎回自動送信。",
+        "layout": "vtc",
+        "videos": [{ "webm": "/assets/media/videos/notification.webm", "mp4": "/assets/media/videos/notification.mp4" }],
+        "images": [
+          { "webp": "/assets/media/images/webp/notification.webp", "png": "/assets/media/images/png/notification.png", "alt": "リスティング編集ページ" }
+        ]
+      },
+      {
+        "id": "personnalisezVosAnnoncesAVotreImage",
+        "title": "リスティングを<strong>あなたらしく</strong>",
+        "description": "デザインテーマから選ぶか、独自の見た目に。物件に合わせてモダン・ナチュラル・ラグジュアリーなど。予約ページで差をつける。",
+        "layout": "vtc",
+        "videos": [{ "webm": "/assets/media/videos/glass-theme.webm", "mp4": "/assets/media/videos/glass-theme.mp4" }],
+        "images": [
+          { "webp": "/assets/media/images/webp/glass-theme.webp", "png": "/assets/media/images/png/glass-theme.png", "alt": "リスティング編集ページ" }
+        ]
+      },
+      {
+        "id": "transformezChaqueVisiteEnProchaineReservation",
+        "title": "毎回の宿泊を<strong>次の直接予約</strong>に",
+        "description": "QRコード付き無料ウェルカムブック。Airbnb/Booking経由のゲストもIndieHostでアカウントなしで連絡可能。<br /><br />アクセスコード・設備・おすすめスポットを掲載。1回スキャンでゲストとつながる。<br /><br />やり取りをシンプルに、宿泊のたびに直接予約のチャンスに。",
+        "layout": "vtc",
+        "videos": [{ "webm": "/assets/media/videos/guide-accueil.webm", "mp4": "/assets/media/videos/guide-accueil.mp4" }],
+        "images": [
+          { "webp": "/assets/media/images/webp/guide.webp", "png": "/assets/media/images/png/guide.png", "alt": "リスティング編集ページ" }
+        ]
+      }
+    ]
+  },
+  "how": {
+    "title": "どのように使う？",
+    "body": "IndieHostは独立したホストが民泊・宿泊を自分のやり方で運営できるようにします。OTA手数料から解放し、収入とゲストとの関係を手元に。"
+  },
+  "habits": {
+    "title": "いつもの<strong>やり方</strong>のまま",
+    "slides": [
+      {
+        "id": "modifiezEtPersonnalisezVosAnnonces",
+        "title": "リスティングを<strong>編集</strong>・<strong>カスタマイズ</strong>",
+        "description": "インポート後、シンプルなビジュアルエディターで自由に編集。リアルタイムプレビュー、クリックで該当項目へ。未公開のまま下書きで編集も保持。",
+        "images": [{ "webp": "/assets/media/images/webp/editeur.webp", "png": "/assets/media/images/png/editeur.png", "alt": "リスティング編集ページ" }]
+      },
+      {
+        "id": "vosFacturesEtVosPerformancesAuMemeEndroit",
+        "title": "請求と実績が<strong>1か所</strong>に",
+        "description": "売上・稼働率・ゲストのリピートを一覧で。月次詳細をエクスポートし、請求書もワンクリックで。",
+        "images": [{ "webp": "/assets/media/images/webp/dashboard-vue-ensemble.webp", "png": "/assets/media/images/png/dashboard-vue-ensemble.png", "alt": "ダッシュボードページ" }]
+      },
+      {
+        "id": "vosReservationsSynchroniseesEtTrieesDansUnEspaceIntuitif",
+        "title": "予約を同期して<strong>わかりやすい</strong>ダッシュボードで",
+        "description": "Airbnb/Bookingのカレンダーリンクを追加すると、他でブロックした日付はここでも自動ブロック。二重予約防止。物件別履歴・ゲスト情報・決済状況を1か所で管理。",
+        "images": [{ "webp": "/assets/media/images/webp/dashboard-detail-logement.webp", "png": "/assets/media/images/png/dashboard-detail-logement.png", "alt": "物件管理ページ" }]
+      },
+      {
+        "id": "desPaiementsPratiquesFlexiblesEtSecurisees",
+        "title": "柔軟で<strong>安全</strong>な決済",
+        "description": "決済方法でゲストを逃さない。一括オンライン・手付＋残金・現金など、ご自身に合った方法を選択。Stripeでゲストも安心して予約。",
+        "images": [{ "webp": "/assets/media/images/webp/annonce-reservation.webp", "png": "/assets/media/images/png/annonce-reservation.png", "alt": "決済ページ" }]
+      },
+      {
+        "id": "communiquezSimplement",
+        "title": "<strong>シンプル</strong>にやり取り",
+        "description": "IndieHostでゲストと安全にメッセージ。即時・整理された受信箱。ウェルカムガイドをスキャンした訪問者はアカウントなしで連絡可能。Airbnb/Booking経由のゲストとも再接続。",
+        "images": [{ "webp": "/assets/media/images/webp/messagerie.webp", "png": "/assets/media/images/png/messagerie.png", "alt": "メッセージページ" }]
+      }
+    ]
+  },
+  "strengths": {
+    "title": "<strong>透明</strong>・<strong>尊重</strong>・<strong>信頼</strong>の上に",
+    "subtitle": "収入・データ・安心を守る3つの価値。",
+    "pillars": [
+      {
+        "id": "pillar1",
+        "title": "<strong>独立したホスト</strong>向け無料プラン",
+        "description": "自立を大切にするホストのため。無料プランで<strong>利用ケースの約70%</strong>をカバー。サイト作成・直接予約受付。契約縛り・隠れ料金なし。"
+      },
+      {
+        "id": "pillar2",
+        "title": "データの所在を明らかに。",
+        "description": "フランスでホスティング、<strong>GDPR</strong>準拠。データは販売しません。収益はサブスクから。"
+      },
+      {
+        "id": "pillar3",
+        "title": "長く使え、サポートも",
+        "description": "頼れるツールを提供。ホストの声を聞き、必要なときにいつでもサポート。"
+      }
+    ]
+  },
+  "roiSection": {
+    "eyebrow": "ROI",
+    "title": "直接予約を取り戻すと、<strong>マージン</strong>も取り戻す",
+    "subtitle": "OTAのみの場合とIndieHost直接チャネルの差をイメージするための例です。",
+    "scenario": {
+      "title": "典型例：1物件、月10予約、平均客単価420ユーロ",
+      "revenueLabel": "想定年間売上",
+      "revenueValue": "50,400ユーロ",
+      "otaCostLabel": "OTA手数料15%想定",
+      "otaCostValue": "7,560ユーロ/年",
+      "indiehostCostLabel": "SuperHost 12か月",
+      "indiehostCostValue": "468ユーロ/年",
+      "savingsLabel": "理論上の年間差額",
+      "savingsValue": "7,092ユーロ",
+      "note": "決済手数料・マーケ費用除くイメージです。手数料の重さを単純なケースで示しています。"
+    },
+    "bullets": [
+      "少ない直接予約でもサブスクはすぐ取り戻せます。",
+      "お客様との関係・URL・コンテンツ・リピート獲得はすべてホストのもの。",
+      "直接チャネルは資産になり、第三者プラットフォームに握られた単なる売上ではありません。"
+    ],
+    "interactive": {
+      "helper": "売上レンジを選ぶか、見込み額を入力してください。データは保存されません。",
+      "revenueHint": "ざっくりしたレンジで簡単に",
+      "directShareLabel": "直予約に切り替わる想定割合",
+      "directShareNote": "直予約の割合が少し増えるだけでも、SuperHostは十分に元が取れます。",
+      "directRevenueLabel": "直予約の想定年間売上",
+      "netGainLabel": "SuperHost差し引き後の理論上の利益",
+      "breakEvenTemplate": "SuperHostは直予約が約{value}に達すると回収できます。"
+    }
+  },
+  "join": {
+    "title": "なかなかでしょう？フランス発です！",
+    "description": "<strong>IndieHost</strong>は<strong>ホストの、ホストによる</strong>サービス。山と海と不安定なWi-Fiのあいだで❤️とともに。",
+    "flagIcon": "IconFrenchFlag",
+    "cta": { "label": "まず試す！", "href": "#join-section", "target": "_self", "rel": "nofollow", "ariaLabel": "申込フォームへ" },
+    "form": {
+      "title": "<strong>ウェイトリストに参加</strong>",
+      "description": "スパムは嫌いです：<strong>1通のメール</strong>でお知らせします。または<a href='/donation'>寄付でプロジェクトを支援</a>も可能。",
+      "variant": "NewsletterForm",
+      "fields": [{ "type": "email", "name": "email", "placeholder": "メールアドレス", "required": true }],
+      "groups": [
+        {
+          "type": "checkbox-group",
+          "name": "platforms",
+          "legend": "現在掲載しているのは…",
+          "options": [
+            { "label": "Airbnb", "value": "airbnb" },
+            { "label": "Booking", "value": "booking" },
+            { "label": "Abritel", "value": "abritel" },
+            { "label": "Expedia Grp.", "value": "expedia" },
+            { "label": "自社サイト", "value": "website" },
+            { "label": "その他", "value": "autre" },
+            { "label": "これから始める", "value": "debutant" }
+          ]
+        }
+      ],
+      "consents": [
+        { "type": "checkbox", "name": "early_access", "label": "リリース情報を受け取り、先行体験したい", "required": true }
+      ],
+      "validation": {
+        "defaults": { "simpleText": { "maxLength": 255, "hideIndicatorAt": 255 } },
+        "fields": {
+          "text": { "maxLength": 80, "autocomplete": "off", "inputMode": "text" },
+          "email": { "minLength": 5, "maxLength": 160, "autocomplete": "email", "inputMode": "email", "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$", "patternTitle": "形式：name@ドメイン.tld" },
+          "tel": { "minLength": 6, "maxLength": 25, "autocomplete": "tel", "inputMode": "tel", "pattern": "^\\+?[0-9().\\s-]{6,25}$", "patternTitle": "数字・スペース・括弧・+ または - のみ" },
+          "zip": { "maxLength": 12, "autocomplete": "postal-code", "inputMode": "numeric", "pattern": "^[0-9A-Za-z\\s-]{3,12}$", "patternTitle": "郵便番号が無効です" }
+        },
+        "nameAutocomplete": { "first": "given-name", "last": "family-name", "name": "name", "default": "off" }
+      },
+      "submit": { "label": "送信", "icon": "SendIcon" }
+    }
+  },
+  "faq": {
+    "title": "IndieHost よくある質問",
+    "searchPlaceholder": "キーワードで検索",
+    "searchLabel": "FAQ検索",
+    "nodes": [
+      {
+        "id": "cat-comprendre",
+        "title": "IndieHostを理解する",
+        "children": [
+          { "id": "q-1", "question": "IndieHostとは？", "answer": "民泊・宿泊をホスト主導で運営するオールインワンプラットフォームです。サイト・予約・決済・カレンダーを提供し、OTA手数料から解放。収入への手数料はゼロ。" },
+          { "id": "q-2", "question": "AirbnbやBooking.comとの違いは？", "answer": "OTAと違い、IndieHostは予約に手数料を取りません。ゲストとの関係・ブランド・料金はホストのもの。ページのカスタマイズや独自ドメインも可能。" },
+          { "id": "q-3", "question": "手数料を取らないならどうやって収益？", "answer": "モデルは透明。無料のIndieHostプラン（決済・カレンダー・2リスティング）を提供。オプションの月額（SuperHost・MegaHost）や単品（Google Travel・KYC等）で収益。" },
+          { "id": "q-4", "question": "どんなホスト向け？", "answer": "個人（無料プラン）・セミプロ（SuperHost）・プロ（MegaHost）すべてに対応。活動レベルに合わせてプランが選べます。" },
+          { "id": "q-5", "question": "直接予約とは？", "answer": "ゲストが仲介なしでホストに直接予約すること。IndieHostが技術を提供し、自ページで受け付け。手数料ゼロでお客様との関係をすべてコントロール。" }
+        ]
+      },
+      {
+        "id": "cat-nos-offres",
+        "title": "料金・サブスク",
+        "children": [
+          { "id": "q-7", "question": "IndieHostプランは本当に無料？隠れ料金は？", "answer": "はい、0ユーロ/月で、当社からの隠れ料金はありません。2リスティング・オンライン決済（Stripe）・請求・iCal・メッセージ・ダッシュボード付き。かかるのはStripeの標準決済手数料のみ。" },
+          { "id": "q-8", "question": "有料サブスク（SuperHost/MegaHost）はいつでも解約できる？", "answer": "できます。縛り・解約料なし。ダッシュボードから解約。現在の課金期間終了まで有効で、次期は課金されません。" },
+          { "id": "q-9", "question": "プラン変更なしでオプションだけ追加できる？", "answer": "できます。無料プランのまま、Google Travel連携・独自ドメイン・手付金受け取りなどを単体で申し込めます。" },
+          { "id": "q-10", "question": "複数地域に物件がある場合は？", "answer": "同一アカウントのリスティングは同一の法人・個人に属する必要があります。他オーナー物件を管理する場合は、オーナーごとにIndieHostアカウントを作成してください。" }
+        ]
+      },
+      {
+        "id": "cat-paiements-en-ligne",
+        "title": "オンライン決済",
+        "children": [
+          { "id": "q-12", "question": "ゲストからの支払いはどう受け取る？", "answer": "Stripe Connectを使用。登録時に銀行口座を連携。ゲストの支払いはStripeが処理し、直接お客様の口座へ。IndieHostは資金を預かりません。" },
+          { "id": "q-13", "question": "IndieHostは決済に手数料を取る？", "answer": "いいえ。ゲスト支払額の100%を受け取れます（Stripeの標準手数料を除く）。" },
+          { "id": "q-14", "question": "一括ではなく手付金だけ受けられる？", "answer": "はい。ご自身で決済ルールを設定可能。手付金オプションは無料プランで有料（5ユーロ/月）、SuperHost・MegaHostでは標準付属。" },
+          { "id": "q-15", "question": "ゲストにとって決済は安全？", "answer": "はい。Stripe ConnectはPCI DSSなど厳格な基準を満たしています。ゲストは安心して支払えます。" },
+          { "id": "q-16", "question": "予約金はいつ受け取れる？", "answer": "取引の安全のため、確認後Stripeが一時保管。ゲストのチェックイン確認後に口座へ振り込み。その後Stripeの通常スケジュールで銀行口座に入金されます。" }
+        ]
+      },
+      {
+        "id": "cat-start",
+        "title": "IndieHostを始める",
+        "children": [
+          { "id": "q-17", "question": "IndieHostでリスティングはどう作る？", "answer": "ライブエディターで。左で情報入力、右で即プレビュー。数分でシェア可能なページができます。" },
+          { "id": "q-18", "question": "リスティングは何件まで？", "answer": "無料で2、SuperHostで5、MegaHostで最大15（要望で拡張可）。" },
+          { "id": "q-19", "question": "登録時に必要な情報は？", "answer": "法務・決済（Stripe）・宿泊税等のため、基本的な行政情報が必要です。" },
+          { "id": "q-20", "question": "ITが苦手でも使える？", "answer": "はい。エディターはステップ式。ダッシュボードで売上・ゲストを一覧。スマホアプリで物件・予約の管理も可能。" }
+        ]
+      },
+      {
+        "id": "cat-synchronisation",
+        "title": "予約管理・同期",
+        "children": [
+          { "id": "q-21", "question": "iCalカレンダー同期はどう動く？", "answer": "双方向。IndieHostにiCalリンク（Airbnb・Booking等）を渡すと外部予約をインポート。IndieHost側のiCalを他プラットフォームに貼れば、1か所の予約が他をブロック。" },
+          { "id": "q-22", "question": "電話予約を手動で入れられる？", "answer": "はい。SuperHost・MegaHostに含まれます。カレンダーに手動で予約を追加・編集して日付をブロックできます。" },
+          { "id": "q-23", "question": "カレンダーは予約をどう表示？", "answer": "IndieHostカレンダーに一元表示。出典（IndieHost・Airbnb・Booking・手動等）も表示。月・週表示あり。" },
+          { "id": "q-24", "question": "新規予約の通知は？", "answer": "アプリ・SMS・メールでリアルタイムに新規リクエスト・決済確認を通知。" },
+          { "id": "q-25", "question": "ゲストとのやり取り（SMS・通知）は自動化できる？", "answer": "はい。SuperHost・MegaHostには自動メッセージ機能があり、確認・7日前・前日案内・到着時・退去案内などをスケジュール送信できます。" }
+        ]
+      },
+      {
+        "id": "cat-attirer-voyageurs",
+        "title": "手数料なしでゲストを集める",
+        "children": [
+          { "id": "q-28", "question": "Airbnbに載せていないとゲストはどう見つける？", "answer": "IndieHostで直接集客。SNS・Googleマップ等でリンクをシェア。有料オプションでGoogle Travel連携も可能。" },
+          { "id": "q-29", "question": "Google Travel連携とは？", "answer": "Google Travel／Googleホテルの検索結果にリスティングを掲載するオプション。無料/SuperHostは有料、MegaHostは付属。" },
+          { "id": "q-30", "question": "IndieHostでGoogle Travelに出るメリットは？", "answer": "手数料がないため、Booking・Airbnbより15〜20%安い価格を表示でき、直予約を獲得しやすくなります。" },
+          { "id": "q-31", "question": "IndieHostにゲスト用検索はある？", "answer": "あります。個別リスティングページに加え、場所・日付・人数で検索でき、サイト訪問者が物件を発見できます。" },
+          { "id": "q-32", "question": "リピート・直結関係の構築は？", "answer": "はい。ウェルカムブック＋QRで直接チャネルを提供。MegaHostではメールキャンペーンで過去ゲストに再アプローチも可能。" }
+        ]
+      },
+      {
+        "id": "cat-url-thèmes",
+        "title": "ドメイン・テーマ",
+        "children": [
+          { "id": "q-38", "question": "独自ドメインは使える？", "answer": "はい。ドメインの取得・既存ドメインの紐づけが可能。MegaHostに含まれ、SuperHostは有料オプション。" },
+          { "id": "q-39", "question": "ドメインがなければ？", "answer": "問題ありません。IndieHost標準URL（例：indiehost.com/ご物件）が付与され、すぐシェアできます。" },
+          { "id": "q-40", "question": "「テーマバンク」とは？", "answer": "予約ページ用のデザインテーマ。デザイン・色・フォントを選び、物件の雰囲気（モダン・ナチュラル・ラグジュアリー等）に合わせられます。" },
+          { "id": "q-41", "question": "カスタマイズの自由度は？", "answer": "ライブエディターでコンテンツ（写真・文・設備）、テーマで見た目を制御。独自でプロな予約ページを作れます。" }
+        ]
+      },
+      {
+        "id": "cat-sécurité",
+        "title": "セキュリティ・法務",
+        "children": [
+          { "id": "q-42", "question": "KYC検証とは？", "answer": "本人確認プロセス。詐欺防止とゲストの安心のため。氏名・物件証明・届出番号等を確認します。" },
+          { "id": "q-43", "question": "KYCは必須？", "answer": "SuperHost・MegaHostには含まれ推奨。無料プランは有料オプション。通過するとリスティングに「認証済み」バッジが付き、信頼と成約率向上に。" },
+          { "id": "q-44", "question": "宿泊税はどう扱う？", "answer": "個人ホスト向けに、宿泊税の自動徴収・納付の仕組みを用意しています。" },
+          { "id": "q-45", "question": "ゲストの本人確認はできる？", "answer": "ゲスト本人確認オプションの提供を予定。賃貸契約を交わすホストに有用です。" }
+        ]
+      },
+      {
+        "id": "cat-pms",
+        "title": "PMS・RMS連携",
+        "children": [
+          { "id": "q-43", "question": "Channel Manager（PMS）やRMSと連携できる？", "answer": "はい。SuperHost・MegaHostに外部管理ツール連携が含まれ、リスティング・料金・空室・予約を一元ツールから同期できます。" }
+        ]
+      }
+    ]
+  },
+  "finalCtaSection": {
+    "eyebrow": "アクション",
+    "title": "リスティングをインポートし、ページを有効化して<strong>直接チャネル</strong>を試そう",
+    "body": "既存リスティングから始め、すぐ公開。その後でページ・料金・戦略を磨いていけます。",
+    "primaryCta": { "label": "無料で試す", "href": "#intro-section", "target": "_self" },
+    "secondaryCta": { "label": "料金を見る", "href": "#pricing-section", "target": "_self" },
+    "note": "直接予約にIndieHost手数料なし。シンプルなフロー、モバイル対応。"
+  }
+}
