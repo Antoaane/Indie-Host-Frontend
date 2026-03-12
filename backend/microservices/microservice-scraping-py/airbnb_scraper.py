@@ -8,6 +8,7 @@ import random
 import re
 import sys
 import time
+import errno
 from collections import deque
 from typing import Any
 
@@ -41,6 +42,21 @@ PRICE_NUMBER_RE = re.compile(r"(-?\d+(?:[.,]\d+)?)")
 
 # File d'attente globale pour sequencer les scrapes
 REQUEST_QUEUE = deque()
+
+
+def _safe_print(*args, **kwargs) -> None:
+    """
+    Évite qu'un log CLI fasse échouer l'API avec un Broken pipe
+    quand stdout/stderr n'est plus disponible.
+    """
+    try:
+        print(*args, **kwargs)
+    except BrokenPipeError:
+        return
+    except OSError as e:
+        if getattr(e, "errno", None) == errno.EPIPE:
+            return
+        raise
 
 
 def _clean_text(value: Any) -> str:
@@ -589,7 +605,7 @@ def process_queue(
     """Traite la file d'attente sequentiellement en espaçant les requetes."""
     while REQUEST_QUEUE:
         client_id, url = REQUEST_QUEUE.popleft()
-        print(f"Traitement de {url} pour le client {client_id}...")
+        _safe_print(f"Traitement de {url} pour le client {client_id}...")
 
         try:
             data = scrape_listing(
@@ -600,7 +616,7 @@ def process_queue(
                 proxy_url=proxy_url,
             )
         except Exception as e:  # pragma: no cover - robustesse CLI
-            print(f"Erreur lors du scraping de {url} pour {client_id}: {e}", file=sys.stderr)
+            _safe_print(f"Erreur lors du scraping de {url} pour {client_id}: {e}", file=sys.stderr)
             continue
 
         output_path = output_template.format(client_id=client_id)
@@ -608,13 +624,13 @@ def process_queue(
             with open(output_path, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=2)
         except OSError as e:  # pragma: no cover
-            print(f"Impossible d'ecrire dans {output_path}: {e}", file=sys.stderr)
+            _safe_print(f"Impossible d'ecrire dans {output_path}: {e}", file=sys.stderr)
             continue
 
-        print(f"Donnees enregistrees dans {output_path}")
+        _safe_print(f"Donnees enregistrees dans {output_path}")
 
         delay = random.uniform(min_delay, max_delay)
-        print(f"Attente de {delay:.1f} s avant la prochaine annonce...")
+        _safe_print(f"Attente de {delay:.1f} s avant la prochaine annonce...")
         time.sleep(delay)
 
 
@@ -696,7 +712,7 @@ def scrape_listing(
         data = gobnb.Get_from_room_url(url, currency, check_in, check_out, proxy_url or "")
     except (KeyError, TypeError, IndexError) as e:
         if HAS_FALLBACK:
-            print(f"gobnb a echoue ({e}), tentative de recuperation fallback...", file=sys.stderr)
+            _safe_print(f"gobnb a echoue ({e}), tentative de recuperation fallback...", file=sys.stderr)
             return _fetch_page_fallback(url, proxy_url or "")
         raise
 
@@ -771,7 +787,7 @@ def main() -> None:
 
     # Validation basique des délais
     if args.min_delay < 0 or args.max_delay < 0:
-        print("Les délais min/max doivent être positifs.", file=sys.stderr)
+        _safe_print("Les délais min/max doivent être positifs.", file=sys.stderr)
         sys.exit(1)
     if args.min_delay > args.max_delay:
         # On échange pour éviter une configuration invalide
@@ -783,11 +799,11 @@ def main() -> None:
             with open(args.batch_file, "r", encoding="utf-8") as f:
                 lines = [line.strip() for line in f if line.strip()]
         except OSError as e:
-            print(f"Impossible de lire le fichier batch {args.batch_file}: {e}", file=sys.stderr)
+            _safe_print(f"Impossible de lire le fichier batch {args.batch_file}: {e}", file=sys.stderr)
             sys.exit(1)
 
         if not lines:
-            print("Le fichier batch ne contient aucune URL/ID.", file=sys.stderr)
+            _safe_print("Le fichier batch ne contient aucune URL/ID.", file=sys.stderr)
             sys.exit(1)
 
         for idx, line in enumerate(lines, start=1):
@@ -813,10 +829,10 @@ def main() -> None:
         try:
             url = input("Entrez l'URL de l'annonce Airbnb (ou l'ID de l'annonce) : ").strip()
         except KeyboardInterrupt:
-            print("\nAnnulé par l'utilisateur.")
+            _safe_print("\nAnnulé par l'utilisateur.")
             sys.exit(1)
         if not url:
-            print("Aucune URL fournie, arrêt.", file=sys.stderr)
+            _safe_print("Aucune URL fournie, arrêt.", file=sys.stderr)
             sys.exit(1)
 
     try:
@@ -828,7 +844,7 @@ def main() -> None:
             proxy_url=args.proxy,
         )
     except (KeyError, TypeError) as e:
-        print(
+        _safe_print(
             f"Erreur de parsing (Airbnb a peut-être changé sa page) : {e}\n"
             "→ Mettre à jour gobnb : pip install -U gobnb\n"
             "→ Voir https://github.com/johnbalvin/pybnb / https://github.com/johnbalvin/pyairbnb",
@@ -836,13 +852,13 @@ def main() -> None:
         )
         sys.exit(1)
     except Exception as e:
-        print(f"Erreur lors du scraping: {e}", file=sys.stderr)
+        _safe_print(f"Erreur lors du scraping: {e}", file=sys.stderr)
         sys.exit(1)
 
     with open(args.output, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-    print(f"Données enregistrées dans {args.output}")
+    _safe_print(f"Données enregistrées dans {args.output}")
 
 
 if __name__ == "__main__":

@@ -112,25 +112,51 @@ async def scrape(request: ScrapeRequest):
             detail="URL non supportée. Utilisez un lien Airbnb (https://www.airbnb.fr/rooms/…) ou Booking (https://www.booking.com/hotel/…).",
         )
 
-    try:
-        if source == "airbnb":
-            data = await asyncio.to_thread(
-                scrape_airbnb,
-                url=url,
-                currency=request.currency or "EUR",
-                check_in=request.check_in or "",
-                check_out=request.check_out or "",
-                proxy_url=request.proxy_url or "",
-            )
-        else:
-            data = await asyncio.to_thread(
-                scrape_booking,
-                url=url,
-                proxy_url=request.proxy_url or "",
-            )
-        return data
-    except Exception as e:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Impossible de récupérer l'annonce : {str(e)}",
-        ) from e
+    # Certains environnements / connexions (notamment depuis des réseaux mobiles ou Wi‑Fi instables)
+    # peuvent provoquer des erreurs bas-niveau du type "[Errno 32] Broken pipe" pendant le scraping.
+    # On applique donc une petite logique de retry côté API avant de remonter une 422 au frontend.
+    max_retries = 3
+    last_error: Exception | None = None
+
+    for attempt in range(1, max_retries + 1):
+        try:
+            if source == "airbnb":
+                data = await asyncio.to_thread(
+                    scrape_airbnb,
+                    url=url,
+                    currency=request.currency or "EUR",
+                    check_in=request.check_in or "",
+                    check_out=request.check_out or "",
+                    proxy_url=request.proxy_url or "",
+                )
+            else:
+                data = await asyncio.to_thread(
+                    scrape_booking,
+                    url=url,
+                    proxy_url=request.proxy_url or "",
+                )
+            return data
+        except Exception as e:  # noqa: BLE001
+            last_error = e
+
+            # Cas particulier : erreurs de type "Broken pipe" (errno 32) → on retente quelques fois.
+            errno = getattr(e, "errno", None)
+            message = str(e)
+            is_broken_pipe = errno == 32 or "Broken pipe" in message
+
+            if is_broken_pipe and attempt < max_retries:
+                # Backoff léger avant de retenter
+                await asyncio.sleep(0.8 * attempt)
+                continue
+
+            # Autres erreurs (ou nombre de tentatives épuisé) : on renvoie au frontend.
+            raise HTTPException(
+                status_code=422,
+                detail=f"Impossible de récupérer l'annonce : {message}",
+            ) from e
+
+    # Sécurité (ne devrait pas être atteint, mais garde un message propre si jamais)
+    raise HTTPException(
+        status_code=422,
+        detail=f"Impossible de récupérer l'annonce après {max_retries} tentatives : {last_error}",
+    )

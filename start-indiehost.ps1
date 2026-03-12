@@ -7,6 +7,35 @@ $ROOT = Split-Path -Parent $MyInvocation.MyCommand.Path
 $LISTINGS_MODE_API = "api"
 $LISTINGS_MODE_LOCAL_JSON = "local-json"
 
+# ---------------------------------------------------------------------------
+# Compatibilité macOS / Linux
+# ---------------------------------------------------------------------------
+# Ce script est historiquement pensé pour Windows (Docker Desktop, netstat, chemins \etc.).
+# Sur macOS et Linux, on délègue proprement au script bash `start-indiehost.sh`
+# qui fait la même chose avec la bonne stack (bash + docker + node + python).
+if (-not $IsWindows) {
+    $shScript = Join-Path $ROOT "start-indiehost.sh"
+    if (-not (Test-Path $shScript)) {
+        Write-Host "start-indiehost.ps1 detecte un OS non‑Windows mais le script start-indiehost.sh est introuvable." -ForegroundColor Red
+        Write-Host "Verifie que tu as bien clone le depot complet et que start-indiehost.sh est present a la racine." -ForegroundColor Yellow
+        exit 1
+    }
+
+    Write-Host ""
+    Write-Host "OS non‑Windows detecte. Delegation au script bash :" -ForegroundColor Cyan
+    Write-Host "  $shScript" -ForegroundColor Gray
+    Write-Host ""
+
+    # Utilise bash si dispo, sinon sh
+    $bash = Get-Command bash -ErrorAction SilentlyContinue
+    if ($bash) {
+        & $bash.Source $shScript
+    } else {
+        & sh $shScript
+    }
+    exit $LASTEXITCODE
+}
+
 function Write-Step { param($msg) Write-Host "" ; Write-Host ">> $msg" -ForegroundColor Cyan }
 function Write-Ok   { param($msg) Write-Host "   [OK] $msg" -ForegroundColor Green }
 function Write-Warn { param($msg) Write-Host "   [!!] $msg" -ForegroundColor Yellow }
