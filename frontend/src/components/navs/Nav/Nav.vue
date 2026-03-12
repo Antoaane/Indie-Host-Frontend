@@ -31,6 +31,8 @@ let lastScrollY = 0
 const SCROLL_THRESHOLD = 80
 const SCROLL_HIDE_DELTA = 10
 const SCROLL_SHOW_DELTA = 8
+/** Au-delà de ce delta (scroll rapide vers le haut), on cache la nav (ex. remontée depuis le footer vers l’intro). */
+const FAST_SCROLL_UP_HIDE_DELTA = 45
 
 function onScroll() {
   const currentY = window.scrollY
@@ -48,7 +50,9 @@ function onScroll() {
     return
   }
 
-  if (delta >= SCROLL_HIDE_DELTA) {
+  if (delta <= -FAST_SCROLL_UP_HIDE_DELTA) {
+    isNavHiddenByScroll.value = true
+  } else if (delta >= SCROLL_HIDE_DELTA) {
     isNavHiddenByScroll.value = true
   } else if (delta <= -SCROLL_SHOW_DELTA) {
     isNavHiddenByScroll.value = false

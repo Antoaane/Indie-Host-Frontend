@@ -89,6 +89,7 @@
     "eyebrow": "Prova de produto",
     "title": "Uma base <strong>concreta</strong> para reservas diretas sem recomeçar do zero",
     "subtitle": "Não mostramos depoimentos falsos. Esta secção apresenta resultados de demonstração e fluxos típicos já possíveis com o produto.",
+    "demoVideoLabel": "Demonstração da edição de um anúncio em direto",
     "metrics": [
       {
         "id": "proof-metric-1",
@@ -347,6 +348,15 @@
         "description": "Construímos ferramentas em que pode confiar. A nossa equipa ouve os anfitriões e apoia-o em cada passo."
       }
     ]
+  },
+  "pricingSection": {
+    "eyebrow": "Preços",
+    "title": "Grátis, SuperHost ou MegaHost: <strong>escolha o seu plano</strong>",
+    "subtitle": "Um plano gratuito para começar e planos pagos com mais páginas, ferramentas e reservas.",
+    "toggleExpandLabel": "Ver detalhe das funcionalidades",
+    "toggleCollapseLabel": "Ocultar detalhe",
+    "accountPrefix": "Já é cliente?",
+    "accountLinkLabel": "Entrar"
   },
   "roiSection": {
     "eyebrow": "ROI",

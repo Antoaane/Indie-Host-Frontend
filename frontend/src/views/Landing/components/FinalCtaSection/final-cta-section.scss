@@ -2,6 +2,7 @@
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
+@use '@/styles/components/buttons' as buttons;
 
 #final-cta-section {
   @include layout-gap(padding, top, 3);
@@ -9,21 +10,55 @@
   @include layout-gap(padding, inline, 1.25);
 
   .wrapper {
+    position: relative;
     max-width: 58rem;
     margin: 0 auto;
-    padding: 1.5rem;
+    padding: 2rem 1.5rem;
+    overflow: hidden;
     border: 1px solid rgba($accent, 0.12);
     border-radius: borders.$rounded-xxl;
-    background: linear-gradient(180deg, rgba($accent, 0.08) 0%, rgba($accent, 0.04) 100%);
+    background:
+      linear-gradient(180deg, rgba($accent, 0.08) 0%, rgba($accent, 0.03) 100%),
+      rgba($accent, 0.02);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.22);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+
+    @media (max-width: 1024px) {
+      html.is-ios & {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+      }
+    }
 
     @include min-width(lg) {
-      padding: 2.5rem;
+      padding: 3.5rem 3rem;
+      gap: 1.25rem;
+    }
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 0.25rem;
+      background: linear-gradient(
+        90deg,
+        $primary_gradiant_first 0%,
+        $primary_gradiant_second 50%,
+        $primary_gradiant_third 100%
+      );
     }
   }
 
   .eyebrow {
-    margin: 0 0 0.75rem;
+    margin: 0;
     letter-spacing: 0.14em;
     text-transform: uppercase;
     color: rgba($accent, 0.68);
@@ -32,57 +67,62 @@
 
   h2 {
     margin: 0;
-    @include lp-h2-title($accent, false);
+    @include lp-h2-title($accent, false, $layout-gap: false);
   }
 
   .body {
     max-width: 44rem;
-    margin: 1rem auto 0;
+    margin: 0;
     color: rgba($accent, 0.8);
     @include base-text($accent, $bigger: true, $bold: false);
   }
 
   .actions {
-    margin-top: 1.5rem;
+    margin-top: 0.75rem;
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
-    align-items: center;
+    gap: 0.85rem;
+    align-items: stretch;
 
     @include min-width(md) {
       flex-direction: row;
       justify-content: center;
+      align-items: center;
     }
-  }
 
-  button {
-    min-height: 3rem;
-    padding: 0.8rem 1.1rem;
-    border-radius: borders.$rounded-sm;
-    border: none;
-    cursor: pointer;
-    transition: transform 180ms ease, opacity 180ms ease, background-color 180ms ease, color 180ms ease;
-    @include base-text($secondary-button-reference, $bigger: false, $bold: true);
+    .cta-primary {
+      @include buttons.primary($cta: true, $theme: light, $fullwidth: true);
 
-    &:hover {
-      transform: translateY(-1px);
+      @include min-width(md) {
+        width: max-content;
+      }
     }
-  }
 
-  .primary {
-    color: $secondary-button-reference;
-    background: $accent;
-  }
+    .cta-secondary {
+      @include buttons.primary($theme: white, $fullwidth: true);
 
-  .secondary {
-    color: $accent;
-    background: rgba($accent, 0.06);
-    border: 1px solid rgba($accent, 0.16);
+      @include min-width(md) {
+        width: max-content;
+      }
+    }
+
+    .cta-primary,
+    .cta-secondary {
+      & > * {
+        box-shadow: none !important;
+
+        > span,
+        > svg {
+          box-shadow: none !important;
+          text-shadow: none !important;
+        }
+      }
+    }
   }
 
   .note {
-    margin: 1rem 0 0;
-    color: rgba($accent, 0.56);
+    margin: 0.5rem 0 0;
+    color: rgba($accent, 0.52);
     @include little-text($accent, $thin: false);
   }
 }

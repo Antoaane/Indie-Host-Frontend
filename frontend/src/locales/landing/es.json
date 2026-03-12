@@ -89,6 +89,7 @@
     "eyebrow": "Prueba de producto",
     "title": "Una base <strong>práctica</strong> para vender en directo sin empezar desde cero",
     "subtitle": "No mostramos testimonios falsos ni cifras ficticias como si fueran reales. Aquí destacamos resultados de demostración y recorridos tipo que el producto ya permite.",
+    "demoVideoLabel": "Demostración de la edición de un anuncio en directo",
     "metrics": [
       {
         "id": "proof-metric-1",
@@ -347,6 +348,15 @@
         "description": "Construimos herramientas en las que puedes confiar. Nuestro equipo escucha el feedback de los anfitriones y te acompaña en cada paso—cuando lo necesites."
       }
     ]
+  },
+  "pricingSection": {
+    "eyebrow": "Tarifas",
+    "title": "Gratis, SuperHost o MegaHost: <strong>elige tu plan</strong>",
+    "subtitle": "Un plan gratuito para empezar y planes de pago con más páginas, herramientas y reservas.",
+    "toggleExpandLabel": "Ver detalle de funcionalidades",
+    "toggleCollapseLabel": "Ocultar detalle",
+    "accountPrefix": "¿Ya eres cliente?",
+    "accountLinkLabel": "Iniciar sesión"
   },
   "roiSection": {
     "eyebrow": "ROI",

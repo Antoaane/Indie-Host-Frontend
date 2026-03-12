@@ -179,7 +179,7 @@ onBeforeUnmount(() => {
     <UsageSection :steps="content.usage.steps" />
     <ProofSection :content="content.proofSection" />
     <StrengthsSection :content="content.strengths" />
-    <PricingSection />
+    <PricingSection :content="content.pricingSection" />
     <RoiSection :content="content.roiSection" />
     <!-- JoinSection désactivée
     <JoinSection

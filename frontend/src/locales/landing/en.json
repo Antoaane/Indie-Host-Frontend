@@ -89,6 +89,7 @@
     "eyebrow": "Product proof",
     "title": "A <strong>practical</strong> foundation for direct bookings without starting from scratch",
     "subtitle": "We are not showing fake customer testimonials here. Instead, this section highlights demo outcomes and typical workflows already enabled by the product.",
+    "demoVideoLabel": "Live demo: editing a listing in real time",
     "metrics": [
       {
         "id": "proof-metric-1",
@@ -347,6 +348,15 @@
         "description": "We build tools you can rely on. Our team listens to host feedback and supports you at every step—whenever you need it."
       }
     ]
+  },
+  "pricingSection": {
+    "eyebrow": "Pricing",
+    "title": "Free, SuperHost or MegaHost: <strong>choose your plan</strong>",
+    "subtitle": "A free plan to get started, then paid plans for more pages, tools and bookings.",
+    "toggleExpandLabel": "View plan details",
+    "toggleCollapseLabel": "Hide details",
+    "accountPrefix": "Already a customer?",
+    "accountLinkLabel": "Sign in"
   },
   "roiSection": {
     "eyebrow": "ROI",
