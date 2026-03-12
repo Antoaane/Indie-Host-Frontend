@@ -8,6 +8,7 @@ import { ArrowLeft, ArrowUpRight, Calendar, Pen, Plus } from 'lucide-vue-next'
 import DatePicker from '@/components/DatePicker/DatePicker.vue'
 import ConfirmationDialog from '@/components/overlays/ConfirmationDialog.vue'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
+import { readRouteUserId } from '@/router/backOfficeUser'
 import { vp } from '@/utils/viewport'
 import type { EditorMode, EditorSource } from '@/views/Editor/types/editor'
 import type { UserListingCard } from '@/views/Editor/utils/listingApi'
@@ -42,6 +43,7 @@ const props = defineProps<{
 }>()
 const route = useRoute()
 const router = useRouter()
+const activeUserId = computed(() => readRouteUserId(route.params.userId))
 
 type ManagementStage = 'reservations' | 'calendar'
 
@@ -328,7 +330,9 @@ function handleReplyToTraveler() {
   const reservation = selectedReservation.value
   if (!listingId || !reservation) return
 
-  const userId = normalizeQueryParam(route.params.userId)
+  const userId = activeUserId.value
+  if (!userId) return
+
   const query: Record<string, string> = {
     listingId,
     reservationId: reservation.id,
@@ -338,17 +342,9 @@ function handleReplyToTraveler() {
     query.conversationId = conversationId
   }
 
-  if (userId) {
-    void router.push({
-      name: 'messaging-user',
-      params: { userId },
-      query,
-    })
-    return
-  }
-
   void router.push({
-    name: 'messaging',
+    name: 'messaging-user',
+    params: { userId },
     query,
   })
 }
@@ -967,6 +963,8 @@ const paymentSubtitle = computed(() => {
 const canEditManualPayments = computed(() => Boolean(paymentPreview.value?.canEditManualPayments))
 
 const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !normalizeInternalNote(noteEditor.value))
+
+console.log("❇️❇️❇️ : ", reservationsForListing.value)
 </script>
 
 <template>
@@ -994,7 +992,10 @@ const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !nor
       >
         <section class="stage">
           <div class="content">
-            <div class="reservation-toolbar">
+            <div
+              v-if="reservationsForListing.length"
+              class="reservation-toolbar"
+            >
               <div
                 v-if="isMobileViewport"
                 class="mobile-back-shell"

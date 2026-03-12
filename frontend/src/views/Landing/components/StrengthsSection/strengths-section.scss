@@ -6,10 +6,10 @@
 #strengths-section {
   position: relative;
 
-  @include layout-gap(padding, top, 4);
+  padding-top: calc(var(--layout-gap) * 4);
 
   @include min-width(lg) {
-    @include layout-gap(padding, top, 6.5);
+    padding-top: calc(var(--layout-gap) * 6.5);
   }
 
   .shapes-bg-circle {
@@ -33,7 +33,8 @@
 
     gap: 2.5rem;
 
-    @include layout-gap(padding, inline, 1.25);
+    padding-left: var(--layout-gap-xl);
+    padding-right: var(--layout-gap-xl);
 
     @include min-width(lg) {
       gap: 5rem;

@@ -309,7 +309,7 @@
 
   >.calendar {
     width: 100%;
-    @include layout-gap(padding, all, 0.5);
+    padding: var(--layout-gap-sm);
 
     background: rgba($accent, 0.5);
     backdrop-filter: blur(12px);

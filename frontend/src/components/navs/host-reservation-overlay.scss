@@ -43,7 +43,7 @@
     border-radius: borders.$rounded-xl;
     background: rgba($accent, 0.85);
 
-    @include layout-gap(padding, all, 0.75);
+    padding: var(--layout-gap-md);
 
     >.header {
       display: flex;
@@ -139,7 +139,7 @@
       transform: translateY(2.5rem);
 
       width: 100%;
-      @include layout-gap(padding, all, 0.125);
+      padding: calc(var(--layout-gap) * 0.125);
 
       border-radius: borders.$rounded-xxl;
 

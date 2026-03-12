@@ -2,8 +2,9 @@
 
 import SignInView from '@/views/SignInView.vue'
 import SignUpView from '@/views/SignUpView.vue'
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, type RouteLocationNormalized } from 'vue-router'
 import { isManagedListingHostname } from '@/domain/listings/publicDomain'
+import { resolveRuntimeUserId } from '@/router/backOfficeUser'
 const HomePage = () => {
   if (typeof window !== 'undefined' && isManagedListingHostname(window.location.hostname)) {
     return import('@/views/Listing/_Listing.vue')
@@ -18,6 +19,36 @@ const CreateListingRoute = () => import('@/views/CreateListing/CreateListingRout
 const MessagingRoute = () => import('@/views/Messaging/MessagingRoute.vue')
 const ManagementRoute = () => import('@/views/Management/ManagementRoute.vue')
 const DomainsRoute = () => import('@/views/Domains/DomainsRoute.vue')
+
+type BackOfficeUserRouteName =
+  | 'editor-user'
+  | 'create-listing-user'
+  | 'management-user'
+  | 'domains-user'
+  | 'messaging-user'
+
+async function resolveLegacyBackOfficeRedirect(
+  to: RouteLocationNormalized,
+  targetName: BackOfficeUserRouteName,
+) {
+  const userId = await resolveRuntimeUserId({
+    waitMs: 1500,
+    pollIntervalMs: 75,
+  })
+
+  if (userId) {
+    return {
+      name: targetName,
+      params: { userId },
+      query: to.query,
+    }
+  }
+
+  return {
+    name: 'sign-in',
+    query: { redirect_url: to.fullPath },
+  }
+}
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -65,22 +96,24 @@ const router = createRouter({
       meta: { navVariant: 'landing' },
     },
     {
-      path: '/editor',
-      name: 'editor',
-      component: EditorRoute,
-      meta: { navVariant: 'host' },
-    },
-    {
       path: '/editor/create',
       name: 'create-listing',
       component: CreateListingRoute,
       meta: { navVariant: 'host' },
+      beforeEnter: (to) => resolveLegacyBackOfficeRedirect(to, 'create-listing-user'),
     },
     {
       path: '/editor/:userId/create',
       name: 'create-listing-user',
       component: CreateListingRoute,
       meta: { navVariant: 'host' },
+    },
+    {
+      path: '/editor',
+      name: 'editor',
+      component: EditorRoute,
+      meta: { navVariant: 'host' },
+      beforeEnter: (to) => resolveLegacyBackOfficeRedirect(to, 'editor-user'),
     },
     {
       path: '/editor/:userId',
@@ -93,6 +126,7 @@ const router = createRouter({
       name: 'management',
       component: ManagementRoute,
       meta: { navVariant: 'host' },
+      beforeEnter: (to) => resolveLegacyBackOfficeRedirect(to, 'management-user'),
     },
     {
       path: '/management/:userId',
@@ -105,6 +139,7 @@ const router = createRouter({
       name: 'domains',
       component: DomainsRoute,
       meta: { navVariant: 'host' },
+      beforeEnter: (to) => resolveLegacyBackOfficeRedirect(to, 'domains-user'),
     },
     {
       path: '/domains/:userId',
@@ -117,6 +152,7 @@ const router = createRouter({
       name: 'messaging',
       component: MessagingRoute,
       meta: { navVariant: 'host' },
+      beforeEnter: (to) => resolveLegacyBackOfficeRedirect(to, 'messaging-user'),
     },
     {
       path: '/messagerie/:userId',

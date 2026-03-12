@@ -15,6 +15,7 @@ import NavPublicVariant from '@/components/navs/Nav/NavPublicVariant.vue'
 import type { NavItem, NavVariant } from '@/components/navs/Nav/navTypes'
 import { closeMobileMenu, isMobileMenuOpen, isNavForcedHidden } from '@/components/navs/navUtils'
 import { isManagedListingHostname } from '@/domain/listings/publicDomain'
+import { readRouteUserId, readRuntimeUserIdSync } from '@/router/backOfficeUser'
 import { vp } from '@/utils/viewport'
 import clerkToken from '@/utils/clerkToken'
 
@@ -72,6 +73,14 @@ const isNavVisible = computed(() => !isNavHidden.value)
 const isNavActuallyHidden = computed(() => isNavForcedHidden.value || isNavHiddenByScroll.value)
 const isHost = computed(() => navVariant.value === 'host')
 const isBackOfficeDockMode = computed(() => isHost.value && !vp.lg.value)
+const activeUserId = computed(() => readRouteUserId(route.params.userId) ?? readRuntimeUserIdSync())
+
+type BackOfficeUserRouteName =
+  | 'editor-user'
+  | 'create-listing-user'
+  | 'management-user'
+  | 'domains-user'
+  | 'messaging-user'
 
 const currentRouteName = computed(() => {
   const value = route.name
@@ -111,14 +120,37 @@ watch(
   },
 )
 
-const resolveRouteLink = (name?: string) => {
+const resolveRouteLink = (
+  name?: string,
+  options?: {
+    params?: Record<string, string>
+    query?: Record<string, string>
+  },
+) => {
   if (!name) return route.fullPath
   try {
-    const resolved = router.resolve({ name })
+    const resolved = router.resolve({
+      name,
+      ...(options?.params ? { params: options.params } : {}),
+      ...(options?.query ? { query: options.query } : {}),
+    })
     return resolved?.href || route.fullPath
   } catch {
     return route.fullPath
   }
+}
+
+function resolveBackOfficeRouteLink(name: BackOfficeUserRouteName, fallbackPath: string) {
+  const userId = activeUserId.value
+  if (userId) {
+    return resolveRouteLink(name, {
+      params: { userId },
+    })
+  }
+
+  return resolveRouteLink('sign-in', {
+    query: { redirect_url: fallbackPath },
+  })
 }
 
 function scrollToIntroOnDesktop() {
@@ -142,7 +174,7 @@ const hostNavItems = computed<NavItem[]>(() => [
   {
     id: 'add-reservation',
     name: 'Ajouter une réservation',
-    link: resolveRouteLink('management'),
+    link: resolveBackOfficeRouteLink('management-user', '/management'),
     cta: true,
     action: toggleReservation,
     ref: reservationAnchor,
@@ -152,15 +184,15 @@ const hostNavItems = computed<NavItem[]>(() => [
       'aria-haspopup': 'dialog',
     },
   },
-  { id: 'listings', name: 'Mes annonces', link: resolveRouteLink('editor') },
-  { id: 'reservations', name: 'Réservations', link: resolveRouteLink('management') },
-  { id: 'domains', name: 'Domaines', link: resolveRouteLink('domains') },
-  { id: 'messagery', name: 'Messagerie', link: resolveRouteLink('messaging') },
+  { id: 'listings', name: 'Mes annonces', link: resolveBackOfficeRouteLink('editor-user', '/editor') },
+  { id: 'reservations', name: 'Réservations', link: resolveBackOfficeRouteLink('management-user', '/management') },
+  { id: 'domains', name: 'Domaines', link: resolveBackOfficeRouteLink('domains-user', '/domains') },
+  { id: 'messagery', name: 'Messagerie', link: resolveBackOfficeRouteLink('messaging-user', '/messagerie') },
 ])
 
 const publicNavItems = computed<NavItem[]>(() => [
-  { id: 'messagery', name: 'Messagerie', link: resolveRouteLink('messaging') },
-  { id: 'reservations', name: 'Réservations', link: resolveRouteLink('management') },
+  { id: 'messagery', name: 'Messagerie', link: resolveBackOfficeRouteLink('messaging-user', '/messagerie') },
+  { id: 'reservations', name: 'Réservations', link: resolveBackOfficeRouteLink('management-user', '/management') },
   { id: 'become-host', name: 'Devenir hôte', link: '/pricing', cta: true },
 ])
 
@@ -191,21 +223,21 @@ const backOfficeDockItems = computed(() => {
       id: 'dock-listings',
       label: 'Annonces',
       icon: LayoutGrid,
-      link: resolveRouteLink('editor'),
+      link: resolveBackOfficeRouteLink('editor-user', '/editor'),
       isActive: isEditorRoute,
     },
     {
       id: 'dock-management',
       label: 'Réserv.',
       icon: CalendarClock,
-      link: resolveRouteLink('management'),
+      link: resolveBackOfficeRouteLink('management-user', '/management'),
       isActive: isManagementRoute,
     },
     {
       id: 'dock-domains',
       label: 'Domaines',
       icon: Globe,
-      link: resolveRouteLink('domains'),
+      link: resolveBackOfficeRouteLink('domains-user', '/domains'),
       isActive: isDomainsRoute,
     },
     {
@@ -224,14 +256,14 @@ const backOfficeDockItems = computed(() => {
       id: 'dock-messaging',
       label: 'Messages',
       icon: MessageSquareMore,
-      link: resolveRouteLink('messaging'),
+      link: resolveBackOfficeRouteLink('messaging-user', '/messagerie'),
       isActive: isMessagingRoute,
     },
     {
       id: 'dock-create',
       label: 'Créer',
       icon: PlusSquare,
-      link: resolveRouteLink('create-listing'),
+      link: resolveBackOfficeRouteLink('create-listing-user', '/editor/create'),
       isActive: isCreateRoute,
     },
   ]
@@ -271,7 +303,7 @@ onMounted(async () => {
   window.addEventListener('scroll', onScroll, { passive: true })
 
   clerkToken.value = await getToken.value()
-  console.log('✅[clerkToken] fetched new token :', clerkToken.value)
+  console.log('✅[clerkToken] fetched new token')
 })
 
 onBeforeUnmount(() => {

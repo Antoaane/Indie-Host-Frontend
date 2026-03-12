@@ -67,7 +67,8 @@
         }
 
         @include container(xxl, 5rem);
-        @include layout-gap(padding, inline, 2);
+        padding-left: var(--layout-gap-4xl);
+        padding-right: var(--layout-gap-4xl);
       }
     }
 

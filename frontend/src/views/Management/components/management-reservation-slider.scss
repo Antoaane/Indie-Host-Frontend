@@ -5,10 +5,40 @@
 @use '@/styles/variables/effects' as effects;
 
 .management-reservation-slider {
+  $height: 51.56px;
+  $gap: ($height - 43.19px) / 2;
+
+  $radius: ($height - $gap) / 2;
+
   min-width: 0;
   width: 100%;
 
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+
   position: relative;
+
+  .slider-track {
+    min-width: 0;
+    flex: 1 1 auto;
+    position: relative;
+    overflow: hidden;
+  }
+
+  // fonctionne pas (les pourcentages sont pas gérés sur clip-path)
+  // clip-path: path("M #{$radius} #{$gap} H calc(100% - #{$radius}) A #{$radius} #{$radius} 0 0 1 calc(100% - #{$radius}) calc(100% - #{$gap}) H #{$radius} A #{$radius} #{$radius} 0 0 1 #{$radius} #{$gap} Z");
+
+  // fonctionne
+  // clip-path: polygon(
+  //   50% 0%,
+  //   100% 50%,
+  //   50% 100%,
+  //   0% 50%
+  // );
+
+  // fonctionne
+  // clip-path: path("M100 0 L200 100 L100 200 L0 100 Z");
 
   [class^="slider-corner"] {
     height: 45px;
@@ -16,6 +46,9 @@
     position: absolute;
     top: 3.5px;
     z-index: 99;
+
+    //temporary
+    display: none;
 
     * {
       fill: $secondary-text;
@@ -25,14 +58,72 @@
   .slider-corner-1 {
     left: -1px;
     transform: rotate(180deg);
+
+    * {
+      fill: $background;
+    }
   }
 
   .slider-corner-2 {
     right: -1px;
+
+    * {
+      fill: $background;
+    }
   }
 
-  >.swiper {
+  .slider-nav {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    // border: 1px solid rgba($secondary, 0.16);
+    border: none;
+    background: $accent;
+    color: rgba($secondary-text, 0.88);
+    box-shadow: 0 8px 16px -12px rgba($secondary, 0.6);
+    backdrop-filter: blur(6px);
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    z-index: 120;
+
+    cursor: pointer;
+    transition: border-color 140ms ease, transform 140ms ease, color 140ms ease, background 140ms ease, opacity 140ms ease;
+
+    &:hover:enabled {
+      transform: scale(1.03);
+      border-color: rgba($secondary, 0.28);
+      color: rgba($secondary-text, 0.98);
+    }
+
+    &:focus-visible {
+      outline: 2px solid rgba($secondary-button-reference, 0.7);
+      outline-offset: 2px;
+    }
+
+    &:active:enabled {
+      transform: scale(0.98);
+    }
+
+    &:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    >svg {
+      flex: 0 0 auto;
+      stroke-width: 2.3;
+    }
+  }
+
+  .slider-track > .swiper {
     width: 100%;
+    --gap: 3.7px;
+    // height: 43.19px;
+
+    // border-radius: borders.$rounded;
 
     >.swiper-wrapper {
       align-items: center;
@@ -44,11 +135,11 @@
   }
 
   .reservation-pill {
-    padding: 0.2rem;
-
     border-radius: borders.$rounded;
     border: 1px rgba($accent, 0) solid;
     background: $background;
+
+    padding: 0.2rem !important;
 
     cursor: pointer;
     transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
@@ -59,6 +150,22 @@
 
     &.is-active {
       border: 1px rgba($accent, 1) solid;
+
+      // &::after {
+      //   content: "";
+      //   position: absolute;
+      //   top: 50%;
+      //   left: 50%;
+
+      //   width: calc(100% + 0.5rem);
+      //   // width: calc(100% + 0.2rem);
+      //   height: calc(100% + 0.5rem);
+
+      //   border-radius: borders.$rounded;
+      //   border: 1px rgba(red, 1) solid;
+
+      //   transform: translate(-50%, -50%);
+      // }
     }
 
     &>div {

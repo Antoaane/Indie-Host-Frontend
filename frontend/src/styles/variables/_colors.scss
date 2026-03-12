@@ -12,16 +12,16 @@ $dark: #000000; // Utility dark background reference (contrast/readability layer
 $translucent: rgba(255, 255, 255, 0);
 
 // SURFACES (derived from main colors)
-$accent-surface-0: lighten($tertiary, 2.5%);
+$accent-surface-0: color.adjust($tertiary, $lightness: 2.5%);
 $accent-surface-1: $tertiary;
-$accent-surface-2: darken($tertiary, 2.5%);
-$accent-surface-3: darken($tertiary, 7.5%);
-$accent-surface-4: darken($tertiary, 15%);
+$accent-surface-2: color.scale($tertiary, $lightness: -2.5%);
+$accent-surface-3: color.scale($tertiary, $lightness: -7.5%);
+$accent-surface-4: color.scale($tertiary, $lightness: -15%);
 
-$secondary-surface-0: lighten(#111117, 90%);
-$secondary-surface-1: lighten(#111117, 85%);
-$secondary-surface-2: lighten(#111117, 80%);
-$secondary-surface-3: lighten(#111117, 70%);
+$secondary-surface-0: color.adjust(#111117, $lightness: 90%);
+$secondary-surface-1: color.adjust(#111117, $lightness: 85%);
+$secondary-surface-2: color.adjust(#111117, $lightness: 80%);
+$secondary-surface-3: color.adjust(#111117, $lightness: 70%);
 
 $translucent-surface-0: rgba(#111117, 0.1);
 $translucent-surface-1: rgba(#111117, 0.15);

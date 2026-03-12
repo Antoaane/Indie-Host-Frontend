@@ -15,7 +15,10 @@ import { useEditorListingState } from '@/views/Editor/composables/useEditorListi
 import { useEditorPatchQueue } from '@/views/Editor/composables/useEditorPatchQueue'
 import type { EditorSource } from '@/views/Editor/types/editor'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
-import { persistListingDraft } from '@/views/Editor/utils/persistListingDraft'
+import {
+  persistListingDraft,
+  persistListingPublishedSnapshot,
+} from '@/views/Editor/utils/persistListingDraft'
 
 export type EditorStage = 'listings' | 'preview'
 
@@ -29,15 +32,15 @@ export function useEditorController(options: EditorControllerOptions) {
   const selectedListingId = ref<string | null>(null)
   const selectionToken = ref(0)
   const sourceToken = ref(0)
-  const cardPublishVersionByListingId = new Map<string, number>()
-  const cardPublishTaskByListingId = new Map<string, Promise<void>>()
 
   const listingState = useEditorListingState({
     getSource: () => options.source.value,
   })
 
   const patchQueue = useEditorPatchQueue({
-    getSource: () => options.source.value,
+    persistPatch: async (listingId, patch) => {
+      await options.source.value.patchListingDraft(listingId, patch)
+    },
   })
 
   const selectedListingHasPendingChanges = computed(() => {
@@ -95,16 +98,12 @@ export function useEditorController(options: EditorControllerOptions) {
     const token = ++selectionToken.value
     const previousListingId = selectedListingId.value
     if (previousListingId && previousListingId !== normalizedListingId) {
-      console.log('[Editor] handleSelectListing drain pending patches before switch', {
+      console.log('[Editor] handleSelectListing drain pending patches in background', {
         from: previousListingId,
         to: normalizedListingId,
         token,
       })
-      await patchQueue.drainPatchQueue()
-      if (token !== selectionToken.value) {
-        console.log('[Editor] handleSelectListing stale after drain', { listingId: normalizedListingId, token })
-        return
-      }
+      void patchQueue.drainPatchQueue()
     }
 
     selectedListingId.value = normalizedListingId
@@ -173,73 +172,36 @@ export function useEditorController(options: EditorControllerOptions) {
     if (currentStatus === normalizedStatus) return
 
     if (!listingState.publishedSnapshotByListingId[listingId]) {
-      listingState.publishedSnapshotByListingId[listingId] = snapshotListingStatus(currentListing?.status)
+      const publishedSnapshot = snapshotListingStatus(currentListing?.status)
+      listingState.publishedSnapshotByListingId[listingId] = publishedSnapshot
+      persistListingPublishedSnapshot(listingId, publishedSnapshot)
     }
 
     const patch: DraftPatch = { core: { status: normalizedStatus } }
+    const isSelectedListing = selectedListingId.value === listingId
 
-    if (selectedListingId.value === listingId && draftLifecycle.draft.value) {
-      draftLifecycle.draft.value.core = {
-        ...(draftLifecycle.draft.value.core ?? {}),
-        status: normalizedStatus,
-      }
+    const selectedDraftSnapshot = isSelectedListing && draftLifecycle.draft.value
+      ? snapshotListingDraft(draftLifecycle.draft.value)
+      : null
+    const baseDraftSnapshot = selectedDraftSnapshot
+      ?? listingState.draftSnapshotByListingId[listingId]
+      ?? snapshotListingStatus(currentListing?.status)
+    const nextDraftSnapshot = snapshotListingDraft(applyPatchToDraftBundle(baseDraftSnapshot, patch))
 
-      const draftSnapshot = snapshotListingDraft(draftLifecycle.draft.value)
-      listingState.draftSnapshotByListingId[listingId] = draftSnapshot
-      persistListingDraft(listingId, draftSnapshot)
-    } else {
-      const baseDraft = listingState.draftSnapshotByListingId[listingId] ?? snapshotListingStatus(currentListing?.status)
-      listingState.draftSnapshotByListingId[listingId] = snapshotListingDraft({
-        ...baseDraft,
-        core: {
-          ...(baseDraft.core ?? {}),
-          status: normalizedStatus,
-        },
-      })
+    listingState.draftSnapshotByListingId[listingId] = nextDraftSnapshot
+    persistListingDraft(listingId, nextDraftSnapshot)
+    if (isSelectedListing) {
+      draftLifecycle.draft.value = snapshotListingDraft(nextDraftSnapshot)
     }
 
     console.log('[Editor] apply listing status patch', { listingId, status: normalizedStatus })
     listingState.applyPatchToListingCard(listingId, patch)
-
-    const publishedSnapshot = listingState.publishedSnapshotByListingId[listingId]
-    listingState.publishedSnapshotByListingId[listingId] = snapshotListingDraft(
-      applyPatchToDraftBundle(publishedSnapshot ?? {}, patch),
-    )
     listingState.syncListingPendingChanges(listingId)
     patchQueue.queuePatchPersistence(listingId, patch)
-    queueCardPatchPublish(listingId, patch)
 
     if (normalizedStatus === 'deleted') {
       handleDeletedListing(listingId)
     }
-  }
-
-  function queueCardPatchPublish(listingId: string, patch: DraftPatch) {
-    const version = (cardPublishVersionByListingId.get(listingId) ?? 0) + 1
-    cardPublishVersionByListingId.set(listingId, version)
-
-    const previousTask = cardPublishTaskByListingId.get(listingId) ?? Promise.resolve()
-    const task = previousTask
-      .catch(() => undefined)
-      .then(async () => {
-        if (cardPublishVersionByListingId.get(listingId) !== version) return
-        await patchQueue.drainPatchQueue({ throwOnError: true })
-        if (cardPublishVersionByListingId.get(listingId) !== version) return
-        await options.source.value.publishListingDraft(listingId, patch)
-      })
-
-    cardPublishTaskByListingId.set(listingId, task)
-
-    void task
-      .catch((err) => {
-        console.log('[Editor] auto publish listing card patch error', { listingId, err })
-      })
-      .finally(() => {
-        if (cardPublishTaskByListingId.get(listingId) === task) {
-          cardPublishTaskByListingId.delete(listingId)
-          cardPublishVersionByListingId.delete(listingId)
-        }
-      })
   }
 
   async function showPreview(listingId: string) {
@@ -277,6 +239,7 @@ export function useEditorController(options: EditorControllerOptions) {
     listingState.publishedSnapshotByListingId[listingId] = snapshotListingDraft(snapshot)
     listingState.draftSnapshotByListingId[listingId] = snapshotListingDraft(snapshot)
     listingState.syncListingPendingChanges(listingId)
+    persistListingPublishedSnapshot(listingId, snapshot)
     persistListingDraft(listingId, snapshot)
   }
 
@@ -297,6 +260,7 @@ export function useEditorController(options: EditorControllerOptions) {
       listingState.publishedSnapshotByListingId[listingId] = snapshotListingDraft(snapshot)
       listingState.draftSnapshotByListingId[listingId] = snapshotListingDraft(snapshot)
       listingState.syncListingPendingChanges(listingId)
+      persistListingPublishedSnapshot(listingId, snapshot)
       persistListingDraft(listingId, snapshot)
 
       if (selectedListingId.value === listingId) {
@@ -315,9 +279,9 @@ export function useEditorController(options: EditorControllerOptions) {
     if (!publishedSnapshot) return
 
     const snapshot = snapshotListingDraft(publishedSnapshot)
+    persistListingPublishedSnapshot(listingId, snapshot)
     const rollbackPatch = buildDraftPatchFromBundle(snapshot)
     if (Object.keys(rollbackPatch).length) {
-      await options.source.value.patchListingDraft(listingId, rollbackPatch)
       listingState.applyPatchToListingCard(listingId, rollbackPatch)
     }
 
@@ -332,11 +296,10 @@ export function useEditorController(options: EditorControllerOptions) {
 
   watch(
     () => options.source.value,
-    (nextSource, previousSource) => {
+    () => {
       const token = ++sourceToken.value
       void (async () => {
-        const sourceForDrain = previousSource ?? nextSource
-        await patchQueue.drainPatchQueue({ source: sourceForDrain })
+        await patchQueue.drainPatchQueue()
 
         if (token !== sourceToken.value) return
 

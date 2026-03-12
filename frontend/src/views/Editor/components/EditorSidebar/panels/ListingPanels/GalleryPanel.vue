@@ -4,6 +4,8 @@
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { Plus, Trash2 } from 'lucide-vue-next'
 import type { RawMedias } from '@/domain/listings/types'
+import { normalizeListingStatus } from '@/domain/listings/status'
+import { isApiImageStorageEnabled, uploadGalleryImageToImageKit } from '@/domain/api/imagekit'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 import {
@@ -14,11 +16,14 @@ import {
   resolveTextMaxLength,
   validateGalleryImageFile,
 } from '@/utils/inputValidation'
+import { readOptimizedImageDataUrl } from '@/utils/imageDataUrl'
 
 type DraftImage = NonNullable<RawMedias['images']>[number]
 
 const props = defineProps<{
   medias?: Partial<RawMedias> | null
+  listingId?: string | null
+  listingStatus?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -32,6 +37,7 @@ const titleValidation = editorStatic.validation.listing.title
 const textDefaults = editorStatic.validation.defaults.simpleText
 const imageAltMaxLength = resolveTextMaxLength(titleValidation.max, textDefaults)
 const fileInput = ref<HTMLInputElement | null>(null)
+const isUploading = ref(false)
 const tileRefs = ref<HTMLElement[]>([])
 const galleryFeedback = ref('')
 const galleryFeedbackLevel = ref<'error' | 'success'>('error')
@@ -54,6 +60,9 @@ const isDragging = computed(() => dragState.active)
 const acceptedMimeTypes = acceptedGalleryMimeTypes(galleryLimits.acceptedMimeTypes)
 const readableFormats = humanizeGalleryMimeTypes(galleryLimits.acceptedMimeTypes)
 const maxFileSizeMb = (galleryLimits.maxFileSizeBytes / (1024 * 1024)).toFixed(1)
+const optimizedImageMaxDimension = Math.min(2560, Math.max(galleryLimits.maxWidth, galleryLimits.maxHeight))
+const apiImageStorageEnabled = isApiImageStorageEnabled()
+const canUploadToImageKit = computed(() => apiImageStorageEnabled && normalizeListingStatus(props.listingStatus) === 'published')
 const galleryHint = computed(() =>
   formatValidationMessage(galleryLimits.messages.hint, {
     formats: readableFormats,
@@ -123,6 +132,7 @@ function clearGalleryFeedback() {
 }
 
 function openFilePicker() {
+  if (isUploading.value) return
   if (orderedImages.value.length >= galleryLimits.maxImages) {
     setGalleryFeedback(maxImagesErrorMessage())
     return
@@ -137,16 +147,8 @@ function openFilePicker() {
   }
 }
 
-function readFileAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(String(reader.result ?? ''))
-    reader.onerror = () => reject(reader.error ?? new Error('Failed to read file'))
-    reader.readAsDataURL(file)
-  })
-}
-
 async function onFilePicked(event: Event) {
+  if (isUploading.value) return
   const input = event.target as HTMLInputElement | null
   const files = input?.files ? Array.from(input.files) : []
   if (input) input.value = ''
@@ -169,12 +171,22 @@ async function onFilePicked(event: Event) {
   }
 
   try {
+    isUploading.value = true
     const baseImages = [
       ...orderedImages.value,
     ]
     const nextImages = await Promise.all(
       filesToAdd.map(async (file, index) => {
-        const src = await readFileAsDataUrl(file)
+        const src = canUploadToImageKit.value
+          ? (await uploadGalleryImageToImageKit(file, {
+              listingId: props.listingId,
+              listingStatus: props.listingStatus,
+            })).url
+          : await readOptimizedImageDataUrl(file, {
+              maxDimension: optimizedImageMaxDimension,
+              preferredMimeType: 'image/webp',
+              quality: 0.86,
+            })
         const alt = normalizeTextInput(file.name.replace(/\.[^/.]+$/, ''), imageAltMaxLength)
         return { src, alt, position: baseImages.length + index } as DraftImage
       }),
@@ -191,7 +203,16 @@ async function onFilePicked(event: Event) {
     }
   } catch (err) {
     console.log('[Editor][Gallery] failed to read file', err)
-    setGalleryFeedback(galleryLimits.messages.processError, 'error')
+    if (canUploadToImageKit.value) {
+      const message = err instanceof Error
+        ? err.message
+        : "Impossible d'envoyer l'image vers ImageKit."
+      setGalleryFeedback(message || "Impossible d'envoyer l'image vers ImageKit.", 'error')
+    } else {
+      setGalleryFeedback(galleryLimits.messages.processError, 'error')
+    }
+  } finally {
+    isUploading.value = false
   }
 }
 
@@ -457,7 +478,7 @@ onBeforeUnmount(() => {
               type="button"
               :aria-label="panelContent.addLabel"
               :title="panelContent.addLabel"
-              :disabled="orderedImages.length >= galleryLimits.maxImages"
+              :disabled="orderedImages.length >= galleryLimits.maxImages || isUploading"
               @click="openFilePicker"
             >
               <Plus :size="20" />
@@ -468,6 +489,7 @@ onBeforeUnmount(() => {
             class="file-input"
             type="file"
             :accept="acceptedMimeTypes"
+            :disabled="isUploading"
             multiple
             @change="onFilePicked"
           />

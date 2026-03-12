@@ -19,6 +19,7 @@ import ReviewsPanel from '@/views/Editor/components/EditorSidebar/panels/Listing
 const props = defineProps<{
   listingId: string
   draft: RawListingBundle
+  listingId?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -35,6 +36,8 @@ const emit = defineEmits<{
     <DomainPanel :listing-id="props.listingId" />
     <GalleryPanel
       :medias="props.draft.medias"
+      :listing-id="props.listingId"
+      :listing-status="props.draft.core?.status"
       @patch="emit('patch', $event)"
     />
     <DescriptionPanel
@@ -66,7 +69,11 @@ const emit = defineEmits<{
       :core="props.draft.core"
       @patch="emit('patch', $event)"
     />
-    <ImportPanel @patch="emit('patch', $event)" />
+    <ImportPanel
+      :listing-id="props.listingId"
+      :listing-status="props.draft.core?.status"
+      @patch="emit('patch', $event)"
+    />
   </div>
 </template>
 

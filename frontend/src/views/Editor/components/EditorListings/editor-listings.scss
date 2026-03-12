@@ -43,7 +43,7 @@ $editor-listing-card-target-width: 20rem;
 
       padding: var(--layout-gap-md);
       display: grid;
-      @include responsive-grid-columns(var(--editor-listing-card-min-width));
+      @include responsive-grid-columns(var(--editor-listing-card-min-width), auto-fill);
       gap: var(--layout-gap-md);
 
       >.new-card {
@@ -190,7 +190,7 @@ $editor-listing-card-target-width: 20rem;
               position: absolute;
               top: 0.75rem;
               left: 0.75rem;
-              z-index: 5;
+              z-index: 20;
               padding-bottom: 0.35rem;
 
               &::after {
@@ -326,7 +326,7 @@ $editor-listing-card-target-width: 20rem;
                 position: absolute;
                 top: 100%;
                 left: 0;
-                z-index: 2;
+                z-index: 30;
 
                 min-width: 12rem;
                 max-width: min(16rem, 78vw);

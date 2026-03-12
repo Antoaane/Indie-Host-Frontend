@@ -14,6 +14,38 @@ function resolveBearerToken(request: FastifyRequest): string | null {
   return token.trim();
 }
 
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  const encodedPayload = token.split('.')[1];
+  if (!encodedPayload) return null;
+
+  try {
+    const normalized = encodedPayload
+      .replace(/-/g, '+')
+      .replace(/_/g, '/')
+      .padEnd(Math.ceil(encodedPayload.length / 4) * 4, '=');
+
+    const decoded = Buffer.from(normalized, 'base64').toString('utf8');
+    const payload = JSON.parse(decoded);
+
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
+    return payload as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+function buildAuthFromPayload(payload: Record<string, unknown>): RequestAuth | null {
+  const userId = typeof payload.sub === 'string' ? payload.sub.trim() : '';
+  if (!userId) return null;
+  return { userId, payload };
+}
+
+function readDevAuthFallback(token: string): RequestAuth | null {
+  const payload = decodeJwtPayload(token);
+  if (!payload) return null;
+  return buildAuthFromPayload(payload);
+}
+
 let jwksResolver: ReturnType<typeof createRemoteJWKSet> | null = null;
 
 function getJwksResolver() {
@@ -29,21 +61,37 @@ async function verifyToken(request: FastifyRequest): Promise<RequestAuth | null>
   if (!token) return null;
 
   const jwks = getJwksResolver();
+  if ((!jwks || !env.CLERK_ISSUER) && env.NODE_ENV === 'development') {
+    return readDevAuthFallback(token);
+  }
+
   if (!jwks || !env.CLERK_ISSUER) {
     throw new Error('Clerk JWT validation is not configured (CLERK_JWKS_URL / CLERK_ISSUER).');
   }
 
-  const { payload } = await jwtVerify(token, jwks, {
-    issuer: env.CLERK_ISSUER,
-    audience: env.CLERK_AUDIENCE.length ? env.CLERK_AUDIENCE : undefined,
-  });
+  try {
+    const { payload } = await jwtVerify(token, jwks, {
+      issuer: env.CLERK_ISSUER,
+      audience: env.CLERK_AUDIENCE.length ? env.CLERK_AUDIENCE : undefined,
+    });
 
-  const userId = typeof payload.sub === 'string' ? payload.sub.trim() : '';
-  if (!userId) {
-    throw new Error('Invalid Clerk JWT: missing subject claim.');
+    const auth = buildAuthFromPayload(payload as Record<string, unknown>);
+    if (!auth) {
+      throw new Error('Invalid Clerk JWT: missing subject claim.');
+    }
+
+    return auth;
+  } catch (error) {
+    if (env.NODE_ENV === 'development') {
+      const fallbackAuth = readDevAuthFallback(token);
+      if (fallbackAuth) {
+        request.log.warn({ err: error }, 'JWT verification failed, using development fallback auth.');
+        return fallbackAuth;
+      }
+    }
+
+    throw error;
   }
-
-  return { userId, payload };
 }
 
 async function authenticate(request: FastifyRequest, reply: FastifyReply) {

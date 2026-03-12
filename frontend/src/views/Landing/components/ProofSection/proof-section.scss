@@ -4,11 +4,11 @@
 @use '@/styles/variables/borders' as borders;
 
 #proof-section {
-  @include layout-gap(padding, top, 4.5);
-  @include layout-gap(padding, bottom, 1.5);
+  padding-top: calc(var(--layout-gap) * 4.5);
+  padding-bottom: var(--layout-gap-2xl);
 
   @include min-width(lg) {
-    @include layout-gap(padding, top, 5.5);
+    padding-top: calc(var(--layout-gap) * 5.5);
   }
 
   .wrapper {
@@ -16,7 +16,8 @@
     flex-direction: column;
     gap: 1.5rem;
 
-    @include layout-gap(padding, inline, 1.25);
+    padding-left: var(--layout-gap-xl);
+    padding-right: var(--layout-gap-xl);
 
     @include min-width(lg) {
       gap: 2rem;

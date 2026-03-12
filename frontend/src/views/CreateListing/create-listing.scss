@@ -14,7 +14,8 @@
     padding-bottom: var(--layout-gap);
     height: calc(100vh - $nav-height - var(--layout-gap));
 
-    @include layout-gap(padding, inline);
+    padding-left: var(--layout-gap);
+    padding-right: var(--layout-gap);
   }
 
   .container {
@@ -44,7 +45,7 @@
       // background: linear-gradient(180deg, $accent-surface-2 0%, $accent-surface-1 100%);
       border-radius: borders.$rounded-xl;
 
-      @include layout-gap(padding, all, 1);
+      padding: var(--layout-gap);
 
       >.header {
         display: flex;

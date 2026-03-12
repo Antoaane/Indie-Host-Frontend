@@ -19,18 +19,19 @@ chmod +x ./start-indiehost.sh
 ./start-indiehost.sh
 ```
 
-Le script démarre automatiquement **tous les services** dans l'ordre correct :
+Le script lit `frontend/.env` puis adapte les services à démarrer :
 
 | # | Service | URL |
 |---|---|---|
-| 1 | **PostgreSQL** (Docker) | `localhost:5432` |
+| 1 | **PostgreSQL** (Docker) | `localhost:5432` (mode API) |
 | 2 | **Backend API** (Fastify) | `http://localhost:4000` |
 | 3 | **Scraping** (FastAPI/Python) | `http://localhost:8000` |
 | 4 | **Frontend** (Vite/Vue 3) | `http://localhost:5179` |
 
 Le script :
-- Vérifie que Docker Desktop est actif (tente de le lancer sinon)
-- Démarre PostgreSQL via `docker compose`
+- Détecte `VITE_LISTINGS_DATA_MODE` dans `frontend/.env`
+- Vérifie Docker + démarre PostgreSQL uniquement en mode `api`
+- Démarre le Backend API dans un terminal dédié (mode `api` et `local-json`)
 - Ouvre un terminal dédié par service (Windows Terminal si disponible, PowerShell sinon)
 - Détecte les ports déjà occupés pour éviter les doublons
 
@@ -40,7 +41,7 @@ Le script :
 
 - [Node.js ≥ 18](https://nodejs.org)
 - [Python 3.10+](https://www.python.org)
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (mode API uniquement)
 - [Git](https://git-scm.com)
 
 ---
@@ -89,6 +90,8 @@ GRANDI_API_TOKEN=pat_votre-token-gandi
 Éditer `frontend/.env` :
 
 ```env
+VITE_LISTINGS_DATA_MODE=local-json
+# VITE_LISTINGS_DATA_MODE=api
 VITE_API_BASE_URL=http://localhost:4000/v1
 ```
 

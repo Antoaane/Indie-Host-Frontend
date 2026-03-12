@@ -20,7 +20,7 @@
     justify-content: center;
     gap: var(--layout-gap-sm);
     text-align: center;
-    @include layout-gap(padding, all, 1.5);
+    padding: var(--layout-gap-2xl);
 
     >h1 {
       @include h1-title($color: $secondary-text, $layout-gap: false, $gradiant: true);
@@ -92,7 +92,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--layout-gap-md);
-    @include layout-gap(padding, all, 1.2);
+    padding: calc(var(--layout-gap) * 1.2);
     background: $accent;
 
     border-top-left-radius: borders.$rounded-xl;
@@ -182,7 +182,8 @@
       gap: 0.2rem;
       border-bottom: 1px solid rgba($secondary, 0.08);
 
-      @include layout-gap(padding, vertical, 0.5);
+      padding-top: var(--layout-gap-sm);
+      padding-bottom: var(--layout-gap-sm);
 
       &:last-child {
         border-bottom: none;

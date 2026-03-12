@@ -3,12 +3,20 @@
 import { reactive, ref } from 'vue'
 
 import type { RawListingBundle } from '@/domain/listings/types'
+import { orderByIndex } from '@/utils/medias/order'
 import {
   areListingDraftsEqual,
+  snapshotListingDraft,
   snapshotListingStatus,
 } from '@/views/Editor/composables/editorDraftTools'
 import type { EditorSource } from '@/views/Editor/types/editor'
 import type { DraftPatch, UserListingCard } from '@/views/Editor/utils/listingApi'
+import {
+  clearListingDraft,
+  clearListingPublishedSnapshot,
+  fetchListingDraft,
+  fetchListingPublishedSnapshot,
+} from '@/views/Editor/utils/fetchListingDraft'
 
 export function useEditorListingState(options: { getSource: () => EditorSource }) {
   const listings = ref<UserListingCard[]>([])
@@ -45,12 +53,19 @@ export function useEditorListingState(options: { getSource: () => EditorSource }
     const listingId = listing.listingId
     if (!listingId) return
 
+    const localDraftSnapshot = fetchListingDraft(listingId)
+    const localPublishedSnapshot = fetchListingPublishedSnapshot(listingId)
+
     if (!publishedSnapshotByListingId[listingId]) {
-      publishedSnapshotByListingId[listingId] = snapshotListingStatus(listing.status)
+      publishedSnapshotByListingId[listingId] = snapshotListingDraft(
+        localPublishedSnapshot ?? snapshotListingStatus(listing.status),
+      )
     }
 
     if (!draftSnapshotByListingId[listingId]) {
-      draftSnapshotByListingId[listingId] = snapshotListingStatus(listing.status)
+      draftSnapshotByListingId[listingId] = snapshotListingDraft(
+        localDraftSnapshot ?? publishedSnapshotByListingId[listingId],
+      )
     }
 
     syncListingPendingChanges(listingId)
@@ -74,8 +89,13 @@ export function useEditorListingState(options: { getSource: () => EditorSource }
     }
 
     if (patch.medias?.images) {
-      next.images = patch.medias.images as UserListingCard['images']
-      next.coverSrc = patch.medias.images?.[0]?.src
+      const validImages = (patch.medias.images as UserListingCard['images'] | undefined)?.filter((image) => {
+        return typeof image?.src === 'string' && image.src.trim().length > 0
+      }) ?? []
+
+      const orderedImages = orderByIndex(validImages)
+      next.images = orderedImages
+      next.coverSrc = orderedImages[0]?.src
     }
 
     listings.value.splice(index, 1, next)
@@ -92,6 +112,8 @@ export function useEditorListingState(options: { getSource: () => EditorSource }
     removeListingFromList(listingId)
     delete draftSnapshotByListingId[listingId]
     delete publishedSnapshotByListingId[listingId]
+    clearListingDraft(listingId)
+    clearListingPublishedSnapshot(listingId)
   }
 
   function resetDraftSnapshots() {
@@ -120,10 +142,16 @@ export function useEditorListingState(options: { getSource: () => EditorSource }
       const listingIds = new Set(nextListings.map((item) => item.listingId))
 
       Object.keys(draftSnapshotByListingId).forEach((listingId) => {
-        if (!listingIds.has(listingId)) delete draftSnapshotByListingId[listingId]
+        if (!listingIds.has(listingId)) {
+          delete draftSnapshotByListingId[listingId]
+          clearListingDraft(listingId)
+        }
       })
       Object.keys(publishedSnapshotByListingId).forEach((listingId) => {
-        if (!listingIds.has(listingId)) delete publishedSnapshotByListingId[listingId]
+        if (!listingIds.has(listingId)) {
+          delete publishedSnapshotByListingId[listingId]
+          clearListingPublishedSnapshot(listingId)
+        }
       })
 
       listings.value = nextListings.map((listing) => ({

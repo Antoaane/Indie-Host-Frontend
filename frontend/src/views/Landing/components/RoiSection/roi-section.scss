@@ -4,15 +4,16 @@
 @use '@/styles/variables/borders' as borders;
 
 #roi-section {
-  @include layout-gap(padding, top, 4);
-  @include layout-gap(padding, bottom, 2.5);
+  padding-top: calc(var(--layout-gap) * 4);
+  padding-bottom: calc(var(--layout-gap) * 2.5);
 
   .wrapper {
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
 
-    @include layout-gap(padding, inline, 1.25);
+    padding-left: var(--layout-gap-xl);
+    padding-right: var(--layout-gap-xl);
 
     @include min-width(lg) {
       gap: 2rem;

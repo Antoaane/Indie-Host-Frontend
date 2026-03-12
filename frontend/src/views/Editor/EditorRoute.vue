@@ -4,31 +4,22 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
+import { requireRouteUserId } from '@/router/backOfficeUser'
 import Editor from '@/views/Editor/_Editor.vue'
-import type { EditorMode, EditorSource } from '@/views/Editor/types/editor'
-import { createStaticEditorSource } from '@/views/Editor/utils/editorSourceStatic'
+import type { EditorSource } from '@/views/Editor/types/editor'
 import { createUserEditorSource } from '@/views/Editor/utils/editorSourceUser'
 
 const route = useRoute()
 
-const userId = computed(() => {
-  const value = route.params.userId
-  if (typeof value === 'string' && value.trim()) return value.trim()
-  return null
-})
+const userId = computed(() => requireRouteUserId(route.params.userId))
 
-const mode = computed<EditorMode>(() => (userId.value ? 'user' : 'static'))
-
-const source = computed<EditorSource>(() => {
-  if (mode.value === 'static') return createStaticEditorSource()
-  return createUserEditorSource(userId.value!)
-})
+const source = computed<EditorSource>(() => createUserEditorSource(userId.value))
 </script>
 
 <template>
   <div class="editor-route">
     <Editor
-      :mode="mode"
+      mode="user"
       :source="source"
     />
   </div>

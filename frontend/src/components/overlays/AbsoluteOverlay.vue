@@ -229,7 +229,8 @@ onBeforeUnmount(() => {
 
 .absolute-overlay--centered {
   padding-top: var(--layout-gap);
-  @include layout-gap(padding, inline, 0.5);
+  padding-left: var(--layout-gap-sm);
+  padding-right: var(--layout-gap-sm);
 
   align-items: center;
   justify-content: center;
@@ -237,7 +238,8 @@ onBeforeUnmount(() => {
   @include min-width(lg) {
     padding-top: var(--layout-gap-4xl);
     padding-bottom: var(--layout-gap-4xl);
-    @include layout-gap;
+    padding-left: var(--layout-gap);
+    padding-right: var(--layout-gap);
   }
 }
 

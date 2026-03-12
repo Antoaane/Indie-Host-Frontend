@@ -270,9 +270,12 @@ function parseBookings(core: Maybe<Partial<RawCore>>, bookings: Maybe<Partial<Ra
 }
 
 function parseMedias(medias: Maybe<Partial<RawMedias>>): MediasModel {
+  const rawImages = Array.isArray(medias?.images) ? medias.images : []
+  const validImages = rawImages.filter((image) => typeof image?.src === 'string' && image.src.trim())
+
   return {
-    images: (medias?.images ?? []).map((i, idx) => ({
-      src: i.src,
+    images: validImages.map((i, idx) => ({
+      src: i.src.trim(),
       alt: i.alt,
       position: typeof i.position === 'number' ? i.position : idx,
     })),

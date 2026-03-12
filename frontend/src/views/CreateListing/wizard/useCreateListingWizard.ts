@@ -4,6 +4,7 @@ import { computed, onBeforeUnmount, onMounted, reactive, ref, toValue, watch } f
 import type { MaybeRefOrGetter } from 'vue'
 import { useRouter } from 'vue-router'
 
+import { ensurePublishedMediasStoredInImageKit, isApiImageStorageEnabled } from '@/domain/api/imagekit'
 import type { RawListingBundle } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import type { EditorMode, EditorSource } from '@/views/Editor/types/editor'
@@ -247,6 +248,13 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
     return message || 'Impossible de créer votre annonce pour le moment.'
   }
 
+  function resolveDraftListingId(bundle: RawListingBundle): string | null {
+    const value = bundle.core?.id
+    if (typeof value !== 'string') return null
+    const trimmed = value.trim()
+    return trimmed || null
+  }
+
   function goToStep(index: number) {
     if (submitState.isSubmitting) return
     const safeIndex = clampStepIndex(index)
@@ -392,7 +400,22 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
 
     submitState.isSubmitting = true
     try {
-      const payload = normalizeBundleForCreate(draft.value)
+      let nextDraft = draft.value
+      if (isApiImageStorageEnabled()) {
+        const medias = await ensurePublishedMediasStoredInImageKit(nextDraft.medias, {
+          listingId: resolveDraftListingId(nextDraft),
+          listingStatus: typeof nextDraft.core?.status === 'string' ? nextDraft.core.status : null,
+        })
+        if (medias) {
+          nextDraft = {
+            ...nextDraft,
+            medias,
+          }
+          draft.value = nextDraft
+        }
+      }
+
+      const payload = normalizeBundleForCreate(nextDraft)
       const { listingId } = await toValue(options.source).createListing(payload)
       disableStoragePersistence()
       clearStorageDraft()

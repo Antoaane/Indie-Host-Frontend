@@ -14,23 +14,85 @@ warn() { echo -e "   ${YELLOW}⚠  $1${NC}"; }
 fail() { echo -e "   ${RED}✘  $1${NC}"; exit 1; }
 
 port_in_use() { lsof -i ":$1" -sTCP:LISTEN -t &>/dev/null; }
+open_service_terminal() {
+    local title="$1"
+    local workdir="$2"
+    local service_cmd="$3"
+    local boot_cmd
 
-# ── 1. Docker ─────────────────────────────────────────────────
-step "Vérification de Docker..."
-if ! docker info &>/dev/null; then
-    fail "Docker n'est pas démarré. Lance Docker Desktop puis relance ce script."
-fi
-ok "Docker actif."
+    printf -v boot_cmd 'cd %q && %s' "$workdir" "$service_cmd"
 
-# ── 2. PostgreSQL ─────────────────────────────────────────────
-step "Démarrage de PostgreSQL..."
-PG_RUNNING=$(docker ps --filter "name=indiehost-postgres" --filter "status=running" -q)
-if [ -n "$PG_RUNNING" ]; then
-    ok "PostgreSQL déjà actif (localhost:5432)."
+    if [ -n "${WSL_DISTRO_NAME:-}" ] && command -v wt.exe &>/dev/null; then
+        wt.exe -w 0 new-tab --title "$title" wsl.exe -d "$WSL_DISTRO_NAME" bash -lc "$boot_cmd; exec bash" >/dev/null 2>&1 &
+        return 0
+    fi
+
+    if command -v gnome-terminal &>/dev/null; then
+        gnome-terminal --title="$title" -- bash -lc "$boot_cmd; exec bash" >/dev/null 2>&1 &
+        return 0
+    fi
+
+    if command -v x-terminal-emulator &>/dev/null; then
+        x-terminal-emulator -e bash -lc "$boot_cmd; exec bash" >/dev/null 2>&1 &
+        return 0
+    fi
+
+    if command -v konsole &>/dev/null; then
+        konsole --new-tab -p tabtitle="$title" -e bash -lc "$boot_cmd; exec bash" >/dev/null 2>&1 &
+        return 0
+    fi
+
+    return 1
+}
+
+resolve_listings_mode() {
+    local env_file="$ROOT/frontend/.env"
+
+    if [ ! -f "$env_file" ]; then
+        echo "local-json"
+        return
+    fi
+
+    local raw
+    raw="$(grep -E '^[[:space:]]*VITE_LISTINGS_DATA_MODE[[:space:]]*=' "$env_file" | tail -n 1 | cut -d '=' -f 2- | tr -d '\r' | xargs || true)"
+    raw="$(printf '%s' "$raw" | tr '[:upper:]' '[:lower:]')"
+
+    if [ "$raw" = "api" ]; then
+        echo "api"
+        return
+    fi
+
+    echo "local-json"
+}
+
+LISTINGS_MODE="$(resolve_listings_mode)"
+
+step "Mode de données annonces: ${LISTINGS_MODE}"
+if [ "$LISTINGS_MODE" = "api" ]; then
+    ok "Mode API détecté: PostgreSQL + Backend API seront démarrés."
 else
-    (cd "$ROOT/docker" && docker compose up -d postgres)
-    sleep 2
-    ok "PostgreSQL démarré (localhost:5432)."
+    ok "Mode local-json détecté: PostgreSQL ignoré, Backend API lancé pour la console."
+fi
+
+if [ "$LISTINGS_MODE" = "api" ]; then
+    # ── 1. Docker ─────────────────────────────────────────────────
+    step "Vérification de Docker..."
+    if ! docker info &>/dev/null; then
+        fail "Docker n'est pas démarré. Lance Docker Desktop puis relance ce script."
+    fi
+    ok "Docker actif."
+
+    # ── 2. PostgreSQL ─────────────────────────────────────────────
+    step "Démarrage de PostgreSQL..."
+    PG_RUNNING=$(docker ps --filter "name=indiehost-postgres" --filter "status=running" -q)
+    if [ -n "$PG_RUNNING" ]; then
+        ok "PostgreSQL déjà actif (localhost:5432)."
+    else
+        (cd "$ROOT/docker" && docker compose up -d postgres)
+        sleep 2
+        ok "PostgreSQL démarré (localhost:5432)."
+    fi
+
 fi
 
 # ── 3. Dépendances npm (frontend + backend/api) ─────────────────
@@ -45,8 +107,12 @@ step "Démarrage du Backend API..."
 if port_in_use 4000; then
     ok "Backend API déjà actif (localhost:4000)."
 else
-    cd "$ROOT/backend/api" && npm run dev &
-    ok "Backend API démarré en arrière-plan (localhost:4000)."
+    if open_service_terminal "IndieHost API :4000" "$ROOT/backend/api" "npm run dev"; then
+        ok "Backend API démarré dans un terminal dédié (localhost:4000)."
+    else
+        (cd "$ROOT/backend/api" && npm run dev &)
+        warn "Aucun terminal externe détecté: Backend API démarré en arrière-plan (localhost:4000)."
+    fi
 fi
 
 # ── 5. Scraping (:8000) ───────────────────────────────────────
@@ -73,7 +139,11 @@ echo ""
 echo -e "${CYAN}════════════════════════════════════════${NC}"
 echo -e "${NC}  IndieHost — Tous les services actifs  ${NC}"
 echo -e "${CYAN}════════════════════════════════════════${NC}"
-echo "  PostgreSQL  localhost:5432"
+if [ "$LISTINGS_MODE" = "api" ]; then
+    echo "  PostgreSQL  localhost:5432"
+else
+    echo "  PostgreSQL  désactivé (mode local-json)"
+fi
 echo "  API         http://localhost:4000"
 echo "  Scraping    http://localhost:8000"
 echo "  Frontend    http://localhost:5179"

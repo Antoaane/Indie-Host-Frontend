@@ -19,7 +19,7 @@
   background-color: $accent;
   border-radius: borders.$rounded-lg;
 
-  @include layout-gap(padding, all);
+  padding: var(--layout-gap);
 
   @include min-width(lg) {
     height: 100%;
@@ -201,7 +201,7 @@
         flex-direction: column;
         gap: var(--layout-gap);
 
-        @include layout-gap(margin, top, 1.5);
+        margin-top: var(--layout-gap-2xl);
 
         >.comment-card::after {
           display: none;

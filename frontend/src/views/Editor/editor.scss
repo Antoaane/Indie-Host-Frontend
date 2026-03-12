@@ -9,6 +9,7 @@
 
   padding-top: var(--layout-gap-sm);
   padding-bottom: var(--editor-mobile-dock-height);
+  min-height: 0 !important;
   height: calc(100vh - var(--editor-mobile-dock-height) - var(--layout-gap-sm));
   height: calc(100dvh - var(--editor-mobile-dock-height) - var(--layout-gap-sm));
   padding-inline: var(--layout-gap-sm);
@@ -42,8 +43,9 @@
       align-items: stretch;
       overflow: visible;
 
-      @include layout-gap(padding, inline, 1);
-      @include layout-gap(padding, bottom, 1);
+      padding-left: var(--layout-gap);
+      padding-right: var(--layout-gap);
+      padding-bottom: var(--layout-gap);
     }
 
     >.sidebar-shell {

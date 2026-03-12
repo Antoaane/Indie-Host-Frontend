@@ -14,6 +14,7 @@ import type {
   VolatileBundle,
 } from '@/domain/listings/types'
 import type { FetchListingsOptions, ListingsController } from '@/domain/listings/controller'
+import { normalizeListingCardsMedia } from '@/domain/listings/cards'
 import { filterDeletedListings } from '@/domain/listings/status'
 import { getCanonicalHost } from '@/domain/listings/host'
 import { createRuntimeLocalJsonStore } from '@/domain/local-json/runtimeStore'
@@ -91,9 +92,9 @@ export function createLocalJsonListingsController(): ListingsController {
         http: async () => {
           const url = userId ? buildUserListingsUrl(userId) : `${LOCAL_JSON_BASE}/listings`
           const listings = await requestJson<UserListingCard[]>(url)
-          return filterDeletedListings(listings, options?.includeDeleted)
+          return filterDeletedListings(normalizeListingCardsMedia(listings), options?.includeDeleted)
         },
-        runtime: () => filterDeletedListings(runtimeStore.listListings(), options?.includeDeleted),
+        runtime: () => filterDeletedListings(normalizeListingCardsMedia(runtimeStore.listListings()), options?.includeDeleted),
       })
     },
     resolveListingIdByHostname: async (): Promise<string | null> => {

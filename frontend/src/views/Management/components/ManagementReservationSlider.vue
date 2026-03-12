@@ -6,6 +6,7 @@ import type { SwiperOptions, SwiperModule } from 'swiper/types'
 import type { Swiper as SwiperInstance } from 'swiper/types'
 import { Swiper, SwiperSlide } from 'swiper/vue'
 import { FreeMode, Mousewheel } from 'swiper/modules'
+import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import SliderCorner from '@/components/svgs/images/SliderCorner.vue'
 
 import type { Reservation } from '@/views/Management/utils/managementReservations'
@@ -25,6 +26,9 @@ const displayedReservations = computed(() =>
   ].reverse(),
 )
 const swiperRef = ref<SwiperInstance | null>(null)
+const canSlidePrev = ref(false)
+const canSlideNext = ref(false)
+
 const activeDisplayedIndex = computed(() => {
   if (!props.activeReservationId) return -1
   return displayedReservations.value.findIndex((reservation) => reservation.id === props.activeReservationId)
@@ -38,7 +42,7 @@ const sliderParams = computed(
         Mousewheel as SwiperModule,
       ],
       slidesPerView: 'auto',
-      spaceBetween: 4,
+      spaceBetween: 6,
       freeMode: {
         enabled: true,
         momentumRatio: 0.8,
@@ -57,13 +61,17 @@ const sliderParams = computed(
 function scrollToContextualPosition() {
   const swiper = swiperRef.value
   const total = displayedReservations.value.length
-  if (!swiper || !total) return
+  if (!swiper || !total) {
+    updateNavigationState()
+    return
+  }
 
   const fallbackIndex = total - 1
   const targetIndex = activeDisplayedIndex.value >= 0 ? activeDisplayedIndex.value : fallbackIndex
 
   if (targetIndex >= fallbackIndex) {
     swiper.slideTo(fallbackIndex, 0)
+    updateNavigationState()
     return
   }
 
@@ -74,6 +82,7 @@ function scrollToContextualPosition() {
 
   if (!Number.isFinite(slideStart) || !Number.isFinite(slideSize)) {
     swiper.slideTo(targetIndex, 0)
+    updateNavigationState()
     return
   }
 
@@ -81,11 +90,53 @@ function scrollToContextualPosition() {
   const centeredTranslate = -(slideStart + slideSize / 2 - swiper.width / 2)
   const clampedTranslate = Math.max(swiper.maxTranslate(), Math.min(swiper.minTranslate(), centeredTranslate))
   swiper.translateTo(clampedTranslate, 0, false, true)
+  updateNavigationState()
+}
+
+function updateNavigationState() {
+  const total = displayedReservations.value.length
+  if (!total) {
+    canSlidePrev.value = false
+    canSlideNext.value = false
+    return
+  }
+
+  const fallbackIndex = total - 1
+  const currentIndex = activeDisplayedIndex.value >= 0 ? activeDisplayedIndex.value : fallbackIndex
+  canSlidePrev.value = currentIndex > 0
+  canSlideNext.value = currentIndex < fallbackIndex
 }
 
 function handleSwiper(instance: SwiperInstance) {
   swiperRef.value = instance
-  nextTick(scrollToContextualPosition)
+  nextTick(() => {
+    scrollToContextualPosition()
+    updateNavigationState()
+  })
+}
+
+function handleNavigatePrevious() {
+  if (!canSlidePrev.value || !displayedReservations.value.length) return
+
+  const fallbackIndex = displayedReservations.value.length - 1
+  const currentIndex = activeDisplayedIndex.value >= 0 ? activeDisplayedIndex.value : fallbackIndex
+  const targetIndex = currentIndex - 1
+  const targetReservation = displayedReservations.value[targetIndex]
+  if (!targetReservation) return
+
+  handleSelect(targetReservation.id)
+}
+
+function handleNavigateNext() {
+  if (!canSlideNext.value || !displayedReservations.value.length) return
+
+  const fallbackIndex = displayedReservations.value.length - 1
+  const currentIndex = activeDisplayedIndex.value >= 0 ? activeDisplayedIndex.value : fallbackIndex
+  const targetIndex = currentIndex + 1
+  const targetReservation = displayedReservations.value[targetIndex]
+  if (!targetReservation) return
+
+  handleSelect(targetReservation.id)
 }
 
 watch(
@@ -134,46 +185,78 @@ function handleSelect(reservationId: string) {
 
 <template>
   <div class="management-reservation-slider">
-    <SliderCorner class="slider-corner-1" />
-    <Swiper
-      class="swiper"
-      v-bind="sliderParams"
-      @swiper="handleSwiper"
+    <button
+      v-if="displayedReservations.length > 1"
+      type="button"
+      class="slider-nav slider-nav-prev"
+      :disabled="!canSlidePrev"
+      aria-label="Réservation précédente"
+      title="Réservation précédente"
+      @click="handleNavigatePrevious"
     >
-      <SwiperSlide
-        v-for="reservation in displayedReservations"
-        :key="reservation.id"
-        class="reservation-slide"
+      <ChevronLeft :size="16" />
+    </button>
+
+    <div class="slider-track">
+      <SliderCorner
+        v-if="displayedReservations.length > 0"
+        class="slider-corner-1"
+      />
+      <Swiper
+        class="swiper"
+        v-bind="sliderParams"
+        @swiper="handleSwiper"
       >
-        <button
-          type="button"
-          class="reservation-pill"
-          :class="{ 'is-active': reservation.id === props.activeReservationId }"
-          @click="handleSelect(reservation.id)"
+        <SwiperSlide
+          v-for="reservation in displayedReservations"
+          :key="reservation.id"
+          class="reservation-slide"
         >
-          <div>
-            <span class="avatar">
-              <img
-                v-if="reservation.guestAvatar"
-                :src="reservation.guestAvatar"
-                :alt="reservation.guestName"
-                loading="lazy"
-              />
-              <span
-                v-else
-                class="initials"
-                >{{ initials(reservation.guestName) }}</span
-              >
-            </span>
-            <span class="meta">
-              <span class="name">{{ reservation.guestName }}</span>
-              <span class="dates">{{ formatDateShort(reservation.start) }} &mdash; {{ formatDateShort(reservation.end) }}</span>
-            </span>
-          </div>
-        </button>
-      </SwiperSlide>
-    </Swiper>
-    <SliderCorner class="slider-corner-2" />
+          <button
+            type="button"
+            class="reservation-pill"
+            :class="{ 'is-active': reservation.id === props.activeReservationId }"
+            @click="handleSelect(reservation.id)"
+          >
+            <div>
+              <span class="avatar">
+                <img
+                  v-if="reservation.guestAvatar"
+                  :src="reservation.guestAvatar"
+                  :alt="reservation.guestName"
+                  loading="lazy"
+                />
+                <span
+                  v-else
+                  class="initials"
+                  >{{ initials(reservation.guestName) }}</span
+                >
+              </span>
+              <span class="meta">
+                <span class="name">{{ reservation.guestName }}</span>
+                <span class="dates">{{ formatDateShort(reservation.start) }} &mdash; {{ formatDateShort(reservation.end) }}</span>
+              </span>
+            </div>
+          </button>
+        </SwiperSlide>
+      </Swiper>
+      <SliderCorner
+        v-if="displayedReservations.length > 0"
+        class="slider-corner-2"
+      />
+    </div>
+
+    <button
+      v-if="displayedReservations.length > 1"
+      type="button"
+      class="slider-nav slider-nav-next"
+      :disabled="!canSlideNext"
+      aria-label="Réservation suivante"
+      title="Réservation suivante"
+      @click="handleNavigateNext"
+    >
+      <ChevronRight :size="16" />
+    </button>
   </div>
 </template>
 

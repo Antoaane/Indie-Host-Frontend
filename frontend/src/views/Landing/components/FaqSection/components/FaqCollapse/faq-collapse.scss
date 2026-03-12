@@ -9,11 +9,13 @@
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
-    @include layout-gap(padding, vertical, 0.25);
+    padding-top: var(--layout-gap-xs);
+    padding-bottom: var(--layout-gap-xs);
   }
 
   >.faq-collapse {
-    @include layout-gap(padding, vertical);
+    padding-top: var(--layout-gap);
+    padding-bottom: var(--layout-gap);
 
     .faq-summary {
       width: 100%;
@@ -59,7 +61,8 @@
 
   .faq-content {
     overflow: visible;
-    @include layout-gap(padding, inline, 1.5);
+    padding-left: var(--layout-gap-2xl);
+    padding-right: var(--layout-gap-2xl);
 
     ul {
       padding: 0;

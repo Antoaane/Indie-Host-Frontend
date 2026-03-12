@@ -7,12 +7,12 @@
   position: relative;
   overflow-x: clip;
 
-  @include layout-gap(padding, top, 4.5);
-  @include layout-gap(padding, bottom, 3.5);
+  padding-top: calc(var(--layout-gap) * 4.5);
+  padding-bottom: calc(var(--layout-gap) * 3.5);
 
   @include min-width(lg) {
-    @include layout-gap(padding, top, 6.5);
-    @include layout-gap(padding, bottom, 4.5);
+    padding-top: calc(var(--layout-gap) * 6.5);
+    padding-bottom: calc(var(--layout-gap) * 4.5);
   }
 
   .wrapper {
@@ -20,7 +20,8 @@
     flex-direction: column;
     gap: 2rem;
 
-    @include layout-gap(padding, inline, 1.25);
+    padding-left: var(--layout-gap-xl);
+    padding-right: var(--layout-gap-xl);
 
     @include min-width(lg) {
       gap: 4rem;

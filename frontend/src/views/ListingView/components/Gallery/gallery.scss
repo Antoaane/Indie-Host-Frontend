@@ -36,7 +36,8 @@
   }
 
   >.main-title {
-    @include layout-gap(padding, inline);
+    padding-left: var(--layout-gap);
+    padding-right: var(--layout-gap);
     margin-bottom: 8px;
     font-weight: 600;
   }
@@ -48,7 +49,8 @@
     flex-direction: column;
     gap: 12px;
     /* espacement entre colonnes/strips */
-    @include layout-gap(padding, inline);
+    padding-left: var(--layout-gap);
+    padding-right: var(--layout-gap);
   }
 
   >.cell {

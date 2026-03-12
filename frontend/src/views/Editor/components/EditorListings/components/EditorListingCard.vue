@@ -347,6 +347,7 @@ function goToImageLabel(index: number) {
             :aria-expanded="props.isStatusMenuOpen"
             :aria-controls="statusMenuControlId"
             aria-haspopup="menu"
+            @pointerdown.stop
             @click.stop="handleToggleStatusMenu"
           >
             <span class="text">{{ currentStatusLabel }}</span>
@@ -371,6 +372,7 @@ function goToImageLabel(index: number) {
               :aria-label="statusOptionAria(status)"
               :title="statusOptionAria(status)"
               :disabled="isStatusOptionSelected(props.listing.status, status)"
+              @pointerdown.stop
               @click.stop="handleSetListingStatus(status)"
             >
               {{ statusLabel(status) }}

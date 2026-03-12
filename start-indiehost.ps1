@@ -4,6 +4,8 @@
 # ============================================================
 
 $ROOT = Split-Path -Parent $MyInvocation.MyCommand.Path
+$LISTINGS_MODE_API = "api"
+$LISTINGS_MODE_LOCAL_JSON = "local-json"
 
 function Write-Step { param($msg) Write-Host "" ; Write-Host ">> $msg" -ForegroundColor Cyan }
 function Write-Ok   { param($msg) Write-Host "   [OK] $msg" -ForegroundColor Green }
@@ -23,82 +25,210 @@ function Open-Service {
         [string]$WorkDir,
         [string]$Command
     )
-    # Titre dans la barre de titre via $host.UI.RawUI.WindowTitle
-    $fullCmd = "`$host.UI.RawUI.WindowTitle = '$Title'; Set-Location '$WorkDir'; $Command"
-    Start-Process powershell -ArgumentList "-NoExit", "-Command", $fullCmd
-}
 
-# ── 1. Docker Desktop ────────────────────────────────────────
-Write-Step "Verification de Docker Desktop..."
-
-$dockerOk = $false
-try {
-    $null = docker info 2>&1
-    $dockerOk = ($LASTEXITCODE -eq 0)
-} catch {}
-
-if (-not $dockerOk) {
-    Write-Warn "Docker Desktop n'est pas demarre. Tentative de lancement..."
-    $candidates = @(
-        "$env:ProgramFiles\Docker\Docker\Docker Desktop.exe",
-        "$env:LOCALAPPDATA\Programs\Docker\Docker\Docker Desktop.exe"
-    )
-    $dockerExe = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
-    if ($dockerExe) {
-        Start-Process $dockerExe
-        Write-Warn "Attente du demarrage de Docker (30s max)..."
-        for ($i = 0; $i -lt 10; $i++) {
-            Start-Sleep 3
-            try { $null = docker info 2>&1; if ($LASTEXITCODE -eq 0) { $dockerOk = $true; break } } catch {}
+    $shellExe = (Get-Process -Id $PID -ErrorAction SilentlyContinue).Path
+    if (-not $shellExe) {
+        $shellExe = if (Get-Command pwsh -ErrorAction SilentlyContinue) {
+            "pwsh"
+        } elseif (Get-Command powershell -ErrorAction SilentlyContinue) {
+            "powershell"
+        } else {
+            $null
         }
     }
+
+    if (-not $shellExe) {
+        Write-Fail "Impossible d'ouvrir un terminal pour $Title (pwsh/powershell introuvable)."
+        exit 1
+    }
+
+    # Titre dans la barre de titre via $host.UI.RawUI.WindowTitle
+    $fullCmd = "`$host.UI.RawUI.WindowTitle = '$Title'; Set-Location '$WorkDir'; $Command"
+    Start-Process $shellExe -ArgumentList "-NoExit", "-Command", $fullCmd
 }
 
-if ($dockerOk) {
-    Write-Ok "Docker Desktop actif."
-} else {
-    Write-Fail "Docker Desktop inaccessible. Lance-le manuellement puis relance ce script."
-    exit 1
+function Normalize-ListingsDataMode {
+    param([AllowNull()][string]$RawMode)
+
+    if ($null -eq $RawMode) {
+        return $LISTINGS_MODE_LOCAL_JSON
+    }
+
+    $normalized = $RawMode.Trim().Trim("'").Trim('"').ToLowerInvariant()
+    if ($normalized -eq $LISTINGS_MODE_API) {
+        return $LISTINGS_MODE_API
+    }
+
+    return $LISTINGS_MODE_LOCAL_JSON
 }
 
-# ── 2. PostgreSQL ─────────────────────────────────────────────
-Write-Step "Demarrage de PostgreSQL..."
+function Resolve-ListingsDataMode {
+    $envPath = Join-Path $ROOT "frontend\.env"
+    if (-not (Test-Path $envPath)) {
+        return $LISTINGS_MODE_LOCAL_JSON
+    }
 
-$pgId = docker ps --filter "name=indiehost-postgres" --filter "status=running" -q 2>$null
-if ($pgId) {
-    Write-Ok "PostgreSQL deja actif (localhost:5432)."
-} else {
-    Push-Location (Join-Path $ROOT "docker")
-    docker compose up -d postgres | Out-Null
-    Pop-Location
-    Start-Sleep 2
-    Write-Ok "PostgreSQL demarre (localhost:5432)."
+    $line = Get-Content $envPath | Where-Object { $_ -match '^\s*VITE_LISTINGS_DATA_MODE\s*=' } | Select-Object -Last 1
+    if (-not $line) {
+        return $LISTINGS_MODE_LOCAL_JSON
+    }
+
+    $rawValue = [regex]::Match($line, '^\s*VITE_LISTINGS_DATA_MODE\s*=\s*(?<value>.*)$').Groups['value'].Value
+    return Normalize-ListingsDataMode -RawMode $rawValue
 }
 
-# ── 3. Dependances npm (frontend + backend/api) ─────────────────
-Write-Step "Installation des paquets npm (frontend et backend/api)..."
-$frontDir = Join-Path $ROOT "frontend"
-Push-Location $frontDir
-try {
-    npm install
-    if ($LASTEXITCODE -ne 0) { Write-Fail "Echec de npm install dans frontend."; exit 1 }
-    Write-Ok "Paquets frontend installes."
-} finally { Pop-Location }
+function Ensure-PortService {
+    param(
+        [int]$Port,
+        [string]$StepMessage,
+        [string]$RunningMessage,
+        [string]$WorkDir,
+        [string]$Title,
+        [string]$Command,
+        [string]$StartedMessage
+    )
 
-$apiDir = Join-Path $ROOT "backend\api"
-Push-Location $apiDir
-try {
-    npm install
-    if ($LASTEXITCODE -ne 0) { Write-Fail "Echec de npm install dans backend/api."; exit 1 }
-    Write-Ok "Paquets backend/api installes."
-} finally { Pop-Location }
+    Write-Step $StepMessage
+    if (Get-ListeningPid $Port) {
+        Write-Ok $RunningMessage
+        return
+    }
 
-# ── 4. Backend API (:4000) ────────────────────────────────────
-Write-Step "Demarrage du Backend API..."
+    Open-Service -Title $Title -WorkDir $WorkDir -Command $Command
+    Start-Sleep 1
+    Write-Ok $StartedMessage
+}
 
-if (Get-ListeningPid 4000) {
-    Write-Ok "Backend API deja actif (localhost:4000)."
-} else {
+function Test-PrismaClientNeedsGeneration {
+    param(
+        [string]$ApiDir
+    )
+
+    $schemaPath = Join-Path $ApiDir "prisma\schema.prisma"
+    $clientPath = Join-Path $ApiDir "node_modules\.prisma\client\index.js"
+
+    if (-not (Test-Path $clientPath)) {
+        return $true
+    }
+
+    if (-not (Test-Path $schemaPath)) {
+        return $false
+    }
+
+    $schemaTime = (Get-Item $schemaPath).LastWriteTimeUtc
+    $clientTime = (Get-Item $clientPath).LastWriteTimeUtc
+
+    return $schemaTime -gt $clientTime
+}
+
+function Test-PythonModuleAvailable {
+    param(
+        [string]$PythonExe,
+        [string]$ModuleName
+    )
+
+    & $PythonExe -c "import $ModuleName" 1>$null 2>$null
+    return ($LASTEXITCODE -eq 0)
+}
+
+function Ensure-ScrapingPythonDependencies {
+    param(
+        [string]$ScrapDir,
+        [string]$PythonExe
+    )
+
+    $requirementsPath = Join-Path $ScrapDir "requirements.txt"
+    if (-not (Test-Path $requirementsPath)) {
+        Write-Fail "requirements.txt introuvable pour le service de scraping."
+        exit 1
+    }
+
+    $depsStampPath = Join-Path $ScrapDir ".venv\.deps-installed"
+    $needInstall = -not (Test-PythonModuleAvailable -PythonExe $PythonExe -ModuleName "uvicorn")
+
+    if (-not $needInstall) {
+        if (-not (Test-Path $depsStampPath)) {
+            $needInstall = $true
+        } else {
+            $requirementsTime = (Get-Item $requirementsPath).LastWriteTimeUtc
+            $stampTime = (Get-Item $depsStampPath).LastWriteTimeUtc
+            $needInstall = $requirementsTime -gt $stampTime
+        }
+    }
+
+    if (-not $needInstall) {
+        Write-Ok "Dependances Python du scraping deja a jour."
+        return
+    }
+
+    Write-Warn "Installation des dependances Python du scraping..."
+    & $PythonExe -m pip install -r $requirementsPath
+    if ($LASTEXITCODE -ne 0) {
+        Write-Fail "L'installation des dependances Python a echoue."
+        exit 1
+    }
+
+    Set-Content -Path $depsStampPath -Value (Get-Date).ToString("o")
+    Write-Ok "Dependances Python du scraping a jour."
+}
+
+function Start-ApiInfraServices {
+    # ── 1. Docker Desktop ────────────────────────────────────────
+    Write-Step "Verification de Docker Desktop..."
+
+    $dockerOk = $false
+    try {
+        $null = docker info 2>&1
+        $dockerOk = ($LASTEXITCODE -eq 0)
+    } catch {}
+
+    if (-not $dockerOk) {
+        Write-Warn "Docker Desktop n'est pas demarre. Tentative de lancement..."
+        $candidates = @(
+            "$env:ProgramFiles\Docker\Docker\Docker Desktop.exe",
+            "$env:LOCALAPPDATA\Programs\Docker\Docker\Docker Desktop.exe"
+        )
+        $dockerExe = $candidates | Where-Object { Test-Path $_ } | Select-Object -First 1
+        if ($dockerExe) {
+            Start-Process $dockerExe
+            Write-Warn "Attente du demarrage de Docker (30s max)..."
+            for ($i = 0; $i -lt 10; $i++) {
+                Start-Sleep 3
+                try { $null = docker info 2>&1; if ($LASTEXITCODE -eq 0) { $dockerOk = $true; break } } catch {}
+            }
+        }
+    }
+
+    if ($dockerOk) {
+        Write-Ok "Docker Desktop actif."
+    } else {
+        Write-Fail "Docker Desktop inaccessible. Lance-le manuellement puis relance ce script."
+        exit 1
+    }
+
+    # ── 2. PostgreSQL ─────────────────────────────────────────────
+    Write-Step "Demarrage de PostgreSQL..."
+
+    $pgId = docker ps --filter "name=indiehost-postgres" --filter "status=running" -q 2>$null
+    if ($pgId) {
+        Write-Ok "PostgreSQL deja actif (localhost:5432)."
+    } else {
+        Push-Location (Join-Path $ROOT "docker")
+        docker compose up -d postgres | Out-Null
+        Pop-Location
+        Start-Sleep 2
+        Write-Ok "PostgreSQL demarre (localhost:5432)."
+    }
+
+}
+
+function Start-BackendApiService {
+    Write-Step "Demarrage du Backend API..."
+    if (Get-ListeningPid 4000) {
+        Write-Ok "Backend API deja actif (localhost:4000)."
+        return
+    }
+
     $apiDir = Join-Path $ROOT "backend\api"
     $apiEnvFile = Join-Path $apiDir ".env"
     $apiEnvExampleFile = Join-Path $apiDir ".env.example"
@@ -115,13 +245,32 @@ if (Get-ListeningPid 4000) {
             Write-Ok "Fichier .env cree pour le backend API."
         }
 
-        Write-Warn "Generation du client Prisma pour le backend..."
-        & npm run prisma:generate
-        if ($LASTEXITCODE -ne 0) {
-            Write-Fail "La generation du client Prisma a echoue."
-            exit 1
+        if (Test-PrismaClientNeedsGeneration -ApiDir $apiDir) {
+            Write-Warn "Generation du client Prisma pour le backend..."
+            $prismaOk = $false
+            for ($attempt = 1; $attempt -le 2; $attempt++) {
+                & npm run prisma:generate
+                if ($LASTEXITCODE -eq 0) {
+                    $prismaOk = $true
+                    break
+                }
+
+                if ($attempt -lt 2) {
+                    Write-Warn "Generation Prisma en echec (tentative $attempt/2). Nouvelle tentative dans 2s..."
+                    Start-Sleep 2
+                }
+            }
+
+            if (-not $prismaOk) {
+                Write-Fail "La generation du client Prisma a echoue."
+                Write-Warn "Si tu vois une erreur EPERM sur query_engine-windows.dll.node, ferme les process Node/Prisma deja ouverts puis relance."
+                exit 1
+            }
+
+            Write-Ok "Client Prisma genere pour le backend."
+        } else {
+            Write-Ok "Client Prisma deja a jour pour le backend."
         }
-        Write-Ok "Client Prisma genere pour le backend."
     } finally {
         Pop-Location
     }
@@ -129,6 +278,38 @@ if (Get-ListeningPid 4000) {
     Start-Sleep 1
     Write-Ok "Backend API lance dans un nouvel onglet (localhost:4000)."
 }
+
+$listingsMode = Resolve-ListingsDataMode
+$apiMode = $listingsMode -eq $LISTINGS_MODE_API
+
+Write-Step "Mode de donnees annonces: $listingsMode"
+if ($apiMode) {
+    Write-Ok "Mode API detecte: PostgreSQL + Backend API seront demarres."
+} else {
+    Write-Ok "Mode local-json detecte: PostgreSQL ignore, Backend API lance pour la console."
+}
+
+if ($apiMode) {
+    Start-ApiInfraServices
+}
+
+Start-BackendApiService
+
+$listingsMode = Resolve-ListingsDataMode
+$apiMode = $listingsMode -eq $LISTINGS_MODE_API
+
+Write-Step "Mode de donnees annonces: $listingsMode"
+if ($apiMode) {
+    Write-Ok "Mode API detecte: PostgreSQL + Backend API seront demarres."
+} else {
+    Write-Ok "Mode local-json detecte: PostgreSQL ignore, Backend API lance pour la console."
+}
+
+if ($apiMode) {
+    Start-ApiInfraServices
+}
+
+Start-BackendApiService
 
 # ── 5. Scraping (:8000) ───────────────────────────────────────
 Write-Step "Demarrage du serveur de scraping..."
@@ -155,42 +336,40 @@ if (Get-ListeningPid 8000) {
                 Write-Fail "La creation du .venv a echoue pour le service de scraping."
                 exit 1
             }
-
-            Write-Warn "Installation des dependances Python du scraping..."
-            & $pythonExe -m pip install -r requirements.txt
-            if ($LASTEXITCODE -ne 0) {
-                Write-Fail "L'installation des dependances Python a echoue."
-                exit 1
-            }
-            Write-Ok "Environnement Python initialise pour le service de scraping."
         } finally {
             Pop-Location
         }
     }
+
+    Ensure-ScrapingPythonDependencies -ScrapDir $scrapDir -PythonExe $pythonExe
+
     $scrapCmd  = "& '$pythonExe' -m uvicorn api:app --reload --port 8000"
     Open-Service -Title "IndieHost Scraping :8000" -WorkDir $scrapDir -Command $scrapCmd
     Start-Sleep 1
     Write-Ok "Serveur de scraping lance dans un nouvel onglet (localhost:8000)."
 }
 
-# ── 6. Frontend (:5179) ───────────────────────────────────────
-Write-Step "Demarrage du Frontend..."
-
-if (Get-ListeningPid 5179) {
-    Write-Ok "Frontend deja actif (localhost:5179)."
-} else {
-    $frontDir = Join-Path $ROOT "frontend"
-    Open-Service -Title "IndieHost Frontend :5179" -WorkDir $frontDir -Command "npm run dev"
-    Start-Sleep 1
-    Write-Ok "Frontend lance dans un nouvel onglet (localhost:5179)."
-}
+# ── 5. Frontend (:5179) ───────────────────────────────────────
+$frontDir = Join-Path $ROOT "frontend"
+Ensure-PortService `
+    -Port 5179 `
+    -StepMessage "Demarrage du Frontend..." `
+    -RunningMessage "Frontend deja actif (localhost:5179)." `
+    -WorkDir $frontDir `
+    -Title "IndieHost Frontend :5179" `
+    -Command "npm run dev" `
+    -StartedMessage "Frontend lance dans un nouvel onglet (localhost:5179)."
 
 # ── Recap ─────────────────────────────────────────────────────
 Write-Host ""
 Write-Host "========================================" -ForegroundColor DarkCyan
 Write-Host "  IndieHost - Tous les services actifs  " -ForegroundColor White
 Write-Host "========================================" -ForegroundColor DarkCyan
-Write-Host "  PostgreSQL  localhost:5432" -ForegroundColor Gray
+if ($apiMode) {
+    Write-Host "  PostgreSQL  localhost:5432" -ForegroundColor Gray
+} else {
+    Write-Host "  PostgreSQL  desactive (mode $LISTINGS_MODE_LOCAL_JSON)" -ForegroundColor DarkGray
+}
 Write-Host "  API         http://localhost:4000" -ForegroundColor Gray
 Write-Host "  Scraping    http://localhost:8000" -ForegroundColor Gray
 Write-Host "  Frontend    http://localhost:5179" -ForegroundColor Gray

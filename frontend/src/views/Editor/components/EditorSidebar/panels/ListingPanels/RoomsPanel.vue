@@ -206,7 +206,7 @@ function setRooms(next: RoomDraftExtended[]) {
     if (!isNonSleepingRoomType(baseRoom.type) && Array.isArray(baseRoom.beds)) {
       return {
         ...baseRoom,
-        beds: baseRoom.beds.map((bed) => sanitizeBed(bed as BedDraftExtended)),
+        beds: normalizeRoomBeds(baseRoom.beds as BedDraftExtended[]),
       } as RoomDraftExtended
     }
 
@@ -324,17 +324,42 @@ function setCustomRoomName(index: number, nextName: string) {
 }
 
 function setBedType(roomIndex: number, bedIndex: number, nextType: string) {
-  if (isBedConfigDisabled(rooms.value[roomIndex])) return
+  const room = rooms.value[roomIndex]
+  if (!room || isBedConfigDisabled(room)) return
+  const currentBeds = roomBeds(room)
+  const currentBed = currentBeds[bedIndex] as BedDraftExtended | undefined
+  if (!currentBed) return
 
   const resolvedType = resolveBedType(nextType)
   if (resolvedType === CUSTOM_BED_TYPE) {
-    const currentBed = rooms.value[roomIndex]?.beds?.[bedIndex] as BedDraftExtended | undefined
     updateBed(roomIndex, bedIndex, {
       type: CUSTOM_BED_TYPE,
       capacity: sanitizeBedCapacity(currentBed?.capacity),
       customName: normalizeTextInput(String(currentBed?.customName ?? ''), customBedNameMaxLength) || customBedContent.fallbackName,
       customIcon: sanitizeCustomBedIcon(currentBed?.customIcon),
     })
+    return
+  }
+
+  const duplicateBedIndex = findBedIndexByType(currentBeds, resolvedType, bedIndex)
+  if (duplicateBedIndex >= 0) {
+    const nextBeds = currentBeds.filter((_, index) => index !== bedIndex) as BedDraftExtended[]
+    const targetIndex = duplicateBedIndex > bedIndex ? duplicateBedIndex - 1 : duplicateBedIndex
+    const duplicateBed = nextBeds[targetIndex] as BedDraftExtended | undefined
+    if (!duplicateBed) return
+
+    nextBeds[targetIndex] = sanitizeBed({
+      ...duplicateBed,
+      type: resolvedType,
+      quantity: sanitizeBedQuantity(
+        sanitizeBedQuantity(duplicateBed.quantity) + sanitizeBedQuantity(currentBed.quantity),
+      ),
+      capacity: bedTypeCapacities[resolvedType] ?? customBedCapacityMin,
+      customName: undefined,
+      customIcon: undefined,
+    } as BedDraftExtended)
+
+    setBeds(roomIndex, nextBeds)
     return
   }
 
@@ -362,12 +387,36 @@ function addBedFromOverlay() {
   const room = rooms.value[roomIndex]
   if (!room || isBedConfigDisabled(room)) return
 
-  const nextBeds = [
-    ...(room.beds ?? []),
-    createDefaultBedDraft(),
-  ] as BedDraftExtended[]
+  const currentBeds = roomBeds(room)
+  const nextBed = createDefaultBedDraft(currentBeds)
+  const nextBedType = resolveBedType(nextBed.type)
+  const duplicateBedIndex = nextBedType === CUSTOM_BED_TYPE ? -1 : findBedIndexByType(currentBeds, nextBedType)
 
-  setBeds(roomIndex, nextBeds)
+  if (duplicateBedIndex >= 0) {
+    const nextBeds = [
+      ...currentBeds,
+    ] as BedDraftExtended[]
+    const duplicateBed = nextBeds[duplicateBedIndex] as BedDraftExtended | undefined
+    if (!duplicateBed) return
+
+    nextBeds[duplicateBedIndex] = sanitizeBed({
+      ...duplicateBed,
+      type: nextBedType,
+      quantity: sanitizeBedQuantity(
+        sanitizeBedQuantity(duplicateBed.quantity) + sanitizeBedQuantity(nextBed.quantity),
+      ),
+      capacity: bedTypeCapacities[nextBedType] ?? customBedCapacityMin,
+      customName: undefined,
+      customIcon: undefined,
+    } as BedDraftExtended)
+    setBeds(roomIndex, nextBeds)
+    return
+  }
+
+  setBeds(roomIndex, [
+    ...currentBeds,
+    nextBed,
+  ] as BedDraftExtended[])
 }
 
 function normalizeText(value: unknown) {
@@ -448,6 +497,73 @@ function sanitizeBed(bed: BedDraftExtended): BedDraftExtended {
   const { customName: _customName, customIcon: _customIcon, ...sanitizedWithoutCustom } = base
 
   return sanitizedWithoutCustom as BedDraftExtended
+}
+
+function normalizeRoomBeds(nextBeds: BedDraftExtended[]) {
+  const sanitizedBeds = nextBeds.map((bed) => sanitizeBed(bed as BedDraftExtended))
+  const normalizedBeds: BedDraftExtended[] = []
+  const standardBedTypeToIndex = new Map<string, number>()
+
+  sanitizedBeds.forEach((bed) => {
+    const bedType = resolveBedType(bed.type)
+    if (bedType === CUSTOM_BED_TYPE) {
+      normalizedBeds.push(bed)
+      return
+    }
+
+    const existingIndex = standardBedTypeToIndex.get(bedType)
+    if (existingIndex === undefined) {
+      standardBedTypeToIndex.set(bedType, normalizedBeds.length)
+      normalizedBeds.push(bed)
+      return
+    }
+
+    const existing = normalizedBeds[existingIndex]
+    if (!existing) {
+      standardBedTypeToIndex.set(bedType, normalizedBeds.length)
+      normalizedBeds.push(bed)
+      return
+    }
+
+    normalizedBeds[existingIndex] = sanitizeBed({
+      ...existing,
+      type: bedType,
+      quantity: sanitizeBedQuantity(
+        sanitizeBedQuantity(existing.quantity) + sanitizeBedQuantity(bed.quantity),
+      ),
+      capacity: bedTypeCapacities[bedType] ?? customBedCapacityMin,
+    } as BedDraftExtended)
+  })
+
+  return normalizedBeds
+}
+
+function findBedIndexByType(beds: BedDraftExtended[], bedType: string, excludeIndex: number | null = null) {
+  return beds.findIndex((bed, index) => {
+    if (excludeIndex !== null && index === excludeIndex) return false
+    return resolveBedType(bed.type) === bedType
+  })
+}
+
+function nextBedTypeForRoom(existingBeds: BedDraftExtended[]) {
+  const usedTypes = new Set(
+    existingBeds
+      .map((bed) => resolveBedType(bed.type))
+      .filter((type) => type !== CUSTOM_BED_TYPE),
+  )
+
+  const availableType = bedTypeOptions
+    .map((option) => resolveBedType(option.value))
+    .find((type) => type !== CUSTOM_BED_TYPE && !usedTypes.has(type))
+
+  return availableType ?? resolveBedType(bedTypeOptions[0]?.value ?? 'simple')
+}
+
+function roomAddBedLabel(room: RoomDraftExtended) {
+  if (roomBeds(room).length > 0) {
+    return panelContent.manageBeds ?? 'Gérer les lits'
+  }
+  return panelContent.addBed
 }
 
 function getBedIconComponent(iconKey: unknown) {
@@ -573,8 +689,8 @@ function decrementBedCapacity(roomIndex: number, bedIndex: number) {
   })
 }
 
-function createDefaultBedDraft(): BedDraftExtended {
-  const defaultType = resolveBedType(bedTypeOptions[0]?.value ?? 'simple')
+function createDefaultBedDraft(existingBeds: BedDraftExtended[] = []): BedDraftExtended {
+  const defaultType = nextBedTypeForRoom(existingBeds)
 
   if (defaultType === CUSTOM_BED_TYPE) {
     return sanitizeBed({
@@ -692,7 +808,7 @@ function createDefaultBedDraft(): BedDraftExtended {
                 type="button"
                 @click="openBedOverlay(roomIndex)"
               >
-                {{ panelContent.addBed }}
+                {{ roomAddBedLabel(room) }}
               </button>
             </div>
           </div>

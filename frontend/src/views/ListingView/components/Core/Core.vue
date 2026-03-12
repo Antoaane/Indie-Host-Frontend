@@ -164,7 +164,7 @@ html:has(#core) {
   background-color: $accent;
   border-radius: borders.$rounded-xxl;
 
-  @include layout-gap(padding, all);
+  padding: var(--layout-gap);
 
   @include min-width(lg) {
     overflow: hidden;

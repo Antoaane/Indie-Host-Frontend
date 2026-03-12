@@ -20,15 +20,19 @@
     row-gap: 3rem;
 
     // border-radius: 130px;
-    @include layout-gap(padding, vertical, 3);
-    @include layout-gap(padding, inline, 2);
+    padding-top: calc(var(--layout-gap) * 3);
+    padding-bottom: calc(var(--layout-gap) * 3);
+    padding-left: var(--layout-gap-4xl);
+    padding-right: var(--layout-gap-4xl);
 
     @include min-width(xxs) {
-      @include layout-gap(padding, inline, 3);
+      padding-left: calc(var(--layout-gap) * 3);
+      padding-right: calc(var(--layout-gap) * 3);
     }
 
     @include min-width(xs) {
-      @include layout-gap(padding, vertical, 3);
+      padding-top: calc(var(--layout-gap) * 3);
+      padding-bottom: calc(var(--layout-gap) * 3);
       // @include layout-gap(padding, inline, 3);
     }
 
@@ -36,7 +40,8 @@
       gap: 2rem;
       // border-radius: 85px;
 
-      @include layout-gap(padding, vertical);
+      padding-top: var(--layout-gap);
+      padding-bottom: var(--layout-gap);
     }
 
     @include min-width(xl) {
@@ -63,13 +68,15 @@
       }
 
       @include min-width(sm) {
-        @include layout-gap(padding, inline, 5);
+        padding-left: calc(var(--layout-gap) * 5);
+        padding-right: calc(var(--layout-gap) * 5);
       }
 
       @include min-width(lg) {
         grid-column: span 5 / span 5;
 
-        @include layout-gap(padding, inline, 0);
+        padding-left: 0;
+        padding-right: 0;
 
         &:has(+ .vtc) {
           grid-column: span 6 / span 6;
@@ -114,7 +121,7 @@
       // @include layout-gap(padding, inline, 1.5);
 
       @include min-width(xs) {
-        @include layout-gap(padding, all, 0);
+        padding: 0;
       }
 
       @include min-width(lg) {

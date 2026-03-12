@@ -4,6 +4,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { Download, Loader2 } from 'lucide-vue-next'
 
+import { ensurePublishedMediasStoredInImageKit } from '@/domain/api/imagekit'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import {
   detectListingSource,
@@ -15,6 +16,11 @@ import type { AirbnbScrapedData } from '@/views/Editor/components/EditorSidebar/
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 import CreateWizardStepShell from '@/views/CreateListing/components/panels/CreateWizardStepShell.vue'
 import { LANDING_IMPORT_URL_KEY } from '@/views/Landing/components/IntroSection/landingImportUrlKey'
+
+const props = defineProps<{
+  listingId?: string | null
+  listingStatus?: string | null
+}>()
 
 const emit = defineEmits<{
   (e: 'patch', patch: DraftPatch): void
@@ -44,7 +50,6 @@ const isAirbnb = computed(() => detectedSource.value === 'airbnb')
 const canImport = computed(
   () => url.value.trim().length > 0 && isAirbnb.value && !isImporting.value
 )
-const placeholder = panelContent.airbnbPlaceholder
 
 async function handleImport() {
   if (!canImport.value) return
@@ -56,7 +61,17 @@ async function handleImport() {
     const transformed = transformAirbnbToRawListingBundle(
       data as AirbnbScrapedData
     )
-    emit('patch', transformed as DraftPatch)
+    const medias = await ensurePublishedMediasStoredInImageKit(transformed.medias, {
+      listingId: props.listingId,
+      listingStatus: props.listingStatus,
+    })
+    const patch: DraftPatch = {
+      ...(transformed.core ? { core: transformed.core } : {}),
+      ...(transformed.bookings ? { bookings: transformed.bookings } : {}),
+      ...(medias ? { medias } : {}),
+      ...(transformed.arrival ? { arrival: transformed.arrival } : {}),
+    }
+    emit('patch', patch)
     emit('next')
     importError.value = null
   } catch (err) {

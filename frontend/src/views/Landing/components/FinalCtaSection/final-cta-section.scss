@@ -5,9 +5,10 @@
 @use '@/styles/components/buttons' as buttons;
 
 #final-cta-section {
-  @include layout-gap(padding, top, 3);
-  @include layout-gap(padding, bottom, 5);
-  @include layout-gap(padding, inline, 1.25);
+  padding-top: calc(var(--layout-gap) * 3);
+  padding-bottom: calc(var(--layout-gap) * 5);
+  padding-left: var(--layout-gap-xl);
+  padding-right: var(--layout-gap-xl);
 
   .wrapper {
     position: relative;

@@ -8,19 +8,19 @@ Vite + Vue 3 + TypeScript — interface hôte pour la gestion d'annonces, réser
 
 ## Architecture — Services à lancer
 
-Le projet nécessite **3 services** pour fonctionner complètement en local :
+Le projet peut tourner en **mode local-json** (sans API) ou en **mode API** :
 
 | # | Service | Commande | Port | Requis |
 |---|---|---|---|---|
-| 1 | **PostgreSQL** (Docker) | `docker compose up -d postgres` | `5432` | ✅ Obligatoire |
-| 2 | **Backend API** (Fastify) | `npm run dev` dans `backend/api/` | `4000` | ✅ Obligatoire |
+| 1 | **PostgreSQL** (Docker) | `docker compose up -d postgres` | `5432` | ✅ Obligatoire (mode API) |
+| 2 | **Backend API** (Fastify) | `npm run dev` dans `backend/api/` | `4000` | ✅ Obligatoire (mode API) |
 | 3 | **Frontend** (Vite) | `npm run dev` dans `frontend/` | `5179` | ✅ Obligatoire |
 
 > Le microservice scraping Python (`backend/microservices/`) est optionnel — uniquement pour l'import d'annonces Airbnb/Booking.
 
 ---
 
-## Démarrage complet (ordre à respecter)
+## Démarrage (mode API)
 
 ### 1. PostgreSQL via Docker
 
@@ -48,7 +48,7 @@ npm run dev
 # Windows (PowerShell)
 cd frontend/
 Copy-Item .env.example .env
-# → Vérifiez VITE_API_BASE_URL=http://localhost:4000/v1
+# → Pour le mode API, utilisez VITE_LISTINGS_DATA_MODE=api
 npm install
 npm run dev
 # → http://localhost:5179
@@ -67,8 +67,9 @@ npm run dev
 ## Variables d'environnement frontend (`frontend/.env`)
 
 ```env
-VITE_LISTINGS_DATA_MODE=api
-VITE_API_BASE_URL=http://localhost:4000/v1
+VITE_LISTINGS_DATA_MODE=local-json
+# VITE_LISTINGS_DATA_MODE=api
+# VITE_API_BASE_URL=http://localhost:4000/v1
 
 VITE_SCRAPING_API_URL=http://localhost:8000
 
@@ -81,7 +82,7 @@ VITE_STRIPE_PAYMENT_RETURN_URL=http://localhost:5179
 VITE_STRIPE_CHECKOUT_OFFLINE_MODE=false
 ```
 
-> En développement, Vite proxifie automatiquement `/v1/*` vers `http://localhost:4000`. Les requêtes apparaissent sous `localhost:5179/v1/...` dans le Network — c'est normal.
+> En mode API, Vite proxifie automatiquement `/v1/*` vers `http://localhost:4000`. Les requêtes apparaissent sous `localhost:5179/v1/...` dans le Network — c'est normal.
 
 ---
 

@@ -48,6 +48,10 @@
     padding-bottom: var(--layout-gap-md);
     padding-left: calc(var(--layout-gap) + var(--safe-area-left));
     justify-content: center;
+
+    padding-left: var(--layout-gap);
+    padding-right: var(--layout-gap);
+    padding-top: var(--layout-gap);
   }
 
   &.is-backoffice-dock {
