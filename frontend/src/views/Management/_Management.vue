@@ -967,6 +967,8 @@ const paymentSubtitle = computed(() => {
 const canEditManualPayments = computed(() => Boolean(paymentPreview.value?.canEditManualPayments))
 
 const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !normalizeInternalNote(noteEditor.value))
+
+console.log("❇️❇️❇️ : ", reservationsForListing.value)
 </script>
 
 <template>
@@ -994,7 +996,10 @@ const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !nor
       >
         <section class="stage">
           <div class="content">
-            <div class="reservation-toolbar">
+            <div
+              v-if="reservationsForListing.length"
+              class="reservation-toolbar"
+            >
               <div
                 v-if="isMobileViewport"
                 class="mobile-back-shell"

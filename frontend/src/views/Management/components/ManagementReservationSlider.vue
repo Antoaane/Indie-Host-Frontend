@@ -38,7 +38,7 @@ const sliderParams = computed(
         Mousewheel as SwiperModule,
       ],
       slidesPerView: 'auto',
-      spaceBetween: 4,
+      spaceBetween: 6,
       freeMode: {
         enabled: true,
         momentumRatio: 0.8,

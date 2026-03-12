@@ -38,7 +38,6 @@ body {
     z-index: 1;
     // height: 100vh;
     // overflow-y: auto;
-    min-height: 100dvh;
     overflow-x: hidden;
     scroll-behavior: auto;
     padding-right: var(--safe-area-right);
@@ -123,7 +122,12 @@ ul {
   }
 }
 
-#landing-page {
+main#landing-page {
+  min-height: 100dvh;
+
+  main {
+    min-height: 100dvh;
+  }
 
   [id*="-section"],
   [class$="-section"] {

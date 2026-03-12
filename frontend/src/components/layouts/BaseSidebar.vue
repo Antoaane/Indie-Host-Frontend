@@ -57,7 +57,7 @@ withDefaults(
   flex-direction: column;
   gap: var(--layout-gap-sm);
   overflow: hidden;
-  box-shadow: 0 14px 28px -16px var(--base-sidebar-shadow-color, rgba(15, 23, 42, 0.18));
+  // box-shadow: 0 14px 28px -16px var(--base-sidebar-shadow-color, rgba(15, 23, 42, 0.18));
 
   > .base-sidebar__header,
   > .base-sidebar__footer {

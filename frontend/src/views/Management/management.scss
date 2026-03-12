@@ -16,7 +16,7 @@
   padding-inline: var(--layout-gap-sm);
 
   @include min-width(lg) {
-    --editor-mobile-dock-height: calc(60px + var(--layout-gap) + var(--layout-gap-md));
+    --editor-mobile-dock-height: calc(70px + var(--layout-gap) + var(--layout-gap-md));
 
     padding-top: var(--editor-mobile-dock-height);
     padding-bottom: 0;
@@ -129,7 +129,7 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      @include effects.big-shadow();
+      // @include effects.big-shadow();
     }
   }
 
@@ -139,7 +139,6 @@
     gap: var(--layout-gap-sm);
 
     padding-bottom: var(--layout-gap-sm);
-    border-bottom: 1px solid rgba($secondary, 0.08);
 
     >.mobile-back-shell {
       flex: 0 0 auto;
