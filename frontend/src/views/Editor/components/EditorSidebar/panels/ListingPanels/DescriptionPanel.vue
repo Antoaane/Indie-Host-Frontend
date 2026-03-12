@@ -298,12 +298,12 @@ onMounted(async () => {
     }
 
     > .actions {
-      @include buttons.low-btn($icon-only: true);
+      @include buttons.primary($theme: white, $icon-only: true, $deep: true);
       flex: 0 0 auto;
 
       > * {
-        width: 2.2rem;
-        height: 2.2rem;
+        width: 2.5rem;
+        height: 2.5rem;
       }
     }
   }
@@ -461,11 +461,11 @@ onMounted(async () => {
   }
 
   .overlay-close {
-    @include buttons.low-btn($icon-only: true);
+    @include buttons.primary($theme: white, $icon-only: true, $deep: true);
 
     > * {
-      width: 2.25rem;
-      height: 2.25rem;
+      width: 2.5rem;
+      height: 2.5rem;
     }
   }
 

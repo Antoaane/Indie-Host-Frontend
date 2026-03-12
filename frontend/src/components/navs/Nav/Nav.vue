@@ -5,7 +5,7 @@ import { useAuth } from '@clerk/vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { Component } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { CalendarClock, Globe, LayoutGrid, MessageSquareMore, PlusSquare } from 'lucide-vue-next'
+import { CalendarClock, LayoutGrid, MessageSquareMore, PlusSquare } from 'lucide-vue-next'
 
 import HostReservationOverlay from '@/components/navs/HostReservationOverlay.vue'
 import BackOfficeDockNav from '@/components/navs/Nav/BackOfficeDockNav.vue'
@@ -79,7 +79,6 @@ type BackOfficeUserRouteName =
   | 'editor-user'
   | 'create-listing-user'
   | 'management-user'
-  | 'domains-user'
   | 'messaging-user'
 
 const currentRouteName = computed(() => {
@@ -186,7 +185,6 @@ const hostNavItems = computed<NavItem[]>(() => [
   },
   { id: 'listings', name: 'Mes annonces', link: resolveBackOfficeRouteLink('editor-user', '/editor') },
   { id: 'reservations', name: 'Réservations', link: resolveBackOfficeRouteLink('management-user', '/management') },
-  { id: 'domains', name: 'Domaines', link: resolveBackOfficeRouteLink('domains-user', '/domains') },
   { id: 'messagery', name: 'Messagerie', link: resolveBackOfficeRouteLink('messaging-user', '/messagerie') },
 ])
 
@@ -215,7 +213,6 @@ const backOfficeDockItems = computed(() => {
   const isEditorRoute = routeName === 'editor' || routeName === 'editor-user'
   const isCreateRoute = routeName === 'create-listing' || routeName === 'create-listing-user'
   const isManagementRoute = routeName === 'management' || routeName === 'management-user'
-  const isDomainsRoute = routeName === 'domains' || routeName === 'domains-user'
   const isMessagingRoute = routeName === 'messaging' || routeName === 'messaging-user'
 
   return [
@@ -232,13 +229,6 @@ const backOfficeDockItems = computed(() => {
       icon: CalendarClock,
       link: resolveBackOfficeRouteLink('management-user', '/management'),
       isActive: isManagementRoute,
-    },
-    {
-      id: 'dock-domains',
-      label: 'Domaines',
-      icon: Globe,
-      link: resolveBackOfficeRouteLink('domains-user', '/domains'),
-      isActive: isDomainsRoute,
     },
     {
       id: 'dock-add-reservation',
