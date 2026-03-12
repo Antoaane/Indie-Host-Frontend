@@ -82,7 +82,7 @@
       gap: 0.6rem;
     }
 
-    >li {
+    >li.nav-link-item {
       @include buttons.secondary;
 
       @media (min-width: 1024px) and (max-width: 1279px) {
@@ -104,6 +104,70 @@
 
         display: flex;
         align-items: center;
+      }
+    }
+
+    >li.auth-item {
+      --nav-auth-size: 2.25rem;
+
+      list-style: none;
+      display: flex;
+      align-items: center;
+
+      >.auth-menu-anchor,
+      >.auth-user-button {
+        width: var(--nav-auth-size);
+        height: var(--nav-auth-size);
+        flex: 0 0 var(--nav-auth-size);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .auth-avatar-button {
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        border: none;
+        border-radius: 999px;
+        background: rgba($accent, 0.12);
+        color: rgba($secondary-button-reference, 0.9);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        outline: 2px solid rgba($secondary-button-reference, 0.14);
+        transition:
+          background-color 140ms ease,
+          color 140ms ease,
+          outline-color 140ms ease,
+          box-shadow 140ms ease,
+          transform 140ms ease;
+
+        &:hover {
+          background: rgba($secondary-button-reference, 0.88);
+          color: $accent;
+          outline-color: rgba($accent, 0.45);
+          box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        &:focus-visible {
+          box-shadow: 0 0 0 3px rgba($accent, 0.35);
+          outline-color: rgba($accent, 0.72);
+        }
+      }
+
+      >.auth-user-button>.cl-rootBox {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      >.auth-user-button .cl-userButtonTrigger {
+        width: 100%;
+        height: 100%;
       }
     }
   }
@@ -201,7 +265,7 @@
       >li {
         @include buttons.secondary;
 
-        &:first-child {
+        &.cta {
           @include buttons.primary(true);
         }
       }
@@ -211,6 +275,45 @@
         min-width: 220px;
         width: 220px;
         flex: 0 0 auto;
+      }
+    }
+  }
+}
+
+.nav-auth-overlay {
+  width: min(210px, calc(100vw - 2rem));
+
+  .nav-auth-menu {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-radius: borders.$rounded-lg;
+    border: 1px solid rgba($secondary, 0.14);
+    background: $accent;
+    box-shadow: 0px 8px 22px rgba(0, 0, 0, 0.2);
+
+    >a {
+      border: 0;
+      border-bottom: 1px solid rgba($secondary, 0.08);
+      background: transparent;
+      color: $secondary-text;
+      text-decoration: none;
+      padding: 0.82rem 0.95rem;
+      font-size: 0.9rem;
+      transition:
+        background-color 140ms ease,
+        color 140ms ease;
+
+      &:last-child {
+        border-bottom: 0;
+      }
+
+      &:hover {
+        background: rgba($background, 0.06);
+      }
+
+      &:focus-visible {
+        @include halo(xs, false, $secondary-text, 0.22);
       }
     }
   }

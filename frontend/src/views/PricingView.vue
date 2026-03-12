@@ -14,6 +14,7 @@ import {
   type StripeSubscriptionState,
   type SubscriptionPlanCode,
 } from '@/domain/api/stripeSubscriptions'
+import { getMarketingPricingPlan, type MarketingPricingPlan } from '@/domain/payments/pricingPlanCatalog'
 import clerkToken from '@/utils/clerkToken'
 
 const PLAN_ORDER: SubscriptionPlanCode[] = ['indiehost', 'superhost', 'megahost']
@@ -59,16 +60,6 @@ function resolveErrorMessage(error: unknown, fallback: string): string {
   return fallback
 }
 
-function formatMoney(amountMinor: number, currencyCode: string): string {
-  const currency = (currencyCode || 'eur').toUpperCase()
-  const amountMajor = Math.max(0, Number(amountMinor) || 0) / 100
-  return new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency,
-    maximumFractionDigits: amountMajor % 1 === 0 ? 0 : 2,
-  }).format(amountMajor)
-}
-
 function isTruthyFlag(value: unknown): boolean {
   const normalized = readQueryValue(value)?.toLowerCase()
   return normalized === '1' || normalized === 'true' || normalized === 'yes' || normalized === 'on'
@@ -83,8 +74,23 @@ const sortedPlans = computed(() => {
   return [...plans.value].sort((left, right) => PLAN_ORDER.indexOf(left.code) - PLAN_ORDER.indexOf(right.code))
 })
 
+type PricingDisplayPlan = StripeSubscriptionPlan & {
+  marketing: MarketingPricingPlan
+}
+
+const displayPlans = computed<PricingDisplayPlan[]>(() => {
+  return sortedPlans.value.map((plan) => ({
+    ...plan,
+    marketing: getMarketingPricingPlan(plan.code),
+  }))
+})
+
 const currentPlanCode = computed(() => subscriptionState.value?.currentPlanCode ?? null)
-const currentPlanName = computed(() => subscriptionState.value?.currentPlan?.name ?? 'Aucun plan actif')
+const currentPlanName = computed(() => {
+  const planCode = subscriptionState.value?.currentPlanCode
+  if (planCode) return getMarketingPricingPlan(planCode).name
+  return subscriptionState.value?.currentPlan?.name ?? 'Aucun plan actif'
+})
 const isUserSignedIn = computed(() => Boolean(isSignedIn.value))
 
 const connectStatusLabel = computed(() => {
@@ -94,20 +100,6 @@ const connectStatusLabel = computed(() => {
   if (status === 'restricted') return 'Stripe Connect restreint'
   return 'Stripe Connect non démarré'
 })
-
-function getPlanFeatureLines(plan: StripeSubscriptionPlan): string[] {
-  const baseLine = `${plan.maxActiveListings} annonce${plan.maxActiveListings > 1 ? 's' : ''} active${plan.maxActiveListings > 1 ? 's' : ''}`
-
-  if (plan.code === 'indiehost') {
-    return [baseLine, 'Paiements Stripe intégrés', 'Support de base']
-  }
-
-  if (plan.code === 'superhost') {
-    return [baseLine, 'Automatisations avancées', 'Priorité support']
-  }
-
-  return [baseLine, 'Fonctions pro multi-logements', 'Accompagnement premium']
-}
 
 function isPlanActive(planCode: SubscriptionPlanCode): boolean {
   return currentPlanCode.value === planCode
@@ -278,10 +270,10 @@ async function handleCheckoutReturn() {
   }
 }
 
-function resolveSignedInButtonLabel(plan: StripeSubscriptionPlan): string {
+function resolveSignedInButtonLabel(plan: PricingDisplayPlan): string {
   if (isPlanBusy(plan.code)) return 'Traitement...'
   if (isPlanActive(plan.code)) return 'Plan actif'
-  return `Choisir ${plan.name}`
+  return `Choisir ${plan.marketing.name}`
 }
 
 watch(
@@ -333,350 +325,190 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="pricing-view">
-    <section class="pricing-hero">
-      <p class="eyebrow">Activation IndieHost</p>
-      <h1>Choisissez votre abonnement</h1>
-      <p>
-        Cette page orchestre l’activation complète: identité utilisateur, abonnement Stripe et initialisation Stripe Connect.
+  <main class="pricing-unified app-pricing">
+    <section class="pricing-shell">
+      <div class="pricing-title">
+        <p class="pricing-eyebrow">Activation IndieHost</p>
+        <h1>Choisissez votre abonnement</h1>
+        <p class="pricing-subtitle">
+          Activez votre plan en quelques clics avec Stripe, puis pilotez vos réservations directes sans commission.
+        </p>
+
+        <div class="status-row">
+          <span>{{ isUserSignedIn ? 'Session connectée' : 'Session non connectée' }}</span>
+          <span>Plan actuel: {{ currentPlanName }}</span>
+          <span>{{ connectStatusLabel }}</span>
+        </div>
+      </div>
+
+      <p
+        v-if="errorMessage"
+        class="pricing-feedback is-error"
+      >
+        {{ errorMessage }}
       </p>
 
-      <div class="status-row">
-        <span>{{ isUserSignedIn ? 'Session connectée' : 'Session non connectée' }}</span>
-        <span>Plan actuel: {{ currentPlanName }}</span>
-        <span>{{ connectStatusLabel }}</span>
-      </div>
-    </section>
-
-    <p
-      v-if="errorMessage"
-      class="feedback is-error"
-    >
-      {{ errorMessage }}
-    </p>
-
-    <p
-      v-if="infoMessage"
-      class="feedback is-info"
-    >
-      {{ infoMessage }}
-    </p>
-
-    <p
-      v-if="isLoadingPlans || isLoadingState"
-      class="feedback is-neutral"
-    >
-      Chargement de votre configuration en cours...
-    </p>
-
-    <section class="plans-grid">
-      <article
-        v-for="plan in sortedPlans"
-        :key="plan.code"
-        class="plan-card"
-        :class="{
-          'is-active': isPlanActive(plan.code),
-          'is-unavailable': !plan.available,
-        }"
+      <p
+        v-if="infoMessage"
+        class="pricing-feedback is-info"
       >
-        <header>
-          <p class="plan-name">{{ plan.name }}</p>
-          <p class="plan-price">
-            {{ formatMoney(plan.monthlyPriceMinor, plan.currency) }}
-            <span>/{{ plan.billingInterval }}</span>
-          </p>
-        </header>
+        {{ infoMessage }}
+      </p>
 
-        <p class="plan-description">
-          {{ plan.description }}
-        </p>
+      <p
+        v-if="isLoadingPlans || isLoadingState"
+        class="pricing-feedback is-neutral"
+      >
+        Chargement de votre configuration en cours...
+      </p>
 
-        <ul>
-          <li
-            v-for="line in getPlanFeatureLines(plan)"
-            :key="line"
-          >
-            {{ line }}
-          </li>
-        </ul>
-
-        <p
-          v-if="!plan.available && plan.unavailableReason"
-          class="plan-unavailable"
+      <section class="plans">
+        <article
+          v-for="plan in displayPlans"
+          :id="plan.marketing.id"
+          :key="plan.code"
+          class="plan"
+          :class="[
+            `is-${plan.marketing.tone}`,
+            { 'is-featured': plan.marketing.tone === 'gold' },
+            { 'is-active': isPlanActive(plan.code) },
+            { 'is-unavailable': !plan.available },
+          ]"
         >
-          {{ plan.unavailableReason }}
-        </p>
+          <div class="plan-topline"></div>
 
-        <div class="plan-actions">
-          <SignedIn>
-            <button
-              type="button"
-              :disabled="!plan.available || isPlanActive(plan.code) || isPlanBusy(plan.code)"
-              @click="startPlanActivation(plan.code)"
+          <div class="plan-head">
+            <div class="plan-badge">
+              <span class="plan-tier">{{ plan.marketing.tier }}</span>
+            </div>
+            <p
+              v-if="plan.marketing.highlight"
+              class="plan-highlight"
             >
-              {{ resolveSignedInButtonLabel(plan) }}
-            </button>
-          </SignedIn>
+              {{ plan.marketing.highlight }}
+            </p>
+            <h3>{{ plan.marketing.name }}</h3>
+            <p class="price">{{ plan.marketing.displayPrice }}</p>
+            <p class="summary">{{ plan.marketing.summary }}</p>
+          </div>
 
-          <SignedOut>
-            <SignUpButton
-              mode="redirect"
-              :force-redirect-url="buildPostAuthRedirectUrl(plan.code)"
-            >
-              <button
-                type="button"
-                :disabled="!plan.available"
-              >
-                Créer un compte et continuer
-              </button>
-            </SignUpButton>
+          <div class="plan-body">
+            <div class="block">
+              <p class="block-label">Inclus</p>
+              <ul>
+                <li
+                  v-for="item in plan.marketing.includes"
+                  :key="item"
+                >
+                  {{ item }}
+                </li>
+              </ul>
+            </div>
 
-            <SignInButton
-              mode="redirect"
-              :force-redirect-url="buildPostAuthRedirectUrl(plan.code)"
+            <div
+              v-if="plan.marketing.options?.length"
+              class="block block-options"
             >
-              <button
-                type="button"
-                class="ghost"
-                :disabled="!plan.available"
-              >
-                J’ai déjà un compte
-              </button>
-            </SignInButton>
-          </SignedOut>
-        </div>
-      </article>
+              <p class="block-label">Options</p>
+              <ul>
+                <li
+                  v-for="option in plan.marketing.options"
+                  :key="option"
+                >
+                  {{ option }}
+                </li>
+              </ul>
+            </div>
+
+            <p class="positioning">{{ plan.marketing.positioning }}</p>
+
+            <p
+              v-if="!plan.available && plan.unavailableReason"
+              class="plan-unavailable"
+            >
+              {{ plan.unavailableReason }}
+            </p>
+
+            <div class="plan-actions">
+              <SignedIn>
+                <button
+                  type="button"
+                  class="plan-cta"
+                  :disabled="!plan.available || isPlanActive(plan.code) || isPlanBusy(plan.code)"
+                  @click="startPlanActivation(plan.code)"
+                >
+                  {{ resolveSignedInButtonLabel(plan) }}
+                </button>
+              </SignedIn>
+
+              <SignedOut>
+                <SignUpButton
+                  mode="redirect"
+                  :force-redirect-url="buildPostAuthRedirectUrl(plan.code)"
+                >
+                  <button
+                    type="button"
+                    class="plan-cta"
+                    :disabled="!plan.available"
+                  >
+                    {{ plan.marketing.cta }}
+                  </button>
+                </SignUpButton>
+
+                <SignInButton
+                  mode="redirect"
+                  :force-redirect-url="buildPostAuthRedirectUrl(plan.code)"
+                >
+                  <button
+                    type="button"
+                    class="plan-cta ghost"
+                    :disabled="!plan.available"
+                  >
+                    J’ai déjà un compte
+                  </button>
+                </SignInButton>
+              </SignedOut>
+            </div>
+
+            <p class="plan-helper">
+              {{ plan.marketing.helper }}
+            </p>
+          </div>
+        </article>
+      </section>
+
+      <p class="account-link">
+        Déjà client ? <RouterLink to="/sign-in?redirect_url=%2Fpricing">Se connecter</RouterLink>
+      </p>
     </section>
   </main>
 </template>
 
 <style lang="scss">
-.pricing-view {
-  --pricing-ink: #191921;
-  --pricing-muted: #59596a;
-  --pricing-line: rgba(17, 17, 23, 0.18);
-  --pricing-soft: rgba(255, 255, 255, 0.86);
-  --pricing-card: rgba(255, 255, 255, 0.94);
-  --pricing-card-active: rgba(17, 17, 23, 0.96);
-  --pricing-card-active-ink: #fbfbff;
-  --pricing-accent: #00a37a;
-  --pricing-danger: #b90f3b;
+@use '@/views/Landing/components/PricingSection/pricing-section.scss';
 
-  min-height: 100vh;
-  padding: 8.5rem 1rem 4rem;
-  font-family: 'Outfit', sans-serif;
-  background:
-    radial-gradient(75rem 34rem at -8% 110%, rgba(0, 163, 122, 0.2), transparent 68%),
-    radial-gradient(68rem 32rem at 110% -8%, rgba(33, 55, 146, 0.18), transparent 62%),
-    linear-gradient(160deg, #efefe9, #f8f8ff 40%, #f4f5ee 100%);
-}
-
-.pricing-hero {
-  max-width: 72rem;
-  margin: 0 auto 1.5rem;
-}
-
-.eyebrow {
-  margin: 0;
-  font-weight: 700;
-  font-size: 0.85rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--pricing-accent);
-}
-
-.pricing-hero h1 {
-  margin: 0.45rem 0 0;
-  font-family: 'Fustat', sans-serif;
-  font-size: clamp(2rem, 1.5rem + 2.2vw, 3.6rem);
-  line-height: 1.08;
-  color: var(--pricing-ink);
-}
-
-.pricing-hero > p {
-  margin: 0.95rem 0 0;
-  max-width: 62ch;
-  color: var(--pricing-muted);
-}
-
-.status-row {
-  margin-top: 1rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-}
-
-.status-row > span {
-  border: 1px solid var(--pricing-line);
-  border-radius: 999px;
-  padding: 0.4rem 0.7rem;
-  font-size: 0.82rem;
-  color: var(--pricing-ink);
-  background: var(--pricing-soft);
-}
-
-.feedback {
-  max-width: 72rem;
-  margin: 0.75rem auto;
-  border-radius: 0.9rem;
-  padding: 0.75rem 0.9rem;
-  font-size: 0.95rem;
-}
-
-.feedback.is-error {
-  background: rgba(185, 15, 59, 0.12);
-  color: var(--pricing-danger);
-  border: 1px solid rgba(185, 15, 59, 0.3);
-}
-
-.feedback.is-info {
-  background: rgba(0, 163, 122, 0.14);
-  color: #00614b;
-  border: 1px solid rgba(0, 163, 122, 0.32);
-}
-
-.feedback.is-neutral {
-  background: rgba(25, 25, 33, 0.08);
-  color: var(--pricing-ink);
-  border: 1px solid var(--pricing-line);
-}
-
-.plans-grid {
-  max-width: 72rem;
-  margin: 1.25rem auto 0;
-  display: grid;
-  grid-template-columns: repeat(1, minmax(0, 1fr));
-  gap: 1rem;
-}
-
-.plan-card {
-  border-radius: 1.1rem;
-  border: 1px solid var(--pricing-line);
-  background: var(--pricing-card);
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  box-shadow: 0 0.9rem 2rem rgba(22, 22, 27, 0.08);
-}
-
-.plan-card.is-active {
-  background: var(--pricing-card-active);
-  border-color: rgba(255, 255, 255, 0.25);
-  color: var(--pricing-card-active-ink);
-}
-
-.plan-card.is-active .plan-name,
-.plan-card.is-active .plan-price,
-.plan-card.is-active .plan-description,
-.plan-card.is-active li {
-  color: var(--pricing-card-active-ink);
-}
-
-.plan-card header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.plan-name {
-  margin: 0;
-  font-family: 'Fustat', sans-serif;
-  font-size: 1.35rem;
-  color: var(--pricing-ink);
-}
-
-.plan-price {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--pricing-ink);
-}
-
-.plan-price span {
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-
-.plan-description {
-  margin: 0;
-  color: var(--pricing-muted);
-  min-height: 2.8rem;
-}
-
-.plan-card ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 0.35rem;
-}
-
-.plan-card li {
-  color: var(--pricing-ink);
-  font-size: 0.95rem;
-}
-
-.plan-card li::before {
-  content: '•';
-  margin-right: 0.4rem;
-  color: var(--pricing-accent);
-}
-
-.plan-unavailable {
-  margin: 0;
-  color: var(--pricing-danger);
-  font-size: 0.86rem;
-}
-
-.plan-actions {
-  margin-top: auto;
-  display: grid;
-  gap: 0.55rem;
-}
-
-.plan-actions .cl-rootBox {
-  display: block;
-}
-
-.plan-actions button {
+.pricing-unified.app-pricing {
   width: 100%;
-  border: 1px solid #121219;
-  border-radius: 0.75rem;
-  min-height: 2.8rem;
-  padding: 0.6rem 0.9rem;
-  font-weight: 700;
-  font-size: 0.95rem;
-  color: #f7f7ff;
-  background: #111117;
-  cursor: pointer;
-  transition: transform 180ms ease, opacity 180ms ease, border-color 180ms ease;
-}
+  min-height: auto;
+  padding-top: clamp(6.25rem, 11vw, 8.5rem);
+  padding-bottom: clamp(1rem, 2.4vw, 2rem);
 
-.plan-actions button:hover:not(:disabled) {
-  transform: translateY(-1px);
-}
-
-.plan-actions button.ghost {
-  border-color: var(--pricing-line);
-  background: transparent;
-  color: var(--pricing-ink);
-}
-
-.plan-actions button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-@media (min-width: 900px) {
-  .plans-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  > .pricing-shell {
+    width: min(100%, 92rem);
+    margin: 0 auto;
+    padding-left: clamp(0.75rem, 2vw, 1.5rem);
+    padding-right: clamp(0.75rem, 2vw, 1.5rem);
+    box-sizing: border-box;
   }
 
-  .plan-card {
-    min-height: 28rem;
-    padding: 1.2rem;
+  .pricing-title {
+    width: min(100%, 54rem);
+  }
+
+  .plans {
+    grid-template-columns: repeat(auto-fit, minmax(18.5rem, 1fr));
+    align-items: stretch;
+    gap: clamp(0.9rem, 1.8vw, 1.25rem);
   }
 }
 </style>

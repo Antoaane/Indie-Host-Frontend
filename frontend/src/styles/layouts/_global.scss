@@ -34,7 +34,7 @@ body {
 
   background-color: $background;
 
-  main {
+  > main {
     z-index: 1;
     // height: 100vh;
     // overflow-y: auto;

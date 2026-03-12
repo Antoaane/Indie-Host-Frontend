@@ -5,94 +5,11 @@ import { SignUpButton, SignedIn, SignedOut } from '@clerk/vue'
 import { useRouter } from 'vue-router'
 
 import type { SubscriptionPlanCode } from '@/domain/api/stripeSubscriptions'
-
-type PricingPlan = {
-  id: string
-  code: SubscriptionPlanCode
-  tier: string
-  name: string
-  price: string
-  summary: string
-  includes: string[]
-  options?: string[]
-  positioning: string
-  cta: string
-  helper: string
-  tone: 'indigo' | 'gold' | 'red'
-}
+import { MARKETING_PRICING_PLANS } from '@/domain/payments/pricingPlanCatalog'
 
 const router = useRouter()
 
-const plans: PricingPlan[] = [
-  {
-    id: 'indiehost-free',
-    code: 'indiehost',
-    tier: 'Plan 1',
-    name: 'IndieHost FREE',
-    price: 'Gratuit',
-    summary: "Pour les hôtes avec 1 logement listé comprenant au maximum 2 annonces.",
-    includes: [
-      '1 page de réservation personnalisée',
-      'Paiement en ligne sécurisé (Stripe : CB, SEPA, Apple Pay)',
-      'Facturation automatique pour les paiements en ligne (résumé mensuel + export CSV)',
-      'Calendrier connecté iCAL + gestion des disponibilités et tarifs',
-      'Messagerie fluide hôte-voyageur sans compte',
-      'Sous-domaine inclus',
-      "Jusqu'à 8 séjours par mois",
-    ],
-    positioning: '100 % opérationnel dès le jour 1 pour un particulier. Zéro commission, gratuit.',
-    cta: 'Activer gratuitement',
-    helper: 'Aucune carte bancaire requise.',
-    tone: 'indigo',
-  },
-  {
-    id: 'superhost',
-    code: 'superhost',
-    tier: 'Plan 2',
-    name: 'SuperHost',
-    price: '39 EUR / mois TTC',
-    summary: "Pour les hôtes semi-pros qui veulent gagner en autonomie et fidéliser.",
-    includes: [
-      'Tout le plan IndieHost',
-      "Jusqu'à 3 pages de réservation personnalisées",
-      'Connexion avec les channel managers (PMS)',
-      "Ajout manuel d'une nouvelle réservation dans le calendrier centralisé",
-      'Annonces avec thèmes personnalisés',
-      "Livret d'accueil physique personnalisable",
-      'Conditions de paiement étendues',
-      'Réservations illimitées',
-    ],
-    options: [
-      'URL personnalisée : + 5 EUR / mois',
-      'Google Travel intégration : + 12 EUR / mois',
-    ],
-    positioning: 'Le bon équilibre pour professionnaliser son activité sans perdre en simplicité.',
-    cta: "S'abonner à SuperHost",
-    helper: 'Paiement sécurisé et activation guidée via Stripe.',
-    tone: 'gold',
-  },
-  {
-    id: 'megahost',
-    code: 'megahost',
-    tier: 'Plan 3',
-    name: 'MegaHost',
-    price: 'A partir de 199 EUR / mois TTC',
-    summary: "Pour les pros de l'hébergement : gîte, hôtel, conciergerie ou portefeuille multi-biens.",
-    includes: [
-      'Tout le plan SuperHost',
-      '15 pages de réservation personnalisées',
-      'URL personnalisée incluse',
-      'Google Travel intégration incluse',
-      "E-commerce intégré au livret d'accueil",
-      'Campagnes marketing email (promo, retour, anniversaire...)',
-      "Statistiques avancées (origine du trafic, CA/logement, taux d'occupation)",
-    ],
-    positioning: 'Pensé pour les structures qui veulent centraliser, scaler et piloter finement leur acquisition directe.',
-    cta: 'Souscrire à MegaHost',
-    helper: 'Parcours d’abonnement direct, avec retour sécurisé dans IndieHost.',
-    tone: 'red',
-  },
-]
+const plans = MARKETING_PRICING_PLANS
 
 function buildPricingReturnUrl(planCode: SubscriptionPlanCode): string {
   const path = `/pricing?plan=${encodeURIComponent(planCode)}&autostart=1`
@@ -106,13 +23,16 @@ function goToPricing(planCode: SubscriptionPlanCode) {
 </script>
 
 <template>
-  <section id="pricing-section">
-    <div class="wrapper">
-      <div class="title">
+  <section
+    id="pricing-section"
+    class="pricing-unified landing-pricing"
+  >
+    <div class="pricing-shell">
+      <div class="pricing-title">
         <p
           data-sr
           data-sr-y="-20"
-          class="eyebrow"
+          class="pricing-eyebrow"
         >
           Tarifs
         </p>
@@ -125,9 +45,9 @@ function goToPricing(planCode: SubscriptionPlanCode) {
         <p
           data-sr
           data-sr-y="30"
-          class="subtitle"
+          class="pricing-subtitle"
         >
-          Commencez gratuitement, puis débloquez plus de volume, de personnalisation et d'automatisation quand votre activité le demande.
+          Choisissez le niveau de volume, de personnalisation et d’automatisation adapté à votre activité.
         </p>
       </div>
 
@@ -149,13 +69,13 @@ function goToPricing(planCode: SubscriptionPlanCode) {
               <span class="plan-tier">{{ plan.tier }}</span>
             </div>
             <p
-              v-if="plan.tone === 'gold'"
+              v-if="plan.highlight"
               class="plan-highlight"
             >
-              Le plus choisi
+              {{ plan.highlight }}
             </p>
             <h3>{{ plan.name }}</h3>
-            <p class="price">{{ plan.price }}</p>
+            <p class="price">{{ plan.displayPrice }}</p>
             <p class="summary">{{ plan.summary }}</p>
           </div>
 
