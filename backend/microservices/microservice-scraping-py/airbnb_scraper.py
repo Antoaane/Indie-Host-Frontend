@@ -3,6 +3,7 @@ Scraper Airbnb base sur gobnb (https://github.com/johnbalvin/pybnb).
 Retourne un format normalise pour l'import frontend, meme en fallback.
 """
 import argparse
+import html
 import json
 import random
 import re
@@ -39,6 +40,57 @@ SUMMARY_ITEM_RE = re.compile(
 )
 IMAGE_URL_RE = re.compile(r"^https?://", re.IGNORECASE)
 PRICE_NUMBER_RE = re.compile(r"(-?\d+(?:[.,]\d+)?)")
+COUNT_TOKEN_RE = re.compile(r"(?P<count>\d+|un|une|one|a|an)\b", re.IGNORECASE)
+ROOM_COUNT_PATTERNS = {
+    "guest_capacity": (
+        re.compile(r"(?P<count>\d+|un|une|one|a|an)\s+(?:guest|guests|voyageur|voyageurs|person|persons|people)", re.IGNORECASE),
+    ),
+    "bedrooms": (
+        re.compile(r"(?P<count>\d+|un|une|one|a|an)\s+(?:bedroom|bedrooms|chambre|chambres)", re.IGNORECASE),
+    ),
+    "beds": (
+        re.compile(r"(?P<count>\d+|un|une|one|a|an)\s+(?:bed|beds|lit|lits)\b", re.IGNORECASE),
+    ),
+    "bathrooms": (
+        re.compile(r"(?P<count>\d+|un|une|one|a|an)\s+(?:bathroom|bathrooms|bath|baths|salle(?:s)? de bain(?:s)?)", re.IGNORECASE),
+    ),
+    "kitchens": (
+        re.compile(r"(?P<count>\d+|un|une|one|a|an)\s+(?:kitchen|kitchens|cuisine|cuisines)\b", re.IGNORECASE),
+    ),
+}
+DESCRIPTION_SECTION_SELECTORS = (
+    "[data-section-id*='DESCRIPTION']",
+    "[data-plugin-in-point-id*='DESCRIPTION']",
+)
+OVERVIEW_SECTION_SELECTORS = (
+    "[data-section-id='OVERVIEW_DEFAULT_V2'] li",
+    "[data-plugin-in-point-id='OVERVIEW_DEFAULT_V2'] li",
+    "[data-section-id='OVERVIEW_DEFAULT'] li",
+    "[data-plugin-in-point-id='OVERVIEW_DEFAULT'] li",
+)
+HIGHLIGHT_SECTION_SELECTORS = (
+    "[data-section-id*='HIGHLIGHT']",
+    "[data-plugin-in-point-id*='HIGHLIGHT']",
+    "[data-section-id*='PREVIEW_AMENIT']",
+    "[data-plugin-in-point-id*='PREVIEW_AMENIT']",
+)
+HIGHLIGHT_KEY_HINTS = ("highlight", "previewamenit", "preview_amenit", "listingexpectation", "primaryamenit")
+GENERIC_DESCRIPTION_TITLES = {
+    "description",
+    "about this space",
+    "about this place",
+    "a propos de ce logement",
+    "a propos du logement",
+    "a propos de ce lieu",
+}
+SKIPPED_DESCRIPTION_LINES = {
+    "show more",
+    "show less",
+    "afficher plus",
+    "afficher moins",
+    "voir plus",
+    "voir moins",
+}
 
 # File d'attente globale pour sequencer les scrapes
 REQUEST_QUEUE = deque()
@@ -121,6 +173,208 @@ def _dedupe_texts(values: list[str]) -> list[str]:
         seen.add(key)
         out.append(clean)
     return out
+
+
+def _parse_count_token(raw_count: str) -> int | None:
+    cleaned = _clean_text(raw_count).casefold()
+    if not cleaned:
+        return None
+    if cleaned.isdigit():
+        return int(cleaned)
+    if cleaned in {"un", "une", "one", "a", "an"}:
+        return 1
+    return None
+
+
+def _extract_room_counts_from_texts(values: list[str]) -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for value in values:
+        text = _clean_text(value)
+        if not text:
+            continue
+        for key, patterns in ROOM_COUNT_PATTERNS.items():
+            for pattern in patterns:
+                match = pattern.search(text)
+                if not match:
+                    continue
+                parsed = _parse_count_token(match.group("count"))
+                if parsed is None:
+                    continue
+                counts[key] = max(counts.get(key, 0), parsed)
+                break
+    return counts
+
+
+def _merge_room_counts(*counts_list: dict[str, int]) -> dict[str, int]:
+    merged: dict[str, int] = {}
+    for counts in counts_list:
+        for key, value in counts.items():
+            if isinstance(value, int) and value > 0:
+                merged[key] = max(merged.get(key, 0), value)
+    return merged
+
+
+def _sanitize_html_fragment(fragment: str, default_tag: str = "p") -> str:
+    raw_fragment = fragment.strip()
+    if not raw_fragment:
+        return ""
+
+    if not HAS_FALLBACK:
+        text = html.escape(_clean_text(raw_fragment))
+        return f"<{default_tag}>{text}</{default_tag}>" if text else ""
+
+    parsed = BeautifulSoup(raw_fragment, "html.parser")
+    allowed_tags = {"p", "br", "strong", "b", "em", "i", "ul", "ol", "li", "h2", "h3"}
+
+    for tag in parsed.find_all(True):
+        if tag.name not in allowed_tags:
+            tag.unwrap()
+            continue
+        tag.attrs = {}
+
+    rendered = "".join(str(node) for node in parsed.contents).strip()
+    if not rendered:
+        text = html.escape(_clean_text(parsed.get_text(" ", strip=True)))
+        return f"<{default_tag}>{text}</{default_tag}>" if text else ""
+
+    if re.match(r"^<\s*(?:p|h2|h3|ul|ol|li)\b", rendered, re.IGNORECASE):
+        return rendered
+    return f"<{default_tag}>{rendered}</{default_tag}>"
+
+
+def _extract_overview_items_from_soup(soup: "BeautifulSoup | None") -> list[str]:
+    if soup is None:
+        return []
+    items: list[str] = []
+    for selector in OVERVIEW_SECTION_SELECTORS:
+        for node in soup.select(selector):
+            text = _clean_text(node.get_text(" ", strip=True))
+            if text:
+                items.append(text)
+    return _dedupe_texts(items)
+
+
+def _extract_description_sections_from_soup(soup: "BeautifulSoup | None") -> list[dict[str, str]]:
+    if soup is None:
+        return []
+
+    sections: list[dict[str, str]] = []
+    seen: set[str] = set()
+    containers = []
+    for selector in DESCRIPTION_SECTION_SELECTORS:
+        containers.extend(soup.select(selector))
+
+    for container in containers:
+        container_title = ""
+        first_heading = container.find(["h2", "h3"])
+        if first_heading:
+            raw_title = _clean_text(first_heading.get_text(" ", strip=True))
+            if raw_title.casefold() not in GENERIC_DESCRIPTION_TITLES:
+                container_title = raw_title
+
+        current_title = container_title
+        current_parts: list[str] = []
+        for node in container.find_all(["h3", "h4", "p", "li"], recursive=True):
+            text = _clean_text(node.get_text(" ", strip=True))
+            if not text:
+                continue
+            if text.casefold() in SKIPPED_DESCRIPTION_LINES:
+                continue
+
+            if node.name in {"h3", "h4"}:
+                if current_parts:
+                    content = "".join(current_parts).strip()
+                    key = f"{current_title.casefold()}::{_clean_text(content).casefold()}"
+                    if content and key not in seen:
+                        seen.add(key)
+                        sections.append({"title": current_title, "content": content})
+                current_title = text
+                current_parts = []
+                continue
+
+            sanitized = _sanitize_html_fragment(str(node), default_tag="li" if node.name == "li" else "p")
+            if sanitized:
+                current_parts.append(sanitized)
+
+        if current_parts:
+            content = "".join(current_parts).strip()
+            key = f"{current_title.casefold()}::{_clean_text(content).casefold()}"
+            if content and key not in seen:
+                seen.add(key)
+                sections.append({"title": current_title, "content": content})
+
+    return sections
+
+
+def _render_description_html(sections: list[dict[str, str]], fallback_text: str) -> str:
+    parts: list[str] = []
+    for section in sections:
+        title = _clean_text(section.get("title"))
+        content = (section.get("content") or "").strip()
+        if not content:
+            continue
+        if title:
+            parts.append(f"<h2>{html.escape(title)}</h2>")
+        parts.append(content)
+
+    rendered = "".join(parts).strip()
+    if rendered:
+        return rendered
+
+    clean_fallback = fallback_text.strip()
+    if not clean_fallback:
+        return ""
+    if "<" in clean_fallback and ">" in clean_fallback:
+        return _sanitize_html_fragment(clean_fallback, default_tag="p")
+    return _sanitize_html_fragment(html.escape(_clean_text(clean_fallback)), default_tag="p")
+
+
+def _extract_highlight_titles_from_value(value: Any, active: bool = False) -> list[str]:
+    titles: list[str] = []
+    if isinstance(value, dict):
+        if active:
+            title = _clean_text(value.get("title") or value.get("name") or value.get("label"))
+            subtitle = _clean_text(value.get("subtitle") or value.get("description"))
+            if title and len(title) <= 80:
+                titles.append(title)
+            if subtitle and len(subtitle) <= 80:
+                titles.append(subtitle)
+        for key, child in value.items():
+            key_name = _clean_text(key).lower()
+            child_active = active or any(hint in key_name for hint in HIGHLIGHT_KEY_HINTS)
+            titles.extend(_extract_highlight_titles_from_value(child, child_active))
+    elif isinstance(value, list):
+        for child in value:
+            titles.extend(_extract_highlight_titles_from_value(child, active))
+    elif active and isinstance(value, str):
+        text = _clean_text(value)
+        if text and len(text) <= 80:
+            titles.append(text)
+    return titles
+
+
+def _extract_highlight_titles(*roots: Any, soup: "BeautifulSoup | None" = None) -> list[str]:
+    titles: list[str] = []
+    for root in roots:
+        titles.extend(_extract_highlight_titles_from_value(root))
+
+    if soup is not None:
+        for selector in HIGHLIGHT_SECTION_SELECTORS:
+            for container in soup.select(selector):
+                for node in container.find_all(["h2", "h3", "p", "li", "span"], recursive=True):
+                    text = _clean_text(node.get_text(" ", strip=True))
+                    if text and len(text) <= 80 and text.casefold() not in SKIPPED_DESCRIPTION_LINES:
+                        titles.append(text)
+
+    filtered = []
+    for title in _dedupe_texts(titles):
+        normalized = title.casefold()
+        if normalized in GENERIC_DESCRIPTION_TITLES:
+            continue
+        if COUNT_TOKEN_RE.fullmatch(normalized):
+            continue
+        filtered.append(title)
+    return filtered
 
 
 def _normalize_image_entries(values: list[str]) -> list[dict]:
@@ -520,6 +774,11 @@ def _normalize_scraped_data(
             amenities = []
 
     summary_items = _extract_summary_items(*roots)
+    overview_items = _extract_overview_items_from_soup(soup)
+    room_counts = _merge_room_counts(
+        _extract_room_counts_from_texts(summary_items),
+        _extract_room_counts_from_texts(overview_items),
+    )
     room_type = _first_non_empty(result.get("room_type"), ld_listing.get("@type"))
     if room_type and room_type.lower() in {"lodgingbusiness", "product", "house", "apartment", "hotel"}:
         room_type = "Logement entier"
@@ -538,7 +797,9 @@ def _normalize_scraped_data(
         house_rules = _extract_house_rules(*roots)
 
     title = _first_non_empty(result.get("title"), ld_listing.get("name"), meta_title)
-    description = _first_non_empty(result.get("description"), ld_listing.get("description"), meta_description)
+    description_preview = _first_non_empty(result.get("description"), ld_listing.get("description"), meta_description)
+    description_sections = _extract_description_sections_from_soup(soup)
+    description = _render_description_html(description_sections, description_preview)
     precise_address = _first_non_empty(result.get("precise_address"), location.get("precise_address"))
     city = _first_non_empty(result.get("city"), location.get("city"))
     region = _first_non_empty(result.get("region"), location.get("region"))
@@ -557,12 +818,15 @@ def _normalize_scraped_data(
             sub_description["title"] = f"{room_type} - {location_title}"
         else:
             sub_description["title"] = location_title
-    if summary_items and not isinstance(sub_description.get("items"), list):
-        sub_description["items"] = summary_items
+    overview_or_summary_items = overview_items or summary_items
+    if overview_or_summary_items:
+        sub_description["items"] = overview_or_summary_items
 
     location_descriptions = result.get("location_descriptions")
     if (not isinstance(location_descriptions, list) or not location_descriptions) and location_title:
         location_descriptions = [{"title": location_title, "content": precise_address or location_title}]
+
+    highlight_titles = _extract_highlight_titles(*roots, soup=soup)
 
     normalized = {
         **result,
@@ -577,6 +841,9 @@ def _normalize_scraped_data(
         "images": images,
         "house_rules": house_rules,
         "sub_description": sub_description,
+        "overview_items": overview_or_summary_items,
+        "room_counts": room_counts,
+        "highlight_titles": highlight_titles,
         "location_descriptions": location_descriptions,
         "precise_address": precise_address,
         "city": city,
@@ -636,6 +903,28 @@ def process_queue(
 
 def _fetch_page_fallback(url: str, proxy_url: str) -> dict:
     """Recupere la page, extrait les donnees HTML/JSON-LD et normalise le resultat."""
+    soup, embedded_data, raw_deferred = _fetch_page_context(url, proxy_url)
+
+    base = {"listing_url": url, "source": "fallback_embedded_json"}
+    if embedded_data is not None:
+        base["embedded_data"] = embedded_data
+    if raw_deferred is not None:
+        base["raw_deferred"] = raw_deferred
+    if embedded_data is None and raw_deferred is None:
+        base["error"] = "Aucun JSON differe trouve dans la page."
+
+    return _normalize_scraped_data(
+        base,
+        url=url,
+        source="fallback_embedded_json",
+        soup=soup,
+        embedded_data=embedded_data,
+        raw_deferred=raw_deferred,
+    )
+
+
+def _fetch_page_context(url: str, proxy_url: str) -> tuple["BeautifulSoup", Any, Any]:
+    """Recupere le HTML de la page et les donnees JSON embarquees si disponibles."""
     headers = {
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "en",
@@ -664,23 +953,7 @@ def _fetch_page_fallback(url: str, proxy_url: str) -> dict:
             break
         if raw_deferred is None:
             raw_deferred = data
-
-    base = {"listing_url": url, "source": "fallback_embedded_json"}
-    if embedded_data is not None:
-        base["embedded_data"] = embedded_data
-    if raw_deferred is not None:
-        base["raw_deferred"] = raw_deferred
-    if embedded_data is None and raw_deferred is None:
-        base["error"] = "Aucun JSON differe trouve dans la page."
-
-    return _normalize_scraped_data(
-        base,
-        url=url,
-        source="fallback_embedded_json",
-        soup=soup,
-        embedded_data=embedded_data,
-        raw_deferred=raw_deferred,
-    )
+    return soup, embedded_data, raw_deferred
 
 
 def scrape_listing(
@@ -718,6 +991,20 @@ def scrape_listing(
 
     if not isinstance(data, dict):
         data = {"raw": data}
+
+    if HAS_FALLBACK:
+        try:
+            soup, embedded_data, raw_deferred = _fetch_page_context(url, proxy_url or "")
+            return _normalize_scraped_data(
+                data,
+                url=url,
+                source="gobnb",
+                soup=soup,
+                embedded_data=embedded_data,
+                raw_deferred=raw_deferred,
+            )
+        except Exception as e:  # pragma: no cover - enrichissement best effort
+            _safe_print(f"Enrichissement HTML Airbnb indisponible: {e}", file=sys.stderr)
 
     return _normalize_scraped_data(data, url=url, source="gobnb")
 

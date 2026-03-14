@@ -162,7 +162,7 @@ export function useEditorController(options: EditorControllerOptions) {
     }
   }
 
-  function applyListingStatusPatch(payload: { listingId: string; status: string }) {
+  async function applyListingStatusPatch(payload: { listingId: string; status: string }) {
     const listingId = payload.listingId.trim()
     const normalizedStatus = normalizeListingStatus(payload.status)
     if (!listingId || !normalizedStatus) return
@@ -171,36 +171,44 @@ export function useEditorController(options: EditorControllerOptions) {
     const currentStatus = normalizeListingStatus(currentListing?.status)
     if (currentStatus === normalizedStatus) return
 
-    if (!listingState.publishedSnapshotByListingId[listingId]) {
-      const publishedSnapshot = snapshotListingStatus(currentListing?.status)
-      listingState.publishedSnapshotByListingId[listingId] = publishedSnapshot
-      persistListingPublishedSnapshot(listingId, publishedSnapshot)
-    }
-
     const patch: DraftPatch = { core: { status: normalizedStatus } }
     const isSelectedListing = selectedListingId.value === listingId
 
-    const selectedDraftSnapshot = isSelectedListing && draftLifecycle.draft.value
-      ? snapshotListingDraft(draftLifecycle.draft.value)
-      : null
-    const baseDraftSnapshot = selectedDraftSnapshot
-      ?? listingState.draftSnapshotByListingId[listingId]
-      ?? snapshotListingStatus(currentListing?.status)
-    const nextDraftSnapshot = snapshotListingDraft(applyPatchToDraftBundle(baseDraftSnapshot, patch))
+    try {
+      // Les changements de statut déclenchés depuis la card doivent être appliqués immédiatement,
+      // sans passer par le flux de validation manuelle des autres brouillons.
+      await options.source.value.patchListingDraft(listingId, patch)
 
-    listingState.draftSnapshotByListingId[listingId] = nextDraftSnapshot
-    persistListingDraft(listingId, nextDraftSnapshot)
-    if (isSelectedListing) {
-      draftLifecycle.draft.value = snapshotListingDraft(nextDraftSnapshot)
-    }
+      const selectedDraftSnapshot = isSelectedListing && draftLifecycle.draft.value
+        ? snapshotListingDraft(draftLifecycle.draft.value)
+        : null
+      const baseDraftSnapshot = selectedDraftSnapshot
+        ?? listingState.draftSnapshotByListingId[listingId]
+        ?? snapshotListingStatus(currentListing?.status)
+      const basePublishedSnapshot = listingState.publishedSnapshotByListingId[listingId]
+        ?? snapshotListingStatus(currentListing?.status)
 
-    console.log('[Editor] apply listing status patch', { listingId, status: normalizedStatus })
-    listingState.applyPatchToListingCard(listingId, patch)
-    listingState.syncListingPendingChanges(listingId)
-    patchQueue.queuePatchPersistence(listingId, patch)
+      const nextDraftSnapshot = snapshotListingDraft(applyPatchToDraftBundle(baseDraftSnapshot, patch))
+      const nextPublishedSnapshot = snapshotListingDraft(applyPatchToDraftBundle(basePublishedSnapshot, patch))
 
-    if (normalizedStatus === 'deleted') {
-      handleDeletedListing(listingId)
+      listingState.draftSnapshotByListingId[listingId] = nextDraftSnapshot
+      listingState.publishedSnapshotByListingId[listingId] = nextPublishedSnapshot
+      persistListingDraft(listingId, nextDraftSnapshot)
+      persistListingPublishedSnapshot(listingId, nextPublishedSnapshot)
+
+      if (isSelectedListing) {
+        draftLifecycle.draft.value = snapshotListingDraft(nextDraftSnapshot)
+      }
+
+      console.log('[Editor] apply listing status patch (auto-applied)', { listingId, status: normalizedStatus })
+      listingState.applyPatchToListingCard(listingId, patch)
+      listingState.syncListingPendingChanges(listingId)
+
+      if (normalizedStatus === 'deleted') {
+        handleDeletedListing(listingId)
+      }
+    } catch (error) {
+      console.error('[Editor] failed to auto-apply listing status patch', { listingId, status: normalizedStatus, error })
     }
   }
 
