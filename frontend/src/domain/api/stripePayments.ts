@@ -64,16 +64,6 @@ function parseEndpoint(raw: string): ParsedEndpoint {
 function normalizeApiBaseUrl(baseUrl: string): string {
   const trimmed = baseUrl.replace(/\/$/, '')
   if (!trimmed) return ''
-
-  if (import.meta.env.DEV) {
-    try {
-      const parsed = new URL(trimmed)
-      return parsed.pathname.replace(/\/$/, '') || '/'
-    } catch {
-      // Keep the original value for relative URLs.
-    }
-  }
-
   return trimmed
 }
 
@@ -94,10 +84,13 @@ function buildCreateIntentUrl(): string {
   if (/^https?:\/\//i.test(PAYMENT_INTENT_PATH)) return PAYMENT_INTENT_PATH
 
   const parsedBase = parseEndpoint(BASE_API_URL)
-  if (!parsedBase.path && !parsedBase.origin) return PAYMENT_INTENT_PATH
-
-  const basePath = parsedBase.path ?? BASE_API_URL
-  return joinUrl(basePath, PAYMENT_INTENT_PATH)
+  if (parsedBase.origin) {
+    const originWithPath = joinUrl(parsedBase.origin, parsedBase.path ?? '/')
+    return joinUrl(originWithPath, PAYMENT_INTENT_PATH)
+  }
+  if (parsedBase.path) return joinUrl(parsedBase.path, PAYMENT_INTENT_PATH)
+  if (!BASE_API_URL) return PAYMENT_INTENT_PATH
+  return joinUrl(BASE_API_URL, PAYMENT_INTENT_PATH)
 }
 
 function toStringValue(value: unknown): string {
@@ -130,6 +123,21 @@ async function getAuthToken(): Promise<string | null> {
   const token = (clerkToken.value ?? '').trim()
   if (token) return token
   return waitForClerkToken({ timeoutMs: 2000, pollEveryMs: 50 })
+}
+
+function resolveErrorMessage(error: unknown): string {
+  if (error && typeof error === 'object') {
+    const maybeAxiosData = (error as { response?: { data?: unknown } }).response?.data
+    if (maybeAxiosData && typeof maybeAxiosData === 'object') {
+      const message = (maybeAxiosData as { message?: unknown }).message
+      if (typeof message === 'string' && message.trim()) return message.trim()
+    }
+
+    const maybeMessage = (error as { message?: unknown }).message
+    if (typeof maybeMessage === 'string' && maybeMessage.trim()) return maybeMessage.trim()
+  }
+
+  return 'Impossible de préparer le paiement Stripe.'
 }
 
 function normalizeSessionResponse(
@@ -195,10 +203,16 @@ export async function createStripePaymentIntent(input: CreateStripePaymentIntent
     metadata: input.metadata ?? {},
   }
 
-  const { data } = await axios.post<Record<string, unknown>>(url, requestPayload, {
-    withCredentials: false,
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-  })
+  let data: Record<string, unknown>
+  try {
+    const response = await axios.post<Record<string, unknown>>(url, requestPayload, {
+      withCredentials: false,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    })
+    data = response.data
+  } catch (error) {
+    throw new Error(resolveErrorMessage(error))
+  }
 
   return normalizeSessionResponse(data, {
     connectedAccountId: input.connectedAccountId,

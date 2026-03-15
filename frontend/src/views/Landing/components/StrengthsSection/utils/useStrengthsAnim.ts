@@ -5,7 +5,16 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 export function useStrengthsAnim() {
   gsap.registerPlugin(ScrollTrigger)
+  if (typeof document === 'undefined') return
+
+  const section = document.querySelector<HTMLElement>('#strengths-section')
+  if (!section) return
+
   const strengths = ['#strength_1', '#strength_2', '#strength_3']
+    .map((selector) => document.querySelector<HTMLElement>(selector))
+    .filter((element): element is HTMLElement => Boolean(element))
+  if (!strengths.length) return
+
   const stagger = 0.1
   const duration = 0.5
   const bgStart = 'rgba(252, 250, 250, 0)'
@@ -17,8 +26,14 @@ export function useStrengthsAnim() {
   // --- phase "start" : on dévoile les div puis les span, en cascade
   strengths.forEach((el, i) => {
     const offset = `start+=${i * stagger}`
-    tl.to(`${el} > div`, { background: bgStart, ease: 'power2.inOut', duration }, offset)
-      .to(`${el} > span`, { opacity: 1, ease: 'power2.inOut', duration }, offset)
+    const backgroundTarget = el.querySelector(':scope > div')
+    const labelTarget = el.querySelector(':scope > span')
+    if (backgroundTarget) {
+      tl.to(backgroundTarget, { background: bgStart, ease: 'power2.inOut', duration }, offset)
+    }
+    if (labelTarget) {
+      tl.to(labelTarget, { opacity: 1, ease: 'power2.inOut', duration }, offset)
+    }
   })
 
   // calcul automatique de quand démarrer la phase "end"
@@ -28,12 +43,18 @@ export function useStrengthsAnim() {
   // --- phase "end" : on remet tout en place, même cadence
   strengths.forEach((el, i) => {
     const offset = `end+=${i * stagger}`
-    tl.to(`${el} > div`, { background: bgEnd, ease: 'power2.inOut', duration }, offset)
-      .to(`${el} > span`, { opacity: 0, ease: 'power2.inOut', duration }, offset)
+    const backgroundTarget = el.querySelector(':scope > div')
+    const labelTarget = el.querySelector(':scope > span')
+    if (backgroundTarget) {
+      tl.to(backgroundTarget, { background: bgEnd, ease: 'power2.inOut', duration }, offset)
+    }
+    if (labelTarget) {
+      tl.to(labelTarget, { opacity: 0, ease: 'power2.inOut', duration }, offset)
+    }
   })
 
   ScrollTrigger.create({
-    trigger: '#strengths-section',
+    trigger: section,
     start: 'center 60%',
     onEnter: () => tl.play(),
     onLeaveBack: () => tl.reverse(),

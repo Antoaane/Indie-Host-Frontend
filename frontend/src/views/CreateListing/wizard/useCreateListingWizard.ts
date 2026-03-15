@@ -3,11 +3,18 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref, toValue, watch } from 'vue'
 import type { MaybeRefOrGetter } from 'vue'
 import { useRouter } from 'vue-router'
+import { useUser } from '@clerk/vue'
 
 import { ensurePublishedMediasStoredInImageKit, isApiImageStorageEnabled } from '@/domain/api/imagekit'
 import type { RawListingBundle } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import type { EditorMode, EditorSource } from '@/views/Editor/types/editor'
+import {
+  buildListingOnboardingState,
+  isValidOnboardingEmailFormat,
+  persistListingOnboardingState,
+  type ListingOnboardingIntent,
+} from '@/domain/onboarding/listingOnboarding'
 import {
   asNumber,
   buildInitialDraft,
@@ -27,6 +34,7 @@ type UseCreateListingWizardOptions = {
   mode: MaybeRefOrGetter<EditorMode>
   source: MaybeRefOrGetter<EditorSource>
   userId?: MaybeRefOrGetter<string | null | undefined>
+  isGuestFlow?: MaybeRefOrGetter<boolean>
   steps: CreateListingStep[]
 }
 
@@ -36,13 +44,20 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
   }
 
   const router = useRouter()
+  const { isSignedIn } = useUser()
   const steps = options.steps
 
   const draft = ref<RawListingBundle>(buildInitialDraft())
   const activeStepIndex = ref(0)
   const furthestVisitedStepIndex = ref(0)
   const isPreviewStage = ref(false)
+  const isGuestTransitionStage = ref(false)
   const stepError = ref<string | null>(null)
+  const guestEmail = ref('')
+  const guestEmailError = ref<string | null>(null)
+  const guestInfoMessage = ref<string | null>(null)
+  const guestIntent = ref<ListingOnboardingIntent | null>(null)
+  const isGuestOnboardingLoading = ref(false)
   const persistTimer = ref<number | null>(null)
   const hasHydratedStorage = ref(false)
 
@@ -52,21 +67,26 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
   })
 
   const modeStorageKey = computed(() => {
+    if (toValue(options.isGuestFlow ?? false)) return 'guest'
     if (toValue(options.mode) !== 'user') return 'static'
     return `user:${cleanText(toValue(options.userId)) || 'anonymous'}`
   })
+  const isGuestFlowEnabled = computed(() => Boolean(toValue(options.isGuestFlow ?? false)))
+  const isSignedInUser = computed(() => Boolean(isSignedIn.value))
 
   const storageKey = computed(() => `${CREATE_LISTING_STORAGE_PREFIX}:${modeStorageKey.value}`)
   const currentStep = computed(() => steps[activeStepIndex.value] ?? steps[0])
   const isFirstStep = computed(() => activeStepIndex.value <= 0)
   const isLastStep = computed(() => activeStepIndex.value >= steps.length - 1)
   const progressPercent = computed(() => {
-    const completedSteps = isPreviewStage.value ? steps.length : activeStepIndex.value + 1
+    const completedSteps = (isPreviewStage.value || isGuestTransitionStage.value) ? steps.length : activeStepIndex.value + 1
     return Math.round((completedSteps / steps.length) * 100)
   })
   const canGoNext = computed(() => !submitState.isSubmitting && !isPreviewStage.value)
-  const canGoBack = computed(() => !submitState.isSubmitting && (isPreviewStage.value || !isFirstStep.value))
-  const canSubmit = computed(() => !submitState.isSubmitting && isPreviewStage.value)
+  const canGoBack = computed(
+    () => !submitState.isSubmitting && !isGuestTransitionStage.value && (isPreviewStage.value || !isFirstStep.value),
+  )
+  const canSubmit = computed(() => !submitState.isSubmitting && isPreviewStage.value && !isGuestTransitionStage.value)
   const stepItems = computed<CreateListingStepItem[]>(() =>
     steps.map((step, index) => ({
       id: step.id,
@@ -99,6 +119,9 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
       stepIndex: activeStepIndex.value,
       furthestStepIndex: furthestVisitedStepIndex.value,
       isPreviewStage: isPreviewStage.value,
+      isGuestTransitionStage: isGuestTransitionStage.value,
+      guestEmail: guestEmail.value,
+      guestIntent: guestIntent.value,
       draft: nextDraft,
       updatedAt: new Date().toISOString(),
     }
@@ -255,17 +278,108 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
     return trimmed || null
   }
 
+  function clearGuestMessages() {
+    guestEmailError.value = null
+    guestInfoMessage.value = null
+  }
+
+  function setGuestEmail(value: string) {
+    guestEmail.value = value
+    guestEmailError.value = null
+    guestInfoMessage.value = null
+  }
+
+  function validateGuestEmail(): string | null {
+    const normalized = cleanText(guestEmail.value)
+    if (!normalized) return 'Veuillez saisir une adresse e-mail.'
+    if (!isValidOnboardingEmailFormat(normalized)) return 'Veuillez saisir une adresse e-mail valide.'
+    guestEmail.value = normalized
+    return null
+  }
+
+  function goBackFromGuestTransitionStage() {
+    isGuestTransitionStage.value = false
+    clearGuestMessages()
+  }
+
+  async function startGuestOnboarding(intent: ListingOnboardingIntent) {
+    if (submitState.isSubmitting || isGuestOnboardingLoading.value) return
+
+    const emailError = validateGuestEmail()
+    if (emailError) {
+      guestEmailError.value = emailError
+      return
+    }
+
+    isGuestOnboardingLoading.value = true
+    clearGuestMessages()
+    guestIntent.value = intent
+
+    const draftSnapshot = normalizeBundleForCreate(draft.value)
+    persistListingOnboardingState(
+      buildListingOnboardingState({
+        source: 'wizard',
+        email: guestEmail.value,
+        intent,
+        draft: draftSnapshot,
+        backendListingId: null,
+        connectMandatory: intent === 'publish',
+      }),
+    )
+
+    flushStorageDraft()
+
+    try {
+      await router.push({
+        name: 'pricing',
+        query: {
+          onboarding: 'listing',
+          intent,
+        },
+      })
+    } finally {
+      isGuestOnboardingLoading.value = false
+    }
+  }
+
+  function continueGuestWithoutAccount() {
+    if (submitState.isSubmitting || isGuestOnboardingLoading.value) return
+
+    const emailError = validateGuestEmail()
+    if (emailError) {
+      guestEmailError.value = emailError
+      return
+    }
+
+    guestIntent.value = null
+    persistListingOnboardingState(
+      buildListingOnboardingState({
+        source: 'wizard',
+        email: guestEmail.value,
+        intent: null,
+        draft: normalizeBundleForCreate(draft.value),
+        backendListingId: null,
+        connectMandatory: false,
+      }),
+    )
+    flushStorageDraft()
+    guestInfoMessage.value = 'Votre annonce reste locale. Vous pourrez reprendre l’onboarding plus tard.'
+  }
+
   function goToStep(index: number) {
     if (submitState.isSubmitting) return
     const safeIndex = clampStepIndex(index)
     if (safeIndex > furthestVisitedStepIndex.value) return
+    isGuestTransitionStage.value = false
     isPreviewStage.value = false
     activeStepIndex.value = safeIndex
+    clearGuestMessages()
   }
 
   function goToPreviousStep() {
     if (!canGoBack.value) return
     clearStepError()
+    clearGuestMessages()
     if (isPreviewStage.value) {
       isPreviewStage.value = false
       return
@@ -280,6 +394,7 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
     if (isLastStep.value) {
       clearStepError()
       isPreviewStage.value = true
+      isGuestTransitionStage.value = false
       return
     }
 
@@ -374,6 +489,13 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
         activeStepIndex.value = restoredStepIndex
         furthestVisitedStepIndex.value = Math.max(restoredStepIndex, restoredFurthestStepIndex)
         isPreviewStage.value = Boolean(parsed.isPreviewStage) && restoredStepIndex >= steps.length - 1
+        isGuestTransitionStage.value =
+          Boolean(parsed.isGuestTransitionStage)
+          && isGuestFlowEnabled.value
+          && !isSignedInUser.value
+          && isPreviewStage.value
+        guestEmail.value = cleanText(parsed.guestEmail)
+        guestIntent.value = parsed.guestIntent === 'publish' || parsed.guestIntent === 'setup' ? parsed.guestIntent : null
       }
     } catch (err) {
       console.log('[CreateListing] failed to restore draft', err)
@@ -384,6 +506,10 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
 
   async function cancelCreation() {
     if (submitState.isSubmitting) return
+    if (isGuestFlowEnabled.value && !isSignedInUser.value) {
+      await router.push({ name: 'home' })
+      return
+    }
     await router.push(
       buildEditorRoute({
         mode: toValue(options.mode),
@@ -395,6 +521,12 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
   async function submitCreateListing() {
     if (!canSubmit.value) return
     submitState.error = null
+
+    if (isGuestFlowEnabled.value && !isSignedInUser.value) {
+      isGuestTransitionStage.value = true
+      clearGuestMessages()
+      return
+    }
 
     if (!validateRequiredSteps()) return
 
@@ -438,11 +570,23 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
       draft,
       activeStepIndex,
       isPreviewStage,
+      isGuestTransitionStage,
+      guestEmail,
+      guestIntent,
     ],
     () => {
       queueStorageDraft()
     },
     { deep: true },
+  )
+
+  watch(
+    () => isSignedInUser.value,
+    (signedIn) => {
+      if (!signedIn) return
+      if (!isGuestTransitionStage.value) return
+      isGuestTransitionStage.value = false
+    },
   )
 
   onMounted(() => {
@@ -459,6 +603,7 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
     draft,
     activeStepIndex,
     isPreviewStage,
+    isGuestTransitionStage,
     currentStep,
     stepError,
     submitState,
@@ -472,6 +617,15 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
     goToStep,
     goToPreviousStep,
     goToNextStep,
+    goBackFromGuestTransitionStage,
+    guestEmail,
+    guestEmailError,
+    guestInfoMessage,
+    isGuestOnboardingLoading,
+    setGuestEmail,
+    startGuestPublishOnboarding: () => startGuestOnboarding('publish'),
+    startGuestSetupOnboarding: () => startGuestOnboarding('setup'),
+    continueGuestWithoutAccount,
     cancelCreation,
     submitCreateListing,
     clearStorageDraft,

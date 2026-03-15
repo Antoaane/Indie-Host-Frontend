@@ -12,6 +12,11 @@ import {
 } from '@/views/Editor/utils/fetchListingDraft'
 
 type PersistStrategy = 'full' | 'strip-inline-images' | 'drop-medias'
+type PersistedMediaImage = {
+  src: string
+  alt: string
+  position: number
+}
 
 const MAX_STORED_IMAGE_SRC_LENGTH = 12_000
 
@@ -31,19 +36,27 @@ function isQuotaExceededError(error: unknown): boolean {
   )
 }
 
-function sanitizeImagesForStorage(images: unknown[]): unknown[] {
-  return images
-    .map((image) => {
-      if (!image || typeof image !== 'object' || Array.isArray(image)) return null
-      const imageRecord = { ...(image as Record<string, unknown>) }
-      const rawSrc = typeof imageRecord.src === 'string' ? imageRecord.src.trim() : ''
-      if (!rawSrc) return null
-      if (rawSrc.startsWith('data:')) return null
-      if (rawSrc.length > MAX_STORED_IMAGE_SRC_LENGTH) return null
-      imageRecord.src = rawSrc
-      return imageRecord
+function sanitizeImagesForStorage(images: unknown[]): PersistedMediaImage[] {
+  return images.reduce<PersistedMediaImage[]>((sanitizedImages, image, index) => {
+    if (!image || typeof image !== 'object' || Array.isArray(image)) return sanitizedImages
+    const imageRecord = image as Record<string, unknown>
+    const rawSrc = typeof imageRecord.src === 'string' ? imageRecord.src.trim() : ''
+    if (!rawSrc) return sanitizedImages
+    if (rawSrc.startsWith('data:')) return sanitizedImages
+    if (rawSrc.length > MAX_STORED_IMAGE_SRC_LENGTH) return sanitizedImages
+
+    const rawAlt = typeof imageRecord.alt === 'string' ? imageRecord.alt.trim() : ''
+    const rawPosition = imageRecord.position
+    const position = typeof rawPosition === 'number' && Number.isFinite(rawPosition) ? Math.max(0, Math.floor(rawPosition)) : index
+
+    sanitizedImages.push({
+      src: rawSrc,
+      alt: rawAlt,
+      position,
     })
-    .filter((image): image is Record<string, unknown> => Boolean(image))
+
+    return sanitizedImages
+  }, [])
 }
 
 function buildStoragePayload(draft: RawListingBundle, strategy: PersistStrategy): RawListingBundle {

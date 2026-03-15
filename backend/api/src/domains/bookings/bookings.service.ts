@@ -22,6 +22,13 @@ function extractBookedDays(bookings: Record<string, unknown>) {
   return bookings['booked-days'].filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object');
 }
 
+function extractStripePaymentIntentId(row: RawReservation): string | null {
+  const payment = asObject(row.payment);
+  const stripe = asObject(payment.stripe);
+  const paymentIntentId = typeof stripe.paymentIntentId === 'string' ? stripe.paymentIntentId.trim() : '';
+  return paymentIntentId || null;
+}
+
 export class BookingsService {
   constructor(private readonly prisma: PrismaClient) {}
 
@@ -79,6 +86,19 @@ export class BookingsService {
         messaging: toPrismaJson(asObject(row.messaging, {})),
       },
     });
+
+    const stripePaymentIntentId = extractStripePaymentIntentId(row);
+    if (stripePaymentIntentId) {
+      await this.prisma.payment.updateMany({
+        where: {
+          stripePaymentIntentId,
+          listingId,
+        },
+        data: {
+          reservationId,
+        },
+      });
+    }
 
     return reservationId;
   }

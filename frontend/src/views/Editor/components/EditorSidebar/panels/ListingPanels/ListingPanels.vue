@@ -19,7 +19,6 @@ import ReviewsPanel from '@/views/Editor/components/EditorSidebar/panels/Listing
 const props = defineProps<{
   listingId: string
   draft: RawListingBundle
-  listingId?: string | null
 }>()
 
 const emit = defineEmits<{

@@ -1,3 +1,5 @@
+// File: src/domain/api/listingDomains.ts
+
 import clerkToken from '@/utils/clerkToken'
 
 export type ListingSubdomainAvailability = {
@@ -21,16 +23,6 @@ const BASE_API_URL = normalizeApiBaseUrl(RAW_BASE_API_URL)
 function normalizeApiBaseUrl(baseUrl: string): string {
   const trimmed = baseUrl.replace(/\/$/, '')
   if (!trimmed) return ''
-
-  if (import.meta.env.DEV) {
-    try {
-      const parsed = new URL(trimmed)
-      return parsed.pathname.replace(/\/$/, '') || '/'
-    } catch {
-      // ignore relative URLs
-    }
-  }
-
   return trimmed
 }
 

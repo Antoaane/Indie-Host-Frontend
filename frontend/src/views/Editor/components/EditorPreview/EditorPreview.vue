@@ -24,10 +24,12 @@ const aspectRatio = ref<{ width: number; height: number } | null>(null)
 const previewContent = editorStatic.preview
 const previewActions = editorStatic.actions
 const publicListingId = computed(() => {
-  const fromCore = typeof props.rawListing?.core?.id === 'string' ? props.rawListing.core.id.trim() : ''
-  if (fromCore) return fromCore
   const fromSelection = typeof props.listingId === 'string' ? props.listingId.trim() : ''
-  return fromSelection || null
+  if (fromSelection) return fromSelection
+
+  const fromCore = typeof props.rawListing?.core?.id === 'string' ? props.rawListing.core.id.trim() : ''
+  if (!fromCore || fromCore === 'landing-preview') return null
+  return fromCore
 })
 
 function updateScale() {

@@ -11,6 +11,7 @@ import {
   type ListingPaymentRules,
 } from '@/domain/listings/reservationRules'
 import { resolveCheckoutPaymentBreakdown } from '@/domain/payments/checkoutPayment'
+import { createBookingReservation } from '@/domain/api/bookings'
 import type { RawBookingReservation, RawBookings, RawCore, RawListingBundle } from '@/domain/listings/types'
 
 import type { ListingParsed } from '@/views/ListingView/types/listing'
@@ -21,6 +22,7 @@ type FetchEditableListingBundle = (listingId: string) => Promise<RawListingBundl
 type PatchListingDraft = (listingId: string, payload: { bookings: Partial<RawBookings> }) => Promise<unknown>
 
 type UseListingCheckoutOptions = {
+  listingsMode: 'api' | 'local-json'
   listingData: ComputedRef<ListingParsed | null>
   listingId: ComputedRef<string | null>
   rawListing: Ref<RawListingBundle | null | undefined>
@@ -146,6 +148,14 @@ function toNonNegativeInt(value: unknown, fallback = 0) {
   return Math.max(0, Math.trunc(next))
 }
 
+function resolveErrorMessage(error: unknown, fallback: string): string {
+  if (error && typeof error === 'object') {
+    const maybeMessage = (error as { message?: unknown }).message
+    if (typeof maybeMessage === 'string' && maybeMessage.trim()) return maybeMessage.trim()
+  }
+  return fallback
+}
+
 function rangesOverlap(aStart: string, aEnd: string, bStart: string, bEnd: string) {
   const aStartMs = toUtcDay(aStart)
   const aEndMs = toUtcDay(aEnd)
@@ -213,13 +223,17 @@ function buildReservationFromCheckout(
     },
   }
 
+  const travelerFirstName = confirmationPayload.travelerContact.firstName.trim()
+  const travelerLastName = confirmationPayload.travelerContact.lastName.trim()
+  const travelerFullName = `${travelerFirstName} ${travelerLastName}`.trim()
+
   const [reservation] = normalizeReservations([
     {
       id: createReservationId(currentListingId, normalizedRange.start, normalizedRange.end),
       start: normalizedRange.start,
       end: normalizedRange.end,
       nights: Math.max(1, toNonNegativeInt(reservationPayload.nights, 1)),
-      guestName: 'Voyageur',
+      guestName: travelerFullName || confirmationPayload.cardholder.fullName || 'Voyageur',
       message: confirmationPayload.travelerMessage.trim(),
       guests: {
         adults: Math.max(1, toNonNegativeInt(reservationPayload.occupants.adults, 1)),
@@ -229,6 +243,11 @@ function buildReservationFromCheckout(
         pmr: toNonNegativeInt(reservationPayload.occupants.pmr),
       },
       payment,
+      contact: {
+        firstName: travelerFirstName || confirmationPayload.cardholder.firstName.trim(),
+        lastName: travelerLastName || confirmationPayload.cardholder.lastName.trim(),
+        phone: confirmationPayload.travelerContact.phone.trim(),
+      },
       createdAt: new Date().toISOString(),
     },
   ])
@@ -380,24 +399,31 @@ export function useListingCheckout(options: UseListingCheckoutOptions) {
         return
       }
 
-      const nextReservations = normalizeReservations([
-        ...currentReservations,
-        createdReservation,
-      ])
-      const nextBookedDays = deriveBookedDaysFromReservations(nextReservations)
+      if (options.listingsMode === 'api') {
+        await createBookingReservation({
+          listingId: targetListingId,
+          reservation: createdReservation,
+        })
+      } else {
+        const nextReservations = normalizeReservations([
+          ...currentReservations,
+          createdReservation,
+        ])
+        const nextBookedDays = deriveBookedDaysFromReservations(nextReservations)
 
-      await options.patchListingDraft(targetListingId, {
-        bookings: {
-          ...(currentBookings ?? {}),
-          reservations: nextReservations,
-          'booked-days': nextBookedDays,
-        },
-      })
+        await options.patchListingDraft(targetListingId, {
+          bookings: {
+            ...(currentBookings ?? {}),
+            reservations: nextReservations,
+            'booked-days': nextBookedDays,
+          },
+        })
+      }
 
       cancelCheckout()
     } catch (error) {
       console.error('[ListingView] checkout reservation failed', error)
-      checkoutStatus.error = 'Impossible de valider la réservation.'
+      checkoutStatus.error = resolveErrorMessage(error, 'Impossible de valider la réservation.')
     } finally {
       checkoutStatus.isSubmitting = false
     }

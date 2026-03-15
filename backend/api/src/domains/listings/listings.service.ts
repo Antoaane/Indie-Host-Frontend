@@ -48,6 +48,22 @@ export type ListingSitemapEntry = {
   updatedAt: string;
 };
 
+type ListingPublicationReadiness = {
+  canPublish: boolean;
+  hasAuthenticatedUser: boolean;
+  hasActiveSubscription: boolean;
+  hasConnectAccount: boolean;
+  connectOnboardingCompleted: boolean;
+  chargesEnabled: boolean;
+  payoutsEnabled: boolean;
+  missingRequirements: string[];
+};
+
+const PUBLICATION_ELIGIBLE_SUBSCRIPTION_STATUSES = new Set([
+  'active',
+  'trialing',
+]);
+
 function toJsonInput(value: Record<string, unknown>): Prisma.InputJsonValue {
   return value as Prisma.InputJsonValue;
 }
@@ -68,6 +84,26 @@ function sanitizeHostname(input: string): string {
     return new URL(trimmed).hostname.toLowerCase();
   } catch {
     return trimmed.replace(/^https?:\/\//, '').split('/')[0]?.split(':')[0]?.trim().toLowerCase() ?? '';
+  }
+}
+
+function readString(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed || null;
+}
+
+function readBoolean(value: unknown, fallback = false): boolean {
+  if (typeof value === 'boolean') return value;
+  return fallback;
+}
+
+class ListingPublicationForbiddenError extends Error {
+  readonly statusCode = 403;
+  readonly code = 'LISTING_PUBLICATION_REQUIREMENTS_NOT_MET';
+
+  constructor(public readonly details: ListingPublicationReadiness) {
+    super('Publishing requires an active subscription and a fully configured Stripe Connect account.');
   }
 }
 
@@ -97,6 +133,51 @@ export class ListingsService {
     const status = core.status;
     if (typeof status === 'string' && status.trim()) return status.trim().toLowerCase();
     return 'draft';
+  }
+
+  private buildPublicationReadiness(user: User | null | undefined): ListingPublicationReadiness {
+    const hasAuthenticatedUser = Boolean(user);
+    const profile = user ? asObject(user.stripeConnectProfile) : {};
+    const billing = asObject(profile.billing);
+
+    const subscriptionStatus = readString(billing.status)?.toLowerCase() ?? null;
+    const hasActiveSubscription = Boolean(
+      subscriptionStatus
+      && PUBLICATION_ELIGIBLE_SUBSCRIPTION_STATUSES.has(subscriptionStatus),
+    );
+
+    const accountIdFromProfile = readString(profile.accountId);
+    const hasConnectAccount = Boolean(user?.stripeConnectAccountId ?? accountIdFromProfile);
+    const onboardingStatus = readString(profile.onboardingStatus) ?? 'not_started';
+    const connectOnboardingCompleted = onboardingStatus === 'completed';
+    const chargesEnabled = readBoolean(profile.chargesEnabled, false);
+    const payoutsEnabled = readBoolean(profile.payoutsEnabled, false);
+
+    const missingRequirements: string[] = [];
+    if (!hasAuthenticatedUser) missingRequirements.push('authenticated_user');
+    if (!hasActiveSubscription) missingRequirements.push('active_subscription');
+    if (!hasConnectAccount) missingRequirements.push('stripe_connect_account');
+    if (!connectOnboardingCompleted) missingRequirements.push('stripe_connect_onboarding');
+    if (!chargesEnabled) missingRequirements.push('stripe_connect_charges_enabled');
+    if (!payoutsEnabled) missingRequirements.push('stripe_connect_payouts_enabled');
+
+    return {
+      canPublish: missingRequirements.length === 0,
+      hasAuthenticatedUser,
+      hasActiveSubscription,
+      hasConnectAccount,
+      connectOnboardingCompleted,
+      chargesEnabled,
+      payoutsEnabled,
+      missingRequirements,
+    };
+  }
+
+  private assertCanPublishListing(user: User | null | undefined) {
+    const readiness = this.buildPublicationReadiness(user);
+    if (!readiness.canPublish) {
+      throw new ListingPublicationForbiddenError(readiness);
+    }
   }
 
   private buildFallbackBundle(listingId: string): ListingSectionBundle {
@@ -196,12 +277,17 @@ export class ListingsService {
     const notes = payload.notes ? deepMerge(defaults.notes, payload.notes) : defaults.notes;
     const comments = payload.comments ? deepMerge(defaults.comments, payload.comments) : defaults.comments;
     const host = payload.host ? deepMerge(buildHostProfileFromUser(owner), payload.host) : buildHostProfileFromUser(owner);
+    const listingStatus = this.extractStatus(core);
+
+    if (listingStatus === 'published') {
+      this.assertCanPublishListing(owner);
+    }
 
     await this.prisma.listing.create({
       data: {
         id: listingId,
         ownerId: owner?.id ?? null,
-        status: this.extractStatus(core),
+        status: listingStatus,
         core: toJsonInput(core),
         bookings: toJsonInput(bookings),
         medias: toJsonInput(medias),
@@ -439,8 +525,12 @@ export class ListingsService {
     };
 
     if (resource === 'core') {
+      const nextStatus = this.extractStatus(merged);
+      if (nextStatus === 'published') {
+        this.assertCanPublishListing(actor);
+      }
       data.core = toJsonInput(merged);
-      data.status = this.extractStatus(merged);
+      data.status = nextStatus;
     }
     if (resource === 'bookings') data.bookings = toJsonInput(merged);
     if (resource === 'medias') data.medias = toJsonInput(merged);

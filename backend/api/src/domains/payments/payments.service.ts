@@ -2,10 +2,13 @@ import type { PrismaClient, User } from '@prisma/client';
 import Stripe from 'stripe';
 
 import { env } from '../../config/env.js';
-import { asObject } from '../../lib/json.js';
+import { asObject, toNumber } from '../../lib/json.js';
 import { toPrismaJson } from '../../lib/prisma.js';
 import type { RequestAuth } from '../../types/auth.js';
 import { upsertUserFromAuth } from '../users/users.repository.js';
+
+type CheckoutPaymentChoice = 'full' | 'split' | 'cash';
+type CheckoutDeferredMode = 'none' | 'online' | 'cash';
 
 type CreatePaymentIntentInput = {
   listingId: string;
@@ -13,11 +16,11 @@ type CreatePaymentIntentInput = {
   currency: string;
   reservation: Record<string, unknown>;
   payment: {
-    choice: string;
+    choice: CheckoutPaymentChoice;
     totalAmount: number;
     chargeNowAmount: number;
     deferredAmount?: number;
-    deferredMode?: string;
+    deferredMode?: CheckoutDeferredMode;
     deferredDueDateISO?: string | null;
   };
   metadata?: Record<string, string>;
@@ -28,6 +31,10 @@ type CreateConnectOnboardingLinkInput = {
   refreshUrl: string;
   returnUrl: string;
   country?: string;
+};
+
+type SyncConnectStateInput = {
+  accountId?: string;
 };
 
 export type SubscriptionPlanCode = 'indiehost' | 'superhost' | 'megahost';
@@ -59,7 +66,23 @@ type ConfirmCheckoutInput = {
 type ConnectSummary = {
   accountId: string | null;
   onboardingStatus: string;
+  chargesEnabled: boolean;
+  payoutsEnabled: boolean;
+  defaultCurrency: string;
+  transferSchedule: string;
   createdInFlow: boolean;
+};
+
+type PublicConnectSummary = Omit<ConnectSummary, 'createdInFlow'>;
+
+type PublicationReadiness = {
+  canPublish: boolean;
+  hasActiveSubscription: boolean;
+  hasConnectAccount: boolean;
+  connectOnboardingCompleted: boolean;
+  chargesEnabled: boolean;
+  payoutsEnabled: boolean;
+  missingRequirements: string[];
 };
 
 type BillingSnapshot = {
@@ -91,6 +114,7 @@ export type SubscriptionActivationResult = {
   plan: SubscriptionPlan | null;
   subscription: PublicBillingSnapshot | null;
   connect: ConnectSummary;
+  publicationReadiness: PublicationReadiness;
   checkout: {
     sessionId: string;
     url: string;
@@ -104,6 +128,7 @@ export type ConfirmSubscriptionCheckoutResult = {
   plan: SubscriptionPlan | null;
   subscription: PublicBillingSnapshot | null;
   connect: ConnectSummary;
+  publicationReadiness: PublicationReadiness;
   message: string | null;
 };
 
@@ -113,7 +138,14 @@ export type MySubscriptionStateResult = {
   currentPlanCode: SubscriptionPlanCode | null;
   currentPlan: SubscriptionPlan | null;
   subscription: PublicBillingSnapshot | null;
-  connect: Omit<ConnectSummary, 'createdInFlow'>;
+  connect: PublicConnectSummary;
+  publicationReadiness: PublicationReadiness;
+};
+
+export type SyncConnectStateResult = {
+  mode: 'live' | 'mock';
+  connect: PublicConnectSummary;
+  publicationReadiness: PublicationReadiness;
 };
 
 type PlanTemplate = {
@@ -122,6 +154,11 @@ type PlanTemplate = {
   maxActiveListings: number;
   defaultCurrency: string;
   defaultMonthlyPriceMinor: number;
+};
+
+type StripePlanCandidate = {
+  product: Stripe.Product;
+  price: Stripe.Price;
 };
 
 const PLAN_CODES: SubscriptionPlanCode[] = [
@@ -136,28 +173,22 @@ const PLAN_TEMPLATES: Record<SubscriptionPlanCode, PlanTemplate> = {
     description: 'Plan de base pour démarrer sans commission.',
     maxActiveListings: 2,
     defaultCurrency: 'eur',
-    defaultMonthlyPriceMinor: 0,
+    defaultMonthlyPriceMinor: 1600,
   },
   superhost: {
     name: 'SuperHost',
     description: 'Plan pour les hôtes semi-pro avec plus de capacité.',
     maxActiveListings: 5,
     defaultCurrency: 'eur',
-    defaultMonthlyPriceMinor: 2900,
+    defaultMonthlyPriceMinor: 3900,
   },
   megahost: {
     name: 'MegaHost',
     description: 'Plan avancé pour les portefeuilles professionnels.',
     maxActiveListings: 15,
     defaultCurrency: 'eur',
-    defaultMonthlyPriceMinor: 7900,
+    defaultMonthlyPriceMinor: 9900,
   },
-};
-
-const PLAN_PRICE_ENV_KEYS: Record<SubscriptionPlanCode, keyof typeof env> = {
-  indiehost: 'STRIPE_BILLING_PRICE_INDIEHOST',
-  superhost: 'STRIPE_BILLING_PRICE_SUPERHOST',
-  megahost: 'STRIPE_BILLING_PRICE_MEGAHOST',
 };
 
 const ONGOING_SUBSCRIPTION_STATUSES = new Set([
@@ -167,6 +198,85 @@ const ONGOING_SUBSCRIPTION_STATUSES = new Set([
   'unpaid',
   'incomplete',
 ]);
+
+const PUBLICATION_ALLOWED_SUBSCRIPTION_STATUSES = new Set([
+  'trialing',
+  'active',
+]);
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+const DEFAULT_CAPACITY = 1;
+const MAX_CAPACITY = 50;
+const DEFAULT_MIN_NIGHTS = 2;
+const MAX_NIGHTS = 365;
+const PAYMENT_DEPOSIT_PERCENT_MIN = 10;
+const PAYMENT_DEPOSIT_PERCENT_MAX = 90;
+const PAYMENT_BALANCE_DAYS_MAX = 365;
+
+type OccupantCounts = {
+  adults: number;
+  children: number;
+  babies: number;
+  animals: number;
+  pmr: number;
+};
+
+type ListingOccupancyRules = {
+  capacity: number;
+  adultsMin: number;
+  adultsMax: number;
+  childrenMax: number;
+  babiesMax: number;
+  animalsMax: number;
+  pmrMax: number;
+};
+
+type ListingStayRules = {
+  minNights: number;
+  maxNights: number | null;
+};
+
+type ListingPaymentRules = {
+  methods: {
+    card: boolean;
+    sepa: boolean;
+    cash: boolean;
+  };
+  onlineEnabled: boolean;
+  mode: 'full' | 'deposit';
+  depositPercent: number;
+  balance: {
+    type: 'arrival' | 'before';
+    days: number;
+  };
+  chargeNowRatioByChoice: Record<CheckoutPaymentChoice, number>;
+  allowedChoices: CheckoutPaymentChoice[];
+  blockedReasons: Partial<Record<CheckoutPaymentChoice, string>>;
+};
+
+type ListingReservationRules = {
+  stay: ListingStayRules;
+  occupancy: ListingOccupancyRules;
+  payment: ListingPaymentRules;
+};
+
+type NormalizedReservationInput = {
+  startISO: string;
+  endISO: string;
+  nights: number;
+  totalAmountMinor: number;
+  occupants: OccupantCounts;
+};
+
+type PaymentBreakdownValidation = {
+  choice: CheckoutPaymentChoice;
+  totalAmountMinor: number;
+  chargeNowAmountMinor: number;
+  deferredAmountMinor: number;
+  deferredMode: CheckoutDeferredMode;
+  deferredDueDateISO: string | null;
+  ratio: number;
+};
 
 function toMinorUnit(amount: number): number {
   const normalized = Number.isFinite(amount) ? amount : 0;
@@ -234,6 +344,383 @@ function oneMonthFromNowIso(): string {
   return d.toISOString();
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function clampInteger(value: unknown, min: number, max: number, fallback: number): number {
+  const next = Number(value);
+  if (!Number.isFinite(next)) return fallback;
+  return Math.min(max, Math.max(min, Math.trunc(next)));
+}
+
+function normalizeRatio(value: unknown, fallback: number): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.min(1, Math.max(0, parsed));
+}
+
+function toUtcDay(value: string): number | null {
+  const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) return null;
+
+  const utc = Date.UTC(year, month - 1, day);
+  const date = new Date(utc);
+  if (
+    date.getUTCFullYear() !== year
+    || date.getUTCMonth() !== month - 1
+    || date.getUTCDate() !== day
+  ) {
+    return null;
+  }
+
+  return utc;
+}
+
+function toIsoFromUtcDay(value: number): string {
+  return new Date(value).toISOString().slice(0, 10);
+}
+
+function subtractDays(isoDate: string, days: number): string {
+  const base = toUtcDay(isoDate);
+  if (base === null) return isoDate;
+  const normalizedDays = Math.max(0, Math.trunc(days));
+  return toIsoFromUtcDay(base - normalizedDays * DAY_MS);
+}
+
+function normalizeIsoDate(value: unknown): string | null {
+  const raw = readString(value);
+  if (!raw) return null;
+  return toUtcDay(raw) === null ? null : raw;
+}
+
+function createBadRequestError(message: string, code = 'INVALID_PAYMENT_REQUEST', details?: Record<string, unknown>) {
+  const error = new Error(message) as Error & {
+    statusCode: number;
+    code: string;
+    details?: Record<string, unknown>;
+  };
+  error.statusCode = 400;
+  error.code = code;
+  if (details) error.details = details;
+  return error;
+}
+
+function resolveLegacyPaymentRules(): ListingPaymentRules {
+  return {
+    methods: {
+      card: true,
+      sepa: true,
+      cash: true,
+    },
+    onlineEnabled: true,
+    mode: 'deposit',
+    depositPercent: 50,
+    balance: {
+      type: 'arrival',
+      days: 0,
+    },
+    chargeNowRatioByChoice: {
+      full: 1,
+      split: 0.5,
+      cash: 0.25,
+    },
+    allowedChoices: [
+      'full',
+      'split',
+      'cash',
+    ],
+    blockedReasons: {},
+  };
+}
+
+function resolvePricingPaymentRules(pricing: Record<string, unknown>): ListingPaymentRules {
+  if (!isRecord(pricing.payment)) {
+    return resolveLegacyPaymentRules();
+  }
+
+  const rawPayment = asObject(pricing.payment);
+  const rawMethods = asObject(rawPayment.methods);
+  const rawBalance = asObject(rawPayment.balance);
+
+  const methods = {
+    card: rawMethods.card === undefined ? true : Boolean(rawMethods.card),
+    sepa: Boolean(rawMethods.sepa),
+    cash: Boolean(rawMethods.cash),
+  };
+  const onlineEnabled = methods.card || methods.sepa;
+  const mode = rawPayment.mode === 'deposit' ? 'deposit' : 'full';
+  const depositPercent = clampInteger(
+    rawPayment.depositPercent,
+    PAYMENT_DEPOSIT_PERCENT_MIN,
+    PAYMENT_DEPOSIT_PERCENT_MAX,
+    PAYMENT_DEPOSIT_PERCENT_MIN,
+  );
+  const balanceType = rawBalance.type === 'before' ? 'before' : 'arrival';
+  const balanceDays = Number.isFinite(Number(rawBalance.days))
+    ? clampInteger(rawBalance.days, 0, PAYMENT_BALANCE_DAYS_MAX, 0)
+    : 0;
+
+  const blockedReasons: Partial<Record<CheckoutPaymentChoice, string>> = {};
+  const allowedChoices: CheckoutPaymentChoice[] = [];
+
+  if (mode === 'full') {
+    if (onlineEnabled) {
+      allowedChoices.push('full');
+    } else {
+      blockedReasons.full = 'Aucun paiement en ligne n est autorise par l hote.';
+    }
+
+    blockedReasons.split = 'Cet hote exige un paiement integral a la reservation.';
+    blockedReasons.cash = methods.cash
+      ? 'Le paiement differe en especes n est pas autorise pour cette annonce.'
+      : 'Le paiement en especes n est pas autorise par l hote.';
+  } else {
+    blockedReasons.full = 'Cet hote exige un acompte puis un solde.';
+
+    if (onlineEnabled) {
+      allowedChoices.push('split');
+    } else {
+      blockedReasons.split = 'Aucun paiement en ligne n est autorise par l hote.';
+    }
+
+    if (!methods.cash) {
+      blockedReasons.cash = 'Le paiement en especes n est pas autorise par l hote.';
+    } else if (!onlineEnabled) {
+      blockedReasons.cash = 'Impossible de collecter l acompte en ligne pour cette annonce.';
+    } else if (balanceType !== 'arrival') {
+      blockedReasons.cash = 'Le solde est exige avant l arrivee, pas en especes le jour d arrivee.';
+    } else {
+      allowedChoices.push('cash');
+    }
+  }
+
+  return {
+    methods,
+    onlineEnabled,
+    mode,
+    depositPercent,
+    balance: {
+      type: balanceType,
+      days: balanceDays,
+    },
+    chargeNowRatioByChoice: {
+      full: 1,
+      split: mode === 'deposit' ? depositPercent / 100 : 1,
+      cash: mode === 'deposit' ? depositPercent / 100 : 1,
+    },
+    allowedChoices,
+    blockedReasons,
+  };
+}
+
+function resolveStayRules(pricing: Record<string, unknown>): ListingStayRules {
+  const rawStay = asObject(pricing.stay);
+  const minNights = clampInteger(rawStay.minNights, 1, MAX_NIGHTS, DEFAULT_MIN_NIGHTS);
+  const maxNights = Number.isFinite(Number(rawStay.maxNights))
+    ? clampInteger(rawStay.maxNights, minNights, MAX_NIGHTS, minNights)
+    : null;
+
+  return {
+    minNights,
+    maxNights,
+  };
+}
+
+function resolveOccupancyRules(pricing: Record<string, unknown>, capacity: number): ListingOccupancyRules {
+  const raw = asObject(pricing.occupancy);
+  const adultsMin = clampInteger(raw.adultsMin, 1, capacity, 1);
+  const adultsMax = clampInteger(raw.adultsMax, adultsMin, capacity, capacity);
+
+  const childrenAllowed = raw.allowChildren !== false;
+  const babiesAllowed = raw.allowBabies !== false;
+  const animalsAllowed = raw.allowAnimals !== false;
+  const pmrAllowed = raw.allowPmr !== false;
+
+  return {
+    capacity,
+    adultsMin,
+    adultsMax,
+    childrenMax: childrenAllowed ? clampInteger(raw.childrenMax, 0, capacity, capacity) : 0,
+    babiesMax: babiesAllowed ? clampInteger(raw.babiesMax ?? raw.infantsMax, 0, capacity, capacity) : 0,
+    animalsMax: animalsAllowed ? clampInteger(raw.animalsMax ?? raw.petsMax, 0, capacity, capacity) : 0,
+    pmrMax: pmrAllowed ? clampInteger(raw.pmrMax, 0, capacity, capacity) : 0,
+  };
+}
+
+function resolveListingReservationRules({
+  core,
+  bookings,
+}: {
+  core: Record<string, unknown>;
+  bookings: Record<string, unknown>;
+}): ListingReservationRules {
+  const capacity = clampInteger(core.guest_capacity, DEFAULT_CAPACITY, MAX_CAPACITY, DEFAULT_CAPACITY);
+  const pricing = asObject(bookings.pricing);
+
+  return {
+    stay: resolveStayRules(pricing),
+    occupancy: resolveOccupancyRules(pricing, capacity),
+    payment: resolvePricingPaymentRules(pricing),
+  };
+}
+
+function normalizeReservationInput(
+  reservation: Record<string, unknown>,
+  rules: ListingReservationRules,
+): NormalizedReservationInput {
+  const startISO = normalizeIsoDate(reservation.startISO);
+  const endISO = normalizeIsoDate(reservation.endISO);
+  if (!startISO || !endISO) {
+    throw createBadRequestError('Selection de dates invalide.', 'INVALID_RESERVATION_RANGE');
+  }
+
+  const startDay = toUtcDay(startISO);
+  const endDay = toUtcDay(endISO);
+  if (startDay === null || endDay === null || startDay >= endDay) {
+    throw createBadRequestError('Selection de dates invalide.', 'INVALID_RESERVATION_RANGE');
+  }
+
+  const nights = Math.round((endDay - startDay) / DAY_MS);
+  if (nights <= 0) {
+    throw createBadRequestError('Selection de dates invalide.', 'INVALID_RESERVATION_RANGE');
+  }
+
+  const requestNights = toNumber(reservation.nights, nights);
+  if (Number.isFinite(requestNights) && Math.max(1, Math.trunc(requestNights)) !== nights) {
+    throw createBadRequestError('Le nombre de nuits est incoherent avec les dates.', 'INVALID_RESERVATION_NIGHTS');
+  }
+
+  if (nights < rules.stay.minNights) {
+    throw createBadRequestError(`Sejour minimum: ${rules.stay.minNights} nuit(s).`, 'INVALID_RESERVATION_NIGHTS');
+  }
+  if (rules.stay.maxNights !== null && nights > rules.stay.maxNights) {
+    throw createBadRequestError(`Sejour maximum: ${rules.stay.maxNights} nuit(s).`, 'INVALID_RESERVATION_NIGHTS');
+  }
+
+  const rawOccupants = asObject(reservation.occupants);
+  const occupants: OccupantCounts = {
+    adults: clampInteger(rawOccupants.adults, 0, MAX_CAPACITY, 1),
+    children: clampInteger(rawOccupants.children, 0, MAX_CAPACITY, 0),
+    babies: clampInteger(rawOccupants.babies, 0, MAX_CAPACITY, 0),
+    animals: clampInteger(rawOccupants.animals, 0, MAX_CAPACITY, 0),
+    pmr: clampInteger(rawOccupants.pmr, 0, MAX_CAPACITY, 0),
+  };
+
+  if (occupants.adults < rules.occupancy.adultsMin || occupants.adults > rules.occupancy.adultsMax) {
+    throw createBadRequestError('Le nombre d adultes ne respecte pas les regles de l annonce.', 'INVALID_OCCUPANTS');
+  }
+  if (occupants.children > rules.occupancy.childrenMax) {
+    throw createBadRequestError('Le nombre d enfants ne respecte pas les regles de l annonce.', 'INVALID_OCCUPANTS');
+  }
+  if (occupants.babies > rules.occupancy.babiesMax) {
+    throw createBadRequestError('Le nombre de bebes ne respecte pas les regles de l annonce.', 'INVALID_OCCUPANTS');
+  }
+  if (occupants.animals > rules.occupancy.animalsMax) {
+    throw createBadRequestError('Le nombre d animaux ne respecte pas les regles de l annonce.', 'INVALID_OCCUPANTS');
+  }
+  if (occupants.pmr > rules.occupancy.pmrMax) {
+    throw createBadRequestError('Le nombre de voyageurs PMR ne respecte pas les regles de l annonce.', 'INVALID_OCCUPANTS');
+  }
+
+  const travelers = occupants.adults + occupants.children;
+  if (travelers > rules.occupancy.capacity) {
+    throw createBadRequestError('Capacite maximale depassee pour cette annonce.', 'INVALID_OCCUPANTS');
+  }
+
+  const totalAmountMinor = toMinorUnit(toNumber(reservation.total, 0));
+  if (totalAmountMinor <= 0) {
+    throw createBadRequestError('Le montant total de la reservation est invalide.', 'INVALID_RESERVATION_TOTAL');
+  }
+
+  return {
+    startISO,
+    endISO,
+    nights,
+    totalAmountMinor,
+    occupants,
+  };
+}
+
+function resolveDeferredMode(choice: CheckoutPaymentChoice): CheckoutDeferredMode {
+  if (choice === 'full') return 'none';
+  if (choice === 'cash') return 'cash';
+  return 'online';
+}
+
+function resolveDeferredDueDateISO(choice: CheckoutPaymentChoice, arrivalDateISO: string, paymentRules: ListingPaymentRules): string | null {
+  if (choice === 'full') return null;
+  if (choice === 'cash') return arrivalDateISO;
+  if (paymentRules.balance.type === 'before' && paymentRules.balance.days > 0) {
+    return subtractDays(arrivalDateISO, paymentRules.balance.days);
+  }
+  return arrivalDateISO;
+}
+
+function validatePaymentBreakdownInput({
+  payment,
+  reservation,
+  paymentRules,
+}: {
+  payment: CreatePaymentIntentInput['payment'];
+  reservation: NormalizedReservationInput;
+  paymentRules: ListingPaymentRules;
+}): PaymentBreakdownValidation {
+  const choice = payment.choice;
+  if (!paymentRules.allowedChoices.includes(choice)) {
+    const blockedReason = paymentRules.blockedReasons[choice] ?? 'Option de paiement non autorisee pour cette annonce.';
+    throw createBadRequestError(blockedReason, 'INVALID_PAYMENT_CHOICE');
+  }
+
+  const totalAmountMinor = toMinorUnit(payment.totalAmount);
+  if (totalAmountMinor !== reservation.totalAmountMinor) {
+    throw createBadRequestError('Le total de paiement est incoherent avec la reservation.', 'INVALID_PAYMENT_TOTAL');
+  }
+
+  const ratio = normalizeRatio(paymentRules.chargeNowRatioByChoice[choice], 1);
+  const expectedChargeNowAmountMinor = Math.round(totalAmountMinor * ratio);
+  const chargeNowAmountMinor = toMinorUnit(payment.chargeNowAmount);
+  if (chargeNowAmountMinor !== expectedChargeNowAmountMinor) {
+    throw createBadRequestError('Le montant a debiter immediatement ne correspond pas aux regles de paiement.', 'INVALID_CHARGE_NOW_AMOUNT');
+  }
+  if (chargeNowAmountMinor <= 0) {
+    throw createBadRequestError('Le montant a debiter immediatement doit etre superieur a 0.', 'INVALID_CHARGE_NOW_AMOUNT');
+  }
+
+  const expectedDeferredAmountMinor = Math.max(0, totalAmountMinor - chargeNowAmountMinor);
+  const deferredAmountMinor = payment.deferredAmount === undefined
+    ? expectedDeferredAmountMinor
+    : toMinorUnit(payment.deferredAmount);
+  if (deferredAmountMinor !== expectedDeferredAmountMinor) {
+    throw createBadRequestError('Le montant differe est incoherent avec les regles de paiement.', 'INVALID_DEFERRED_AMOUNT');
+  }
+
+  const deferredMode = resolveDeferredMode(choice);
+  if (payment.deferredMode && payment.deferredMode !== deferredMode) {
+    throw createBadRequestError('Le mode de paiement differe est invalide.', 'INVALID_DEFERRED_MODE');
+  }
+
+  const deferredDueDateISO = resolveDeferredDueDateISO(choice, reservation.startISO, paymentRules);
+  const inputDeferredDueDate = normalizeIsoDate(payment.deferredDueDateISO);
+  if (deferredDueDateISO !== inputDeferredDueDate) {
+    throw createBadRequestError('La date de solde differe est invalide.', 'INVALID_DEFERRED_DUE_DATE');
+  }
+
+  return {
+    choice,
+    totalAmountMinor,
+    chargeNowAmountMinor,
+    deferredAmountMinor,
+    deferredMode,
+    deferredDueDateISO,
+    ratio,
+  };
+}
+
 function isSubscriptionOngoing(status: string | null): boolean {
   if (!status) return false;
   return ONGOING_SUBSCRIPTION_STATUSES.has(status);
@@ -254,10 +741,107 @@ export class PaymentsService {
     return this.stripe ? 'live' : 'mock';
   }
 
+  private isTestStripeSecretKey(): boolean {
+    return env.STRIPE_SECRET_KEY.trim().startsWith('sk_test_');
+  }
+
+  private getStripeConnectPlatformProfileDashboardUrl(): string {
+    return this.isTestStripeSecretKey()
+      ? 'https://dashboard.stripe.com/test/settings/connect/platform-profile'
+      : 'https://dashboard.stripe.com/settings/connect/platform-profile';
+  }
+
+  private isStripeConnectPlatformProfileError(error: unknown): boolean {
+    if (!isRecord(error)) return false;
+
+    const message = readString(error.message)?.toLowerCase() ?? '';
+    const code = readString(error.code)?.toLowerCase() ?? '';
+    const type = readString(error.type)?.toLowerCase() ?? '';
+    const statusCode = toNumber(error.statusCode, 0);
+
+    if (statusCode !== 400 && statusCode !== 403) return false;
+
+    if (message.includes('managing losses')) return true;
+    if (message.includes('connect/platform-profile')) return true;
+    if (message.includes('platform profile')) return true;
+    if (code.includes('losses')) return true;
+    if (type.includes('invalid_request_error') && message.includes('connect')) return true;
+    return false;
+  }
+
+  private buildStripeConnectPlatformProfileError(error: unknown): Error {
+    const dashboardUrl = this.getStripeConnectPlatformProfileDashboardUrl();
+    const mode = this.isTestStripeSecretKey() ? 'test' : 'live';
+
+    const wrapped = new Error(
+      `Stripe Connect nécessite une validation du profil plateforme en mode ${mode}. `
+      + `Ouvrez ${dashboardUrl}, confirmez les responsabilités, puis réessayez.`,
+    ) as Error & {
+      statusCode: number;
+      code: string;
+      details: Record<string, unknown>;
+    };
+
+    wrapped.statusCode = 400;
+    wrapped.code = 'STRIPE_CONNECT_PLATFORM_PROFILE_REQUIRED';
+    wrapped.details = {
+      mode,
+      dashboardUrl,
+      stripeMessage: isRecord(error) ? readString(error.message) : null,
+      stripeCode: isRecord(error) ? readString(error.code) : null,
+      stripeType: isRecord(error) ? readString(error.type) : null,
+    };
+
+    return wrapped;
+  }
+
+  private getSubscriptionExecutionMode(): 'live' | 'mock' {
+    return this.stripe ? 'live' : 'mock';
+  }
+
   private computeApplicationFee(amountMinor: number): number {
     if (amountMinor <= 0) return 0;
     if (env.STRIPE_CONNECT_PLATFORM_FEE_BPS <= 0) return 0;
     return Math.max(0, Math.round((amountMinor * env.STRIPE_CONNECT_PLATFORM_FEE_BPS) / 10000));
+  }
+
+  private resolveListingConnectedAccountId(listingOwner: {
+    stripeConnectAccountId: string | null;
+    stripeConnectProfile: unknown;
+  } | null): string | null {
+    if (!listingOwner) return null;
+    const profile = asObject(listingOwner.stripeConnectProfile);
+    const profileAccountId = readString(profile.accountId);
+    return readString(listingOwner.stripeConnectAccountId) ?? profileAccountId;
+  }
+
+  private validatePaymentIntentInput({
+    input,
+    listingCore,
+    listingBookings,
+  }: {
+    input: CreatePaymentIntentInput;
+    listingCore: Record<string, unknown>;
+    listingBookings: Record<string, unknown>;
+  }): {
+    reservation: NormalizedReservationInput;
+    payment: PaymentBreakdownValidation;
+  } {
+    const rules = resolveListingReservationRules({
+      core: listingCore,
+      bookings: listingBookings,
+    });
+    const normalizedReservation = normalizeReservationInput(input.reservation, rules);
+    const payment = validatePaymentBreakdownInput({
+      payment: input.payment,
+      reservation: normalizedReservation,
+      paymentRules: rules.payment,
+    });
+
+    return {
+      reservation: normalizedReservation,
+      payment,
+    };
   }
 
   private readStripeProfile(user: User): Record<string, unknown> {
@@ -285,6 +869,62 @@ export class PaymentsService {
     const profile = this.readStripeProfile(user);
     const onboardingStatus = readString(profile.onboardingStatus);
     return onboardingStatus ?? 'not_started';
+  }
+
+  private readConnectState(user: User): PublicConnectSummary {
+    const profile = this.readStripeProfile(user);
+    const profileAccountId = readString(profile.accountId);
+    const defaultCurrency = readString(profile.defaultCurrency)?.toLowerCase() ?? 'eur';
+    const transferSchedule = readString(profile.transferSchedule) ?? 'manual';
+
+    return {
+      accountId: user.stripeConnectAccountId ?? profileAccountId,
+      onboardingStatus: this.readConnectOnboardingStatus(user),
+      chargesEnabled: readBoolean(profile.chargesEnabled, false),
+      payoutsEnabled: readBoolean(profile.payoutsEnabled, false),
+      defaultCurrency,
+      transferSchedule,
+    };
+  }
+
+  private toConnectSummary(user: User, createdInFlow = false): ConnectSummary {
+    const connect = this.readConnectState(user);
+    return {
+      ...connect,
+      createdInFlow,
+    };
+  }
+
+  private hasPublicationEligibleSubscription(status: string | null): boolean {
+    if (!status) return false;
+    return PUBLICATION_ALLOWED_SUBSCRIPTION_STATUSES.has(status);
+  }
+
+  private toPublicationReadiness(user: User): PublicationReadiness {
+    const billing = this.readBillingSnapshot(user);
+    const connect = this.readConnectState(user);
+    const hasActiveSubscription = this.hasPublicationEligibleSubscription(billing.status);
+    const hasConnectAccount = Boolean(connect.accountId);
+    const connectOnboardingCompleted = connect.onboardingStatus === 'completed';
+    const chargesEnabled = connect.chargesEnabled;
+    const payoutsEnabled = connect.payoutsEnabled;
+
+    const missingRequirements: string[] = [];
+    if (!hasActiveSubscription) missingRequirements.push('active_subscription');
+    if (!hasConnectAccount) missingRequirements.push('stripe_connect_account');
+    if (!connectOnboardingCompleted) missingRequirements.push('stripe_connect_onboarding');
+    if (!chargesEnabled) missingRequirements.push('stripe_connect_charges_enabled');
+    if (!payoutsEnabled) missingRequirements.push('stripe_connect_payouts_enabled');
+
+    return {
+      canPublish: missingRequirements.length === 0,
+      hasActiveSubscription,
+      hasConnectAccount,
+      connectOnboardingCompleted,
+      chargesEnabled,
+      payoutsEnabled,
+      missingRequirements,
+    };
   }
 
   private toPublicBillingSnapshot(billing: BillingSnapshot | null): PublicBillingSnapshot | null {
@@ -535,29 +1175,144 @@ export class PaymentsService {
     return latestOngoing ?? null;
   }
 
-  private async resolvePlanCatalog(): Promise<SubscriptionPlan[]> {
-    const mode = this.getExecutionMode();
-
-    const plans = await Promise.all(PLAN_CODES.map(async (code): Promise<SubscriptionPlan> => {
+  private buildMockPlanCatalog(): SubscriptionPlan[] {
+    return PLAN_CODES.map((code): SubscriptionPlan => {
       const template = PLAN_TEMPLATES[code];
-      const configuredPriceId = readString(env[PLAN_PRICE_ENV_KEYS[code]]);
+      return {
+        code,
+        name: template.name,
+        description: template.description,
+        maxActiveListings: template.maxActiveListings,
+        currency: template.defaultCurrency,
+        monthlyPriceMinor: template.defaultMonthlyPriceMinor,
+        billingInterval: 'month',
+        stripePriceId: null,
+        available: true,
+        unavailableReason: null,
+      };
+    });
+  }
 
-      if (mode === 'mock') {
-        return {
-          code,
-          name: template.name,
-          description: template.description,
-          maxActiveListings: template.maxActiveListings,
-          currency: template.defaultCurrency,
-          monthlyPriceMinor: template.defaultMonthlyPriceMinor,
-          billingInterval: 'month',
-          stripePriceId: configuredPriceId,
-          available: true,
-          unavailableReason: null,
-        };
+  private resolvePlanCodeFromStripeCatalogEntry(price: Stripe.Price, product: Stripe.Product): SubscriptionPlanCode | null {
+    const fromPriceMetadata = normalizePlanCode(price.metadata?.indiehost_plan_code ?? price.metadata?.plan_code);
+    if (fromPriceMetadata) return fromPriceMetadata;
+
+    const fromProductMetadata = normalizePlanCode(product.metadata?.indiehost_plan_code ?? product.metadata?.plan_code);
+    if (fromProductMetadata) return fromProductMetadata;
+
+    const normalizedProductName = product.name.trim().toLowerCase();
+    for (const code of PLAN_CODES) {
+      if (PLAN_TEMPLATES[code].name.trim().toLowerCase() === normalizedProductName) return code;
+    }
+
+    if (normalizedProductName.startsWith('indiehost')) return 'indiehost';
+    if (normalizedProductName.startsWith('superhost')) return 'superhost';
+    if (normalizedProductName.startsWith('megahost')) return 'megahost';
+    return null;
+  }
+
+  private readMaxActiveListingsFromStripeProduct(product: Stripe.Product, fallback: number): number {
+    const metadataValues = [
+      product.metadata?.indiehost_max_active_listings,
+      product.metadata?.max_active_listings,
+    ];
+
+    for (const value of metadataValues) {
+      const parsed = Number.parseInt(String(value ?? ''), 10);
+      if (Number.isFinite(parsed) && parsed > 0) return parsed;
+    }
+
+    return fallback;
+  }
+
+  private async resolveStripeProductFromPrice(
+    price: Stripe.Price,
+    cache: Map<string, Stripe.Product>,
+  ): Promise<Stripe.Product | null> {
+    if (!this.stripe) return null;
+
+    const rawProduct = price.product;
+    if (typeof rawProduct !== 'string') {
+      if ('deleted' in rawProduct && rawProduct.deleted) return null;
+      cache.set(rawProduct.id, rawProduct);
+      return rawProduct;
+    }
+
+    const cached = cache.get(rawProduct);
+    if (cached) return cached;
+
+    try {
+      const resolved = await this.stripe.products.retrieve(rawProduct);
+      if ('deleted' in resolved && resolved.deleted) return null;
+      cache.set(resolved.id, resolved);
+      return resolved;
+    } catch {
+      return null;
+    }
+  }
+
+  private selectBestStripePlanCandidate(candidates: StripePlanCandidate[]): StripePlanCandidate | null {
+    if (!candidates.length) return null;
+
+    const ranked = [...candidates].sort((left, right) => {
+      const leftAvailabilityScore = (left.price.active ? 2 : 0) + (left.product.active ? 1 : 0);
+      const rightAvailabilityScore = (right.price.active ? 2 : 0) + (right.product.active ? 1 : 0);
+      if (leftAvailabilityScore !== rightAvailabilityScore) {
+        return rightAvailabilityScore - leftAvailabilityScore;
       }
 
-      if (!configuredPriceId) {
+      return (right.price.created ?? 0) - (left.price.created ?? 0);
+    });
+
+    return ranked[0] ?? null;
+  }
+
+  private async resolvePlanCatalog(): Promise<SubscriptionPlan[]> {
+    const mode = this.getSubscriptionExecutionMode();
+    if (mode === 'mock' || !this.stripe) return this.buildMockPlanCatalog();
+
+    const candidatesByPlanCode: Record<SubscriptionPlanCode, StripePlanCandidate[]> = {
+      indiehost: [],
+      superhost: [],
+      megahost: [],
+    };
+    const productCache = new Map<string, Stripe.Product>();
+    let startingAfter: string | null = null;
+
+    try {
+      while (true) {
+        const listParams: Stripe.PriceListParams = {
+          type: 'recurring',
+          limit: 100,
+          expand: ['data.product'],
+        };
+        if (startingAfter) {
+          listParams.starting_after = startingAfter;
+        }
+
+        const page = await this.stripe.prices.list(listParams);
+
+        for (const price of page.data) {
+          if (price.recurring?.interval !== 'month') continue;
+          if ((price.recurring?.interval_count ?? 1) !== 1) continue;
+
+          const product = await this.resolveStripeProductFromPrice(price, productCache);
+          if (!product) continue;
+
+          const planCode = this.resolvePlanCodeFromStripeCatalogEntry(price, product);
+          if (!planCode) continue;
+
+          candidatesByPlanCode[planCode].push({ product, price });
+        }
+
+        if (!page.has_more || page.data.length === 0) break;
+
+        startingAfter = page.data[page.data.length - 1]?.id ?? null;
+        if (!startingAfter) break;
+      }
+    } catch {
+      return PLAN_CODES.map((code): SubscriptionPlan => {
+        const template = PLAN_TEMPLATES[code];
         return {
           code,
           name: template.name,
@@ -568,11 +1323,15 @@ export class PaymentsService {
           billingInterval: 'month',
           stripePriceId: null,
           available: false,
-          unavailableReason: `Le prix Stripe du plan ${template.name} n'est pas configuré.`,
+          unavailableReason: `Impossible de récupérer le catalogue Stripe pour ${template.name}.`,
         };
-      }
+      });
+    }
 
-      if (!this.stripe) {
+    return PLAN_CODES.map((code): SubscriptionPlan => {
+      const template = PLAN_TEMPLATES[code];
+      const candidate = this.selectBestStripePlanCandidate(candidatesByPlanCode[code]);
+      if (!candidate) {
         return {
           code,
           name: template.name,
@@ -581,47 +1340,33 @@ export class PaymentsService {
           currency: template.defaultCurrency,
           monthlyPriceMinor: template.defaultMonthlyPriceMinor,
           billingInterval: 'month',
-          stripePriceId: configuredPriceId,
-          available: true,
-          unavailableReason: null,
-        };
-      }
-
-      try {
-        const price = await this.stripe.prices.retrieve(configuredPriceId);
-        const unitAmount = typeof price.unit_amount === 'number' && Number.isFinite(price.unit_amount)
-          ? Math.max(0, Math.trunc(price.unit_amount))
-          : template.defaultMonthlyPriceMinor;
-
-        return {
-          code,
-          name: template.name,
-          description: template.description,
-          maxActiveListings: template.maxActiveListings,
-          currency: (price.currency || template.defaultCurrency).toLowerCase(),
-          monthlyPriceMinor: unitAmount,
-          billingInterval: price.recurring?.interval ?? 'month',
-          stripePriceId: configuredPriceId,
-          available: price.active,
-          unavailableReason: price.active ? null : `Le prix Stripe du plan ${template.name} est inactif.`,
-        };
-      } catch {
-        return {
-          code,
-          name: template.name,
-          description: template.description,
-          maxActiveListings: template.maxActiveListings,
-          currency: template.defaultCurrency,
-          monthlyPriceMinor: template.defaultMonthlyPriceMinor,
-          billingInterval: 'month',
-          stripePriceId: configuredPriceId,
+          stripePriceId: null,
           available: false,
-          unavailableReason: `Impossible de récupérer le prix Stripe du plan ${template.name}.`,
+          unavailableReason: `Aucun produit/prix Stripe mensuel trouvé pour ${template.name}.`,
         };
       }
-    }));
 
-    return plans;
+      const unitAmount = typeof candidate.price.unit_amount === 'number' && Number.isFinite(candidate.price.unit_amount)
+        ? Math.max(0, Math.trunc(candidate.price.unit_amount))
+        : template.defaultMonthlyPriceMinor;
+      const planName = readString(candidate.product.name) ?? template.name;
+      const planDescription = readString(candidate.product.description) ?? template.description;
+      const planMaxActiveListings = this.readMaxActiveListingsFromStripeProduct(candidate.product, template.maxActiveListings);
+      const available = Boolean(candidate.price.active && candidate.product.active);
+
+      return {
+        code,
+        name: planName,
+        description: planDescription,
+        maxActiveListings: planMaxActiveListings,
+        currency: (candidate.price.currency || template.defaultCurrency).toLowerCase(),
+        monthlyPriceMinor: unitAmount,
+        billingInterval: candidate.price.recurring?.interval ?? 'month',
+        stripePriceId: candidate.price.id,
+        available,
+        unavailableReason: available ? null : `Le produit/prix Stripe du plan ${planName} est inactif.`,
+      };
+    });
   }
 
   async listSubscriptionPlans(): Promise<SubscriptionPlan[]> {
@@ -633,9 +1378,10 @@ export class PaymentsService {
     if (!user) return null;
 
     const plans = await this.resolvePlanCatalog();
+    const subscriptionMode = this.getSubscriptionExecutionMode();
     const shouldSync = Boolean(options?.sync);
 
-    if (shouldSync && this.stripe) {
+    if (shouldSync && subscriptionMode === 'live' && this.stripe) {
       const billing = this.readBillingSnapshot(user);
       if (billing.customerId) {
         const liveSubscription = await this.getCurrentStripeSubscription({
@@ -657,28 +1403,23 @@ export class PaymentsService {
     const currentPlan = plans.find((plan) => plan.code === currentBilling.planCode) ?? null;
 
     return {
-      mode: this.getExecutionMode(),
+      mode: subscriptionMode,
       plans,
       currentPlanCode: currentBilling.planCode,
       currentPlan,
       subscription: this.toPublicBillingSnapshot(currentBilling),
-      connect: {
-        accountId: user.stripeConnectAccountId,
-        onboardingStatus: this.readConnectOnboardingStatus(user),
-      },
+      connect: this.readConnectState(user),
+      publicationReadiness: this.toPublicationReadiness(user),
     };
   }
 
   async activateSubscription(input: ActivateSubscriptionInput, auth: RequestAuth | null): Promise<SubscriptionActivationResult | null> {
-    const mode = this.getExecutionMode();
+    const mode = this.getSubscriptionExecutionMode();
     const plans = await this.resolvePlanCatalog();
     const selectedPlan = plans.find((plan) => plan.code === input.planCode) ?? null;
 
     let user = await upsertUserFromAuth(this.prisma, auth);
     if (!user) return null;
-
-    const connectState = await this.ensureStripeConnectAccount(user);
-    user = connectState.user;
 
     if (!selectedPlan || !selectedPlan.available) {
       return {
@@ -686,11 +1427,8 @@ export class PaymentsService {
         mode,
         plan: selectedPlan,
         subscription: this.toPublicBillingSnapshot(this.readBillingSnapshot(user)),
-        connect: {
-          accountId: connectState.accountId,
-          onboardingStatus: this.readConnectOnboardingStatus(user),
-          createdInFlow: connectState.created,
-        },
+        connect: this.toConnectSummary(user, false),
+        publicationReadiness: this.toPublicationReadiness(user),
         checkout: null,
         message: selectedPlan?.unavailableReason ?? 'Plan indisponible.',
       };
@@ -725,11 +1463,8 @@ export class PaymentsService {
           mode,
           plan: selectedPlan,
           subscription: this.toPublicBillingSnapshot(this.readBillingSnapshot(next)),
-          connect: {
-            accountId: connectState.accountId,
-            onboardingStatus: this.readConnectOnboardingStatus(next),
-            createdInFlow: connectState.created,
-          },
+          connect: this.toConnectSummary(next, false),
+          publicationReadiness: this.toPublicationReadiness(next),
           checkout: null,
           message: isSamePlan
             ? 'Ce plan est déjà actif sur votre compte.'
@@ -754,11 +1489,8 @@ export class PaymentsService {
         mode,
         plan: selectedPlan,
         subscription: this.toPublicBillingSnapshot(this.readBillingSnapshot(next)),
-        connect: {
-          accountId: connectState.accountId,
-          onboardingStatus: this.readConnectOnboardingStatus(next),
-          createdInFlow: connectState.created,
-        },
+        connect: this.toConnectSummary(next, false),
+        publicationReadiness: this.toPublicationReadiness(next),
         checkout: {
           sessionId,
           url: checkoutUrl,
@@ -792,11 +1524,8 @@ export class PaymentsService {
           mode,
           plan: selectedPlan,
           subscription: this.toPublicBillingSnapshot(this.readBillingSnapshot(next)),
-          connect: {
-            accountId: connectState.accountId,
-            onboardingStatus: this.readConnectOnboardingStatus(next),
-            createdInFlow: connectState.created,
-          },
+          connect: this.toConnectSummary(next, false),
+          publicationReadiness: this.toPublicationReadiness(next),
           checkout: null,
           message: 'Ce plan est déjà actif sur votre compte.',
         };
@@ -831,11 +1560,8 @@ export class PaymentsService {
         mode,
         plan: selectedPlan,
         subscription: this.toPublicBillingSnapshot(this.readBillingSnapshot(next)),
-        connect: {
-          accountId: connectState.accountId,
-          onboardingStatus: this.readConnectOnboardingStatus(next),
-          createdInFlow: connectState.created,
-        },
+        connect: this.toConnectSummary(next, false),
+        publicationReadiness: this.toPublicationReadiness(next),
         checkout: null,
         message: `Votre plan a été mis à jour vers ${selectedPlan.name}.`,
       };
@@ -847,13 +1573,10 @@ export class PaymentsService {
         mode,
         plan: selectedPlan,
         subscription: this.toPublicBillingSnapshot(currentBilling),
-        connect: {
-          accountId: connectState.accountId,
-          onboardingStatus: this.readConnectOnboardingStatus(user),
-          createdInFlow: connectState.created,
-        },
+        connect: this.toConnectSummary(user, false),
+        publicationReadiness: this.toPublicationReadiness(user),
         checkout: null,
-        message: `Le prix Stripe du plan ${selectedPlan.name} n'est pas configuré.`,
+        message: `Aucun prix Stripe valide n'a été trouvé pour ${selectedPlan.name}.`,
       };
     }
 
@@ -904,11 +1627,8 @@ export class PaymentsService {
       mode,
       plan: selectedPlan,
       subscription: this.toPublicBillingSnapshot(this.readBillingSnapshot(next)),
-      connect: {
-        accountId: connectState.accountId,
-        onboardingStatus: this.readConnectOnboardingStatus(next),
-        createdInFlow: connectState.created,
-      },
+      connect: this.toConnectSummary(next, false),
+      publicationReadiness: this.toPublicationReadiness(next),
       checkout: {
         sessionId: session.id,
         url: session.url,
@@ -922,9 +1642,7 @@ export class PaymentsService {
     if (!user) return null;
 
     const plans = await this.resolvePlanCatalog();
-    const mode = this.getExecutionMode();
-    const connectAccountId = user.stripeConnectAccountId;
-    const connectStatus = this.readConnectOnboardingStatus(user);
+    const mode = this.getSubscriptionExecutionMode();
 
     if (mode === 'mock') {
       const billing = this.readBillingSnapshot(user);
@@ -935,11 +1653,8 @@ export class PaymentsService {
           mode,
           plan: null,
           subscription: this.toPublicBillingSnapshot(billing),
-          connect: {
-            accountId: connectAccountId,
-            onboardingStatus: connectStatus,
-            createdInFlow: false,
-          },
+          connect: this.toConnectSummary(user, false),
+          publicationReadiness: this.toPublicationReadiness(user),
           message: 'Aucun plan à confirmer pour cette session.',
         };
       }
@@ -966,11 +1681,8 @@ export class PaymentsService {
         mode,
         plan: currentPlan,
         subscription: this.toPublicBillingSnapshot(nextBilling),
-        connect: {
-          accountId: next.stripeConnectAccountId,
-          onboardingStatus: this.readConnectOnboardingStatus(next),
-          createdInFlow: false,
-        },
+        connect: this.toConnectSummary(next, false),
+        publicationReadiness: this.toPublicationReadiness(next),
         message: null,
       };
     }
@@ -992,11 +1704,8 @@ export class PaymentsService {
         mode,
         plan: null,
         subscription: this.toPublicBillingSnapshot(billing),
-        connect: {
-          accountId: connectAccountId,
-          onboardingStatus: connectStatus,
-          createdInFlow: false,
-        },
+        connect: this.toConnectSummary(user, false),
+        publicationReadiness: this.toPublicationReadiness(user),
         message: 'Cette session checkout ne correspond pas à l’utilisateur authentifié.',
       };
     }
@@ -1014,11 +1723,8 @@ export class PaymentsService {
         mode,
         plan: null,
         subscription: this.toPublicBillingSnapshot(billing),
-        connect: {
-          accountId: connectAccountId,
-          onboardingStatus: connectStatus,
-          createdInFlow: false,
-        },
+        connect: this.toConnectSummary(user, false),
+        publicationReadiness: this.toPublicationReadiness(user),
         message: 'La session Stripe ne contient aucun abonnement confirmé.',
       };
     }
@@ -1039,11 +1745,8 @@ export class PaymentsService {
       mode,
       plan: currentPlan,
       subscription: this.toPublicBillingSnapshot(nextBilling),
-      connect: {
-        accountId: user.stripeConnectAccountId,
-        onboardingStatus: this.readConnectOnboardingStatus(user),
-        createdInFlow: false,
-      },
+      connect: this.toConnectSummary(user, false),
+      publicationReadiness: this.toPublicationReadiness(user),
       message: null,
     };
   }
@@ -1051,24 +1754,71 @@ export class PaymentsService {
   async createPaymentIntent(input: CreatePaymentIntentInput, auth: RequestAuth | null) {
     const listing = await this.prisma.listing.findUnique({
       where: { id: input.listingId },
-      select: { id: true, ownerId: true },
+      select: {
+        id: true,
+        ownerId: true,
+        core: true,
+        bookings: true,
+        owner: {
+          select: {
+            stripeConnectAccountId: true,
+            stripeConnectProfile: true,
+          },
+        },
+      },
     });
 
     if (!listing) return null;
 
-    const actor = await upsertUserFromAuth(this.prisma, auth);
-    const currency = (input.currency || 'eur').toLowerCase();
-    const chargeNowAmountMinor = toMinorUnit(input.payment.chargeNowAmount);
-    if (chargeNowAmountMinor <= 0) {
-      throw new Error('chargeNowAmount must be greater than 0.');
+    const listingConnectedAccountId = this.resolveListingConnectedAccountId(listing.owner);
+    if (listingConnectedAccountId && listingConnectedAccountId !== input.connectedAccountId) {
+      throw createBadRequestError(
+        'Le compte Stripe Connect fourni ne correspond pas au proprietaire de cette annonce.',
+        'INVALID_CONNECTED_ACCOUNT',
+      );
     }
 
+    const connectedAccountId = listingConnectedAccountId ?? input.connectedAccountId;
+    if (!connectedAccountId) {
+      throw createBadRequestError(
+        'Le compte Stripe Connect du proprietaire est manquant.',
+        'MISSING_CONNECTED_ACCOUNT',
+      );
+    }
+
+    const validation = this.validatePaymentIntentInput({
+      input,
+      listingCore: asObject(listing.core),
+      listingBookings: asObject(listing.bookings),
+    });
+
+    const actor = await upsertUserFromAuth(this.prisma, auth);
+    const currency = (input.currency || 'eur').toLowerCase();
+    const chargeNowAmountMinor = validation.payment.chargeNowAmountMinor;
+
     const metadata: Record<string, string> = {
-      listingId: input.listingId,
-      connectedAccountId: input.connectedAccountId,
-      paymentChoice: input.payment.choice,
       ...(input.metadata ?? {}),
+      listingId: input.listingId,
+      connectedAccountId,
+      paymentChoice: validation.payment.choice,
+      paymentTotalAmountMinor: String(validation.payment.totalAmountMinor),
+      paymentChargeNowAmountMinor: String(validation.payment.chargeNowAmountMinor),
+      paymentDeferredAmountMinor: String(validation.payment.deferredAmountMinor),
+      paymentDeferredMode: validation.payment.deferredMode,
+      paymentChargeNowRatio: String(validation.payment.ratio),
+      reservationStartISO: validation.reservation.startISO,
+      reservationEndISO: validation.reservation.endISO,
+      reservationNights: String(validation.reservation.nights),
+      reservationTotalAmountMinor: String(validation.reservation.totalAmountMinor),
+      reservationAdults: String(validation.reservation.occupants.adults),
+      reservationChildren: String(validation.reservation.occupants.children),
+      reservationBabies: String(validation.reservation.occupants.babies),
+      reservationAnimals: String(validation.reservation.occupants.animals),
+      reservationPmr: String(validation.reservation.occupants.pmr),
     };
+    if (validation.payment.deferredDueDateISO) {
+      metadata.paymentDeferredDueDateISO = validation.payment.deferredDueDateISO;
+    }
 
     let session: {
       id: string;
@@ -1087,7 +1837,7 @@ export class PaymentsService {
         clientSecret: `${fakeId}_secret_mock`,
         status: 'requires_payment_method',
         currency,
-        connectedAccountId: input.connectedAccountId,
+        connectedAccountId,
         rawResponse: {
           mode: 'mock',
           message: 'Stripe key not configured.',
@@ -1105,14 +1855,12 @@ export class PaymentsService {
         metadata,
       };
 
-      if (input.connectedAccountId) {
-        createParams.transfer_data = {
-          destination: input.connectedAccountId,
-        };
+      createParams.transfer_data = {
+        destination: connectedAccountId,
+      };
 
-        if (applicationFee > 0) {
-          createParams.application_fee_amount = applicationFee;
-        }
+      if (applicationFee > 0) {
+        createParams.application_fee_amount = applicationFee;
       }
 
       const intent = await this.stripe.paymentIntents.create(createParams);
@@ -1126,7 +1874,7 @@ export class PaymentsService {
         clientSecret: intent.client_secret,
         status: intent.status,
         currency: intent.currency,
-        connectedAccountId: input.connectedAccountId,
+        connectedAccountId,
         rawResponse: intent as unknown as Record<string, unknown>,
       };
     }
@@ -1136,19 +1884,24 @@ export class PaymentsService {
         listingId: input.listingId,
         userId: actor?.id ?? listing.ownerId ?? null,
         stripePaymentIntentId: session.id,
-        stripeConnectedAccountId: input.connectedAccountId,
+        stripeConnectedAccountId: connectedAccountId,
         currency,
         amountMinor: chargeNowAmountMinor,
         status: session.status,
-        paymentChoice: input.payment.choice,
+        paymentChoice: validation.payment.choice,
         chargeNowAmountMinor,
-        deferredAmountMinor: toMinorUnit(input.payment.deferredAmount ?? 0),
-        deferredMode: input.payment.deferredMode ?? null,
-        deferredDueDate: input.payment.deferredDueDateISO ? new Date(input.payment.deferredDueDateISO) : null,
+        deferredAmountMinor: validation.payment.deferredAmountMinor,
+        deferredMode: validation.payment.deferredMode,
+        deferredDueDate: validation.payment.deferredDueDateISO ? new Date(validation.payment.deferredDueDateISO) : null,
         metadata: toPrismaJson(metadata),
         rawRequest: toPrismaJson({
           reservation: input.reservation,
           payment: input.payment,
+          validated: {
+            reservation: validation.reservation,
+            payment: validation.payment,
+            connectedAccountId,
+          },
           currency,
         }),
         rawResponse: toPrismaJson(session.rawResponse),
@@ -1168,16 +1921,38 @@ export class PaymentsService {
     let user = await upsertUserFromAuth(this.prisma, auth);
     if (!user) return null;
 
-    const connect = await this.ensureStripeConnectAccount(user, {
-      country: input.country,
-      forcedAccountId: input.accountId,
-    });
-    user = connect.user;
+    try {
+      const connect = await this.ensureStripeConnectAccount(user, {
+        country: input.country,
+        forcedAccountId: input.accountId,
+      });
+      user = connect.user;
 
-    if (!this.stripe) {
-      const fakeUrl = `${input.returnUrl}?account=${connect.accountId}&mode=mock`;
+      if (!this.stripe) {
+        const fakeUrl = `${input.returnUrl}?account=${connect.accountId}&mode=mock`;
 
-      user = await this.updateUserStripeState({
+        user = await this.updateUserStripeState({
+          user,
+          connectPatch: {
+            onboardingStatus: 'pending',
+          },
+        });
+
+        return {
+          accountId: connect.accountId,
+          url: fakeUrl,
+          mode: 'mock',
+        };
+      }
+
+      const accountLink = await this.stripe.accountLinks.create({
+        account: connect.accountId,
+        refresh_url: input.refreshUrl,
+        return_url: input.returnUrl,
+        type: 'account_onboarding',
+      });
+
+      await this.updateUserStripeState({
         user,
         connectPatch: {
           onboardingStatus: 'pending',
@@ -1186,30 +1961,109 @@ export class PaymentsService {
 
       return {
         accountId: connect.accountId,
-        url: fakeUrl,
-        mode: 'mock',
+        url: accountLink.url,
+        expiresAt: accountLink.expires_at,
+        mode: 'live',
+      };
+    } catch (error) {
+      if (this.isStripeConnectPlatformProfileError(error)) {
+        throw this.buildStripeConnectPlatformProfileError(error);
+      }
+      throw error;
+    }
+  }
+
+  private resolveConnectOnboardingStatusFromStripeAccount(account: Stripe.Account): string {
+    const chargesEnabled = Boolean(account.charges_enabled);
+    const payoutsEnabled = Boolean(account.payouts_enabled);
+    const currentlyDue = account.requirements?.currently_due?.length ?? 0;
+    const disabledReason = readString(account.requirements?.disabled_reason);
+
+    if (chargesEnabled && payoutsEnabled && !disabledReason && currentlyDue === 0) {
+      return 'completed';
+    }
+
+    if (disabledReason || currentlyDue > 0) {
+      return 'restricted';
+    }
+
+    return 'pending';
+  }
+
+  async syncMyStripeConnectState(
+    input: SyncConnectStateInput,
+    auth: RequestAuth | null,
+  ): Promise<SyncConnectStateResult | null> {
+    let user = await upsertUserFromAuth(this.prisma, auth);
+    if (!user) return null;
+
+    const requestedAccountId = readString(input.accountId) ?? user.stripeConnectAccountId ?? null;
+    if (!requestedAccountId) {
+      const next = await this.updateUserStripeState({
+        user,
+        stripeConnectAccountId: null,
+        connectPatch: {
+          accountId: null,
+          onboardingStatus: 'not_started',
+          chargesEnabled: false,
+          payoutsEnabled: false,
+          defaultCurrency: 'eur',
+          transferSchedule: 'manual',
+        },
+      });
+
+      return {
+        mode: this.getExecutionMode(),
+        connect: this.readConnectState(next),
+        publicationReadiness: this.toPublicationReadiness(next),
       };
     }
 
-    const accountLink = await this.stripe.accountLinks.create({
-      account: connect.accountId,
-      refresh_url: input.refreshUrl,
-      return_url: input.returnUrl,
-      type: 'account_onboarding',
-    });
+    if (!this.stripe) {
+      const ensured = await this.ensureStripeConnectAccount(user, {
+        forcedAccountId: requestedAccountId,
+      });
+      user = ensured.user;
 
-    await this.updateUserStripeState({
+      const next = await this.updateUserStripeState({
+        user,
+        stripeConnectAccountId: requestedAccountId,
+        connectPatch: {
+          accountId: requestedAccountId,
+          onboardingStatus: 'completed',
+          chargesEnabled: true,
+          payoutsEnabled: true,
+          defaultCurrency: 'eur',
+          transferSchedule: 'manual',
+        },
+      });
+
+      return {
+        mode: this.getExecutionMode(),
+        connect: this.readConnectState(next),
+        publicationReadiness: this.toPublicationReadiness(next),
+      };
+    }
+
+    const account = await this.stripe.accounts.retrieve(requestedAccountId);
+    const onboardingStatus = this.resolveConnectOnboardingStatusFromStripeAccount(account);
+    const next = await this.updateUserStripeState({
       user,
+      stripeConnectAccountId: requestedAccountId,
       connectPatch: {
-        onboardingStatus: 'pending',
+        accountId: requestedAccountId,
+        onboardingStatus,
+        chargesEnabled: Boolean(account.charges_enabled),
+        payoutsEnabled: Boolean(account.payouts_enabled),
+        defaultCurrency: (account.default_currency ?? 'eur').toLowerCase(),
+        transferSchedule: readString(account.settings?.payouts?.schedule?.interval) ?? 'manual',
       },
     });
 
     return {
-      accountId: connect.accountId,
-      url: accountLink.url,
-      expiresAt: accountLink.expires_at,
-      mode: 'live',
+      mode: this.getExecutionMode(),
+      connect: this.readConnectState(next),
+      publicationReadiness: this.toPublicationReadiness(next),
     };
   }
 

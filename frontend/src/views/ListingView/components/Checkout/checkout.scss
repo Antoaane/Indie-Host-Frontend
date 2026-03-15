@@ -244,6 +244,10 @@ html:has(#checkout) {
       margin-bottom: 0 !important;
 
       @include h3-title($colorful: false);
+
+      &:disabled {
+        cursor: not-allowed;
+      }
     }
 
     .progress-step-chevron {
@@ -514,6 +518,7 @@ html:has(#checkout) {
     }
 
     .payment-card-grid,
+    .payment-cardholder-grid,
     .payment-offline-grid {
       display: grid;
       gap: 0.6rem;
@@ -560,6 +565,7 @@ html:has(#checkout) {
 
     @media (max-width: 600px) {
       .payment-card-grid,
+      .payment-cardholder-grid,
       .payment-offline-grid {
         grid-template-columns: 1fr;
       }
@@ -570,6 +576,41 @@ html:has(#checkout) {
     display: flex;
     flex-direction: column;
     gap: var(--layout-gap-sm);
+  }
+
+  .traveler-identity-grid {
+    display: grid;
+    gap: 0.6rem;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .identity-input-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+
+    >span {
+      margin: 0;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    >input {
+      width: 100%;
+      box-sizing: border-box;
+      min-height: 2.7rem;
+      border-radius: borders.$rounded-md;
+      border: 1px solid rgba($secondary, 0.16);
+      background: $accent;
+      color: $secondary-text;
+      padding: 0.5rem 0.7rem;
+      font: inherit;
+
+      &:focus {
+        outline: 2px solid rgba($secondary, 0.25);
+        outline-offset: 1px;
+      }
+    }
   }
 
   .info-item {
@@ -722,6 +763,10 @@ html:has(#checkout) {
 
 @media (max-width: 640px) {
   .listing-checkout#checkout {
+    .traveler-identity-grid {
+      grid-template-columns: 1fr;
+    }
+
     >.checkout-header {
       flex-direction: column;
       align-items: flex-start;

@@ -82,6 +82,16 @@ GRANDI_CHECKOUT_BASE_URL=https://www.gandi.net/en/domain/checkout
 > **Important Gandi** : utilisez un **Personal Access Token** (PAT) depuis votre compte Gandi.net.
 > Les anciennes clés API (`Apikey`) sont dépréciées et peuvent retourner des erreurs 403.
 
+### Bootstrap des plans Stripe en dev
+
+```bash
+cd backend/api
+npm run stripe:billing:setup:dev
+```
+
+Cette commande crée (ou réutilise) les produits/prix Stripe mensuels en EUR pour `indiehost`, `superhost`, `megahost`.
+L’API lit ensuite directement ces produits/prix depuis Stripe (plus besoin de `STRIPE_BILLING_PRICE_*` dans `.env`).
+
 ---
 
 ## Endpoints

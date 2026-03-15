@@ -7,6 +7,7 @@ import {
   createConnectOnboardingLinkSchema,
   createPaymentIntentSchema,
   getMySubscriptionQuerySchema,
+  syncConnectStateSchema,
 } from './payments.schemas.js';
 import { PaymentsService } from './payments.service.js';
 
@@ -45,6 +46,20 @@ export const paymentsPlugin = fp(async (fastify) => {
     preHandler: fastify.authenticate,
   }, async (request, reply) => {
     const result = await service.getMyStripeConnectProfile(request.auth);
+
+    if (!result) {
+      reply.code(401).send({ message: 'Authentication required.' });
+      return;
+    }
+
+    reply.send(result);
+  });
+
+  fastify.post('/payments/stripe/connect/sync', {
+    preHandler: fastify.authenticate,
+  }, async (request, reply) => {
+    const payload = syncConnectStateSchema.parse(asObject(request.body));
+    const result = await service.syncMyStripeConnectState(payload, request.auth);
 
     if (!result) {
       reply.code(401).send({ message: 'Authentication required.' });

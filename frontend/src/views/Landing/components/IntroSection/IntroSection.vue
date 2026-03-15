@@ -138,7 +138,7 @@ function activateSite() {
   } catch {
     // ignore storage errors (private mode, quota)
   }
-  void router.push({ name: 'sign-up', query: { redirect_url: '/editor/create' } })
+  void router.push({ name: 'create-listing-public' })
 }
 
 function closeMobilePreview() {

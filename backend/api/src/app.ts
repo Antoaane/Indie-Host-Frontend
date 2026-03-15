@@ -86,8 +86,13 @@ export async function buildApp() {
     const safeMessage = statusCode >= 500
       ? 'Internal server error.'
       : (error instanceof Error ? error.message : 'Request failed.');
+    const errorCode = (error as { code?: unknown }).code;
+    const errorDetails = (error as { details?: unknown }).details;
+
     reply.code(statusCode).send({
       message: safeMessage,
+      ...(statusCode < 500 && typeof errorCode === 'string' ? { code: errorCode } : {}),
+      ...(statusCode < 500 && errorDetails !== undefined ? { details: errorDetails } : {}),
     });
   });
 

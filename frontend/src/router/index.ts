@@ -16,6 +16,7 @@ const Listing = () => import('@/views/Listing/_Listing.vue')
 const ListingGuide = () => import('@/views/ListingGuide/_ListingGuide.vue')
 const EditorRoute = () => import('@/views/Editor/EditorRoute.vue')
 const CreateListingRoute = () => import('@/views/CreateListing/CreateListingRoute.vue')
+const CreateListingPublicRoute = () => import('@/views/CreateListing/CreateListingPublicRoute.vue')
 const MessagingRoute = () => import('@/views/Messaging/MessagingRoute.vue')
 const ManagementRoute = () => import('@/views/Management/ManagementRoute.vue')
 const DomainsRoute = () => import('@/views/Domains/DomainsRoute.vue')
@@ -47,6 +48,26 @@ async function resolveLegacyBackOfficeRedirect(
   return {
     name: 'sign-in',
     query: { redirect_url: to.fullPath },
+  }
+}
+
+async function resolveCreateListingEntryRedirect(to: RouteLocationNormalized) {
+  const userId = await resolveRuntimeUserId({
+    waitMs: 1500,
+    pollIntervalMs: 75,
+  })
+
+  if (userId) {
+    return {
+      name: 'create-listing-user',
+      params: { userId },
+      query: to.query,
+    }
+  }
+
+  return {
+    name: 'create-listing-public',
+    query: to.query,
   }
 }
 
@@ -98,9 +119,15 @@ const router = createRouter({
     {
       path: '/editor/create',
       name: 'create-listing',
-      component: CreateListingRoute,
-      meta: { navVariant: 'host' },
-      beforeEnter: (to) => resolveLegacyBackOfficeRedirect(to, 'create-listing-user'),
+      component: CreateListingPublicRoute,
+      meta: { navVariant: 'public' },
+      beforeEnter: resolveCreateListingEntryRedirect,
+    },
+    {
+      path: '/create-listing',
+      name: 'create-listing-public',
+      component: CreateListingPublicRoute,
+      meta: { navVariant: 'public' },
     },
     {
       path: '/editor/:userId/create',

@@ -31,7 +31,21 @@ export type StripeSubscriptionSnapshot = {
 export type StripeConnectSummary = {
   accountId: string | null
   onboardingStatus: string
+  chargesEnabled: boolean
+  payoutsEnabled: boolean
+  defaultCurrency: string
+  transferSchedule: string
   createdInFlow?: boolean
+}
+
+export type StripePublicationReadiness = {
+  canPublish: boolean
+  hasActiveSubscription: boolean
+  hasConnectAccount: boolean
+  connectOnboardingCompleted: boolean
+  chargesEnabled: boolean
+  payoutsEnabled: boolean
+  missingRequirements: string[]
 }
 
 export type StripeSubscriptionState = {
@@ -40,10 +54,8 @@ export type StripeSubscriptionState = {
   currentPlanCode: SubscriptionPlanCode | null
   currentPlan: StripeSubscriptionPlan | null
   subscription: StripeSubscriptionSnapshot | null
-  connect: {
-    accountId: string | null
-    onboardingStatus: string
-  }
+  connect: StripeConnectSummary
+  publicationReadiness: StripePublicationReadiness
 }
 
 export type ActivateSubscriptionResponse = {
@@ -52,6 +64,7 @@ export type ActivateSubscriptionResponse = {
   plan: StripeSubscriptionPlan | null
   subscription: StripeSubscriptionSnapshot | null
   connect: StripeConnectSummary
+  publicationReadiness: StripePublicationReadiness
   checkout: {
     sessionId: string
     url: string
@@ -65,7 +78,21 @@ export type ConfirmSubscriptionCheckoutResponse = {
   plan: StripeSubscriptionPlan | null
   subscription: StripeSubscriptionSnapshot | null
   connect: StripeConnectSummary
+  publicationReadiness: StripePublicationReadiness
   message: string | null
+}
+
+export type StripeConnectOnboardingLinkResponse = {
+  accountId: string
+  url: string
+  expiresAt?: number
+  mode: 'live' | 'mock'
+}
+
+export type StripeConnectSyncResponse = {
+  mode: 'live' | 'mock'
+  connect: StripeConnectSummary
+  publicationReadiness: StripePublicationReadiness
 }
 
 type ParsedEndpoint = {
@@ -80,6 +107,8 @@ const PLANS_PATH = '/payments/stripe/subscriptions/plans'
 const STATE_PATH = '/payments/stripe/subscriptions/me'
 const ACTIVATE_PATH = '/payments/stripe/subscriptions/activate'
 const CONFIRM_CHECKOUT_PATH = '/payments/stripe/subscriptions/checkout/confirm'
+const CONNECT_ONBOARDING_LINK_PATH = '/payments/stripe/connect/onboarding-link'
+const CONNECT_SYNC_PATH = '/payments/stripe/connect/sync'
 
 function normalizePath(path: string): string {
   const trimmed = path.trim()
@@ -115,16 +144,6 @@ function parseEndpoint(raw: string): ParsedEndpoint {
 function normalizeApiBaseUrl(baseUrl: string): string {
   const trimmed = baseUrl.replace(/\/$/, '')
   if (!trimmed) return ''
-
-  if (import.meta.env.DEV) {
-    try {
-      const parsed = new URL(trimmed)
-      return parsed.pathname.replace(/\/$/, '') || '/'
-    } catch {
-      // Keep original value for relative base URL.
-    }
-  }
-
   return trimmed
 }
 
@@ -146,10 +165,13 @@ function buildApiUrl(path: string): string {
   if (/^https?:\/\//i.test(normalizedPath)) return normalizedPath
 
   const parsedBase = parseEndpoint(BASE_API_URL)
-  if (!parsedBase.path && !parsedBase.origin) return normalizedPath
-
-  const basePath = parsedBase.path ?? BASE_API_URL
-  return joinUrl(basePath, normalizedPath)
+  if (parsedBase.origin) {
+    const originWithPath = joinUrl(parsedBase.origin, parsedBase.path ?? '/')
+    return joinUrl(originWithPath, normalizedPath)
+  }
+  if (parsedBase.path) return joinUrl(parsedBase.path, normalizedPath)
+  if (!BASE_API_URL) return normalizedPath
+  return joinUrl(BASE_API_URL, normalizedPath)
 }
 
 function waitForClerkToken({ timeoutMs, pollEveryMs }: { timeoutMs: number; pollEveryMs: number }): Promise<string | null> {
@@ -285,5 +307,56 @@ export async function confirmStripeSubscriptionCheckout(input: {
     return data
   } catch (error) {
     throw new Error(toApiErrorMessage(error, 'Impossible de confirmer le paiement Stripe.'))
+  }
+}
+
+export async function createStripeConnectOnboardingLink(input: {
+  accountId?: string
+  refreshUrl: string
+  returnUrl: string
+  country?: string
+}): Promise<StripeConnectOnboardingLinkResponse> {
+  const axios = await getAxios()
+  const headers = await getHeaders({ requiresAuth: true })
+
+  try {
+    const { data } = await axios.post<StripeConnectOnboardingLinkResponse>(
+      resolveUrl(buildApiUrl(CONNECT_ONBOARDING_LINK_PATH)),
+      {
+        accountId: input.accountId,
+        refreshUrl: input.refreshUrl,
+        returnUrl: input.returnUrl,
+        country: input.country ?? 'FR',
+      },
+      {
+        withCredentials: false,
+        headers,
+      },
+    )
+    return data
+  } catch (error) {
+    throw new Error(toApiErrorMessage(error, 'Impossible de lancer la configuration Stripe Connect.'))
+  }
+}
+
+export async function syncMyStripeConnectState(input?: { accountId?: string }): Promise<StripeConnectSyncResponse> {
+  const axios = await getAxios()
+  const headers = await getHeaders({ requiresAuth: true })
+
+  try {
+    const { data } = await axios.post<StripeConnectSyncResponse>(
+      resolveUrl(buildApiUrl(CONNECT_SYNC_PATH)),
+      {
+        accountId: input?.accountId,
+      },
+      {
+        withCredentials: false,
+        headers,
+      },
+    )
+
+    return data
+  } catch (error) {
+    throw new Error(toApiErrorMessage(error, 'Impossible de synchroniser Stripe Connect.'))
   }
 }

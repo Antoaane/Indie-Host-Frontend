@@ -4,6 +4,16 @@ import type { CheckoutPaymentBreakdown, CheckoutPaymentChoice } from '@/domain/p
 
 export type CheckoutConfirmationPayload = {
   travelerMessage: string
+  travelerContact: {
+    firstName: string
+    lastName: string
+    phone: string
+  }
+  cardholder: {
+    firstName: string
+    lastName: string
+    fullName: string
+  }
   paymentChoice: CheckoutPaymentChoice
   payment: {
     breakdown: CheckoutPaymentBreakdown

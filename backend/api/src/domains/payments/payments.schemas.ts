@@ -1,22 +1,40 @@
 import { z } from 'zod';
 
+const isoDateSchema = z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/);
+const paymentChoiceSchema = z.enum([
+  'full',
+  'split',
+  'cash',
+]);
+const deferredModeSchema = z.enum([
+  'none',
+  'online',
+  'cash',
+]);
+
 const reservationSchema = z.object({
-  startISO: z.string().optional(),
-  endISO: z.string().optional(),
-  nights: z.coerce.number().optional(),
-  total: z.coerce.number().optional(),
-  occupants: z.record(z.any()).optional(),
+  startISO: isoDateSchema.optional(),
+  endISO: isoDateSchema.optional(),
+  nights: z.coerce.number().int().positive().optional(),
+  total: z.coerce.number().nonnegative().optional(),
+  occupants: z.object({
+    adults: z.coerce.number().int().nonnegative().optional(),
+    children: z.coerce.number().int().nonnegative().optional(),
+    babies: z.coerce.number().int().nonnegative().optional(),
+    animals: z.coerce.number().int().nonnegative().optional(),
+    pmr: z.coerce.number().int().nonnegative().optional(),
+  }).optional(),
   fees: z.array(z.record(z.any())).optional(),
   pricing: z.record(z.any()).optional(),
 });
 
 const paymentSchema = z.object({
-  choice: z.string().trim().min(1),
-  totalAmount: z.coerce.number(),
-  chargeNowAmount: z.coerce.number(),
-  deferredAmount: z.coerce.number().optional(),
-  deferredMode: z.string().trim().optional(),
-  deferredDueDateISO: z.string().nullable().optional(),
+  choice: paymentChoiceSchema,
+  totalAmount: z.coerce.number().nonnegative(),
+  chargeNowAmount: z.coerce.number().positive(),
+  deferredAmount: z.coerce.number().nonnegative().optional(),
+  deferredMode: deferredModeSchema.optional(),
+  deferredDueDateISO: isoDateSchema.nullable().optional(),
 });
 
 export const createPaymentIntentSchema = z.object({
@@ -33,6 +51,10 @@ export const createConnectOnboardingLinkSchema = z.object({
   refreshUrl: z.string().url(),
   returnUrl: z.string().url(),
   country: z.string().trim().length(2).optional().default('FR'),
+});
+
+export const syncConnectStateSchema = z.object({
+  accountId: z.string().trim().optional(),
 });
 
 export const subscriptionPlanCodeSchema = z.enum([

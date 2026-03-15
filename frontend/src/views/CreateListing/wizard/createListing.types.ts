@@ -3,6 +3,7 @@
 import type { Component } from 'vue'
 
 import type { RawListingBundle } from '@/domain/listings/types'
+import type { ListingOnboardingIntent } from '@/domain/onboarding/listingOnboarding'
 
 export type CreateListingStep = {
   id: string
@@ -30,6 +31,9 @@ export type PersistedCreateDraft = {
   stepIndex: number
   furthestStepIndex?: number
   isPreviewStage?: boolean
+  isGuestTransitionStage?: boolean
+  guestEmail?: string
+  guestIntent?: ListingOnboardingIntent | null
   draft: RawListingBundle
   updatedAt: string
 }

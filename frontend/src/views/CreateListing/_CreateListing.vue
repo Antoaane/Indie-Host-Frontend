@@ -10,6 +10,7 @@ import CreateListingLayout from '@/views/CreateListing/components/wizard/CreateL
 import CreateListingProgressBar from '@/views/CreateListing/components/wizard/CreateListingProgressBar.vue'
 import CreateListingStage from '@/views/CreateListing/components/wizard/CreateListingStage.vue'
 import CreateListingStepsTabs from '@/views/CreateListing/components/wizard/CreateListingStepsTabs.vue'
+import CreateGuestOnboardingStepPanel from '@/views/CreateListing/components/panels/CreateGuestOnboardingStepPanel.vue'
 import CreateListingPreviewStepPanel from '@/views/CreateListing/components/panels/CreateListingPreviewStepPanel.vue'
 import { createListingSteps } from '@/views/CreateListing/wizard/createListingSteps'
 import { useCreateListingWizard } from '@/views/CreateListing/wizard/useCreateListingWizard'
@@ -26,6 +27,7 @@ const {
   currentStep,
   activeStepIndex,
   isPreviewStage,
+  isGuestTransitionStage,
   stepError,
   submitState,
   progressPercent,
@@ -36,12 +38,22 @@ const {
   goToStep,
   goToPreviousStep,
   goToNextStep,
+  goBackFromGuestTransitionStage,
+  guestEmail,
+  guestEmailError,
+  guestInfoMessage,
+  isGuestOnboardingLoading,
+  setGuestEmail,
+  startGuestPublishOnboarding,
+  startGuestSetupOnboarding,
+  continueGuestWithoutAccount,
   cancelCreation,
   submitCreateListing,
 } = useCreateListingWizard({
   mode: () => props.mode,
   source: () => props.source,
   userId: () => props.userId,
+  isGuestFlow: () => props.mode === 'static',
   steps: createListingSteps(),
 })
 
@@ -61,24 +73,43 @@ const submitError = computed(() => submitState.error)
     /> -->
 
     <CreateListingProgressBar
-      v-if="!isPreviewStage"
+      v-if="!isPreviewStage && !isGuestTransitionStage"
       :progress-percent="progressPercent"
     />
 
     <CreateListingStepsTabs
-      v-if="!isPreviewStage"
+      v-if="!isPreviewStage && !isGuestTransitionStage"
       :items="stepItems"
       @select="goToStep"
     />
 
     <CreateListingStage
-      v-if="!isPreviewStage"
+      v-if="!isPreviewStage && !isGuestTransitionStage"
       :step="currentStep"
       :draft="draft"
       :step-error="stepError"
       @patch="applyDraftPatch"
       @next="goToNextStep"
     />
+
+    <section
+      v-else-if="isGuestTransitionStage"
+      class="stage is-guest-onboarding"
+    >
+      <div class="slide">
+        <CreateGuestOnboardingStepPanel
+          :email="guestEmail"
+          :email-error="guestEmailError"
+          :info-message="guestInfoMessage"
+          :is-loading="isGuestOnboardingLoading"
+          @update:email="setGuestEmail"
+          @back="goBackFromGuestTransitionStage"
+          @start-publish="startGuestPublishOnboarding"
+          @start-setup="startGuestSetupOnboarding"
+          @continue-without-account="continueGuestWithoutAccount"
+        />
+      </div>
+    </section>
 
     <section
       v-else
@@ -97,6 +128,7 @@ const submitError = computed(() => submitState.error)
     </p>
 
     <CreateListingFooterNavigation
+      v-if="!isGuestTransitionStage"
       :is-last-step="isPreviewStage"
       :can-go-back="canGoBack"
       :can-go-next="canGoNext"

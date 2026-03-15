@@ -68,16 +68,6 @@ function parseEndpoint(raw: string): ParsedEndpoint {
 function normalizeApiBaseUrl(baseUrl: string): string {
   const trimmed = baseUrl.replace(/\/$/, '')
   if (!trimmed) return ''
-
-  if (import.meta.env.DEV) {
-    try {
-      const parsed = new URL(trimmed)
-      return parsed.pathname.replace(/\/$/, '') || '/'
-    } catch {
-      // Keep the original value for relative URLs.
-    }
-  }
-
   return trimmed
 }
 
@@ -98,10 +88,13 @@ function buildApiUrl(path: string): string {
   if (/^https?:\/\//i.test(path)) return path
 
   const parsedBase = parseEndpoint(BASE_API_URL)
-  if (!parsedBase.path && !parsedBase.origin) return path
-
-  const basePath = parsedBase.path ?? BASE_API_URL
-  return joinUrl(basePath, path)
+  if (parsedBase.origin) {
+    const originWithPath = joinUrl(parsedBase.origin, parsedBase.path ?? '/')
+    return joinUrl(originWithPath, path)
+  }
+  if (parsedBase.path) return joinUrl(parsedBase.path, path)
+  if (!BASE_API_URL) return path
+  return joinUrl(BASE_API_URL, path)
 }
 
 function toTrimmedString(value: unknown): string {

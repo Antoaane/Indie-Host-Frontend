@@ -1,10 +1,11 @@
 // File: src/views/Editor/composables/useEditorController.ts
 
 import { computed, onBeforeUnmount, ref, watch, type Ref } from 'vue'
-import type { RouteLocationNormalizedLoaded } from 'vue-router'
+import { useRouter, type RouteLocationNormalizedLoaded } from 'vue-router'
 
 import type { RawListingBundle } from '@/domain/listings/types'
 import { normalizeListingStatus } from '@/domain/listings/status'
+import { fetchMyStripeSubscriptionState } from '@/domain/api/stripeSubscriptions'
 import {
   applyPatchToDraftBundle,
   snapshotListingDraft,
@@ -28,6 +29,7 @@ type EditorControllerOptions = {
 }
 
 export function useEditorController(options: EditorControllerOptions) {
+  const router = useRouter()
   const stage = ref<EditorStage>('listings')
   const selectedListingId = ref<string | null>(null)
   const selectionToken = ref(0)
@@ -162,7 +164,7 @@ export function useEditorController(options: EditorControllerOptions) {
     }
   }
 
-  function applyListingStatusPatch(payload: { listingId: string; status: string }) {
+  async function applyListingStatusPatch(payload: { listingId: string; status: string }) {
     const listingId = payload.listingId.trim()
     const normalizedStatus = normalizeListingStatus(payload.status)
     if (!listingId || !normalizedStatus) return
@@ -170,6 +172,30 @@ export function useEditorController(options: EditorControllerOptions) {
     const currentListing = listingState.listings.value.find((item) => item.listingId === listingId)
     const currentStatus = normalizeListingStatus(currentListing?.status)
     if (currentStatus === normalizedStatus) return
+
+    if (normalizedStatus === 'published') {
+      try {
+        const billingState = await fetchMyStripeSubscriptionState({ sync: true })
+        if (!billingState.publicationReadiness?.canPublish) {
+          const missing = billingState.publicationReadiness?.missingRequirements ?? []
+          const detail = missing.length ? ` (${missing.join(', ')})` : ''
+          window.alert(`Publication bloquée: abonnement actif + Stripe Connect complet requis${detail}.`)
+          await router.push({
+            name: 'pricing',
+            query: {
+              onboarding: 'listing',
+              intent: 'publish',
+              listingId,
+            },
+          })
+          return
+        }
+      } catch (error) {
+        console.warn('[Editor] failed to validate publication requirements', { listingId, error })
+        window.alert('Impossible de vérifier les prérequis de publication pour le moment.')
+        return
+      }
+    }
 
     if (!listingState.publishedSnapshotByListingId[listingId]) {
       const publishedSnapshot = snapshotListingStatus(currentListing?.status)

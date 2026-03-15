@@ -23,11 +23,11 @@ import type {
 
 import type { ListingParsed } from '@/views/ListingView/types/listing'
 import type { ReservationPayload } from '@/views/ListingView/types/reservation'
+import type { CheckoutConfirmationPayload } from '@/views/ListingView/types/checkout'
 import { createStripePaymentIntent } from '@/domain/api/stripePayments'
 import {
   buildStripeReservationMetadata,
   resolveCheckoutPaymentBreakdown,
-  type CheckoutPaymentBreakdown,
   type CheckoutPaymentChoice,
 } from '@/domain/payments/checkoutPayment'
 import {
@@ -39,18 +39,6 @@ import {
   isStripeCheckoutOfflineModeEnabled,
   loadStripeClient,
 } from '@/domain/payments/stripeClient'
-
-type CheckoutConfirmationPayload = {
-  travelerMessage: string
-  paymentChoice: CheckoutPaymentChoice
-  payment: {
-    breakdown: CheckoutPaymentBreakdown
-    paymentIntentId: string
-    paymentIntentStatus: string
-    currency: string
-    connectedAccountId: string
-  }
-}
 
 type ProgressSectionKey = 'information' | 'reminder' | 'final'
 
@@ -84,6 +72,8 @@ const emit = defineEmits<{
 
 const paymentChoice = ref<CheckoutPaymentChoice>('full')
 const travelerMessage = ref('')
+const travelerFirstName = ref('')
+const travelerLastName = ref('')
 const travelerPhone = ref('')
 const paymentIntentError = ref<string | null>(null)
 const isPreparingPayment = ref(false)
@@ -94,11 +84,11 @@ const cardCvcElementMount = ref<HTMLDivElement | null>(null)
 const paymentIntentId = ref<string | null>(null)
 const paymentIntentClientSecret = ref<string | null>(null)
 const paymentIntentCurrency = ref('eur')
-const cardholderName = ref('')
+const cardholderFirstName = ref('')
+const cardholderLastName = ref('')
 const offlineCardNumber = ref('')
 const offlineCardExpiry = ref('')
 const offlineCardCvc = ref('')
-const hasUnlockedPostPaymentSections = ref(false)
 const hasAcknowledgedReminder = ref(false)
 const isStripeOfflineMode = isStripeCheckoutOfflineModeEnabled()
 const stripeCardInputError = ref<string | null>(null)
@@ -164,7 +154,8 @@ watch(
 
 watch(
   [
-    cardholderName,
+    cardholderFirstName,
+    cardholderLastName,
     offlineCardNumber,
     offlineCardExpiry,
     offlineCardCvc,
@@ -246,6 +237,8 @@ const listingImage = computed(() => {
 })
 
 const paymentSectionTitle = 'Paiement sécurisé Stripe'
+const cardholderFullName = computed(() => `${cardholderFirstName.value.trim()} ${cardholderLastName.value.trim()}`.trim())
+const isCardholderNameComplete = computed(() => Boolean(cardholderFirstName.value.trim() && cardholderLastName.value.trim()))
 const isPaymentReady = computed(() => (
   isStripeOfflineMode
     ? Boolean(paymentIntentId.value)
@@ -261,7 +254,7 @@ const isPaymentReady = computed(() => (
 ))
 const stripeCardFormValidationError = computed(() => {
   if (isStripeOfflineMode) return null
-  if (!cardholderName.value.trim()) return 'Saisissez le nom du titulaire de la carte.'
+  if (!isCardholderNameComplete.value) return 'Saisissez le prénom et le nom du titulaire de la carte.'
   if (stripeCardInputError.value) return stripeCardInputError.value
   if (!stripeCardFormState.numberComplete || !stripeCardFormState.expiryComplete || !stripeCardFormState.cvcComplete) {
     return 'Complétez les informations de carte bancaire.'
@@ -270,7 +263,7 @@ const stripeCardFormValidationError = computed(() => {
 })
 const offlineCardFormValidationError = computed(() => {
   if (!isStripeOfflineMode) return null
-  if (!cardholderName.value.trim()) return 'Saisissez le nom du titulaire de la carte.'
+  if (!isCardholderNameComplete.value) return 'Saisissez le prénom et le nom du titulaire de la carte.'
 
   const cardNumberDigits = offlineCardNumber.value.replace(/\D/g, '')
   if (cardNumberDigits.length < 13 || cardNumberDigits.length > 19) {
@@ -314,7 +307,7 @@ const paymentErrorMessage = computed(() => {
 })
 const isCardFormReady = computed(() => !cardFormValidationError.value)
 const isCardDetailsEntered = computed(() => {
-  if (!cardholderName.value.trim()) return false
+  if (!isCardholderNameComplete.value) return false
 
   if (isStripeOfflineMode) {
     return Boolean(
@@ -330,9 +323,22 @@ const isCardDetailsEntered = computed(() => {
     stripeCardFormState.cvcComplete
   )
 })
-const shouldRevealPostPaymentSections = computed(() => hasUnlockedPostPaymentSections.value)
-const canAccessInformationStep = computed(() => shouldRevealPostPaymentSections.value)
-const isInformationStepComplete = computed(() => Boolean(travelerPhone.value.trim()))
+const isPaymentStepComplete = computed(() => (
+  !reservationError.value &&
+  !paymentOptionError.value &&
+  !isPreparingPayment.value &&
+  isPaymentReady.value &&
+  isCardFormReady.value &&
+  !paymentIntentError.value &&
+  isCardDetailsEntered.value
+))
+const shouldRevealPostPaymentSections = computed(() => isPaymentStepComplete.value)
+const canAccessInformationStep = computed(() => isPaymentStepComplete.value)
+const isInformationStepComplete = computed(() => Boolean(
+  travelerFirstName.value.trim() &&
+  travelerLastName.value.trim() &&
+  travelerPhone.value.trim(),
+))
 const canAccessReminderStep = computed(() => canAccessInformationStep.value && isInformationStepComplete.value)
 const canAccessFinalStep = computed(() => canAccessReminderStep.value && hasAcknowledgedReminder.value)
 const openedProgressSection = ref<ProgressSectionKey | null>(null)
@@ -347,6 +353,7 @@ const canSubmit = computed(() =>
   !isConfirmingPayment.value &&
   isPaymentReady.value &&
   isCardFormReady.value &&
+  canAccessFinalStep.value &&
   !paymentIntentError.value,
 )
 
@@ -360,6 +367,9 @@ const submitLabel = computed(() => {
 })
 
 function toggleProgressSection(section: ProgressSectionKey) {
+  if (section === 'information' && !canAccessInformationStep.value) return
+  if (section === 'reminder' && !canAccessReminderStep.value) return
+  if (section === 'final' && !canAccessFinalStep.value) return
   openedProgressSection.value = openedProgressSection.value === section ? null : section
 }
 
@@ -563,6 +573,16 @@ async function confirmCheckout() {
 
       emit('confirm', {
         travelerMessage: travelerMessage.value.trim(),
+        travelerContact: {
+          firstName: travelerFirstName.value.trim(),
+          lastName: travelerLastName.value.trim(),
+          phone: travelerPhone.value.trim(),
+        },
+        cardholder: {
+          firstName: cardholderFirstName.value.trim(),
+          lastName: cardholderLastName.value.trim(),
+          fullName: cardholderFullName.value,
+        },
         paymentChoice: selectedBreakdown.value.choice,
         payment: {
           breakdown: selectedBreakdown.value,
@@ -586,7 +606,7 @@ async function confirmCheckout() {
         payment_method: {
           card: stripeCardNumberElement,
           billing_details: {
-            name: cardholderName.value.trim(),
+            name: cardholderFullName.value,
           },
         },
       },
@@ -613,6 +633,16 @@ async function confirmCheckout() {
 
     emit('confirm', {
       travelerMessage: travelerMessage.value.trim(),
+      travelerContact: {
+        firstName: travelerFirstName.value.trim(),
+        lastName: travelerLastName.value.trim(),
+        phone: travelerPhone.value.trim(),
+      },
+      cardholder: {
+        firstName: cardholderFirstName.value.trim(),
+        lastName: cardholderLastName.value.trim(),
+        fullName: cardholderFullName.value,
+      },
       paymentChoice: selectedBreakdown.value.choice,
       payment: {
         breakdown: selectedBreakdown.value,
@@ -631,17 +661,33 @@ async function confirmCheckout() {
 }
 
 watch(
-  isCardDetailsEntered,
-  (isEntered) => {
-    if (isEntered) hasUnlockedPostPaymentSections.value = true
+  canAccessReminderStep,
+  (canAccess) => {
+    if (!canAccess) hasAcknowledgedReminder.value = false
   },
   { immediate: true },
 )
 
 watch(
-  canAccessReminderStep,
-  (canAccess) => {
-    if (!canAccess) hasAcknowledgedReminder.value = false
+  [
+    canAccessInformationStep,
+    isInformationStepComplete,
+    canAccessFinalStep,
+  ],
+  () => {
+    if (!canAccessInformationStep.value) {
+      openedProgressSection.value = null
+      return
+    }
+    if (!isInformationStepComplete.value) {
+      openedProgressSection.value = 'information'
+      return
+    }
+    if (!canAccessFinalStep.value) {
+      openedProgressSection.value = 'reminder'
+      return
+    }
+    openedProgressSection.value = 'final'
   },
   { immediate: true },
 )
@@ -890,15 +936,26 @@ onBeforeUnmount(() => {
               {{ brand }}
             </span>
           </div>
-          <label class="payment-offline-field">
-            <span>Nom du titulaire</span>
-            <input
-              v-model="cardholderName"
-              type="text"
-              autocomplete="cc-name"
-              placeholder="Nom Prénom"
-            />
-          </label>
+          <div class="payment-cardholder-grid">
+            <label class="payment-offline-field">
+              <span>Prénom du titulaire</span>
+              <input
+                v-model="cardholderFirstName"
+                type="text"
+                autocomplete="cc-given-name"
+                placeholder="Prénom"
+              />
+            </label>
+            <label class="payment-offline-field">
+              <span>Nom du titulaire</span>
+              <input
+                v-model="cardholderLastName"
+                type="text"
+                autocomplete="cc-family-name"
+                placeholder="Nom"
+              />
+            </label>
+          </div>
           <div class="payment-offline-grid">
             <label class="payment-offline-field">
               <span>Numéro de carte</span>
@@ -936,15 +993,26 @@ onBeforeUnmount(() => {
           v-else
           class="payment-card-form"
         >
-          <label class="payment-card-field">
-            <span>Nom du titulaire</span>
-            <input
-              v-model="cardholderName"
-              type="text"
-              autocomplete="cc-name"
-              placeholder="Nom Prénom"
-            />
-          </label>
+          <div class="payment-cardholder-grid">
+            <label class="payment-card-field">
+              <span>Prénom du titulaire</span>
+              <input
+                v-model="cardholderFirstName"
+                type="text"
+                autocomplete="cc-given-name"
+                placeholder="Prénom"
+              />
+            </label>
+            <label class="payment-card-field">
+              <span>Nom du titulaire</span>
+              <input
+                v-model="cardholderLastName"
+                type="text"
+                autocomplete="cc-family-name"
+                placeholder="Nom"
+              />
+            </label>
+          </div>
           <label class="payment-card-field">
             <span>Numéro de carte</span>
             <div
@@ -980,7 +1048,7 @@ onBeforeUnmount(() => {
           v-if="!shouldRevealPostPaymentSections"
           class="payment-reveal-hint"
         >
-          Complétez les informations de carte pour afficher les étapes suivantes.
+          Complétez les informations de carte et le nom du titulaire pour afficher les étapes suivantes.
         </p>
       </div>
     </section>
@@ -993,6 +1061,7 @@ onBeforeUnmount(() => {
         <button
           type="button"
           class="progress-section-toggle"
+          :disabled="!canAccessInformationStep"
           :aria-expanded="isInformationSectionOpen"
           @click="toggleProgressSection('information')"
         >
@@ -1026,6 +1095,28 @@ onBeforeUnmount(() => {
           :class="{ 'is-disabled': !canAccessInformationStep }"
         >
           <div class="info-list">
+            <div class="traveler-identity-grid">
+              <label class="identity-input-field">
+                <span>Prénom</span>
+                <input
+                  v-model="travelerFirstName"
+                  :disabled="!canAccessInformationStep"
+                  type="text"
+                  autocomplete="given-name"
+                  placeholder="Ex : Antoine"
+                />
+              </label>
+              <label class="identity-input-field">
+                <span>Nom</span>
+                <input
+                  v-model="travelerLastName"
+                  :disabled="!canAccessInformationStep"
+                  type="text"
+                  autocomplete="family-name"
+                  placeholder="Ex : Dupont"
+                />
+              </label>
+            </div>
             <div class="traveler-message-field">
               <label for="traveler-message">Dites nous-en un peu plus sur vous</label>
               <p class="field-help">Donnez la raison de votre voyage, votre nombre, etc.</p>
@@ -1064,6 +1155,7 @@ onBeforeUnmount(() => {
         <button
           type="button"
           class="progress-section-toggle"
+          :disabled="!canAccessReminderStep"
           :aria-expanded="isReminderSectionOpen"
           @click="toggleProgressSection('reminder')"
         >
@@ -1121,6 +1213,7 @@ onBeforeUnmount(() => {
         <button
           type="button"
           class="progress-section-toggle"
+          :disabled="!canAccessFinalStep"
           :aria-expanded="isFinalSectionOpen"
           @click="toggleProgressSection('final')"
         >
