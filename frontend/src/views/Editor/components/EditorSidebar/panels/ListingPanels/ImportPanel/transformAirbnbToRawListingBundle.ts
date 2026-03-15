@@ -33,6 +33,18 @@ export type AirbnbScrapedData = {
       available?: boolean
     }>
   }>
+  /** Amenities déjà mappées IndieHost par le backend (prioritaires sur amenities + buildAmenities). */
+  amenities_indiehost?: Array<{
+    id: string
+    name: string
+    description?: string
+    category?: string
+    relevance?: number
+    pinned?: boolean
+    perkEligible?: boolean
+    perkScore?: number
+    perkPriority?: number
+  }>
   images?: Array<{ title?: string; url: string }>
   house_rules?: {
     general?: Array<{
@@ -355,8 +367,25 @@ function dedupeImportedImages(images?: Array<{ title?: string; url: string }>) {
   })
 }
 
+function amenitiesFromScraped(scraped: AirbnbScrapedData): RawAmenity[] {
+  if (scraped.amenities_indiehost?.length) {
+    return scraped.amenities_indiehost.map((a) => ({
+      id: a.id,
+      name: a.name,
+      description: a.description ?? '',
+      category: a.category,
+      relevance: a.relevance,
+      pinned: a.pinned,
+      perkEligible: a.perkEligible,
+      perkScore: a.perkScore,
+      perkPriority: a.perkPriority,
+    }))
+  }
+  return buildAmenities(scraped)
+}
+
 export function transformAirbnbToRawListingBundle(scraped: AirbnbScrapedData): Partial<RawListingBundle> {
-  const amenities = buildAmenities(scraped)
+  const amenities = amenitiesFromScraped(scraped)
 
   const locFromSub = parseLocationFromTitle(scraped.sub_description?.title)
   const locFromDesc = parseLocationFromDescriptions(scraped.location_descriptions)

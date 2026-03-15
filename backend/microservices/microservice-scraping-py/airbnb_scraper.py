@@ -19,6 +19,8 @@ PLAYWRIGHT_TIMEOUT_SECONDS = 35
 
 import gobnb
 
+from airbnb_amenity_mapping import translate_amenities_to_indiehost
+
 os.environ.setdefault("PLAYWRIGHT_BROWSERS_PATH", "0")
 
 try:
@@ -126,6 +128,42 @@ DESCRIPTION_EXPAND_LABELS = (
     "lire la suite",
     "afficher plus",
     "voir plus",
+)
+AMENITY_SECTION_SELECTORS = (
+    "[data-cursor-amenities-modal]",
+    "[data-section-id*='AMENIT']",
+    "[data-plugin-in-point-id*='AMENIT']",
+    "[data-testid*='amenit']",
+)
+GENERIC_AMENITY_TITLES = {
+    "ce que propose ce logement",
+    "ce que cet endroit propose",
+    "what this place offers",
+    "amenities",
+    "equipements",
+    "équipements",
+}
+SKIPPED_AMENITY_LINES = {
+    "show more",
+    "show less",
+    "show all",
+    "afficher plus",
+    "afficher moins",
+    "voir plus",
+    "voir moins",
+}
+AMENITY_VALUE_SKIP_PATTERNS = (
+    re.compile(r"^(?:available|disponible|included|inclu)\b", re.IGNORECASE),
+    re.compile(r"^(?:not available|non disponible)\b", re.IGNORECASE),
+    re.compile(r"^(?:show all|show more|afficher|voir plus)\b", re.IGNORECASE),
+)
+AMENITY_EXPAND_LABELS = (
+    "show all amenities",
+    "what this place offers",
+    "amenities",
+    "afficher les",
+    "équipements",
+    "equipements",
 )
 
 # File d'attente globale pour sequencer les scrapes
@@ -290,6 +328,33 @@ def _soup_has_description_expand_button(soup: "BeautifulSoup | None") -> bool:
     return False
 
 
+def _soup_has_amenities_expand_button(soup: "BeautifulSoup | None") -> bool:
+    if soup is None:
+        return False
+    for button in soup.find_all("button"):
+        label = _clean_text(button.get("aria-label"))
+        text = _clean_text(button.get_text(" ", strip=True))
+        haystack = f"{label} {text}".casefold()
+        if any(token in haystack for token in AMENITY_EXPAND_LABELS):
+            return True
+    return False
+
+
+def _extract_amenities_expand_count_from_soup(soup: "BeautifulSoup | None") -> int | None:
+    if soup is None:
+        return None
+    for button in soup.find_all("button"):
+        label = _clean_text(button.get("aria-label"))
+        text = _clean_text(button.get_text(" ", strip=True))
+        haystack = f"{label} {text}".casefold()
+        if not any(token in haystack for token in AMENITY_EXPAND_LABELS):
+            continue
+        match = re.search(r"\b(\d{1,3})\b", haystack)
+        if match:
+            return int(match.group(1))
+    return None
+
+
 def _sanitize_description_modal_html(fragment: str) -> str:
     if not fragment:
         return ""
@@ -352,7 +417,11 @@ def _extract_description_from_modal(soup: "BeautifulSoup | None") -> list[dict[s
     if soup is None:
         return []
 
-    for selector in ("[data-section-id='DESCRIPTION_MODAL']", "[data-plugin-in-point-id='DESCRIPTION_MODAL']"):
+    for selector in (
+        "[data-cursor-description-modal]",
+        "[data-section-id='DESCRIPTION_MODAL']",
+        "[data-plugin-in-point-id='DESCRIPTION_MODAL']",
+    ):
         container = soup.select_one(selector)
         if container is None:
             continue
@@ -872,6 +941,118 @@ def _extract_amenities_from_value(value: Any, default_title: str = "Equipements"
     return deduped_groups
 
 
+def _count_amenity_items(groups: Any) -> int:
+    if not isinstance(groups, list):
+        return 0
+    total = 0
+    for group in groups:
+        if not isinstance(group, dict):
+            continue
+        values = group.get("values")
+        if isinstance(values, list):
+            total += sum(1 for item in values if isinstance(item, dict) and _clean_text(item.get("title")))
+        elif _clean_text(group.get("title")):
+            total += 1
+    return total
+
+
+def _extract_amenities_from_soup(soup: "BeautifulSoup | None") -> list[dict]:
+    if soup is None:
+        return []
+
+    groups: list[dict] = []
+    seen_keys: set[str] = set()
+    containers = []
+    for selector in AMENITY_SECTION_SELECTORS:
+        containers.extend(soup.select(selector))
+
+    for container in containers:
+        current_title = "Équipements"
+        container_heading = container.find(["h2", "h3"])
+        if container_heading is not None:
+            heading_text = _clean_text(container_heading.get_text(" ", strip=True))
+            if heading_text and heading_text.casefold() not in GENERIC_AMENITY_TITLES:
+                current_title = heading_text
+
+        current_values: list[dict[str, str]] = []
+        for node in container.find_all(["h3", "h4", "li", "div"], recursive=True):
+            text = _clean_text(" | ".join(part for part in node.stripped_strings if _clean_text(part)))
+            if not text:
+                continue
+
+            if node.name in {"h3", "h4"}:
+                if current_values:
+                    groups.append({"title": current_title, "values": current_values})
+                    current_values = []
+                if text.casefold() not in GENERIC_AMENITY_TITLES:
+                    current_title = text
+                continue
+
+            strings = [_clean_text(part) for part in node.stripped_strings if _clean_text(part)]
+            if not 1 <= len(strings) <= 3:
+                continue
+
+            title = strings[0]
+            title_folded = title.casefold()
+            if (
+                not title
+                or title_folded in GENERIC_AMENITY_TITLES
+                or title_folded in SKIPPED_AMENITY_LINES
+                or any(pattern.search(title) for pattern in AMENITY_VALUE_SKIP_PATTERNS)
+            ):
+                continue
+            if re.search(r"\b\d{1,3}\b", title) and any(token in title_folded for token in AMENITY_EXPAND_LABELS):
+                continue
+
+            subtitle_parts = [
+                part
+                for part in strings[1:]
+                if part.casefold() != title_folded and not any(pattern.search(part) for pattern in AMENITY_VALUE_SKIP_PATTERNS)
+            ]
+            item_key = f"{current_title.casefold()}::{title_folded}"
+            if item_key in seen_keys:
+                continue
+            seen_keys.add(item_key)
+
+            item = {"title": title}
+            if subtitle_parts:
+                item["subtitle"] = " - ".join(subtitle_parts)
+            current_values.append(item)
+
+        if current_values:
+            groups.append({"title": current_title, "values": current_values})
+
+    deduped_groups: list[dict] = []
+    deduped_seen: set[str] = set()
+    for group in groups:
+        group_title = _clean_text(group.get("title") or "Équipements") or "Équipements"
+        values: list[dict[str, str]] = []
+        for item in group.get("values", []):
+            item_title = _clean_text(item.get("title"))
+            if not item_title:
+                continue
+            key = f"{group_title.casefold()}::{item_title.casefold()}"
+            if key in deduped_seen:
+                continue
+            deduped_seen.add(key)
+            normalized_item = {"title": item_title}
+            subtitle = _clean_text(item.get("subtitle"))
+            if subtitle:
+                normalized_item["subtitle"] = subtitle
+            values.append(normalized_item)
+        if values:
+            deduped_groups.append({"title": group_title, "values": values})
+
+    return deduped_groups
+
+
+def _amenities_look_truncated(amenities: list[dict], soup: "BeautifulSoup | None") -> bool:
+    expected_count = _extract_amenities_expand_count_from_soup(soup)
+    if expected_count is None:
+        return not amenities and _soup_has_amenities_expand_button(soup)
+    return _count_amenity_items(amenities) < expected_count
+
+
 def _extract_summary_items(*roots: Any) -> list[str]:
     matches: list[str] = []
     for root in roots:
@@ -1025,6 +1206,9 @@ def _normalize_scraped_data(
                 break
         if not isinstance(amenities, list):
             amenities = []
+    soup_amenities = _extract_amenities_from_soup(soup)
+    if _count_amenity_items(soup_amenities) > _count_amenity_items(amenities):
+        amenities = soup_amenities
 
     summary_items = _extract_summary_items(*roots)
     overview_items = _extract_overview_items_from_soup(soup)
@@ -1085,6 +1269,7 @@ def _normalize_scraped_data(
         location_descriptions = [{"title": location_title, "content": precise_address or location_title}]
 
     highlight_titles = _extract_highlight_titles(*roots, soup=soup)
+    amenities_indiehost = translate_amenities_to_indiehost(amenities, highlight_titles)
 
     normalized = {
         **result,
@@ -1096,6 +1281,7 @@ def _normalize_scraped_data(
         "person_capacity": person_capacity if isinstance(person_capacity, int) and person_capacity > 0 else result.get("person_capacity"),
         "room_type": room_type or result.get("room_type") or "Logement entier",
         "amenities": amenities,
+        "amenities_indiehost": amenities_indiehost,
         "images": images,
         "house_rules": house_rules,
         "sub_description": sub_description,
@@ -1254,7 +1440,11 @@ def _fetch_page_context_with_playwright(url: str, proxy_url: str) -> tuple["Beau
             except Exception:
                 continue
 
+        description_modal_html = ""
         for sel in [
+            "button:has-text('Lire la suite')",
+            "button:has-text('Afficher plus')",
+            "button:has-text('Voir plus')",
             "button[aria-label*='Show more about this place' i]",
             "button[aria-label*='about this place' i]",
             "button[aria-label*='À propos de ce logement' i]",
@@ -1266,6 +1456,19 @@ def _fetch_page_context_with_playwright(url: str, proxy_url: str) -> tuple["Beau
                 if btn.is_visible(timeout=3_000):
                     btn.click()
                     page.wait_for_timeout(2_000)
+                    for modal_sel in (
+                        "[data-section-id='DESCRIPTION_MODAL']",
+                        "[data-plugin-in-point-id='DESCRIPTION_MODAL']",
+                        "[role='dialog']",
+                    ):
+                        try:
+                            modal = page.locator(modal_sel).last
+                            modal.wait_for(timeout=5_000)
+                            description_modal_html = modal.evaluate("el => el.outerHTML") or ""
+                            if description_modal_html:
+                                break
+                        except Exception:
+                            continue
                     break
             except Exception:
                 continue
@@ -1275,7 +1478,57 @@ def _fetch_page_context_with_playwright(url: str, proxy_url: str) -> tuple["Beau
         except Exception:
             pass
 
+        if description_modal_html:
+            try:
+                page.keyboard.press("Escape")
+                page.wait_for_timeout(800)
+            except Exception:
+                pass
+
+        amenities_modal_html = ""
+        for sel in [
+            "button:has-text('Afficher les')",
+            "button:has-text('équipements')",
+            "button:has-text('equipements')",
+            "button:has-text('Show all amenities')",
+            "button:has-text('What this place offers')",
+        ]:
+            try:
+                btn = page.locator(sel).first
+                if btn.is_visible(timeout=2_000):
+                    btn.click()
+                    page.wait_for_timeout(2_000)
+                    for modal_sel in (
+                        "[role='dialog']",
+                        "[aria-modal='true']",
+                        "[data-section-id*='AMENIT']",
+                        "[data-plugin-in-point-id*='AMENIT']",
+                    ):
+                        try:
+                            modal = page.locator(modal_sel).last
+                            modal.wait_for(timeout=5_000)
+                            amenities_modal_html = modal.evaluate("el => el.outerHTML") or ""
+                            if amenities_modal_html:
+                                break
+                        except Exception:
+                            continue
+                    break
+            except Exception:
+                continue
+
         html_doc = page.content()
+        if description_modal_html:
+            html_doc = html_doc.replace(
+                "</body>",
+                f'<div data-cursor-description-modal="true">{description_modal_html}</div></body>',
+                1,
+            )
+        if amenities_modal_html:
+            html_doc = html_doc.replace(
+                "</body>",
+                f'<div data-cursor-amenities-modal="true">{amenities_modal_html}</div></body>',
+                1,
+            )
         browser.close()
 
     soup = BeautifulSoup(html_doc, "html.parser")
@@ -1298,12 +1551,22 @@ def _fetch_page_context(url: str, proxy_url: str) -> tuple["BeautifulSoup", Any,
     soup = BeautifulSoup(resp.text, "html.parser")
     embedded_data, raw_deferred = _extract_embedded_payload_from_soup(soup)
     structured_description_sections = _extract_description_sections_from_value(embedded_data, raw_deferred)
-
-    # Tenter la description complète via Playwright (clic "Lire la suite") avec un timeout strict.
-    use_playwright = HAS_PLAYWRIGHT and not structured_description_sections and (
-        _soup_has_description_expand_button(soup)
+    structured_amenities = _extract_amenities_from_value(embedded_data)
+    deferred_amenities = _extract_amenities_from_value(raw_deferred)
+    if _count_amenity_items(deferred_amenities) > _count_amenity_items(structured_amenities):
+        structured_amenities = deferred_amenities
+    soup_amenities = _extract_amenities_from_soup(soup)
+    if _count_amenity_items(soup_amenities) > _count_amenity_items(structured_amenities):
+        structured_amenities = soup_amenities
+    description_needs_expand = (
+        not structured_description_sections
+        and _soup_has_description_expand_button(soup)
         and _description_sections_look_truncated(_extract_description_sections_from_soup(soup))
     )
+    amenities_need_expand = _soup_has_amenities_expand_button(soup) and _amenities_look_truncated(structured_amenities, soup)
+
+    # Tenter l'ouverture des modals Airbnb (description / équipements) via Playwright avec un timeout strict.
+    use_playwright = HAS_PLAYWRIGHT and (description_needs_expand or amenities_need_expand)
 
     if use_playwright:
         executor = ThreadPoolExecutor(max_workers=1)
@@ -1311,7 +1574,8 @@ def _fetch_page_context(url: str, proxy_url: str) -> tuple["BeautifulSoup", Any,
             future = executor.submit(_fetch_page_context_with_playwright, url, proxy_url)
             rich_soup, rich_embedded_data, rich_raw_deferred = future.result(timeout=PLAYWRIGHT_TIMEOUT_SECONDS)
             rich_sections = _extract_description_sections_from_soup(rich_soup)
-            if rich_sections:
+            rich_amenities = _extract_amenities_from_soup(rich_soup)
+            if rich_sections or rich_amenities:
                 return (
                     rich_soup,
                     rich_embedded_data if rich_embedded_data is not None else embedded_data,
@@ -1319,7 +1583,7 @@ def _fetch_page_context(url: str, proxy_url: str) -> tuple["BeautifulSoup", Any,
                 )
         except FuturesTimeoutError:
             future.cancel()
-            _safe_print("Ouverture du modal Airbnb (description complète) : timeout, utilisation de la preview.", file=sys.stderr)
+            _safe_print("Ouverture des modals Airbnb (description / équipements) : timeout, utilisation du HTML initial.", file=sys.stderr)
         except Exception as e:  # pragma: no cover - enrichissement best effort
             _safe_print(f"Ouverture du modal Airbnb indisponible: {e}", file=sys.stderr)
         finally:

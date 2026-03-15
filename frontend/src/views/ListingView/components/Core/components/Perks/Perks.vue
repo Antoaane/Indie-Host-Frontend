@@ -74,14 +74,13 @@ function resolveIcon(name: string) {
       padding: var(--layout-gap-md);
 
       display: flex;
+      align-items: center;
       gap: var(--layout-gap-md);
 
       border: solid 1px $quaternary;
       border-radius: borders.$rounded-lg;
 
       > .icon {
-        margin-top: var(--layout-gap-xs);
-
         flex-shrink: 0;
         flex-basis: 2rem;
         height: 2rem;
