@@ -69,6 +69,10 @@ const categorizedAmenities = computed(() => {
   return order.map((category) => ({ name: category, items: categories[category] }))
 })
 
+function resolveAmenityIcon(amenity: AmenityWithIndex) {
+  return resolveAmenityIconComponent(amenity) ?? resolveLucideComponent(amenity.id)
+}
+
 function openOverlay() {
   isOverlayOpen.value = true
 }
@@ -94,8 +98,8 @@ function closeOverlay() {
         class="item"
       >
         <component
-          v-if="resolveAmenityIconComponent(amenity.id)"
-          :is="resolveAmenityIconComponent(amenity.id)"
+          v-if="resolveAmenityIcon(amenity)"
+          :is="resolveAmenityIcon(amenity)"
           class="icon"
           aria-hidden="true"
         />
@@ -153,8 +157,8 @@ function closeOverlay() {
                 class="item"
               >
                 <component
-                  v-if="resolveAmenityIconComponent(amenity.id)"
-                  :is="resolveAmenityIconComponent(amenity.id)"
+                  v-if="resolveAmenityIcon(amenity)"
+                  :is="resolveAmenityIcon(amenity)"
                   class="icon"
                   aria-hidden="true"
                 />
