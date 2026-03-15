@@ -13,6 +13,7 @@ import { getSynchronizedBookedDays } from '@/domain/listings/bookings';
 import { resolveWeekendPricing } from '@/domain/listings/pricing';
 import { buildPerkCandidates, selectTopPerkCandidates } from '@/domain/listings/perks';
 import { normalizeFeeItems, resolveListingReservationRules } from '@/domain/listings/reservationRules';
+import { getKnownAmenityCatalogItem, isKnownAmenityId } from '@/utils/amenitiesCatalog';
 
 // ---- TYPES ----
 import type {
@@ -220,17 +221,23 @@ function parseMap(core: Maybe<Partial<RawCore>>): MapModel {
 }
 
 function parseAmenities(core: Maybe<Partial<RawCore>>): AmenitiesModel {
-  return (core?.amenities ?? []).map((a) => ({
-    id: a.id ?? '',
-    name: a.name ?? '',
-    description: a.description,
-    category: a.category ?? '',
-    relevance: Number.isFinite(Number(a.relevance)) ? Number(a.relevance) : 0,
-    pinned: Boolean(a.pinned),
-    perkEligible: typeof a.perkEligible === 'boolean' ? a.perkEligible : undefined,
-    perkScore: Number.isFinite(Number(a.perkScore)) ? Number(a.perkScore) : undefined,
-    perkPriority: Number.isFinite(Number(a.perkPriority)) ? Number(a.perkPriority) : undefined,
-  }));
+  return (core?.amenities ?? [])
+    .flatMap((a) => {
+      if (!isKnownAmenityId(a.id)) return [];
+      const catalogItem = getKnownAmenityCatalogItem(a.id);
+
+      return [{
+        id: a.id,
+        name: a.name ?? catalogItem?.name ?? '',
+        description: a.description ?? catalogItem?.description,
+        category: a.category ?? catalogItem?.category ?? '',
+        relevance: Number.isFinite(Number(a.relevance)) ? Number(a.relevance) : 0,
+        pinned: Boolean(a.pinned),
+        perkEligible: typeof a.perkEligible === 'boolean' ? a.perkEligible : undefined,
+        perkScore: Number.isFinite(Number(a.perkScore)) ? Number(a.perkScore) : undefined,
+        perkPriority: Number.isFinite(Number(a.perkPriority)) ? Number(a.perkPriority) : undefined,
+      }];
+    });
 }
 
 function parseRooms(core: Maybe<Partial<RawCore>>): RoomsModel {

@@ -2,6 +2,7 @@
 
 import { getAmenityPerkDefaults } from '@/domain/listings/perks'
 import type { RawAmenity, RawArrival, RawCore, RawListingBundle } from '@/domain/listings/types'
+import { getKnownAmenityCatalogItem, isKnownAmenityId } from '@/utils/amenitiesCatalog'
 
 export type AirbnbScrapedData = {
   coordinates?: { latitude?: number; longitude?: number }
@@ -226,28 +227,6 @@ function buildAmenities(scraped: AirbnbScrapedData): RawAmenity[] {
     }
   }
 
-  highlightTitles.forEach((highlightTitle, index) => {
-    if (matchedHighlights.has(index) || !highlightTitle) return
-
-    const id = inferAmenityId(highlightTitle) ?? `highlight_${slugify(highlightTitle) || index.toString()}`
-    const perkDefaults = getAmenityPerkDefaults(id)
-    const amenityKey = `highlight::${normalizeText(highlightTitle)}`
-    if (seenAmenityKeys.has(amenityKey)) return
-    seenAmenityKeys.add(amenityKey)
-
-    amenities.push({
-      id,
-      name: highlightTitle,
-      description: '',
-      category: 'Points forts Airbnb',
-      relevance: 95,
-      pinned: true,
-      perkEligible: true,
-      perkScore: perkDefaults?.perkScore ?? 80,
-      perkPriority: perkDefaults?.perkPriority ?? 1,
-    })
-  })
-
   return amenities
 }
 
@@ -369,19 +348,24 @@ function dedupeImportedImages(images?: Array<{ title?: string; url: string }>) {
 
 function amenitiesFromScraped(scraped: AirbnbScrapedData): RawAmenity[] {
   if (scraped.amenities_indiehost?.length) {
-    return scraped.amenities_indiehost.map((a) => ({
-      id: a.id,
-      name: a.name,
-      description: a.description ?? '',
-      category: a.category,
-      relevance: a.relevance,
-      pinned: a.pinned,
-      perkEligible: a.perkEligible,
-      perkScore: a.perkScore,
-      perkPriority: a.perkPriority,
-    }))
+    return scraped.amenities_indiehost.flatMap((a) => {
+      if (!isKnownAmenityId(a.id)) return []
+
+      const catalogItem = getKnownAmenityCatalogItem(a.id)
+      return [{
+        id: a.id,
+        name: catalogItem?.name ?? a.name,
+        description: a.description ?? catalogItem?.description ?? '',
+        category: a.category ?? catalogItem?.category,
+        relevance: a.relevance,
+        pinned: a.pinned,
+        perkEligible: a.perkEligible,
+        perkScore: a.perkScore,
+        perkPriority: a.perkPriority,
+      }]
+    })
   }
-  return buildAmenities(scraped)
+  return buildAmenities(scraped).filter((amenity) => isKnownAmenityId(amenity.id))
 }
 
 export function transformAirbnbToRawListingBundle(scraped: AirbnbScrapedData): Partial<RawListingBundle> {

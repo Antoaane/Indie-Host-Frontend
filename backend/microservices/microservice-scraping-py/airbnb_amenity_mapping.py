@@ -812,19 +812,6 @@ INDIEHOST_AMENITIES: list[dict[str, Any]] = [
         ],
     },
     {
-        "id": "SHOWER",
-        "name": "Douche",
-        "category": "Salle de bain",
-        "relevance": 75,
-        "perkEligible": False,
-        "perkScore": 75,
-        "perkPriority": 0,
-        "patterns": [
-            "shower",
-            "douche",
-        ],
-    },
-    {
         "id": "BIDET",
         "name": "Bidet",
         "category": "Salle de bain",
@@ -1095,41 +1082,6 @@ INDIEHOST_AMENITIES: list[dict[str, Any]] = [
             "barriere securite bebe",
             "barriere",
             "gate ",
-        ],
-    },
-    # --- Animaux / Pets ---
-    {
-        "id": "PET_FRIENDLY",
-        "name": "Animaux acceptés",
-        "category": "Famille",
-        "relevance": 75,
-        "perkEligible": False,
-        "perkScore": 75,
-        "perkPriority": 0,
-        "patterns": [
-            "pets allowed",
-            "animaux acceptés",
-            "animaux acceptes",
-            "pet friendly",
-            "dogs",
-            "chats",
-            "cats",
-            "dog ",
-            "cat ",
-        ],
-    },
-    {
-        "id": "PET_BOWL",
-        "name": "Gamelle pour animaux",
-        "category": "Famille",
-        "relevance": 50,
-        "perkEligible": False,
-        "perkScore": 50,
-        "perkPriority": 0,
-        "patterns": [
-            "pet bowl",
-            "gamelle",
-            "dog bowl",
         ],
     },
     # --- Divertissement / Entertainment ---
@@ -1725,10 +1677,22 @@ def _normalize_for_match(text: str) -> str:
     return s
 
 
-def _build_haystack(title: str, subtitle: str, category: str) -> str:
-    return " ".join(
-        _normalize_for_match(part) for part in (title, subtitle, category) if part
-    )
+def _build_match_candidates(title: str, subtitle: str) -> set[str]:
+    candidates: set[str] = set()
+    normalized_title = _normalize_for_match(title)
+    normalized_subtitle = _normalize_for_match(subtitle)
+
+    for value in (normalized_title, normalized_subtitle):
+        if value:
+            candidates.add(value)
+            candidates.add(value.replace(" ", ""))
+
+    if normalized_title and normalized_subtitle:
+        combined = f"{normalized_title} {normalized_subtitle}".strip()
+        candidates.add(combined)
+        candidates.add(combined.replace(" ", ""))
+
+    return candidates
 
 
 def map_airbnb_amenity_to_indiehost(
@@ -1741,8 +1705,8 @@ def map_airbnb_amenity_to_indiehost(
 
     title, subtitle, category : chaînes brutes renvoyées par le scraper Airbnb.
     """
-    haystack = _build_haystack(title, subtitle, category)
-    if not haystack:
+    candidates = _build_match_candidates(title, subtitle)
+    if not candidates:
         return None
 
     for entry in INDIEHOST_AMENITIES:
@@ -1751,7 +1715,8 @@ def map_airbnb_amenity_to_indiehost(
             norm_pat = _normalize_for_match(pat)
             if not norm_pat:
                 continue
-            if norm_pat in haystack or norm_pat in haystack.replace(" ", ""):
+            compact_pat = norm_pat.replace(" ", "")
+            if norm_pat in candidates or compact_pat in candidates:
                 out = {
                     "id": entry["id"],
                     "name": entry["name"],
@@ -1809,19 +1774,4 @@ def translate_amenities_to_indiehost(
                     mapped["relevance"] = max(mapped.get("relevance", 0), 95)
                     mapped["pinned"] = True
                 out.append(mapped)
-            else:
-                # Garder les amenities non mappées avec un id slug pour compatibilité
-                slug = _normalize_for_match(title).replace(" ", "_")[:40] or "other"
-                key = f"raw::{group_title}::{title}"
-                if key in seen_keys:
-                    continue
-                seen_keys.add(key)
-                out.append({
-                    "id": f"airbnb_{slug}",
-                    "name": title,
-                    "description": subtitle,
-                    "category": group_title or "Équipements",
-                    "relevance": 50,
-                })
-
     return out

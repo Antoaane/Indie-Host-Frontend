@@ -7,6 +7,7 @@ import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'
 
 // UTILS
 import { resolveAmenityIconComponent, resolveLucideComponent } from '@/utils/amenitiesIcons'
+import { isKnownAmenityId } from '@/utils/amenitiesCatalog'
 import { mockAmenitiesCatalog, type AmenityCatalogItem } from '@/views/Editor/mocks/amenitiesCatalog'
 import { getAmenityPerkDefaults } from '@/domain/listings/perks'
 import { formatValidationMessage, normalizeTextInput, resolveTextMaxLength, shouldDisplayTextLimit } from '@/utils/inputValidation'
@@ -246,7 +247,7 @@ const selectedAmenities = computed<SelectedAmenityItem[]>(() => {
 
   amenities.value.forEach((amenity, index) => {
     const id = resolveAmenityId(amenity)
-    if (!id || seen.has(id)) return
+    if (!id || !isKnownAmenityId(id) || seen.has(id)) return
     seen.add(id)
 
     const catalogItem = catalogById.value.get(id)
