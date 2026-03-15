@@ -117,9 +117,14 @@ function resolveAmenityPerkCandidate(amenity: RawAmenity, order: number): PerkCa
   if (!name) return null
 
   const amenityId = normalizeString(amenity.id)
-  const icon = getAmenityIconName(amenityId) ?? 'star'
-  const sourceId = amenityId || `index-${order}`
   const description = normalizeString(amenity.description) || undefined
+  const icon = getAmenityIconName({
+    id: amenityId,
+    name,
+    description,
+    category: normalizeString(amenity.category),
+  }) ?? 'star'
+  const sourceId = amenityId || `index-${order}`
 
   return {
     source: 'amenity',

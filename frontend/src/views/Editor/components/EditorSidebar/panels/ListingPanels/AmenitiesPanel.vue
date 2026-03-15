@@ -148,9 +148,10 @@ function resolveAmenityId(amenity: AmenityDraft): string | null {
   return normalizeAmenityId(match?.id)
 }
 
-function resolveAmenityIcon(amenityId: string | null) {
-  if (!amenityId) return null
-  return resolveAmenityIconComponent(amenityId) ?? resolveLucideComponent(amenityId)
+function resolveAmenityIcon(input: string | Partial<OverlayAmenityItem> | AmenityDraft | null) {
+  if (!input) return null
+  const amenityId = typeof input === 'string' ? input : normalizeAmenityId((input as any)?.id)
+  return resolveAmenityIconComponent(input as any) ?? resolveLucideComponent(amenityId)
 }
 
 function removeAmenityById(amenityId: string) {
@@ -263,7 +264,12 @@ const selectedAmenities = computed<SelectedAmenityItem[]>(() => {
       category,
       relevance: toFiniteNumber((amenity as any)?.relevance) ?? 0,
       pinned: Boolean((amenity as any)?.pinned),
-      icon: resolveAmenityIcon(id),
+      icon: resolveAmenityIcon({
+        id,
+        name,
+        description,
+        category,
+      }),
       index,
       amenity,
     })
@@ -323,7 +329,12 @@ const catalogGroups = computed<OverlayAmenityGroup[]>(() => {
       perkPriority: item.perkPriority,
       selected: Boolean(selected),
       pinned: Boolean(selected?.pinned),
-      icon: resolveAmenityIcon(normalizedId),
+      icon: resolveAmenityIcon({
+        id: normalizedId,
+        name: selected?.name ?? item.name,
+        description: selected?.description ?? item.description,
+        category: selected?.category ?? (normalizeAmenityText(item.category) ?? FALLBACK_CATEGORY),
+      }),
       index: selected?.index ?? catalogIndex,
     }
 

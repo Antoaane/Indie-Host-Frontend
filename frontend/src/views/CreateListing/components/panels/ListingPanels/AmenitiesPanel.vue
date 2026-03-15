@@ -71,9 +71,10 @@ function resolveAmenityId(amenity: AmenityDraft): string | null {
   return normalizeAmenityId(match?.id)
 }
 
-function resolveAmenityIcon(amenityId: string | null) {
-  if (!amenityId) return null
-  return resolveAmenityIconComponent(amenityId) ?? resolveLucideComponent(amenityId)
+function resolveAmenityIcon(input: string | AmenityDraft | AmenityCatalogItem | null) {
+  if (!input) return null
+  const amenityId = typeof input === 'string' ? input : normalizeAmenityId((input as any)?.id)
+  return resolveAmenityIconComponent(input as any) ?? resolveLucideComponent(amenityId)
 }
 
 function removeAmenityById(amenityId: string) {
@@ -177,7 +178,7 @@ const catalogGroups = computed<CatalogAmenityGroup[]>(() => {
     items.push({
       ...item,
       id: normalizedId,
-      icon: resolveAmenityIcon(normalizedId),
+      icon: resolveAmenityIcon(item),
       selected: selectedAmenityIdSet.value.has(normalizedId),
     })
     groups.set(key, items)
