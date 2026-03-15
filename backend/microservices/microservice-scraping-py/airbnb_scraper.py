@@ -5,15 +5,21 @@ Retourne un format normalise pour l'import frontend, meme en fallback.
 import argparse
 import html
 import json
+import os
 import random
 import re
 import sys
 import time
 import errno
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
 from collections import deque
 from typing import Any
 
+PLAYWRIGHT_TIMEOUT_SECONDS = 35
+
 import gobnb
+
+os.environ.setdefault("PLAYWRIGHT_BROWSERS_PATH", "0")
 
 try:
     from curl_cffi import requests as cffi_requests
@@ -22,6 +28,20 @@ try:
     HAS_FALLBACK = True
 except ImportError:
     HAS_FALLBACK = False
+
+try:
+    from playwright.sync_api import sync_playwright
+
+    HAS_PLAYWRIGHT = True
+except ImportError:
+    HAS_PLAYWRIGHT = False
+
+try:
+    from playwright_stealth import Stealth
+
+    HAS_STEALTH = True
+except ImportError:
+    HAS_STEALTH = False
 
 # Cles possibles pour les donnees embarquees (Airbnb change parfois le nom)
 EMBEDDED_DATA_KEYS = ("niobeClientData", "niobeMinimalClientData", "niobeFullClientData", "bootstrapData")
@@ -59,6 +79,8 @@ ROOM_COUNT_PATTERNS = {
     ),
 }
 DESCRIPTION_SECTION_SELECTORS = (
+    "[data-section-id='DESCRIPTION_MODAL']",
+    "[data-plugin-in-point-id='DESCRIPTION_MODAL']",
     "[data-section-id*='DESCRIPTION']",
     "[data-plugin-in-point-id*='DESCRIPTION']",
 )
@@ -91,6 +113,20 @@ SKIPPED_DESCRIPTION_LINES = {
     "voir plus",
     "voir moins",
 }
+SKIPPED_DESCRIPTION_SECTION_TITLES = {
+    "détails de l'enregistrement",
+    "details de l'enregistrement",
+}
+SKIPPED_DESCRIPTION_SECTION_PATTERNS = (
+    re.compile(r"ce qu(?:['’]| i)l faut savoir sur les logements proposés par des (?:particuliers|entreprises)", re.IGNORECASE),
+)
+DESCRIPTION_EXPAND_LABELS = (
+    "show more about this place",
+    "show more",
+    "lire la suite",
+    "afficher plus",
+    "voir plus",
+)
 
 # File d'attente globale pour sequencer les scrapes
 REQUEST_QUEUE = deque()
@@ -242,6 +278,98 @@ def _sanitize_html_fragment(fragment: str, default_tag: str = "p") -> str:
     return f"<{default_tag}>{rendered}</{default_tag}>"
 
 
+def _soup_has_description_expand_button(soup: "BeautifulSoup | None") -> bool:
+    if soup is None:
+        return False
+    for button in soup.find_all("button"):
+        label = _clean_text(button.get("aria-label"))
+        text = _clean_text(button.get_text(" ", strip=True))
+        haystack = f"{label} {text}".casefold()
+        if any(token in haystack for token in DESCRIPTION_EXPAND_LABELS):
+            return True
+    return False
+
+
+def _sanitize_description_modal_html(fragment: str) -> str:
+    if not fragment:
+        return ""
+    if not HAS_FALLBACK:
+        return _sanitize_html_fragment(fragment)
+
+    parsed = BeautifulSoup(fragment, "html.parser")
+
+    for tag in parsed.find_all(True):
+        classes = set(tag.get("class") or [])
+        style = _clean_text(tag.get("style"))
+
+        if tag.name == "span" and "_g5uevq" in classes:
+            tag.name = "h2"
+            tag.attrs = {}
+            continue
+
+        if tag.name == "span" and "font-style: italic" in style.lower():
+            tag.name = "em"
+            tag.attrs = {}
+            continue
+
+        if tag.name == "span" and ("font-weight" in style.lower() or "bold" in style.lower()):
+            tag.name = "strong"
+            tag.attrs = {}
+            continue
+
+        if tag.name == "b":
+            tag.name = "strong"
+            tag.attrs = {}
+            continue
+
+        if tag.name == "i":
+            tag.name = "em"
+            tag.attrs = {}
+            continue
+
+        if tag.name in {"div", "section"}:
+            tag.unwrap()
+            continue
+
+        if tag.name == "span":
+            tag.unwrap()
+            continue
+
+        if tag.name not in {"br", "strong", "em", "h2", "h3", "p", "ul", "ol", "li"}:
+            tag.unwrap()
+            continue
+
+        tag.attrs = {}
+
+    rendered = "".join(str(node) for node in parsed.contents)
+    rendered = re.sub(r"(?:<br\s*/?>\s*){3,}", "<br><br>", rendered, flags=re.IGNORECASE)
+    rendered = re.sub(r"\s*<h2>", "<h2>", rendered)
+    rendered = re.sub(r"</h2>\s*", "</h2>", rendered)
+    return rendered.strip()
+
+
+def _extract_description_from_modal(soup: "BeautifulSoup | None") -> list[dict[str, str]]:
+    if soup is None:
+        return []
+
+    for selector in ("[data-section-id='DESCRIPTION_MODAL']", "[data-plugin-in-point-id='DESCRIPTION_MODAL']"):
+        container = soup.select_one(selector)
+        if container is None:
+            continue
+
+        content_root = (
+            container.select_one(".cz692az .l1h825yc")
+            or container.select_one(".cz692az")
+            or container.select_one("span")
+            or container
+        )
+        content_html = _sanitize_description_modal_html(content_root.decode_contents())
+        if content_html:
+            return [{"title": "", "content": content_html}]
+
+    return []
+
+
 def _extract_overview_items_from_soup(soup: "BeautifulSoup | None") -> list[str]:
     if soup is None:
         return []
@@ -257,6 +385,10 @@ def _extract_overview_items_from_soup(soup: "BeautifulSoup | None") -> list[str]
 def _extract_description_sections_from_soup(soup: "BeautifulSoup | None") -> list[dict[str, str]]:
     if soup is None:
         return []
+
+    modal_sections = _extract_description_from_modal(soup)
+    if modal_sections:
+        return modal_sections
 
     sections: list[dict[str, str]] = []
     seen: set[str] = set()
@@ -304,6 +436,127 @@ def _extract_description_sections_from_soup(soup: "BeautifulSoup | None") -> lis
                 sections.append({"title": current_title, "content": content})
 
     return sections
+
+
+def _description_sections_to_text(sections: list[dict[str, str]]) -> str:
+    text_parts: list[str] = []
+    for section in sections:
+        title = _clean_text(section.get("title"))
+        content = section.get("content") or ""
+        if title:
+            text_parts.append(title)
+        if HAS_FALLBACK:
+            text_parts.append(_clean_text(BeautifulSoup(content, "html.parser").get_text(" ", strip=True)))
+        else:
+            text_parts.append(_clean_text(re.sub(r"<[^>]+>", " ", content)))
+    return " ".join(part for part in text_parts if part).strip()
+
+
+def _should_skip_description_section(section: dict[str, str]) -> bool:
+    title = _clean_text(section.get("title")).casefold()
+    content = _clean_text(section.get("content"))
+
+    if title in SKIPPED_DESCRIPTION_SECTION_TITLES:
+        return True
+    if any(pattern.search(title) for pattern in SKIPPED_DESCRIPTION_SECTION_PATTERNS):
+        return True
+
+    lowered_content = content.casefold()
+    if "centre d'aide" in lowered_content and "pour plus d'informations juridiques" in lowered_content:
+        return True
+    if "utilisez toujours airbnb pour envoyer de l'argent" in lowered_content:
+        return True
+
+    return False
+
+
+def _extract_description_sections_from_value(*roots: Any) -> list[dict[str, str]]:
+    sections: list[dict[str, str]] = []
+    seen: set[str] = set()
+
+    def append_section(title: str, content: str) -> None:
+        clean_title = _clean_text(title)
+        clean_content = (content or "").strip()
+        if not clean_content:
+            return
+        content_text = _description_sections_to_text([{"title": clean_title, "content": clean_content}]).casefold()
+        key = f"{clean_title.casefold()}::{content_text}"
+        if not content_text or key in seen:
+            return
+        seen.add(key)
+        sections.append({"title": clean_title, "content": clean_content})
+
+    for root in roots:
+        for node in _walk(root):
+            if not isinstance(node, dict):
+                continue
+
+            identifier = " ".join(
+                filter(
+                    None,
+                    (
+                        _clean_text(node.get("sectionId")),
+                        _clean_text(node.get("pluginPointId")),
+                        _clean_text(node.get("sectionComponentType")),
+                    ),
+                )
+            ).casefold()
+            candidate = node.get("section") if isinstance(node.get("section"), dict) else node
+            if not isinstance(candidate, dict):
+                continue
+
+            candidate_title = _clean_text(candidate.get("title"))
+            candidate_items = candidate.get("items")
+            looks_like_description = (
+                "description" in identifier
+                or candidate_title.casefold() in GENERIC_DESCRIPTION_TITLES
+            )
+            if not looks_like_description or not isinstance(candidate_items, list):
+                continue
+
+            default_title = "" if candidate_title.casefold() in GENERIC_DESCRIPTION_TITLES else candidate_title
+            default_title_used = False
+
+            for item in candidate_items:
+                if not isinstance(item, dict):
+                    continue
+
+                item_title = _clean_text(item.get("title"))
+                html_node = item.get("html")
+                html_text = ""
+                if isinstance(html_node, dict):
+                    html_text = str(html_node.get("htmlText") or "")
+                if not html_text:
+                    html_text = str(item.get("subtitle") or item.get("description") or "")
+                if not _clean_text(html_text):
+                    continue
+
+                title = item_title
+                if not title and default_title and not default_title_used:
+                    title = default_title
+                    default_title_used = True
+
+                append_section(title, _sanitize_description_modal_html(html_text))
+
+    return sections
+
+
+def _description_sections_look_truncated(sections: list[dict[str, str]]) -> bool:
+    if not sections:
+        return True
+
+    combined = _description_sections_to_text(sections)
+    has_heading = any(
+        _clean_text(section.get("title"))
+        or "<h2>" in (section.get("content") or "").lower()
+        or "<h3>" in (section.get("content") or "").lower()
+        for section in sections
+    )
+    if len(combined) < 700:
+        return True
+    if not has_heading and len(combined) < 1200:
+        return True
+    return False
 
 
 def _render_description_html(sections: list[dict[str, str]], fallback_text: str) -> str:
@@ -798,7 +1051,12 @@ def _normalize_scraped_data(
 
     title = _first_non_empty(result.get("title"), ld_listing.get("name"), meta_title)
     description_preview = _first_non_empty(result.get("description"), ld_listing.get("description"), meta_description)
-    description_sections = _extract_description_sections_from_soup(soup)
+    structured_description_sections = _extract_description_sections_from_value(*roots)
+    soup_description_sections = _extract_description_sections_from_soup(soup)
+    description_sections = structured_description_sections
+    if len(_description_sections_to_text(soup_description_sections)) > len(_description_sections_to_text(description_sections)):
+        description_sections = soup_description_sections
+    description_sections = [section for section in description_sections if not _should_skip_description_section(section)]
     description = _render_description_html(description_sections, description_preview)
     precise_address = _first_non_empty(result.get("precise_address"), location.get("precise_address"))
     city = _first_non_empty(result.get("city"), location.get("city"))
@@ -923,20 +1181,7 @@ def _fetch_page_fallback(url: str, proxy_url: str) -> dict:
     )
 
 
-def _fetch_page_context(url: str, proxy_url: str) -> tuple["BeautifulSoup", Any, Any]:
-    """Recupere le HTML de la page et les donnees JSON embarquees si disponibles."""
-    headers = {
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "en",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    }
-    proxies = {}
-    if proxy_url:
-        proxies = {"http": proxy_url, "https": proxy_url}
-    resp = cffi_requests.get(url, headers=headers, proxies=proxies, timeout=30)
-    resp.raise_for_status()
-    soup = BeautifulSoup(resp.text, "html.parser")
-
+def _extract_embedded_payload_from_soup(soup: "BeautifulSoup") -> tuple[Any, Any]:
     embedded_data = None
     raw_deferred = None
     for tag in soup.select("[id^='data-deferred-state-']"):
@@ -953,6 +1198,133 @@ def _fetch_page_context(url: str, proxy_url: str) -> tuple["BeautifulSoup", Any,
             break
         if raw_deferred is None:
             raw_deferred = data
+    return embedded_data, raw_deferred
+
+
+def _fetch_page_context_with_playwright(url: str, proxy_url: str) -> tuple["BeautifulSoup", Any, Any]:
+    if not HAS_PLAYWRIGHT:
+        raise RuntimeError("Playwright indisponible")
+
+    proxy = {"server": proxy_url} if proxy_url else None
+    with sync_playwright() as p:
+        browser = p.chromium.launch(
+            headless=True,
+            proxy=proxy,
+            args=[
+                "--no-sandbox",
+                "--disable-setuid-sandbox",
+                "--disable-blink-features=AutomationControlled",
+                "--headless=new",
+            ],
+        )
+        ctx = browser.new_context(
+            user_agent=(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/120.0.0.0 Safari/537.36"
+            ),
+            locale="fr-FR",
+            viewport={"width": 1440, "height": 1800},
+        )
+        page = ctx.new_page()
+
+        if HAS_STEALTH:
+            Stealth().apply_stealth_sync(page)
+
+        page.add_init_script("""
+            Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+            Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
+            Object.defineProperty(navigator, 'languages', { get: () => ['fr-FR', 'fr', 'en-US', 'en'] });
+        """)
+
+        page.goto(url, wait_until="domcontentloaded", timeout=20_000)
+        page.wait_for_timeout(1_500)
+
+        for sel in [
+            "#onetrust-accept-btn-handler",
+            "button[data-testid='accept-btn']",
+            "button[aria-label*='cookie' i]",
+        ]:
+            try:
+                btn = page.locator(sel).first
+                if btn.is_visible(timeout=1_500):
+                    btn.click()
+                    page.wait_for_timeout(600)
+                    break
+            except Exception:
+                continue
+
+        for sel in [
+            "button[aria-label*='Show more about this place' i]",
+            "button[aria-label*='about this place' i]",
+            "button[aria-label*='À propos de ce logement' i]",
+            "button[aria-label*='A propos de ce logement' i]",
+            "button[aria-label*='description' i]",
+        ]:
+            try:
+                btn = page.locator(sel).first
+                if btn.is_visible(timeout=3_000):
+                    btn.click()
+                    page.wait_for_timeout(2_000)
+                    break
+            except Exception:
+                continue
+
+        try:
+            page.locator("[data-section-id='DESCRIPTION_MODAL'], [data-plugin-in-point-id='DESCRIPTION_MODAL']").first.wait_for(timeout=5_000)
+        except Exception:
+            pass
+
+        html_doc = page.content()
+        browser.close()
+
+    soup = BeautifulSoup(html_doc, "html.parser")
+    embedded_data, raw_deferred = _extract_embedded_payload_from_soup(soup)
+    return soup, embedded_data, raw_deferred
+
+
+def _fetch_page_context(url: str, proxy_url: str) -> tuple["BeautifulSoup", Any, Any]:
+    """Recupere le HTML de la page et les donnees JSON embarquees si disponibles."""
+    headers = {
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    }
+    proxies = {}
+    if proxy_url:
+        proxies = {"http": proxy_url, "https": proxy_url}
+    resp = cffi_requests.get(url, headers=headers, proxies=proxies, timeout=30)
+    resp.raise_for_status()
+    soup = BeautifulSoup(resp.text, "html.parser")
+    embedded_data, raw_deferred = _extract_embedded_payload_from_soup(soup)
+    structured_description_sections = _extract_description_sections_from_value(embedded_data, raw_deferred)
+
+    # Tenter la description complète via Playwright (clic "Lire la suite") avec un timeout strict.
+    use_playwright = HAS_PLAYWRIGHT and not structured_description_sections and (
+        _soup_has_description_expand_button(soup)
+        and _description_sections_look_truncated(_extract_description_sections_from_soup(soup))
+    )
+
+    if use_playwright:
+        executor = ThreadPoolExecutor(max_workers=1)
+        try:
+            future = executor.submit(_fetch_page_context_with_playwright, url, proxy_url)
+            rich_soup, rich_embedded_data, rich_raw_deferred = future.result(timeout=PLAYWRIGHT_TIMEOUT_SECONDS)
+            rich_sections = _extract_description_sections_from_soup(rich_soup)
+            if rich_sections:
+                return (
+                    rich_soup,
+                    rich_embedded_data if rich_embedded_data is not None else embedded_data,
+                    rich_raw_deferred if rich_raw_deferred is not None else raw_deferred,
+                )
+        except FuturesTimeoutError:
+            future.cancel()
+            _safe_print("Ouverture du modal Airbnb (description complète) : timeout, utilisation de la preview.", file=sys.stderr)
+        except Exception as e:  # pragma: no cover - enrichissement best effort
+            _safe_print(f"Ouverture du modal Airbnb indisponible: {e}", file=sys.stderr)
+        finally:
+            executor.shutdown(wait=False, cancel_futures=True)
+
     return soup, embedded_data, raw_deferred
 
 

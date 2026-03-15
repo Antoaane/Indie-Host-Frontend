@@ -43,6 +43,9 @@ const canImport = computed(
     (detectedSource.value === 'airbnb' || detectedSource.value === 'booking') &&
     !isImporting.value,
 )
+const importButtonA11yLabel = computed(() =>
+  isImporting.value ? panelContent.importLoadingA11y : panelContent.ctaA11y,
+)
 
 async function handleImport() {
   if (isImporting.value) return
@@ -111,16 +114,21 @@ async function handleImport() {
               type="button"
               :disabled="!canImport"
               @click="handleImport"
-              :aria-label="isImporting ? panelContent.importLoading : panelContent.cta"
-              :title="isImporting ? panelContent.importLoading : panelContent.cta"
+              :aria-label="importButtonA11yLabel"
+              :title="importButtonA11yLabel"
             >
+              <span class="sr-only">{{ importButtonA11yLabel }}</span>
               <Loader2
                 v-if="isImporting"
                 class="icon is-spinning"
+                aria-hidden="true"
+                focusable="false"
               />
               <Download
                 v-else
                 class="icon"
+                aria-hidden="true"
+                focusable="false"
               />
             </button>
           </div>
@@ -174,6 +182,18 @@ async function handleImport() {
 
 .is-spinning {
   animation: editor-import-spin 0.9s linear infinite;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 @keyframes editor-import-spin {

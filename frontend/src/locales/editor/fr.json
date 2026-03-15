@@ -89,8 +89,10 @@
           "airbnbPlaceholder": "https://www.airbnb.fr/rooms/…",
           "bookingPlaceholder": "https://www.booking.com/hotel/…",
           "cta": "Importer",
+          "ctaA11y": "Importer l’annonce depuis le lien collé",
           "createManually": "Créer manuellement",
           "importLoading": "Récupération de l'annonce en cours…",
+          "importLoadingA11y": "Import de l’annonce en cours",
           "bookingNotSupported": "L'import Booking n'est pas encore disponible. Utilisez un lien Airbnb ou créez manuellement."
         },
         "title": {

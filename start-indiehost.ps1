@@ -201,6 +201,43 @@ function Ensure-ScrapingPythonDependencies {
     Write-Ok "Dependances Python du scraping a jour."
 }
 
+function Ensure-ScrapingPlaywrightChromium {
+    param(
+        [string]$ScrapDir,
+        [string]$PythonExe
+    )
+
+    $requirementsPath = Join-Path $ScrapDir "requirements.txt"
+    $browserStampPath = Join-Path $ScrapDir ".venv\.playwright-chromium-installed"
+    $needInstall = -not (Test-PythonModuleAvailable -PythonExe $PythonExe -ModuleName "playwright")
+
+    if (-not $needInstall) {
+        if (-not (Test-Path $browserStampPath)) {
+            $needInstall = $true
+        } elseif (Test-Path $requirementsPath) {
+            $requirementsTime = (Get-Item $requirementsPath).LastWriteTimeUtc
+            $stampTime = (Get-Item $browserStampPath).LastWriteTimeUtc
+            $needInstall = $requirementsTime -gt $stampTime
+        }
+    }
+
+    if (-not $needInstall) {
+        Write-Ok "Playwright Chromium deja installe pour le scraping."
+        return
+    }
+
+    Write-Warn "Installation de Playwright Chromium pour le scraping..."
+    $env:PLAYWRIGHT_BROWSERS_PATH = "0"
+    & $PythonExe -m playwright install chromium
+    if ($LASTEXITCODE -ne 0) {
+        Write-Fail "L'installation de Playwright Chromium a echoue."
+        exit 1
+    }
+
+    Set-Content -Path $browserStampPath -Value (Get-Date).ToString("o")
+    Write-Ok "Playwright Chromium pret pour le scraping."
+}
+
 function Start-ApiInfraServices {
     # ── 1. Docker Desktop ────────────────────────────────────────
     Write-Step "Verification de Docker Desktop..."
@@ -371,8 +408,9 @@ if (Get-ListeningPid 8000) {
     }
 
     Ensure-ScrapingPythonDependencies -ScrapDir $scrapDir -PythonExe $pythonExe
+    Ensure-ScrapingPlaywrightChromium -ScrapDir $scrapDir -PythonExe $pythonExe
 
-    $scrapCmd  = "& '$pythonExe' -m uvicorn api:app --reload --port 8000"
+    $scrapCmd  = "`$env:PLAYWRIGHT_BROWSERS_PATH='0'; & '$pythonExe' -m uvicorn api:app --reload --port 8000"
     Open-Service -Title "IndieHost Scraping :8000" -WorkDir $scrapDir -Command $scrapCmd
     Start-Sleep 1
     Write-Ok "Serveur de scraping lance dans un nouvel onglet (localhost:8000)."

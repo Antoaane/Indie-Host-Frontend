@@ -45,6 +45,62 @@ open_service_terminal() {
     return 1
 }
 
+python_module_available() {
+    local python_exe="$1"
+    local module_name="$2"
+    "$python_exe" -c "import ${module_name}" >/dev/null 2>&1
+}
+
+ensure_scraping_python_dependencies() {
+    local scrap_dir="$1"
+    local python_exe="$2"
+    local requirements_path="$scrap_dir/requirements.txt"
+    local deps_stamp_path="$scrap_dir/.venv/.deps-installed"
+    local need_install="false"
+
+    [ -f "$requirements_path" ] || fail "requirements.txt introuvable pour le service de scraping."
+
+    if ! python_module_available "$python_exe" "uvicorn"; then
+        need_install="true"
+    elif [ ! -f "$deps_stamp_path" ] || [ "$requirements_path" -nt "$deps_stamp_path" ]; then
+        need_install="true"
+    fi
+
+    if [ "$need_install" = "false" ]; then
+        ok "Dépendances Python du scraping déjà à jour."
+        return
+    fi
+
+    warn "Installation des dépendances Python du scraping..."
+    "$python_exe" -m pip install -r "$requirements_path" || fail "Échec de l'installation des dépendances Python."
+    date -u +"%Y-%m-%dT%H:%M:%SZ" > "$deps_stamp_path"
+    ok "Dépendances Python du scraping à jour."
+}
+
+ensure_scraping_playwright_chromium() {
+    local scrap_dir="$1"
+    local python_exe="$2"
+    local requirements_path="$scrap_dir/requirements.txt"
+    local browser_stamp_path="$scrap_dir/.venv/.playwright-chromium-installed"
+    local need_install="false"
+
+    if ! python_module_available "$python_exe" "playwright"; then
+        need_install="true"
+    elif [ ! -f "$browser_stamp_path" ] || [ "$requirements_path" -nt "$browser_stamp_path" ]; then
+        need_install="true"
+    fi
+
+    if [ "$need_install" = "false" ]; then
+        ok "Playwright Chromium déjà installé pour le scraping."
+        return
+    fi
+
+    warn "Installation de Playwright Chromium pour le scraping..."
+    PLAYWRIGHT_BROWSERS_PATH=0 "$python_exe" -m playwright install chromium || fail "Échec de l'installation de Playwright Chromium."
+    date -u +"%Y-%m-%dT%H:%M:%SZ" > "$browser_stamp_path"
+    ok "Playwright Chromium prêt pour le scraping."
+}
+
 resolve_listings_mode() {
     local env_file="$ROOT/frontend/.env"
 
@@ -121,7 +177,23 @@ if port_in_use 8000; then
     ok "Serveur de scraping déjà actif (localhost:8000)."
 else
     PYTHON="$ROOT/backend/microservices/microservice-scraping-py/.venv/bin/python"
-    cd "$ROOT/backend/microservices/microservice-scraping-py" && "$PYTHON" -m uvicorn api:app --reload --port 8000 &
+    SCRAP_DIR="$ROOT/backend/microservices/microservice-scraping-py"
+
+    if [ ! -x "$PYTHON" ]; then
+        warn "Environnement Python introuvable. Initialisation automatique du .venv..."
+        if command -v python3 &>/dev/null; then
+            (cd "$SCRAP_DIR" && python3 -m venv .venv) || fail "Échec de la création du .venv du scraping."
+        elif command -v python &>/dev/null; then
+            (cd "$SCRAP_DIR" && python -m venv .venv) || fail "Échec de la création du .venv du scraping."
+        else
+            fail "Python 3 est introuvable. Installe Python 3.10+ puis relance le script."
+        fi
+    fi
+
+    ensure_scraping_python_dependencies "$SCRAP_DIR" "$PYTHON"
+    ensure_scraping_playwright_chromium "$SCRAP_DIR" "$PYTHON"
+
+    cd "$SCRAP_DIR" && PLAYWRIGHT_BROWSERS_PATH=0 "$PYTHON" -m uvicorn api:app --reload --port 8000 &
     ok "Serveur de scraping démarré en arrière-plan (localhost:8000)."
 fi
 
