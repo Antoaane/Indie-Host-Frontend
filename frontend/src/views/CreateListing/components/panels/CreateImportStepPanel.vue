@@ -11,8 +11,9 @@ import {
   normalizeListingUrl,
   scrapeListing,
   transformAirbnbToRawListingBundle,
+  transformBookingToRawListingBundle,
 } from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/ImportPanel'
-import type { AirbnbScrapedData } from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/ImportPanel'
+import type { AirbnbScrapedData, BookingScrapedData } from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/ImportPanel'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 import CreateWizardStepShell from '@/views/CreateListing/components/panels/CreateWizardStepShell.vue'
 import { LANDING_IMPORT_URL_KEY } from '@/views/Landing/components/IntroSection/landingImportUrlKey'
@@ -62,10 +63,16 @@ const importError = ref<string | null>(null)
 const panelContent = editorStatic.panels.listing.import
 
 const detectedSource = computed(() => detectListingSource(url.value))
-const isBooking = computed(() => detectedSource.value === 'booking')
-const isAirbnb = computed(() => detectedSource.value === 'airbnb')
+const placeholder = computed(() =>
+  detectedSource.value === 'booking'
+    ? panelContent.bookingPlaceholder
+    : panelContent.airbnbPlaceholder,
+)
 const canImport = computed(
-  () => url.value.trim().length > 0 && isAirbnb.value && !isImporting.value
+  () =>
+    url.value.trim().length > 0 &&
+    (detectedSource.value === 'airbnb' || detectedSource.value === 'booking') &&
+    !isImporting.value,
 )
 
 watch(
@@ -82,10 +89,18 @@ async function handleImport() {
   isImporting.value = true
   try {
     const normalizedUrl = normalizeListingUrl(url.value.trim())
+    const source = detectListingSource(normalizedUrl)
+    if (source !== 'airbnb' && source !== 'booking') {
+      importError.value =
+        "Lien non reconnu. Utilisez un lien Airbnb (https://www.airbnb.fr/rooms/…) ou Booking (https://www.booking.com/hotel/…)"
+      return
+    }
+
     const data = await scrapeListing({ url: normalizedUrl })
-    const transformed = transformAirbnbToRawListingBundle(
-      data as AirbnbScrapedData
-    )
+    const transformed =
+      source === 'airbnb'
+        ? transformAirbnbToRawListingBundle(data as AirbnbScrapedData)
+        : transformBookingToRawListingBundle(data as BookingScrapedData)
     const medias = await ensurePublishedMediasStoredInImageKit(transformed.medias, {
       listingId: props.listingId,
       listingStatus: props.listingStatus,
@@ -126,7 +141,7 @@ function handleCreateManually() {
         <div class="input action">
           <input
             v-model="url"
-            :placeholder="panelContent.airbnbPlaceholder"
+            :placeholder="placeholder"
             type="url"
             :disabled="isImporting"
             @keydown.enter.prevent="handleImport"
@@ -154,13 +169,6 @@ function handleCreateManually() {
           </div>
         </div>
       </div>
-
-      <p
-        v-if="isBooking && url.trim()"
-        class="booking-notice"
-      >
-        {{ panelContent.bookingNotSupported }}
-      </p>
 
       <button
         type="button"
@@ -215,15 +223,6 @@ function handleCreateManually() {
         }
       }
     }
-  }
-
-  > .booking-notice {
-    margin: 0;
-    padding: 0.5rem 0.75rem;
-    background: rgba($bad, 0.08);
-    border-radius: 0.5rem;
-    @include little-text($thin: false);
-    color: rgba($bad, 0.95);
   }
 
   > .create-manually {

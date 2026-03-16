@@ -163,12 +163,15 @@ function parseOptionalAmount(raw: string): number | null {
 .create-fees-panel {
   @extend %panel;
 
+  min-width: 0;
+
   > .header {
     @extend %panel-header;
   }
 
   > .body {
     @extend %panel-body;
+    min-width: 0;
 
     .add-fee {
       display: flex;
@@ -198,6 +201,15 @@ function parseOptionalAmount(raw: string): number | null {
       grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto;
       gap: var(--layout-gap-xs);
       align-items: center;
+      min-width: 0;
+      padding: var(--layout-gap-sm);
+      border-radius: 1rem;
+      background: rgba($secondary, 0.03);
+      border: 1px solid rgba($secondary, 0.08);
+
+      > * {
+        min-width: 0;
+      }
 
       @media screen and (max-width: 768px) {
         grid-template-columns: minmax(0, 1fr);

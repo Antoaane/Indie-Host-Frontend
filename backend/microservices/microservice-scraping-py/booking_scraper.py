@@ -120,6 +120,8 @@ ROOM_COUNT_PATTERNS = {
     ),
 }
 DESCRIPTION_SELECTORS = (
+    "[data-capla-component-boundary='b-property-web-property-page/PropertyDescriptionDesktop'] [data-testid='property-description']",
+    "p[data-testid='property-description']",
     "#summary p",
     "#summary",
     "[data-capla-component-boundary='b-property-web-property-page/PropertyDescriptionDesktop'] p",
@@ -130,6 +132,17 @@ DESCRIPTION_SELECTORS = (
     "div#property_description_content",
     "div.hp_desc_main_content",
     "div.hotel_description_wrapper_exp",
+)
+DESCRIPTION_EXCLUDED_TESTIDS = {
+    "property-description-location-score-trans",
+    "PropertyDescriptionOsmDisclaimer",
+}
+DESCRIPTION_NOISE_PATTERNS = (
+    re.compile(r"les couples apprécient particulièrement l'emplacement", re.IGNORECASE),
+    re.compile(r"couples particularly like the location", re.IGNORECASE),
+    re.compile(r"distances indiquées dans la description", re.IGNORECASE),
+    re.compile(r"distances stated in the property descriptions", re.IGNORECASE),
+    re.compile(r"calculated using .*openstreetmap", re.IGNORECASE),
 )
 ADDRESS_SELECTORS = (
     "#showMap2 span[data-source='top_link']",
@@ -255,6 +268,35 @@ def _dedupe_texts(values: list[str]) -> list[str]:
         seen.add(key)
         out.append(clean)
     return out
+
+
+def _is_description_noise(text: str, data_testid: str = "") -> bool:
+    if data_testid in DESCRIPTION_EXCLUDED_TESTIDS:
+        return True
+    clean = _clean_text(text)
+    if not clean:
+        return True
+    return any(pattern.search(clean) for pattern in DESCRIPTION_NOISE_PATTERNS)
+
+
+def _extract_description_texts_from_element(el: "BeautifulSoup") -> list[str]:
+    texts: list[str] = []
+
+    descendants = [
+        node
+        for node in el.select("p, li")
+        if node is not el
+    ]
+    nodes = descendants or [el]
+
+    for node in nodes:
+        data_testid = _clean_text(node.get("data-testid", ""))
+        text = _clean_text(node.get_text(separator="\n", strip=True))
+        if len(text) <= 30 or _is_description_noise(text, data_testid):
+            continue
+        texts.append(text)
+
+    return _dedupe_texts(texts)
 
 
 def _parse_count_token(value: str) -> int | None:
@@ -645,19 +687,22 @@ def _parse_title(soup: "BeautifulSoup", ld: dict | None) -> str:
 
 
 def _parse_description(soup: "BeautifulSoup", ld: dict | None) -> str:
-    if ld and ld.get("description"):
-        return _clean_text(ld["description"])
+    candidates: list[str] = []
 
-    blocks: list[str] = []
+    if ld and ld.get("description"):
+        text = _clean_text(ld["description"])
+        if text:
+            candidates.append(text)
+
     for sel in DESCRIPTION_SELECTORS:
         for el in soup.select(sel):
-            text = _clean_text(el.get_text(separator="\n", strip=True))
-            if len(text) > 30:
-                blocks.append(text)
+            texts = _extract_description_texts_from_element(el)
+            if texts:
+                candidates.append("\n\n".join(texts))
 
-    deduped = _dedupe_texts(blocks)
+    deduped = _dedupe_texts(candidates)
     if deduped:
-        return "\n\n".join(deduped)
+        return max(deduped, key=lambda text: (len(text), text.count(".") + text.count("\n")))
     return ""
 
 

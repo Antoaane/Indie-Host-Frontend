@@ -64,6 +64,20 @@ function normalizeText(value?: string): string {
     .trim() ?? ''
 }
 
+function resolveBookingHousingType(roomType?: string): string {
+  const raw = roomType?.trim()
+  if (!raw) return 'Logement entier'
+
+  const normalized = normalizeText(raw)
+  if (!normalized) return 'Logement entier'
+
+  if (/(^| )(hotel|hotel room|room|suite|motel|hostel)( |$)/.test(normalized)) {
+    return "Chambre d'hôtel"
+  }
+
+  return raw
+}
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, '&amp;')
@@ -406,7 +420,7 @@ export function transformBookingToRawListingBundle(
   return {
     core: {
       title: scraped.title ?? '',
-      type: scraped.room_type ?? 'Logement entier',
+      type: resolveBookingHousingType(scraped.room_type),
       latitude: scraped.coordinates?.latitude,
       longitude: scraped.coordinates?.longitude,
       lat: scraped.coordinates?.latitude,

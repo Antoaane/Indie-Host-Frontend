@@ -186,8 +186,8 @@ function deriveWeekendPercent(basePrice: number, weekendNightPrice: number): num
           :min="pricingLimits.moneyMin"
           :max="pricingLimits.moneyMax"
           :suffix="panelContent.pricePerNightSuffix"
-          value-font-size="5rem"
-          suffix-font-size="2rem"
+          value-font-size="clamp(3.5rem, 10vw, 5rem)"
+          suffix-font-size="clamp(1.5rem, 4vw, 2rem)"
           @input="setPricePerNight($event.number)"
         />
       </div>
@@ -214,8 +214,8 @@ function deriveWeekendPercent(basePrice: number, weekendNightPrice: number): num
             :min="pricingLimits.moneyMin"
             :max="pricingLimits.moneyMax"
             :suffix="panelContent.weekendPriceSuffix"
-            value-font-size="5rem"
-            suffix-font-size="2rem"
+            value-font-size="clamp(3rem, 8vw, 5rem)"
+            suffix-font-size="clamp(1.35rem, 3.5vw, 2rem)"
             @input="setWeekendPrice($event.number)"
           />
           <StepperInput
@@ -223,8 +223,8 @@ function deriveWeekendPercent(basePrice: number, weekendNightPrice: number): num
             min="0"
             :max="weekendPercentMax"
             :suffix="panelContent.weekendPercentSuffix"
-            value-font-size="5rem"
-            suffix-font-size="2rem"
+            value-font-size="clamp(3rem, 8vw, 5rem)"
+            suffix-font-size="clamp(1.35rem, 3.5vw, 2rem)"
             @input="setWeekendPercent($event.number)"
           />
         </div>
@@ -256,8 +256,8 @@ function deriveWeekendPercent(basePrice: number, weekendNightPrice: number): num
             :min="pricingLimits.moneyMin"
             :max="pricingLimits.moneyMax"
             :suffix="panelContent.extraGuestsSuffix"
-            value-font-size="5rem"
-            suffix-font-size="2rem"
+            value-font-size="clamp(3rem, 8vw, 5rem)"
+            suffix-font-size="clamp(1.35rem, 3.5vw, 2rem)"
             @input="updateExtraGuests({ price: $event.number })"
           />
           <div class="input">
@@ -292,15 +292,23 @@ function deriveWeekendPercent(basePrice: number, weekendNightPrice: number): num
 .create-base-pricing-panel {
   @extend %panel;
 
+  min-width: 0;
+
   > .header {
     @extend %panel-header;
   }
 
   > .body {
     @extend %panel-body;
+    min-width: 0;
 
     > .field {
       @extend %panel-field;
+      min-width: 0;
+      padding: var(--layout-gap-sm);
+      border-radius: 1.25rem;
+      background: linear-gradient(180deg, rgba($secondary, 0.04) 0%, rgba($secondary, 0.02) 100%);
+      border: 1px solid rgba($secondary, 0.08);
     }
 
     .field-label {
@@ -309,7 +317,14 @@ function deriveWeekendPercent(basePrice: number, weekendNightPrice: number): num
 
     .toggle {
       @include buttons.checkbox-label(white);
+      width: fit-content;
+      max-width: 100%;
       border: 1px solid rgba($secondary, 0.06);
+    }
+
+    .ui-stepper-input {
+      min-width: 0;
+      max-width: 100%;
     }
 
     .row {
@@ -318,8 +333,16 @@ function deriveWeekendPercent(basePrice: number, weekendNightPrice: number): num
       gap: var(--layout-gap-xs);
       align-items: center;
 
+      > * {
+        min-width: 0;
+      }
+
       > .input {
         @include inputs.field($theme: base);
+      }
+
+      @media screen and (max-width: 768px) {
+        grid-template-columns: minmax(0, 1fr);
       }
     }
 
@@ -328,6 +351,14 @@ function deriveWeekendPercent(basePrice: number, weekendNightPrice: number): num
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       gap: var(--layout-gap-xs);
       align-items: start;
+
+      > * {
+        min-width: 0;
+      }
+
+      @media screen and (max-width: 768px) {
+        grid-template-columns: minmax(0, 1fr);
+      }
     }
 
     .field-label.is-slider-label {
