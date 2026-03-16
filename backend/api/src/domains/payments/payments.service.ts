@@ -1771,14 +1771,16 @@ export class PaymentsService {
     if (!listing) return null;
 
     const listingConnectedAccountId = this.resolveListingConnectedAccountId(listing.owner);
-    if (listingConnectedAccountId && listingConnectedAccountId !== input.connectedAccountId) {
-      throw createBadRequestError(
-        'Le compte Stripe Connect fourni ne correspond pas au proprietaire de cette annonce.',
-        'INVALID_CONNECTED_ACCOUNT',
-      );
+    const providedConnectedAccountId = readString(input.connectedAccountId);
+    const connectedAccountId = listingConnectedAccountId;
+    if (listingConnectedAccountId && providedConnectedAccountId && listingConnectedAccountId !== providedConnectedAccountId) {
+      console.warn('[payments] ignoring mismatched connected account provided by client', {
+        listingId: listing.id,
+        providedConnectedAccountId,
+        ownerConnectedAccountId: listingConnectedAccountId,
+      });
     }
 
-    const connectedAccountId = listingConnectedAccountId ?? input.connectedAccountId;
     if (!connectedAccountId) {
       throw createBadRequestError(
         'Le compte Stripe Connect du proprietaire est manquant.',

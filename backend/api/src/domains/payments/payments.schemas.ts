@@ -39,7 +39,7 @@ const paymentSchema = z.object({
 
 export const createPaymentIntentSchema = z.object({
   listingId: z.string().trim().min(1),
-  connectedAccountId: z.string().trim().min(1),
+  connectedAccountId: z.string().trim().optional().default(''),
   currency: z.string().trim().default('eur'),
   reservation: reservationSchema,
   payment: paymentSchema,

@@ -84,6 +84,7 @@ const cardCvcElementMount = ref<HTMLDivElement | null>(null)
 const paymentIntentId = ref<string | null>(null)
 const paymentIntentClientSecret = ref<string | null>(null)
 const paymentIntentCurrency = ref('eur')
+const paymentIntentConnectedAccountId = ref('')
 const cardholderFirstName = ref('')
 const cardholderLastName = ref('')
 const offlineCardNumber = ref('')
@@ -401,6 +402,7 @@ function resetPaymentElement() {
 
   stripeElements = null
   paymentIntentClientSecret.value = null
+  paymentIntentConnectedAccountId.value = ''
   resetStripeCardElementState()
 }
 
@@ -417,10 +419,15 @@ function createOfflinePaymentIntentId(): string {
   return `pi_offline_${suffix}`
 }
 
+function resolveConfirmedConnectedAccountId(): string {
+  const resolved = paymentIntentConnectedAccountId.value.trim()
+  if (resolved) return resolved
+  return resolveConnectedAccountId()
+}
+
 function getPaymentSetupError(): string | null {
   if (!props.listingId?.trim()) return "Impossible de déterminer l'annonce pour le paiement."
   if (isStripeOfflineMode) return null
-  if (!props.connectedAccountId?.trim()) return 'Le compte Stripe Connect du propriétaire est manquant.'
   if (!getStripePublishableKey()) return 'La clé Stripe publique est absente. Vérifiez VITE_STRIPE_PUBLISHABLE_KEY.'
   return null
 }
@@ -525,6 +532,7 @@ async function preparePaymentIntent() {
       if (sequence !== intentRequestSequence) return
       paymentIntentId.value = createOfflinePaymentIntentId()
       paymentIntentCurrency.value = 'eur'
+      paymentIntentConnectedAccountId.value = resolveConnectedAccountId()
       return
     }
 
@@ -546,13 +554,16 @@ async function preparePaymentIntent() {
 
     paymentIntentId.value = session.id
     paymentIntentCurrency.value = session.currency
+    paymentIntentConnectedAccountId.value = session.connectedAccountId || resolveConnectedAccountId()
+    isPreparingPayment.value = false
+    await nextTick()
     await mountPaymentElement(session.clientSecret)
   } catch (error) {
     if (sequence !== intentRequestSequence) return
     console.error('[Checkout] prepare payment intent failed', error)
     paymentIntentError.value = resolveErrorMessage(error, 'Impossible de préparer le paiement Stripe.')
   } finally {
-    if (sequence === intentRequestSequence) {
+    if (sequence === intentRequestSequence && isPreparingPayment.value) {
       isPreparingPayment.value = false
     }
   }
@@ -589,7 +600,7 @@ async function confirmCheckout() {
           paymentIntentId: paymentIntentId.value ?? createOfflinePaymentIntentId(),
           paymentIntentStatus: OFFLINE_PAYMENT_INTENT_STATUS,
           currency: paymentIntentCurrency.value || 'eur',
-          connectedAccountId: resolveConnectedAccountId(),
+          connectedAccountId: resolveConfirmedConnectedAccountId(),
         },
       })
       return
@@ -649,7 +660,7 @@ async function confirmCheckout() {
         paymentIntentId: paymentIntent.id,
         paymentIntentStatus: paymentIntent.status,
         currency: paymentIntent.currency || paymentIntentCurrency.value,
-        connectedAccountId: resolveConnectedAccountId(),
+        connectedAccountId: resolveConfirmedConnectedAccountId(),
       },
     })
   } catch (error) {
