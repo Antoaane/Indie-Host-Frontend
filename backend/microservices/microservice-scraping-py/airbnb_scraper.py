@@ -224,6 +224,15 @@ def _coerce_price(value: Any) -> int | None:
     return int(round(number))
 
 
+def _coerce_rating(value: Any) -> float | None:
+    number = _coerce_float(value)
+    if number is None:
+        return None
+    if number < 0 or number > 5:
+        return None
+    return round(number, 2)
+
+
 def _walk(value: Any):
     yield value
     if isinstance(value, dict):
@@ -851,6 +860,72 @@ def _extract_coordinates(*roots: Any) -> tuple[float | None, float | None]:
     return None, None
 
 
+def _extract_average_rating(*roots: Any) -> float | None:
+    rating_key_hints = {
+        "ratingvalue",
+        "averagerating",
+        "overallrating",
+        "reviewrating",
+        "reviewscore",
+        "starrating",
+        "accuracyrating",
+        "guestfavoriteaverageoverallrating",
+    }
+
+    for root in roots:
+        for node in _walk(root):
+            if isinstance(node, dict):
+                aggregate_rating = node.get("aggregateRating")
+                if isinstance(aggregate_rating, dict):
+                    rating = _coerce_rating(
+                        aggregate_rating.get("ratingValue")
+                        or aggregate_rating.get("rating_value")
+                        or aggregate_rating.get("value")
+                    )
+                    if rating is not None:
+                        return rating
+
+                for key, value in node.items():
+                    key_name = _clean_text(key).replace("_", "").replace("-", "").casefold()
+                    if key_name not in rating_key_hints:
+                        continue
+                    rating = _coerce_rating(value)
+                    if rating is not None:
+                        return rating
+    return None
+
+
+def _extract_review_count(*roots: Any) -> int | None:
+    review_count_key_hints = {
+        "reviewcount",
+        "ratingcount",
+        "reviewscount",
+        "numberofreviews",
+        "visible_review_count",
+    }
+
+    for root in roots:
+        for node in _walk(root):
+            if not isinstance(node, dict):
+                continue
+
+            aggregate_rating = node.get("aggregateRating")
+            if isinstance(aggregate_rating, dict):
+                raw_count = aggregate_rating.get("reviewCount") or aggregate_rating.get("ratingCount")
+                parsed_count = _coerce_float(raw_count)
+                if parsed_count is not None and parsed_count >= 0:
+                    return int(round(parsed_count))
+
+            for key, value in node.items():
+                key_name = _clean_text(key).replace("_", "").replace("-", "").casefold()
+                if key_name not in review_count_key_hints:
+                    continue
+                parsed_count = _coerce_float(value)
+                if parsed_count is not None and parsed_count >= 0:
+                    return int(round(parsed_count))
+    return None
+
+
 def _extract_images_from_value(value: Any) -> list[dict]:
     urls: list[str] = []
     if isinstance(value, str):
@@ -1249,6 +1324,8 @@ def _normalize_scraped_data(
     price = _coerce_price(result.get("price"))
     if price is None:
         price = _extract_price(*roots, ld_listing.get("offers"))
+    average_rating = _extract_average_rating(result, embedded_data, raw_deferred, ld_listing)
+    review_count = _extract_review_count(result, embedded_data, raw_deferred, ld_listing)
 
     location_title_parts = [part for part in (city, region, country) if part]
     location_title = ", ".join(location_title_parts)
@@ -1296,6 +1373,10 @@ def _normalize_scraped_data(
     }
     if price is not None:
         normalized["price"] = price
+    if average_rating is not None:
+        normalized["average_rating"] = average_rating
+    if review_count is not None:
+        normalized["review_count"] = review_count
     return normalized
 
 

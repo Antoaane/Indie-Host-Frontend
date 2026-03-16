@@ -360,6 +360,9 @@ export function createRuntimeLocalJsonStore(): RuntimeLocalJsonStore {
     if (patch.arrival) {
       record.arrival = deepMerge(record.arrival, patch.arrival)
     }
+    if (patch.notes) {
+      record.notes = deepMerge(record.notes, patch.notes)
+    }
     record.host = deepClone(getCanonicalHost())
   }
 

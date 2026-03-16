@@ -1,7 +1,7 @@
 // File: src/views/Editor/components/EditorSidebar/panels/ListingPanels/ImportPanel/transformAirbnbToRawListingBundle.ts
 
 import { getAmenityPerkDefaults } from '@/domain/listings/perks'
-import type { RawAmenity, RawArrival, RawCore, RawListingBundle } from '@/domain/listings/types'
+import type { RawAmenity, RawArrival, RawCore, RawListingBundle, RawNotes } from '@/domain/listings/types'
 import { getKnownAmenityCatalogItem, isKnownAmenityId } from '@/utils/amenitiesCatalog'
 
 export type AirbnbScrapedData = {
@@ -9,6 +9,8 @@ export type AirbnbScrapedData = {
   room_type?: string
   person_capacity?: number
   price?: number
+  average_rating?: number
+  review_count?: number
   sub_description?: { title?: string; items?: string[] }
   overview_items?: string[]
   room_counts?: {
@@ -346,6 +348,16 @@ function dedupeImportedImages(images?: Array<{ title?: string; url: string }>) {
   })
 }
 
+function buildEmptyRatingDistribution() {
+  return {
+    1: 0,
+    2: 0,
+    3: 0,
+    4: 0,
+    5: 0,
+  }
+}
+
 function amenitiesFromScraped(scraped: AirbnbScrapedData): RawAmenity[] {
   if (scraped.amenities_indiehost?.length) {
     return scraped.amenities_indiehost.flatMap((a) => {
@@ -370,6 +382,33 @@ function amenitiesFromScraped(scraped: AirbnbScrapedData): RawAmenity[] {
 
 export function transformAirbnbToRawListingBundle(scraped: AirbnbScrapedData): Partial<RawListingBundle> {
   const amenities = amenitiesFromScraped(scraped)
+  const averageRating =
+    typeof scraped.average_rating === 'number' && Number.isFinite(scraped.average_rating)
+      ? Number(scraped.average_rating.toFixed(2))
+      : null
+  const reviewCount =
+    typeof scraped.review_count === 'number' && Number.isFinite(scraped.review_count) && scraped.review_count >= 0
+      ? Math.round(scraped.review_count)
+      : null
+  const notes: Partial<RawNotes> | null = averageRating !== null
+    ? {
+        note: {
+          note: averageRating,
+          distribution: buildEmptyRatingDistribution(),
+          source: 'airbnb',
+          reviewCount: reviewCount ?? undefined,
+        },
+        'otas-note': [
+          {
+            ota: 'airbnb',
+            note: averageRating,
+            distribution: buildEmptyRatingDistribution(),
+            reviewCount: reviewCount ?? undefined,
+            sourceLabel: 'Airbnb',
+          },
+        ],
+      }
+    : null
 
   const locFromSub = parseLocationFromTitle(scraped.sub_description?.title)
   const locFromDesc = parseLocationFromDescriptions(scraped.location_descriptions)
@@ -421,5 +460,6 @@ export function transformAirbnbToRawListingBundle(scraped: AirbnbScrapedData): P
       videos: [],
     },
     arrival,
+    notes,
   }
 }

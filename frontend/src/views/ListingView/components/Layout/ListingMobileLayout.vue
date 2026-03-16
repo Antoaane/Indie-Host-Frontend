@@ -110,6 +110,7 @@ function onConfirmCheckout(payload: CheckoutConfirmationPayload) {
             <Comments
               :notes="props.listingData.notes"
               :comments="props.listingData.comments"
+              :visibility="props.listingData.reviewsVisibility"
             />
           </div>
           <div

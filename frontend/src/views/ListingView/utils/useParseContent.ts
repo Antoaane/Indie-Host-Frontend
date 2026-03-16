@@ -32,6 +32,7 @@ import type {
   CommentsModel,
   CommentsPagesModel,
   MapModel,
+  ReviewsVisibilityModel,
 } from '@/views/ListingView/types/listing';
 
 export type { RawListingBundle };
@@ -294,12 +295,36 @@ function parseNotes(notes: Maybe<Partial<RawNotes>>): NotesModel {
   return {
     overall: notes?.note?.note,
     distribution: notes?.note?.distribution,
-    otas: (notes?.['otas-note'] || []).map(n => ({
-      ota: n.ota as any,
-      note: n.note,
-      distribution: n.distribution,
-    })),
+    source: notes?.note?.source,
+    reviewCount: notes?.note?.reviewCount,
+    otas: (notes?.['otas-note'] || [])
+      .filter((n) => typeof n?.note === 'number' && !Number.isNaN(n.note))
+      .map(n => ({
+        ota: n.ota as any,
+        note: n.note as number,
+        distribution: n.distribution,
+        reviewCount: n.reviewCount,
+        sourceLabel: n.sourceLabel,
+      })),
   };
+}
+
+function parseReviewsVisibility(core: Maybe<Partial<RawCore>>): ReviewsVisibilityModel {
+  const raw = (core as Record<string, unknown> | null | undefined)?.['reviews-display']
+  if (raw && typeof raw === 'object') {
+    const typed = raw as Record<string, unknown>
+    return {
+      indiehost: typed.indiehost !== false,
+      airbnb: typed.airbnb !== false,
+      booking: typed.booking !== false,
+    }
+  }
+
+  return {
+    indiehost: true,
+    airbnb: true,
+    booking: true,
+  }
 }
 
 function parseComments(raw: Maybe<Partial<RawComments>>): { pages: CommentsPagesModel; flat: CommentsModel } {
@@ -344,6 +369,7 @@ export function core(raw: RawListingBundle): ListingParsed {
     notes: parseNotes(raw.notes),
     comments: parsedComments.flat,
     commentsPages: parsedComments.pages,
+    reviewsVisibility: parseReviewsVisibility(raw.core),
   };
 }
 

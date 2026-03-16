@@ -46,7 +46,9 @@
       "summary": {
         "overallLabel": "Note globale",
         "ratingUnit": "sur 5",
-        "countLabel": "{count, plural, one {# avis} other {# avis}}"
+        "countLabel": "{count, plural, one {# avis} other {# avis}}",
+        "airbnbCountLabel": "{count, plural, one {# avis Airbnb} other {# avis Airbnb}}",
+        "airbnbSourceLabel": "Notes importees depuis Airbnb"
       },
       "distribution": {
         "title": "Répartition des notes",

@@ -67,6 +67,7 @@ const amenities = computed<AmenityDraft[]>(() => (props.core?.amenities as Ameni
 const catalog = computed<AmenityCatalogItem[]>(() => mockAmenitiesCatalog.amenities ?? [])
 const catalogSearch = ref('')
 const isOverlayOpen = ref(false)
+const showSelectedOnly = ref(false)
 
 const panelContent = editorStatic.panels.listing.amenities
 const panelContentRecord = panelContent as Record<string, unknown>
@@ -85,6 +86,8 @@ const unpinLabel = String(overlayContent.unpin ?? 'Retirer cet équipement des �
 const pinBadgeLabel = String(overlayContent.pinBadge ?? 'Épingler')
 const pinnedBadgeLabel = String(overlayContent.pinnedBadge ?? 'Désépingler')
 const closeOverlayLabel = String(overlayContent.close ?? 'Fermer')
+const showSelectedOnlyLabel = String(overlayContent.showSelectedOnly ?? 'Afficher la sélection')
+const showAllAmenitiesLabel = String(overlayContent.showAll ?? 'Afficher tous les équipements')
 
 const searchCounter = computed(() =>
   formatValidationMessage(amenitiesValidation.messages.counter, {
@@ -118,6 +121,10 @@ function openOverlay() {
 
 function closeOverlay() {
   isOverlayOpen.value = false
+}
+
+function toggleSelectedFilter() {
+  showSelectedOnly.value = !showSelectedOnly.value
 }
 
 function toFiniteNumber(value: unknown): number | undefined {
@@ -318,6 +325,7 @@ const catalogGroups = computed<OverlayAmenityGroup[]>(() => {
     if (!normalizedId) return
 
     const selected = selectedAmenityById.value.get(normalizedId)
+    if (showSelectedOnly.value && !selected) return
     const resolved: OverlayAmenityItem = {
       id: normalizedId,
       name: selected?.name ?? item.name,
@@ -503,6 +511,17 @@ watch(
                 inputmode="search"
                 autocomplete="off"
               />
+            </div>
+            <div class="search-actions">
+              <button
+                type="button"
+                class="filter-toggle"
+                :class="{ 'is-active': showSelectedOnly }"
+                :aria-pressed="showSelectedOnly"
+                @click="toggleSelectedFilter"
+              >
+                {{ showSelectedOnly ? showAllAmenitiesLabel : showSelectedOnlyLabel }}
+              </button>
             </div>
             <p
               v-if="showSearchCounter"

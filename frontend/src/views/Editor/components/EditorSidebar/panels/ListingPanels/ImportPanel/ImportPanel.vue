@@ -81,6 +81,7 @@ async function handleImport() {
       ...(transformed.bookings ? { bookings: transformed.bookings } : {}),
       ...(medias ? { medias } : {}),
       ...(transformed.arrival ? { arrival: transformed.arrival } : {}),
+      ...(transformed.notes ? { notes: transformed.notes } : {}),
     }
     emit('patch', patch)
   } catch (err) {

@@ -154,6 +154,45 @@
       @include little-text($thin: false);
       color: rgba($secondary-text, 0.65);
     }
+
+    > .search-actions {
+      display: flex;
+      justify-content: flex-start;
+      margin-top: calc(var(--layout-gap-xs) / 2);
+    }
+
+    .filter-toggle {
+      min-height: 2.1rem;
+      padding: 0.45rem 0.8rem;
+      border: 1px solid rgba($secondary, 0.14);
+      border-radius: borders.$rounded;
+      background: rgba($secondary, 0.04);
+      color: rgba($secondary-text, 0.82);
+      cursor: pointer;
+      font: inherit;
+      @include little-text($thin: false);
+
+      transition:
+        background-color 160ms ease,
+        border-color 160ms ease,
+        color 160ms ease;
+
+      &:hover {
+        border-color: rgba($secondary, 0.24);
+        background: rgba($secondary, 0.08);
+      }
+
+      &:focus-visible {
+        outline: 2px solid rgba($secondary, 0.32);
+        outline-offset: 2px;
+      }
+
+      &.is-active {
+        border-color: rgba($secondary, 0.2);
+        background: $secondary;
+        color: $accent;
+      }
+    }
   }
 
   .catalog {
