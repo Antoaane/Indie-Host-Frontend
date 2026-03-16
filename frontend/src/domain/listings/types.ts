@@ -107,6 +107,7 @@ export type RawPricingCancellation = RawPerkScoring & {
 export type RawPricingWeekend = {
   enabled?: boolean
   price?: number | null
+  percent?: number | null
 }
 export type RawPricingStay = {
   minNights?: number | null

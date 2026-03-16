@@ -336,6 +336,9 @@
           "weekendToggle": "Prix week-end (vendredi / samedi)",
           "weekendPriceLabel": "Tarif week-end",
           "weekendPriceSuffix": "€ / nuit",
+          "weekendPercentLabel": "Majoration week-end",
+          "weekendPercentSuffix": "%",
+          "weekendSliderLabel": "Ajuster la majoration",
           "extraGuestsLabel": "Voyageurs supplémentaires",
           "extraGuestsSuffix": "€ / personne / nuit",
           "extraGuestsPlaceholder": "Seuil inclus"
