@@ -11,6 +11,7 @@ const props = defineProps<{
   step: CreateListingStep
   draft: RawListingBundle
   stepError?: string | null
+  extraProps?: Record<string, unknown>
 }>()
 
 const emit = defineEmits<{
@@ -36,8 +37,11 @@ const listeners = computed(() => {
   return base
 })
 const stepProps = computed(() =>
-  props.step.props(props.draft, {
-    validationError: props.stepError ?? null,
+  ({
+    ...props.step.props(props.draft, {
+      validationError: props.stepError ?? null,
+    }),
+    ...(props.extraProps ?? {}),
   }),
 )
 </script>

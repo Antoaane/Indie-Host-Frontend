@@ -87,14 +87,15 @@
   },
   "proofSection": {
     "eyebrow": "Preuve produit",
-    "title": "Une base <strong>concrète</strong> pour vendre en direct sans repartir de zéro",
-    "subtitle": "Nous n’affichons pas ici de faux témoignages clients. À la place, cette section montre des résultats de démonstration et des usages types permis par le produit dès aujourd’hui.",
+    "title": "Comment nos utilisateurs deviennent <strong>plus autonomes</strong>",
+    "subtitle": "Sans faux témoignages : des démos et des usages concrets déjà possibles avec le produit.",
+    "demoVideoLabel": "Démonstration de l'édition d'une annonce en direct",
     "metrics": [
       {
         "id": "proof-metric-1",
-        "value": "15 min",
-        "label": "pour importer, personnaliser puis publier une première page dans un scénario type",
-        "detail": "Estimation illustrative pour une annonce déjà structurée"
+        "value": "5 min",
+        "label": "pour importer, personnaliser puis publier une première page type",
+        "detail": "Estimation indicative pour une annonce déjà structurée"
       },
       {
         "id": "proof-metric-2",
@@ -105,25 +106,8 @@
       {
         "id": "proof-metric-3",
         "value": "1 URL",
-        "label": "à partager pour recevoir vos premières réservations directes",
-        "detail": "Sous-domaine IndieHost inclus sur les premiers plans"
-      }
-    ],
-    "cards": [
-      {
-        "id": "proof-card-1",
-        "title": "Import guidé depuis Airbnb ou Booking",
-        "description": "Vous partez d’une annonce existante au lieu de recréer tout votre contenu à la main. Photos, description, informations clés et structure de page sont déjà amorcées."
-      },
-      {
-        "id": "proof-card-2",
-        "title": "Paiement en ligne immédiatement exploitable",
-        "description": "Le parcours de réservation s’appuie sur Stripe pour accepter CB, SEPA et Apple Pay. Vous pouvez donc ouvrir un canal direct sans bricoler votre stack de paiement."
-      },
-      {
-        "id": "proof-card-3",
-        "title": "Page publiable et partageable dès le départ",
-        "description": "Votre logement obtient une URL dédiée, personnalisable selon votre plan. C’est assez simple pour être utilisé vite, et assez propre pour être partagé ou indexé."
+        "label": "à partager avec vos voyageurs pour recevoir vos premières réservations directes",
+        "detail": "Une adresse simple à envoyer par message, SMS ou à placer sur vos supports"
       }
     ]
   },
@@ -348,6 +332,15 @@
         "description": "Notre priorité est de vous garantir un outil sur lequel vous pouvez compter dans le temps. Nous restons à votre écoute pour recueillir vos retours et vous accompagner à chaque étape, dès que vous en avez besoin."
       }
     ]
+  },
+  "pricingSection": {
+    "eyebrow": "Tarifs",
+    "title": "Gratuit, SuperHost ou MegaHost : <strong>choisissez votre formule</strong>",
+    "subtitle": "Une formule gratuite pour démarrer, puis des abonnements pour plus de pages, d’outils et de réservations.",
+    "toggleExpandLabel": "Voir le détail des fonctionnalités",
+    "toggleCollapseLabel": "Réduire le détail",
+    "accountPrefix": "Déjà client ?",
+    "accountLinkLabel": "Se connecter"
   },
   "roiSection": {
     "eyebrow": "ROI",

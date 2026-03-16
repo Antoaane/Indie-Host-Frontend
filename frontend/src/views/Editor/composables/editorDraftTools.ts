@@ -45,6 +45,10 @@ export function mergeDraftPatch(base: DraftPatch | null, patch: DraftPatch): Dra
     next.arrival = mergeDeepObject(next.arrival, patch.arrival)
   }
 
+  if (patch.notes) {
+    next.notes = mergeDeepObject(next.notes, patch.notes)
+  }
+
   return next
 }
 
@@ -98,6 +102,10 @@ export function applyPatchToDraftBundle(currentDraft: RawListingBundle | null, p
 
   if (patch.arrival) {
     nextDraft.arrival = mergeDeepObject(nextDraft.arrival, patch.arrival)
+  }
+
+  if (patch.notes) {
+    nextDraft.notes = mergeDeepObject(nextDraft.notes, patch.notes)
   }
 
   return nextDraft

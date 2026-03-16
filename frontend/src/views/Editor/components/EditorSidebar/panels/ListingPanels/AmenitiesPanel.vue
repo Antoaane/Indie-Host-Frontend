@@ -7,6 +7,7 @@ import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'
 
 // UTILS
 import { resolveAmenityIconComponent, resolveLucideComponent } from '@/utils/amenitiesIcons'
+import { isKnownAmenityId } from '@/utils/amenitiesCatalog'
 import { mockAmenitiesCatalog, type AmenityCatalogItem } from '@/views/Editor/mocks/amenitiesCatalog'
 import { getAmenityPerkDefaults } from '@/domain/listings/perks'
 import { formatValidationMessage, normalizeTextInput, resolveTextMaxLength, shouldDisplayTextLimit } from '@/utils/inputValidation'
@@ -66,6 +67,7 @@ const amenities = computed<AmenityDraft[]>(() => (props.core?.amenities as Ameni
 const catalog = computed<AmenityCatalogItem[]>(() => mockAmenitiesCatalog.amenities ?? [])
 const catalogSearch = ref('')
 const isOverlayOpen = ref(false)
+const showSelectedOnly = ref(false)
 
 const panelContent = editorStatic.panels.listing.amenities
 const panelContentRecord = panelContent as Record<string, unknown>
@@ -84,6 +86,8 @@ const unpinLabel = String(overlayContent.unpin ?? 'Retirer cet équipement des �
 const pinBadgeLabel = String(overlayContent.pinBadge ?? 'Épingler')
 const pinnedBadgeLabel = String(overlayContent.pinnedBadge ?? 'Désépingler')
 const closeOverlayLabel = String(overlayContent.close ?? 'Fermer')
+const showSelectedOnlyLabel = String(overlayContent.showSelectedOnly ?? 'Afficher la sélection')
+const showAllAmenitiesLabel = String(overlayContent.showAll ?? 'Afficher tous les équipements')
 
 const searchCounter = computed(() =>
   formatValidationMessage(amenitiesValidation.messages.counter, {
@@ -119,6 +123,10 @@ function closeOverlay() {
   isOverlayOpen.value = false
 }
 
+function toggleSelectedFilter() {
+  showSelectedOnly.value = !showSelectedOnly.value
+}
+
 function toFiniteNumber(value: unknown): number | undefined {
   const next = Number(value)
   return Number.isFinite(next) ? next : undefined
@@ -147,9 +155,10 @@ function resolveAmenityId(amenity: AmenityDraft): string | null {
   return normalizeAmenityId(match?.id)
 }
 
-function resolveAmenityIcon(amenityId: string | null) {
-  if (!amenityId) return null
-  return resolveAmenityIconComponent(amenityId) ?? resolveLucideComponent(amenityId)
+function resolveAmenityIcon(input: string | Partial<OverlayAmenityItem> | AmenityDraft | null) {
+  if (!input) return null
+  const amenityId = typeof input === 'string' ? input : normalizeAmenityId((input as any)?.id)
+  return resolveAmenityIconComponent(input as any) ?? resolveLucideComponent(amenityId)
 }
 
 function removeAmenityById(amenityId: string) {
@@ -246,7 +255,7 @@ const selectedAmenities = computed<SelectedAmenityItem[]>(() => {
 
   amenities.value.forEach((amenity, index) => {
     const id = resolveAmenityId(amenity)
-    if (!id || seen.has(id)) return
+    if (!id || !isKnownAmenityId(id) || seen.has(id)) return
     seen.add(id)
 
     const catalogItem = catalogById.value.get(id)
@@ -262,7 +271,12 @@ const selectedAmenities = computed<SelectedAmenityItem[]>(() => {
       category,
       relevance: toFiniteNumber((amenity as any)?.relevance) ?? 0,
       pinned: Boolean((amenity as any)?.pinned),
-      icon: resolveAmenityIcon(id),
+      icon: resolveAmenityIcon({
+        id,
+        name,
+        description,
+        category,
+      }),
       index,
       amenity,
     })
@@ -311,6 +325,7 @@ const catalogGroups = computed<OverlayAmenityGroup[]>(() => {
     if (!normalizedId) return
 
     const selected = selectedAmenityById.value.get(normalizedId)
+    if (showSelectedOnly.value && !selected) return
     const resolved: OverlayAmenityItem = {
       id: normalizedId,
       name: selected?.name ?? item.name,
@@ -322,7 +337,12 @@ const catalogGroups = computed<OverlayAmenityGroup[]>(() => {
       perkPriority: item.perkPriority,
       selected: Boolean(selected),
       pinned: Boolean(selected?.pinned),
-      icon: resolveAmenityIcon(normalizedId),
+      icon: resolveAmenityIcon({
+        id: normalizedId,
+        name: selected?.name ?? item.name,
+        description: selected?.description ?? item.description,
+        category: selected?.category ?? (normalizeAmenityText(item.category) ?? FALLBACK_CATEGORY),
+      }),
       index: selected?.index ?? catalogIndex,
     }
 
@@ -492,6 +512,17 @@ watch(
                 autocomplete="off"
               />
             </div>
+            <div class="search-actions">
+              <button
+                type="button"
+                class="filter-toggle"
+                :class="{ 'is-active': showSelectedOnly }"
+                :aria-pressed="showSelectedOnly"
+                @click="toggleSelectedFilter"
+              >
+                {{ showSelectedOnly ? showAllAmenitiesLabel : showSelectedOnlyLabel }}
+              </button>
+            </div>
             <p
               v-if="showSearchCounter"
               class="meta"
@@ -546,8 +577,9 @@ watch(
                       </p>
                     </div>
                     <span
-                      v-if="item.selected"
                       class="state"
+                      :class="{ 'is-hidden': !item.selected }"
+                      :aria-hidden="!item.selected"
                     >
                       <component
                         v-if="checkIcon"

@@ -211,6 +211,7 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
           }
         : draft.value.medias,
       arrival: patch.arrival ? deepMerge(draft.value.arrival, patch.arrival) : draft.value.arrival,
+      notes: patch.notes ? deepMerge(draft.value.notes, patch.notes) : draft.value.notes,
     }
 
     clearStepError()

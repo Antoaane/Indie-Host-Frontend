@@ -86,6 +86,29 @@
     }
   }
 
+  html.safari-landing-lite & {
+    overflow: hidden;
+  }
+
+  html.safari-landing-lite & .gradiant-separator-wrapper {
+    isolation: isolate;
+  }
+
+  html.safari-landing-lite & .gradiant-separator-wrapper::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: min(58rem, 78vh);
+    pointer-events: none;
+    z-index: 0;
+    background:
+      radial-gradient(44rem 24rem at 8% 12%, rgba(#a499ff, 0.42) 0%, rgba(#a499ff, 0.18) 38%, rgba(#a499ff, 0) 72%),
+      radial-gradient(38rem 18rem at 46% 0%, rgba(#df99ff, 0.34) 0%, rgba(#df99ff, 0.14) 40%, rgba(#df99ff, 0) 74%),
+      radial-gradient(42rem 20rem at 92% 8%, rgba(#ffc4c5, 0.28) 0%, rgba(#ffc4c5, 0.12) 42%, rgba(#ffc4c5, 0) 76%),
+      linear-gradient(180deg, rgba($secondary, 0) 0%, rgba($secondary, 0.06) 48%, rgba($secondary, 0.18) 100%);
+    transform: translate3d(0, 0, 0);
+  }
+
   .gradiant-separator {
     width: 160%;
     height: auto;
@@ -106,6 +129,10 @@
       display: block;
       transform: translate(-50%, 0) scaleY(1.9);
     }
+  }
+
+  html.safari-landing-lite & .gradiant-separator {
+    opacity: 0;
   }
 
   /* Mobile : pas de gradient décoratif — fond $secondary uniforme partout */
@@ -545,21 +572,40 @@
     z-index: 1;
     padding-bottom: env(safe-area-inset-bottom);
     background: transparent;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
 
     .listing-view {
       width: 100%;
-      height: 100%;
-      min-height: 0;
+      height: auto;
+      min-height: 100%;
       border-radius: 0;
       background-color: transparent;
     }
 
     .listing-view > .main {
+      height: auto;
+      overflow: visible;
       background: transparent;
     }
 
     .listing-view > .main > .core {
       background: $background;
+    }
+
+    .listing-view > .footer {
+      padding-bottom: calc(var(--layout-gap) + env(safe-area-inset-bottom));
+    }
+
+    .listing-gallery:has(.swiper-initialized) {
+      aspect-ratio: 5 / 4;
+      max-height: min(38vh, 22rem);
+      margin-bottom: 0;
+    }
+
+    .listing-gallery:has(.swiper-initialized)::after {
+      display: none;
     }
   }
 

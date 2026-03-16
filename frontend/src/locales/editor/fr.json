@@ -89,8 +89,10 @@
           "airbnbPlaceholder": "https://www.airbnb.fr/rooms/…",
           "bookingPlaceholder": "https://www.booking.com/hotel/…",
           "cta": "Importer",
+          "ctaA11y": "Importer l’annonce depuis le lien collé",
           "createManually": "Créer manuellement",
           "importLoading": "Récupération de l'annonce en cours…",
+          "importLoadingA11y": "Import de l’annonce en cours",
           "bookingNotSupported": "L'import Booking n'est pas encore disponible. Utilisez un lien Airbnb ou créez manuellement."
         },
         "title": {
@@ -282,7 +284,7 @@
         },
         "reviews": {
           "title": "Avis",
-          "subtitle": "Modifiez les avis que vous souhaitez afficher (cela n’impactera pas la note globale)",
+          "subtitle": "Choisissez les sources d’avis visibles sur la page client. Les données non IndieHost proviennent du scraping.",
           "toggle": {
             "indiehost": "Avis Indie Host",
             "airbnb": "Avis Airbnb",
@@ -334,6 +336,9 @@
           "weekendToggle": "Prix week-end (vendredi / samedi)",
           "weekendPriceLabel": "Tarif week-end",
           "weekendPriceSuffix": "€ / nuit",
+          "weekendPercentLabel": "Majoration week-end",
+          "weekendPercentSuffix": "%",
+          "weekendSliderLabel": "Ajuster la majoration",
           "extraGuestsLabel": "Voyageurs supplémentaires",
           "extraGuestsSuffix": "€ / personne / nuit",
           "extraGuestsPlaceholder": "Seuil inclus"

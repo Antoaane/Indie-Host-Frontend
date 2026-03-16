@@ -6,6 +6,11 @@ import type { ProofSectionContent } from '@/views/Landing/types/content'
 defineProps<{
   content: ProofSectionContent
 }>()
+
+const demoVideo = {
+  webm: '/assets/media/videos/annonces.webm',
+  mp4: '/assets/media/videos/annonces.mp4',
+}
 </script>
 
 <template>
@@ -30,6 +35,36 @@ defineProps<{
           class="subtitle"
         >
           {{ content.subtitle }}
+        </p>
+      </div>
+
+      <div
+        class="demo"
+        data-sr
+        data-sr-y="30"
+      >
+        <div class="demo-video">
+          <video
+            v-if="demoVideo.webm || demoVideo.mp4"
+            autoplay
+            loop
+            muted
+            playsinline
+          >
+            <source
+              v-if="demoVideo.webm"
+              :src="demoVideo.webm"
+              type="video/webm"
+            />
+            <source
+              v-if="demoVideo.mp4"
+              :src="demoVideo.mp4"
+              type="video/mp4"
+            />
+          </video>
+        </div>
+        <p class="demo-caption">
+          {{ content.demoVideoLabel }}
         </p>
       </div>
 

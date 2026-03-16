@@ -99,3 +99,12 @@
     }
   }
 }
+
+.listing-view.editor,
+.listing-view.create-listing {
+  .listing-gallery:has(.swiper-initialized) {
+    margin-bottom: 0;
+    overflow: hidden;
+    border-radius: borders.$rounded-xl;
+  }
+}

@@ -118,11 +118,21 @@ export type BookingsModel = {
 export type NotesModel = {
   overall?: number;
   distribution?: Record<string, number>;
+  source?: string;
+  reviewCount?: number;
   otas?: Array<{
     ota: 'airbnb' | 'booking' | string;
     note: number;
     distribution?: Record<string, number>;
+    reviewCount?: number;
+    sourceLabel?: string;
   }>;
+};
+
+export type ReviewsVisibilityModel = {
+  indiehost: boolean;
+  airbnb: boolean;
+  booking: boolean;
 };
 
 export type CommentItem = {
@@ -150,4 +160,5 @@ export type ListingParsed = {
   notes: NotesModel;
   comments: CommentsModel;
   commentsPages: CommentsPagesModel;
+  reviewsVisibility: ReviewsVisibilityModel;
 };

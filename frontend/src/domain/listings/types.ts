@@ -107,6 +107,7 @@ export type RawPricingCancellation = RawPerkScoring & {
 export type RawPricingWeekend = {
   enabled?: boolean
   price?: number | null
+  percent?: number | null
 }
 export type RawPricingStay = {
   minNights?: number | null
@@ -207,7 +208,21 @@ export type RawBookings = Override<RawBookingsBase, {
   pricing?: RawPricingSettings
 }>
 export type RawMedias = typeof mediasJSON
-export type RawNotes = typeof notesJSON
+export type RawNotes = Override<typeof notesJSON, {
+  note?: {
+    note?: number
+    distribution?: Record<string, number>
+    source?: string
+    reviewCount?: number
+  }
+  'otas-note'?: Array<{
+    ota: string
+    note?: number
+    distribution?: Record<string, number>
+    reviewCount?: number
+    sourceLabel?: string
+  }>
+}>
 export type RawComments = typeof commentsJSON
 export type RawHost = typeof hostJSON
 export type RawArrival = typeof arrivalJSON
@@ -227,6 +242,7 @@ export type DraftPatch = {
   bookings?: Partial<RawBookings> | null
   medias?: Partial<RawMedias> | null
   arrival?: Partial<RawArrival> | null
+  notes?: Partial<RawNotes> | null
 }
 
 export type VolatileBundle = Pick<RawListingBundle, 'bookings' | 'notes' | 'comments' | 'host'>

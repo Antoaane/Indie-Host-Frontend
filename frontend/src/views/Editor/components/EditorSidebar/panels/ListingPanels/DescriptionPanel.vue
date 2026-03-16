@@ -298,12 +298,12 @@ onMounted(async () => {
     }
 
     > .actions {
-      @include buttons.low-btn($icon-only: true);
+      @include buttons.primary($theme: white, $icon-only: true, $deep: true);
       flex: 0 0 auto;
 
       > * {
-        width: 2.2rem;
-        height: 2.2rem;
+        width: 2.5rem;
+        height: 2.5rem;
       }
     }
   }
@@ -408,8 +408,12 @@ onMounted(async () => {
   > .ql-container {
     @include inputs.richtext($theme: base);
     min-height: 0;
+    display: flex;
+    flex-direction: column;
 
     > .ql-editor {
+      flex: 1 1 auto;
+      min-height: clamp(12rem, 30vh, 18rem);
       max-height: clamp(11rem, 34vh, 18rem);
       overflow-y: auto;
     }
@@ -461,11 +465,11 @@ onMounted(async () => {
   }
 
   .overlay-close {
-    @include buttons.low-btn($icon-only: true);
+    @include buttons.primary($theme: white, $icon-only: true, $deep: true);
 
     > * {
-      width: 2.25rem;
-      height: 2.25rem;
+      width: 2.5rem;
+      height: 2.5rem;
     }
   }
 
@@ -477,10 +481,14 @@ onMounted(async () => {
     > .ql-container {
       flex: 1 1 auto;
       min-height: 0;
+      display: flex;
+      flex-direction: column;
 
       > .ql-editor {
-        height: 100%;
+        flex: 1 1 auto;
+        height: auto;
         max-height: none;
+        overflow-y: auto;
       }
     }
   }

@@ -186,6 +186,8 @@ onMounted(() => {
 
   > .body {
     @extend %panel-body;
+    min-height: 0;
+    overflow: hidden;
 
     > .textarea {
       @include inputs.textarea($theme: base);
@@ -276,6 +278,16 @@ onMounted(() => {
 
     > .ql-container {
       @include inputs.richtext($theme: base);
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+
+      > .ql-editor {
+        flex: 1 1 auto;
+        min-height: clamp(12rem, 36vh, 22rem);
+        max-height: min(58vh, 34rem);
+        overflow-y: auto;
+      }
     }
 
     > .meta {

@@ -452,6 +452,10 @@ export function createApiListingsController(): ListingsController {
         requests.push(patchRemoteWithToken(resolveUrl(buildListingUrl('arrival', listingId)), patch.arrival, token))
       }
 
+      if (patch.notes) {
+        requests.push(patchRemoteWithToken(resolveUrl(buildListingUrl('notes', listingId)), patch.notes, token))
+      }
+
       if (requests.length) {
         await Promise.all(requests)
       }
@@ -481,6 +485,10 @@ export function createApiListingsController(): ListingsController {
 
       if (draft.arrival) {
         requests.push(patchRemoteWithToken(resolveUrl(buildListingUrl('arrival', listingId)), draft.arrival, token))
+      }
+
+      if (draft.notes) {
+        requests.push(patchRemoteWithToken(resolveUrl(buildListingUrl('notes', listingId)), draft.notes, token))
       }
 
       if (requests.length) {

@@ -1,7 +1,7 @@
 <!-- File: src/views/CreateListing/components/panels/CreateImportStepPanel.vue -->
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { Download, Loader2 } from 'lucide-vue-next'
 
 import { ensurePublishedMediasStoredInImageKit } from '@/domain/api/imagekit'
@@ -20,19 +20,36 @@ import { LANDING_IMPORT_URL_KEY } from '@/views/Landing/components/IntroSection/
 const props = defineProps<{
   listingId?: string | null
   listingStatus?: string | null
+  importUrl?: string
+  importRequestToken?: number
 }>()
 
 const emit = defineEmits<{
   (e: 'patch', patch: DraftPatch): void
   (e: 'next'): void
+  (e: 'update:importUrl', value: string): void
 }>()
 
-const url = ref('')
+const url = ref(props.importUrl ?? '')
+
+watch(
+  () => props.importUrl,
+  (value) => {
+    const nextValue = value ?? ''
+    if (nextValue !== url.value) {
+      url.value = nextValue
+    }
+  },
+)
+
+watch(url, (value) => {
+  emit('update:importUrl', value)
+})
 
 onMounted(() => {
   try {
     const stored = sessionStorage.getItem(LANDING_IMPORT_URL_KEY)
-    if (stored?.trim()) {
+    if (stored?.trim() && !url.value.trim()) {
       url.value = stored.trim()
       sessionStorage.removeItem(LANDING_IMPORT_URL_KEY)
     }
@@ -49,6 +66,14 @@ const isBooking = computed(() => detectedSource.value === 'booking')
 const isAirbnb = computed(() => detectedSource.value === 'airbnb')
 const canImport = computed(
   () => url.value.trim().length > 0 && isAirbnb.value && !isImporting.value
+)
+
+watch(
+  () => props.importRequestToken,
+  (value, previousValue) => {
+    if (value == null || value === previousValue) return
+    handleImport()
+  },
 )
 
 async function handleImport() {
@@ -70,6 +95,7 @@ async function handleImport() {
       ...(transformed.bookings ? { bookings: transformed.bookings } : {}),
       ...(medias ? { medias } : {}),
       ...(transformed.arrival ? { arrival: transformed.arrival } : {}),
+      ...(transformed.notes ? { notes: transformed.notes } : {}),
     }
     emit('patch', patch)
     emit('next')
@@ -123,6 +149,7 @@ function handleCreateManually() {
                 :aria-label="panelContent.cta"
                 :title="panelContent.cta"
               />
+              <span>{{ panelContent.cta }}</span>
             </button>
           </div>
         </div>
@@ -149,6 +176,7 @@ function handleCreateManually() {
 
 <style lang="scss">
 @use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
 @use '@/styles/components/inputs' as inputs;
 
 .create-import-step-panel {
@@ -159,6 +187,33 @@ function handleCreateManually() {
   > .input-row {
     > .input {
       @include inputs.action($theme: base, $action-theme: white);
+
+      > .action {
+        > * {
+          width: auto;
+          min-width: 7.5rem;
+          height: 42px;
+          padding: 0 0.9rem;
+
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.45rem;
+
+          border-radius: borders.$rounded-sm;
+          white-space: nowrap;
+        }
+
+        .icon {
+          width: 1rem;
+          height: 1rem;
+          flex: 0 0 auto;
+        }
+
+        span {
+          line-height: 1;
+        }
+      }
     }
   }
 

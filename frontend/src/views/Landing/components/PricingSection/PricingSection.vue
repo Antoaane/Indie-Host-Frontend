@@ -1,11 +1,45 @@
 <!-- File: src/views/Landing/components/PricingSection/PricingSection.vue -->
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import { SignUpButton, SignedIn, SignedOut } from '@clerk/vue'
 import { useRouter } from 'vue-router'
 
 import type { SubscriptionPlanCode } from '@/domain/api/stripeSubscriptions'
 import { MARKETING_PRICING_PLANS } from '@/domain/payments/pricingPlanCatalog'
+import type { PricingSectionContent } from '@/views/Landing/types/content'
+
+defineProps<{
+  content: PricingSectionContent
+}>()
+
+/** Un seul plan déplié à la fois : évite les bugs de réactivité et garde l’UI lisible. */
+const expandedPlanId = ref<string | null>(null)
+
+const PREVIEW_INCLUDES_COUNT = 3
+
+function togglePlan(planId: string) {
+  expandedPlanId.value = expandedPlanId.value === planId ? null : planId
+}
+
+function isExpanded(planId: string): boolean {
+  return expandedPlanId.value === planId
+}
+
+type PricingPlan = {
+  id: string
+  code: SubscriptionPlanCode
+  tier: string
+  name: string
+  price: string
+  summary: string
+  includes: string[]
+  options?: string[]
+  positioning: string
+  cta: string
+  helper: string
+  tone: 'indigo' | 'gold' | 'red'
+}
 
 const router = useRouter()
 
@@ -34,20 +68,19 @@ function goToPricing(planCode: SubscriptionPlanCode) {
           data-sr-y="-20"
           class="pricing-eyebrow"
         >
-          Tarifs
+          {{ content.eyebrow }}
         </p>
         <h2
           data-sr
           data-sr-y="-30"
-        >
-          Une grille simple pour <strong>lancer</strong>, <strong>faire grandir</strong> puis <strong>industrialiser</strong> vos réservations directes.
-        </h2>
+          v-html="content.title"
+        />
         <p
           data-sr
           data-sr-y="30"
           class="pricing-subtitle"
         >
-          Choisissez le niveau de volume, de personnalisation et d’automatisation adapté à votre activité.
+          {{ content.subtitle }}
         </p>
       </div>
 
@@ -57,7 +90,7 @@ function goToPricing(planCode: SubscriptionPlanCode) {
           :id="plan.id"
           :key="plan.id"
           class="plan"
-          :class="[`is-${plan.tone}`, { 'is-featured': plan.tone === 'gold' }]"
+          :class="[`is-${plan.tone}`, { 'is-featured': plan.tone === 'gold', 'is-expanded': isExpanded(plan.id) }]"
           data-sr
           data-sr-y="50"
           :data-sr-delay="index * 0.15"
@@ -77,9 +110,76 @@ function goToPricing(planCode: SubscriptionPlanCode) {
             <h3>{{ plan.name }}</h3>
             <p class="price">{{ plan.displayPrice }}</p>
             <p class="summary">{{ plan.summary }}</p>
+
+            <!-- Aperçu replié : quelques points clés + CTA toujours visibles -->
+            <div
+              v-if="!isExpanded(plan.id)"
+              class="plan-preview"
+            >
+              <ul class="plan-preview-list">
+                <li
+                  v-for="item in plan.includes.slice(0, PREVIEW_INCLUDES_COUNT)"
+                  :key="item"
+                >
+                  {{ item }}
+                </li>
+              </ul>
+              <div class="plan-actions plan-actions-preview">
+                <SignedIn>
+                  <button
+                    type="button"
+                    class="plan-cta"
+                    @click="goToPricing(plan.code)"
+                  >
+                    {{ plan.cta }}
+                  </button>
+                </SignedIn>
+                <SignedOut>
+                  <SignUpButton
+                    mode="redirect"
+                    :force-redirect-url="buildPricingReturnUrl(plan.code)"
+                  >
+                    <button
+                      type="button"
+                      class="plan-cta"
+                    >
+                      {{ plan.cta }}
+                    </button>
+                  </SignUpButton>
+                </SignedOut>
+                <p class="plan-helper">
+                  {{ plan.helper }}
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              class="plan-toggle"
+              :aria-expanded="isExpanded(plan.id)"
+              :aria-controls="`plan-body-${plan.id}`"
+              :id="`plan-toggle-${plan.id}`"
+              @click="togglePlan(plan.id)"
+            >
+              <span class="plan-toggle-label">
+                {{ isExpanded(plan.id) ? content.toggleCollapseLabel : content.toggleExpandLabel }}
+              </span>
+              <span class="plan-toggle-icon" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </span>
+            </button>
           </div>
 
-          <div class="plan-body">
+          <div
+            :id="`plan-body-${plan.id}`"
+            class="plan-body"
+            :class="{ 'is-expanded': isExpanded(plan.id) }"
+            role="region"
+            :aria-labelledby="`plan-toggle-${plan.id}`"
+            :aria-hidden="!isExpanded(plan.id)"
+          >
             <div class="block">
               <p class="block-label">Inclus</p>
               <ul>
@@ -143,7 +243,7 @@ function goToPricing(planCode: SubscriptionPlanCode) {
       </div>
 
       <p class="account-link">
-        Déjà client ? <RouterLink to="/sign-in?redirect_url=%2Fpricing">Se connecter</RouterLink>
+        {{ content.accountPrefix }} <RouterLink to="/sign-in?redirect_url=%2Fpricing">{{ content.accountLinkLabel }}</RouterLink>
       </p>
     </div>
   </section>

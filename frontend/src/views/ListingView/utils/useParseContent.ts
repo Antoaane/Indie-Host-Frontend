@@ -13,6 +13,7 @@ import { getSynchronizedBookedDays } from '@/domain/listings/bookings';
 import { resolveWeekendPricing } from '@/domain/listings/pricing';
 import { buildPerkCandidates, selectTopPerkCandidates } from '@/domain/listings/perks';
 import { normalizeFeeItems, resolveListingReservationRules } from '@/domain/listings/reservationRules';
+import { getKnownAmenityCatalogItem, sanitizeKnownAmenities } from '@/utils/amenitiesCatalog';
 
 // ---- TYPES ----
 import type {
@@ -31,6 +32,7 @@ import type {
   CommentsModel,
   CommentsPagesModel,
   MapModel,
+  ReviewsVisibilityModel,
 } from '@/views/ListingView/types/listing';
 
 export type { RawListingBundle };
@@ -220,17 +222,22 @@ function parseMap(core: Maybe<Partial<RawCore>>): MapModel {
 }
 
 function parseAmenities(core: Maybe<Partial<RawCore>>): AmenitiesModel {
-  return (core?.amenities ?? []).map((a) => ({
-    id: a.id ?? '',
-    name: a.name ?? '',
-    description: a.description,
-    category: a.category ?? '',
-    relevance: Number.isFinite(Number(a.relevance)) ? Number(a.relevance) : 0,
-    pinned: Boolean(a.pinned),
-    perkEligible: typeof a.perkEligible === 'boolean' ? a.perkEligible : undefined,
-    perkScore: Number.isFinite(Number(a.perkScore)) ? Number(a.perkScore) : undefined,
-    perkPriority: Number.isFinite(Number(a.perkPriority)) ? Number(a.perkPriority) : undefined,
-  }));
+  return sanitizeKnownAmenities(core?.amenities ?? [])
+    .flatMap((a) => {
+      const catalogItem = getKnownAmenityCatalogItem(a.id);
+
+      return [{
+        id: a.id,
+        name: a.name ?? catalogItem?.name ?? '',
+        description: a.description ?? catalogItem?.description,
+        category: a.category ?? catalogItem?.category ?? '',
+        relevance: Number.isFinite(Number(a.relevance)) ? Number(a.relevance) : 0,
+        pinned: Boolean(a.pinned),
+        perkEligible: typeof a.perkEligible === 'boolean' ? a.perkEligible : undefined,
+        perkScore: Number.isFinite(Number(a.perkScore)) ? Number(a.perkScore) : undefined,
+        perkPriority: Number.isFinite(Number(a.perkPriority)) ? Number(a.perkPriority) : undefined,
+      }];
+    });
 }
 
 function parseRooms(core: Maybe<Partial<RawCore>>): RoomsModel {
@@ -287,12 +294,36 @@ function parseNotes(notes: Maybe<Partial<RawNotes>>): NotesModel {
   return {
     overall: notes?.note?.note,
     distribution: notes?.note?.distribution,
-    otas: (notes?.['otas-note'] || []).map(n => ({
-      ota: n.ota as any,
-      note: n.note,
-      distribution: n.distribution,
-    })),
+    source: notes?.note?.source,
+    reviewCount: notes?.note?.reviewCount,
+    otas: (notes?.['otas-note'] || [])
+      .filter((n) => typeof n?.note === 'number' && !Number.isNaN(n.note))
+      .map(n => ({
+        ota: n.ota as any,
+        note: n.note as number,
+        distribution: n.distribution,
+        reviewCount: n.reviewCount,
+        sourceLabel: n.sourceLabel,
+      })),
   };
+}
+
+function parseReviewsVisibility(core: Maybe<Partial<RawCore>>): ReviewsVisibilityModel {
+  const raw = (core as Record<string, unknown> | null | undefined)?.['reviews-display']
+  if (raw && typeof raw === 'object') {
+    const typed = raw as Record<string, unknown>
+    return {
+      indiehost: typed.indiehost !== false,
+      airbnb: typed.airbnb !== false,
+      booking: typed.booking !== false,
+    }
+  }
+
+  return {
+    indiehost: true,
+    airbnb: true,
+    booking: true,
+  }
 }
 
 function parseComments(raw: Maybe<Partial<RawComments>>): { pages: CommentsPagesModel; flat: CommentsModel } {
@@ -337,6 +368,7 @@ export function core(raw: RawListingBundle): ListingParsed {
     notes: parseNotes(raw.notes),
     comments: parsedComments.flat,
     commentsPages: parsedComments.pages,
+    reviewsVisibility: parseReviewsVisibility(raw.core),
   };
 }
 

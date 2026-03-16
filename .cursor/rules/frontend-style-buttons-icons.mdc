@@ -1,0 +1,29 @@
+---
+description: Utiliser les mixins et variables du design system frontend pour boutons et icônes
+globs: frontend/src/**/*.{vue,scss,ts,tsx}
+alwaysApply: false
+---
+
+# Boutons et Icônes Frontend
+
+- Pour tout bouton ou bouton icône dans le frontend, utiliser d'abord les mixins existants de `@/styles/components/buttons` au lieu de recréer un style local.
+- Préférer `buttons.primary(...)` pour les CTA et actions principales, et `buttons.low-btn(...)` pour les actions secondaires, légères ou icon-only.
+- Pour un bouton icône, préférer `buttons.primary($theme: white|light, $icon-only: true, $deep: true)` ou `buttons.low-btn($icon-only: true)` selon le contexte visuel existant.
+- Réutiliser les variables de style du projet depuis `@/styles/variables/globals` et `@/styles/variables/borders` : `$accent`, `$secondary`, `$secondary-button-reference`, `$good`, `$bad`, `borders.$rounded-*`.
+- Ne pas introduire de couleurs, bordures, rayons, ombres ou transitions en dur si une variable, un thème de bouton ou un mixin du projet couvre déjà le besoin.
+- Quand une icône est dans un bouton, laisser le mixin piloter `color`/`stroke`; éviter les couleurs hardcodées sur le SVG sauf nécessité explicite.
+- Pour rester cohérent avec le design system, regarder d'abord les usages existants dans la landing, l’editor, management et gallery avant d’ajouter une variante locale.
+
+## Exemples
+
+```scss
+@use '@/styles/components/buttons' as buttons;
+
+.cta-primary {
+  @include buttons.primary($cta: true, $theme: light, $fullwidth: true);
+}
+
+.icon-button {
+  @include buttons.primary($theme: white, $icon-only: true, $deep: true);
+}
+```

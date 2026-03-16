@@ -102,6 +102,7 @@ const listingCoverImage = computed(() => {
 
 const listingViewStyles = computed<Record<string, string | number>>(() => ({
   ...(aspectStyles.value as Record<string, string | number>),
+  '--listing-view-cover-image': listingCoverImage.value ? `url(${JSON.stringify(listingCoverImage.value)})` : 'none',
 }))
 
 const resolvedViewportMode = computed<ListingViewportMode | null>(() => props.forcedViewportMode ?? null)
@@ -123,19 +124,6 @@ provideListingViewportMode(resolvedViewportMode)
       ref="listingView"
       :style="listingViewStyles"
     >
-      <div
-        v-if="listingCoverImage"
-        class="listing-view-cover"
-        aria-hidden="true"
-      >
-        <img
-          :src="listingCoverImage"
-          alt=""
-          loading="eager"
-          decoding="async"
-        />
-      </div>
-
       <ListingDesktopLayout
         :listing-data="listingData"
         :booking-range="bookingRange"
@@ -165,19 +153,6 @@ provideListingViewportMode(resolvedViewportMode)
       :class="{ 'listing-view': true, 'is-checkout': isCheckout, 'preview-only': props.previewOnly }"
       :style="listingViewStyles"
     >
-      <div
-        v-if="listingCoverImage"
-        class="listing-view-cover"
-        aria-hidden="true"
-      >
-        <img
-          :src="listingCoverImage"
-          alt=""
-          loading="eager"
-          decoding="async"
-        />
-      </div>
-
       <ListingMobileLayout
         :listing-data="listingData"
         :booking-range="bookingRange"

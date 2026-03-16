@@ -154,6 +154,7 @@ function onConfirmCheckout(payload: CheckoutConfirmationPayload) {
           v-if="props.listingData"
           :notes="props.listingData.notes"
           :comments="props.listingData.comments"
+          :visibility="props.listingData.reviewsVisibility"
         />
         <template v-else><div class="skeleton">Chargement…</div></template>
       </div>

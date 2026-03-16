@@ -101,6 +101,12 @@
       >h2 {
         @include h2-title;
       }
+
+      >.source-label {
+        margin: calc(var(--layout-gap-xs) * -1) 0 0 0;
+        @include little-text($thin: false);
+        color: rgba($secondary, 0.72);
+      }
     }
   }
 
@@ -188,6 +194,12 @@
             >div {
               margin-left: var(--layout-gap-md);
             }
+          }
+
+          >.source-label {
+            margin: var(--layout-gap-sm) 0 0 0;
+            @include little-text($thin: false);
+            color: rgba($secondary, 0.72);
           }
         }
       }

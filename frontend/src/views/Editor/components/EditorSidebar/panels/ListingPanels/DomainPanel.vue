@@ -146,7 +146,15 @@ watch(
   },
 )
 
-watch(subdomainInput, () => {
+watch(subdomainInput, (value) => {
+  // Normalise automatiquement les espaces et majuscules en slug compatible
+  // Ex. "gite de saint francois" → "gite-de-saint-francois"
+  const sanitized = value.replace(/\s+/g, '-')
+  if (sanitized !== value) {
+    subdomainInput.value = sanitized
+    return
+  }
+
   availability.value = null
   errorMessage.value = null
   successMessage.value = null

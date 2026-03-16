@@ -7,6 +7,35 @@ $ROOT = Split-Path -Parent $MyInvocation.MyCommand.Path
 $LISTINGS_MODE_API = "api"
 $LISTINGS_MODE_LOCAL_JSON = "local-json"
 
+# ---------------------------------------------------------------------------
+# Compatibilité macOS / Linux
+# ---------------------------------------------------------------------------
+# Ce script est historiquement pensé pour Windows (Docker Desktop, netstat, chemins \etc.).
+# Sur macOS et Linux, on délègue proprement au script bash `start-indiehost.sh`
+# qui fait la même chose avec la bonne stack (bash + docker + node + python).
+if (-not $IsWindows) {
+    $shScript = Join-Path $ROOT "start-indiehost.sh"
+    if (-not (Test-Path $shScript)) {
+        Write-Host "start-indiehost.ps1 detecte un OS non‑Windows mais le script start-indiehost.sh est introuvable." -ForegroundColor Red
+        Write-Host "Verifie que tu as bien clone le depot complet et que start-indiehost.sh est present a la racine." -ForegroundColor Yellow
+        exit 1
+    }
+
+    Write-Host ""
+    Write-Host "OS non‑Windows detecte. Delegation au script bash :" -ForegroundColor Cyan
+    Write-Host "  $shScript" -ForegroundColor Gray
+    Write-Host ""
+
+    # Utilise bash si dispo, sinon sh
+    $bash = Get-Command bash -ErrorAction SilentlyContinue
+    if ($bash) {
+        & $bash.Source $shScript
+    } else {
+        & sh $shScript
+    }
+    exit $LASTEXITCODE
+}
+
 function Write-Step { param($msg) Write-Host "" ; Write-Host ">> $msg" -ForegroundColor Cyan }
 function Write-Ok   { param($msg) Write-Host "   [OK] $msg" -ForegroundColor Green }
 function Write-Warn { param($msg) Write-Host "   [!!] $msg" -ForegroundColor Yellow }
@@ -170,6 +199,43 @@ function Ensure-ScrapingPythonDependencies {
 
     Set-Content -Path $depsStampPath -Value (Get-Date).ToString("o")
     Write-Ok "Dependances Python du scraping a jour."
+}
+
+function Ensure-ScrapingPlaywrightChromium {
+    param(
+        [string]$ScrapDir,
+        [string]$PythonExe
+    )
+
+    $requirementsPath = Join-Path $ScrapDir "requirements.txt"
+    $browserStampPath = Join-Path $ScrapDir ".venv\.playwright-chromium-installed"
+    $needInstall = -not (Test-PythonModuleAvailable -PythonExe $PythonExe -ModuleName "playwright")
+
+    if (-not $needInstall) {
+        if (-not (Test-Path $browserStampPath)) {
+            $needInstall = $true
+        } elseif (Test-Path $requirementsPath) {
+            $requirementsTime = (Get-Item $requirementsPath).LastWriteTimeUtc
+            $stampTime = (Get-Item $browserStampPath).LastWriteTimeUtc
+            $needInstall = $requirementsTime -gt $stampTime
+        }
+    }
+
+    if (-not $needInstall) {
+        Write-Ok "Playwright Chromium deja installe pour le scraping."
+        return
+    }
+
+    Write-Warn "Installation de Playwright Chromium pour le scraping..."
+    $env:PLAYWRIGHT_BROWSERS_PATH = "0"
+    & $PythonExe -m playwright install chromium
+    if ($LASTEXITCODE -ne 0) {
+        Write-Fail "L'installation de Playwright Chromium a echoue."
+        exit 1
+    }
+
+    Set-Content -Path $browserStampPath -Value (Get-Date).ToString("o")
+    Write-Ok "Playwright Chromium pret pour le scraping."
 }
 
 function Start-ApiInfraServices {
@@ -342,8 +408,9 @@ if (Get-ListeningPid 8000) {
     }
 
     Ensure-ScrapingPythonDependencies -ScrapDir $scrapDir -PythonExe $pythonExe
+    Ensure-ScrapingPlaywrightChromium -ScrapDir $scrapDir -PythonExe $pythonExe
 
-    $scrapCmd  = "& '$pythonExe' -m uvicorn api:app --reload --port 8000"
+    $scrapCmd  = "`$env:PLAYWRIGHT_BROWSERS_PATH='0'; & '$pythonExe' -m uvicorn api:app --reload --port 8000"
     Open-Service -Title "IndieHost Scraping :8000" -WorkDir $scrapDir -Command $scrapCmd
     Start-Sleep 1
     Write-Ok "Serveur de scraping lance dans un nouvel onglet (localhost:8000)."

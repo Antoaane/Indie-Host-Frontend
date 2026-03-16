@@ -89,6 +89,7 @@
     "eyebrow": "Produktnachweis",
     "title": "Eine <strong>konkrete</strong> Basis für Direktbuchungen ohne bei Null anzufangen",
     "subtitle": "Wir zeigen hier keine gefälschten Kundenbewertungen. Stattdessen zeigt dieser Bereich Demo-Ergebnisse und typische Abläufe, die das Produkt bereits heute ermöglicht.",
+    "demoVideoLabel": "Demonstration der Bearbeitung einer Anzeige in Echtzeit",
     "metrics": [
       {
         "id": "proof-metric-1",
@@ -347,6 +348,15 @@
         "description": "Wir bauen Tools, auf die Sie sich verlassen können. Unser Team hört auf Gastgeber-Feedback und unterstützt Sie bei jedem Schritt – wann immer Sie es brauchen."
       }
     ]
+  },
+  "pricingSection": {
+    "eyebrow": "Preise",
+    "title": "Kostenlos, SuperHost oder MegaHost: <strong>wählen Sie Ihren Tarif</strong>",
+    "subtitle": "Ein kostenloser Tarif zum Start, danach Abos mit mehr Seiten, Tools und Buchungen.",
+    "toggleExpandLabel": "Details zu den Funktionen anzeigen",
+    "toggleCollapseLabel": "Details ausblenden",
+    "accountPrefix": "Bereits Kunde?",
+    "accountLinkLabel": "Anmelden"
   },
   "roiSection": {
     "eyebrow": "ROI",

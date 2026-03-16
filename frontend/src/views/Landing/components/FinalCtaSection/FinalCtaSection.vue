@@ -31,20 +31,22 @@ function handleCtaClick(href: string) {
       <p class="body">{{ props.content.body }}</p>
 
       <div class="actions">
-        <button
-          type="button"
-          class="primary"
-          @click="handleCtaClick(props.content.primaryCta.href)"
-        >
-          {{ props.content.primaryCta.label }}
-        </button>
-        <button
-          type="button"
-          class="secondary"
-          @click="handleCtaClick(props.content.secondaryCta.href)"
-        >
-          {{ props.content.secondaryCta.label }}
-        </button>
+        <div class="cta-primary">
+          <button
+            type="button"
+            @click="handleCtaClick(props.content.primaryCta.href)"
+          >
+            <span v-html="props.content.primaryCta.label" />
+          </button>
+        </div>
+        <div class="cta-secondary">
+          <button
+            type="button"
+            @click="handleCtaClick(props.content.secondaryCta.href)"
+          >
+            <span v-html="props.content.secondaryCta.label" />
+          </button>
+        </div>
       </div>
 
       <p

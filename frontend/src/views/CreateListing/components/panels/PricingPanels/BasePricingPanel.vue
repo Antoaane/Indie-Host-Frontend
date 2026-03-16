@@ -1,7 +1,7 @@
 <!-- File: src/views/CreateListing/components/panels/PricingPanels/BasePricingPanel.vue -->
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import type { RawBookings } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
@@ -11,6 +11,7 @@ import StepperInput from '@/components/inputs/StepperInput.vue'
 type PricingWeekend = {
   enabled?: boolean
   price?: number | null
+  percent?: number | null
 }
 
 type PricingExtraGuests = {
@@ -36,10 +37,19 @@ const pricing = computed<PricingSettings>(() => (props.bookings as any)?.pricing
 const weekend = computed<PricingWeekend>(() => pricing.value.weekend ?? {})
 const extraGuests = computed<PricingExtraGuests>(() => pricing.value.extraGuests ?? {})
 const pricingLimits = editorStatic.validation.pricing
+const weekendPercentMax = 200
 
 const pricePerNight = computed(() => clampMoney(props.bookings?.price))
 const weekendEnabled = computed(() => Boolean(weekend.value.enabled))
 const weekendPrice = computed(() => clampMoney(weekend.value.price))
+const weekendPercent = computed(() => {
+  const rawPercent = weekend.value.percent
+  if (Number.isFinite(Number(rawPercent))) {
+    return clampPercent(rawPercent)
+  }
+
+  return deriveWeekendPercent(pricePerNight.value, weekendPrice.value)
+})
 const extraGuestPrice = computed(() => clampMoney(extraGuests.value.price))
 const extraGuestThreshold = computed(() => (Number.isFinite(Number(extraGuests.value.threshold)) ? clampInteger(extraGuests.value.threshold, pricingLimits.moneyMin, pricingLimits.extraGuestsThresholdMax, pricingLimits.moneyMin) : null))
 
@@ -50,6 +60,25 @@ const baseHint = computed(() =>
     moneyMax: pricingLimits.moneyMax,
     extraGuestsThresholdMax: pricingLimits.extraGuestsThresholdMax,
   }),
+)
+
+watch(
+  [weekendEnabled, pricePerNight],
+  ([enabled, basePrice]) => {
+    if (!enabled) return
+
+    const nextPercent = weekendPercent.value
+    const nextPrice = computeWeekendPrice(basePrice, nextPercent)
+    const hasStoredPercent = Number.isFinite(Number(weekend.value.percent))
+
+    if (nextPrice === weekendPrice.value && hasStoredPercent) return
+
+    updateWeekend({
+      price: nextPrice,
+      percent: nextPercent,
+    })
+  },
+  { immediate: true },
 )
 
 function setPricePerNight(next: number) {
@@ -73,6 +102,7 @@ function updateWeekend(patch: Partial<PricingWeekend>) {
   const nextPatch = {
     ...patch,
     ...(Object.prototype.hasOwnProperty.call(patch, 'price') ? { price: clampMoney(patch.price) } : {}),
+    ...(Object.prototype.hasOwnProperty.call(patch, 'percent') ? { percent: clampPercent(patch.percent) } : {}),
   }
 
   updatePricing({
@@ -80,6 +110,22 @@ function updateWeekend(patch: Partial<PricingWeekend>) {
       ...weekend.value,
       ...nextPatch,
     },
+  })
+}
+
+function setWeekendPrice(next: number) {
+  const normalizedPrice = Math.max(pricePerNight.value, clampMoney(next))
+  updateWeekend({
+    price: normalizedPrice,
+    percent: deriveWeekendPercent(pricePerNight.value, normalizedPrice),
+  })
+}
+
+function setWeekendPercent(next: number) {
+  const normalizedPercent = clampPercent(next)
+  updateWeekend({
+    percent: normalizedPercent,
+    price: computeWeekendPrice(pricePerNight.value, normalizedPercent),
   })
 }
 
@@ -107,8 +153,22 @@ function parseOptionalNumber(raw: string): number | null {
   return parseOptionalInteger(raw, pricingLimits.moneyMin, pricingLimits.extraGuestsThresholdMax)
 }
 
+function clampPercent(value: unknown): number {
+  return clampInteger(value, 0, weekendPercentMax, 0)
+}
+
 function clampMoney(value: unknown): number {
   return clampInteger(value, pricingLimits.moneyMin, pricingLimits.moneyMax, pricingLimits.moneyMin)
+}
+
+function computeWeekendPrice(basePrice: number, percent: number): number {
+  if (basePrice <= 0) return 0
+  return clampMoney(Math.round(basePrice * (1 + percent / 100)))
+}
+
+function deriveWeekendPercent(basePrice: number, weekendNightPrice: number): number {
+  if (basePrice <= 0 || weekendNightPrice <= basePrice) return 0
+  return clampPercent(Math.round(((weekendNightPrice - basePrice) / basePrice) * 100))
 }
 </script>
 
@@ -148,14 +208,38 @@ function clampMoney(value: unknown): number {
         <div class="field-label">
           <p>{{ panelContent.weekendPriceLabel }}</p>
         </div>
-        <StepperInput
-          :value="weekendPrice"
-          :min="pricingLimits.moneyMin"
-          :max="pricingLimits.moneyMax"
-          :suffix="panelContent.weekendPriceSuffix"
-          value-font-size="5rem"
-          suffix-font-size="2rem"
-          @input="updateWeekend({ price: $event.number })"
+        <div class="weekend-grid">
+          <StepperInput
+            :value="weekendPrice"
+            :min="pricingLimits.moneyMin"
+            :max="pricingLimits.moneyMax"
+            :suffix="panelContent.weekendPriceSuffix"
+            value-font-size="5rem"
+            suffix-font-size="2rem"
+            @input="setWeekendPrice($event.number)"
+          />
+          <StepperInput
+            :value="weekendPercent"
+            min="0"
+            :max="weekendPercentMax"
+            :suffix="panelContent.weekendPercentSuffix"
+            value-font-size="5rem"
+            suffix-font-size="2rem"
+            @input="setWeekendPercent($event.number)"
+          />
+        </div>
+        <div class="field-label is-slider-label">
+          <p>{{ panelContent.weekendSliderLabel }}</p>
+          <span>{{ weekendPercent }} {{ panelContent.weekendPercentSuffix }}</span>
+        </div>
+        <input
+          class="range"
+          type="range"
+          min="0"
+          :max="weekendPercentMax"
+          step="1"
+          :value="weekendPercent"
+          @input="setWeekendPercent(Number(($event.target as HTMLInputElement).value))"
         />
       </div>
 
@@ -237,6 +321,21 @@ function clampMoney(value: unknown): number {
       > .input {
         @include inputs.field($theme: base);
       }
+    }
+
+    .weekend-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: var(--layout-gap-xs);
+      align-items: start;
+    }
+
+    .field-label.is-slider-label {
+      margin-top: 0.2rem;
+    }
+
+    .range {
+      width: 100%;
     }
 
     .hint {

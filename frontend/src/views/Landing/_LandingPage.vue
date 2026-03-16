@@ -37,6 +37,20 @@ const os = ref<OSInfo | null>(null)
 const osReady = detectOS().then((res) => {
   os.value = res
 })
+const isSafariLanding = ref(false)
+
+function detectSafariBrowser(): boolean {
+  if (typeof navigator === 'undefined') return false
+
+  const userAgent = navigator.userAgent || ''
+  const vendor = navigator.vendor || ''
+  const isAppleVendor = /apple/i.test(vendor)
+  const isSafariEngine = /safari/i.test(userAgent)
+  const isOtherBrowser =
+    /crios|chrome|android|fxios|firefox|edgios|edg|opr|opera/i.test(userAgent)
+
+  return isAppleVendor && isSafariEngine && !isOtherBrowser
+}
 
 // let smoother: ReturnType<typeof ScrollSmoother.create>
 
@@ -69,10 +83,17 @@ function disableIphoneLandingAnimations() {
 }
 
 onMounted(() => {
+  isSafariLanding.value = detectSafariBrowser()
   document.documentElement.classList.add('force-scroll')
   document.body.classList.add('force-scroll')
   document.documentElement.classList.add('ios-landing-surface')
   document.body.classList.add('ios-landing-surface')
+  if (isSafariLanding.value) {
+    document.documentElement.classList.add('safari-landing-surface')
+    document.body.classList.add('safari-landing-surface')
+    document.documentElement.classList.add('safari-landing-lite')
+    document.body.classList.add('safari-landing-lite')
+  }
 
   const isLandingMobile = !vp.lg.value
   if (isLandingMobile) {
@@ -149,10 +170,14 @@ onBeforeUnmount(() => {
   document.body.classList.remove('force-scroll')
   document.documentElement.classList.remove('ios-landing-surface')
   document.body.classList.remove('ios-landing-surface')
+  document.documentElement.classList.remove('safari-landing-surface')
+  document.body.classList.remove('safari-landing-surface')
   document.documentElement.classList.remove('mobile-landing-lite')
   document.body.classList.remove('mobile-landing-lite')
   document.documentElement.classList.remove('ios-landing-lite')
   document.body.classList.remove('ios-landing-lite')
+  document.documentElement.classList.remove('safari-landing-lite')
+  document.body.classList.remove('safari-landing-lite')
   // if (vp.lg.value) {
   //   smoother.kill()
   // }
@@ -179,7 +204,7 @@ onBeforeUnmount(() => {
     <UsageSection :steps="content.usage.steps" />
     <ProofSection :content="content.proofSection" />
     <StrengthsSection :content="content.strengths" />
-    <PricingSection />
+    <PricingSection :content="content.pricingSection" />
     <RoiSection :content="content.roiSection" />
     <!-- JoinSection désactivée
     <JoinSection
@@ -202,6 +227,59 @@ onBeforeUnmount(() => {
 
 html.is-ios.ios-landing-lite {
   scroll-behavior: auto;
+}
+
+html.safari-landing-surface,
+body.safari-landing-surface,
+body.safari-landing-surface #app,
+body.safari-landing-surface main,
+html.safari-landing-surface #landing-page,
+body.safari-landing-surface #landing-page {
+  background-color: $secondary !important;
+}
+
+html.safari-landing-surface #landing-page,
+body.safari-landing-surface #landing-page {
+  position: relative;
+  isolation: isolate;
+}
+
+html.safari-landing-surface #landing-page::before,
+body.safari-landing-surface #landing-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: $secondary;
+  pointer-events: none;
+  z-index: -1;
+}
+
+html.safari-landing-lite #landing-page .text-gradiant,
+html.safari-landing-lite #landing-page h1 strong,
+html.safari-landing-lite #landing-page h2 strong,
+html.safari-landing-lite #landing-page h3 strong,
+html.safari-landing-lite #landing-page .hero-counter {
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+  -webkit-text-fill-color: currentColor !important;
+  color: $primary_gradiant_second !important;
+}
+
+html.safari-landing-lite #landing-page [class*='glass'],
+html.safari-landing-lite #landing-page [class*='blur'],
+html.safari-landing-lite #landing-page [class*='frosted'],
+html.safari-landing-lite #landing-page [class*='halo'],
+html.safari-landing-lite #landing-page [class*='glow'] {
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html.safari-landing-lite #landing-page *,
+html.safari-landing-lite #landing-page *::before,
+html.safari-landing-lite #landing-page *::after {
+  text-shadow: none !important;
 }
 
 @media (max-width: 1024px) {

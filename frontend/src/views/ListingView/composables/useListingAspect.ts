@@ -1,6 +1,6 @@
 // File: src/views/ListingView/composables/useListingAspect.ts
 
-import { computed, nextTick, ref, watch, type Ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch, type Ref } from 'vue'
 import type { StyleValue } from 'vue'
 
 export type ListingViewAspect = {
@@ -17,6 +17,9 @@ export function useListingAspect(aspect: Ref<ListingViewAspect | undefined>) {
   const lvHeight = ref<number | null>(0)
 
   const scaleDiff = ref<number | null>(0)
+  const offsetX = ref<number>(0)
+  const offsetY = ref<number>(0)
+  let listingViewResizeObserver: ResizeObserver | null = null
 
   const aspectStyles = computed<StyleValue>(() => {
     if (!aspect.value) {
@@ -25,9 +28,11 @@ export function useListingAspect(aspect: Ref<ListingViewAspect | undefined>) {
 
     return {
       aspectRatio: `${pvWidth.value} / ${pvHeight.value}`,
-      transform: `scale(${scaleDiff.value})`,
+      transform: `translate(${offsetX.value}px, ${offsetY.value}px) scale(${scaleDiff.value})`,
       transformOrigin: 'top left',
-      position: 'relative',
+      position: 'absolute',
+      top: 0,
+      left: 0,
     }
   })
 
@@ -42,7 +47,13 @@ export function useListingAspect(aspect: Ref<ListingViewAspect | undefined>) {
     }
 
     if (lvWidth.value && pvWidth.value && lvHeight.value && pvHeight.value) {
-      scaleDiff.value = pvWidth.value / lvWidth.value
+      const widthScale = pvWidth.value / lvWidth.value
+      const heightScale = pvHeight.value / lvHeight.value
+      const nextScale = Math.min(widthScale, heightScale)
+
+      scaleDiff.value = nextScale
+      offsetX.value = Math.max(0, (pvWidth.value - (lvWidth.value * nextScale)) / 2)
+      offsetY.value = Math.max(0, (pvHeight.value - (lvHeight.value * nextScale)) / 2)
     }
   }
 
@@ -55,6 +66,27 @@ export function useListingAspect(aspect: Ref<ListingViewAspect | undefined>) {
     },
     { immediate: true },
   )
+
+  watch(
+    listingView,
+    (element) => {
+      listingViewResizeObserver?.disconnect()
+      listingViewResizeObserver = null
+
+      if (!element || typeof ResizeObserver === 'undefined') return
+
+      listingViewResizeObserver = new ResizeObserver(() => {
+        setAspect()
+      })
+      listingViewResizeObserver.observe(element)
+    },
+    { immediate: true },
+  )
+
+  onBeforeUnmount(() => {
+    listingViewResizeObserver?.disconnect()
+    listingViewResizeObserver = null
+  })
 
   return {
     listingView,

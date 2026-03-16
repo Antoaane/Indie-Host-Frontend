@@ -39,7 +39,8 @@ const props = defineProps<{
 .create-wizard-step-shell {
   @extend %panel;
 
-  height: 100%;
+  width: 100%;
+  height: auto;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -52,7 +53,7 @@ const props = defineProps<{
   > .content {
     @extend %panel-body;
 
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     min-height: 0;
 
     > [class*='create-'][class$='-panel'],

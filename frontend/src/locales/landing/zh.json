@@ -74,6 +74,7 @@
     "eyebrow": "产品验证",
     "title": "不做OTA也能<strong>直订</strong>，有据可依",
     "subtitle": "此处不展示虚假用户评价，而是演示产品已能实现的典型流程与效果。",
+    "demoVideoLabel": "实时编辑房源演示",
     "metrics": [
       { "id": "proof-metric-1", "value": "15 分钟", "label": "在典型场景下完成导入、编辑并发布首页", "detail": "针对已成型房源的大致估算" },
       { "id": "proof-metric-2", "value": "0%", "label": "IndieHost 对直订收取的佣金", "detail": "不含 Stripe 标准支付手续费" },
@@ -217,6 +218,15 @@
         "description": "打造您可信赖的工具。团队倾听房东反馈，在每一步为您提供支持。"
       }
     ]
+  },
+  "pricingSection": {
+    "eyebrow": "价格",
+    "title": "免费、SuperHost 或 MegaHost：<strong>选择您的方案</strong>",
+    "subtitle": "免费方案入门，付费方案提供更多页面、工具与预订量。",
+    "toggleExpandLabel": "查看功能详情",
+    "toggleCollapseLabel": "收起详情",
+    "accountPrefix": "已是客户？",
+    "accountLinkLabel": "登录"
   },
   "roiSection": {
     "eyebrow": "ROI",

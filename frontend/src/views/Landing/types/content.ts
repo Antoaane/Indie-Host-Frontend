@@ -97,6 +97,7 @@ export interface ProofSectionContent {
   eyebrow: string
   title: string
   subtitle: string
+  demoVideoLabel: string
   metrics: Array<{
     id: string
     value: string
@@ -248,6 +249,16 @@ export interface FaqContent {
   nodes: FaqNode[]
 }
 
+export interface PricingSectionContent {
+  eyebrow: string
+  title: string
+  subtitle: string
+  toggleExpandLabel: string
+  toggleCollapseLabel: string
+  accountPrefix: string
+  accountLinkLabel: string
+}
+
 export interface LandingContent {
   hero: HeroContent
   introSection: IntroSectionContent
@@ -258,6 +269,7 @@ export interface LandingContent {
   habits: HabitsContent
   proofSection: ProofSectionContent
   strengths: StrengthsContent
+  pricingSection: PricingSectionContent
   roiSection: RoiSectionContent
   join: JoinContent
   faq: FaqContent

@@ -74,6 +74,7 @@
     "eyebrow": "製品の証明",
     "title": "ゼロからやり直さず<strong>直接予約</strong>するための土台",
     "subtitle": "架空の口コミではなく、本製品で既に可能なデモ結果と典型的なフローをご紹介します。",
+    "demoVideoLabel": "リスティングのリアルタイム編集デモ",
     "metrics": [
       { "id": "proof-metric-1", "value": "15分", "label": "典型的なシナリオでインポート・編集・公開まで", "detail": "既に構成されたリスティングの目安" },
       { "id": "proof-metric-2", "value": "0%", "label": "IndieHostが直接予約に取る手数料", "detail": "Stripeの標準決済手数料を除く" },
@@ -217,6 +218,15 @@
         "description": "頼れるツールを提供。ホストの声を聞き、必要なときにいつでもサポート。"
       }
     ]
+  },
+  "pricingSection": {
+    "eyebrow": "料金",
+    "title": "無料、SuperHost、MegaHost：<strong>プランをお選びください</strong>",
+    "subtitle": "無料プランで始めて、より多くのページ・機能・予約に対応した有料プランへ。",
+    "toggleExpandLabel": "機能の詳細を見る",
+    "toggleCollapseLabel": "詳細を閉じる",
+    "accountPrefix": "既にご利用中ですか？",
+    "accountLinkLabel": "ログイン"
   },
   "roiSection": {
     "eyebrow": "ROI",

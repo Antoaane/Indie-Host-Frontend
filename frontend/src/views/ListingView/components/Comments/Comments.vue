@@ -19,7 +19,7 @@ import { buildDistributionFromComments, computePercentage } from '@/views/Listin
 import { useListingViewport } from '@/views/ListingView/composables/useListingViewport'
 
 // TYPES
-import type { CommentsModel, NotesModel } from '@/views/ListingView/types/listing'
+import type { CommentsModel, NotesModel, ReviewsVisibilityModel } from '@/views/ListingView/types/listing'
 
 // ASSETS
 import { X } from 'lucide-vue-next'
@@ -35,6 +35,8 @@ interface CommentsWidgetStaticContent {
     overallLabel: string
     ratingUnit: string
     countLabel: string
+    airbnbCountLabel?: string
+    airbnbSourceLabel?: string
   }
   distribution: {
     title: string
@@ -65,9 +67,15 @@ const props = withDefaults(
   defineProps<{
     notes?: NotesModel
     comments?: CommentsModel
+    visibility?: ReviewsVisibilityModel
   }>(),
   {
     comments: () => [],
+    visibility: () => ({
+      indiehost: true,
+      airbnb: true,
+      booking: true,
+    }),
   },
 )
 // console.log(`${data?.comments?.length ? '✅' : '❌'} [Comments.vue](setup) core:resolved commentsCount=${data.comments?.length ?? 0} fetched`)
@@ -85,20 +93,40 @@ const comments = computed(() => {
   // console.log(`${value.length ? '✅' : '❌'} [Comments.vue](comments) comments:computed listLength=${value.length} prepared`)
   return value
 })
+
+const visibleComments = computed(() => (
+  props.visibility?.indiehost === false ? [] : comments.value
+))
+
+const airbnbNote = computed(() => (
+  (props.notes?.otas ?? []).find((note) => note.ota === 'airbnb' && typeof note.note === 'number' && !Number.isNaN(note.note)) ?? null
+))
+
+const usesVisibleAirbnbNote = computed(() => props.visibility?.airbnb !== false && Boolean(airbnbNote.value))
+
 const commentsCount = computed(() => {
-  const count = comments.value.length
+  const count = visibleComments.value.length
   // console.log(`${count ? '✅' : '❌'} [Comments.vue](commentsCount) commentsCount:computed total=${count} ready`)
   return count
 })
 
 const countLabel = computed(() => {
+  const airbnbReviewCount = airbnbNote.value?.reviewCount
+  if (!commentsCount.value && usesVisibleAirbnbNote.value && typeof airbnbReviewCount === 'number') {
+    return formatICUMessage(content.summary.airbnbCountLabel ?? content.summary.countLabel, { count: airbnbReviewCount })
+  }
+
   const label = formatICUMessage(content.summary.countLabel, { count: commentsCount.value })
   // console.log(`${'ℹ️'} [Comments.vue](countLabel) countLabel:computed formatted=${label} applied`)
   return label
 })
 
 const overallScore = computed(() => {
-  const overall = props.notes?.overall
+  if (usesVisibleAirbnbNote.value) {
+    return airbnbNote.value?.note ?? null
+  }
+
+  const overall = props.notes?.source === 'airbnb' ? null : props.notes?.overall
   if (typeof overall === 'number' && !Number.isNaN(overall)) {
     // console.log(`${'✅'} [Comments.vue](overallScore) overallScore:computed fromNotes=${overall} reused`)
     return overall
@@ -109,14 +137,18 @@ const overallScore = computed(() => {
     return null
   }
 
-  const sum = comments.value.reduce((acc, comment) => acc + comment.note, 0)
+  const sum = visibleComments.value.reduce((acc, comment) => acc + comment.note, 0)
   const value = commentsCount.value ? sum / commentsCount.value : null
   // console.log(`${typeof value === 'number' ? '✅' : '❌'} [Comments.vue](overallScore) overallScore:computed averaged=${value} calculated`)
   return value
 })
 
 function resolveDistribution(notes: NotesModel | undefined, list: CommentsModel) {
-  const source = notes?.distribution
+  const source = usesVisibleAirbnbNote.value
+    ? airbnbNote.value?.distribution
+    : notes?.source === 'airbnb'
+      ? undefined
+      : notes?.distribution
   const base = source && Object.keys(source).length ? source : buildDistributionFromComments(list)
 
   const entries = Object.entries(base)
@@ -146,24 +178,40 @@ function resolveDistribution(notes: NotesModel | undefined, list: CommentsModel)
 }
 
 const distribution = computed(() => {
-  const resolved = resolveDistribution(props.notes, comments.value)
+  const resolved = resolveDistribution(props.notes, visibleComments.value)
   // console.log(`${resolved.entries.length ? '✅' : '❌'} [Comments.vue](distribution) distribution:computed totalEntries=${resolved.total} readyForUI`)
   return resolved
 })
 
 const previewComments = computed(() => {
-  const preview = comments.value.slice(0, previewLimit)
+  const preview = visibleComments.value.slice(0, previewLimit)
   // console.log(`${preview.length ? '✅' : '❌'} [Comments.vue](previewComments) preview:computed items=${preview.length} trimmed`)
   return preview
 })
 
 const overlayComments = computed(() => {
-  const overlayList = comments.value.slice(0, overlayLimit.value)
+  const overlayList = visibleComments.value.slice(0, overlayLimit.value)
   // console.log(`${overlayList.length ? '✅' : '❌'} [Comments.vue](overlayComments) overlay:computed items=${overlayList.length} limit=${overlayLimit.value}`)
   return overlayList
 })
 
-const canLoadOverlay = computed(() => overlayComments.value.length < comments.value.length)
+const canLoadOverlay = computed(() => overlayComments.value.length < visibleComments.value.length)
+
+const sourceLabel = computed(() => (
+  usesVisibleAirbnbNote.value ? (content.summary.airbnbSourceLabel ?? 'Notes importees depuis Airbnb') : ''
+))
+
+const hasImportedReviewData = computed(() => {
+  if (typeof props.notes?.overall === 'number' && !Number.isNaN(props.notes.overall)) return true
+  if ((props.notes?.otas?.length ?? 0) > 0) return true
+  return false
+})
+
+const hasVisibleContent = computed(() => comments.value.length > 0 || hasImportedReviewData.value)
+const showSummary = computed(() => overallScore.value !== null)
+const headerTitle = computed(() => (
+  showSummary.value ? `${content.title} — ${countLabel.value}` : content.title
+))
 
 function computeOverlayLimitForIndex(index: number) {
   if (index < 0) {
@@ -173,7 +221,7 @@ function computeOverlayLimitForIndex(index: number) {
   const neededPages = Math.floor(index / overlayStep) + 1
   const neededLimit = neededPages * overlayStep
 
-  return Math.min(Math.max(overlayStep, neededLimit), comments.value.length)
+  return Math.min(Math.max(overlayStep, neededLimit), visibleComments.value.length)
 }
 
 async function scrollOverlayToIndex(index: number) {
@@ -222,9 +270,9 @@ function loadMoreOverlay() {
   if (!canLoadOverlay.value) {
     return
   }
-  const nextLimit = Math.min(overlayLimit.value + overlayStep, comments.value.length)
+  const nextLimit = Math.min(overlayLimit.value + overlayStep, visibleComments.value.length)
   overlayLimit.value = nextLimit
-  // console.log(`${'ℹ️'} [Comments.vue](loadMoreOverlay) overlay:paginate limit=${overlayLimit.value} total=${comments.value.length}`)
+  // console.log(`${'ℹ️'} [Comments.vue](loadMoreOverlay) overlay:paginate limit=${overlayLimit.value} total=${visibleComments.value.length}`)
 }
 
 function handleOverlayScroll(event: Event) {
@@ -262,6 +310,7 @@ const swiperParams = computed(
 
 <template>
   <section
+    v-if="hasVisibleContent"
     id="comments"
     class="comments"
   >
@@ -269,16 +318,23 @@ const swiperParams = computed(
       <div class="header">
         <h2
           v-if="!isLg"
-          v-html="`${content.title} — ${countLabel}`"
+          v-html="headerTitle"
         />
         <!-- <p v-if="commentsCount">{{ countLabel }}</p> -->
         <SummaryCard
+          v-if="showSummary"
           :score="overallScore"
           :rating-unit="content.summary.ratingUnit"
           :overall-label="content.summary.overallLabel"
           :count-label="countLabel"
-          :show-stars="commentsCount > 0"
+          :show-stars="overallScore !== null"
         />
+        <p
+          v-if="sourceLabel"
+          class="source-label"
+        >
+          {{ sourceLabel }}
+        </p>
       </div>
     </div>
 
@@ -353,14 +409,21 @@ const swiperParams = computed(
         <div class="body">
           <div class="summary">
             <div class="summary-container">
-              <h2 v-html="`${content.title} — ${countLabel}`" />
+              <h2 v-html="headerTitle" />
               <SummaryCard
+                v-if="showSummary"
                 :score="overallScore"
                 :rating-unit="content.summary.ratingUnit"
                 :overall-label="content.summary.overallLabel"
                 :count-label="countLabel"
-                :show-stars="commentsCount > 0"
+                :show-stars="overallScore !== null"
               />
+              <p
+                v-if="sourceLabel"
+                class="source-label"
+              >
+                {{ sourceLabel }}
+              </p>
             </div>
 
             <DistributionList
