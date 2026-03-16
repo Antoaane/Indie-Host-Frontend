@@ -577,8 +577,9 @@ watch(
                       </p>
                     </div>
                     <span
-                      v-if="item.selected"
                       class="state"
+                      :class="{ 'is-hidden': !item.selected }"
+                      :aria-hidden="!item.selected"
                     >
                       <component
                         v-if="checkIcon"

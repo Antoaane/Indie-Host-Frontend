@@ -99,11 +99,10 @@
         > .amenity-card {
           width: 100%;
           padding: var(--layout-gap-md);
-          padding-right: calc(var(--layout-gap-md) + 2.2rem);
-          padding-bottom: calc(var(--layout-gap-md) + 1.2rem);
 
-          display: flex;
-          align-items: flex-start;
+          display: grid;
+          grid-template-columns: auto minmax(0, 1fr) auto;
+          align-items: start;
           gap: var(--layout-gap-sm);
 
           border: 1px solid $quaternary;
@@ -148,13 +147,12 @@
           }
 
           > .state {
-            position: absolute;
-            right: 0.6rem;
-            bottom: 0.6rem;
-
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            align-self: start;
+            margin-left: auto;
+            flex: 0 0 1.75rem;
 
             width: 1.75rem;
             height: 1.75rem;
@@ -168,6 +166,10 @@
               width: 1.05rem;
               height: 1.05rem;
               stroke: currentColor;
+            }
+
+            &.is-hidden {
+              visibility: hidden;
             }
           }
 

@@ -201,7 +201,17 @@ const sourceLabel = computed(() => (
   usesVisibleAirbnbNote.value ? (content.summary.airbnbSourceLabel ?? 'Notes importees depuis Airbnb') : ''
 ))
 
-const hasVisibleContent = computed(() => commentsCount.value > 0 || overallScore.value !== null)
+const hasImportedReviewData = computed(() => {
+  if (typeof props.notes?.overall === 'number' && !Number.isNaN(props.notes.overall)) return true
+  if ((props.notes?.otas?.length ?? 0) > 0) return true
+  return false
+})
+
+const hasVisibleContent = computed(() => comments.value.length > 0 || hasImportedReviewData.value)
+const showSummary = computed(() => overallScore.value !== null)
+const headerTitle = computed(() => (
+  showSummary.value ? `${content.title} — ${countLabel.value}` : content.title
+))
 
 function computeOverlayLimitForIndex(index: number) {
   if (index < 0) {
@@ -308,10 +318,11 @@ const swiperParams = computed(
       <div class="header">
         <h2
           v-if="!isLg"
-          v-html="`${content.title} — ${countLabel}`"
+          v-html="headerTitle"
         />
         <!-- <p v-if="commentsCount">{{ countLabel }}</p> -->
         <SummaryCard
+          v-if="showSummary"
           :score="overallScore"
           :rating-unit="content.summary.ratingUnit"
           :overall-label="content.summary.overallLabel"
@@ -398,8 +409,9 @@ const swiperParams = computed(
         <div class="body">
           <div class="summary">
             <div class="summary-container">
-              <h2 v-html="`${content.title} — ${countLabel}`" />
+              <h2 v-html="headerTitle" />
               <SummaryCard
+                v-if="showSummary"
                 :score="overallScore"
                 :rating-unit="content.summary.ratingUnit"
                 :overall-label="content.summary.overallLabel"

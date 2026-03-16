@@ -41,7 +41,6 @@ const props = defineProps<{
 
   width: 100%;
   height: auto;
-  max-height: 100%;
   display: flex;
   flex-direction: column;
   min-height: 0;

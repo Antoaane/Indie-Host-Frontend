@@ -21,6 +21,7 @@ const emit = defineEmits<{
 
 const wrapper = ref<HTMLElement | null>(null)
 const aspectRatio = ref<{ width: number; height: number } | null>(null)
+let wrapperResizeObserver: ResizeObserver | null = null
 const previewContent = editorStatic.preview
 const previewActions = editorStatic.actions
 const publicListingId = computed(() => {
@@ -33,15 +34,11 @@ const publicListingId = computed(() => {
 function updateScale() {
   const container = wrapper.value
 
-  console.log('EditorPreview mounted :', wrapper.value)
-
   if (container) {
     aspectRatio.value = {
       width: container?.clientWidth,
       height: container?.clientHeight,
     }
-
-    console.log('EditorPreview mounted with size:', aspectRatio.value)
   }
 }
 
@@ -56,11 +53,32 @@ watch(
   { immediate: true },
 )
 
+watch(
+  wrapper,
+  (element) => {
+    wrapperResizeObserver?.disconnect()
+    wrapperResizeObserver = null
+
+    if (!element || typeof ResizeObserver === 'undefined') return
+
+    wrapperResizeObserver = new ResizeObserver(() => {
+      updateScale()
+    })
+    wrapperResizeObserver.observe(element)
+
+    updateScale()
+  },
+  { immediate: true },
+)
+
 onMounted(() => {
   window.addEventListener('resize', updateScale)
+  updateScale()
 })
 
 onBeforeUnmount(() => {
+  wrapperResizeObserver?.disconnect()
+  wrapperResizeObserver = null
   window.removeEventListener('resize', updateScale)
 })
 </script>
@@ -161,7 +179,7 @@ onBeforeUnmount(() => {
   > .content {
     height: 100%;
     min-height: 0;
-    // overflow: hidden;
+    overflow: hidden;
     position: relative;
   }
 

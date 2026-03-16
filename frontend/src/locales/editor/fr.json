@@ -284,7 +284,7 @@
         },
         "reviews": {
           "title": "Avis",
-          "subtitle": "Modifiez les avis que vous souhaitez afficher (cela n’impactera pas la note globale)",
+          "subtitle": "Choisissez les sources d’avis visibles sur la page client. Les données non IndieHost proviennent du scraping.",
           "toggle": {
             "indiehost": "Avis Indie Host",
             "airbnb": "Avis Airbnb",

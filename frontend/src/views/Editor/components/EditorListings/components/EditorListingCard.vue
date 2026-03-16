@@ -248,8 +248,12 @@ function goToImageLabel(index: number) {
   >
     <div
       class="select"
-      type="button"
+      role="button"
+      tabindex="0"
+      :aria-pressed="props.isSelected"
       @click="handleSelect"
+      @keydown.enter.prevent="handleSelect"
+      @keydown.space.prevent="handleSelect"
     >
       <div class="media">
         <template v-if="slides.length">

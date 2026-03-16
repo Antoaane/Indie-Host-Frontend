@@ -111,6 +111,8 @@
     display: flex;
     flex-direction: column;
     position: absolute;
+    border-radius: borders.$rounded-xxl;
+    overflow: hidden;
 
     @include min-width(lg) {
       flex-direction: row;
@@ -126,6 +128,8 @@
     display: flex;
     flex-direction: column;
     position: absolute;
+    border-radius: borders.$rounded-xxl;
+    overflow: hidden;
 
     @include min-width(lg) {
       flex-direction: row;
@@ -138,7 +142,7 @@
     flex-grow: 0;
     flex-basis: 25%;
     flex-shrink: 0;
-    height: 100%;
+    height: auto;
     min-height: 0;
 
     .swiper-pagination-bullets {
@@ -157,13 +161,13 @@
 
   >.core {
     flex: 1;
-    height: 100%;
+    height: auto;
     min-height: 0;
   }
 
   >.stay {
     // max-height: calc(100vh - $nav-height);
-    height: 100%;
+    height: auto;
     min-height: 0;
 
     flex-grow: 0;
@@ -197,6 +201,7 @@
       >.panel {
         background-color: $accent;
         border-radius: borders.$rounded-xl;
+        overflow: hidden;
 
         >#core {
           background-color: $translucent !important;
@@ -220,6 +225,18 @@
             gap: var(--layout-gap-md);
           }
         }
+      }
+    }
+  }
+
+  &.editor,
+  &.create-listing {
+    @include min-width(lg) {
+      >.gallery,
+      >.core,
+      >.stay {
+        border-radius: borders.$rounded-xl;
+        overflow: hidden;
       }
     }
   }
