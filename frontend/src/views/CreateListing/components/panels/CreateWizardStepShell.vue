@@ -40,9 +40,10 @@ const props = defineProps<{
   @extend %panel;
 
   width: 100%;
-  height: auto;
+  height: 100%;
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
   min-height: 0;
 
   > .header {
@@ -53,11 +54,14 @@ const props = defineProps<{
   > .content {
     @extend %panel-body;
 
-    flex: 0 1 auto;
+    flex: 1 1 auto;
     min-height: 0;
 
     > [class*='create-'][class$='-panel'],
     > [class*='editor-'][class$='-panel'] {
+      height: 100%;
+      flex: 1 1 auto;
+      min-height: 0;
       border: none;
       box-shadow: none;
       background: transparent;

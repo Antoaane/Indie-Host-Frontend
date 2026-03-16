@@ -17,10 +17,14 @@ Configuration rapide ScrapFly :
 """
 import json
 import os
+import random
 import re
+import time
 from html import unescape
 from pathlib import Path
 from typing import Any
+
+from booking_amenity_mapping import translate_booking_amenities_to_indiehost
 
 # Charge le .env dès l'import du module (même si appelé standalone)
 try:
@@ -84,6 +88,17 @@ LODGING_TYPES = {
 BOOKING_BLOCKED_ERROR = (
     "Booking.com bloque le scraping automatique sur cette annonce. "
     "Essayez avec un lien Airbnb, ou entrez les informations manuellement."
+)
+BOOKING_PLAYWRIGHT_USER_AGENTS = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/122.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/121.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (X11; Linux x86_64) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/120.0.0.0 Safari/537.36",
 )
 PRICE_NUMBER_RE = re.compile(r"(\d[\d\s\xa0.,]*)")
 REVIEW_COUNT_RE = re.compile(r"(\d[\d\s\xa0.,]*)\s*(?:reviews?|avis)\b", re.IGNORECASE)
@@ -379,7 +394,40 @@ def _fetch_with_scrapfly(url: str) -> str:
 # Méthode 2 : Playwright
 # ---------------------------------------------------------------------------
 
-def _fetch_with_playwright(url: str, proxy_url: str = "", headless: bool = False) -> str:
+def _playwright_random_delay(min_sec: float = 0.6, max_sec: float = 1.8) -> None:
+    time.sleep(random.uniform(min_sec, max_sec))
+
+
+def _playwright_simulate_human_mouse(page: Any) -> None:
+    viewport = page.viewport_size or {"width": 1280, "height": 800}
+    width = max(int(viewport.get("width", 1280)), 320)
+    height = max(int(viewport.get("height", 800)), 320)
+    for _ in range(random.randint(2, 4)):
+        page.mouse.move(
+            random.randint(0, width - 1),
+            random.randint(0, height - 1),
+            steps=random.randint(6, 16),
+        )
+        _playwright_random_delay(0.15, 0.45)
+
+
+def _dismiss_booking_overlays(page: Any) -> None:
+    for sel in [
+        "#onetrust-accept-btn-handler",
+        "button[data-testid='accept-button']",
+        "button[aria-label='Dismiss sign-in info.']",
+        "button[aria-label='Ignorer les infos de connexion']",
+    ]:
+        try:
+            btn = page.locator(sel).first
+            if btn.is_visible(timeout=1_500):
+                btn.click()
+                page.wait_for_timeout(900)
+        except Exception:
+            continue
+
+
+def _fetch_with_playwright(url: str, proxy_url: str = "", headless: bool = True) -> str:
     proxy = {"server": proxy_url} if proxy_url else None
 
     with sync_playwright() as p:
@@ -387,21 +435,19 @@ def _fetch_with_playwright(url: str, proxy_url: str = "", headless: bool = False
             "proxy": proxy,
             "args": ["--no-sandbox", "--disable-setuid-sandbox", "--disable-blink-features=AutomationControlled"],
         }
+        launch_kwargs["headless"] = headless
         if headless:
-            launch_kwargs["headless"] = True
             launch_kwargs["args"] += ["--headless=new"]
-        else:
-            launch_kwargs["headless"] = False
 
         browser = p.chromium.launch(**launch_kwargs)
         ctx = browser.new_context(
-            user_agent=(
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/120.0.0.0 Safari/537.36"
-            ),
-            locale="fr-FR",
-            viewport={"width": 1280, "height": 900},
+            user_agent=random.choice(BOOKING_PLAYWRIGHT_USER_AGENTS),
+            locale="en-US",
+            timezone_id="Europe/Paris",
+            viewport={"width": 1280, "height": 800},
+            extra_http_headers={
+                "Accept-Language": "en-US,en;q=0.9",
+            },
         )
 
         page = ctx.new_page()
@@ -412,10 +458,21 @@ def _fetch_with_playwright(url: str, proxy_url: str = "", headless: bool = False
         page.add_init_script("""
             Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
             Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
-            Object.defineProperty(navigator, 'languages', { get: () => ['fr-FR', 'fr', 'en-US', 'en'] });
+            Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
+            Object.defineProperty(navigator, 'platform', { get: () => 'Win32' });
+            window.chrome = { runtime: {} };
         """)
 
-        page.goto(url, wait_until="domcontentloaded", timeout=45_000)
+        # On reprend ici l'idée clé du repo fourni : "chauffer" une vraie session
+        # Booking avant d'ouvrir la page hôtel, même en headless.
+        page.goto("https://www.booking.com", wait_until="domcontentloaded", timeout=60_000)
+        _playwright_random_delay(2.0, 3.2)
+        _dismiss_booking_overlays(page)
+        _playwright_simulate_human_mouse(page)
+        page.evaluate("window.scrollBy(0, window.innerHeight / 3)")
+        _playwright_random_delay(1.0, 2.0)
+
+        page.goto(url, wait_until="domcontentloaded", timeout=60_000)
 
         if "chal_t" in page.url:
             try:
@@ -424,19 +481,9 @@ def _fetch_with_playwright(url: str, proxy_url: str = "", headless: bool = False
             except Exception:
                 pass
 
-        for sel in [
-            "#onetrust-accept-btn-handler",
-            "button[id*='accept'][id*='cookie']",
-            "button[data-testid='accept-button']",
-        ]:
-            try:
-                btn = page.locator(sel).first
-                if btn.is_visible(timeout=2_000):
-                    btn.click()
-                    page.wait_for_timeout(800)
-                    break
-            except Exception:
-                continue
+        _playwright_random_delay(3.5, 5.5)
+        _dismiss_booking_overlays(page)
+        _playwright_simulate_human_mouse(page)
 
         for sel in [
             "button:has-text('Show me more')",
@@ -473,16 +520,17 @@ def _fetch_with_playwright(url: str, proxy_url: str = "", headless: bool = False
             page.wait_for_selector(
                 "[data-testid='property-name'], h2.pp-header__title, "
                 "#hp_hotel_name, [data-capla-component='PropertyHeader'], "
-                ".hp__hotel-name",
-                timeout=15_000,
+                ".hp__hotel-name, h2",
+                timeout=20_000,
             )
         except Exception:
             pass
 
         page.evaluate("window.scrollTo(0, document.body.scrollHeight / 2)")
-        page.wait_for_timeout(1_500)
+        _playwright_random_delay(1.0, 1.8)
 
         html = page.content()
+        ctx.close()
         browser.close()
     return html
 
@@ -514,7 +562,7 @@ def _fetch_with_curl(url: str, proxy_url: str = "") -> str:
 
 def _fetch_html(url: str, proxy_url: str = "") -> str:
     """
-    Ordre : ScrapFly (si clé dispo) → Playwright → curl_cffi.
+    Ordre : ScrapFly (si clé dispo) → Playwright headless → curl_cffi.
     Lève RuntimeError(BOOKING_BLOCKED_ERROR) si tout échoue.
     """
     # 1. ScrapFly — méthode la plus fiable contre le WAF Booking.com
@@ -526,15 +574,15 @@ def _fetch_html(url: str, proxy_url: str = "") -> str:
         except Exception:
             pass  # passe à Playwright
 
-    # 2. Playwright
+    # 2. Playwright headless, avec navigation initiale via la home Booking
+    # inspirée du repo hotel-scraper pour obtenir une session plus crédible.
     if HAS_PLAYWRIGHT:
-        for headless in (False, True):
-            try:
-                html = _fetch_with_playwright(url, proxy_url, headless=headless)
-                if not _is_blocked_page(html) and len(html) > 10_000:
-                    return html
-            except Exception:
-                continue
+        try:
+            html = _fetch_with_playwright(url, proxy_url, headless=True)
+            if not _is_blocked_page(html) and len(html) > 10_000:
+                return html
+        except Exception:
+            pass
 
     # 3. curl_cffi
     if HAS_CURL:
@@ -985,8 +1033,7 @@ def scrape_listing(url: str, proxy_url: str = "") -> dict:
 
     Méthodes dans l'ordre :
       1. ScrapFly (si SCRAPFLY_KEY définie) — contourne le WAF fiablement
-      2. Playwright headless=False
-      3. Playwright headless=True
+      2. Playwright headless avec warm-up sur la home Booking
       4. curl_cffi
 
     Free tier ScrapFly : https://scrapfly.io (1000 req/mois gratuit)
@@ -1017,6 +1064,7 @@ def scrape_listing(url: str, proxy_url: str = "") -> dict:
             "country": location.get("country") or html_location.get("country"),
         }
     amenities = _parse_amenities(soup, ld)
+    amenities_indiehost = translate_booking_amenities_to_indiehost(amenities)
     images = _parse_images(soup, ld)
     house_rules_data = _parse_house_rules(soup)
     capacity = _parse_capacity(soup, ld)
@@ -1053,6 +1101,7 @@ def scrape_listing(url: str, proxy_url: str = "") -> dict:
         "overview_items": overview_items,
         "room_counts": room_counts,
         "amenities": amenities,
+        "amenities_indiehost": amenities_indiehost,
         "images": images,
         "house_rules": house_rules,
         "person_capacity": capacity,

@@ -222,14 +222,9 @@ watch(
 
 watch(
   () => selectedAmenityIdSet.value.size,
-  (size, previousSize) => {
+  (size) => {
     if (size <= 0) {
       showSelectedOnly.value = false
-      return
-    }
-
-    if (!previousSize) {
-      showSelectedOnly.value = true
     }
   },
   { immediate: true },
@@ -259,9 +254,12 @@ watch(
           v-if="selectedAmenityIdSet.size"
           type="button"
           class="selection-toggle"
+          :class="{ 'is-active': showSelectedOnly }"
+          :aria-pressed="showSelectedOnly"
           @click="toggleSelectedFilter"
         >
-          {{ showSelectedOnly ? showAllAmenitiesLabel : showSelectedOnlyLabel }}
+          <span class="label">{{ showSelectedOnly ? showAllAmenitiesLabel : showSelectedOnlyLabel }}</span>
+          <span class="count">{{ selectedAmenityIdSet.size }}</span>
         </button>
       </div>
       <div

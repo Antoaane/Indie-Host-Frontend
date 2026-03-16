@@ -1,3 +1,5 @@
+// File: src/views/Editor/components/EditorSidebar/panels/ListingPanels/ImportPanel/transformBookingToRawListingBundle.ts
+
 import type { RawAmenity, RawArrival, RawCore, RawListingBundle, RawNotes } from '@/domain/listings/types'
 import { getKnownAmenityCatalogItem, isKnownAmenityId, sanitizeKnownAmenities } from '@/utils/amenitiesCatalog'
 
@@ -30,6 +32,18 @@ export type BookingScrapedData = {
       subtitle?: string
       available?: boolean
     }>
+  }>
+  /** Amenities deja mappees IndieHost par le backend (prioritaires sur amenities + buildAmenities). */
+  amenities_indiehost?: Array<{
+    id: string
+    name: string
+    description?: string
+    category?: string
+    relevance?: number
+    pinned?: boolean
+    perkEligible?: boolean
+    perkScore?: number
+    perkPriority?: number
   }>
   images?: Array<{ title?: string; url: string }>
   house_rules?: {
@@ -314,10 +328,33 @@ function buildEmptyRatingDistribution() {
   }
 }
 
+function amenitiesFromScraped(scraped: BookingScrapedData): RawAmenity[] {
+  if (scraped.amenities_indiehost?.length) {
+    return sanitizeKnownAmenities(scraped.amenities_indiehost.flatMap((amenity) => {
+      if (!isKnownAmenityId(amenity.id)) return []
+
+      const catalogItem = getKnownAmenityCatalogItem(amenity.id)
+      return [{
+        id: amenity.id,
+        name: catalogItem?.name ?? amenity.name,
+        description: amenity.description ?? catalogItem?.description ?? '',
+        category: amenity.category ?? catalogItem?.category,
+        relevance: amenity.relevance,
+        pinned: amenity.pinned,
+        perkEligible: amenity.perkEligible,
+        perkScore: amenity.perkScore,
+        perkPriority: amenity.perkPriority,
+      }]
+    }))
+  }
+
+  return buildAmenities(scraped)
+}
+
 export function transformBookingToRawListingBundle(
   scraped: BookingScrapedData,
 ): Partial<RawListingBundle> {
-  const amenities = buildAmenities(scraped)
+  const amenities = amenitiesFromScraped(scraped)
   const rawAverageRating =
     typeof scraped.average_rating === 'number' && Number.isFinite(scraped.average_rating)
       ? scraped.average_rating
