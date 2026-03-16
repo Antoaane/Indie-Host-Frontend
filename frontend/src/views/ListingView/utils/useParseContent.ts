@@ -13,7 +13,7 @@ import { getSynchronizedBookedDays } from '@/domain/listings/bookings';
 import { resolveWeekendPricing } from '@/domain/listings/pricing';
 import { buildPerkCandidates, selectTopPerkCandidates } from '@/domain/listings/perks';
 import { normalizeFeeItems, resolveListingReservationRules } from '@/domain/listings/reservationRules';
-import { getKnownAmenityCatalogItem, isKnownAmenityId } from '@/utils/amenitiesCatalog';
+import { getKnownAmenityCatalogItem, sanitizeKnownAmenities } from '@/utils/amenitiesCatalog';
 
 // ---- TYPES ----
 import type {
@@ -222,9 +222,8 @@ function parseMap(core: Maybe<Partial<RawCore>>): MapModel {
 }
 
 function parseAmenities(core: Maybe<Partial<RawCore>>): AmenitiesModel {
-  return (core?.amenities ?? [])
+  return sanitizeKnownAmenities(core?.amenities ?? [])
     .flatMap((a) => {
-      if (!isKnownAmenityId(a.id)) return [];
       const catalogItem = getKnownAmenityCatalogItem(a.id);
 
       return [{

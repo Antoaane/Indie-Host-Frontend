@@ -25,16 +25,30 @@ const { submitUrl } = useLandingImport()
 const isIosMobile = ref(typeof document !== 'undefined' && document.documentElement.classList.contains('is-ios') && !vp.lg.value)
 const submitError = ref('')
 
-// Compteur animé : part de 20% et descend à 0% — désactivé sur mobile
-const counterValue = ref(20)
+function detectSafariBrowser(): boolean {
+  if (typeof navigator === 'undefined') return false
+
+  const userAgent = navigator.userAgent || ''
+  const vendor = navigator.vendor || ''
+  const isAppleVendor = /apple/i.test(vendor)
+  const isSafariEngine = /safari/i.test(userAgent)
+  const isOtherBrowser =
+    /crios|chrome|android|fxios|firefox|edgios|edg|opr|opera/i.test(userAgent)
+
+  return isAppleVendor && isSafariEngine && !isOtherBrowser
+}
+
+// Compteur animé : part de 20% et descend à 0% — désactivé sur mobile et Safari
+const isSafari = ref(detectSafariBrowser())
+const counterValue = ref(isSafari.value ? 0 : 20)
 const isMobile = () => !vp.lg.value
 const animatedTitle = computed(() => {
-  // Sur mobile : titre brut avec "0%" (évite tout problème d'affichage du span)
-  if (isMobile()) return props.content.title
+  // Sur mobile et Safari : titre brut avec "0%"
+  if (isMobile() || isSafari.value) return props.content.title
   const displayValue = counterValue.value
   return props.content.title.replace(
     '<strong>0%</strong>',
-    `<strong><span class="hero-counter">${displayValue}%</span></strong>`,
+    `<strong class="hero-counter">${displayValue}%</strong>`,
   )
 })
 
@@ -69,7 +83,8 @@ function handleCreateSite() {
 }
 
 onMounted(async () => {
-  if (!vp.lg.value) {
+  isSafari.value = detectSafariBrowser()
+  if (!vp.lg.value || isSafari.value) {
     counterValue.value = 0
     return
   }
@@ -77,7 +92,7 @@ onMounted(async () => {
   const osInfo = await detectOS().catch(() => null)
   const normalizedOs = String(osInfo?.os ?? '').toLowerCase()
   isIosMobile.value = !vp.lg.value && (normalizedOs === 'ios' || normalizedOs === 'ipados')
-  if (!vp.lg.value) {
+  if (!vp.lg.value || isSafari.value) {
     counterValue.value = 0
     return
   }

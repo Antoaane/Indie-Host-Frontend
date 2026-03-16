@@ -1468,6 +1468,170 @@ def _extract_embedded_payload_from_soup(soup: "BeautifulSoup") -> tuple[Any, Any
     return embedded_data, raw_deferred
 
 
+def _click_best_labeled_button(page, labels: tuple[str, ...]) -> bool:
+    try:
+        return bool(page.evaluate(
+            """
+            (tokens) => {
+              const normalize = (value) => (value || '')
+                .normalize('NFD')
+                .replace(/[\\u0300-\\u036f]/g, '')
+                .toLowerCase()
+                .replace(/\\s+/g, ' ')
+                .trim();
+
+              const nodes = Array.from(document.querySelectorAll('button, [role="button"]'));
+              let bestNode = null;
+              let bestScore = -1;
+
+              for (const node of nodes) {
+                const text = normalize(`${node.getAttribute('aria-label') || ''} ${node.innerText || node.textContent || ''}`);
+                if (!text) continue;
+                if (!tokens.some((token) => text.includes(normalize(token)))) continue;
+
+                const rect = node.getBoundingClientRect();
+                const style = window.getComputedStyle(node);
+                const visible = rect.width > 0
+                  && rect.height > 0
+                  && style.visibility !== 'hidden'
+                  && style.display !== 'none';
+                if (!visible) continue;
+
+                const countMatch = text.match(/\\b(\\d{1,3})\\b/);
+                const countScore = countMatch ? Number.parseInt(countMatch[1], 10) : 0;
+                const score = countScore * 1000 + text.length;
+                if (score > bestScore) {
+                  bestScore = score;
+                  bestNode = node;
+                }
+              }
+
+              if (!bestNode) return false;
+              bestNode.scrollIntoView({ block: 'center', inline: 'center' });
+              bestNode.click();
+              return true;
+            }
+            """,
+            list(labels),
+        ))
+    except Exception:
+        return False
+
+
+def _scroll_best_amenities_modal(page) -> bool:
+    try:
+        return bool(page.evaluate(
+            """
+            (tokens) => {
+              const normalize = (value) => (value || '')
+                .normalize('NFD')
+                .replace(/[\\u0300-\\u036f]/g, '')
+                .toLowerCase()
+                .replace(/\\s+/g, ' ')
+                .trim();
+
+              const selectors = [
+                '[role="dialog"]',
+                '[aria-modal="true"]',
+                '[data-section-id*="AMENIT"]',
+                '[data-plugin-in-point-id*="AMENIT"]',
+                '[data-cursor-amenities-modal]'
+              ];
+
+              const nodes = Array.from(document.querySelectorAll(selectors.join(',')));
+              let bestNode = null;
+              let bestScore = -1;
+
+              for (const node of nodes) {
+                const text = normalize(node.innerText || node.textContent || '');
+                const rect = node.getBoundingClientRect();
+                const style = window.getComputedStyle(node);
+                const visible = rect.width > 0
+                  && rect.height > 0
+                  && style.visibility !== 'hidden'
+                  && style.display !== 'none';
+                if (!visible) continue;
+
+                const matchesLabel = tokens.some((token) => text.includes(normalize(token)));
+                const itemCount = node.querySelectorAll('li').length + node.querySelectorAll('[data-testid*="amenit"]').length;
+                const score = (matchesLabel ? 100000 : 0) + itemCount * 100 + text.length;
+                if (score > bestScore) {
+                  bestScore = score;
+                  bestNode = node;
+                }
+              }
+
+              if (!bestNode) return false;
+
+              const scrollTargets = [bestNode, ...bestNode.querySelectorAll('*')]
+                .filter((node) => node.scrollHeight > node.clientHeight + 12);
+
+              bestNode.scrollIntoView({ block: 'center', inline: 'center' });
+              for (const node of scrollTargets) {
+                node.scrollTo(0, node.scrollHeight);
+              }
+              window.scrollTo(0, document.body.scrollHeight);
+              return true;
+            }
+            """,
+            list(AMENITY_EXPAND_LABELS),
+        ))
+    except Exception:
+        return False
+
+
+def _capture_best_amenities_modal_html(page) -> str:
+    try:
+        return page.evaluate(
+            """
+            (tokens) => {
+              const normalize = (value) => (value || '')
+                .normalize('NFD')
+                .replace(/[\\u0300-\\u036f]/g, '')
+                .toLowerCase()
+                .replace(/\\s+/g, ' ')
+                .trim();
+
+              const selectors = [
+                '[role="dialog"]',
+                '[aria-modal="true"]',
+                '[data-section-id*="AMENIT"]',
+                '[data-plugin-in-point-id*="AMENIT"]',
+                '[data-cursor-amenities-modal]'
+              ];
+
+              const nodes = Array.from(document.querySelectorAll(selectors.join(',')));
+              let bestNode = null;
+              let bestScore = -1;
+
+              for (const node of nodes) {
+                const text = normalize(node.innerText || node.textContent || '');
+                const rect = node.getBoundingClientRect();
+                const style = window.getComputedStyle(node);
+                const visible = rect.width > 0
+                  && rect.height > 0
+                  && style.visibility !== 'hidden'
+                  && style.display !== 'none';
+                if (!visible) continue;
+
+                const matchesLabel = tokens.some((token) => text.includes(normalize(token)));
+                const itemCount = node.querySelectorAll('li').length + node.querySelectorAll('[data-testid*="amenit"]').length;
+                const score = (matchesLabel ? 100000 : 0) + itemCount * 100 + text.length;
+                if (score > bestScore) {
+                  bestScore = score;
+                  bestNode = node;
+                }
+              }
+
+              return bestNode ? (bestNode.outerHTML || '') : '';
+            }
+            """,
+            list(AMENITY_EXPAND_LABELS),
+        ) or ""
+    except Exception:
+        return ""
+
+
 def _fetch_page_context_with_playwright(url: str, proxy_url: str) -> tuple["BeautifulSoup", Any, Any]:
     if not HAS_PLAYWRIGHT:
         raise RuntimeError("Playwright indisponible")
@@ -1567,6 +1731,7 @@ def _fetch_page_context_with_playwright(url: str, proxy_url: str) -> tuple["Beau
                 pass
 
         amenities_modal_html = ""
+        clicked_amenities_expand = False
         for sel in [
             "button:has-text('Afficher les')",
             "button:has-text('équipements')",
@@ -1578,24 +1743,39 @@ def _fetch_page_context_with_playwright(url: str, proxy_url: str) -> tuple["Beau
                 btn = page.locator(sel).first
                 if btn.is_visible(timeout=2_000):
                     btn.click()
-                    page.wait_for_timeout(2_000)
-                    for modal_sel in (
-                        "[role='dialog']",
-                        "[aria-modal='true']",
-                        "[data-section-id*='AMENIT']",
-                        "[data-plugin-in-point-id*='AMENIT']",
-                    ):
-                        try:
-                            modal = page.locator(modal_sel).last
-                            modal.wait_for(timeout=5_000)
-                            amenities_modal_html = modal.evaluate("el => el.outerHTML") or ""
-                            if amenities_modal_html:
-                                break
-                        except Exception:
-                            continue
+                    clicked_amenities_expand = True
+                    page.wait_for_timeout(1_500)
                     break
             except Exception:
                 continue
+
+        if not clicked_amenities_expand:
+            clicked_amenities_expand = _click_best_labeled_button(page, AMENITY_EXPAND_LABELS)
+            if clicked_amenities_expand:
+                page.wait_for_timeout(1_500)
+
+        if clicked_amenities_expand:
+            for _ in range(6):
+                _scroll_best_amenities_modal(page)
+                page.wait_for_timeout(350)
+
+            for modal_sel in (
+                "[role='dialog']",
+                "[aria-modal='true']",
+                "[data-section-id*='AMENIT']",
+                "[data-plugin-in-point-id*='AMENIT']",
+            ):
+                try:
+                    modal = page.locator(modal_sel).last
+                    modal.wait_for(timeout=5_000)
+                    amenities_modal_html = modal.evaluate("el => el.outerHTML") or ""
+                    if amenities_modal_html:
+                        break
+                except Exception:
+                    continue
+
+            if not amenities_modal_html:
+                amenities_modal_html = _capture_best_amenities_modal_html(page)
 
         html_doc = page.content()
         if description_modal_html:
@@ -1644,7 +1824,7 @@ def _fetch_page_context(url: str, proxy_url: str) -> tuple["BeautifulSoup", Any,
         and _soup_has_description_expand_button(soup)
         and _description_sections_look_truncated(_extract_description_sections_from_soup(soup))
     )
-    amenities_need_expand = _soup_has_amenities_expand_button(soup) and _amenities_look_truncated(structured_amenities, soup)
+    amenities_need_expand = _soup_has_amenities_expand_button(soup)
 
     # Tenter l'ouverture des modals Airbnb (description / équipements) via Playwright avec un timeout strict.
     use_playwright = HAS_PLAYWRIGHT and (description_needs_expand or amenities_need_expand)

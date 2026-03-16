@@ -6,6 +6,7 @@ import { computed, ref, watch } from 'vue'
 
 // UTILS
 import { resolveAmenityIconComponent, resolveLucideComponent } from '@/utils/amenitiesIcons'
+import { sanitizeKnownAmenities } from '@/utils/amenitiesCatalog'
 import { mockAmenitiesCatalog, type AmenityCatalogItem } from '@/views/Editor/mocks/amenitiesCatalog'
 import { getAmenityPerkDefaults } from '@/domain/listings/perks'
 import { formatValidationMessage, normalizeTextInput, resolveTextMaxLength, shouldDisplayTextLimit } from '@/utils/inputValidation'
@@ -35,18 +36,27 @@ const emit = defineEmits<{
   (e: 'patch', patch: DraftPatch): void
 }>()
 
-const amenities = computed<AmenityDraft[]>(() => (props.core?.amenities as AmenityDraft[] | undefined) ?? [])
+const amenities = computed<AmenityDraft[]>(() => sanitizeKnownAmenities((props.core?.amenities as AmenityDraft[] | undefined) ?? []))
 const catalog = computed<AmenityCatalogItem[]>(() => mockAmenitiesCatalog.amenities ?? [])
 const catalogSearch = ref('')
+const showSelectedOnly = ref(false)
 const panelContent = editorStatic.panels.listing.amenities
+const panelContentRecord = panelContent as Record<string, unknown>
+const overlayContent = (panelContent.overlay ?? {}) as Record<string, unknown>
 const amenitiesValidation = editorStatic.validation.listing.amenities
 const textDefaults = editorStatic.validation.defaults.simpleText
 const searchLimit = resolveTextMaxLength(amenitiesValidation.searchMax, textDefaults)
 const showSearchCounter = shouldDisplayTextLimit(searchLimit, textDefaults)
 const checkIcon = resolveLucideComponent('check')
+const showSelectedOnlyLabel = String(overlayContent.showSelectedOnly ?? 'Afficher la sélection')
+const showAllAmenitiesLabel = String(overlayContent.showAll ?? 'Afficher tous les équipements')
 
 function setAmenities(next: AmenityDraft[]) {
   emit('patch', { core: { amenities: next } })
+}
+
+function toggleSelectedFilter() {
+  showSelectedOnly.value = !showSelectedOnly.value
 }
 
 function toFiniteNumber(value: unknown): number | undefined {
@@ -171,6 +181,7 @@ const catalogGroups = computed<CatalogAmenityGroup[]>(() => {
   for (const item of catalog.value) {
     const normalizedId = normalizeAmenityId(item.id)
     if (!normalizedId) continue
+    if (showSelectedOnly.value && !selectedAmenityIdSet.value.has(normalizedId)) continue
     if (!matchesCatalogSearch(item, tokens)) continue
 
     const key = String(item.category ?? '').trim() || 'Autres'
@@ -208,6 +219,21 @@ watch(
     }
   },
 )
+
+watch(
+  () => selectedAmenityIdSet.value.size,
+  (size, previousSize) => {
+    if (size <= 0) {
+      showSelectedOnly.value = false
+      return
+    }
+
+    if (!previousSize) {
+      showSelectedOnly.value = true
+    }
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
@@ -229,6 +255,14 @@ watch(
             autocomplete="off"
           />
         </div>
+        <button
+          v-if="selectedAmenityIdSet.size"
+          type="button"
+          class="selection-toggle"
+          @click="toggleSelectedFilter"
+        >
+          {{ showSelectedOnly ? showAllAmenitiesLabel : showSelectedOnlyLabel }}
+        </button>
       </div>
       <div
         v-if="catalogGroups.length"

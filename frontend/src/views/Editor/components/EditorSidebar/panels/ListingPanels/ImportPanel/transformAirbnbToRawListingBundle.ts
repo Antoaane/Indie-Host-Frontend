@@ -2,7 +2,7 @@
 
 import { getAmenityPerkDefaults } from '@/domain/listings/perks'
 import type { RawAmenity, RawArrival, RawCore, RawListingBundle, RawNotes } from '@/domain/listings/types'
-import { getKnownAmenityCatalogItem, isKnownAmenityId } from '@/utils/amenitiesCatalog'
+import { getKnownAmenityCatalogItem, isKnownAmenityId, sanitizeKnownAmenities } from '@/utils/amenitiesCatalog'
 
 export type AirbnbScrapedData = {
   coordinates?: { latitude?: number; longitude?: number }
@@ -360,7 +360,7 @@ function buildEmptyRatingDistribution() {
 
 function amenitiesFromScraped(scraped: AirbnbScrapedData): RawAmenity[] {
   if (scraped.amenities_indiehost?.length) {
-    return scraped.amenities_indiehost.flatMap((a) => {
+    return sanitizeKnownAmenities(scraped.amenities_indiehost.flatMap((a) => {
       if (!isKnownAmenityId(a.id)) return []
 
       const catalogItem = getKnownAmenityCatalogItem(a.id)
@@ -375,9 +375,9 @@ function amenitiesFromScraped(scraped: AirbnbScrapedData): RawAmenity[] {
         perkScore: a.perkScore,
         perkPriority: a.perkPriority,
       }]
-    })
+    }))
   }
-  return buildAmenities(scraped).filter((amenity) => isKnownAmenityId(amenity.id))
+  return sanitizeKnownAmenities(buildAmenities(scraped).filter((amenity) => isKnownAmenityId(amenity.id)))
 }
 
 export function transformAirbnbToRawListingBundle(scraped: AirbnbScrapedData): Partial<RawListingBundle> {

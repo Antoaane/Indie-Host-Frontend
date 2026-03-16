@@ -36,6 +36,17 @@
       > .search-input {
         @include inputs.search($theme: accent);
       }
+
+      > .selection-toggle {
+        align-self: flex-start;
+        padding: 0;
+        border: none;
+        background: none;
+        cursor: pointer;
+        text-decoration: underline;
+        color: rgba($secondary-text, 0.72);
+        @include little-text($thin: false);
+      }
     }
 
     > .catalog {
