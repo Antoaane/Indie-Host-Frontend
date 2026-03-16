@@ -98,11 +98,15 @@ const visibleComments = computed(() => (
   props.visibility?.indiehost === false ? [] : comments.value
 ))
 
-const airbnbNote = computed(() => (
-  (props.notes?.otas ?? []).find((note) => note.ota === 'airbnb' && typeof note.note === 'number' && !Number.isNaN(note.note)) ?? null
-))
+const visibleImportedOtaNote = computed(() => {
+  const notes = (props.notes?.otas ?? []).filter((note) => typeof note.note === 'number' && !Number.isNaN(note.note))
 
-const usesVisibleAirbnbNote = computed(() => props.visibility?.airbnb !== false && Boolean(airbnbNote.value))
+  return notes.find((note) => note.ota === 'airbnb' && props.visibility?.airbnb !== false)
+    ?? notes.find((note) => note.ota === 'booking' && props.visibility?.booking !== false)
+    ?? null
+})
+
+const usesVisibleImportedOtaNote = computed(() => Boolean(visibleImportedOtaNote.value))
 
 const commentsCount = computed(() => {
   const count = visibleComments.value.length
@@ -111,9 +115,9 @@ const commentsCount = computed(() => {
 })
 
 const countLabel = computed(() => {
-  const airbnbReviewCount = airbnbNote.value?.reviewCount
-  if (!commentsCount.value && usesVisibleAirbnbNote.value && typeof airbnbReviewCount === 'number') {
-    return formatICUMessage(content.summary.airbnbCountLabel ?? content.summary.countLabel, { count: airbnbReviewCount })
+  const importedReviewCount = visibleImportedOtaNote.value?.reviewCount
+  if (!commentsCount.value && usesVisibleImportedOtaNote.value && typeof importedReviewCount === 'number') {
+    return formatICUMessage(content.summary.countLabel, { count: importedReviewCount })
   }
 
   const label = formatICUMessage(content.summary.countLabel, { count: commentsCount.value })
@@ -122,11 +126,15 @@ const countLabel = computed(() => {
 })
 
 const overallScore = computed(() => {
-  if (usesVisibleAirbnbNote.value) {
-    return airbnbNote.value?.note ?? null
+  if (usesVisibleImportedOtaNote.value) {
+    return visibleImportedOtaNote.value?.note ?? null
   }
 
-  const overall = props.notes?.source === 'airbnb' ? null : props.notes?.overall
+  const source = props.notes?.source
+  const shouldHideImportedSource =
+    (source === 'airbnb' && props.visibility?.airbnb === false)
+    || (source === 'booking' && props.visibility?.booking === false)
+  const overall = shouldHideImportedSource ? null : props.notes?.overall
   if (typeof overall === 'number' && !Number.isNaN(overall)) {
     // console.log(`${'✅'} [Comments.vue](overallScore) overallScore:computed fromNotes=${overall} reused`)
     return overall
@@ -144,9 +152,9 @@ const overallScore = computed(() => {
 })
 
 function resolveDistribution(notes: NotesModel | undefined, list: CommentsModel) {
-  const source = usesVisibleAirbnbNote.value
-    ? airbnbNote.value?.distribution
-    : notes?.source === 'airbnb'
+  const source = usesVisibleImportedOtaNote.value
+    ? visibleImportedOtaNote.value?.distribution
+    : notes?.source === 'airbnb' || notes?.source === 'booking'
       ? undefined
       : notes?.distribution
   const base = source && Object.keys(source).length ? source : buildDistributionFromComments(list)
@@ -198,7 +206,9 @@ const overlayComments = computed(() => {
 const canLoadOverlay = computed(() => overlayComments.value.length < visibleComments.value.length)
 
 const sourceLabel = computed(() => (
-  usesVisibleAirbnbNote.value ? (content.summary.airbnbSourceLabel ?? 'Notes importees depuis Airbnb') : ''
+  usesVisibleImportedOtaNote.value
+    ? `Notes importees depuis ${visibleImportedOtaNote.value?.sourceLabel ?? visibleImportedOtaNote.value?.ota ?? 'une OTA'}`
+    : ''
 ))
 
 const hasImportedReviewData = computed(() => {
