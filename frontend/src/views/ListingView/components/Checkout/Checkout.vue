@@ -1,7 +1,7 @@
 <!-- File: src/views/ListingView/components/Checkout/Checkout.vue -->
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import {
   CalendarCheck,
   ChevronDown,
@@ -15,10 +15,8 @@ import {
 } from 'lucide-vue-next'
 import type {
   Stripe,
-  StripeCardCvcElement,
-  StripeCardExpiryElement,
-  StripeCardNumberElement,
   StripeElements,
+  StripePaymentElement,
 } from '@stripe/stripe-js'
 
 import type { ListingParsed } from '@/views/ListingView/types/listing'
@@ -78,9 +76,7 @@ const travelerPhone = ref('')
 const paymentIntentError = ref<string | null>(null)
 const isPreparingPayment = ref(false)
 const isConfirmingPayment = ref(false)
-const cardNumberElementMount = ref<HTMLDivElement | null>(null)
-const cardExpiryElementMount = ref<HTMLDivElement | null>(null)
-const cardCvcElementMount = ref<HTMLDivElement | null>(null)
+const paymentElementMount = ref<HTMLDivElement | null>(null)
 const paymentIntentId = ref<string | null>(null)
 const paymentIntentClientSecret = ref<string | null>(null)
 const paymentIntentCurrency = ref('eur')
@@ -93,17 +89,12 @@ const offlineCardCvc = ref('')
 const hasAcknowledgedReminder = ref(false)
 const isStripeOfflineMode = isStripeCheckoutOfflineModeEnabled()
 const stripeCardInputError = ref<string | null>(null)
-const stripeCardFormState = reactive({
-  numberComplete: false,
-  expiryComplete: false,
-  cvcComplete: false,
-})
+const stripePaymentElementComplete = ref(false)
+const isPaymentElementMounted = ref(false)
 
 let stripe: Stripe | null = null
 let stripeElements: StripeElements | null = null
-let stripeCardNumberElement: StripeCardNumberElement | null = null
-let stripeCardExpiryElement: StripeCardExpiryElement | null = null
-let stripeCardCvcElement: StripeCardCvcElement | null = null
+let stripePaymentElement: StripePaymentElement | null = null
 let intentRequestSequence = 0
 
 const currency = new Intl.NumberFormat('fr-FR', {
@@ -244,11 +235,7 @@ const isPaymentReady = computed(() => (
   isStripeOfflineMode
     ? Boolean(paymentIntentId.value)
     : Boolean(
-      stripe &&
-      stripeElements &&
-      stripeCardNumberElement &&
-      stripeCardExpiryElement &&
-      stripeCardCvcElement &&
+      isPaymentElementMounted.value &&
       paymentIntentId.value &&
       paymentIntentClientSecret.value,
     )
@@ -257,8 +244,8 @@ const stripeCardFormValidationError = computed(() => {
   if (isStripeOfflineMode) return null
   if (!isCardholderNameComplete.value) return 'Saisissez le prénom et le nom du titulaire de la carte.'
   if (stripeCardInputError.value) return stripeCardInputError.value
-  if (!stripeCardFormState.numberComplete || !stripeCardFormState.expiryComplete || !stripeCardFormState.cvcComplete) {
-    return 'Complétez les informations de carte bancaire.'
+  if (!stripePaymentElementComplete.value) {
+    return 'Complétez les informations de paiement Stripe.'
   }
   return null
 })
@@ -307,8 +294,8 @@ const paymentErrorMessage = computed(() => {
   return cardFormValidationError.value
 })
 const isCardFormReady = computed(() => !cardFormValidationError.value)
-const isCardDetailsEntered = computed(() => {
-  if (!isCardholderNameComplete.value) return false
+const isPaymentElementFieldsComplete = computed(() => {
+  if (!isPaymentReady.value) return false
 
   if (isStripeOfflineMode) {
     return Boolean(
@@ -318,20 +305,14 @@ const isCardDetailsEntered = computed(() => {
     )
   }
 
-  return (
-    stripeCardFormState.numberComplete &&
-    stripeCardFormState.expiryComplete &&
-    stripeCardFormState.cvcComplete
-  )
+  if (stripeCardInputError.value) return false
+  return stripePaymentElementComplete.value
 })
 const isPaymentStepComplete = computed(() => (
   !reservationError.value &&
   !paymentOptionError.value &&
   !isPreparingPayment.value &&
-  isPaymentReady.value &&
-  isCardFormReady.value &&
-  !paymentIntentError.value &&
-  isCardDetailsEntered.value
+  isPaymentElementFieldsComplete.value
 ))
 const shouldRevealPostPaymentSections = computed(() => isPaymentStepComplete.value)
 const canAccessInformationStep = computed(() => isPaymentStepComplete.value)
@@ -375,29 +356,17 @@ function toggleProgressSection(section: ProgressSectionKey) {
 }
 
 function resetStripeCardElementState() {
-  stripeCardFormState.numberComplete = false
-  stripeCardFormState.expiryComplete = false
-  stripeCardFormState.cvcComplete = false
+  stripePaymentElementComplete.value = false
   stripeCardInputError.value = null
 }
 
 function resetPaymentElement() {
-  if (stripeCardNumberElement) {
-    stripeCardNumberElement.unmount()
-    stripeCardNumberElement.destroy()
-    stripeCardNumberElement = null
-  }
+  isPaymentElementMounted.value = false
 
-  if (stripeCardExpiryElement) {
-    stripeCardExpiryElement.unmount()
-    stripeCardExpiryElement.destroy()
-    stripeCardExpiryElement = null
-  }
-
-  if (stripeCardCvcElement) {
-    stripeCardCvcElement.unmount()
-    stripeCardCvcElement.destroy()
-    stripeCardCvcElement = null
+  if (stripePaymentElement) {
+    stripePaymentElement.unmount()
+    stripePaymentElement.destroy()
+    stripePaymentElement = null
   }
 
   stripeElements = null
@@ -428,7 +397,11 @@ function resolveConfirmedConnectedAccountId(): string {
 function getPaymentSetupError(): string | null {
   if (!props.listingId?.trim()) return "Impossible de déterminer l'annonce pour le paiement."
   if (isStripeOfflineMode) return null
-  if (!getStripePublishableKey()) return 'La clé Stripe publique est absente. Vérifiez VITE_STRIPE_PUBLISHABLE_KEY.'
+  const stripePublishableKey = getStripePublishableKey()
+  if (!stripePublishableKey) return 'La clé Stripe publique est absente. Vérifiez VITE_STRIPE_PUBLISHABLE_KEY.'
+  if (/X{8,}/.test(stripePublishableKey)) {
+    return 'La clé Stripe publique frontend est un placeholder. Remplacez VITE_STRIPE_PUBLISHABLE_KEY par une vraie clé pk_test du même compte Stripe que le backend.'
+  }
   return null
 }
 
@@ -440,6 +413,27 @@ function resolveErrorMessage(error: unknown, fallback: string): string {
   return fallback
 }
 
+function resolvePaymentElementLoadErrorMessage(rawMessage: string): string | null {
+  const message = rawMessage.trim()
+  if (!message) return null
+
+  const normalized = message.toLowerCase()
+  if (normalized.includes('401') || normalized.includes('unauthorized')) {
+    return 'Stripe refuse le chargement du module de paiement (401). Vérifiez que VITE_STRIPE_PUBLISHABLE_KEY correspond au même compte Stripe que STRIPE_SECRET_KEY.'
+  }
+
+  if (
+    normalized.includes('failed to fetch') ||
+    normalized.includes('network') ||
+    normalized.includes('blocked_by_client') ||
+    normalized.includes('r.stripe.com')
+  ) {
+    return null
+  }
+
+  return message
+}
+
 async function mountPaymentElement(clientSecret: string) {
   stripe = await loadStripeClient()
   if (!stripe) {
@@ -447,46 +441,42 @@ async function mountPaymentElement(clientSecret: string) {
   }
 
   await nextTick()
-  const numberMountNode = cardNumberElementMount.value
-  const expiryMountNode = cardExpiryElementMount.value
-  const cvcMountNode = cardCvcElementMount.value
-  if (!numberMountNode || !expiryMountNode || !cvcMountNode) {
+  const mountNode = paymentElementMount.value
+  if (!mountNode) {
     throw new Error('Le module de paiement ne peut pas être affiché pour le moment.')
   }
 
   resetStripeCardElementState()
   stripeElements = stripe.elements({
+    clientSecret,
     appearance: {
       theme: 'stripe',
     },
   })
 
-  stripeCardNumberElement = stripeElements.create('cardNumber', {
-    placeholder: '1234 1234 1234 1234',
-    showIcon: true,
+  stripePaymentElement = stripeElements.create('payment', {
+    layout: 'tabs',
+    fields: {
+      billingDetails: {
+        name: 'never',
+      },
+    },
   })
-  stripeCardExpiryElement = stripeElements.create('cardExpiry')
-  stripeCardCvcElement = stripeElements.create('cardCvc')
-
-  stripeCardNumberElement.on('change', (event) => {
-    stripeCardFormState.numberComplete = Boolean(event.complete)
-    stripeCardInputError.value = event.error?.message ?? null
+  stripePaymentElement.on('change', (event) => {
+    const changeEventError = (event as unknown as { error?: { message?: string } }).error
+    stripePaymentElementComplete.value = Boolean(event.complete)
+    stripeCardInputError.value = changeEventError?.message ?? null
     if (paymentIntentError.value) paymentIntentError.value = null
   })
-  stripeCardExpiryElement.on('change', (event) => {
-    stripeCardFormState.expiryComplete = Boolean(event.complete)
-    stripeCardInputError.value = event.error?.message ?? null
-    if (paymentIntentError.value) paymentIntentError.value = null
+  stripePaymentElement.on('loaderror', (event) => {
+    console.error('[Checkout] payment element loaderror', event.error)
+    const blockingMessage = resolvePaymentElementLoadErrorMessage(event.error.message ?? '')
+    if (blockingMessage) {
+      paymentIntentError.value = blockingMessage
+    }
   })
-  stripeCardCvcElement.on('change', (event) => {
-    stripeCardFormState.cvcComplete = Boolean(event.complete)
-    stripeCardInputError.value = event.error?.message ?? null
-    if (paymentIntentError.value) paymentIntentError.value = null
-  })
-
-  stripeCardNumberElement.mount(numberMountNode)
-  stripeCardExpiryElement.mount(expiryMountNode)
-  stripeCardCvcElement.mount(cvcMountNode)
+  stripePaymentElement.mount(mountNode)
+  isPaymentElementMounted.value = true
 
   paymentIntentClientSecret.value = clientSecret
 }
@@ -606,25 +596,28 @@ async function confirmCheckout() {
       return
     }
 
-    if (!stripe || !stripeElements || !paymentIntentId.value || !paymentIntentClientSecret.value || !stripeCardNumberElement) {
+    if (!stripe || !stripeElements || !paymentIntentId.value || !paymentIntentClientSecret.value || !stripePaymentElement) {
       paymentIntentError.value = 'Le paiement n\'est pas prêt. Réessayez dans quelques secondes.'
       return
     }
 
-    const result = await stripe.confirmCardPayment(
-      paymentIntentClientSecret.value,
-      {
-        payment_method: {
-          card: stripeCardNumberElement,
+    const submitResult = await stripeElements.submit()
+    if (submitResult.error) {
+      paymentIntentError.value = submitResult.error.message ?? 'Les informations de paiement sont incomplètes.'
+      return
+    }
+
+    const result = await stripe.confirmPayment({
+      elements: stripeElements,
+      confirmParams: {
+        payment_method_data: {
           billing_details: {
             name: cardholderFullName.value,
           },
         },
       },
-      {
-        handleActions: true,
-      },
-    )
+      redirect: 'if_required',
+    })
 
     if (result.error) {
       paymentIntentError.value = result.error.message ?? 'Le paiement a été refusé.'
@@ -1024,28 +1017,14 @@ onBeforeUnmount(() => {
               />
             </label>
           </div>
-          <label class="payment-card-field">
-            <span>Numéro de carte</span>
-            <div
-              ref="cardNumberElementMount"
-              class="payment-element"
-            />
-          </label>
-          <div class="payment-card-grid">
-            <label class="payment-card-field">
-              <span>Expiration</span>
+          <div class="payment-card-field">
+            <span>Détails du moyen de paiement</span>
+            <div class="payment-element-shell">
               <div
-                ref="cardExpiryElementMount"
+                ref="paymentElementMount"
                 class="payment-element"
               />
-            </label>
-            <label class="payment-card-field">
-              <span>CVC</span>
-              <div
-                ref="cardCvcElementMount"
-                class="payment-element"
-              />
-            </label>
+            </div>
           </div>
         </div>
 
@@ -1059,7 +1038,7 @@ onBeforeUnmount(() => {
           v-if="!shouldRevealPostPaymentSections"
           class="payment-reveal-hint"
         >
-          Complétez les informations de carte et le nom du titulaire pour afficher les étapes suivantes.
+          Complétez le formulaire de paiement Stripe pour afficher les étapes suivantes.
         </p>
       </div>
     </section>

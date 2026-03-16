@@ -49,12 +49,17 @@ const listingData = computed<ListingParsed | null>(() => {
 })
 
 const statusFlags = computed(() => getListingStatusFlags(props.rawListing?.core?.status))
-const isBookingDisabled = computed(() => !statusFlags.value.isBookable)
-const bookingDisabledLabel = computed(() => (statusFlags.value.isBlocked ? 'Réservations bloquées' : 'Indisponible'))
+const isBookingDisabled = computed(() => isCheckout.value || !statusFlags.value.isBookable)
+const bookingDisabledLabel = computed(() => {
+  if (isCheckout.value) return 'Checkout en cours'
+  return statusFlags.value.isBlocked ? 'Réservations bloquées' : 'Indisponible'
+})
 const bookingDisabledHint = computed(() =>
-  statusFlags.value.isBlocked
-    ? 'Cette annonce reste consultable mais les réservations sont suspendues.'
-    : 'Les réservations ne sont pas disponibles pour le moment.',
+  isCheckout.value
+    ? 'Complétez toutes les étapes du checkout pour confirmer la réservation.'
+    : statusFlags.value.isBlocked
+      ? 'Cette annonce reste consultable mais les réservations sont suspendues.'
+      : 'Les réservations ne sont pas disponibles pour le moment.',
 )
 
 const bookingRange = ref<RangeISO | null>(null)

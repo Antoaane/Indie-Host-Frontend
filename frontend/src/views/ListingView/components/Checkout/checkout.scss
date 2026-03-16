@@ -498,12 +498,16 @@ html:has(#checkout) {
       @include little-text($color: rgba($secondary-text, 0.75), $thin: false);
     }
 
-    .payment-element {
+    .payment-element-shell {
       min-height: 3rem;
-      padding: 0.65rem;
+      padding: 0.35rem 0.6rem;
       border-radius: borders.$rounded-md;
       border: 1px solid rgba($secondary, 0.12);
       background: $accent;
+    }
+
+    .payment-element {
+      min-height: 2.2rem;
     }
 
     .payment-card-form,
