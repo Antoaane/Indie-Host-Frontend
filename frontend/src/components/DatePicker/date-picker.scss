@@ -179,14 +179,14 @@
               border-radius: 0;
 
               &:is([data-selection-start="true"], [data-selection-start]) {
-                background-color: $background;
+                background-color: $secondary;
                 border-radius: borders.$rounded-md;
 
                 color: $accent !important;
               }
 
               &:is([data-selection-end="true"], [data-selection-end]) {
-                background-color: $background;
+                background-color: $secondary;
                 border-radius: borders.$rounded-md;
 
                 color: $accent !important;
