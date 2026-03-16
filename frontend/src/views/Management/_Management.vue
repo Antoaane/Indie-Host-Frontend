@@ -1,7 +1,7 @@
 <!-- File: src/views/Management/_Management.vue -->
 
 <script setup lang="ts">
-import { computed, nextTick, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft, ArrowUpRight, Calendar, Pen, Plus } from 'lucide-vue-next'
 
@@ -46,6 +46,7 @@ const router = useRouter()
 const activeUserId = computed(() => readRouteUserId(route.params.userId))
 
 type ManagementStage = 'reservations' | 'calendar'
+const LIVE_SYNC_INTERVAL_MS = 5000
 
 const stage = ref<ManagementStage>('reservations')
 const selectedListingId = ref<string | null>(null)
@@ -105,6 +106,10 @@ const noteEditor = reactive({
 const internalNoteTextareaRef = ref<HTMLTextAreaElement | null>(null)
 
 const reservationsByListingId = reactive<Record<string, Reservation[]>>({})
+const liveSyncState = reactive({
+  inFlight: false,
+  timerId: null as number | null,
+})
 
 const selectedListing = computed(() => listings.value.find((listing) => listing.listingId === selectedListingId.value) ?? null)
 const isMobileViewport = computed(() => !vp.lg.value)
@@ -135,16 +140,21 @@ const selectedReservation = computed(() => {
   return items[0] ?? null
 })
 
+const blockedRangesForListing = computed<RangeISO[]>(() => {
+  return normalizeBookedDays(
+    reservationsForListing.value.map((reservation) => ({
+      start: reservation.start,
+      end: reservation.end,
+    })),
+  )
+})
+
 const disabledStayRanges = computed<RangeISO[]>(() => {
   const activeReservation = selectedReservation.value
-
+  if (!activeReservation) return blockedRangesForListing.value
   return normalizeBookedDays(
     reservationsForListing.value
-      .filter((reservation) => {
-        if (!activeReservation) return true
-        if (reservation.id === activeReservation.id) return false
-        return reservation.start !== activeReservation.start || reservation.end !== activeReservation.end
-      })
+      .filter((reservation) => reservation.id !== activeReservation.id)
       .map((reservation) => ({
         start: reservation.start,
         end: reservation.end,
@@ -267,6 +277,109 @@ async function loadReservations(sourceListings: UserListingCard[]) {
   }
 
   reservationsStatus.isLoading = false
+}
+
+function reservationRefKey(reservation: Reservation): string {
+  if (reservation.id?.trim()) return `id:${reservation.id.trim()}`
+  return `range:${reservation.start}__${reservation.end}`
+}
+
+function reservationSignature(reservation: Reservation): string {
+  return JSON.stringify(reservation)
+}
+
+function withStableReservationReferences(previous: Reservation[], incoming: Reservation[]): Reservation[] {
+  if (!previous.length || !incoming.length) return incoming
+
+  const previousByKey = new Map<string, Reservation>()
+  const previousSignatureByKey = new Map<string, string>()
+
+  previous.forEach((reservation) => {
+    const key = reservationRefKey(reservation)
+    previousByKey.set(key, reservation)
+    previousSignatureByKey.set(key, reservationSignature(reservation))
+  })
+
+  return incoming.map((reservation) => {
+    const key = reservationRefKey(reservation)
+    const previousReservation = previousByKey.get(key)
+    if (!previousReservation) return reservation
+
+    return previousSignatureByKey.get(key) === reservationSignature(reservation) ? previousReservation : reservation
+  })
+}
+
+function areSameReservationList(a: Reservation[], b: Reservation[]): boolean {
+  if (a.length !== b.length) return false
+  return a.every((reservation, index) => reservation === b[index])
+}
+
+async function refreshReservationsInBackground() {
+  if (liveSyncState.inFlight || reservationsStatus.isLoading) return
+  if (deleteStatus.isDeleting || noteEditor.isSaving || paymentEditor.isSaving) return
+  if (!listings.value.length) return
+
+  liveSyncState.inFlight = true
+
+  try {
+    const snapshots = await Promise.allSettled(
+      listings.value.map(async (listing) => {
+        const volatile = await props.source.fetchVolatileListingBundle(listing.listingId)
+        return {
+          listingId: listing.listingId,
+          reservations: buildReservationsForListing({
+            listing,
+            bookings: volatile.bookings ?? null,
+          }),
+        }
+      }),
+    )
+
+    snapshots.forEach((snapshot) => {
+      if (snapshot.status !== 'fulfilled') return
+
+      const {
+        listingId,
+        reservations,
+      } = snapshot.value
+      const previousReservations = reservationsByListingId[listingId] ?? []
+      const nextReservations = withStableReservationReferences(previousReservations, reservations)
+      if (!areSameReservationList(previousReservations, nextReservations)) {
+        reservationsByListingId[listingId] = nextReservations
+      }
+    })
+  } finally {
+    liveSyncState.inFlight = false
+  }
+}
+
+function stopLiveSync() {
+  if (liveSyncState.timerId === null || typeof window === 'undefined') return
+  window.clearInterval(liveSyncState.timerId)
+  liveSyncState.timerId = null
+}
+
+function startLiveSync() {
+  if (typeof window === 'undefined' || liveSyncState.timerId !== null) return
+  liveSyncState.timerId = window.setInterval(() => {
+    void refreshReservationsInBackground()
+  }, LIVE_SYNC_INTERVAL_MS)
+}
+
+function handleVisibilityChange() {
+  if (typeof document === 'undefined') return
+
+  if (document.visibilityState === 'visible') {
+    startLiveSync()
+    void refreshReservationsInBackground()
+    return
+  }
+
+  stopLiveSync()
+}
+
+function handleWindowFocus() {
+  void refreshReservationsInBackground()
 }
 
 function selectDefaultReservation() {
@@ -775,7 +888,6 @@ async function confirmDeleteReservation() {
     })
 
     reservationsByListingId[listingId] = reservationsByListingId[listingId].filter((item) => item.id !== reservation.id)
-
     selectedReservationId.value = findClosestReservationForListing(reservationsByListingId[listingId] ?? [])?.id ?? reservationsByListingId[listingId]?.[0]?.id ?? null
 
     isDeleteOverlayOpen.value = false
@@ -864,6 +976,34 @@ watch(
 watch(selectedListingId, (listingId) => {
   if (listingId) return
   isMobileStageOpen.value = false
+})
+
+onMounted(() => {
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    if (document.visibilityState === 'visible') {
+      startLiveSync()
+      void refreshReservationsInBackground()
+    }
+  } else {
+    startLiveSync()
+  }
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('focus', handleWindowFocus)
+  }
+})
+
+onBeforeUnmount(() => {
+  stopLiveSync()
+
+  if (typeof document !== 'undefined') {
+    document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }
+
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('focus', handleWindowFocus)
+  }
 })
 
 function formatCurrency(value?: number) {
@@ -963,8 +1103,6 @@ const paymentSubtitle = computed(() => {
 const canEditManualPayments = computed(() => Boolean(paymentPreview.value?.canEditManualPayments))
 
 const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !normalizeInternalNote(noteEditor.value))
-
-console.log("❇️❇️❇️ : ", reservationsForListing.value)
 </script>
 
 <template>
@@ -1129,7 +1267,8 @@ console.log("❇️❇️❇️ : ", reservationsForListing.value)
                             :read-only="true"
                             :allow-navigation-in-read-only="true"
                             :allow-disabled-model-value="true"
-                            :restrict-to-future="true"
+                            :exclude-model-value-from-disabled="true"
+                            :restrict-to-future="false"
                           />
                         </div>
                         <div class="stay-cards">

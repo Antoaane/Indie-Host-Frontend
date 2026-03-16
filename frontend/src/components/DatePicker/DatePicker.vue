@@ -16,6 +16,7 @@ const props = withDefaults(
     allowNavigationInReadOnly?: boolean
     restrictToFuture?: boolean
     allowDisabledModelValue?: boolean
+    excludeModelValueFromDisabled?: boolean
   }>(),
   {
     numberOfMonths: 2,
@@ -25,6 +26,7 @@ const props = withDefaults(
     allowNavigationInReadOnly: false,
     restrictToFuture: true,
     allowDisabledModelValue: false,
+    excludeModelValueFromDisabled: false,
   },
 )
 
@@ -33,7 +35,33 @@ const emit = defineEmits<{
 }>()
 
 /* ---------- disabled ---------- */
-const isDateDisabled = computed(() => makeIsDateDisabled(props.disabledDates, { allowPast: !props.restrictToFuture }))
+const modelValueNumericRange = computed(() => {
+  if (!props.modelValue?.start || !props.modelValue?.end) return null
+  try {
+    const start = toNum(parseISO(props.modelValue.start))
+    const end = toNum(parseISO(props.modelValue.end))
+    if (!Number.isFinite(start) || !Number.isFinite(end)) return null
+    return start <= end ? { start, end } : { start: end, end: start }
+  } catch {
+    return null
+  }
+})
+
+const isDateDisabled = computed(() => {
+  const baseDisabled = makeIsDateDisabled(props.disabledDates, { allowPast: !props.restrictToFuture })
+  if (!props.excludeModelValueFromDisabled) return baseDisabled
+
+  const modelRange = modelValueNumericRange.value
+  if (!modelRange) return baseDisabled
+
+  return (date: { year: number; month: number; day: number }) => {
+    const dayNum = toNum(date)
+    if (dayNum >= modelRange.start && dayNum <= modelRange.end) {
+      return false
+    }
+    return baseDisabled(date)
+  }
+})
 
 /* ---------- selection (v-model) ---------- */
 const internal = shallowRef<any>()

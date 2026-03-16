@@ -199,6 +199,8 @@
                 cursor: not-allowed;
               }
 
+              &[data-highlighted][data-disabled],
+              &[data-selected][data-disabled],
               &:is([data-selection-start="true"], [data-selection-start], [data-selection-end="true"], [data-selection-end])[data-disabled] {
                 color: $accent !important;
                 text-decoration: none;
