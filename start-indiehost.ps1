@@ -13,7 +13,17 @@ $LISTINGS_MODE_LOCAL_JSON = "local-json"
 # Ce script est historiquement pensé pour Windows (Docker Desktop, netstat, chemins \etc.).
 # Sur macOS et Linux, on délègue proprement au script bash `start-indiehost.sh`
 # qui fait la même chose avec la bonne stack (bash + docker + node + python).
-if (-not $IsWindows) {
+# Detection fiable sous PowerShell 5.1 (Desktop) et PowerShell 7+
+$runningOnWindows = $false
+if (Get-Variable -Name IsWindows -ErrorAction SilentlyContinue) {
+    $runningOnWindows = [bool]$IsWindows
+} elseif ($PSVersionTable.PSEdition -eq "Desktop") {
+    $runningOnWindows = $true
+} else {
+    $runningOnWindows = ($env:OS -eq "Windows_NT")
+}
+
+if (-not $runningOnWindows) {
     $shScript = Join-Path $ROOT "start-indiehost.sh"
     if (-not (Test-Path $shScript)) {
         Write-Host "start-indiehost.ps1 detecte un OS non‑Windows mais le script start-indiehost.sh est introuvable." -ForegroundColor Red
