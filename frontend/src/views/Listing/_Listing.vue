@@ -7,7 +7,7 @@ import { useRoute } from 'vue-router'
 // COMOOENENTS
 import ListingView from '@/views/ListingView/_ListingView.vue'
 import ListingUnavailable from '@/views/Listing/ListingUnavailable.vue'
-import { loadBookings, loadComments, loadCore, loadHost, loadMedias, loadNotes } from '@/views/Listing/utils/fetchListingRaw'
+import { loadBookings, loadComments, loadCore, loadHost, loadMedias, loadNotes, refreshListingAvailability } from '@/views/Listing/utils/fetchListingRaw'
 import type { RawListingBundle } from '@/domain/listings/types'
 import { getListingStatusFlags } from '@/domain/listings/status'
 
@@ -21,6 +21,7 @@ const listingKey = computed(() => {
 
 const rawListing = ref<RawListingBundle | null>(null)
 const isLoading = ref(false)
+let activeFetchId = 0
 
 const statusFlags = computed(() => getListingStatusFlags(rawListing.value?.core?.status))
 const pauseMessage = computed(() => (rawListing.value?.core?.pause_message ?? '').trim())
@@ -83,6 +84,8 @@ useHead(() => ({
 }))
 
 async function fetchRawListing() {
+  const fetchId = activeFetchId + 1
+  activeFetchId = fetchId
   isLoading.value = true
   try {
     const [
@@ -101,8 +104,36 @@ async function fetchRawListing() {
       loadComments(listingKey.value),
     ])
     rawListing.value = { core, host, bookings, medias, notes, comments }
+
+    const resolvedListingId = (core?.id ?? listingKey.value ?? '').trim()
+    if (resolvedListingId) {
+      void refreshAvailabilityInBackground(resolvedListingId, fetchId)
+    }
   } finally {
-    isLoading.value = false
+    if (fetchId === activeFetchId) {
+      isLoading.value = false
+    }
+  }
+}
+
+async function refreshAvailabilityInBackground(listingId: string, fetchId: number) {
+  try {
+    const syncResult = await refreshListingAvailability(listingId)
+
+    if (fetchId !== activeFetchId) return
+    if (!syncResult?.hasSources) return
+    if (!syncResult.availabilityUpdated && syncResult.syncedSources === 0) return
+
+    const refreshedBookings = await loadBookings(listingId)
+    if (fetchId !== activeFetchId) return
+    if (!rawListing.value) return
+
+    rawListing.value = {
+      ...rawListing.value,
+      bookings: refreshedBookings,
+    }
+  } catch (error) {
+    console.warn('[Listing] background availability sync failed', { listingId, error })
   }
 }
 

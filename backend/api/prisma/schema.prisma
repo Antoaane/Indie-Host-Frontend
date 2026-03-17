@@ -191,6 +191,7 @@ model CalendarSync {
   events      CalendarEvent[]
 
   @@index([listingId])
+  @@index([listingId, lastSyncedAt])
 }
 
 model CalendarEvent {
@@ -217,4 +218,5 @@ model CalendarEvent {
   @@index([startDate])
   @@index([endDate])
   @@unique([listingId, externalUid, source])
+  @@unique([listingId, reservationId, source])
 }

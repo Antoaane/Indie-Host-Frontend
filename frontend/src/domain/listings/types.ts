@@ -204,6 +204,7 @@ export type RawBookingReservation = {
 }
 export type RawBookings = Override<RawBookingsBase, {
   'booked-days': RawBookedDay[]
+  'external-booked-days'?: RawBookedDay[]
   reservations?: RawBookingReservation[]
   pricing?: RawPricingSettings
 }>
@@ -246,6 +247,33 @@ export type DraftPatch = {
 }
 
 export type VolatileBundle = Pick<RawListingBundle, 'bookings' | 'notes' | 'comments' | 'host'>
+
+export type ListingAvailabilitySyncSource = {
+  syncId: string
+  name: string | null
+  sourceUrl: string | null
+  status: 'synced' | 'throttled' | 'failed' | 'skipped'
+  changed: boolean
+  importedEvents: number
+  blockingEvents: number
+  lastSyncedAt: string | null
+  lastStatus: string | null
+  lastError: string | null
+  isFresh: boolean
+  staleAfter: string | null
+}
+
+export type ListingAvailabilitySyncResult = {
+  listingId: string
+  refreshedAt: string
+  hasSources: boolean
+  availabilityUpdated: boolean
+  syncedSources: number
+  throttledSources: number
+  failedSources: number
+  skippedSources: number
+  sources: ListingAvailabilitySyncSource[]
+}
 
 export type UserListingCard = {
   listingId: string

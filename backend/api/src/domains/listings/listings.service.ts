@@ -239,14 +239,27 @@ export class ListingsService {
     const bookedDaysRaw = Array.isArray(value['booked-days'])
       ? value['booked-days'].filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object')
       : [];
+    const externalBookedDaysRaw = Array.isArray(value['external-booked-days'])
+      ? value['external-booked-days'].filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object')
+      : [];
 
     const bookedDaysByRange = new Map<string, { start: string; end: string }>();
+    const externalBookedDaysByRange = new Map<string, { start: string; end: string }>();
 
     for (const item of bookedDaysRaw) {
       const start = typeof item.start === 'string' ? item.start.trim() : '';
       const end = typeof item.end === 'string' ? item.end.trim() : '';
       if (!start || !end) continue;
       bookedDaysByRange.set(`${start}__${end}`, { start, end });
+    }
+
+    for (const item of externalBookedDaysRaw) {
+      const start = typeof item.start === 'string' ? item.start.trim() : '';
+      const end = typeof item.end === 'string' ? item.end.trim() : '';
+      if (!start || !end) continue;
+      const range = { start, end };
+      externalBookedDaysByRange.set(`${start}__${end}`, range);
+      bookedDaysByRange.set(`${start}__${end}`, range);
     }
 
     for (const reservation of normalizedReservations) {
@@ -260,6 +273,7 @@ export class ListingsService {
       ...value,
       reservations: normalizedReservations,
       'booked-days': Array.from(bookedDaysByRange.values()),
+      'external-booked-days': Array.from(externalBookedDaysByRange.values()),
     };
   }
 

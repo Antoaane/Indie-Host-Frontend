@@ -78,6 +78,7 @@ const { checkoutPayload, isCheckout, checkoutStatus, onReserve, cancelCheckout, 
   listingId,
   rawListing: computed(() => props.rawListing ?? null),
   fetchEditableListingBundle: (targetListingId) => controller.fetchEditableListingBundle(targetListingId),
+  syncListingAvailability: (targetListingId) => controller.syncListingAvailability(targetListingId),
   patchListingDraft: (targetListingId, payload) => controller.patchListingDraft(targetListingId, payload),
 })
 

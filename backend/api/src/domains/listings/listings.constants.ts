@@ -53,6 +53,7 @@ export function buildDefaultResource(resource: ListingResourceKey, listingId: st
         price: 0,
         fees: [],
         'booked-days': [],
+        'external-booked-days': [],
         reservations: [],
       };
     case 'medias':

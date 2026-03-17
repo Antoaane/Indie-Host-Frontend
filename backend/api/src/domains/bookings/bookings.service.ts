@@ -6,7 +6,18 @@ import { toPrismaJson } from '../../lib/prisma.js';
 
 type RawReservation = Record<string, unknown>;
 
+type PersistedReservation = {
+  id: string;
+  guestName: string;
+  message: string | null;
+  startDate: Date;
+  endDate: Date;
+};
+
+const INTERNAL_RESERVATION_SOURCE = 'indiehost_reservation';
+
 function parseDate(value: unknown): Date | null {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
   if (typeof value !== 'string' || !value.trim()) return null;
   const parsed = new Date(value);
   return Number.isNaN(parsed.getTime()) ? null : parsed;
@@ -36,10 +47,19 @@ function normalizeDayValue(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const trimmed = value.trim();
   if (!trimmed) return null;
-  return trimmed;
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return trimmed;
+  }
+
+  const parsed = new Date(trimmed);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toISOString().slice(0, 10);
 }
 
 function appendBookedDayIfMissing(bookedDays: Array<Record<string, unknown>>, start: string, end: string) {
+  if (start >= end) return;
+
   const hasMatch = bookedDays.some((item) => item.start === start && item.end === end);
   if (hasMatch) return;
   bookedDays.push({ start, end });
@@ -98,22 +118,65 @@ export class BookingsService {
       price: 0,
       fees: [],
       'booked-days': [],
+      'external-booked-days': [],
       reservations: [],
     });
   }
 
-  private async persistReservation(row: RawReservation, listingId: string) {
+  private async upsertInternalReservationEvent(listingId: string, reservation: PersistedReservation) {
+    await this.prisma.calendarEvent.upsert({
+      where: {
+        listingId_reservationId_source: {
+          listingId,
+          reservationId: reservation.id,
+          source: INTERNAL_RESERVATION_SOURCE,
+        },
+      },
+      update: {
+        startDate: reservation.startDate,
+        endDate: reservation.endDate,
+        summary: `Reservation ${reservation.guestName}`,
+        description: reservation.message,
+        status: 'confirmed',
+        externalUid: reservation.id,
+      },
+      create: {
+        listingId,
+        reservationId: reservation.id,
+        source: INTERNAL_RESERVATION_SOURCE,
+        startDate: reservation.startDate,
+        endDate: reservation.endDate,
+        summary: `Reservation ${reservation.guestName}`,
+        description: reservation.message,
+        status: 'confirmed',
+        externalUid: reservation.id,
+      },
+    });
+  }
+
+  private async removeInternalReservationEvent(listingId: string, reservationId: string) {
+    await this.prisma.calendarEvent.deleteMany({
+      where: {
+        listingId,
+        reservationId,
+        source: INTERNAL_RESERVATION_SOURCE,
+      },
+    });
+  }
+
+  private async persistReservation(row: RawReservation, listingId: string): Promise<PersistedReservation> {
     const reservationId = normalizeReservationId(row.id) ?? buildReservationId(listingId);
     const guestName = typeof row.guestName === 'string' ? row.guestName : 'Voyageur';
     const startDate = parseDate(row.start) ?? new Date();
     const endDate = parseDate(row.end) ?? startDate;
+    const message = typeof row.message === 'string' ? row.message : null;
     const payload = {
       guestName,
       guestAvatar: typeof row.guestAvatar === 'string' ? row.guestAvatar : null,
       startDate,
       endDate,
       nights: toNumber(row.nights, 1),
-      message: typeof row.message === 'string' ? row.message : null,
+      message,
       internalNote: typeof row.internalNote === 'string' ? row.internalNote : null,
       guests: toPrismaJson(asObject(row.guests, {})),
       payment: toPrismaJson(asObject(row.payment, {})),
@@ -165,7 +228,13 @@ export class BookingsService {
       });
     }
 
-    return persistedReservationId;
+    return {
+      id: persistedReservationId,
+      guestName,
+      message,
+      startDate,
+      endDate,
+    };
   }
 
   async createBooking(input: Record<string, unknown>) {
@@ -184,6 +253,7 @@ export class BookingsService {
       price: 0,
       fees: [],
       'booked-days': [],
+      'external-booked-days': [],
       reservations: [],
     });
 
@@ -236,11 +306,13 @@ export class BookingsService {
       },
     });
 
-    const reservationId = await this.persistReservation(reservation, listingId);
-    if (reservationId !== safeReservationId) {
+    const persistedReservation = await this.persistReservation(reservation, listingId);
+    await this.upsertInternalReservationEvent(listingId, persistedReservation);
+
+    if (persistedReservation.id !== safeReservationId) {
       reservations[0] = {
         ...reservations[0],
-        id: reservationId,
+        id: persistedReservation.id,
       };
 
       const syncedBookings = {
@@ -256,14 +328,14 @@ export class BookingsService {
       });
 
       return {
-        reservationId,
+        reservationId: persistedReservation.id,
         listingId,
         bookings: syncedBookings,
       };
     }
 
     return {
-      reservationId,
+      reservationId: persistedReservation.id,
       listingId,
       bookings: nextBookings,
     };
@@ -284,10 +356,12 @@ export class BookingsService {
       price: 0,
       fees: [],
       'booked-days': [],
+      'external-booked-days': [],
       reservations: [],
     });
 
     const reservations = extractReservations(bookings);
+    const bookedDays = extractBookedDays(bookings);
     const index = reservations.findIndex((item) => reservationIdFromRow(item) === reservationId);
 
     if (index < 0) return 'not_found' as const;
@@ -304,9 +378,16 @@ export class BookingsService {
     updatedReservation.id = safeReservationId;
     reservations[index] = updatedReservation;
 
+    const updatedStart = normalizeDayValue(updatedReservation.start);
+    const updatedEnd = normalizeDayValue(updatedReservation.end);
+    if (updatedStart && updatedEnd) {
+      appendBookedDayIfMissing(bookedDays, updatedStart, updatedEnd);
+    }
+
     const nextBookings = {
       ...bookings,
       reservations,
+      'booked-days': bookedDays,
     };
 
     await this.prisma.listing.update({
@@ -316,9 +397,15 @@ export class BookingsService {
       },
     });
 
-    const persistedReservationId = await this.persistReservation(updatedReservation, listingId);
-    if (persistedReservationId !== safeReservationId) {
-      updatedReservation.id = persistedReservationId;
+    const persistedReservation = await this.persistReservation(updatedReservation, listingId);
+    await this.upsertInternalReservationEvent(listingId, persistedReservation);
+
+    if (persistedReservation.id !== reservationId) {
+      await this.removeInternalReservationEvent(listingId, reservationId);
+    }
+
+    if (persistedReservation.id !== safeReservationId) {
+      updatedReservation.id = persistedReservation.id;
       reservations[index] = updatedReservation;
 
       const syncedBookings = {
@@ -332,6 +419,12 @@ export class BookingsService {
           bookings: toPrismaJson(syncedBookings),
         },
       });
+
+      return updatedReservation;
+    }
+
+    if (updatedReservation.id !== persistedReservation.id) {
+      updatedReservation.id = persistedReservation.id;
     }
 
     return updatedReservation;

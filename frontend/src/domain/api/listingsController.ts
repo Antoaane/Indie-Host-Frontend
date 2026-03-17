@@ -3,6 +3,7 @@
 import clerkToken from '@/utils/clerkToken'
 import type {
   DraftPatch,
+  ListingAvailabilitySyncResult,
   ListingResourceKey,
   RawBookings,
   RawComments,
@@ -52,6 +53,7 @@ const buildListingBundleUrl = (listingId: string) => `${BASE_API_URL}/listings/b
 const buildCreateListingUrl = () => `${BASE_API_URL}/listings`
 const buildResolveListingHostnameUrl = (hostname: string) =>
   `${BASE_API_URL}/listings/domains/resolve?hostname=${encodeURIComponent(hostname.trim())}`
+const buildListingAvailabilityRefreshUrl = (listingId: string) => `${BASE_API_URL}/calendar/listings/${listingId}/refresh`
 
 function waitForClerkToken({ timeoutMs, pollEveryMs }: { timeoutMs: number; pollEveryMs: number }): Promise<string | null> {
   const startedAt = Date.now()
@@ -270,6 +272,15 @@ async function postRemote<T>(url: string, payload: unknown): Promise<T> {
   return postRemoteWithToken<T>(url, payload, token)
 }
 
+async function postRemotePublic<T>(url: string, payload: unknown): Promise<T> {
+  const axios = await getAxios()
+  const { data } = await axios.post<T>(url, payload, {
+    withCredentials: false,
+    timeout: API_REQUEST_TIMEOUT_MS,
+  })
+  return data
+}
+
 function fallbackEditableBundle(listingId: string): RawListingBundle {
   return {
     core: { id: listingId },
@@ -428,6 +439,27 @@ export function createApiListingsController(): ListingsController {
       ])
 
       return { bookings, notes, comments, host: host ?? getCanonicalHost() }
+    },
+    syncListingAvailability: async (listingId: string): Promise<ListingAvailabilitySyncResult> => {
+      console.log('[Domain][api] syncListingAvailability', { listingId })
+      if (!apiEnabled) {
+        return {
+          listingId,
+          refreshedAt: new Date().toISOString(),
+          hasSources: false,
+          availabilityUpdated: false,
+          syncedSources: 0,
+          throttledSources: 0,
+          failedSources: 0,
+          skippedSources: 0,
+          sources: [],
+        }
+      }
+
+      return postRemotePublic<ListingAvailabilitySyncResult>(
+        resolveUrl(buildListingAvailabilityRefreshUrl(listingId)),
+        {},
+      )
     },
     patchListingDraft: async (listingId: string, patch: DraftPatch): Promise<void> => {
       console.log('[Domain][api] patchListingDraft', { listingId, patch })

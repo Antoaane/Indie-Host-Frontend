@@ -21,6 +21,8 @@ const envSchema = z.object({
   STRIPE_CONNECT_PLATFORM_FEE_BPS: z.coerce.number().int().min(0).max(10000).default(0),
   STRIPE_CONNECT_DEFAULT_APPLICATION_FEE_BPS: z.coerce.number().int().min(0).max(10000).default(0),
   ICAL_EXPORT_DEFAULT_PRODID: z.string().trim().min(1).default('IndieHost//Calendar//FR'),
+  ICAL_SYNC_THROTTLE_SECONDS: z.coerce.number().int().min(60).default(300),
+  ICAL_SYNC_FETCH_TIMEOUT_MS: z.coerce.number().int().min(1000).default(15000),
   PUBLIC_LISTING_ROOT_DOMAIN: z.string().trim().min(1).default('indiehost.fr'),
   GRANDI_API_TOKEN: z.string().trim().optional().default(''),
   GRANDI_API_BASE_URL: z.string().trim().optional().default('https://api.gandi.net/v5'),

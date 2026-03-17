@@ -2,6 +2,7 @@
 
 import type {
   DraftPatch,
+  ListingAvailabilitySyncResult,
   RawListingBundle,
   UserListingCard,
   VolatileBundle,
@@ -23,6 +24,7 @@ export type ListingsController = {
   fetchListingBundle: (listingId: string) => Promise<RawListingBundle>
   fetchEditableListingBundle: (listingId: string) => Promise<RawListingBundle>
   fetchVolatileListingBundle: (listingId: string) => Promise<VolatileBundle>
+  syncListingAvailability: (listingId: string) => Promise<ListingAvailabilitySyncResult>
   patchListingDraft: (listingId: string, patch: DraftPatch) => Promise<void>
   publishListingDraft: (listingId: string, draft: RawListingBundle) => Promise<void>
   createListing: (payload?: Partial<RawListingBundle>) => Promise<{ listingId: string }>

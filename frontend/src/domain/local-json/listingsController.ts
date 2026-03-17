@@ -2,6 +2,7 @@
 
 import type {
   DraftPatch,
+  ListingAvailabilitySyncResult,
   ListingResourceKey,
   RawBookings,
   RawComments,
@@ -151,6 +152,20 @@ export function createLocalJsonListingsController(): ListingsController {
         },
         runtime: () => runtimeStore.getVolatileBundle(listingId),
       })
+    },
+    syncListingAvailability: async (listingId: string): Promise<ListingAvailabilitySyncResult> => {
+      console.log('[Domain][local-json] syncListingAvailability', { listingId })
+      return {
+        listingId,
+        refreshedAt: new Date().toISOString(),
+        hasSources: false,
+        availabilityUpdated: false,
+        syncedSources: 0,
+        throttledSources: 0,
+        failedSources: 0,
+        skippedSources: 0,
+        sources: [],
+      }
     },
     patchListingDraft: async (listingId: string, patch: DraftPatch): Promise<void> => {
       console.log('[Domain][local-json] patchListingDraft', { listingId, patch })

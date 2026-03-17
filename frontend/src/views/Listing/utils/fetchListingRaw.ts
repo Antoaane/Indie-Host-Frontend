@@ -2,6 +2,7 @@
 
 import { getListingsController } from '@/domain/listings/controller'
 import type {
+  ListingAvailabilitySyncResult,
   RawBookings,
   RawComments,
   RawCore,
@@ -14,6 +15,7 @@ import type {
 
 const controller = getListingsController()
 const inflightBundles = new Map<string, Promise<RawListingBundle>>()
+const inflightAvailabilitySync = new Map<string, Promise<ListingAvailabilitySyncResult>>()
 
 async function resolveListingId(explicitId?: string): Promise<string> {
   if (explicitId && explicitId.trim()) return explicitId.trim()
@@ -96,4 +98,26 @@ export async function loadHost(listingId?: string): Promise<RawHost> {
   const resolved = await resolveListingId(listingId)
   const bundle = await fetchBundle(resolved)
   return (bundle.host ?? { name: '', status: '', avatar: '' }) as RawHost
+}
+
+export async function refreshListingAvailability(listingId?: string): Promise<ListingAvailabilitySyncResult | null> {
+  const resolved = await resolveListingId(listingId)
+
+  if (inflightAvailabilitySync.has(resolved)) {
+    return inflightAvailabilitySync.get(resolved) as Promise<ListingAvailabilitySyncResult>
+  }
+
+  const promise = controller.syncListingAvailability(resolved)
+    .finally(() => {
+      inflightAvailabilitySync.delete(resolved)
+    })
+
+  inflightAvailabilitySync.set(resolved, promise)
+
+  try {
+    return await promise
+  } catch (error) {
+    console.warn('[fetchListingRaw] refresh availability failed', { listingId: resolved, error })
+    return null
+  }
 }

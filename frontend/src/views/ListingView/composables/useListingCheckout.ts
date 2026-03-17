@@ -27,6 +27,7 @@ type UseListingCheckoutOptions = {
   listingId: ComputedRef<string | null>
   rawListing: Ref<RawListingBundle | null | undefined>
   fetchEditableListingBundle: FetchEditableListingBundle
+  syncListingAvailability?: (listingId: string) => Promise<unknown>
   patchListingDraft: PatchListingDraft
 }
 
@@ -337,6 +338,14 @@ export function useListingCheckout(options: UseListingCheckoutOptions) {
     checkoutStatus.isSubmitting = true
 
     try {
+      if (options.syncListingAvailability) {
+        try {
+          await options.syncListingAvailability(targetListingId)
+        } catch (syncError) {
+          console.warn('[ListingView] availability sync before checkout failed', syncError)
+        }
+      }
+
       const editable = await options.fetchEditableListingBundle(targetListingId)
       const currentCore = (editable.core ?? options.rawListing.value?.core ?? null) as Partial<RawCore> | null
       const currentBookings = (editable.bookings ?? null) as Partial<RawBookings> | null

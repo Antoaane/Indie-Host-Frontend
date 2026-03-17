@@ -45,11 +45,23 @@ export const calendarPlugin = fp(async (fastify) => {
     reply.code(201).send(result);
   });
 
+  fastify.post('/calendar/listings/:listingId/refresh', async (request, reply) => {
+    const { listingId } = calendarListingParamsSchema.parse(request.params);
+    const result = await service.syncListingSourcesForPublicView(listingId);
+
+    if (!result) {
+      reply.code(404).send({ message: 'Listing not found.' });
+      return;
+    }
+
+    reply.send(result);
+  });
+
   fastify.post('/calendar/listings/:listingId/sources/:syncId/sync', {
     preHandler: fastify.authenticate,
   }, async (request, reply) => {
     const { listingId, syncId } = syncParamsSchema.parse(request.params);
-    const result = await service.syncCalendarSource(listingId, syncId);
+    const result = await service.syncCalendarSource(listingId, syncId, { force: true });
 
     if (!result) {
       reply.code(404).send({ message: 'Sync source not found.' });
