@@ -2,7 +2,7 @@ import type { Listing, Prisma, PrismaClient, User } from '@prisma/client';
 
 import { env } from '../../config/env.js';
 import { deepMerge, asObject, toNumber } from '../../lib/json.js';
-import { buildListingId } from '../../lib/id.js';
+import { buildListingId, buildReservationId } from '../../lib/id.js';
 import type { RequestAuth } from '../../types/auth.js';
 import { buildHostProfileFromUser, upsertUserFromAuth } from '../users/users.repository.js';
 import { buildDefaultResource, type ListingResourceKey } from './listings.constants.js';
@@ -178,6 +178,89 @@ export class ListingsService {
     if (!readiness.canPublish) {
       throw new ListingPublicationForbiddenError(readiness);
     }
+  }
+
+  private normalizeReservationId(value: unknown): string | null {
+    if (typeof value !== 'string') return null;
+    const trimmed = value.trim();
+    return trimmed || null;
+  }
+
+  private async reservationIdExistsOnAnotherListing(reservationId: string, listingId: string): Promise<boolean> {
+    const existing = await this.prisma.reservation.findUnique({
+      where: { id: reservationId },
+      select: {
+        listingId: true,
+      },
+    });
+
+    if (!existing) return false;
+    return existing.listingId !== listingId;
+  }
+
+  private async ensureBookingReservationId(preferredId: string | null, listingId: string, usedIds: Set<string>): Promise<string> {
+    let candidate = preferredId ?? buildReservationId(listingId);
+    let attempts = 0;
+
+    while (attempts < 20) {
+      const alreadyUsedInPayload = usedIds.has(candidate);
+      const existsOnAnotherListing = await this.reservationIdExistsOnAnotherListing(candidate, listingId);
+
+      if (!alreadyUsedInPayload && !existsOnAnotherListing) {
+        return candidate;
+      }
+
+      candidate = buildReservationId(listingId);
+      attempts += 1;
+    }
+
+    return `${buildReservationId(listingId)}-${Date.now().toString(36)}`;
+  }
+
+  private async normalizeBookingsResourceValue(listingId: string, value: Record<string, unknown>): Promise<Record<string, unknown>> {
+    const reservationsRaw = Array.isArray(value.reservations)
+      ? value.reservations.filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object')
+      : [];
+
+    const usedReservationIds = new Set<string>();
+    const normalizedReservations: Array<Record<string, unknown>> = [];
+
+    for (const reservation of reservationsRaw) {
+      const preferredId = this.normalizeReservationId(reservation.id);
+      const reservationId = await this.ensureBookingReservationId(preferredId, listingId, usedReservationIds);
+      usedReservationIds.add(reservationId);
+
+      normalizedReservations.push({
+        ...reservation,
+        id: reservationId,
+      });
+    }
+
+    const bookedDaysRaw = Array.isArray(value['booked-days'])
+      ? value['booked-days'].filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object')
+      : [];
+
+    const bookedDaysByRange = new Map<string, { start: string; end: string }>();
+
+    for (const item of bookedDaysRaw) {
+      const start = typeof item.start === 'string' ? item.start.trim() : '';
+      const end = typeof item.end === 'string' ? item.end.trim() : '';
+      if (!start || !end) continue;
+      bookedDaysByRange.set(`${start}__${end}`, { start, end });
+    }
+
+    for (const reservation of normalizedReservations) {
+      const start = typeof reservation.start === 'string' ? reservation.start.trim() : '';
+      const end = typeof reservation.end === 'string' ? reservation.end.trim() : '';
+      if (!start || !end) continue;
+      bookedDaysByRange.set(`${start}__${end}`, { start, end });
+    }
+
+    return {
+      ...value,
+      reservations: normalizedReservations,
+      'booked-days': Array.from(bookedDaysByRange.values()),
+    };
   }
 
   private buildFallbackBundle(listingId: string): ListingSectionBundle {
@@ -519,25 +602,28 @@ export class ListingsService {
     const rawValue = (listing as Record<string, unknown>)[resource];
     const currentValue = asObject(rawValue, fallback);
     const merged = deepMerge(currentValue, patch);
+    const normalizedMerged = resource === 'bookings'
+      ? await this.normalizeBookingsResourceValue(listingId, merged)
+      : merged;
 
     const data: Prisma.ListingUpdateInput = {
       updatedAt: new Date(),
     };
 
     if (resource === 'core') {
-      const nextStatus = this.extractStatus(merged);
+      const nextStatus = this.extractStatus(normalizedMerged);
       if (nextStatus === 'published') {
         this.assertCanPublishListing(actor);
       }
-      data.core = toJsonInput(merged);
+      data.core = toJsonInput(normalizedMerged);
       data.status = nextStatus;
     }
-    if (resource === 'bookings') data.bookings = toJsonInput(merged);
-    if (resource === 'medias') data.medias = toJsonInput(merged);
-    if (resource === 'arrival') data.arrival = toJsonInput(merged);
-    if (resource === 'notes') data.notes = toJsonInput(merged);
-    if (resource === 'comments') data.comments = toJsonInput(merged);
-    if (resource === 'host') data.host = toJsonInput(merged);
+    if (resource === 'bookings') data.bookings = toJsonInput(normalizedMerged);
+    if (resource === 'medias') data.medias = toJsonInput(normalizedMerged);
+    if (resource === 'arrival') data.arrival = toJsonInput(normalizedMerged);
+    if (resource === 'notes') data.notes = toJsonInput(normalizedMerged);
+    if (resource === 'comments') data.comments = toJsonInput(normalizedMerged);
+    if (resource === 'host') data.host = toJsonInput(normalizedMerged);
 
     if (!listing.ownerId && actor) {
       data.owner = {
@@ -550,7 +636,7 @@ export class ListingsService {
       data,
     });
 
-    return merged;
+    return normalizedMerged;
   }
 
   listUserCards(listings: Listing[]) {

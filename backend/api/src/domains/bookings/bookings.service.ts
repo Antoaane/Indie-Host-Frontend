@@ -22,6 +22,29 @@ function extractBookedDays(bookings: Record<string, unknown>) {
   return bookings['booked-days'].filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object');
 }
 
+function normalizeReservationId(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed || null;
+}
+
+function reservationIdFromRow(row: RawReservation): string | null {
+  return normalizeReservationId(row.id);
+}
+
+function normalizeDayValue(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return trimmed;
+}
+
+function appendBookedDayIfMissing(bookedDays: Array<Record<string, unknown>>, start: string, end: string) {
+  const hasMatch = bookedDays.some((item) => item.start === start && item.end === end);
+  if (hasMatch) return;
+  bookedDays.push({ start, end });
+}
+
 function extractStripePaymentIntentId(row: RawReservation): string | null {
   const payment = asObject(row.payment);
   const stripe = asObject(payment.stripe);
@@ -31,6 +54,37 @@ function extractStripePaymentIntentId(row: RawReservation): string | null {
 
 export class BookingsService {
   constructor(private readonly prisma: PrismaClient) {}
+
+  private async reservationIdUsedByAnotherListing(reservationId: string, listingId: string): Promise<boolean> {
+    const existing = await this.prisma.reservation.findUnique({
+      where: { id: reservationId },
+      select: { listingId: true },
+    });
+
+    if (!existing) return false;
+    return existing.listingId !== listingId;
+  }
+
+  private async ensureReservationId(preferredId: string | null, listingId: string, usedReservationIds: Set<string> = new Set()): Promise<string> {
+    const requestedId = preferredId ?? buildReservationId(listingId);
+
+    let candidate = requestedId;
+    let attempts = 0;
+
+    while (attempts < 20) {
+      const alreadyUsedInListing = usedReservationIds.has(candidate);
+      const belongsToOtherListing = await this.reservationIdUsedByAnotherListing(candidate, listingId);
+
+      if (!alreadyUsedInListing && !belongsToOtherListing) {
+        return candidate;
+      }
+
+      candidate = buildReservationId(listingId);
+      attempts += 1;
+    }
+
+    return `${buildReservationId(listingId)}-${Date.now().toString(36)}`;
+  }
 
   async getListingBookings(listingId: string) {
     const listing = await this.prisma.listing.findUnique({
@@ -49,43 +103,54 @@ export class BookingsService {
   }
 
   private async persistReservation(row: RawReservation, listingId: string) {
-    const reservationId = typeof row.id === 'string' && row.id.trim() ? row.id.trim() : buildReservationId(listingId);
+    const reservationId = normalizeReservationId(row.id) ?? buildReservationId(listingId);
     const guestName = typeof row.guestName === 'string' ? row.guestName : 'Voyageur';
     const startDate = parseDate(row.start) ?? new Date();
     const endDate = parseDate(row.end) ?? startDate;
+    const payload = {
+      guestName,
+      guestAvatar: typeof row.guestAvatar === 'string' ? row.guestAvatar : null,
+      startDate,
+      endDate,
+      nights: toNumber(row.nights, 1),
+      message: typeof row.message === 'string' ? row.message : null,
+      internalNote: typeof row.internalNote === 'string' ? row.internalNote : null,
+      guests: toPrismaJson(asObject(row.guests, {})),
+      payment: toPrismaJson(asObject(row.payment, {})),
+      contact: toPrismaJson(asObject(row.contact, {})),
+      messaging: toPrismaJson(asObject(row.messaging, {})),
+    };
 
-    await this.prisma.reservation.upsert({
+    const existing = await this.prisma.reservation.findUnique({
       where: { id: reservationId },
-      update: {
-        listingId,
-        guestName,
-        guestAvatar: typeof row.guestAvatar === 'string' ? row.guestAvatar : null,
-        startDate,
-        endDate,
-        nights: toNumber(row.nights, 1),
-        message: typeof row.message === 'string' ? row.message : null,
-        internalNote: typeof row.internalNote === 'string' ? row.internalNote : null,
-        guests: toPrismaJson(asObject(row.guests, {})),
-        payment: toPrismaJson(asObject(row.payment, {})),
-        contact: toPrismaJson(asObject(row.contact, {})),
-        messaging: toPrismaJson(asObject(row.messaging, {})),
-      },
-      create: {
-        id: reservationId,
-        listingId,
-        guestName,
-        guestAvatar: typeof row.guestAvatar === 'string' ? row.guestAvatar : null,
-        startDate,
-        endDate,
-        nights: toNumber(row.nights, 1),
-        message: typeof row.message === 'string' ? row.message : null,
-        internalNote: typeof row.internalNote === 'string' ? row.internalNote : null,
-        guests: toPrismaJson(asObject(row.guests, {})),
-        payment: toPrismaJson(asObject(row.payment, {})),
-        contact: toPrismaJson(asObject(row.contact, {})),
-        messaging: toPrismaJson(asObject(row.messaging, {})),
+      select: {
+        id: true,
+        listingId: true,
       },
     });
+
+    let persistedReservationId = reservationId;
+
+    if (existing && existing.listingId === listingId) {
+      await this.prisma.reservation.update({
+        where: { id: reservationId },
+        data: payload,
+      });
+    } else {
+      if (existing && existing.listingId !== listingId) {
+        persistedReservationId = await this.ensureReservationId(null, listingId, new Set([
+          reservationId,
+        ]));
+      }
+
+      await this.prisma.reservation.create({
+        data: {
+          id: persistedReservationId,
+          listingId,
+          ...payload,
+        },
+      });
+    }
 
     const stripePaymentIntentId = extractStripePaymentIntentId(row);
     if (stripePaymentIntentId) {
@@ -95,12 +160,12 @@ export class BookingsService {
           listingId,
         },
         data: {
-          reservationId,
+          reservationId: persistedReservationId,
         },
       });
     }
 
-    return reservationId;
+    return persistedReservationId;
   }
 
   async createBooking(input: Record<string, unknown>) {
@@ -122,11 +187,19 @@ export class BookingsService {
       reservations: [],
     });
 
-    const reservations = extractReservations(bookings);
+    const existingReservations = extractReservations(bookings);
     const bookedDays = extractBookedDays(bookings);
+    const usedReservationIds = new Set(
+      existingReservations
+        .map((reservation) => reservationIdFromRow(reservation))
+        .filter((value): value is string => Boolean(value)),
+    );
+    const requestedReservationId = normalizeReservationId(input.id);
+    const safeReservationId = await this.ensureReservationId(requestedReservationId, listingId, usedReservationIds);
+    const reservations = existingReservations.filter((reservation) => reservationIdFromRow(reservation) !== safeReservationId);
 
     const reservation: RawReservation = {
-      id: typeof input.id === 'string' && input.id.trim() ? input.id.trim() : buildReservationId(listingId),
+      id: safeReservationId,
       start: input.start,
       end: input.end,
       nights: input.nights,
@@ -143,11 +216,11 @@ export class BookingsService {
 
     reservations.unshift(reservation);
 
-    const start = typeof input.start === 'string' ? input.start : '';
-    const end = typeof input.end === 'string' ? input.end : '';
+    const start = normalizeDayValue(input.start);
+    const end = normalizeDayValue(input.end);
 
     if (start && end) {
-      bookedDays.push({ start, end });
+      appendBookedDayIfMissing(bookedDays, start, end);
     }
 
     const nextBookings = {
@@ -164,6 +237,30 @@ export class BookingsService {
     });
 
     const reservationId = await this.persistReservation(reservation, listingId);
+    if (reservationId !== safeReservationId) {
+      reservations[0] = {
+        ...reservations[0],
+        id: reservationId,
+      };
+
+      const syncedBookings = {
+        ...nextBookings,
+        reservations,
+      };
+
+      await this.prisma.listing.update({
+        where: { id: listingId },
+        data: {
+          bookings: toPrismaJson(syncedBookings),
+        },
+      });
+
+      return {
+        reservationId,
+        listingId,
+        bookings: syncedBookings,
+      };
+    }
 
     return {
       reservationId,
@@ -191,11 +288,20 @@ export class BookingsService {
     });
 
     const reservations = extractReservations(bookings);
-    const index = reservations.findIndex((item) => item.id === reservationId);
+    const index = reservations.findIndex((item) => reservationIdFromRow(item) === reservationId);
 
     if (index < 0) return 'not_found' as const;
 
+    const usedReservationIds = new Set(
+      reservations
+        .filter((_, itemIndex) => itemIndex !== index)
+        .map((reservation) => reservationIdFromRow(reservation))
+        .filter((value): value is string => Boolean(value)),
+    );
+    const safeReservationId = await this.ensureReservationId(reservationId, listingId, usedReservationIds);
+
     const updatedReservation = deepMerge(reservations[index] ?? {}, patch) as RawReservation;
+    updatedReservation.id = safeReservationId;
     reservations[index] = updatedReservation;
 
     const nextBookings = {
@@ -210,7 +316,23 @@ export class BookingsService {
       },
     });
 
-    await this.persistReservation(updatedReservation, listingId);
+    const persistedReservationId = await this.persistReservation(updatedReservation, listingId);
+    if (persistedReservationId !== safeReservationId) {
+      updatedReservation.id = persistedReservationId;
+      reservations[index] = updatedReservation;
+
+      const syncedBookings = {
+        ...nextBookings,
+        reservations,
+      };
+
+      await this.prisma.listing.update({
+        where: { id: listingId },
+        data: {
+          bookings: toPrismaJson(syncedBookings),
+        },
+      });
+    }
 
     return updatedReservation;
   }
