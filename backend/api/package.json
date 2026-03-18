@@ -11,7 +11,7 @@
     "dev": "tsx watch src/server.ts",
     "build": "prisma generate && tsc -p tsconfig.build.json",
     "start": "node dist/server.js",
-    "start:docker": "prisma generate && prisma db push && node dist/server.js",
+    "start:docker": "sh -c 'if [ -z \"${DATABASE_URL:-}\" ] && [ -n \"${DATABASE_URL_FILE:-}\" ] && [ -f \"$DATABASE_URL_FILE\" ]; then export DATABASE_URL=\"$(cat \"$DATABASE_URL_FILE\")\"; fi; if [ -z \"${DATABASE_URL:-}\" ]; then echo \"DATABASE_URL (or DATABASE_URL_FILE) is required\" >&2; exit 1; fi; prisma generate && prisma db push && node dist/server.js'",
     "typecheck": "tsc --noEmit",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
