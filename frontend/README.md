@@ -4,6 +4,9 @@
 
 Vite + Vue 3 + TypeScript — interface hôte pour la gestion d'annonces, réservations, messagerie et noms de domaine.
 
+> Mode standard du projet: lancement via `docker compose` depuis la racine.
+> Ce README documente le frontend et conserve le mode Vite local à titre legacy/debug.
+
 ---
 
 ## Architecture — Services à lancer

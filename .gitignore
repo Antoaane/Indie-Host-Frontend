@@ -55,3 +55,10 @@ backend/api/node_modules/
 backend/api/dist/
 backend/api/.env
 
+/secrets
+/secret.test
+
+/.env
+/.env.*
+!/.env.example
+

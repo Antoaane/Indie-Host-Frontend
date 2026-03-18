@@ -2,6 +2,9 @@
 
 Backend REST TypeScript pour le frontend IndieHost.
 
+> Mode standard du projet: lancement via `docker compose` depuis la racine.
+> Ce README conserve les infos API et les commandes hors Docker à titre legacy/debug.
+
 ## Stack
 
 - Fastify (plugins modulaires)

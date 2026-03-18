@@ -1,6 +1,47 @@
 import 'dotenv/config';
 
+import fs from 'node:fs';
 import { z } from 'zod';
+
+const SECRET_FALLBACK_KEYS = [
+  'DATABASE_URL',
+  'IMAGEKIT_API_KEY',
+  'CLERK_SECRET_KEY',
+  'STRIPE_SECRET_KEY',
+  'STRIPE_WEBHOOK_SECRET',
+  'GANDI_API_TOKEN',
+] as const;
+
+type SecretFallbackKey = (typeof SECRET_FALLBACK_KEYS)[number];
+
+function readSecretFile(path?: string): string | undefined {
+  if (!path?.trim()) return undefined;
+
+  try {
+    const value = fs.readFileSync(path, 'utf-8').trim();
+    return value || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function readEnvValue(name: SecretFallbackKey): string | undefined {
+  const direct = process.env[name]?.trim();
+  if (direct) return direct;
+
+  return readSecretFile(process.env[`${name}_FILE`]);
+}
+
+function resolveEnvWithSecretFallback(): NodeJS.ProcessEnv {
+  const next = { ...process.env };
+
+  for (const key of SECRET_FALLBACK_KEYS) {
+    const value = readEnvValue(key);
+    if (value !== undefined) next[key] = value;
+  }
+
+  return next;
+}
 
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -16,6 +57,7 @@ const envSchema = z.object({
   CLERK_JWKS_URL: z.string().trim().optional().default(''),
   CLERK_ISSUER: z.string().trim().optional().default(''),
   CLERK_AUDIENCE: z.string().trim().optional().default(''),
+  CLERK_SECRET_KEY: z.string().trim().optional().default(''),
   STRIPE_SECRET_KEY: z.string().trim().optional().default(''),
   STRIPE_WEBHOOK_SECRET: z.string().trim().optional().default(''),
   STRIPE_CONNECT_PLATFORM_FEE_BPS: z.coerce.number().int().min(0).max(10000).default(0),
@@ -29,7 +71,7 @@ const envSchema = z.object({
   GANDI_CHECKOUT_BASE_URL: z.string().trim().optional().default('https://www.gandi.net/en/domain/checkout'),
 });
 
-const parsed = envSchema.safeParse(process.env);
+const parsed = envSchema.safeParse(resolveEnvWithSecretFallback());
 
 if (!parsed.success) {
   const formatted = parsed.error.issues
