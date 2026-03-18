@@ -223,7 +223,7 @@
       @include base-text($bigger: true, $thin: false);
     }
 
-    &.is-pinned-group {
+    &.is-selected-group {
       > h5 {
         color: $secondary;
       }

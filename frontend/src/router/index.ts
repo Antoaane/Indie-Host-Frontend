@@ -120,20 +120,20 @@ const router = createRouter({
       path: '/editor/create',
       name: 'create-listing',
       component: CreateListingPublicRoute,
-      meta: { navVariant: 'public' },
+      meta: { navVariant: 'public', hideNav: true },
       beforeEnter: resolveCreateListingEntryRedirect,
     },
     {
       path: '/create-listing',
       name: 'create-listing-public',
       component: CreateListingPublicRoute,
-      meta: { navVariant: 'public' },
+      meta: { navVariant: 'public', hideNav: true },
     },
     {
       path: '/editor/:userId/create',
       name: 'create-listing-user',
       component: CreateListingRoute,
-      meta: { navVariant: 'host' },
+      meta: { navVariant: 'host', hideNav: true },
     },
     {
       path: '/editor',

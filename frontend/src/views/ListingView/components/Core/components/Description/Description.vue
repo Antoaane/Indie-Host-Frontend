@@ -153,15 +153,34 @@ function closePopup() {
 }
 
 .listing-description-overlay {
+  align-items: flex-end;
+  padding-top: max(var(--layout-gap), env(safe-area-inset-top));
+  padding-bottom: max(var(--layout-gap-sm), env(safe-area-inset-bottom));
+
+  @include min-width(lg) {
+    align-items: center;
+  }
+
   > .panel {
     @extend %overlay-panel;
-    padding: var(--layout-gap-4xl);
-    padding-bottom: calc(var(--layout-gap) * 2) !important;
+    box-sizing: border-box;
+    width: 100%;
+    height: auto;
+    max-height: min(78dvh, calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - (var(--layout-gap) * 2)));
+    padding: var(--layout-gap-xl) var(--layout-gap) calc(var(--layout-gap) + env(safe-area-inset-bottom));
     min-height: 0;
     overflow: hidden;
 
+    @include min-width(lg) {
+      height: 100%;
+      max-height: 100%;
+      padding: var(--layout-gap-4xl);
+      padding-bottom: calc(var(--layout-gap) * 2) !important;
+    }
+
     > h2 {
       flex: 0 0 auto;
+      padding-right: 3rem;
     }
 
     > .content {
@@ -169,13 +188,17 @@ function closePopup() {
       flex: 1 1 auto;
       min-height: 0;
       margin-bottom: 0;
-      padding-bottom: var(--layout-gap);
+      padding-bottom: calc(var(--layout-gap-sm) + env(safe-area-inset-bottom));
       overflow-y: auto;
       overscroll-behavior: contain;
       -webkit-overflow-scrolling: touch;
       touch-action: pan-y;
       overflow-wrap: anywhere;
       word-break: break-word;
+
+      @include min-width(lg) {
+        padding-bottom: var(--layout-gap);
+      }
 
       > span {
         @include base-text($thin: false);
@@ -201,8 +224,13 @@ function closePopup() {
 
     > .close {
       position: absolute;
-      top: var(--layout-gap-md);
-      right: var(--layout-gap-md);
+      top: var(--layout-gap-sm);
+      right: var(--layout-gap-sm);
+
+      @include min-width(lg) {
+        top: var(--layout-gap-md);
+        right: var(--layout-gap-md);
+      }
 
       > .button {
         @include buttons.primary($padding: false, $theme: white);

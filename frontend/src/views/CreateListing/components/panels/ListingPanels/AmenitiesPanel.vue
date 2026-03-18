@@ -26,7 +26,10 @@ type CatalogAmenityItem = AmenityCatalogItem & {
 type CatalogAmenityGroup = {
   category: string
   items: CatalogAmenityItem[]
+  selectedGroup?: boolean
 }
+
+const FALLBACK_CATEGORY = 'Autres'
 
 const props = defineProps<{
   core?: Partial<RawCore> | null
@@ -50,6 +53,7 @@ const showSearchCounter = shouldDisplayTextLimit(searchLimit, textDefaults)
 const checkIcon = resolveLucideComponent('check')
 const showSelectedOnlyLabel = String(overlayContent.showSelectedOnly ?? 'Afficher la sélection')
 const showAllAmenitiesLabel = String(overlayContent.showAll ?? 'Afficher tous les équipements')
+const selectedAmenitiesLabel = String(overlayContent.selectedCategory ?? overlayContent.pinnedCategory ?? 'Équipements sélectionnés')
 
 function setAmenities(next: AmenityDraft[]) {
   emit('patch', { core: { amenities: next } })
@@ -159,6 +163,61 @@ function isAmenitySelected(amenityId: string): boolean {
   return selectedAmenityIdSet.value.has(normalized)
 }
 
+const catalogById = computed(() => {
+  const map = new Map<string, AmenityCatalogItem>()
+  for (const item of catalog.value) {
+    const normalizedId = normalizeAmenityId(item.id)
+    if (!normalizedId) continue
+    map.set(normalizedId, item)
+  }
+  return map
+})
+
+function compareCatalogAmenities(a: CatalogAmenityItem, b: CatalogAmenityItem): number {
+  if (a.relevance !== b.relevance) return (b.relevance ?? 0) - (a.relevance ?? 0)
+  return String(a.name ?? '').localeCompare(String(b.name ?? ''))
+}
+
+const selectedCatalogItems = computed<CatalogAmenityItem[]>(() => {
+  const seen = new Set<string>()
+  const items: CatalogAmenityItem[] = []
+
+  amenities.value.forEach((amenity) => {
+    const normalizedId = resolveAmenityId(amenity)
+    if (!normalizedId || seen.has(normalizedId)) return
+    seen.add(normalizedId)
+
+    const catalogItem = catalogById.value.get(normalizedId)
+    const name = String((amenity as any)?.name ?? catalogItem?.name ?? normalizedId).trim() || normalizedId
+    const description = String((amenity as any)?.description ?? catalogItem?.description ?? '').trim() || undefined
+    const category = String((amenity as any)?.category ?? catalogItem?.category ?? FALLBACK_CATEGORY).trim() || FALLBACK_CATEGORY
+
+    items.push({
+      ...(catalogItem ?? {
+        id: normalizedId,
+        name,
+        description,
+        category,
+        relevance: Number((amenity as any)?.relevance ?? 0) || 0,
+      }),
+      id: normalizedId,
+      name,
+      description,
+      category,
+      relevance: Number((amenity as any)?.relevance ?? catalogItem?.relevance ?? 0) || 0,
+      icon: resolveAmenityIcon({
+        id: normalizedId,
+        name,
+        description,
+        category,
+      } as AmenityCatalogItem),
+      selected: true,
+    })
+  })
+
+  return items.sort(compareCatalogAmenities)
+})
+
 const catalogSearchTokens = computed(() => tokenizeSearchText(catalogSearch.value))
 const catalogSearchLength = computed(() => Math.min(catalogSearch.value.length, searchLimit))
 const searchCounter = computed(() =>
@@ -176,15 +235,28 @@ function matchesCatalogSearch(item: AmenityCatalogItem, tokens: string[]): boole
 
 const catalogGroups = computed<CatalogAmenityGroup[]>(() => {
   const tokens = catalogSearchTokens.value
+  const selectedItems = selectedCatalogItems.value.filter((item) => matchesCatalogSearch(item, tokens))
+
+  if (showSelectedOnly.value) {
+    return selectedItems.length
+      ? [
+          {
+            category: selectedAmenitiesLabel,
+            items: selectedItems,
+            selectedGroup: true,
+          },
+        ]
+      : []
+  }
 
   const groups = new Map<string, CatalogAmenityItem[]>()
   for (const item of catalog.value) {
     const normalizedId = normalizeAmenityId(item.id)
     if (!normalizedId) continue
-    if (showSelectedOnly.value && !selectedAmenityIdSet.value.has(normalizedId)) continue
+    if (selectedAmenityIdSet.value.has(normalizedId)) continue
     if (!matchesCatalogSearch(item, tokens)) continue
 
-    const key = String(item.category ?? '').trim() || 'Autres'
+    const key = String(item.category ?? '').trim() || FALLBACK_CATEGORY
     const items = groups.get(key) ?? []
     items.push({
       ...item,
@@ -207,7 +279,16 @@ const catalogGroups = computed<CatalogAmenityGroup[]>(() => {
     )
     .sort((a, b) => a.category.localeCompare(b.category))
 
-  return ordered
+  return selectedItems.length
+    ? [
+        {
+          category: selectedAmenitiesLabel,
+          items: selectedItems,
+          selectedGroup: true,
+        },
+        ...ordered,
+      ]
+    : ordered
 })
 
 watch(
@@ -268,8 +349,9 @@ watch(
       >
         <div
           v-for="group in catalogGroups"
-          :key="group.category"
+          :key="group.selectedGroup ? '__selected__' : group.category"
           class="category"
+          :class="{ 'is-selected-group': group.selectedGroup }"
         >
           <h4>{{ group.category }}</h4>
           <ul>

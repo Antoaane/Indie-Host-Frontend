@@ -108,6 +108,7 @@ onBeforeUnmount(() => {
           v-if="aspectRatio"
           :aspect="aspectRatio"
           :raw-listing="props.rawListing"
+          preview-only
         />
       </div>
     </div>
@@ -168,6 +169,7 @@ onBeforeUnmount(() => {
       min-height: 0;
       overflow: hidden;
       position: relative;
+      background: $background;
     }
   }
 
@@ -179,6 +181,15 @@ onBeforeUnmount(() => {
     border-radius: borders.$rounded-xl;
     background: rgba($secondary, 0.05);
     color: rgba($secondary-text, 0.65);
+  }
+
+  @media screen and (max-width: 768px) {
+    width: 100%;
+    gap: var(--layout-gap-sm);
+
+    > .preview-frame {
+      min-height: clamp(24rem, 62vh, 34rem);
+    }
   }
 }
 </style>

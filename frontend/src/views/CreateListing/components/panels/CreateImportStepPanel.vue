@@ -4,7 +4,9 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { Download, Loader2 } from 'lucide-vue-next'
 
+import ImportLoadingState from '@/components/feedback/ImportLoadingState.vue'
 import { ensurePublishedMediasStoredInImageKit } from '@/domain/api/imagekit'
+import { useImportLoadingFeedback } from '@/composables/useImportLoadingFeedback'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import {
   detectListingSource,
@@ -61,6 +63,16 @@ onMounted(() => {
 const isImporting = ref(false)
 const importError = ref<string | null>(null)
 const panelContent = editorStatic.panels.listing.import
+const {
+  progressPercent,
+  progressLabel,
+  progressTitle,
+  progressHint,
+  progressTip,
+  startImportLoadingFeedback,
+  completeImportLoadingFeedback,
+  resetImportLoadingFeedback,
+} = useImportLoadingFeedback()
 
 const detectedSource = computed(() => detectListingSource(url.value))
 const placeholder = computed(() =>
@@ -86,7 +98,6 @@ watch(
 async function handleImport() {
   if (!canImport.value) return
   importError.value = null
-  isImporting.value = true
   try {
     const normalizedUrl = normalizeListingUrl(url.value.trim())
     const source = detectListingSource(normalizedUrl)
@@ -96,6 +107,8 @@ async function handleImport() {
       return
     }
 
+    startImportLoadingFeedback(source)
+    isImporting.value = true
     const data = await scrapeListing({ url: normalizedUrl })
     const transformed =
       source === 'airbnb'
@@ -112,6 +125,7 @@ async function handleImport() {
       ...(transformed.arrival ? { arrival: transformed.arrival } : {}),
       ...(transformed.notes ? { notes: transformed.notes } : {}),
     }
+    await completeImportLoadingFeedback()
     emit('patch', patch)
     emit('next')
     importError.value = null
@@ -120,6 +134,7 @@ async function handleImport() {
       err instanceof Error ? err.message : 'Impossible de récupérer l\'annonce.'
   } finally {
     isImporting.value = false
+    resetImportLoadingFeedback()
   }
 }
 
@@ -169,6 +184,15 @@ function handleCreateManually() {
           </div>
         </div>
       </div>
+
+      <ImportLoadingState
+        v-if="isImporting"
+        :label="progressLabel"
+        :progress="progressPercent"
+        :title="progressTitle"
+        :hint="progressHint"
+        :tip="progressTip"
+      />
 
       <button
         type="button"

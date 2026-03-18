@@ -7,6 +7,8 @@ import { vp } from '@/utils/viewport'
 import { orderByIndex } from '@/utils/medias/order'
 import { ArrowLeft, ArrowRight, Loader2, Search } from 'lucide-vue-next'
 import { useRouter } from 'vue-router'
+import ImportLoadingState from '@/components/feedback/ImportLoadingState.vue'
+import { useImportLoadingFeedback } from '@/composables/useImportLoadingFeedback'
 import GradiantSeparator from '@/components/svgs/images/GradiantSeparator.vue'
 import ListingView from '@/views/ListingView/_ListingView.vue'
 import PreviewSkeleton from '@/views/Landing/components/IntroSection/PreviewSkeleton.vue'
@@ -38,12 +40,22 @@ const isPreviewLoading = ref(false)
 const previewError = ref<string | null>(null)
 const previewContainerRef = ref<HTMLElement | null>(null)
 const mobileImportVideoSrc = '/assets/media/videos/import-auto-video.webm'
+const {
+  progressPercent,
+  progressLabel,
+  progressTitle,
+  progressHint,
+  progressTip,
+  startImportLoadingFeedback,
+  completeImportLoadingFeedback,
+  resetImportLoadingFeedback,
+} = useImportLoadingFeedback()
 
 const displayedPreviewBundle = computed(() => previewBundle.value)
 const isMobilePreviewFullscreen = computed(() => Boolean(previewBundle.value) && !vp.md.value)
 const showInlinePreview = computed(() => vp.lg.value || (vp.md.value && Boolean(previewBundle.value)))
 const showInlineActivateCta = computed(() => Boolean(previewBundle.value) && !isPreviewLoading.value && vp.md.value)
-const showMobileLoadingHint = computed(() => isPreviewLoading.value && !vp.md.value)
+const showStackedLoadingFeedback = computed(() => isPreviewLoading.value && !showInlinePreview.value)
 const showMobileTeaser = computed(() => !vp.lg.value && !isPreviewLoading.value && !previewBundle.value)
 const mobilePreviewTopbarStyle = computed<Record<string, string>>(() => {
   const images = orderByIndex([...(displayedPreviewBundle.value?.medias?.images ?? [])])
@@ -72,6 +84,7 @@ async function runPreview() {
     return
   }
   previewError.value = null
+  startImportLoadingFeedback(source)
   isPreviewLoading.value = true
   previewBundle.value = null
   try {
@@ -80,7 +93,9 @@ async function runPreview() {
       source === 'airbnb'
         ? transformAirbnbToRawListingBundle(data as AirbnbScrapedData)
         : transformBookingToRawListingBundle(data as BookingScrapedData)
-    previewBundle.value = buildPreviewBundle(partial)
+    const nextPreviewBundle = buildPreviewBundle(partial)
+    await completeImportLoadingFeedback()
+    previewBundle.value = nextPreviewBundle
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Impossible de récupérer l'annonce."
     // Message spécifique si Booking.com bloque le scraping
@@ -91,6 +106,7 @@ async function runPreview() {
     }
   } finally {
     isPreviewLoading.value = false
+    resetImportLoadingFeedback()
   }
 }
 
@@ -228,13 +244,16 @@ onBeforeUnmount(() => {
           {{ previewError }}
         </p>
 
-        <div
-          v-if="showMobileLoadingHint"
+        <ImportLoadingState
+          v-if="showStackedLoadingFeedback"
           class="mobile-loading-hint"
-        >
-          <Loader2 class="icon is-spinning" />
-          <span>Récupération de votre annonce…</span>
-        </div>
+          :label="progressLabel"
+          :progress="progressPercent"
+          :title="progressTitle"
+          :hint="progressHint"
+          :tip="progressTip"
+          tone="inverted"
+        />
 
         <div
           v-if="showMobileTeaser"
@@ -296,7 +315,14 @@ onBeforeUnmount(() => {
           v-if="isPreviewLoading"
           class="embed-skeleton"
         >
-          Récupération de votre annonce…
+          <ImportLoadingState
+            :label="progressLabel"
+            :progress="progressPercent"
+            :title="progressTitle"
+            :hint="progressHint"
+            :tip="progressTip"
+            tone="inverted"
+          />
         </div>
         <div
           v-else
@@ -360,7 +386,7 @@ onBeforeUnmount(() => {
           <div class="mobile-preview-stage">
             <ListingView
               :raw-listing="displayedPreviewBundle"
-              :forced-viewport-mode="vp.md ? 'xxl' : 'sm'"
+              :forced-viewport-mode="'sm'"
               :preview-only="true"
             />
           </div>
