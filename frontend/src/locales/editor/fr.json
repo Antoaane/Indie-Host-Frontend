@@ -37,6 +37,10 @@
       "pendingChanges": {
         "label": "Modifications non appliquées"
       },
+      "statusOverlay": {
+        "paused": "Cette annonce est en pause",
+        "blocked": "Les réservations de cette annonce sont bloquées"
+      },
       "untitled": "Annonce sans titre",
       "guests": "{count, plural, one {# voyageur} other {# voyageurs}}",
       "priceSuffix": "par nuit",
@@ -94,6 +98,50 @@
           "importLoading": "Récupération de l'annonce en cours…",
           "importLoadingA11y": "Import de l’annonce en cours",
           "bookingNotSupported": "L'import Booking n'est pas encore disponible. Utilisez un lien Airbnb ou créez manuellement."
+        },
+        "calendar": {
+          "title": "Synchronisation iCal",
+          "subtitle": "Ajoutez vos calendriers externes et récupérez le lien iCal de cette annonce.",
+          "export": {
+            "label": "Lien iCal de cette annonce",
+            "hint": "Copiez ce lien pour l’ajouter sur Airbnb, Booking et vos autres plateformes.",
+            "copyCta": "Copier le lien",
+            "openCta": "Ouvrir le lien",
+            "copySuccess": "Lien iCal copié.",
+            "copyError": "Impossible de copier automatiquement le lien.",
+            "unavailable": "Lien indisponible (API non configurée)."
+          },
+          "import": {
+            "label": "Ajouter un calendrier externe",
+            "namePlaceholder": "Nom de la source (optionnel)",
+            "urlPlaceholder": "https://...",
+            "cta": "Ajouter ce lien iCal",
+            "loading": "Import en cours...",
+            "invalidUrl": "Saisissez une URL iCal valide (http ou https).",
+            "success": "Source iCal ajoutée et synchronisée.",
+            "error": "Impossible d’ajouter cette source iCal."
+          },
+          "sources": {
+            "title": "Sources connectées",
+            "loading": "Chargement des sources iCal...",
+            "empty": "Aucune source iCal ajoutée pour cette annonce.",
+            "defaultName": "Source sans nom",
+            "noUrl": "URL indisponible",
+            "statusLabel": "Statut :",
+            "lastSyncLabel": "Dernière synchro :",
+            "neverSynced": "Jamais",
+            "statusOk": "Synchronisé",
+            "statusError": "En erreur",
+            "statusSyncing": "Synchronisation en cours",
+            "statusUnknown": "Inconnu",
+            "syncCta": "Forcer une synchro",
+            "syncing": "Synchronisation...",
+            "syncSuccess": "Synchronisation iCal terminée.",
+            "syncError": "Impossible de synchroniser cette source iCal.",
+            "throttled": "Source récente : synchronisation ignorée (throttling).",
+            "loadError": "Impossible de charger les sources iCal.",
+            "apiUnavailable": "API calendrier non configurée pour cet environnement."
+          }
         },
         "title": {
           "title": "Titre de l’annonce",

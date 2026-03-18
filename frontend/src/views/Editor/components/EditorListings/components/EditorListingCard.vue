@@ -81,6 +81,13 @@ const slides = computed<ListingSlide[]>(() => {
 })
 
 const currentStatusLabel = computed(() => statusLabel(props.listing.status))
+const normalizedStatus = computed(() => normalizeListingStatus(props.listing.status))
+const hasNonPublishedStatus = computed(() => Boolean(normalizedStatus.value) && normalizedStatus.value !== 'published')
+const nonPublishedOverlayLabel = computed(() => {
+  if (!hasNonPublishedStatus.value) return ''
+  if (normalizedStatus.value === 'paused') return props.listingContent.statusOverlay.paused
+  return props.listingContent.statusOverlay.blocked
+})
 const statusMenuControlId = computed(() => `listing-status-menu-${props.listing.listingId}`)
 const actionsMenuControlId = computed(() => `listing-actions-menu-${props.listing.listingId}`)
 const deleteContent = computed(() => editorStatic.panels.listing.visibility.delete)
@@ -255,7 +262,10 @@ function goToImageLabel(index: number) {
       @keydown.enter.prevent="handleSelect"
       @keydown.space.prevent="handleSelect"
     >
-      <div class="media">
+      <div
+        class="media"
+        :class="{ 'is-non-published': hasNonPublishedStatus }"
+      >
         <template v-if="slides.length">
           <div
             class="swiper-hitbox"
@@ -385,8 +395,16 @@ function goToImageLabel(index: number) {
         </div>
 
         <div
+          v-if="nonPublishedOverlayLabel"
+          class="pending-changes status-overlay"
+        >
+          {{ nonPublishedOverlayLabel }}
+        </div>
+
+        <div
           v-if="props.listing.hasPendingChanges"
           class="pending-changes"
+          :class="{ 'with-status-overlay': hasNonPublishedStatus }"
         >
           {{ props.listingContent.pendingChanges.label }}
         </div>

@@ -7,6 +7,7 @@ import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import ImportPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/ImportPanel/ImportPanel.vue'
 import TitlePanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/TitlePanel.vue'
 import DomainPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/DomainPanel.vue'
+import CalendarPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/CalendarPanel.vue'
 import VisibilityPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/VisibilityPanel.vue'
 import GalleryPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/GalleryPanel.vue'
 import DescriptionPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/DescriptionPanel.vue'
@@ -34,43 +35,44 @@ const emit = defineEmits<{
     />
     <DomainPanel :listing-id="props.listingId" />
     <GalleryPanel
-      :medias="props.draft.medias"
-      :listing-id="props.listingId"
-      :listing-status="props.draft.core?.status"
-      @patch="emit('patch', $event)"
+    :medias="props.draft.medias"
+    :listing-id="props.listingId"
+    :listing-status="props.draft.core?.status"
+    @patch="emit('patch', $event)"
     />
     <DescriptionPanel
-      :core="props.draft.core"
-      @patch="emit('patch', $event)"
+    :core="props.draft.core"
+    @patch="emit('patch', $event)"
     />
     <AmenitiesPanel
-      :core="props.draft.core"
-      @patch="emit('patch', $event)"
+    :core="props.draft.core"
+    @patch="emit('patch', $event)"
     />
     <CapacityPanel
-      :core="props.draft.core"
-      @patch="emit('patch', $event)"
+    :core="props.draft.core"
+    @patch="emit('patch', $event)"
     />
     <LocationPanel
-      :core="props.draft.core"
-      :require-precise-address="true"
-      @patch="emit('patch', $event)"
+    :core="props.draft.core"
+    :require-precise-address="true"
+    @patch="emit('patch', $event)"
     />
     <RoomsPanel
-      :core="props.draft.core"
-      @patch="emit('patch', $event)"
+    :core="props.draft.core"
+    @patch="emit('patch', $event)"
     />
     <ReviewsPanel
-      :core="props.draft.core"
-      @patch="emit('patch', $event)"
+    :core="props.draft.core"
+    @patch="emit('patch', $event)"
+    />
+    <CalendarPanel :listing-id="props.listingId" />
+    <ImportPanel
+    :listing-id="props.listingId"
+    :listing-status="props.draft.core?.status"
+    @patch="emit('patch', $event)"
     />
     <VisibilityPanel
       :core="props.draft.core"
-      @patch="emit('patch', $event)"
-    />
-    <ImportPanel
-      :listing-id="props.listingId"
-      :listing-status="props.draft.core?.status"
       @patch="emit('patch', $event)"
     />
   </div>

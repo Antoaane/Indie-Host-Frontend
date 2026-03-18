@@ -5,6 +5,7 @@ import { computed, ref } from 'vue'
 import { Search } from 'lucide-vue-next'
 
 import BaseSidebar from '@/components/layouts/BaseSidebar.vue'
+import { normalizeListingStatus } from '@/domain/listings/status'
 import { normalizeSearchText } from '@/utils/search'
 import type { UserListingCard } from '@/views/Editor/utils/listingApi'
 import type { Reservation } from '@/views/Management/utils/managementReservations'
@@ -66,6 +67,28 @@ function latestLabel(listingId: string) {
   return date ? `Derni\u00e8re visite : ${reservation.guestName} - ${date}` : `Derni\u00e8re visite : ${reservation.guestName}`
 }
 
+type ListingStatusBadge = {
+  label: string
+  variant: 'is-paused' | 'is-blocked'
+}
+
+function listingStatusBadge(status?: string): ListingStatusBadge | null {
+  const normalized = normalizeListingStatus(status)
+  if (normalized === 'paused') {
+    return {
+      label: 'En pause',
+      variant: 'is-paused',
+    }
+  }
+  if (normalized === 'blocked') {
+    return {
+      label: 'Réservations bloquées',
+      variant: 'is-blocked',
+    }
+  }
+  return null
+}
+
 function handleSelect(listingId: string) {
   emit('select', listingId)
 }
@@ -108,6 +131,13 @@ function handleSelect(listingId: string) {
 
           <div class="content">
             <p class="title">{{ listing.title || 'Annonce sans titre' }}</p>
+            <p
+              v-if="listingStatusBadge(listing.status)"
+              class="status-pill"
+              :class="listingStatusBadge(listing.status)?.variant"
+            >
+              {{ listingStatusBadge(listing.status)?.label }}
+            </p>
             <p class="meta">{{ latestLabel(listing.listingId) }}</p>
           </div>
 

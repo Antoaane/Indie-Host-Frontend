@@ -186,6 +186,15 @@ $editor-listing-card-target-width: 20rem;
               }
             }
 
+            &.is-non-published {
+              >.swiper-hitbox,
+              >img,
+              >.placeholder {
+                opacity: 0.62;
+                @include animations.transition(180ms);
+              }
+            }
+
             >.status-menu {
               position: absolute;
               top: 0.75rem;
@@ -211,9 +220,9 @@ $editor-listing-card-target-width: 20rem;
                 display: inline-flex;
                 align-items: center;
                 gap: 0.45rem;
+                letter-layout-gap: -0.01em;
 
                 @include little-text($thin: false);
-                letter-layout-gap: -0.01em;
 
                 >.text {
                   display: inline-flex;
@@ -244,11 +253,11 @@ $editor-listing-card-target-width: 20rem;
 
                   * {
                     stroke: rgba($secondary-text, 1);
-                    ;
                   }
 
                   >.text::after {
                     background: rgba($good, 1);
+                    border: 1px solid rgba($secondary, 0.25);
                   }
                 }
 
@@ -274,7 +283,7 @@ $editor-listing-card-target-width: 20rem;
                   background: rgba($background, 0.65);
 
                   span {
-                    color: rgba($accent, 1);
+                    color: rgba($secondary, 1);
                   }
 
                   * {
@@ -283,6 +292,9 @@ $editor-listing-card-target-width: 20rem;
 
                   >.text::after {
                     background: rgba($progressing, 1);
+                    border: 1px solid rgba($secondary, 0.25);
+
+                    // @include halo($size: sm, $color: $secondary);
                   }
                 }
 
@@ -291,7 +303,7 @@ $editor-listing-card-target-width: 20rem;
                   background: rgba($background, 0.9);
 
                   span {
-                    color: rgba($accent, 1);
+                    color: rgba($secondary, 1);
                   }
 
                   * {
@@ -301,6 +313,7 @@ $editor-listing-card-target-width: 20rem;
 
                   >.text::after {
                     background: rgba($bad, 1);
+                    border: 1px solid rgba($secondary, 0.25);
                   }
                 }
 
@@ -413,6 +426,18 @@ $editor-listing-card-target-width: 20rem;
 
               @include little-text($thin: false);
               white-space: nowrap;
+
+              &.status-overlay {
+                max-width: calc(100% - 2rem);
+                text-align: center;
+                white-space: normal;
+              }
+
+              &.with-status-overlay {
+                top: auto;
+                bottom: 2rem;
+                transform: translateX(-50%);
+              }
             }
 
 
