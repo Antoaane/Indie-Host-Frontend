@@ -21,15 +21,32 @@ const emit = defineEmits<{
   <CreateWizardStepShell
     title="Définissez votre tarif de base et vos frais"
     :validation-error="props.validationError"
+    :fill-height="false"
   >
-    <BasePricingPanel
-      :bookings="props.bookings"
-      :show-extra-guests="false"
-      @patch="emit('patch', $event)"
-    />
-    <CreateFeesPanel
-      :bookings="props.bookings"
-      @patch="emit('patch', $event)"
-    />
+    <div class="create-base-pricing-step-stack">
+      <BasePricingPanel
+        :bookings="props.bookings"
+        :show-extra-guests="false"
+        @patch="emit('patch', $event)"
+      />
+      <CreateFeesPanel
+        :bookings="props.bookings"
+        @patch="emit('patch', $event)"
+      />
+    </div>
   </CreateWizardStepShell>
 </template>
+
+<style lang="scss">
+.create-base-pricing-step-stack {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--layout-gap-sm);
+
+  > * {
+    min-width: 0;
+  }
+}
+</style>

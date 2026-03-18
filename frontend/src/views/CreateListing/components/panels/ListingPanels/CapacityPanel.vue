@@ -46,8 +46,8 @@ function setCapacity(next: number) {
         :value="capacity"
         :min="capacityValidation.min"
         :max="capacityValidation.max"
-        value-font-size="7rem"
-        suffix-font-size="2.5rem"
+        value-font-size="clamp(3.75rem, 22vw, 7rem)"
+        suffix-font-size="clamp(1.15rem, 5vw, 2.5rem)"
         :suffix="capacitySuffix"
         @input="setCapacity($event.number)"
       />
@@ -76,6 +76,25 @@ function setCapacity(next: number) {
       margin: 0;
       @include little-text($thin: true);
       color: rgba($secondary-text, 0.58);
+    }
+  }
+
+  @media screen and (max-width: 768px) {
+    > .body {
+      gap: var(--layout-gap-sm);
+
+      .ui-stepper-input {
+        align-self: stretch;
+        flex-wrap: wrap;
+        gap: 0.35rem 0.6rem;
+        padding-inline: 0;
+
+        > .suffix {
+          margin-left: 0;
+          white-space: normal;
+          line-height: 1.08;
+        }
+      }
     }
   }
 }

@@ -180,7 +180,9 @@ def _safe_print(*args, **kwargs) -> None:
     except BrokenPipeError:
         return
     except OSError as e:
-        if getattr(e, "errno", None) == errno.EPIPE:
+        # Certains lancements via uvicorn/reload ou terminaux détachés
+        # remontent EIO au lieu de EPIPE quand stderr/stdout n'est pas exploitable.
+        if getattr(e, "errno", None) in {errno.EPIPE, errno.EIO}:
             return
         raise
 

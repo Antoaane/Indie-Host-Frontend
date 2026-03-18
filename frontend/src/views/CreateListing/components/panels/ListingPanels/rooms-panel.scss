@@ -24,10 +24,8 @@
 
     flex: 1 1 auto;
     min-height: 0;
-    // overflow: auto;
 
     > .rooms-list {
-      // height: 100% !important;
       flex: 1 1 auto;
       padding: 0 !important;
 
@@ -156,6 +154,38 @@
 
     > .add-room {
       @include buttons.primary($theme: dark, $fullwidth: true);
+    }
+  }
+
+  @media screen and (max-width: 768px) {
+    height: auto;
+    min-height: auto;
+
+    > .body {
+      flex: 0 0 auto;
+      min-height: auto;
+      overflow: visible;
+
+      > .rooms-list {
+        flex: 0 0 auto;
+        min-height: auto;
+        grid-template-columns: minmax(0, 1fr);
+        overflow: visible;
+        padding-bottom: calc(var(--layout-gap) * 2.75) !important;
+      }
+
+      > .add-room {
+        position: sticky;
+        bottom: calc(env(safe-area-inset-bottom) + var(--layout-gap-2xs));
+        z-index: 4;
+        padding-top: var(--layout-gap-xs);
+        background: linear-gradient(
+          180deg,
+          rgba($accent, 0) 0%,
+          rgba($accent, 0.94) 28%,
+          $accent 100%
+        );
+      }
     }
   }
 }

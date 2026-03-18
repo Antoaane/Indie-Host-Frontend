@@ -41,21 +41,30 @@ const isUploading = ref(false)
 const tileRefs = ref<HTMLElement[]>([])
 const galleryFeedback = ref('')
 const galleryFeedbackLevel = ref<'error' | 'success'>('error')
+const TOUCH_DRAG_THRESHOLD = 14
+const PEN_DRAG_THRESHOLD = 8
 const dragState = reactive({
+  pending: false,
   active: false,
   index: -1,
   overIndex: -1,
   overAfter: false,
+  pointerId: -1,
+  pointerType: '',
+  startX: 0,
+  startY: 0,
   pointerX: 0,
   pointerY: 0,
   offsetX: 0,
   offsetY: 0,
   positions: [] as DOMRect[],
+  sourceEl: null as HTMLElement | null,
   previousCursor: '',
   previousUserSelect: '',
 })
 const disableDropAnimation = ref(false)
 let dropAnimationResetRaf = 0
+let dragListenersBound = false
 const isDragging = computed(() => dragState.active)
 const acceptedMimeTypes = acceptedGalleryMimeTypes(galleryLimits.acceptedMimeTypes)
 const readableFormats = humanizeGalleryMimeTypes(galleryLimits.acceptedMimeTypes)
@@ -227,6 +236,25 @@ function capturePositions() {
   return tiles.map((tile) => tile.getBoundingClientRect())
 }
 
+function resolveInsertAfter(rect: DOMRect, centerX: number, centerY: number) {
+  const cx = (rect.left + rect.right) / 2
+  const cy = (rect.top + rect.bottom) / 2
+  const verticalEdgeThreshold = Math.min(rect.height * 0.22, 24)
+  const horizontalEdgeThreshold = Math.min(rect.width * 0.22, 28)
+  const isWideTile = rect.width > rect.height * 1.35
+
+  if (isWideTile) {
+    return centerY > cy
+  }
+
+  if (centerY <= rect.top + verticalEdgeThreshold) return false
+  if (centerY >= rect.bottom - verticalEdgeThreshold) return true
+  if (centerX <= cx - horizontalEdgeThreshold) return false
+  if (centerX >= cx + horizontalEdgeThreshold) return true
+
+  return centerX > cx
+}
+
 function updateOverIndex() {
   const { pointerX, pointerY, positions } = dragState
   if (!positions.length) return
@@ -240,9 +268,7 @@ function updateOverIndex() {
   if (directIndex >= 0) {
     dragState.overIndex = directIndex
     const rect = positions[directIndex]
-    const cx = (rect.left + rect.right) / 2
-    const cy = (rect.top + rect.bottom) / 2
-    dragState.overAfter = centerX > cx || centerY > cy
+    dragState.overAfter = resolveInsertAfter(rect, centerX, centerY)
     return
   }
 
@@ -264,9 +290,7 @@ function updateOverIndex() {
   dragState.overIndex = nearestIndex
   const nearestRect = positions[nearestIndex]
   if (nearestRect) {
-    const cx = (nearestRect.left + nearestRect.right) / 2
-    const cy = (nearestRect.top + nearestRect.bottom) / 2
-    dragState.overAfter = centerX > cx || centerY > cy
+    dragState.overAfter = resolveInsertAfter(nearestRect, centerX, centerY)
   }
 }
 
@@ -276,34 +300,110 @@ function applyReorder(order: number[]) {
   setImages(normalizePositions(nextImages))
 }
 
+function bindDragListeners() {
+  if (typeof window === 'undefined' || dragListenersBound) return
+  window.addEventListener('pointermove', onPointerMove)
+  window.addEventListener('pointerup', onPointerUp)
+  window.addEventListener('pointercancel', onPointerUp)
+  dragListenersBound = true
+}
+
+function unbindDragListeners() {
+  if (typeof window === 'undefined' || !dragListenersBound) return
+  window.removeEventListener('pointermove', onPointerMove)
+  window.removeEventListener('pointerup', onPointerUp)
+  window.removeEventListener('pointercancel', onPointerUp)
+  dragListenersBound = false
+}
+
+function releasePointerCapture() {
+  const { sourceEl, pointerId } = dragState
+  if (!sourceEl || pointerId < 0 || typeof sourceEl.releasePointerCapture !== 'function') return
+
+  try {
+    if (typeof sourceEl.hasPointerCapture !== 'function' || sourceEl.hasPointerCapture(pointerId)) {
+      sourceEl.releasePointerCapture(pointerId)
+    }
+  } catch {
+    // Ignore browsers that throw when capture is already gone.
+  }
+}
+
 function stopDrag() {
+  releasePointerCapture()
+
+  const previousCursor = dragState.previousCursor
+  const previousUserSelect = dragState.previousUserSelect
+
+  dragState.pending = false
   dragState.active = false
   dragState.index = -1
   dragState.overIndex = -1
   dragState.overAfter = false
+  dragState.pointerId = -1
+  dragState.pointerType = ''
+  dragState.startX = 0
+  dragState.startY = 0
   dragState.pointerX = 0
   dragState.pointerY = 0
   dragState.offsetX = 0
   dragState.offsetY = 0
   dragState.positions = []
+  dragState.sourceEl = null
+  dragState.previousCursor = ''
+  dragState.previousUserSelect = ''
 
-  window.removeEventListener('pointermove', onPointerMove)
-  window.removeEventListener('pointerup', onPointerUp)
-  window.removeEventListener('pointercancel', onPointerUp)
+  unbindDragListeners()
 
-  document.body.style.cursor = dragState.previousCursor
-  document.body.style.userSelect = dragState.previousUserSelect
+  document.body.style.cursor = previousCursor
+  document.body.style.userSelect = previousUserSelect
+}
+
+function dragThreshold(pointerType: string) {
+  if (pointerType === 'touch') return TOUCH_DRAG_THRESHOLD
+  if (pointerType === 'pen') return PEN_DRAG_THRESHOLD
+  return 0
+}
+
+function canStartDrag(event: PointerEvent) {
+  if (event.isPrimary === false) return false
+  if (event.pointerType === 'mouse') return event.button === 0
+  return true
+}
+
+function shouldActivateDrag(event: PointerEvent) {
+  const threshold = dragThreshold(dragState.pointerType)
+  if (threshold <= 0) return true
+
+  const deltaX = event.clientX - dragState.startX
+  const deltaY = event.clientY - dragState.startY
+  return (deltaX * deltaX) + (deltaY * deltaY) >= threshold * threshold
 }
 
 function onPointerMove(event: PointerEvent) {
+  if (dragState.pointerId >= 0 && event.pointerId !== dragState.pointerId) return
+
+  if (dragState.pending && !dragState.active) {
+    if (!shouldActivateDrag(event)) return
+    startDrag(dragState.index, event)
+    return
+  }
+
   if (!dragState.active) return
+  if (event.cancelable) {
+    event.preventDefault()
+  }
   dragState.pointerX = event.clientX
   dragState.pointerY = event.clientY
   updateOverIndex()
 }
 
-function onPointerUp() {
-  if (!dragState.active) return
+function onPointerUp(event: PointerEvent) {
+  if (dragState.pointerId >= 0 && event.pointerId !== dragState.pointerId) return
+  if (!dragState.active) {
+    stopDrag()
+    return
+  }
   const order = virtualOrder.value
   const changed = order.some((value, idx) => value !== idx)
   disableDropAnimation.value = true
@@ -316,17 +416,24 @@ function onPointerUp() {
 }
 
 function startDrag(index: number, event: PointerEvent) {
-  if (event.button !== 0) return
-  event.preventDefault()
+  if (!canStartDrag(event)) return
   const positions = capturePositions()
   if (!positions.length) return
 
   const rect = positions[index]
   if (!rect) return
 
+  if (event.cancelable) {
+    event.preventDefault()
+  }
+
+  dragState.pending = false
   dragState.active = true
   dragState.index = index
   dragState.overIndex = index
+  dragState.overAfter = false
+  dragState.pointerId = event.pointerId
+  dragState.pointerType = event.pointerType
   dragState.pointerX = event.clientX
   dragState.pointerY = event.clientY
   dragState.positions = positions
@@ -339,9 +446,13 @@ function startDrag(index: number, event: PointerEvent) {
   document.body.style.cursor = 'grabbing'
   document.body.style.userSelect = 'none'
 
-  window.addEventListener('pointermove', onPointerMove)
-  window.addEventListener('pointerup', onPointerUp)
-  window.addEventListener('pointercancel', onPointerUp)
+  if (dragState.sourceEl && typeof dragState.sourceEl.setPointerCapture === 'function') {
+    try {
+      dragState.sourceEl.setPointerCapture(event.pointerId)
+    } catch {
+      // Some browsers can reject capture if the pointer was already released.
+    }
+  }
 
   updateOverIndex()
 }
@@ -365,7 +476,28 @@ function scheduleDropAnimationReset() {
 }
 
 function onTilePointerDown(index: number, event: PointerEvent) {
-  startDrag(index, event)
+  if (!canStartDrag(event)) return
+
+  dragState.pending = true
+  dragState.active = false
+  dragState.index = index
+  dragState.overIndex = index
+  dragState.overAfter = false
+  dragState.pointerId = event.pointerId
+  dragState.pointerType = event.pointerType
+  dragState.startX = event.clientX
+  dragState.startY = event.clientY
+  dragState.pointerX = event.clientX
+  dragState.pointerY = event.clientY
+  dragState.sourceEl = event.currentTarget instanceof HTMLElement
+    ? event.currentTarget
+    : tileRefs.value[index] ?? null
+
+  bindDragListeners()
+
+  if (dragThreshold(event.pointerType) === 0) {
+    startDrag(index, event)
+  }
 }
 
 function tileStyle(index: number) {
@@ -417,7 +549,7 @@ onBeforeUnmount(() => {
           :key="img.position ?? index"
           class="tile"
           :ref="(el) => setTileRef(el as HTMLElement | null, index)"
-          :style="tileStyle(index)"
+          :style="{ ...tileStyle(index), touchAction: 'none' }"
           :class="{
             'is-dragging': dragState.active && dragState.index === index,
             'is-over': dragState.active && dragState.overIndex === index && dragState.index !== index,

@@ -4,7 +4,9 @@
 import { computed, ref } from 'vue'
 import { Download, Loader2 } from 'lucide-vue-next'
 
+import ImportLoadingState from '@/components/feedback/ImportLoadingState.vue'
 import { ensurePublishedMediasStoredInImageKit } from '@/domain/api/imagekit'
+import { useImportLoadingFeedback } from '@/composables/useImportLoadingFeedback'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 
@@ -26,6 +28,16 @@ const url = ref('')
 const isImporting = ref(false)
 const importError = ref<string | null>(null)
 const panelContent = editorStatic.panels.listing.import
+const {
+  progressPercent,
+  progressLabel,
+  progressTitle,
+  progressHint,
+  progressTip,
+  startImportLoadingFeedback,
+  completeImportLoadingFeedback,
+  resetImportLoadingFeedback,
+} = useImportLoadingFeedback()
 
 const emit = defineEmits<{
   (e: 'patch', patch: DraftPatch): void
@@ -65,6 +77,7 @@ async function handleImport() {
     return
   }
 
+  startImportLoadingFeedback(source)
   isImporting.value = true
   try {
     const data = await scrapeListing({ url: normalizedUrl })
@@ -83,12 +96,14 @@ async function handleImport() {
       ...(transformed.arrival ? { arrival: transformed.arrival } : {}),
       ...(transformed.notes ? { notes: transformed.notes } : {}),
     }
+    await completeImportLoadingFeedback()
     emit('patch', patch)
   } catch (err) {
     importError.value =
       err instanceof Error ? err.message : "Impossible de récupérer l'annonce."
   } finally {
     isImporting.value = false
+    resetImportLoadingFeedback()
   }
 }
 </script>
@@ -135,6 +150,16 @@ async function handleImport() {
           </div>
         </div>
       </div>
+
+      <ImportLoadingState
+        v-if="isImporting"
+        :label="progressLabel"
+        :progress="progressPercent"
+        :title="progressTitle"
+        :hint="progressHint"
+        :tip="progressTip"
+        compact
+      />
 
       <p
         v-if="importError"

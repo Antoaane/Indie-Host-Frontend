@@ -1,6 +1,8 @@
 <!-- File: src/views/CreateListing/components/panels/CreateGuestOnboardingStepPanel.vue -->
 
 <script setup lang="ts">
+import CreateWizardStepShell from '@/views/CreateListing/components/panels/CreateWizardStepShell.vue'
+
 const props = defineProps<{
   email: string
   emailError?: string | null
@@ -18,76 +20,78 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <section class="create-guest-onboarding-step-panel">
-    <header class="intro">
-      <h2>Finaliser votre publication</h2>
-      <p>Ajoutez votre e-mail pour relier ce brouillon à votre onboarding compte.</p>
-    </header>
+  <CreateWizardStepShell
+    class="create-guest-onboarding-shell"
+    title="Finaliser votre publication"
+    hint="Ajoutez votre e-mail pour relier ce brouillon à votre onboarding compte."
+    :fill-height="false"
+  >
+    <section class="create-guest-onboarding-step-panel">
+      <div class="email-field">
+        <label for="create-listing-guest-email">Adresse e-mail</label>
+        <input
+          id="create-listing-guest-email"
+          :value="props.email"
+          type="email"
+          inputmode="email"
+          autocomplete="email"
+          placeholder="vous@exemple.com"
+          :disabled="props.isLoading"
+          @input="emit('update:email', String(($event.target as HTMLInputElement | null)?.value ?? ''))"
+        >
+        <p
+          v-if="props.emailError"
+          class="error"
+        >
+          {{ props.emailError }}
+        </p>
+        <p
+          v-if="props.infoMessage"
+          class="info"
+        >
+          {{ props.infoMessage }}
+        </p>
+      </div>
 
-    <div class="email-field">
-      <label for="create-listing-guest-email">Adresse e-mail</label>
-      <input
-        id="create-listing-guest-email"
-        :value="props.email"
-        type="email"
-        inputmode="email"
-        autocomplete="email"
-        placeholder="vous@exemple.com"
-        :disabled="props.isLoading"
-        @input="emit('update:email', String(($event.target as HTMLInputElement | null)?.value ?? ''))"
-      >
-      <p
-        v-if="props.emailError"
-        class="error"
-      >
-        {{ props.emailError }}
-      </p>
-      <p
-        v-if="props.infoMessage"
-        class="info"
-      >
-        {{ props.infoMessage }}
-      </p>
-    </div>
+      <div class="actions">
+        <button
+          type="button"
+          class="btn primary"
+          :disabled="props.isLoading"
+          @click="emit('start-publish')"
+        >
+          Finaliser publication
+        </button>
 
-    <div class="actions">
+        <button
+          type="button"
+          class="btn secondary"
+          :disabled="props.isLoading"
+          @click="emit('start-setup')"
+        >
+          Créer mon compte sans publier
+        </button>
+
+        <button
+          type="button"
+          class="btn ghost"
+          :disabled="props.isLoading"
+          @click="emit('continue-without-account')"
+        >
+          Continuer sans compte
+        </button>
+      </div>
+
       <button
         type="button"
-        class="btn primary"
+        class="back"
         :disabled="props.isLoading"
-        @click="emit('start-publish')"
+        @click="emit('back')"
       >
-        Finaliser publication
+        Retour à l’aperçu
       </button>
-
-      <button
-        type="button"
-        class="btn secondary"
-        :disabled="props.isLoading"
-        @click="emit('start-setup')"
-      >
-        Créer mon compte sans publier
-      </button>
-
-      <button
-        type="button"
-        class="btn ghost"
-        :disabled="props.isLoading"
-        @click="emit('continue-without-account')"
-      >
-        Continuer sans compte
-      </button>
-    </div>
-
-    <button
-      type="button"
-      class="back"
-      :disabled="props.isLoading"
-      @click="emit('back')"
-    >
-      Retour à l’aperçu
-    </button>
-  </section>
+    </section>
+  </CreateWizardStepShell>
 </template>
 
 <style lang="scss">
@@ -97,33 +101,23 @@ const emit = defineEmits<{
 @use '@/styles/variables/borders' as borders;
 
 .create-guest-onboarding-step-panel {
-  width: min(100%, 46rem);
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   margin: 0 auto;
-  border: 1px solid rgba($secondary, 0.12);
-  border-radius: borders.$rounded-xl;
-  background: rgba($secondary, 0.02);
-  padding: var(--layout-gap-md);
+  flex: 0 1 auto;
   display: flex;
   flex-direction: column;
   gap: var(--layout-gap-md);
+}
 
-  > .intro {
-    display: flex;
-    flex-direction: column;
-    gap: 0.4rem;
+.create-guest-onboarding-shell {
+  width: min(100%, 46rem);
+  max-width: 100%;
+  margin: 0 auto;
+}
 
-    > h2 {
-      margin: 0;
-      @include h2-title();
-    }
-
-    > p {
-      margin: 0;
-      @include little-text($thin: false);
-      color: rgba($secondary-text, 0.72);
-    }
-  }
-
+.create-guest-onboarding-step-panel {
   > .email-field {
     display: flex;
     flex-direction: column;

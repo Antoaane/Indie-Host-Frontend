@@ -276,19 +276,9 @@
     }
 
     .mobile-loading-hint {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
+      width: min(100%, 28rem);
       margin-top: var(--layout-gap-sm);
-      @include little-text($color: $accent, $thin: false);
-      opacity: 0.6;
-
-      .icon {
-        width: 1rem;
-        height: 1rem;
-        flex-shrink: 0;
-      }
+      margin-inline: auto;
 
       @include min-width(lg) {
         display: none;
@@ -449,7 +439,10 @@
       width: 100%;
       height: 100%;
       padding: var(--layout-gap-2xl);
-      @include base-text($accent, $bigger: true);
+
+      > .import-loading-state {
+        width: min(100%, 30rem);
+      }
     }
 
     // La listing-view doit avoir une hauteur définie pour que la chaîne
@@ -572,40 +565,21 @@
     z-index: 1;
     padding-bottom: env(safe-area-inset-bottom);
     background: transparent;
-    overflow-y: auto;
-    overscroll-behavior-y: contain;
-    -webkit-overflow-scrolling: touch;
 
     .listing-view {
       width: 100%;
-      height: auto;
-      min-height: 100%;
+      height: 100%;
+      min-height: 0;
       border-radius: 0;
       background-color: transparent;
     }
 
     .listing-view > .main {
-      height: auto;
-      overflow: visible;
       background: transparent;
     }
 
     .listing-view > .main > .core {
       background: $background;
-    }
-
-    .listing-view > .footer {
-      padding-bottom: calc(var(--layout-gap) + env(safe-area-inset-bottom));
-    }
-
-    .listing-gallery:has(.swiper-initialized) {
-      aspect-ratio: 5 / 4;
-      max-height: min(38vh, 22rem);
-      margin-bottom: 0;
-    }
-
-    .listing-gallery:has(.swiper-initialized)::after {
-      display: none;
     }
   }
 

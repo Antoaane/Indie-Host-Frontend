@@ -20,6 +20,7 @@ const emit = defineEmits<{
   <CreateWizardStepShell
     title="Précisez les pièces et les lits disponibles"
     :validation-error="props.validationError"
+    fit-width
   >
     <RoomsPanel
       :core="props.core"

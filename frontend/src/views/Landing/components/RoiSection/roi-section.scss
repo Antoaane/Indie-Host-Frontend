@@ -55,7 +55,7 @@
     gap: 1rem;
 
     @include min-width(lg) {
-      grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+      grid-template-columns: minmax(0, 1fr);
     }
   }
 

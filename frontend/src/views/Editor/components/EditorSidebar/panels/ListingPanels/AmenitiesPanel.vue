@@ -38,7 +38,7 @@ type OverlayAmenityItem = {
 type OverlayAmenityGroup = {
   category: string
   items: OverlayAmenityItem[]
-  pinnedGroup?: boolean
+  selectedGroup?: boolean
 }
 type SelectedAmenityItem = {
   id: string
@@ -80,7 +80,7 @@ const showSearchCounter = shouldDisplayTextLimit(searchLimit, textDefaults)
 const manageAmenitiesLabel = String(panelContentRecord.manageCta ?? 'Gérer mes équipements')
 const overlayTitle = String(overlayContent.titleList ?? panelContent.title)
 const overlayAriaLabel = String(overlayContent.ariaLabel ?? 'Gérer les équipements')
-const overlayPinnedCategoryLabel = String(overlayContent.pinnedCategory ?? 'Équipements épinglés')
+const overlaySelectedCategoryLabel = String(overlayContent.selectedCategory ?? overlayContent.pinnedCategory ?? 'Équipements sélectionnés')
 const pinLabel = String(overlayContent.pin ?? 'Épingler cet équipement')
 const unpinLabel = String(overlayContent.unpin ?? 'Retirer cet équipement des épinglés')
 const pinBadgeLabel = String(overlayContent.pinBadge ?? 'Épingler')
@@ -243,6 +243,7 @@ function comparePreviewAmenities(a: SelectedAmenityItem, b: SelectedAmenityItem)
 }
 
 function compareCatalogAmenities(a: OverlayAmenityItem, b: OverlayAmenityItem): number {
+  if (a.pinned !== b.pinned) return Number(b.pinned) - Number(a.pinned)
   if (a.relevance !== b.relevance) return b.relevance - a.relevance
   const byName = String(a.name ?? '').localeCompare(String(b.name ?? ''))
   if (byName) return byName
@@ -318,6 +319,38 @@ function matchesCatalogSearch(item: { name?: string; description?: string }, tok
 
 const catalogGroups = computed<OverlayAmenityGroup[]>(() => {
   const tokens = catalogSearchTokens.value
+  const selectedItems = selectedAmenities.value
+    .map((selectedItem) => ({
+      id: selectedItem.id,
+      name: selectedItem.name,
+      description: selectedItem.description,
+      category: selectedItem.category,
+      relevance: selectedItem.relevance,
+      perkEligible: typeof (selectedItem.amenity as any)?.perkEligible === 'boolean'
+        ? (selectedItem.amenity as any).perkEligible
+        : undefined,
+      perkScore: toFiniteNumber((selectedItem.amenity as any)?.perkScore),
+      perkPriority: toFiniteNumber((selectedItem.amenity as any)?.perkPriority),
+      selected: true,
+      pinned: selectedItem.pinned,
+      icon: selectedItem.icon,
+      index: selectedItem.index,
+    }) satisfies OverlayAmenityItem)
+    .filter((item) => matchesCatalogSearch(item, tokens))
+    .sort(compareCatalogAmenities)
+
+  if (showSelectedOnly.value) {
+    return selectedItems.length
+      ? [
+          {
+            category: overlaySelectedCategoryLabel,
+            items: selectedItems,
+            selectedGroup: true,
+          },
+        ]
+      : []
+  }
+
   const itemsById = new Map<string, OverlayAmenityItem>()
 
   catalog.value.forEach((item, catalogIndex) => {
@@ -325,7 +358,7 @@ const catalogGroups = computed<OverlayAmenityGroup[]>(() => {
     if (!normalizedId) return
 
     const selected = selectedAmenityById.value.get(normalizedId)
-    if (showSelectedOnly.value && !selected) return
+    if (selected) return
     const resolved: OverlayAmenityItem = {
       id: normalizedId,
       name: selected?.name ?? item.name,
@@ -350,34 +383,6 @@ const catalogGroups = computed<OverlayAmenityGroup[]>(() => {
     itemsById.set(normalizedId, resolved)
   })
 
-  selectedAmenities.value.forEach((selectedItem) => {
-    if (itemsById.has(selectedItem.id)) return
-
-    const resolved: OverlayAmenityItem = {
-      id: selectedItem.id,
-      name: selectedItem.name,
-      description: selectedItem.description,
-      category: selectedItem.category,
-      relevance: selectedItem.relevance,
-      perkEligible: typeof (selectedItem.amenity as any)?.perkEligible === 'boolean'
-        ? (selectedItem.amenity as any).perkEligible
-        : undefined,
-      perkScore: toFiniteNumber((selectedItem.amenity as any)?.perkScore),
-      perkPriority: toFiniteNumber((selectedItem.amenity as any)?.perkPriority),
-      selected: true,
-      pinned: selectedItem.pinned,
-      icon: selectedItem.icon,
-      index: selectedItem.index,
-    }
-
-    if (!matchesCatalogSearch(resolved, tokens)) return
-    itemsById.set(selectedItem.id, resolved)
-  })
-
-  const pinnedItems = Array.from(itemsById.values())
-    .filter((item) => item.selected && item.pinned)
-    .sort(compareCatalogAmenities)
-
   const groups = new Map<string, OverlayAmenityItem[]>()
   for (const item of itemsById.values()) {
     const key = normalizeAmenityText(item.category) ?? FALLBACK_CATEGORY
@@ -398,16 +403,16 @@ const catalogGroups = computed<OverlayAmenityGroup[]>(() => {
     )
     .sort((a, b) => a.category.localeCompare(b.category))
 
-  if (!pinnedItems.length) return ordered
-
-  return [
-    {
-      category: overlayPinnedCategoryLabel,
-      items: pinnedItems,
-      pinnedGroup: true,
-    },
-    ...ordered,
-  ]
+  return selectedItems.length
+    ? [
+        {
+          category: overlaySelectedCategoryLabel,
+          items: selectedItems,
+          selectedGroup: true,
+        },
+        ...ordered,
+      ]
+    : ordered
 })
 
 watch(
@@ -537,9 +542,9 @@ watch(
           >
             <div
               v-for="group in catalogGroups"
-              :key="group.pinnedGroup ? '__pinned__' : group.category"
+              :key="group.selectedGroup ? '__selected__' : group.category"
               class="category"
-              :class="{ 'is-pinned-group': group.pinnedGroup }"
+              :class="{ 'is-selected-group': group.selectedGroup }"
             >
               <h5>{{ group.category }}</h5>
 

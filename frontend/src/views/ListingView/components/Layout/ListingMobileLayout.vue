@@ -154,7 +154,7 @@ function onConfirmCheckout(payload: CheckoutConfirmationPayload) {
   </div>
 
   <div
-    v-if="!props.isCheckout"
+    v-if="!props.isCheckout && !props.previewOnly"
     class="footer"
   >
     <span class="shape-container is-right">

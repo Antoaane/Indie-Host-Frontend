@@ -151,7 +151,8 @@ provideListingViewportMode(resolvedViewportMode)
 
   <template v-else>
     <div
-      :class="{ 'listing-view': true, 'is-checkout': isCheckout, 'preview-only': props.previewOnly }"
+      :class="{ 'listing-view': true, editor: props.aspect, 'is-checkout': isCheckout, 'preview-only': props.previewOnly }"
+      ref="listingView"
       :style="listingViewStyles"
     >
       <ListingMobileLayout

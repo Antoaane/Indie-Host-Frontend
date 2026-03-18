@@ -45,26 +45,6 @@ const interactiveContent = computed(() => ({
   breakEvenTemplate: props.content.interactive?.breakEvenTemplate ?? 'SuperHost est amorti dès environ {value} de ventes en direct.',
 }))
 
-const compareContent = computed(() => ({
-  title: props.content.compare?.title ?? 'Deux niveaux de valeur, selon votre ambition',
-  intro: props.content.compare?.intro ?? "L'offre gratuite permet de lancer un canal direct. SuperHost devient pertinent dès que vous voulez en faire un vrai levier de marge.",
-  freeTitle: props.content.compare?.freeTitle ?? 'Offre gratuite',
-  freePrice: props.content.compare?.freePrice ?? '0 EUR / mois',
-  freePoints: props.content.compare?.freePoints ?? [
-    'Lancer un premier canal direct sans risque',
-    'Tester votre page, vos paiements et vos premiers séjours',
-    'Valider l’intérêt du direct avant d’aller plus loin',
-  ],
-  superhostTitle: props.content.compare?.superhostTitle ?? 'SuperHost',
-  superhostPrice: props.content.compare?.superhostPrice ?? '39 EUR / mois TTC',
-  superhostPoints: props.content.compare?.superhostPoints ?? [
-    'Accélérer le direct avec plus de volume et d’automatisation',
-    'Professionnaliser la relation voyageur et la fidélisation',
-    'Transformer quelques réservations directes en vraie marge',
-  ],
-  note: props.content.compare?.note ?? "La vraie rupture n'est pas entre gratuit et payant. Elle est entre subir la commission et investir dans un canal qui vous appartient.",
-}))
-
 const annualRevenueLabel = computed(() => currency.format(annualRevenue.value))
 const otaFeesAvoidedLabel = computed(() => currency.format(otaFeesAvoided.value))
 const superHostAnnualCostLabel = computed(() => currency.format(superHostAnnualCost.value))
@@ -196,50 +176,6 @@ function applyRevenuePreset(value: number) {
 
           <p class="scenario-note">
             {{ props.content.scenario.note }}
-          </p>
-        </article>
-
-        <article
-          class="compare"
-          data-sr
-          data-sr-y="40"
-          data-sr-delay="0.12"
-        >
-          <h3>{{ compareContent.title }}</h3>
-          <p class="compare-intro">
-            {{ compareContent.intro }}
-          </p>
-
-          <div class="compare-cards">
-            <article class="compare-card is-free">
-              <p class="compare-card-title">{{ compareContent.freeTitle }}</p>
-              <p class="compare-card-price">{{ compareContent.freePrice }}</p>
-              <ul>
-                <li
-                  v-for="point in compareContent.freePoints"
-                  :key="point"
-                >
-                  {{ point }}
-                </li>
-              </ul>
-            </article>
-
-            <article class="compare-card is-superhost">
-              <p class="compare-card-title">{{ compareContent.superhostTitle }}</p>
-              <p class="compare-card-price">{{ compareContent.superhostPrice }}</p>
-              <ul>
-                <li
-                  v-for="point in compareContent.superhostPoints"
-                  :key="point"
-                >
-                  {{ point }}
-                </li>
-              </ul>
-            </article>
-          </div>
-
-          <p class="compare-note">
-            {{ compareContent.note }}
           </p>
         </article>
       </div>
