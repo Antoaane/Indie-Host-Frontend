@@ -30,11 +30,9 @@ Modifier:
 - `/.env`
 - `/secrets/database_url.txt`
 - `/secrets/stripe_secret_key.txt`
-- `/secrets/stripe_webhook_secret.txt`
 - `/secrets/clerk_secret_key.txt`
 - `/secrets/gandi_api_token.txt`
 - `/secrets/imagekit_api_key.txt`
-- `/secrets/scrapfly_api_key.txt` (optionnel, recommandé pour Booking)
 
 Par défaut `STRICT_EXTERNAL_CONFIG=true` dans `.env`: le démarrage échoue si Stripe/Clerk/ImageKit/Gandi ne sont pas configurés.
 
@@ -86,5 +84,6 @@ docker compose up -d --build --wait
 ## Notes
 
 - Les variables frontend `VITE_*` sont injectées au build Docker via `docker-compose.yml`.
-- Les secrets backend passent par des fichiers (`*_FILE`) montés depuis `secrets/*.txt`.
+- Les secrets backend principaux passent par des fichiers (`*_FILE`) montés depuis `secrets/*.txt`.
+- Les clés optionnelles peuvent rester en variables d'environnement (`STRIPE_WEBHOOK_SECRET`, `SCRAPFLY_KEY`).
 - Le microservice scraping est exposé via Nginx sur `/scraping/`.

@@ -41,14 +41,12 @@ services:
     secrets:
       - database_url
       - stripe_secret_key
-      - stripe_webhook_secret
       - clerk_secret_key
       - gandi_api_token
       - imagekit_api_key
     environment:
       DATABASE_URL_FILE: /run/secrets/database_url
       STRIPE_SECRET_KEY_FILE: /run/secrets/stripe_secret_key
-      STRIPE_WEBHOOK_SECRET_FILE: /run/secrets/stripe_webhook_secret
       CLERK_SECRET_KEY_FILE: /run/secrets/clerk_secret_key
       GANDI_API_TOKEN_FILE: /run/secrets/gandi_api_token
       IMAGEKIT_API_KEY_FILE: /run/secrets/imagekit_api_key
@@ -68,10 +66,8 @@ services:
     depends_on:
       preflight:
         condition: service_completed_successfully
-    secrets:
-      - scrapfly_api_key
     environment:
-      SCRAPFLY_KEY_FILE: /run/secrets/scrapfly_api_key
+      SCRAPFLY_KEY: ${SCRAPFLY_KEY:-}
     expose:
       - "8000"
     healthcheck:
@@ -149,13 +145,9 @@ secrets:
     file: ./secrets/database_url.txt
   stripe_secret_key:
     file: ./secrets/stripe_secret_key.txt
-  stripe_webhook_secret:
-    file: ./secrets/stripe_webhook_secret.txt
   clerk_secret_key:
     file: ./secrets/clerk_secret_key.txt
   gandi_api_token:
     file: ./secrets/gandi_api_token.txt
   imagekit_api_key:
     file: ./secrets/imagekit_api_key.txt
-  scrapfly_api_key:
-    file: ./secrets/scrapfly_api_key.txt

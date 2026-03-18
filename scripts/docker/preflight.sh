@@ -79,31 +79,6 @@ require_secret_exists() {
   fi
 }
 
-warn_secret_if_missing_or_empty() {
-  file_name="$1"
-  path="/secrets/$file_name"
-
-  if [ -d "$path" ]; then
-    log_warn "Secret optionnel invalide: $path est un dossier (attendu: un fichier .txt)."
-    return
-  fi
-
-  if [ ! -f "$path" ]; then
-    log_warn "Secret optionnel absent: $path"
-    return
-  fi
-
-  if [ ! -s "$path" ]; then
-    log_warn "Secret optionnel vide: $path"
-    return
-  fi
-
-  trimmed="$(tr -d '\r' < "$path" | sed -e 's/[[:space:]]*$//')"
-  if [ -z "$trimmed" ]; then
-    log_warn "Secret optionnel vide (apres trim): $path"
-  fi
-}
-
 log_info "Validation de la configuration Docker..."
 
 # Toujours requis pour booter l'API + Prisma.
@@ -119,7 +94,6 @@ if is_truthy "$STRICT_EXTERNAL_CONFIG_RAW"; then
   require_env_non_empty "IMAGEKIT_ENDPOINT"
 
   require_secret_non_empty "stripe_secret_key.txt"
-  require_secret_non_empty "stripe_webhook_secret.txt"
   require_secret_non_empty "clerk_secret_key.txt"
   require_secret_non_empty "gandi_api_token.txt"
   require_secret_non_empty "imagekit_api_key.txt"
@@ -130,9 +104,6 @@ else
   require_secret_exists "gandi_api_token.txt"
   require_secret_exists "imagekit_api_key.txt"
 fi
-
-# Optionnel mais recommande pour la fiabilite du scraping Booking.
-warn_secret_if_missing_or_empty "scrapfly_api_key.txt"
 
 if [ "$errors" -ne 0 ]; then
   log_error "Configuration invalide. Corrige .env et secrets/*.txt, puis relance docker compose."
