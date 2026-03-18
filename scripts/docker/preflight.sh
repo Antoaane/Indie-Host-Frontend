@@ -95,13 +95,11 @@ if is_truthy "$STRICT_EXTERNAL_CONFIG_RAW"; then
 
   require_secret_non_empty "stripe_secret_key.txt"
   require_secret_non_empty "clerk_secret_key.txt"
-  require_secret_non_empty "gandi_api_token.txt"
   require_secret_non_empty "imagekit_api_key.txt"
 else
   log_warn "Mode STRICT_EXTERNAL_CONFIG desactive: seules les dependances minimales sont validees."
   require_secret_exists "stripe_secret_key.txt"
   require_secret_exists "clerk_secret_key.txt"
-  require_secret_exists "gandi_api_token.txt"
   require_secret_exists "imagekit_api_key.txt"
 fi
 

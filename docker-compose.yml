@@ -42,13 +42,11 @@ services:
       - database_url
       - stripe_secret_key
       - clerk_secret_key
-      - gandi_api_token
       - imagekit_api_key
     environment:
       DATABASE_URL_FILE: /run/secrets/database_url
       STRIPE_SECRET_KEY_FILE: /run/secrets/stripe_secret_key
       CLERK_SECRET_KEY_FILE: /run/secrets/clerk_secret_key
-      GANDI_API_TOKEN_FILE: /run/secrets/gandi_api_token
       IMAGEKIT_API_KEY_FILE: /run/secrets/imagekit_api_key
     expose:
       - "4000"
@@ -147,7 +145,5 @@ secrets:
     file: ./secrets/stripe_secret_key.txt
   clerk_secret_key:
     file: ./secrets/clerk_secret_key.txt
-  gandi_api_token:
-    file: ./secrets/gandi_api_token.txt
   imagekit_api_key:
     file: ./secrets/imagekit_api_key.txt

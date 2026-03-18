@@ -6,8 +6,8 @@ Fichiers disponibles:
 - `database_url.example.txt`
 - `stripe_secret_key.example.txt`
 - `clerk_secret_key.example.txt`
-- `gandi_api_token.example.txt`
 - `imagekit_api_key.example.txt`
+- `gandi_api_token.example.txt` (optionnel, hors init Docker)
 - `stripe_webhook_secret.example.txt` (optionnel, hors init Docker)
 - `scrapfly_api_key.example.txt` (optionnel, hors init Docker)
 

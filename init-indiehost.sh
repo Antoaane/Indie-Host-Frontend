@@ -68,7 +68,6 @@ mkdir -p "secrets"
 copy_if_missing "secret.example/database_url.example.txt" "secrets/database_url.txt"
 copy_if_missing "secret.example/stripe_secret_key.example.txt" "secrets/stripe_secret_key.txt"
 copy_if_missing "secret.example/clerk_secret_key.example.txt" "secrets/clerk_secret_key.txt"
-copy_if_missing "secret.example/gandi_api_token.example.txt" "secrets/gandi_api_token.txt"
 copy_if_missing "secret.example/imagekit_api_key.example.txt" "secrets/imagekit_api_key.txt"
 
 echo
