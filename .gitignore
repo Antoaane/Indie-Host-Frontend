@@ -3,18 +3,18 @@
 ############################
 
 # Environnements virtuels Python (scraper)
-IndieHost-Scraping/.venv/
-IndieHost-Scraping/venv/
+backend/microservices/microservice-scraping-py/.venv/
+backend/microservices/microservice-scraping-py/venv/
 
 # Fichiers Python générés
-IndieHost-Scraping/**/*.pyc
-IndieHost-Scraping/**/__pycache__/
+backend/microservices/microservice-scraping-py/**/*.pyc
+backend/microservices/microservice-scraping-py/**/__pycache__/
 
 # Fichiers de sortie du scraper (non versionnés)
-IndieHost-Scraping/annonce.json
+backend/microservices/microservice-scraping-py/annonce.json
 
 # Config locale / secrets éventuels
-IndieHost-Scraping/.env
+backend/microservices/microservice-scraping-py/.env
 
 # Fichiers Node à ne pas sur-pister localement
 frontend/package-lock.json

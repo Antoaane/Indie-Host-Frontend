@@ -112,6 +112,7 @@ Variables utiles :
 | Variable | Description | Obligatoire |
 |---|---|---|
 | `SCRAPFLY_KEY` | Cle API ScrapFly pour fiabiliser le scraping Booking | Non |
+| `SCRAPFLY_KEY_FILE` | Chemin fichier secret Docker contenant `SCRAPFLY_KEY` | Non |
 | `PLAYWRIGHT_BROWSERS_PATH` | Chemin des navigateurs Playwright. Le scraper force deja `0` par defaut pour Airbnb | Non |
 
 Notes :
@@ -124,6 +125,13 @@ Notes :
 cd backend/microservices/microservice-scraping-py
 uvicorn api:app --reload --port 8000
 ```
+
+### Lancement Docker (compose)
+
+Le service est lance automatiquement par `docker-compose.yml`.
+
+Healthcheck:
+- `GET /health`
 
 Endpoints :
 

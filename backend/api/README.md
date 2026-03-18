@@ -26,7 +26,6 @@ Backend REST TypeScript pour le frontend IndieHost.
 ### 1. Base de données
 
 ```bash
-cd docker/
 docker compose up -d postgres
 ```
 
@@ -189,7 +188,7 @@ Ce script fait automatiquement :
 2. `prisma db push`
 3. démarrage serveur
 
-Le `docker-compose.yml` (dans `docker/`) expose :
-- `postgres:16` sur `:5432`
-- `backend-api` sur `:4000`
-- `pgadmin` sur `:5050` (admin@indiehost.fr / admin)
+Le `docker-compose.yml` (à la racine du projet) expose :
+- `api` derrière Nginx via `http://localhost/api/...`
+- `postgres:16` comme service interne Docker (`postgres:5432`)
+- `scraping` derrière Nginx via `http://localhost/scraping/...`

@@ -1,6 +1,6 @@
 // File: src/views/Editor/components/EditorSidebar/panels/ListingPanels/ImportPanel/scrapingClient.ts
 
-const BASE_URL = (import.meta.env.VITE_SCRAPING_API_URL ?? 'http://localhost:8000').replace(/\/$/, '')
+const BASE_URL = (import.meta.env.VITE_SCRAPING_API_URL ?? '/scraping').replace(/\/$/, '')
 
 /** Timeout en ms pour l'appel au serveur de scraping.
  * Certaines annonces Airbnb peuvent prendre plus de 90 s avec les fallbacks HTML/Playwright.
@@ -44,7 +44,7 @@ export async function scrapeListing(options: ScrapeListingOptions): Promise<Reco
   } catch (err) {
     clearTimeout(timeoutId)
     if (err instanceof Error && err.name === 'AbortError') {
-      throw new Error("Le serveur de scraping met trop de temps à répondre. Réessayez ou vérifiez que le service tourne sur le port 8000.")
+      throw new Error("Le serveur de scraping met trop de temps à répondre. Réessayez ou vérifiez que le service scraping est démarré.")
     }
     throw err
   } finally {

@@ -4,6 +4,7 @@ Expose un endpoint POST /scrape pour récupérer les données d'une annonce Airb
 Service stateless : aucune donnée n'est stockée.
 """
 import asyncio
+import os
 import re
 from contextlib import asynccontextmanager
 
@@ -13,6 +14,35 @@ try:
     load_dotenv()
 except ImportError:
     pass
+
+
+def _read_secret_file(path: str | None) -> str | None:
+    if not path:
+        return None
+    try:
+        with open(path, "r", encoding="utf-8") as handle:
+            value = handle.read().strip()
+        return value or None
+    except OSError:
+        return None
+
+
+def _hydrate_secret_env(var_name: str) -> None:
+    direct = (os.getenv(var_name) or "").strip()
+    if direct:
+        return
+
+    file_path = (os.getenv(f"{var_name}_FILE") or "").strip()
+    if not file_path:
+        return
+
+    value = _read_secret_file(file_path)
+    if value:
+        os.environ[var_name] = value
+
+
+for _secret_var in ("SCRAPFLY_KEY",):
+    _hydrate_secret_env(_secret_var)
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware

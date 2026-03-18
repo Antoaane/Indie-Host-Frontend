@@ -1,39 +1,69 @@
 # IndieHost
 
-Solution SaaS pour hôtes de locations courte durée: réservations directes, paiements intégrés, messagerie et domaines.
+Solution SaaS pour hôtes de locations courte durée: réservations directes, paiements intégrés, messagerie, domaines et import d'annonce (scraping Airbnb/Booking).
 
 ## Docker-Only (mode standard)
 
 Le projet se lance uniquement via Docker Compose.
 
-### 1) Préparer la configuration
+## 1) Initialiser les fichiers locaux
 
-Copier l'environnement racine:
-
-```bash
-cp .env.example .env
-```
-
-Copier les secrets runtime:
+Linux/macOS:
 
 ```bash
-cp secret.example/database_url.example.txt secrets/database_url.txt
-cp secret.example/stripe_secret_key.example.txt secrets/stripe_secret_key.txt
-cp secret.example/clerk_secret_key.example.txt secrets/clerk_secret_key.txt
-cp secret.example/gandi_api_token.example.txt secrets/gandi_api_token.txt
+./init-indiehost.sh
 ```
 
-### 2) Lancer la stack
+Windows PowerShell:
+
+```powershell
+./init-indiehost.ps1
+```
+
+Cette étape crée (si absents):
+- `/.env`
+- `/secrets/*.txt`
+
+## 2) Renseigner les valeurs réelles
+
+Modifier:
+- `/.env`
+- `/secrets/database_url.txt`
+- `/secrets/stripe_secret_key.txt`
+- `/secrets/stripe_webhook_secret.txt`
+- `/secrets/clerk_secret_key.txt`
+- `/secrets/gandi_api_token.txt`
+- `/secrets/imagekit_api_key.txt`
+- `/secrets/scrapfly_api_key.txt` (optionnel, recommandé pour Booking)
+
+Par défaut `STRICT_EXTERNAL_CONFIG=true` dans `.env`: le démarrage échoue si Stripe/Clerk/ImageKit/Gandi ne sont pas configurés.
+
+## 3) Lancer et attendre que tout soit prêt
+
+Linux/macOS:
 
 ```bash
-docker compose up -d --build
+./start-indiehost.sh
 ```
 
-### 3) Vérifier
+Windows PowerShell:
+
+```powershell
+./start-indiehost.ps1
+```
+
+Commande Docker équivalente:
+
+```bash
+docker compose up -d --build --wait
+```
+
+## 4) Vérifier
 
 - Frontend: `http://localhost`
-- API health: `http://localhost/api/v1/health`
-- PostgreSQL: service interne Docker `postgres:5432`
+- API health: `http://localhost/api/health`
+- Scraping health: `http://localhost/scraping/health`
+- PostgreSQL interne: `postgres:5432`
 
 ## Arborescence utile
 
@@ -45,11 +75,16 @@ docker compose up -d --build
 ├── secrets/          # secrets locaux runtime (non versionnés)
 ├── frontend/
 ├── backend/api/
-└── nginx/
+├── backend/microservices/microservice-scraping-py/
+├── nginx/
+├── init-indiehost.sh
+├── init-indiehost.ps1
+├── start-indiehost.sh
+└── start-indiehost.ps1
 ```
 
 ## Notes
 
 - Les variables frontend `VITE_*` sont injectées au build Docker via `docker-compose.yml`.
 - Les secrets backend passent par des fichiers (`*_FILE`) montés depuis `secrets/*.txt`.
-- Les scripts `start-indiehost.sh` et `start-indiehost.ps1` restent disponibles comme wrappers Docker.
+- Le microservice scraping est exposé via Nginx sur `/scraping/`.

@@ -1,12 +1,17 @@
-# secret.exemple
+# secret.example
 
-Ce dossier centralise tous les modèles de secrets (`*.example.txt`).
+Ce dossier centralise tous les templates versionnes (`*.example.txt`) pour Docker.
 
 Fichiers disponibles:
 - `database_url.example.txt`
 - `stripe_secret_key.example.txt`
+- `stripe_webhook_secret.example.txt`
 - `clerk_secret_key.example.txt`
 - `gandi_api_token.example.txt`
+- `imagekit_api_key.example.txt`
+- `scrapfly_api_key.example.txt` (optionnel)
 
 Utilisation:
-- Copier ces modèles vers `secrets/*.txt` ou `secret.test/*.txt` selon l'environnement ciblé.
+- Copier ces templates vers `secrets/*.txt`.
+- Remplacer les placeholders par de vraies valeurs.
+- Relancer `docker compose up -d --build --wait`.

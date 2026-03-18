@@ -1,7 +1,21 @@
 services:
+  preflight:
+    image: alpine:3.20
+    restart: "no"
+    env_file: .env
+    environment:
+      STRICT_EXTERNAL_CONFIG: ${STRICT_EXTERNAL_CONFIG:-true}
+    volumes:
+      - ./scripts/docker/preflight.sh:/preflight.sh:ro
+      - ./secrets:/secrets:ro
+    command: ["/bin/sh", "/preflight.sh"]
+
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
+    depends_on:
+      preflight:
+        condition: service_completed_successfully
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -19,19 +33,25 @@ services:
       context: ./backend/api
     restart: unless-stopped
     depends_on:
+      preflight:
+        condition: service_completed_successfully
       postgres:
         condition: service_healthy
     env_file: .env
     secrets:
       - database_url
       - stripe_secret_key
+      - stripe_webhook_secret
       - clerk_secret_key
       - gandi_api_token
+      - imagekit_api_key
     environment:
       DATABASE_URL_FILE: /run/secrets/database_url
       STRIPE_SECRET_KEY_FILE: /run/secrets/stripe_secret_key
+      STRIPE_WEBHOOK_SECRET_FILE: /run/secrets/stripe_webhook_secret
       CLERK_SECRET_KEY_FILE: /run/secrets/clerk_secret_key
       GANDI_API_TOKEN_FILE: /run/secrets/gandi_api_token
+      IMAGEKIT_API_KEY_FILE: /run/secrets/imagekit_api_key
     expose:
       - "4000"
     healthcheck:
@@ -41,6 +61,26 @@ services:
       retries: 12
       start_period: 20s
 
+  scraping:
+    build:
+      context: ./backend/microservices/microservice-scraping-py
+    restart: unless-stopped
+    depends_on:
+      preflight:
+        condition: service_completed_successfully
+    secrets:
+      - scrapfly_api_key
+    environment:
+      SCRAPFLY_KEY_FILE: /run/secrets/scrapfly_api_key
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys;sys.exit(0) if urllib.request.urlopen('http://localhost:8000/health', timeout=3).status==200 else sys.exit(1)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 25s
+
   frontend:
     build:
       context: ./frontend
@@ -49,6 +89,8 @@ services:
         VITE_LISTINGS_DATA_MODE: ${VITE_LISTINGS_DATA_MODE:-api}
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api/v1}
         VITE_API_REQUEST_TIMEOUT_MS: ${VITE_API_REQUEST_TIMEOUT_MS:-20000}
+        VITE_BOOKINGS_API_BASE_URL: ${VITE_BOOKINGS_API_BASE_URL:-/api/v1}
+        VITE_BOOKINGS_PATH: ${VITE_BOOKINGS_PATH:-/bookings}
         VITE_CLERK_PUBLISHABLE_KEY: ${VITE_CLERK_PUBLISHABLE_KEY:-}
         VITE_IN_DEV_UTILITIES_ENABLED: ${VITE_IN_DEV_UTILITIES_ENABLED:-false}
         VITE_STRIPE_PUBLISHABLE_KEY: ${VITE_STRIPE_PUBLISHABLE_KEY:-}
@@ -56,11 +98,26 @@ services:
         VITE_STRIPE_PAYMENT_INTENT_PATH: ${VITE_STRIPE_PAYMENT_INTENT_PATH:-/payments/stripe/payment-intents}
         VITE_STRIPE_PAYMENT_RETURN_URL: ${VITE_STRIPE_PAYMENT_RETURN_URL:-http://localhost}
         VITE_STRIPE_CHECKOUT_OFFLINE_MODE: ${VITE_STRIPE_CHECKOUT_OFFLINE_MODE:-false}
+        VITE_GANDI_API_BASE_URL: ${VITE_GANDI_API_BASE_URL:-/api/v1}
+        VITE_GANDI_AVAILABILITY_PATH: ${VITE_GANDI_AVAILABILITY_PATH:-/domains/grandi/availability}
+        VITE_GANDI_CHECKOUT_PATH: ${VITE_GANDI_CHECKOUT_PATH:-/domains/grandi/checkout}
         VITE_IMAGEKIT_ENDPOINT: ${VITE_IMAGEKIT_ENDPOINT:-}
+        VITE_IMAGEKIT_UPLOAD_PATH: ${VITE_IMAGEKIT_UPLOAD_PATH:-/medias/imagekit/upload}
+        VITE_IMAGEKIT_IMPORT_PATH: ${VITE_IMAGEKIT_IMPORT_PATH:-/medias/imagekit/import}
         VITE_PUBLIC_LISTING_ROOT_DOMAIN: ${VITE_PUBLIC_LISTING_ROOT_DOMAIN:-localhost}
+        VITE_SCRAPING_API_URL: ${VITE_SCRAPING_API_URL:-/scraping}
     restart: unless-stopped
+    depends_on:
+      preflight:
+        condition: service_completed_successfully
     expose:
       - "80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
 
   nginx:
     image: nginx:alpine
@@ -68,13 +125,21 @@ services:
     restart: unless-stopped
     depends_on:
       frontend:
-        condition: service_started
+        condition: service_healthy
       api:
+        condition: service_healthy
+      scraping:
         condition: service_healthy
     ports:
       - "80:80"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost/ && wget -q -O /dev/null http://localhost/api/health && wget -q -O /dev/null http://localhost/scraping/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
 
 volumes:
   postgres_data:
@@ -84,7 +149,13 @@ secrets:
     file: ./secrets/database_url.txt
   stripe_secret_key:
     file: ./secrets/stripe_secret_key.txt
+  stripe_webhook_secret:
+    file: ./secrets/stripe_webhook_secret.txt
   clerk_secret_key:
     file: ./secrets/clerk_secret_key.txt
   gandi_api_token:
     file: ./secrets/gandi_api_token.txt
+  imagekit_api_key:
+    file: ./secrets/imagekit_api_key.txt
+  scrapfly_api_key:
+    file: ./secrets/scrapfly_api_key.txt

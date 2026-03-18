@@ -28,7 +28,6 @@ Le projet peut tourner en **mode local-json** (sans API) ou en **mode API** :
 ### 1. PostgreSQL via Docker
 
 ```bash
-cd docker/
 docker compose up -d postgres
 ```
 
@@ -74,7 +73,7 @@ VITE_LISTINGS_DATA_MODE=local-json
 # VITE_LISTINGS_DATA_MODE=api
 # VITE_API_BASE_URL=http://localhost:4000/v1
 
-VITE_SCRAPING_API_URL=http://localhost:8000
+VITE_SCRAPING_API_URL=/scraping
 
 VITE_CLERK_PUBLISHABLE_KEY=pk_test_XXXXXXXXXXXXXXXX
 
