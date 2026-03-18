@@ -74,9 +74,9 @@ ICAL_EXPORT_DEFAULT_PRODID=IndieHost//Calendar//FR
 # Générez un Personal Access Token sur https://account.gandi.net
 #   → Sécurité → Personal Access Tokens → Créer
 #   → Scope requis : domain:read
-GRANDI_API_TOKEN=pat_votre-token-gandi
-GRANDI_API_BASE_URL=https://api.gandi.net/v5
-GRANDI_CHECKOUT_BASE_URL=https://www.gandi.net/en/domain/checkout
+GANDI_API_TOKEN=pat_votre-token-gandi
+GANDI_API_BASE_URL=https://api.gandi.net/v5
+GANDI_CHECKOUT_BASE_URL=https://www.gandi.net/en/domain/checkout
 ```
 
 > **Important Gandi** : utilisez un **Personal Access Token** (PAT) depuis votre compte Gandi.net.
@@ -148,7 +148,7 @@ curl -X POST "http://localhost:4000/v1/domains/grandi/checkout" \
 **Réponse :**
 ```json
 {
-  "id": "grandi_lx3k2a_a8f3c1",
+  "id": "gandi_lx3k2a_a8f3c1",
   "checkoutUrl": "https://www.gandi.net/en/domain/checkout?domain=mon-gite.fr"
 }
 ```

@@ -1,7 +1,7 @@
 import { env } from '../../config/env.js';
 
-const GANDI_API_BASE = (env.GRANDI_API_BASE_URL || 'https://api.gandi.net/v5').replace(/\/+$/, '');
-const GANDI_CHECKOUT_BASE = (env.GRANDI_CHECKOUT_BASE_URL || 'https://www.gandi.net/en/domain/checkout').replace(/\/+$/, '');
+const GANDI_API_BASE = (env.GANDI_API_BASE_URL || 'https://api.gandi.net/v5').replace(/\/+$/, '');
+const GANDI_CHECKOUT_BASE = (env.GANDI_CHECKOUT_BASE_URL || 'https://www.gandi.net/en/domain/checkout').replace(/\/+$/, '');
 
 export type DomainAvailabilityResult = {
   domain: string;
@@ -82,7 +82,7 @@ export class GrandiService {
   private readonly apiToken: string;
 
   constructor() {
-    this.apiToken = env.GRANDI_API_TOKEN ?? '';
+    this.apiToken = env.GANDI_API_TOKEN ?? '';
   }
 
   private authHeaders(): Record<string, string> {
@@ -168,7 +168,7 @@ export class GrandiService {
     // On génère une URL directe vers leur interface d'achat en ligne.
     const checkoutUrl = `${GANDI_CHECKOUT_BASE}?domain=${encodeURIComponent(normalized)}`;
 
-    const sessionId = `grandi_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+    const sessionId = `gandi_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
 
     return {
       id: sessionId,

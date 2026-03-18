@@ -29,10 +29,10 @@ export type GrandiCheckoutSession = {
   checkoutUrl: string
 }
 
-const RAW_GRANDI_API_BASE_URL = (import.meta.env.VITE_GRANDI_API_BASE_URL ?? import.meta.env.VITE_API_BASE_URL ?? '').trim()
-const BASE_API_URL = normalizeApiBaseUrl(RAW_GRANDI_API_BASE_URL)
-const AVAILABILITY_PATH = normalizePath((import.meta.env.VITE_GRANDI_AVAILABILITY_PATH ?? '/domains/grandi/availability').trim())
-const CHECKOUT_PATH = normalizePath((import.meta.env.VITE_GRANDI_CHECKOUT_PATH ?? '/domains/grandi/checkout').trim())
+const RAW_GANDI_API_BASE_URL = (import.meta.env.VITE_GANDI_API_BASE_URL ?? import.meta.env.VITE_API_BASE_URL ?? '').trim()
+const BASE_API_URL = normalizeApiBaseUrl(RAW_GANDI_API_BASE_URL)
+const AVAILABILITY_PATH = normalizePath((import.meta.env.VITE_GANDI_AVAILABILITY_PATH ?? '/domains/grandi/availability').trim())
+const CHECKOUT_PATH = normalizePath((import.meta.env.VITE_GANDI_CHECKOUT_PATH ?? '/domains/grandi/checkout').trim())
 
 function normalizePath(path: string): string {
   const trimmed = path.trim()

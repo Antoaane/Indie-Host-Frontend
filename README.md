@@ -84,7 +84,7 @@ DATABASE_URL=postgresql://indiehost:indiehost_dev_password@localhost:5432/indieh
 # Gandi.net — disponibilité et achat de noms de domaine
 # Générez un PAT sur https://account.gandi.net → Sécurité → Personal Access Tokens
 # Scope requis : domain:read
-GRANDI_API_TOKEN=pat_votre-token-gandi
+GANDI_API_TOKEN=pat_votre-token-gandi
 ```
 
 Éditer `frontend/.env` :

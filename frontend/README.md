@@ -34,7 +34,7 @@ docker compose up -d postgres
 ```bash
 cd backend/api/
 cp .env.example .env
-# → Renseignez DATABASE_URL, GRANDI_API_TOKEN, etc.
+# → Renseignez DATABASE_URL, GANDI_API_TOKEN, etc.
 npm install
 npm run prisma:generate
 npm run prisma:push
@@ -94,9 +94,9 @@ DATABASE_URL=postgresql://indiehost:indiehost_dev_password@localhost:5432/indieh
 # Gandi.net — noms de domaine (DomainPanel)
 # Générez un PAT sur https://account.gandi.net → Sécurité → Personal Access Tokens
 # Scope requis : domain:read
-GRANDI_API_TOKEN=pat_votre-token-gandi
-GRANDI_API_BASE_URL=https://api.gandi.net/v5
-GRANDI_CHECKOUT_BASE_URL=https://www.gandi.net/en/domain/checkout
+GANDI_API_TOKEN=pat_votre-token-gandi
+GANDI_API_BASE_URL=https://api.gandi.net/v5
+GANDI_CHECKOUT_BASE_URL=https://www.gandi.net/en/domain/checkout
 ```
 
 ---
