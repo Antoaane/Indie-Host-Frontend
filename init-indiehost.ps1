@@ -1,10 +1,48 @@
 $ErrorActionPreference = 'Stop'
 
+function Normalize-SecretPath {
+  param(
+    [Parameter(Mandatory = $true)][string]$Source,
+    [Parameter(Mandatory = $true)][string]$Destination
+  )
+
+  if (Test-Path -LiteralPath $Destination -PathType Container) {
+    $sourceName = [System.IO.Path]::GetFileName($Source)
+    $preferredCandidate = Join-Path $Destination $sourceName
+    $candidate = $null
+
+    if (Test-Path -LiteralPath $preferredCandidate -PathType Leaf) {
+      $candidate = $preferredCandidate
+    }
+    else {
+      $files = Get-ChildItem -LiteralPath $Destination -File -Force
+      if ($files.Count -eq 1) {
+        $candidate = $files[0].FullName
+      }
+    }
+
+    $tmpFile = [System.IO.Path]::GetTempFileName()
+    if ($null -ne $candidate) {
+      Copy-Item -LiteralPath $candidate -Destination $tmpFile -Force
+      Write-Host "[init] Replaced directory by file $Destination (preserved content from $candidate)"
+    }
+    else {
+      Copy-Item -LiteralPath $Source -Destination $tmpFile -Force
+      Write-Host "[init] Replaced directory by file $Destination (template reapplied from $Source)"
+    }
+
+    Remove-Item -LiteralPath $Destination -Recurse -Force
+    Move-Item -LiteralPath $tmpFile -Destination $Destination -Force
+  }
+}
+
 function Copy-IfMissing {
   param(
     [Parameter(Mandatory = $true)][string]$Source,
     [Parameter(Mandatory = $true)][string]$Destination
   )
+
+  Normalize-SecretPath -Source $Source -Destination $Destination
 
   if (-not (Test-Path -LiteralPath $Destination)) {
     Copy-Item -LiteralPath $Source -Destination $Destination

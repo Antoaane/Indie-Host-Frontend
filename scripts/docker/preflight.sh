@@ -46,6 +46,11 @@ require_secret_non_empty() {
   file_name="$1"
   path="/secrets/$file_name"
 
+  if [ -d "$path" ]; then
+    log_error "Secret invalide: $path est un dossier (attendu: un fichier .txt). Lance ./init-indiehost.sh ou ./init-indiehost.ps1."
+    return
+  fi
+
   if [ ! -f "$path" ]; then
     log_error "Secret manquant: $path"
     return
@@ -65,6 +70,10 @@ require_secret_non_empty() {
 require_secret_exists() {
   file_name="$1"
   path="/secrets/$file_name"
+  if [ -d "$path" ]; then
+    log_error "Secret invalide: $path est un dossier (attendu: un fichier .txt)."
+    return
+  fi
   if [ ! -f "$path" ]; then
     log_error "Secret manquant: $path"
   fi
@@ -73,6 +82,11 @@ require_secret_exists() {
 warn_secret_if_missing_or_empty() {
   file_name="$1"
   path="/secrets/$file_name"
+
+  if [ -d "$path" ]; then
+    log_warn "Secret optionnel invalide: $path est un dossier (attendu: un fichier .txt)."
+    return
+  fi
 
   if [ ! -f "$path" ]; then
     log_warn "Secret optionnel absent: $path"
