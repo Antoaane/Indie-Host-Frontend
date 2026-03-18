@@ -361,22 +361,22 @@ const catalogGroups = computed<OverlayAmenityGroup[]>(() => {
     if (selected) return
     const resolved: OverlayAmenityItem = {
       id: normalizedId,
-      name: selected?.name ?? item.name,
-      description: selected?.description ?? item.description,
-      category: selected?.category ?? (normalizeAmenityText(item.category) ?? FALLBACK_CATEGORY),
-      relevance: selected?.relevance ?? toFiniteNumber(item.relevance) ?? 0,
+      name: item.name,
+      description: item.description,
+      category: normalizeAmenityText(item.category) ?? FALLBACK_CATEGORY,
+      relevance: toFiniteNumber(item.relevance) ?? 0,
       perkEligible: item.perkEligible,
       perkScore: item.perkScore,
       perkPriority: item.perkPriority,
-      selected: Boolean(selected),
-      pinned: Boolean(selected?.pinned),
+      selected: false,
+      pinned: false,
       icon: resolveAmenityIcon({
         id: normalizedId,
-        name: selected?.name ?? item.name,
-        description: selected?.description ?? item.description,
-        category: selected?.category ?? (normalizeAmenityText(item.category) ?? FALLBACK_CATEGORY),
+        name: item.name,
+        description: item.description,
+        category: normalizeAmenityText(item.category) ?? FALLBACK_CATEGORY,
       }),
-      index: selected?.index ?? catalogIndex,
+      index: catalogIndex,
     }
 
     if (!matchesCatalogSearch(resolved, tokens)) return
