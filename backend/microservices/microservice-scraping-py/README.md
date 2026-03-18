@@ -103,6 +103,28 @@ python -m pip install -r requirements.txt
 python -m playwright install chromium
 ```
 
+### Depannage Windows (`KeyboardInterrupt` pendant `python -m venv`)
+
+Si la creation du venv se bloque dans `_setup_pip` puis finit en `KeyboardInterrupt`, le plus fiable est de creer le venv sans pip, puis d'installer pip manuellement :
+
+```powershell
+cd backend/microservices/microservice-scraping-py
+if (Test-Path .venv) { Remove-Item -Recurse -Force .venv }
+
+py -3.11 -m venv .venv --without-pip
+.\.venv\Scripts\python.exe -m ensurepip --upgrade
+.\.venv\Scripts\python.exe -m pip install --upgrade pip setuptools wheel
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
+python -m playwright install chromium
+```
+
+Si l'activation PowerShell est bloquee, utiliser :
+
+```powershell
+Set-ExecutionPolicy -Scope Process Bypass
+```
+
 ## Variables d'environnement
 
 Le service charge automatiquement un `.env` si disponible.
