@@ -8,7 +8,7 @@ services:
     volumes:
       - ./scripts/docker/preflight.sh:/preflight.sh:ro
       - ./secrets:/secrets:ro
-    command: ["/bin/sh", "/preflight.sh"]
+    command: ["/bin/sh", "-ec", "tr -d '\\r' < /preflight.sh > /tmp/preflight.sh && /bin/sh /tmp/preflight.sh"]
 
   postgres:
     image: postgres:16-alpine
