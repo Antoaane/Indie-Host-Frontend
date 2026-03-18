@@ -221,7 +221,7 @@
         &.is-preview {
           >.slide {
             align-items: flex-start;
-            padding-top: 0;
+            padding-top: var(--layout-gap-sm);
             padding-bottom: 0;
 
             >* {
