@@ -528,6 +528,10 @@ export function createApiListingsController(): ListingsController {
         requests.push(patchRemoteWithToken(resolveUrl(buildListingUrl('notes', listingId)), patch.notes, token))
       }
 
+      if (patch.comments) {
+        requests.push(patchRemoteWithToken(resolveUrl(buildListingUrl('comments', listingId)), patch.comments, token))
+      }
+
       if (requests.length) {
         await Promise.all(requests)
       }

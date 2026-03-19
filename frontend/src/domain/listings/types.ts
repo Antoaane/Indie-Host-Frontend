@@ -245,6 +245,7 @@ export type DraftPatch = {
   medias?: Partial<RawMedias> | null
   arrival?: Partial<RawArrival> | null
   notes?: Partial<RawNotes> | null
+  comments?: Partial<RawComments> | null
 }
 
 export type VolatileBundle = Pick<RawListingBundle, 'bookings' | 'notes' | 'comments' | 'host'>

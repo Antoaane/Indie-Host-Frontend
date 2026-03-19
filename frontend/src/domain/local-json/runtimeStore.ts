@@ -466,6 +466,9 @@ export function createRuntimeLocalJsonStore(): RuntimeLocalJsonStore {
     if (patch.notes) {
       record.notes = deepMerge(record.notes, patch.notes)
     }
+    if (patch.comments) {
+      record.comments = deepMerge(record.comments, patch.comments)
+    }
     resolveRecordSlug(listingId, record)
     record.host = deepClone(getCanonicalHost())
   }

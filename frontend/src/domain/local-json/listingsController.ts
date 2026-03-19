@@ -229,6 +229,24 @@ export function createLocalJsonListingsController(): ListingsController {
         )
       }
 
+      if (patch.notes) {
+        requests.push(
+          requestJson<RawNotes>(buildListingUrl('notes', listingId), {
+            method: 'PATCH',
+            body: JSON.stringify(patch.notes),
+          }),
+        )
+      }
+
+      if (patch.comments) {
+        requests.push(
+          requestJson<RawComments>(buildListingUrl('comments', listingId), {
+            method: 'PATCH',
+            body: JSON.stringify(patch.comments),
+          }),
+        )
+      }
+
       try {
         if (requests.length) {
           await Promise.all(requests)
