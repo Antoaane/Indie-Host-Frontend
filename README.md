@@ -62,11 +62,43 @@ docker compose up -d --build --wait
 - Scraping health: `http://localhost/scraping/health`
 - PostgreSQL interne: `postgres:5432`
 
+## Mode Dev (hot reload)
+
+Le mode dev garde PostgreSQL + API + scraping + reverse proxy, avec:
+- `frontend` via Vite (`:5179`, HMR actif)
+- `api` via `tsx watch`
+- `scraping` via `uvicorn --reload`
+
+Linux/macOS:
+
+```bash
+./start-indiehost-dev.sh
+```
+
+Windows PowerShell:
+
+```powershell
+./start-indiehost-dev.ps1
+```
+
+Commande Docker équivalente:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build --wait
+```
+
+URLs utiles en dev:
+- via Nginx: `http://localhost`
+- Vite direct: `http://localhost:5179`
+- API health: `http://localhost/api/health`
+- scraping health: `http://localhost/scraping/health`
+
 ## Arborescence utile
 
 ```text
 .
 ├── docker-compose.yml
+├── docker-compose.dev.yml
 ├── .env.example
 ├── secret.example/   # templates versionnés
 ├── secrets/          # secrets locaux runtime (non versionnés)
@@ -77,7 +109,9 @@ docker compose up -d --build --wait
 ├── init-indiehost.sh
 ├── init-indiehost.ps1
 ├── start-indiehost.sh
-└── start-indiehost.ps1
+├── start-indiehost.ps1
+├── start-indiehost-dev.sh
+└── start-indiehost-dev.ps1
 ```
 
 ## Notes
