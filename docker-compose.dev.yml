@@ -11,10 +11,10 @@ services:
       - /bin/sh
       - -ec
       - |
-        if [ -z "${DATABASE_URL:-}" ] && [ -n "${DATABASE_URL_FILE:-}" ] && [ -f "$DATABASE_URL_FILE" ]; then
-          export DATABASE_URL="$(cat "$DATABASE_URL_FILE")"
+        if [ -z "$${DATABASE_URL:-}" ] && [ -n "$${DATABASE_URL_FILE:-}" ] && [ -f "$$DATABASE_URL_FILE" ]; then
+          export DATABASE_URL="$$(cat "$$DATABASE_URL_FILE")"
         fi
-        if [ -z "${DATABASE_URL:-}" ]; then
+        if [ -z "$${DATABASE_URL:-}" ]; then
           echo "DATABASE_URL (or DATABASE_URL_FILE) is required" >&2
           exit 1
         fi
