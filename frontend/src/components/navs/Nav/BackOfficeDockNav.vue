@@ -25,6 +25,7 @@ function handleItemAction(item: { action?: (event?: MouseEvent) => void }, event
   <nav
     class="back-office-dock-nav"
     aria-label="Navigation back-office"
+    :style="{ '--dock-columns': String(items.length) }"
   >
     <component
       v-for="item in items"

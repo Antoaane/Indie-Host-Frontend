@@ -357,7 +357,7 @@ onBeforeUnmount(() => {
                 <UserButton.MenuItems>
                   <UserButton.Action
                     v-if="showStripeConnectDashboardAction"
-                    label="Dashboard Stripe Connect"
+                    label="Mes revenus"
                     :on-click="handleOpenStripeConnectDashboard"
                   >
                     <template #labelIcon>

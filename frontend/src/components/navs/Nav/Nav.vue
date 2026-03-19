@@ -1,11 +1,11 @@
 <!-- File: src/components/navs/Nav/Nav.vue -->
 
 <script setup lang="ts">
-import { useAuth } from '@clerk/vue'
+import { useAuth, useUser } from '@clerk/vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { Component } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { CalendarClock, LayoutGrid, MessageSquareMore, PlusSquare } from 'lucide-vue-next'
+import { CalendarClock, LayoutGrid, MessageSquareMore, PlusSquare, Wallet } from 'lucide-vue-next'
 
 import HostReservationOverlay from '@/components/navs/HostReservationOverlay.vue'
 import BackOfficeDockNav from '@/components/navs/Nav/BackOfficeDockNav.vue'
@@ -14,6 +14,10 @@ import NavLandingVariant from '@/components/navs/Nav/NavLandingVariant.vue'
 import NavPublicVariant from '@/components/navs/Nav/NavPublicVariant.vue'
 import type { NavItem, NavVariant } from '@/components/navs/Nav/navTypes'
 import { closeMobileMenu, isMobileMenuOpen, isNavForcedHidden } from '@/components/navs/navUtils'
+import {
+  createMyStripeConnectDashboardLink,
+  fetchMyStripeSubscriptionState,
+} from '@/domain/api/stripeSubscriptions'
 import { isManagedListingHostname } from '@/domain/listings/publicDomain'
 import { readRouteUserId, readRuntimeUserIdSync } from '@/router/backOfficeUser'
 import { vp } from '@/utils/viewport'
@@ -22,11 +26,16 @@ import clerkToken from '@/utils/clerkToken'
 const route = useRoute()
 const router = useRouter()
 const { getToken } = useAuth()
+const { isSignedIn } = useUser()
 
 const navRoot = ref<HTMLElement | null>(null)
 const reservationAnchor = ref<HTMLElement | null>(null)
 const reservationOpen = ref(false)
 const isNavHiddenByScroll = ref(false)
+const canOpenStripeConnectDashboard = ref(false)
+const stripeConnectAccountId = ref<string | null>(null)
+const isOpeningStripeConnectDashboard = ref(false)
+const stripeConnectAvailabilityRequestId = ref(0)
 
 let lastScrollY = 0
 const SCROLL_THRESHOLD = 80
@@ -101,8 +110,74 @@ function closeReservation() {
   reservationOpen.value = false
 }
 
+function resetStripeConnectDashboardAccess() {
+  canOpenStripeConnectDashboard.value = false
+  stripeConnectAccountId.value = null
+}
+
+async function refreshStripeConnectDashboardAvailability() {
+  const requestId = stripeConnectAvailabilityRequestId.value + 1
+  stripeConnectAvailabilityRequestId.value = requestId
+
+  if (!isHost.value || !isSignedIn.value) {
+    resetStripeConnectDashboardAccess()
+    return
+  }
+
+  try {
+    const token = await getToken.value()
+    if (!token) throw new Error('Session utilisateur absente.')
+
+    clerkToken.value = token
+    const state = await fetchMyStripeSubscriptionState()
+    if (requestId !== stripeConnectAvailabilityRequestId.value) return
+
+    const accountId = state.connect?.accountId ?? null
+    const onboardingCompleted = Boolean(
+      state.publicationReadiness?.connectOnboardingCompleted
+      || state.connect?.onboardingStatus === 'completed',
+    )
+
+    stripeConnectAccountId.value = accountId
+    canOpenStripeConnectDashboard.value = Boolean(accountId) && onboardingCompleted
+  } catch {
+    if (requestId !== stripeConnectAvailabilityRequestId.value) return
+    resetStripeConnectDashboardAccess()
+  }
+}
+
+async function handleOpenStripeConnectDashboard(_event?: MouseEvent) {
+  if (!canOpenStripeConnectDashboard.value || isOpeningStripeConnectDashboard.value) return
+
+  isOpeningStripeConnectDashboard.value = true
+
+  try {
+    const token = await getToken.value()
+    if (!token) throw new Error('Session utilisateur absente.')
+
+    clerkToken.value = token
+    const dashboard = await createMyStripeConnectDashboardLink({
+      accountId: stripeConnectAccountId.value ?? undefined,
+    })
+
+    const opened = window.open(dashboard.url, '_blank', 'noopener,noreferrer')
+    if (!opened) {
+      window.location.assign(dashboard.url)
+    }
+  } catch (error) {
+    console.warn('[Nav] impossible d\'ouvrir les revenus Stripe Connect', { error })
+  } finally {
+    isOpeningStripeConnectDashboard.value = false
+  }
+}
+
 watch(isHost, (value) => {
-  if (!value) closeReservation()
+  if (!value) {
+    closeReservation()
+    resetStripeConnectDashboardAccess()
+    return
+  }
+  void refreshStripeConnectDashboardAvailability()
 })
 
 watch(vp.lg, (value) => {
@@ -116,7 +191,16 @@ watch(
     closeMobileMenu()
     isNavHiddenByScroll.value = false
     lastScrollY = window.scrollY
+    void refreshStripeConnectDashboardAvailability()
   },
+)
+
+watch(
+  () => isSignedIn.value,
+  () => {
+    void refreshStripeConnectDashboardAvailability()
+  },
+  { immediate: true },
 )
 
 const resolveRouteLink = (
@@ -169,24 +253,40 @@ const landingNavItems: NavItem[] = [
   { id: 'trial-intro', name: 'Essayer gratuitement', link: '/pricing', cta: true, action: scrollToIntroOnDesktop },
 ]
 
-const hostNavItems = computed<NavItem[]>(() => [
-  {
-    id: 'add-reservation',
-    name: 'Ajouter une réservation',
-    link: resolveBackOfficeRouteLink('management-user', '/management'),
-    cta: true,
-    action: toggleReservation,
-    ref: reservationAnchor,
-    attrs: {
-      'aria-expanded': reservationOpen.value,
-      'aria-controls': 'host-reservation-overlay',
-      'aria-haspopup': 'dialog',
+const hostNavItems = computed<NavItem[]>(() => {
+  const items: NavItem[] = [
+    {
+      id: 'add-reservation',
+      name: 'Ajouter une réservation',
+      link: resolveBackOfficeRouteLink('management-user', '/management'),
+      cta: true,
+      action: toggleReservation,
+      ref: reservationAnchor,
+      attrs: {
+        'aria-expanded': reservationOpen.value,
+        'aria-controls': 'host-reservation-overlay',
+        'aria-haspopup': 'dialog',
+      },
     },
-  },
-  { id: 'listings', name: 'Mes annonces', link: resolveBackOfficeRouteLink('editor-user', '/editor') },
-  { id: 'reservations', name: 'Réservations', link: resolveBackOfficeRouteLink('management-user', '/management') },
-  { id: 'messagery', name: 'Messagerie', link: resolveBackOfficeRouteLink('messaging-user', '/messagerie') },
-])
+    { id: 'listings', name: 'Mes annonces', link: resolveBackOfficeRouteLink('editor-user', '/editor') },
+    { id: 'reservations', name: 'Réservations', link: resolveBackOfficeRouteLink('management-user', '/management') },
+    { id: 'messagery', name: 'Messagerie', link: resolveBackOfficeRouteLink('messaging-user', '/messagerie') },
+  ]
+
+  if (canOpenStripeConnectDashboard.value) {
+    items.push({
+      id: 'revenues',
+      name: 'Mes revenus',
+      link: resolveBackOfficeRouteLink('management-user', '/management'),
+      action: handleOpenStripeConnectDashboard,
+      attrs: {
+        disabled: isOpeningStripeConnectDashboard.value,
+      },
+    })
+  }
+
+  return items
+})
 
 const publicNavItems = computed<NavItem[]>(() => [
   { id: 'messagery', name: 'Messagerie', link: resolveBackOfficeRouteLink('messaging-user', '/messagerie') },
@@ -215,7 +315,7 @@ const backOfficeDockItems = computed(() => {
   const isManagementRoute = routeName === 'management' || routeName === 'management-user'
   const isMessagingRoute = routeName === 'messaging' || routeName === 'messaging-user'
 
-  return [
+  const items = [
     {
       id: 'dock-listings',
       label: 'Annonces',
@@ -257,6 +357,20 @@ const backOfficeDockItems = computed(() => {
       isActive: isCreateRoute,
     },
   ]
+
+  if (canOpenStripeConnectDashboard.value) {
+    items.push({
+      id: 'dock-revenues',
+      label: 'Mes revenus',
+      icon: Wallet,
+      action: handleOpenStripeConnectDashboard,
+      attrs: {
+        disabled: isOpeningStripeConnectDashboard.value,
+      },
+    })
+  }
+
+  return items
 })
 
 function animateNavIn() {
@@ -292,8 +406,14 @@ onMounted(async () => {
   lastScrollY = window.scrollY
   window.addEventListener('scroll', onScroll, { passive: true })
 
-  clerkToken.value = await getToken.value()
-  console.log('✅[clerkToken] fetched new token')
+  try {
+    clerkToken.value = await getToken.value()
+    console.log('✅[clerkToken] fetched new token')
+  } catch {
+    clerkToken.value = null
+  }
+
+  void refreshStripeConnectDashboardAvailability()
 })
 
 onBeforeUnmount(() => {
