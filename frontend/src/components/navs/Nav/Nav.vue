@@ -90,6 +90,17 @@ type BackOfficeUserRouteName =
   | 'management-user'
   | 'messaging-user'
 
+type BackOfficeDockItem = {
+  id: string
+  label: string
+  link?: string
+  icon: Component
+  isActive?: boolean
+  isPrimary?: boolean
+  action?: (event?: MouseEvent) => void
+  attrs?: Record<string, string | number | boolean>
+}
+
 const currentRouteName = computed(() => {
   const value = route.name
   if (typeof value === 'string') return value
@@ -315,7 +326,7 @@ const backOfficeDockItems = computed(() => {
   const isManagementRoute = routeName === 'management' || routeName === 'management-user'
   const isMessagingRoute = routeName === 'messaging' || routeName === 'messaging-user'
 
-  const items = [
+  const items: BackOfficeDockItem[] = [
     {
       id: 'dock-listings',
       label: 'Annonces',
