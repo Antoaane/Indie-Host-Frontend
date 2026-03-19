@@ -11,7 +11,7 @@
     },
     "secondaryCta": {
       "label": "Crear mi sitio gratis",
-      "href": "/editor/create",
+      "href": "/dashboard/editor/create",
       "target": "_self"
     },
     "images": [

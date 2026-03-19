@@ -11,7 +11,7 @@
     },
     "secondaryCta": {
       "label": "免费创建我的网站",
-      "href": "/editor/create",
+      "href": "/dashboard/editor/create",
       "target": "_self"
     },
     "images": [

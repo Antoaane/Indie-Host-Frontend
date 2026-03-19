@@ -6,7 +6,6 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { normalizeReservations } from '@/domain/listings/bookings'
 import type { RawBookingReservation, RawBookings, RawHost, RawReservationMessage, UserListingCard } from '@/domain/listings/types'
-import { readRouteUserId } from '@/router/backOfficeUser'
 import { vp } from '@/utils/viewport'
 import type { EditorMode, EditorSource } from '@/views/Editor/types/editor'
 import MessagingSidebar from '@/views/Messaging/components/MessagingSidebar/MessagingSidebar.vue'
@@ -22,7 +21,6 @@ const props = defineProps<{
 
 const route = useRoute()
 const router = useRouter()
-const activeUserId = computed(() => readRouteUserId(route.params.userId))
 
 const selectedConversationId = ref<string | null>(null)
 const isMobileThreadOpen = ref(false)
@@ -223,12 +221,8 @@ function handleOpenReservation(conversationId: string) {
   const conversation = findConversationById(conversationId)
   if (!conversation) return
 
-  const userId = activeUserId.value
-  if (!userId) return
-
   void router.push({
-    name: 'management-user',
-    params: { userId },
+    name: 'management',
     query: {
       listingId: conversation.listingId,
       reservationId: conversation.reservationId,

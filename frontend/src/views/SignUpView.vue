@@ -4,6 +4,7 @@
 import { SignUp } from '@clerk/vue'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { clerkLocalization } from '@/locales/clerk'
 
 const route = useRoute()
 
@@ -33,6 +34,7 @@ const signInUrl = computed(() => {
       routing="path"
       :force-redirect-url="redirectUrl"
       :sign-in-url="signInUrl"
+      :localization="clerkLocalization"
     />
   </div>
 </template>

@@ -5,7 +5,7 @@ import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { createGrandiDomainCheckoutSession, fetchGrandiDomainAvailability } from '@/domain/api/grandiDomains'
-import { readRouteUserId } from '@/router/backOfficeUser'
+import { readActiveUserId } from '@/router/backOfficeUser'
 
 const route = useRoute()
 
@@ -24,7 +24,7 @@ const availability = ref<{
   reason: string | null
 } | null>(null)
 
-const userId = computed(() => readRouteUserId(route.params.userId))
+const userId = computed(() => readActiveUserId(route.params.userId))
 
 const normalizedDomain = computed(() => domainInput.value.trim().toLowerCase())
 const canCheck = computed(() => normalizedDomain.value.length >= 4 && normalizedDomain.value.includes('.'))
@@ -88,8 +88,8 @@ async function startCheckout() {
   isCreatingCheckout.value = true
 
   try {
-    const successUrl = typeof window !== 'undefined' ? `${window.location.origin}/domains/${activeUserId}?checkout=success` : undefined
-    const cancelUrl = typeof window !== 'undefined' ? `${window.location.origin}/domains/${activeUserId}?checkout=cancel` : undefined
+    const successUrl = typeof window !== 'undefined' ? `${window.location.origin}/dashboard/domains/${activeUserId}?checkout=success` : undefined
+    const cancelUrl = typeof window !== 'undefined' ? `${window.location.origin}/dashboard/domains/${activeUserId}?checkout=cancel` : undefined
     const session = await createGrandiDomainCheckoutSession({
       domain: candidate.domain,
       userId: activeUserId,

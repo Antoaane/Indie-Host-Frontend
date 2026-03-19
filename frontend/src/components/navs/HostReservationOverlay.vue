@@ -16,6 +16,7 @@ import type { RawBookingReservation, RawBookings, RawCore, UserListingCard } fro
 
 import { type OccupantCounts } from '@/views/ListingView/components/Booking/utils/labels'
 import { findNextRange, isSelectedRangeValid } from '@/views/ListingView/components/Booking/utils/range'
+import { readActiveUserId } from '@/router/backOfficeUser'
 
 const props = withDefaults(
   defineProps<{
@@ -90,11 +91,7 @@ const occupants = reactive<OccupantCounts>({
   pmr: 0,
 })
 
-const activeUserId = computed(() => {
-  const value = route.params.userId
-  if (typeof value === 'string' && value.trim()) return value.trim()
-  return null
-})
+const activeUserId = computed(() => readActiveUserId(route.params.userId))
 
 const bookedRanges = computed<RangeISO[]>(() => {
   const listingId = selectedListingId.value

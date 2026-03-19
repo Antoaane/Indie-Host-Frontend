@@ -8,7 +8,6 @@ import { ArrowLeft, ArrowUpRight, Calendar, Pen, Plus } from 'lucide-vue-next'
 import DatePicker from '@/components/DatePicker/DatePicker.vue'
 import ConfirmationDialog from '@/components/overlays/ConfirmationDialog.vue'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
-import { readRouteUserId } from '@/router/backOfficeUser'
 import { vp } from '@/utils/viewport'
 import type { EditorMode, EditorSource } from '@/views/Editor/types/editor'
 import type { UserListingCard } from '@/views/Editor/utils/listingApi'
@@ -43,7 +42,6 @@ const props = defineProps<{
 }>()
 const route = useRoute()
 const router = useRouter()
-const activeUserId = computed(() => readRouteUserId(route.params.userId))
 
 type ManagementStage = 'reservations' | 'calendar'
 const LIVE_SYNC_INTERVAL_MS = 5000
@@ -443,9 +441,6 @@ function handleReplyToTraveler() {
   const reservation = selectedReservation.value
   if (!listingId || !reservation) return
 
-  const userId = activeUserId.value
-  if (!userId) return
-
   const query: Record<string, string> = {
     listingId,
     reservationId: reservation.id,
@@ -456,8 +451,7 @@ function handleReplyToTraveler() {
   }
 
   void router.push({
-    name: 'messaging-user',
-    params: { userId },
+    name: 'messaging',
     query,
   })
 }

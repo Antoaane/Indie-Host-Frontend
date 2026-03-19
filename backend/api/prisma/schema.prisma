@@ -43,7 +43,7 @@ model User {
 
 model Listing {
   id                String         @id
-  subdomainSlug     String?        @unique
+  subdomainSlug     String?
   ownerId           String?
   owner             User?          @relation("OwnerListings", fields: [ownerId], references: [id], onDelete: SetNull)
   status            String         @default("draft")

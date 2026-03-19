@@ -513,8 +513,6 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
     }
     await router.push(
       buildEditorRoute({
-        mode: toValue(options.mode),
-        userId: toValue(options.userId),
       }),
     )
   }
@@ -554,8 +552,6 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
       clearStorageDraft()
       await router.push(
         buildEditorRoute({
-          mode: toValue(options.mode),
-          userId: toValue(options.userId),
           listingId,
         }),
       )

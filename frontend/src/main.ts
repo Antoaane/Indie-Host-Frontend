@@ -18,6 +18,7 @@ import 'swiper/css/navigation'
 import App from './App.vue'
 import router from './router'
 import detectOS from '@/utils/detectOs'
+import { clerkDocumentLang, clerkLocalization } from '@/locales/clerk'
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
 const IN_DEV_UTILITIES_ROOT_CLASS = 'in-dev-utilities-enabled'
@@ -41,6 +42,7 @@ const syncIosDetection = () => {
 const isProbablyIos = syncIosDetection()
 document.documentElement.classList.toggle('is-ios', isProbablyIos)
 document.body.classList.toggle('is-ios', isProbablyIos)
+document.documentElement.lang = clerkDocumentLang
 
 void detectOS()
   .then((info) => {
@@ -59,6 +61,7 @@ const app = createApp(App)
 app.use(ui)
 app.use(clerkPlugin, {
   publishableKey: PUBLISHABLE_KEY,
+  localization: clerkLocalization,
 })
 // app.use(LenisVue)
 app.use(createPinia())

@@ -52,10 +52,16 @@ const buildLegacyMyListingsUrl = () => `${BASE_API_URL}/user/me/listings`
 const buildMyListingsUrl = () => `${BASE_API_URL}/users/me/listings`
 const buildListingBundleUrl = (listingId: string) => `${BASE_API_URL}/listings/bundle/${listingId}`
 const buildCreateListingUrl = () => `${BASE_API_URL}/listings`
-const buildResolveListingHostnameUrl = (hostname: string) =>
-  `${BASE_API_URL}/listings/domains/resolve?hostname=${encodeURIComponent(hostname.trim())}`
-const buildResolveListingSlugDomainUrl = (slug: string) =>
-  `${BASE_API_URL}/listings/domains/resolve?slug=${encodeURIComponent(slug.trim())}`
+const buildResolveListingHostnameUrl = (hostname: string, listingSlug?: string | null) => {
+  const params = new URLSearchParams({
+    hostname: hostname.trim(),
+  })
+  const normalizedListingSlug = (listingSlug ?? '').trim()
+  if (normalizedListingSlug) {
+    params.set('listingSlug', normalizedListingSlug)
+  }
+  return `${BASE_API_URL}/listings/domains/resolve?${params.toString()}`
+}
 const buildResolveListingSlugUrl = (slug: string) =>
   `${BASE_API_URL}/listings/resolve?slug=${encodeURIComponent(slug.trim())}`
 const buildListingAvailabilityRefreshUrl = (listingId: string) => `${BASE_API_URL}/calendar/listings/${listingId}/refresh`
@@ -350,27 +356,19 @@ export function createApiListingsController(): ListingsController {
     const normalizedSlug = normalizeListingSlug(slug)
     if (!apiEnabled || !normalizedSlug) return null
 
-    const candidateUrls = [
-      resolveUrl(buildResolveListingSlugDomainUrl(normalizedSlug)),
-      resolveUrl(buildResolveListingSlugUrl(normalizedSlug)),
-    ]
+    const url = resolveUrl(buildResolveListingSlugUrl(normalizedSlug))
 
-    for (const url of candidateUrls) {
-      try {
-        const result = await fetchRemote<ListingHostnameResolution>(url)
-        const listingId = readResolvedListingId(result)
-        if (listingId) return listingId
-      } catch (error) {
-        const status = readHttpStatus(error)
-        if (status === 400 || status === 401 || status === 403 || status === 404) {
-          continue
-        }
-        console.warn('[Domain][api] resolveListingIdBySlug failed', { slug: normalizedSlug, error })
+    try {
+      const result = await fetchRemote<ListingHostnameResolution>(url)
+      return readResolvedListingId(result)
+    } catch (error) {
+      const status = readHttpStatus(error)
+      if (status === 400 || status === 401 || status === 403 || status === 404) {
         return null
       }
+      console.warn('[Domain][api] resolveListingIdBySlug failed', { slug: normalizedSlug, error })
+      return null
     }
-
-    return null
   }
 
   return {
@@ -419,11 +417,13 @@ export function createApiListingsController(): ListingsController {
         throw error
       }
     },
-    resolveListingIdByHostname: async (hostname: string): Promise<string | null> => {
+    resolveListingIdByHostname: async (hostname: string, listingSlug?: string | null): Promise<string | null> => {
       if (!apiEnabled || !hostname.trim()) return null
 
       try {
-        const result = await fetchRemote<ListingHostnameResolution>(resolveUrl(buildResolveListingHostnameUrl(hostname)))
+        const result = await fetchRemote<ListingHostnameResolution>(
+          resolveUrl(buildResolveListingHostnameUrl(hostname, listingSlug)),
+        )
         return readResolvedListingId(result)
       } catch (error) {
         if (readHttpStatus(error) === 404) return null

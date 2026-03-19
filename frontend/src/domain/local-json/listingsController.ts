@@ -101,7 +101,7 @@ export function createLocalJsonListingsController(): ListingsController {
         runtime: () => filterDeletedListings(normalizeListingCardsMedia(runtimeStore.listListings()), options?.includeDeleted),
       })
     },
-    resolveListingIdByHostname: async (): Promise<string | null> => {
+    resolveListingIdByHostname: async (_hostname: string, _listingSlug?: string | null): Promise<string | null> => {
       return null
     },
     resolveListingIdBySlug: async (slug: string): Promise<string | null> => {

@@ -6,6 +6,7 @@ import { ArrowLeft, ExternalLink } from 'lucide-vue-next'
 import ListingView from '@/views/ListingView/_ListingView.vue'
 import type { RawListingBundle } from '@/domain/listings/types'
 import { buildListingSlug, isTransientListingId } from '@/domain/listings/slug'
+import { fetchListingDomain } from '@/domain/api/listingDomains'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 import type { ListingViewportMode } from '@/views/ListingView/composables/useListingViewport'
 
@@ -25,6 +26,7 @@ const aspectRatio = ref<{ width: number; height: number } | null>(null)
 let wrapperResizeObserver: ResizeObserver | null = null
 const previewContent = editorStatic.preview
 const previewActions = editorStatic.actions
+const publicListingHref = ref<string | null>(null)
 const publicListingSlug = computed(() => {
   const fromSelection = typeof props.listingId === 'string' ? props.listingId.trim() : ''
   const fromCore = typeof props.rawListing?.core?.id === 'string' ? props.rawListing.core.id.trim() : ''
@@ -37,6 +39,35 @@ const publicListingSlug = computed(() => {
     listingId,
   })
 })
+
+const resolvedListingId = computed(() => {
+  const fromSelection = typeof props.listingId === 'string' ? props.listingId.trim() : ''
+  const fromCore = typeof props.rawListing?.core?.id === 'string' ? props.rawListing.core.id.trim() : ''
+  const listingId = fromSelection || fromCore
+  if (!listingId || isTransientListingId(listingId)) return null
+  return listingId
+})
+
+async function resolvePublicListingHref() {
+  const listingId = resolvedListingId.value
+  const fallbackSlug = publicListingSlug.value
+
+  if (!listingId || !fallbackSlug) {
+    publicListingHref.value = null
+    return
+  }
+
+  publicListingHref.value = `/${fallbackSlug}`
+
+  try {
+    const domain = await fetchListingDomain(listingId)
+    if (domain.publicUrl) {
+      publicListingHref.value = domain.publicUrl
+    }
+  } catch {
+    // Fallback conservé: route slug standard si le domaine n'est pas disponible.
+  }
+}
 
 function updateScale() {
   const container = wrapper.value
@@ -56,6 +87,14 @@ watch(
     if (!isShowed || !rawListing) return
     await nextTick()
     updateScale()
+  },
+  { immediate: true },
+)
+
+watch(
+  [resolvedListingId, publicListingSlug],
+  () => {
+    void resolvePublicListingHref()
   },
   { immediate: true },
 )
@@ -105,9 +144,9 @@ onBeforeUnmount(() => {
       </div>
 
       <div class="show-online">
-        <RouterLink
-          v-if="props.rawListing && publicListingSlug"
-          :to="{ name: 'listing', params: { slug: publicListingSlug } }"
+        <a
+          v-if="props.rawListing && publicListingHref"
+          :href="publicListingHref"
           target="_blank"
           rel="noopener noreferrer"
           :aria-label="editorStatic.listings.externalLink"
@@ -116,7 +155,7 @@ onBeforeUnmount(() => {
           @pointerdown.stop
         >
           <ExternalLink :size="18" />
-        </RouterLink>
+        </a>
       </div>
     </div>
 

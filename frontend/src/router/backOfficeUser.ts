@@ -111,6 +111,18 @@ export function readRuntimeUserIdSync(): string | null {
   return readClerkRuntimeUserId() ?? readStoredTokenUserId()
 }
 
+export function readActiveUserId(value: unknown): string | null {
+  return readRouteUserId(value) ?? readRuntimeUserIdSync()
+}
+
+export function requireActiveUserId(value: unknown): string {
+  const userId = readActiveUserId(value)
+  if (!userId) {
+    throw new Error('[router] missing active user id in route params and runtime session')
+  }
+  return userId
+}
+
 export async function resolveRuntimeUserId(options?: ResolveRuntimeUserIdOptions): Promise<string | null> {
   const waitMs = Number.isFinite(options?.waitMs) ? Math.max(0, Number(options?.waitMs)) : 0
   const pollIntervalMs = Number.isFinite(options?.pollIntervalMs) ? Math.max(10, Number(options?.pollIntervalMs)) : 50

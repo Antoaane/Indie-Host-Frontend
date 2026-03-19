@@ -63,7 +63,7 @@ export function buildListingSlug({
   fallback?: string
 }): string {
   const fromExisting = normalizeListingSlug(existingSlug)
-  if (fromExisting) return fromExisting
+  if (fromExisting && !isTransientListingId(fromExisting)) return fromExisting
 
   const fromTitle = normalizeListingSlug(title)
   if (fromTitle) return fromTitle

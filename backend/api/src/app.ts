@@ -16,6 +16,43 @@ import { usersPlugin } from './domains/users/users.plugin.js';
 import { authPlugin } from './plugins/auth.js';
 import { prismaPlugin } from './plugins/prisma.js';
 
+function isOriginAllowed(origin: string, allowedOrigins: readonly string[]): boolean {
+  if (allowedOrigins.includes(origin)) return true;
+
+  let originUrl: URL;
+  try {
+    originUrl = new URL(origin);
+  } catch {
+    return false;
+  }
+
+  for (const allowedOrigin of allowedOrigins) {
+    if (!allowedOrigin.includes('*')) continue;
+
+    let allowedUrl: URL;
+    try {
+      allowedUrl = new URL(allowedOrigin);
+    } catch {
+      continue;
+    }
+
+    if (!allowedUrl.hostname.startsWith('*.')) continue;
+    if (originUrl.protocol !== allowedUrl.protocol) continue;
+    if (originUrl.port !== allowedUrl.port) continue;
+
+    const baseHost = allowedUrl.hostname.slice(2);
+    if (!baseHost) continue;
+    if (!originUrl.hostname.endsWith(`.${baseHost}`)) continue;
+
+    const subdomainPart = originUrl.hostname.slice(0, -(baseHost.length + 1));
+    if (!subdomainPart || subdomainPart.includes('..')) continue;
+
+    return true;
+  }
+
+  return false;
+}
+
 export async function buildApp() {
   const app = Fastify({
     logger: {
@@ -33,7 +70,7 @@ export async function buildApp() {
         return;
       }
 
-      if (env.CORS_ORIGINS.includes(origin)) {
+      if (isOriginAllowed(origin, env.CORS_ORIGINS)) {
         callback(null, true);
         return;
       }

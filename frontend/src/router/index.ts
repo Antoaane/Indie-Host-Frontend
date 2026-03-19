@@ -23,28 +23,14 @@ const MessagingRoute = () => import('@/views/Messaging/MessagingRoute.vue')
 const ManagementRoute = () => import('@/views/Management/ManagementRoute.vue')
 const DomainsRoute = () => import('@/views/Domains/DomainsRoute.vue')
 
-type BackOfficeUserRouteName =
-  | 'editor-user'
-  | 'create-listing-user'
-  | 'management-user'
-  | 'domains-user'
-  | 'messaging-user'
-
-async function resolveLegacyBackOfficeRedirect(
-  to: RouteLocationNormalized,
-  targetName: BackOfficeUserRouteName,
-) {
+async function resolveBackOfficeAccess(to: RouteLocationNormalized) {
   const userId = await resolveRuntimeUserId({
     waitMs: 1500,
     pollIntervalMs: 75,
   })
 
   if (userId) {
-    return {
-      name: targetName,
-      params: { userId },
-      query: to.query,
-    }
+    return true
   }
 
   return {
@@ -137,7 +123,7 @@ const router = createRouter({
       meta: { navVariant: 'landing' },
     },
     {
-      path: '/editor/create',
+      path: '/dashboard/editor/create',
       name: 'create-listing',
       component: CreateListingPublicRoute,
       meta: { navVariant: 'public', hideNav: true },
@@ -150,62 +136,147 @@ const router = createRouter({
       meta: { navVariant: 'public', hideNav: true },
     },
     {
-      path: '/editor/:userId/create',
+      path: '/dashboard/editor/:userId/create',
       name: 'create-listing-user',
       component: CreateListingRoute,
       meta: { navVariant: 'host', hideNav: true },
     },
     {
-      path: '/editor',
+      path: '/dashboard/editor',
       name: 'editor',
       component: EditorRoute,
       meta: { navVariant: 'host' },
-      beforeEnter: (to) => resolveLegacyBackOfficeRedirect(to, 'editor-user'),
+      beforeEnter: resolveBackOfficeAccess,
     },
     {
-      path: '/editor/:userId',
+      path: '/dashboard/editor/:userId',
       name: 'editor-user',
       component: EditorRoute,
       meta: { navVariant: 'host' },
     },
     {
-      path: '/management',
+      path: '/dashboard/management',
       name: 'management',
       component: ManagementRoute,
       meta: { navVariant: 'host' },
-      beforeEnter: (to) => resolveLegacyBackOfficeRedirect(to, 'management-user'),
+      beforeEnter: resolveBackOfficeAccess,
     },
     {
-      path: '/management/:userId',
+      path: '/dashboard/management/:userId',
       name: 'management-user',
       component: ManagementRoute,
       meta: { navVariant: 'host' },
     },
     {
-      path: '/domains',
+      path: '/dashboard/domains',
       name: 'domains',
       component: DomainsRoute,
       meta: { navVariant: 'host' },
-      beforeEnter: (to) => resolveLegacyBackOfficeRedirect(to, 'domains-user'),
+      beforeEnter: resolveBackOfficeAccess,
     },
     {
-      path: '/domains/:userId',
+      path: '/dashboard/domains/:userId',
       name: 'domains-user',
       component: DomainsRoute,
       meta: { navVariant: 'host' },
     },
     {
-      path: '/messagerie',
+      path: '/dashboard/messages',
       name: 'messaging',
       component: MessagingRoute,
       meta: { navVariant: 'host' },
-      beforeEnter: (to) => resolveLegacyBackOfficeRedirect(to, 'messaging-user'),
+      beforeEnter: resolveBackOfficeAccess,
     },
     {
-      path: '/messagerie/:userId',
+      path: '/dashboard/messages/:userId',
       name: 'messaging-user',
       component: MessagingRoute,
       meta: { navVariant: 'host' },
+    },
+    {
+      path: '/editor/create',
+      redirect: (to) => ({
+        name: 'create-listing',
+        query: to.query,
+        hash: to.hash,
+      }),
+    },
+    {
+      path: '/editor/:userId/create',
+      redirect: (to) => ({
+        name: 'create-listing-user',
+        params: to.params,
+        query: to.query,
+        hash: to.hash,
+      }),
+    },
+    {
+      path: '/editor',
+      redirect: (to) => ({
+        name: 'editor',
+        query: to.query,
+        hash: to.hash,
+      }),
+    },
+    {
+      path: '/editor/:userId',
+      redirect: (to) => ({
+        name: 'editor-user',
+        params: to.params,
+        query: to.query,
+        hash: to.hash,
+      }),
+    },
+    {
+      path: '/management',
+      redirect: (to) => ({
+        name: 'management',
+        query: to.query,
+        hash: to.hash,
+      }),
+    },
+    {
+      path: '/management/:userId',
+      redirect: (to) => ({
+        name: 'management-user',
+        params: to.params,
+        query: to.query,
+        hash: to.hash,
+      }),
+    },
+    {
+      path: '/messagerie',
+      redirect: (to) => ({
+        name: 'messaging',
+        query: to.query,
+        hash: to.hash,
+      }),
+    },
+    {
+      path: '/messagerie/:userId',
+      redirect: (to) => ({
+        name: 'messaging-user',
+        params: to.params,
+        query: to.query,
+        hash: to.hash,
+      }),
+    },
+    {
+      path: '/domains',
+      redirect: (to) => ({
+        name: 'domains',
+        query: to.query,
+        hash: to.hash,
+      }),
+    },
+    {
+      path: '/domains/:userId',
+      redirect: (to) => ({
+        name: 'domains-user',
+        params: to.params,
+        query: to.query,
+        hash: to.hash,
+      }),
     },
     {
       path: '/listing',

@@ -6,7 +6,7 @@ import { useRoute } from 'vue-router'
 
 import { normalizeListingStatus } from '@/domain/listings/status'
 import { getUserMaxActiveListings } from '@/domain/user/subscription'
-import { readRouteUserId } from '@/router/backOfficeUser'
+import { readActiveUserId } from '@/router/backOfficeUser'
 import { normalizeSearchText } from '@/utils/search'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 import type { UserListingCard } from '@/views/Editor/utils/listingApi'
@@ -55,20 +55,19 @@ const isActiveListingsLimitReached = computed(() => remainingActiveListings.valu
 const newListingActiveUsage = computed(() => listingContent.newListing.activeUsage.replace('{count}', String(activeListingsCount.value)).replace('{max}', String(maxActiveListings)))
 const newListingRemaining = computed(() => listingContent.newListing.remaining.replace('{count}', String(remainingActiveListings.value)))
 const newListingRemainingDisplay = computed(() => (isActiveListingsLimitReached.value ? `${newListingRemaining.value} ${listingContent.newListing.remainingAlertSuffix}` : newListingRemaining.value))
-const activeUserId = computed(() => readRouteUserId(route.params.userId))
+const activeUserId = computed(() => readActiveUserId(route.params.userId))
 
 const createListingRoute = computed(() => {
   const userId = activeUserId.value
   if (userId) {
     return {
-      name: 'create-listing-user',
-      params: { userId },
+      name: 'create-listing',
     }
   }
 
   return {
     name: 'sign-in',
-    query: { redirect_url: '/editor/create' },
+    query: { redirect_url: '/dashboard/editor/create' },
   }
 })
 

@@ -19,7 +19,6 @@ import {
   fetchMyStripeSubscriptionState,
 } from '@/domain/api/stripeSubscriptions'
 import { isManagedListingHostname } from '@/domain/listings/publicDomain'
-import { readRouteUserId, readRuntimeUserIdSync } from '@/router/backOfficeUser'
 import { vp } from '@/utils/viewport'
 import clerkToken from '@/utils/clerkToken'
 
@@ -82,13 +81,8 @@ const isNavVisible = computed(() => !isNavHidden.value)
 const isNavActuallyHidden = computed(() => isNavForcedHidden.value || isNavHiddenByScroll.value)
 const isHost = computed(() => navVariant.value === 'host')
 const isBackOfficeDockMode = computed(() => isHost.value && !vp.lg.value)
-const activeUserId = computed(() => readRouteUserId(route.params.userId) ?? readRuntimeUserIdSync())
 
-type BackOfficeUserRouteName =
-  | 'editor-user'
-  | 'create-listing-user'
-  | 'management-user'
-  | 'messaging-user'
+type BackOfficeRouteName = 'editor' | 'create-listing' | 'management' | 'messaging'
 
 type BackOfficeDockItem = {
   id: string
@@ -234,17 +228,11 @@ const resolveRouteLink = (
   }
 }
 
-function resolveBackOfficeRouteLink(name: BackOfficeUserRouteName, fallbackPath: string) {
-  const userId = activeUserId.value
-  if (userId) {
-    return resolveRouteLink(name, {
-      params: { userId },
-    })
+function resolveBackOfficeRouteLink(name: BackOfficeRouteName, fallbackPath: string) {
+  if (isSignedIn.value) {
+    return resolveRouteLink(name)
   }
-
-  return resolveRouteLink('sign-in', {
-    query: { redirect_url: fallbackPath },
-  })
+  return resolveRouteLink('sign-in', { query: { redirect_url: fallbackPath } })
 }
 
 function scrollToIntroOnDesktop() {
@@ -256,20 +244,37 @@ function scrollToIntroOnDesktop() {
   void router.push('/pricing')
 }
 
-const landingNavItems: NavItem[] = [
-  { id: 'features-section', name: 'Fonctionnalités', link: '#features-section', target: true },
-  { id: 'how-section', name: 'Comment ça marche ?', link: '#how-section', target: true },
-  { id: 'strengths-section', name: 'Nos valeurs', link: '#strengths-section', target: true },
-  { id: 'pricing-section', name: 'Tarifs', link: '#pricing-section', target: true },
-  { id: 'trial-intro', name: 'Essayer gratuitement', link: '/pricing', cta: true, action: scrollToIntroOnDesktop },
-]
+const landingNavItems = computed<NavItem[]>(() => {
+  const trialOrManagementItem: NavItem = isSignedIn.value
+    ? {
+        id: 'my-space',
+        name: 'Mon espace',
+        link: '/dashboard/management',
+        cta: true,
+      }
+    : {
+        id: 'trial-intro',
+        name: 'Essayer gratuitement',
+        link: '/pricing',
+        cta: true,
+        action: scrollToIntroOnDesktop,
+      }
+
+  return [
+    { id: 'features-section', name: 'Fonctionnalités', link: '#features-section', target: true },
+    { id: 'how-section', name: 'Comment ça marche ?', link: '#how-section', target: true },
+    { id: 'strengths-section', name: 'Nos valeurs', link: '#strengths-section', target: true },
+    { id: 'pricing-section', name: 'Tarifs', link: '#pricing-section', target: true },
+    trialOrManagementItem,
+  ]
+})
 
 const hostNavItems = computed<NavItem[]>(() => {
   const items: NavItem[] = [
     {
       id: 'add-reservation',
       name: 'Ajouter une réservation',
-      link: resolveBackOfficeRouteLink('management-user', '/management'),
+      link: resolveBackOfficeRouteLink('management', '/dashboard/management'),
       cta: true,
       action: toggleReservation,
       ref: reservationAnchor,
@@ -279,16 +284,16 @@ const hostNavItems = computed<NavItem[]>(() => {
         'aria-haspopup': 'dialog',
       },
     },
-    { id: 'listings', name: 'Mes annonces', link: resolveBackOfficeRouteLink('editor-user', '/editor') },
-    { id: 'reservations', name: 'Réservations', link: resolveBackOfficeRouteLink('management-user', '/management') },
-    { id: 'messagery', name: 'Messagerie', link: resolveBackOfficeRouteLink('messaging-user', '/messagerie') },
+    { id: 'listings', name: 'Mes annonces', link: resolveBackOfficeRouteLink('editor', '/dashboard/editor') },
+    { id: 'reservations', name: 'Réservations', link: resolveBackOfficeRouteLink('management', '/dashboard/management') },
+    { id: 'messagery', name: 'Messagerie', link: resolveBackOfficeRouteLink('messaging', '/dashboard/messages') },
   ]
 
   if (canOpenStripeConnectDashboard.value) {
     items.push({
       id: 'revenues',
       name: 'Mes revenus',
-      link: resolveBackOfficeRouteLink('management-user', '/management'),
+      link: resolveBackOfficeRouteLink('management', '/dashboard/management'),
       action: handleOpenStripeConnectDashboard,
       attrs: {
         disabled: isOpeningStripeConnectDashboard.value,
@@ -300,13 +305,13 @@ const hostNavItems = computed<NavItem[]>(() => {
 })
 
 const publicNavItems = computed<NavItem[]>(() => [
-  { id: 'messagery', name: 'Messagerie', link: resolveBackOfficeRouteLink('messaging-user', '/messagerie') },
-  { id: 'reservations', name: 'Réservations', link: resolveBackOfficeRouteLink('management-user', '/management') },
+  { id: 'messagery', name: 'Messagerie', link: resolveBackOfficeRouteLink('messaging', '/dashboard/messages') },
+  { id: 'reservations', name: 'Réservations', link: resolveBackOfficeRouteLink('management', '/dashboard/management') },
   { id: 'become-host', name: 'Devenir hôte', link: '/pricing', cta: true },
 ])
 
 const navItems = computed<NavItem[]>(() => {
-  if (navVariant.value === 'landing') return landingNavItems
+  if (navVariant.value === 'landing') return landingNavItems.value
   if (navVariant.value === 'host') return hostNavItems.value
   return publicNavItems.value
 })
@@ -331,14 +336,14 @@ const backOfficeDockItems = computed(() => {
       id: 'dock-listings',
       label: 'Annonces',
       icon: LayoutGrid,
-      link: resolveBackOfficeRouteLink('editor-user', '/editor'),
+      link: resolveBackOfficeRouteLink('editor', '/dashboard/editor'),
       isActive: isEditorRoute,
     },
     {
       id: 'dock-management',
       label: 'Réserv.',
       icon: CalendarClock,
-      link: resolveBackOfficeRouteLink('management-user', '/management'),
+      link: resolveBackOfficeRouteLink('management', '/dashboard/management'),
       isActive: isManagementRoute,
     },
     {
@@ -357,14 +362,14 @@ const backOfficeDockItems = computed(() => {
       id: 'dock-messaging',
       label: 'Messages',
       icon: MessageSquareMore,
-      link: resolveBackOfficeRouteLink('messaging-user', '/messagerie'),
+      link: resolveBackOfficeRouteLink('messaging', '/dashboard/messages'),
       isActive: isMessagingRoute,
     },
     {
       id: 'dock-create',
       label: 'Créer',
       icon: PlusSquare,
-      link: resolveBackOfficeRouteLink('create-listing-user', '/editor/create'),
+      link: resolveBackOfficeRouteLink('create-listing', '/dashboard/editor/create'),
       isActive: isCreateRoute,
     },
   ]

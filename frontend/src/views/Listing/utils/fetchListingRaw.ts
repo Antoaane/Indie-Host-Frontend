@@ -1,6 +1,7 @@
 // File: src/views/Listing/utils/fetchListingRaw.ts
 
 import { getListingsController } from '@/domain/listings/controller'
+import { isManagedListingHostname } from '@/domain/listings/publicDomain'
 import {
   isListingIdLike,
   normalizeListingSlug,
@@ -29,25 +30,70 @@ function decodePathSegment(value: string): string {
   }
 }
 
+function canUseListingIdFallback(): boolean {
+  if (typeof window === 'undefined') return false
+  return window.location.pathname.startsWith('/listing/guide/')
+}
+
 async function resolveListingId(explicitKey?: string): Promise<string> {
+  const managedHostname = typeof window !== 'undefined' && isManagedListingHostname(window.location.hostname)
   const normalizedExplicitKey = typeof explicitKey === 'string' ? explicitKey.trim() : ''
   if (normalizedExplicitKey) {
+    if (managedHostname) {
+      const explicitSlug = normalizeListingSlug(normalizedExplicitKey)
+      if (explicitSlug) {
+        const listingIdFromManagedHostname = await controller.resolveListingIdByHostname(window.location.hostname, explicitSlug)
+        if (listingIdFromManagedHostname) return listingIdFromManagedHostname
+      }
+
+      const hostnameOnlyListingId = await controller.resolveListingIdByHostname(window.location.hostname)
+      if (hostnameOnlyListingId) return hostnameOnlyListingId
+
+      if (isListingIdLike(normalizedExplicitKey) && canUseListingIdFallback()) {
+        return normalizedExplicitKey
+      }
+
+      return '__missing-managed-listing__'
+    }
+
     const explicitSlug = normalizeListingSlug(normalizedExplicitKey)
     if (explicitSlug) {
       const listingIdFromSlug = await controller.resolveListingIdBySlug(explicitSlug)
       if (listingIdFromSlug) return listingIdFromSlug
     }
 
-    if (isListingIdLike(normalizedExplicitKey)) {
+    if (isListingIdLike(normalizedExplicitKey) && canUseListingIdFallback()) {
       return normalizedExplicitKey
     }
+
+    return '__missing-public-listing__'
   }
 
   if (typeof window !== 'undefined') {
+    const currentPath = window.location.pathname
+    if (managedHostname) {
+      const listingSlugFromManagedPath = currentPath.match(/^\/([^/]+)\/?$/)?.[1]
+      const normalizedManagedPathSlug = listingSlugFromManagedPath
+        ? normalizeListingSlug(decodePathSegment(listingSlugFromManagedPath))
+        : ''
+
+      if (normalizedManagedPathSlug) {
+        const listingIdFromHostnameAndSlug = await controller.resolveListingIdByHostname(
+          window.location.hostname,
+          normalizedManagedPathSlug,
+        )
+        if (listingIdFromHostnameAndSlug) return listingIdFromHostnameAndSlug
+      }
+
+      const hostnameOnlyListingId = await controller.resolveListingIdByHostname(window.location.hostname)
+      if (hostnameOnlyListingId) return hostnameOnlyListingId
+
+      return '__missing-managed-listing__'
+    }
+
     const hostnameListingId = await controller.resolveListingIdByHostname(window.location.hostname)
     if (hostnameListingId) return hostnameListingId
 
-    const currentPath = window.location.pathname
     const listingSlugFromRootRoute = currentPath.match(/^\/([^/]+)\/?$/)?.[1]
     if (listingSlugFromRootRoute) {
       const rootSlug = normalizeListingSlug(decodePathSegment(listingSlugFromRootRoute))
@@ -56,9 +102,6 @@ async function resolveListingId(explicitKey?: string): Promise<string> {
         if (listingIdFromRootSlug) return listingIdFromRootSlug
       }
     }
-
-    const listingIdFromLegacyRoute = currentPath.match(/^\/listing\/([^/]+)\/?$/)?.[1]
-    if (listingIdFromLegacyRoute && isListingIdLike(listingIdFromLegacyRoute)) return listingIdFromLegacyRoute
   }
 
   const listings = await controller.fetchListings()

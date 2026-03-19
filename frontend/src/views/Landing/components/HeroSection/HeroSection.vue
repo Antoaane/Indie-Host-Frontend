@@ -79,7 +79,7 @@ function onSubmit(e?: Event) {
 function handleCreateSite() {
   submitError.value = ''
   submitUrl(url.value.trim())
-  void router.push(props.content.secondaryCta.href || '/editor/create')
+  void router.push(props.content.secondaryCta.href || '/dashboard/editor/create')
 }
 
 onMounted(async () => {
