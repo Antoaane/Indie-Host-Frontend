@@ -61,6 +61,9 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const rawApiBaseUrl = (env.VITE_API_BASE_URL ?? '').trim()
   const rawApiProxyTarget = (env.VITE_API_PROXY_TARGET ?? '').trim()
+  const usePolling = (env.CHOKIDAR_USEPOLLING ?? '').toLowerCase() === 'true'
+  const parsedPollingInterval = Number.parseInt(env.CHOKIDAR_INTERVAL ?? '300', 10)
+  const pollingInterval = Number.isFinite(parsedPollingInterval) && parsedPollingInterval > 0 ? parsedPollingInterval : 300
 
   const parsedBase = parseEndpoint(rawApiBaseUrl)
   const parsedProxyTarget = parseEndpoint(rawApiProxyTarget)
@@ -94,6 +97,8 @@ export default defineConfig(({ mode }) => {
       port: 5179,
       watch: {
         ignored: ['**/src/content/**'],
+        usePolling,
+        interval: usePolling ? pollingInterval : undefined,
       },
       proxy:
         apiProxyPath && apiTargetOrigin
