@@ -11,6 +11,9 @@ services:
       - /bin/sh
       - -ec
       - |
+        if [ ! -x "./node_modules/.bin/tsx" ] || [ ! -x "./node_modules/.bin/prisma" ]; then
+          npm ci
+        fi
         if [ -z "$${DATABASE_URL:-}" ] && [ -n "$${DATABASE_URL_FILE:-}" ] && [ -f "$$DATABASE_URL_FILE" ]; then
           export DATABASE_URL="$$(cat "$$DATABASE_URL_FILE")"
         fi
@@ -18,8 +21,8 @@ services:
           echo "DATABASE_URL (or DATABASE_URL_FILE) is required" >&2
           exit 1
         fi
-        prisma generate
-        prisma db push
+        npm run prisma:generate
+        npm run prisma:push
         npm run dev
     volumes:
       - ./backend/api:/app
