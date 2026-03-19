@@ -1,14 +1,19 @@
 <!-- File: src/components/navs/Nav/NavShell.vue -->
 
 <script setup lang="ts">
-import { SignedIn, SignedOut, UserButton } from '@clerk/vue'
-import { UserRound } from 'lucide-vue-next'
+import { SignedIn, SignedOut, UserButton, useAuth, useUser } from '@clerk/vue'
+import { ExternalLink, UserRound } from 'lucide-vue-next'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import RelativeOverlay from '@/components/overlays/RelativeOverlay.vue'
 import type { NavItem } from '@/components/navs/Nav/navTypes'
 import { closeMobileMenu, isMobileMenuOpen, scrollToTarget, toggleMobileMenu } from '@/components/navs/navUtils'
+import {
+  createMyStripeConnectDashboardLink,
+  fetchMyStripeSubscriptionState,
+} from '@/domain/api/stripeSubscriptions'
+import clerkToken from '@/utils/clerkToken'
 import { vp } from '@/utils/viewport'
 
 import { icons } from '@/components/svgs'
@@ -35,15 +40,22 @@ const props = withDefaults(
 
 const itemsUndefined = computed(() => typeof props.items === 'undefined')
 const route = useRoute()
+const { isSignedIn } = useUser()
+const { getToken } = useAuth()
 const signedOutAnchor = ref<HTMLElement | null>(null)
 const authMenuPanel = ref<HTMLElement | null>(null)
 const authMenuOpen = ref(false)
+const canOpenStripeConnectDashboard = ref(false)
+const stripeConnectAccountId = ref<string | null>(null)
+const isOpeningStripeConnectDashboard = ref(false)
+const stripeConnectAvailabilityRequestId = ref(0)
 
 let authMenuCloseTimeout: number | null = null
 
 const redirectUrl = computed(() => encodeURIComponent(route.fullPath || '/'))
 const signInHref = computed(() => `/sign-in?redirect_url=${redirectUrl.value}`)
 const signUpHref = computed(() => `/sign-up?redirect_url=${redirectUrl.value}`)
+const showStripeConnectDashboardAction = computed(() => canOpenStripeConnectDashboard.value)
 
 const goBack = () => {
   if (window.history.length > 1) window.history.back()
@@ -106,16 +118,78 @@ function handleAction(item: NavItem, event: MouseEvent, closeMenuAfterClick: boo
   if (closeMenuAfterClick) closeMobileMenu()
 }
 
+async function refreshStripeConnectMenuAvailability() {
+  const requestId = stripeConnectAvailabilityRequestId.value + 1
+  stripeConnectAvailabilityRequestId.value = requestId
+
+  if (!isSignedIn.value) {
+    canOpenStripeConnectDashboard.value = false
+    stripeConnectAccountId.value = null
+    return
+  }
+
+  try {
+    clerkToken.value = await getToken.value()
+    const state = await fetchMyStripeSubscriptionState()
+    if (requestId !== stripeConnectAvailabilityRequestId.value) return
+
+    const accountId = state.connect?.accountId ?? null
+    const onboardingCompleted = Boolean(
+      state.publicationReadiness?.connectOnboardingCompleted
+      || state.connect?.onboardingStatus === 'completed',
+    )
+
+    stripeConnectAccountId.value = accountId
+    canOpenStripeConnectDashboard.value = Boolean(accountId) && onboardingCompleted
+  } catch {
+    if (requestId !== stripeConnectAvailabilityRequestId.value) return
+    canOpenStripeConnectDashboard.value = false
+    stripeConnectAccountId.value = null
+  }
+}
+
+async function handleOpenStripeConnectDashboard() {
+  if (isOpeningStripeConnectDashboard.value) return
+  if (!canOpenStripeConnectDashboard.value) return
+
+  isOpeningStripeConnectDashboard.value = true
+
+  try {
+    clerkToken.value = await getToken.value()
+    const dashboard = await createMyStripeConnectDashboardLink({
+      accountId: stripeConnectAccountId.value ?? undefined,
+    })
+
+    const opened = window.open(dashboard.url, '_blank', 'noopener,noreferrer')
+    if (!opened) {
+      window.location.assign(dashboard.url)
+    }
+  } catch (error) {
+    console.warn('[NavShell] impossible d\'ouvrir le dashboard Stripe Connect', { error })
+  } finally {
+    isOpeningStripeConnectDashboard.value = false
+  }
+}
+
 watch(
   () => route.fullPath,
   () => {
     closeAuthMenu()
+    void refreshStripeConnectMenuAvailability()
   },
 )
 
 watch(vp.lg, (isDesktop) => {
   if (!isDesktop) closeAuthMenu()
 })
+
+watch(
+  () => isSignedIn.value,
+  () => {
+    void refreshStripeConnectMenuAvailability()
+  },
+  { immediate: true },
+)
 
 onBeforeUnmount(() => {
   clearAuthMenuCloseTimeout()
@@ -279,7 +353,19 @@ onBeforeUnmount(() => {
           </SignedOut>
           <SignedIn>
             <div class="auth-user-button">
-              <UserButton />
+              <UserButton>
+                <UserButton.MenuItems>
+                  <UserButton.Action
+                    v-if="showStripeConnectDashboardAction"
+                    label="Dashboard Stripe Connect"
+                    :on-click="handleOpenStripeConnectDashboard"
+                  >
+                    <template #labelIcon>
+                      <ExternalLink :size="16" />
+                    </template>
+                  </UserButton.Action>
+                </UserButton.MenuItems>
+              </UserButton>
             </div>
           </SignedIn>
         </li>

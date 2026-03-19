@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { computed, ref, toRef, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import { vp } from '@/utils/viewport'
 import EditorListings from '@/views/Editor/components/EditorListings/EditorListings.vue'
@@ -19,6 +19,7 @@ const props = defineProps<{
 }>()
 
 const route = useRoute()
+const router = useRouter()
 
 const {
   applyDraftPatch,
@@ -30,6 +31,7 @@ const {
   hasAnyPendingChanges,
   hasMultiplePendingListings,
   isPatchSyncPending,
+  isStripeConnectPublishLocked,
   listings,
   listingsStatus,
   pendingListingsCount,
@@ -65,6 +67,17 @@ function handleListingSelect(listingId: string) {
 function handleMobileBackToListings() {
   isMobileSidebarOpen.value = false
   showListings()
+}
+
+function handleConfigureStripeConnect(listingId: string) {
+  void router.push({
+    name: 'pricing-callback',
+    query: {
+      onboarding: 'listing',
+      intent: 'publish',
+      listingId,
+    },
+  })
 }
 
 watch(
@@ -133,10 +146,12 @@ watch(selectedListingId, (listingId) => {
               :isLoading="listingsStatus.isLoading"
               :error="listingsStatus.error"
               :selectedListingId="selectedListingId"
+              :isStripeConnectPublishLocked="isStripeConnectPublishLocked"
               :canPreview="isPreviewAvailable"
               @select="handleListingSelect"
               @preview="showPreview"
               @status-change="applyListingStatusPatch"
+              @configure-connect="handleConfigureStripeConnect"
             />
           </Transition>
 

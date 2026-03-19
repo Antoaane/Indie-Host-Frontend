@@ -1,6 +1,6 @@
 // File: src/domain/payments/pricingPlanCatalog.ts
 
-import type { SubscriptionPlanCode } from '@/domain/api/stripeSubscriptions'
+import type { StripeSubscriptionPlan, SubscriptionPlanCode } from '@/domain/api/stripeSubscriptions'
 
 export type PricingPlanTone = 'indigo' | 'gold' | 'red'
 
@@ -19,6 +19,17 @@ export type MarketingPricingPlan = {
   tone: PricingPlanTone
   highlight?: string
 }
+
+export type PricingPlanPresentation = {
+  name: string
+  summary: string
+  displayPrice: string
+}
+
+type StripePlanPresentationSource = Pick<
+StripeSubscriptionPlan,
+'name' | 'description' | 'monthlyPriceMinor' | 'currency' | 'billingInterval'
+>
 
 const PLAN_ORDER: SubscriptionPlanCode[] = ['indiehost', 'superhost', 'megahost']
 
@@ -98,4 +109,62 @@ export const MARKETING_PRICING_PLANS: MarketingPricingPlan[] = PLAN_ORDER.map((p
 
 export function getMarketingPricingPlan(planCode: SubscriptionPlanCode): MarketingPricingPlan {
   return PLAN_CATALOG[planCode]
+}
+
+function toNonEmptyString(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  return trimmed ? trimmed : null
+}
+
+function normalizeCurrencyCode(value: unknown): string {
+  const normalized = toNonEmptyString(value)?.toUpperCase()
+  if (normalized && /^[A-Z]{3}$/.test(normalized)) return normalized
+  return 'EUR'
+}
+
+function resolveBillingIntervalLabel(value: unknown): string {
+  const normalized = toNonEmptyString(value)?.toLowerCase() ?? ''
+  if (normalized === 'month' || normalized === 'monthly' || normalized === 'mois' || normalized === 'mensuel') {
+    return '/ mois TTC'
+  }
+  if (
+    normalized === 'year'
+    || normalized === 'yearly'
+    || normalized === 'annual'
+    || normalized === 'annually'
+    || normalized === 'an'
+    || normalized === 'annuel'
+  ) {
+    return '/ an TTC'
+  }
+  return '/ période TTC'
+}
+
+function resolveDynamicDisplayPrice(stripePlan?: StripePlanPresentationSource | null): string | null {
+  if (!stripePlan) return null
+  if (typeof stripePlan.monthlyPriceMinor !== 'number' || !Number.isFinite(stripePlan.monthlyPriceMinor)) return null
+  const amount = stripePlan.monthlyPriceMinor / 100
+  if (!Number.isFinite(amount) || amount < 0) return null
+
+  const currency = normalizeCurrencyCode(stripePlan.currency)
+  const formattedAmount = new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency,
+    minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
+    maximumFractionDigits: Number.isInteger(amount) ? 0 : 2,
+  }).format(amount)
+
+  return `${formattedAmount} ${resolveBillingIntervalLabel(stripePlan.billingInterval)}`
+}
+
+export function resolvePricingPlanPresentation(
+  marketingPlan: MarketingPricingPlan,
+  stripePlan?: StripePlanPresentationSource | null,
+): PricingPlanPresentation {
+  return {
+    name: toNonEmptyString(stripePlan?.name) ?? marketingPlan.name,
+    summary: toNonEmptyString(stripePlan?.description) ?? marketingPlan.summary,
+    displayPrice: resolveDynamicDisplayPrice(stripePlan) ?? marketingPlan.displayPrice,
+  }
 }

@@ -1,12 +1,12 @@
 <!-- File: src/views/Landing/components/PricingSection/PricingSection.vue -->
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { SignUpButton, SignedIn, SignedOut } from '@clerk/vue'
 import { useRouter } from 'vue-router'
 
-import type { SubscriptionPlanCode } from '@/domain/api/stripeSubscriptions'
-import { MARKETING_PRICING_PLANS } from '@/domain/payments/pricingPlanCatalog'
+import { fetchStripeSubscriptionPlans, type StripeSubscriptionPlan, type SubscriptionPlanCode } from '@/domain/api/stripeSubscriptions'
+import { MARKETING_PRICING_PLANS, resolvePricingPlanPresentation } from '@/domain/payments/pricingPlanCatalog'
 import type { PricingSectionContent } from '@/views/Landing/types/content'
 
 defineProps<{
@@ -31,7 +31,7 @@ type PricingPlan = {
   code: SubscriptionPlanCode
   tier: string
   name: string
-  price: string
+  displayPrice: string
   summary: string
   includes: string[]
   options?: string[]
@@ -39,21 +39,61 @@ type PricingPlan = {
   cta: string
   helper: string
   tone: 'indigo' | 'gold' | 'red'
+  highlight?: string
+  available: boolean
+  unavailableReason: string | null
 }
 
 const router = useRouter()
 
-const plans = MARKETING_PRICING_PLANS
+const plansFromApi = ref<StripeSubscriptionPlan[]>([])
 
-function buildPricingReturnUrl(planCode: SubscriptionPlanCode): string {
-  const path = `/pricing?plan=${encodeURIComponent(planCode)}&autostart=1`
+const plansFromApiByCode = computed(() => new Map(plansFromApi.value.map((plan) => [plan.code, plan])))
+
+const plans = computed<PricingPlan[]>(() => {
+  return MARKETING_PRICING_PLANS.map((marketingPlan) => {
+    const stripePlan = plansFromApiByCode.value.get(marketingPlan.code)
+    const presentation = resolvePricingPlanPresentation(marketingPlan, stripePlan)
+
+    return {
+      ...marketingPlan,
+      name: presentation.name,
+      summary: presentation.summary,
+      displayPrice: presentation.displayPrice,
+      available: stripePlan?.available ?? true,
+      unavailableReason: stripePlan?.unavailableReason ?? null,
+    }
+  })
+})
+
+function buildPricingCallbackAuthUrl(planCode: SubscriptionPlanCode): string {
+  const path = `/pricing/callback?plan=${encodeURIComponent(planCode)}&action=auth&autostart=1`
   if (typeof window === 'undefined') return path
   return new URL(path, window.location.origin).toString()
 }
 
-function goToPricing(planCode: SubscriptionPlanCode) {
-  void router.push({ path: '/pricing', query: { plan: planCode, autostart: '1' } })
+function goToPricingCallbackAuth(planCode: SubscriptionPlanCode) {
+  void router.push({
+    path: '/pricing/callback',
+    query: {
+      plan: planCode,
+      action: 'auth',
+      autostart: '1',
+    },
+  })
 }
+
+async function loadPlans() {
+  try {
+    plansFromApi.value = await fetchStripeSubscriptionPlans()
+  } catch {
+    plansFromApi.value = []
+  }
+}
+
+onMounted(() => {
+  void loadPlans()
+})
 </script>
 
 <template>
@@ -129,7 +169,8 @@ function goToPricing(planCode: SubscriptionPlanCode) {
                   <button
                     type="button"
                     class="plan-cta"
-                    @click="goToPricing(plan.code)"
+                    :disabled="!plan.available"
+                    @click="goToPricingCallbackAuth(plan.code)"
                   >
                     {{ plan.cta }}
                   </button>
@@ -137,16 +178,23 @@ function goToPricing(planCode: SubscriptionPlanCode) {
                 <SignedOut>
                   <SignUpButton
                     mode="redirect"
-                    :force-redirect-url="buildPricingReturnUrl(plan.code)"
+                    :force-redirect-url="buildPricingCallbackAuthUrl(plan.code)"
                   >
                     <button
                       type="button"
                       class="plan-cta"
+                      :disabled="!plan.available"
                     >
                       {{ plan.cta }}
                     </button>
                   </SignUpButton>
                 </SignedOut>
+                <p
+                  v-if="!plan.available && plan.unavailableReason"
+                  class="plan-unavailable"
+                >
+                  {{ plan.unavailableReason }}
+                </p>
                 <p class="plan-helper">
                   {{ plan.helper }}
                 </p>
@@ -209,12 +257,20 @@ function goToPricing(planCode: SubscriptionPlanCode) {
 
             <p class="positioning">{{ plan.positioning }}</p>
 
+            <p
+              v-if="!plan.available && plan.unavailableReason"
+              class="plan-unavailable"
+            >
+              {{ plan.unavailableReason }}
+            </p>
+
             <div class="plan-actions">
               <SignedIn>
                 <button
                   type="button"
                   class="plan-cta"
-                  @click="goToPricing(plan.code)"
+                  :disabled="!plan.available"
+                  @click="goToPricingCallbackAuth(plan.code)"
                 >
                   {{ plan.cta }}
                 </button>
@@ -223,11 +279,12 @@ function goToPricing(planCode: SubscriptionPlanCode) {
               <SignedOut>
                 <SignUpButton
                   mode="redirect"
-                  :force-redirect-url="buildPricingReturnUrl(plan.code)"
+                  :force-redirect-url="buildPricingCallbackAuthUrl(plan.code)"
                 >
                   <button
                     type="button"
                     class="plan-cta"
+                    :disabled="!plan.available"
                   >
                     {{ plan.cta }}
                   </button>
@@ -243,7 +300,7 @@ function goToPricing(planCode: SubscriptionPlanCode) {
       </div>
 
       <p class="account-link">
-        {{ content.accountPrefix }} <RouterLink to="/sign-in?redirect_url=%2Fpricing">{{ content.accountLinkLabel }}</RouterLink>
+        {{ content.accountPrefix }} <RouterLink to="/sign-in?redirect_url=%2Fpricing%2Fcallback">{{ content.accountLinkLabel }}</RouterLink>
       </p>
     </div>
   </section>

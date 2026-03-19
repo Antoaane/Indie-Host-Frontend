@@ -21,7 +21,6 @@ const emit = defineEmits<{
   <CreateWizardStepShell
     title="Définissez votre tarif de base et vos frais"
     :validation-error="props.validationError"
-    :fill-height="false"
   >
     <div class="create-base-pricing-step-stack">
       <BasePricingPanel
@@ -41,6 +40,9 @@ const emit = defineEmits<{
 .create-base-pricing-step-stack {
   width: 100%;
   min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: var(--layout-gap-sm);

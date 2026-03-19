@@ -33,6 +33,10 @@ type CreateConnectOnboardingLinkInput = {
   country?: string;
 };
 
+type CreateConnectDashboardLinkInput = {
+  accountId?: string;
+};
+
 type SyncConnectStateInput = {
   accountId?: string;
 };
@@ -146,6 +150,12 @@ export type SyncConnectStateResult = {
   mode: 'live' | 'mock';
   connect: PublicConnectSummary;
   publicationReadiness: PublicationReadiness;
+};
+
+export type ConnectDashboardLinkResult = {
+  mode: 'live' | 'mock';
+  accountId: string;
+  url: string;
 };
 
 type PlanTemplate = {
@@ -317,6 +327,21 @@ function addQueryParam(url: string, key: string, value: string): string {
       parsed.searchParams.set(key, value);
     }
     return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
+function addRawQueryParam(url: string, key: string, value: string): string {
+  try {
+    const parsed = new URL(url);
+    if (parsed.searchParams.has(key)) return parsed.toString();
+
+    const hash = parsed.hash ?? '';
+    parsed.hash = '';
+    const base = parsed.toString();
+    const separator = parsed.search ? '&' : '?';
+    return `${base}${separator}${encodeURIComponent(key)}=${value}${hash}`;
   } catch {
     return url;
   }
@@ -1580,7 +1605,7 @@ export class PaymentsService {
       };
     }
 
-    const successUrl = addQueryParam(input.successUrl, 'session_id', '{CHECKOUT_SESSION_ID}');
+    const successUrl = addRawQueryParam(input.successUrl, 'session_id', '{CHECKOUT_SESSION_ID}');
 
     const session = await this.stripe.checkout.sessions.create({
       mode: 'subscription',
@@ -1973,6 +1998,42 @@ export class PaymentsService {
       }
       throw error;
     }
+  }
+
+  async createConnectDashboardLink(
+    input: CreateConnectDashboardLinkInput,
+    auth: RequestAuth | null,
+  ): Promise<ConnectDashboardLinkResult | null> {
+    const user = await upsertUserFromAuth(this.prisma, auth);
+    if (!user) return null;
+
+    const connect = this.readConnectState(user);
+    const profileAccountId = readString(this.readStripeProfile(user).accountId);
+    const requestedAccountId = readString(input.accountId) ?? connect.accountId ?? profileAccountId;
+
+    if (!requestedAccountId) {
+      throw new Error('Aucun compte Stripe Connect trouvé pour cet utilisateur.');
+    }
+
+    if (connect.onboardingStatus !== 'completed') {
+      throw new Error("Le compte Stripe Connect doit terminer l'onboarding avant d'ouvrir le dashboard.");
+    }
+
+    if (!this.stripe) {
+      return {
+        mode: this.getExecutionMode(),
+        accountId: requestedAccountId,
+        url: `https://dashboard.stripe.com/express/accounts/${requestedAccountId}`,
+      };
+    }
+
+    const loginLink = await this.stripe.accounts.createLoginLink(requestedAccountId);
+
+    return {
+      mode: 'live',
+      accountId: requestedAccountId,
+      url: loginLink.url,
+    };
   }
 
   private resolveConnectOnboardingStatusFromStripeAccount(account: Stripe.Account): string {

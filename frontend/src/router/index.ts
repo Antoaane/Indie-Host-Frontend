@@ -4,6 +4,7 @@ import SignInView from '@/views/SignInView.vue'
 import SignUpView from '@/views/SignUpView.vue'
 import { createRouter, createWebHistory, type RouteLocationNormalized } from 'vue-router'
 import { isManagedListingHostname } from '@/domain/listings/publicDomain'
+import { normalizeListingSlug } from '@/domain/listings/slug'
 import { resolveRuntimeUserId } from '@/router/backOfficeUser'
 const HomePage = () => {
   if (typeof window !== 'undefined' && isManagedListingHostname(window.location.hostname)) {
@@ -12,6 +13,7 @@ const HomePage = () => {
   return import('@/views/Landing/_LandingPage.vue')
 }
 const PricingView = () => import('@/views/PricingView.vue')
+const PricingChecklistCallbackView = () => import('@/views/PricingCallbacks/PricingChecklistCallbackView.vue')
 const Listing = () => import('@/views/Listing/_Listing.vue')
 const ListingGuide = () => import('@/views/ListingGuide/_ListingGuide.vue')
 const EditorRoute = () => import('@/views/Editor/EditorRoute.vue')
@@ -99,10 +101,28 @@ const router = createRouter({
       meta: { navVariant: 'public' },
     },
     {
-      path: '/listing/:id?',
-      name: 'listing',
-      component: Listing,
-      meta: { hideNav: true },
+      path: '/pricing/callback',
+      name: 'pricing-callback',
+      component: PricingChecklistCallbackView,
+      meta: { navVariant: 'public' },
+    },
+    {
+      path: '/pricing/callback/auth',
+      name: 'pricing-callback-auth',
+      component: PricingChecklistCallbackView,
+      meta: { navVariant: 'public' },
+    },
+    {
+      path: '/pricing/callback/checkout',
+      name: 'pricing-callback-checkout',
+      component: PricingChecklistCallbackView,
+      meta: { navVariant: 'public' },
+    },
+    {
+      path: '/pricing/callback/connect',
+      name: 'pricing-callback-connect',
+      component: PricingChecklistCallbackView,
+      meta: { navVariant: 'public' },
     },
     {
       path: '/listing/guide/:id',
@@ -186,6 +206,30 @@ const router = createRouter({
       name: 'messaging-user',
       component: MessagingRoute,
       meta: { navVariant: 'host' },
+    },
+    {
+      path: '/listing',
+      redirect: { name: 'home' },
+    },
+    {
+      path: '/listing/:slug',
+      redirect: (to) => {
+        const raw = to.params.slug
+        const slug = normalizeListingSlug(typeof raw === 'string' ? raw : '')
+        if (!slug) return { name: 'home' }
+        return {
+          name: 'listing',
+          params: { slug },
+          query: to.query,
+          hash: to.hash,
+        }
+      },
+    },
+    {
+      path: '/:slug([a-z0-9-]+)',
+      name: 'listing',
+      component: Listing,
+      meta: { hideNav: true },
     },
   ],
 })

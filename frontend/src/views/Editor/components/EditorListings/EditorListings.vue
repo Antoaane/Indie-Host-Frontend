@@ -19,6 +19,7 @@ const props = defineProps<{
   isLoading?: boolean
   error?: unknown
   selectedListingId: string | null
+  isStripeConnectPublishLocked?: boolean
   canPreview?: boolean
 }>()
 
@@ -26,6 +27,7 @@ const emit = defineEmits<{
   (e: 'select', listingId: string): void
   (e: 'preview', listingId: string): void
   (e: 'status-change', payload: { listingId: string; status: string }): void
+  (e: 'configure-connect', listingId: string): void
 }>()
 
 const query = ref('')
@@ -98,6 +100,11 @@ function handlePreview(listingId: string) {
 function setListingStatus(payload: { listingId: string; status: string }) {
   closeCardMenus()
   emit('status-change', payload)
+}
+
+function handleConfigureConnect(listingId: string) {
+  closeCardMenus()
+  emit('configure-connect', listingId)
 }
 
 function isStatusMenuOpen(listingId: string) {
@@ -179,6 +186,7 @@ onBeforeUnmount(() => {
           :isActionsMenuOpen="isActionsMenuOpen(listing.listingId)"
           :statusOptions="STATUS_OPTIONS"
           :listingContent="listingContent"
+          :isStripeConnectPublishLocked="props.isStripeConnectPublishLocked"
           :canPreview="props.canPreview !== false"
           @select="handleSelect"
           @preview="handlePreview"
@@ -186,6 +194,7 @@ onBeforeUnmount(() => {
           @toggle-actions-menu="toggleActionsMenu"
           @close-menus="closeCardMenus"
           @status-change="setListingStatus"
+          @configure-connect="handleConfigureConnect"
         />
 
         <EditorListingsCreateCard

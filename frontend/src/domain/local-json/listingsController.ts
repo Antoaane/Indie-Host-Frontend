@@ -16,6 +16,7 @@ import type {
 } from '@/domain/listings/types'
 import type { FetchListingsOptions, ListingsController } from '@/domain/listings/controller'
 import { normalizeListingCardsMedia } from '@/domain/listings/cards'
+import { normalizeListingSlug } from '@/domain/listings/slug'
 import { filterDeletedListings } from '@/domain/listings/status'
 import { getCanonicalHost } from '@/domain/listings/host'
 import { createRuntimeLocalJsonStore } from '@/domain/local-json/runtimeStore'
@@ -60,6 +61,8 @@ const buildListingUrl = (resource: ListingResourceKey, listingId: string) =>
   `${LOCAL_JSON_BASE}/listings/${resource}/${listingId}`
 
 const buildUserListingsUrl = (userId: string) => `${LOCAL_JSON_BASE}/user/${userId}/listings`
+const buildResolveListingSlugUrl = (slug: string) =>
+  `${LOCAL_JSON_BASE}/listings/resolve?slug=${encodeURIComponent(slug)}`
 
 async function runWithRuntimeFallback<T>({
   label,
@@ -100,6 +103,20 @@ export function createLocalJsonListingsController(): ListingsController {
     },
     resolveListingIdByHostname: async (): Promise<string | null> => {
       return null
+    },
+    resolveListingIdBySlug: async (slug: string): Promise<string | null> => {
+      const normalizedSlug = normalizeListingSlug(slug)
+      if (!normalizedSlug) return null
+
+      return runWithRuntimeFallback({
+        label: 'resolveListingIdBySlug',
+        http: async () => {
+          const resolved = await requestJson<{ listingId?: string | null }>(buildResolveListingSlugUrl(normalizedSlug))
+          const listingId = typeof resolved?.listingId === 'string' ? resolved.listingId.trim() : ''
+          return listingId || null
+        },
+        runtime: () => runtimeStore.resolveListingIdBySlug(normalizedSlug),
+      })
     },
     fetchListingBundle: async (listingId: string): Promise<RawListingBundle> => {
       console.log('[Domain][local-json] fetchListingBundle', { listingId })

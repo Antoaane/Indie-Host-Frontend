@@ -84,7 +84,7 @@ VITE_STRIPE_PAYMENT_RETURN_URL=http://localhost:5179
 VITE_STRIPE_CHECKOUT_OFFLINE_MODE=false
 ```
 
-> En mode API, Vite proxifie automatiquement `/v1/*` vers `http://localhost:4000`. Les requêtes apparaissent sous `localhost:5179/v1/...` dans le Network — c'est normal.
+> En mode API, Vite proxifie automatiquement `/api/v1/*` vers `http://localhost:4000/v1/*`. Les requêtes apparaissent sous `localhost:5179/api/v1/...` dans le Network — c'est normal.
 
 ---
 

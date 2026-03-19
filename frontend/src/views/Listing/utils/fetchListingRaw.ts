@@ -1,6 +1,10 @@
 // File: src/views/Listing/utils/fetchListingRaw.ts
 
 import { getListingsController } from '@/domain/listings/controller'
+import {
+  isListingIdLike,
+  normalizeListingSlug,
+} from '@/domain/listings/slug'
 import type {
   ListingAvailabilitySyncResult,
   RawBookings,
@@ -17,16 +21,44 @@ const controller = getListingsController()
 const inflightBundles = new Map<string, Promise<RawListingBundle>>()
 const inflightAvailabilitySync = new Map<string, Promise<ListingAvailabilitySyncResult>>()
 
-async function resolveListingId(explicitId?: string): Promise<string> {
-  if (explicitId && explicitId.trim()) return explicitId.trim()
+function decodePathSegment(value: string): string {
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
+}
+
+async function resolveListingId(explicitKey?: string): Promise<string> {
+  const normalizedExplicitKey = typeof explicitKey === 'string' ? explicitKey.trim() : ''
+  if (normalizedExplicitKey) {
+    const explicitSlug = normalizeListingSlug(normalizedExplicitKey)
+    if (explicitSlug) {
+      const listingIdFromSlug = await controller.resolveListingIdBySlug(explicitSlug)
+      if (listingIdFromSlug) return listingIdFromSlug
+    }
+
+    if (isListingIdLike(normalizedExplicitKey)) {
+      return normalizedExplicitKey
+    }
+  }
 
   if (typeof window !== 'undefined') {
     const hostnameListingId = await controller.resolveListingIdByHostname(window.location.hostname)
     if (hostnameListingId) return hostnameListingId
 
     const currentPath = window.location.pathname
-    const listingIdFromRoute = currentPath.match(/^\/listing\/([^/]+)\/?$/)?.[1]
-    if (listingIdFromRoute) return listingIdFromRoute
+    const listingSlugFromRootRoute = currentPath.match(/^\/([^/]+)\/?$/)?.[1]
+    if (listingSlugFromRootRoute) {
+      const rootSlug = normalizeListingSlug(decodePathSegment(listingSlugFromRootRoute))
+      if (rootSlug) {
+        const listingIdFromRootSlug = await controller.resolveListingIdBySlug(rootSlug)
+        if (listingIdFromRootSlug) return listingIdFromRootSlug
+      }
+    }
+
+    const listingIdFromLegacyRoute = currentPath.match(/^\/listing\/([^/]+)\/?$/)?.[1]
+    if (listingIdFromLegacyRoute && isListingIdLike(listingIdFromLegacyRoute)) return listingIdFromLegacyRoute
   }
 
   const listings = await controller.fetchListings()

@@ -32,6 +32,7 @@ export type RawPerkSetting = RawPerkScoring & {
   enabled?: boolean
 }
 export type RawCore = Override<RawCoreBase, {
+  slug?: string
   amenities?: RawAmenity[]
   perkSettings?: RawPerkSetting[]
   precise_address?: string
@@ -277,6 +278,7 @@ export type ListingAvailabilitySyncResult = {
 
 export type UserListingCard = {
   listingId: string
+  slug?: string
   subdomainSlug?: string
   publicUrl?: string
   title?: string

@@ -24,7 +24,6 @@ const emit = defineEmits<{
     class="create-guest-onboarding-shell"
     title="Finaliser votre publication"
     hint="Ajoutez votre e-mail pour relier ce brouillon à votre onboarding compte."
-    :fill-height="false"
   >
     <section class="create-guest-onboarding-step-panel">
       <div class="email-field">

@@ -64,7 +64,7 @@ const bookingDisabledHint = computed(() =>
 
 const bookingRange = ref<RangeISO | null>(null)
 
-const listingId = computed(() => normalizeListingId(route.params.id) ?? normalizeListingId(props.rawListing?.core?.id) ?? null)
+const listingId = computed(() => normalizeListingId(props.rawListing?.core?.id) ?? null)
 const currentUserId = computed(() => {
   const id = user.value?.id
   if (typeof id === 'string' && id.trim()) return id.trim()

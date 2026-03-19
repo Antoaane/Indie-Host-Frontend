@@ -161,7 +161,7 @@ function parseOptionalAmount(raw: string): number | null {
 @use '@/views/CreateListing/components/panels/panel.scss' as *;
 
 .create-fees-panel {
-  @extend %panel;
+  // @extend %panel;
 
   min-width: 0;
 

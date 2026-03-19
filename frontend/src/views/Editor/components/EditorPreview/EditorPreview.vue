@@ -5,6 +5,7 @@ import { computed, onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue'
 import { ArrowLeft, ExternalLink } from 'lucide-vue-next'
 import ListingView from '@/views/ListingView/_ListingView.vue'
 import type { RawListingBundle } from '@/domain/listings/types'
+import { buildListingSlug, isTransientListingId } from '@/domain/listings/slug'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 import type { ListingViewportMode } from '@/views/ListingView/composables/useListingViewport'
 
@@ -24,13 +25,17 @@ const aspectRatio = ref<{ width: number; height: number } | null>(null)
 let wrapperResizeObserver: ResizeObserver | null = null
 const previewContent = editorStatic.preview
 const previewActions = editorStatic.actions
-const publicListingId = computed(() => {
+const publicListingSlug = computed(() => {
   const fromSelection = typeof props.listingId === 'string' ? props.listingId.trim() : ''
-  if (fromSelection) return fromSelection
-
   const fromCore = typeof props.rawListing?.core?.id === 'string' ? props.rawListing.core.id.trim() : ''
-  if (!fromCore || fromCore === 'landing-preview') return null
-  return fromCore
+  const listingId = fromSelection || fromCore
+  if (!listingId || isTransientListingId(listingId)) return null
+
+  return buildListingSlug({
+    existingSlug: props.rawListing?.core?.slug,
+    title: props.rawListing?.core?.title,
+    listingId,
+  })
 })
 
 function updateScale() {
@@ -101,8 +106,8 @@ onBeforeUnmount(() => {
 
       <div class="show-online">
         <RouterLink
-          v-if="props.rawListing && publicListingId"
-          :to="{ name: 'listing', params: { id: publicListingId } }"
+          v-if="props.rawListing && publicListingSlug"
+          :to="{ name: 'listing', params: { slug: publicListingSlug } }"
           target="_blank"
           rel="noopener noreferrer"
           :aria-label="editorStatic.listings.externalLink"
