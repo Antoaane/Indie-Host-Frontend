@@ -1,12 +1,54 @@
 # IndieHost
 
-Solution SaaS pour hôtes de locations courte durée: réservations directes, paiements intégrés, messagerie, domaines et import d'annonce (scraping Airbnb/Booking).
+Plateforme SaaS pour hôtes de locations courte durée:
+- site de réservation directe
+- paiements Stripe
+- messagerie
+- domaines
+- import d'annonces Airbnb/Booking via microservice scraping
 
-## Docker-Only (mode standard)
+Le projet fonctionne en **Docker-only**.
 
-Le projet se lance uniquement via Docker Compose.
+## Prérequis
 
-## 1) Initialiser les fichiers locaux
+- Docker Desktop (ou Docker Engine + Compose v2)
+- Port `80` libre
+
+## TL;DR
+
+Mode standard:
+
+```bash
+./start-indiehost.sh
+```
+
+Mode dev (hot reload):
+
+```bash
+./start-indiehost-dev.sh
+```
+
+Sous PowerShell, utilise les versions `.ps1`.
+
+## Arborescence clé
+
+```text
+.
+├── docker-compose.yml                # stack standard (prod-like local)
+├── docker-compose.dev.yml            # override dev (hot reload)
+├── .env.example
+├── secret.example/                   # templates versionnés
+├── secrets/                          # secrets locaux runtime (non versionnés)
+├── nginx/
+├── frontend/
+├── backend/api/
+├── backend/microservices/microservice-scraping-py/
+├── init-indiehost.sh(.ps1)
+├── start-indiehost.sh(.ps1)
+└── start-indiehost-dev.sh(.ps1)
+```
+
+## Initialisation (une seule fois par machine)
 
 Linux/macOS:
 
@@ -20,22 +62,16 @@ Windows PowerShell:
 ./init-indiehost.ps1
 ```
 
-Cette étape crée (si absents):
-- `/.env`
-- `/secrets/*.txt`
-
-## 2) Renseigner les valeurs réelles
-
-Modifier:
+Cette commande crée, si absents:
 - `/.env`
 - `/secrets/database_url.txt`
 - `/secrets/stripe_secret_key.txt`
 - `/secrets/clerk_secret_key.txt`
 - `/secrets/imagekit_api_key.txt`
 
-Par défaut `STRICT_EXTERNAL_CONFIG=true` dans `.env`: le démarrage échoue si Stripe/Clerk/ImageKit ne sont pas configurés.
+## Mode Standard (stack stable)
 
-## 3) Lancer et attendre que tout soit prêt
+### Lancer
 
 Linux/macOS:
 
@@ -49,25 +85,33 @@ Windows PowerShell:
 ./start-indiehost.ps1
 ```
 
-Commande Docker équivalente:
+Commande équivalente:
 
 ```bash
 docker compose up -d --build --wait
 ```
 
-## 4) Vérifier
+### URLs
 
-- Frontend: `http://localhost`
+- App: `http://localhost`
 - API health: `http://localhost/api/health`
 - Scraping health: `http://localhost/scraping/health`
-- PostgreSQL interne: `postgres:5432`
 
-## Mode Dev (hot reload)
+### Comportement de validation
 
-Le mode dev garde PostgreSQL + API + scraping + reverse proxy, avec:
-- `frontend` via Vite (`:5179`, HMR actif)
-- `api` via `tsx watch`
-- `scraping` via `uvicorn --reload`
+Le service `preflight` vérifie la config avant de démarrer la stack:
+- `STRICT_EXTERNAL_CONFIG=true` (par défaut): configuration externe stricte (Clerk/Stripe/ImageKit)
+- `STRICT_EXTERNAL_CONFIG=false`: mode plus permissif (utile en dev local)
+
+## Mode Dev (hot reload complet)
+
+Le mode dev garde la même architecture globale (nginx + api + scraping + postgres) avec:
+- frontend en **Vite dev server** (`HMR`)
+- api en `tsx watch`
+- scraping en `uvicorn --reload`
+- watcher frontend en polling (compatible Docker Desktop + Windows)
+
+### Lancer
 
 Linux/macOS:
 
@@ -81,42 +125,109 @@ Windows PowerShell:
 ./start-indiehost-dev.ps1
 ```
 
-Commande Docker équivalente:
+Commande équivalente:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build --wait
 ```
 
-URLs utiles en dev:
-- via Nginx: `http://localhost`
+### URLs
+
+- App via nginx: `http://localhost`
 - Vite direct: `http://localhost:5179`
 - API health: `http://localhost/api/health`
-- scraping health: `http://localhost/scraping/health`
+- Scraping health: `http://localhost/scraping/health`
 
-## Arborescence utile
+## Variables et secrets
 
-```text
-.
-├── docker-compose.yml
-├── docker-compose.dev.yml
-├── .env.example
-├── secret.example/   # templates versionnés
-├── secrets/          # secrets locaux runtime (non versionnés)
-├── frontend/
-├── backend/api/
-├── backend/microservices/microservice-scraping-py/
-├── nginx/
-├── init-indiehost.sh
-├── init-indiehost.ps1
-├── start-indiehost.sh
-├── start-indiehost.ps1
-├── start-indiehost-dev.sh
-└── start-indiehost-dev.ps1
+### Obligatoires pour démarrer
+
+- `.env` (copié depuis `.env.example`)
+- `secrets/database_url.txt`
+
+### Recommandés / selon fonctionnalités
+
+- `secrets/stripe_secret_key.txt`
+- `secrets/clerk_secret_key.txt`
+- `secrets/imagekit_api_key.txt`
+
+### Optionnels (env direct)
+
+- `STRIPE_WEBHOOK_SECRET`
+- `SCRAPFLY_KEY`
+- `GANDI_API_TOKEN`
+
+Templates disponibles dans `secret.example/`.
+
+## Commandes utiles
+
+Démarrer standard:
+
+```bash
+docker compose up -d --build --wait
 ```
 
-## Notes
+Démarrer dev:
 
-- Les variables frontend `VITE_*` sont injectées au build Docker via `docker-compose.yml`.
-- Les secrets backend principaux passent par des fichiers (`*_FILE`) montés depuis `secrets/*.txt`.
-- Les clés optionnelles peuvent rester en variables d'environnement (`STRIPE_WEBHOOK_SECRET`, `SCRAPFLY_KEY`, `GANDI_API_TOKEN`).
-- Le microservice scraping est exposé via Nginx sur `/scraping/`.
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build --wait
+```
+
+Arrêter:
+
+```bash
+docker compose down
+```
+
+Arrêter dev:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml down
+```
+
+Voir l'état:
+
+```bash
+docker compose ps
+```
+
+Logs d'un service:
+
+```bash
+docker compose logs -f api
+```
+
+Logs en mode dev:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml logs -f frontend
+```
+
+## Dépannage rapide
+
+### `preflight` en échec
+
+- Vérifie `.env` + `secrets/*.txt`
+- Lance:
+
+```bash
+docker compose run --rm preflight
+```
+
+### `api` redémarre en boucle en mode dev
+
+- Relance propre:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml down -v
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build --wait
+```
+
+### Le frontend ne hot-reload pas
+
+- Vérifie que tu modifies bien les fichiers du même dossier que celui utilisé par `docker compose`
+- Regarde les logs frontend:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml logs -f frontend
+```
