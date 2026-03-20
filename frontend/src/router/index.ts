@@ -16,6 +16,7 @@ const PricingView = () => import('@/views/PricingView.vue')
 const PricingChecklistCallbackView = () => import('@/views/PricingCallbacks/PricingChecklistCallbackView.vue')
 const Listing = () => import('@/views/Listing/_Listing.vue')
 const ListingGuide = () => import('@/views/ListingGuide/_ListingGuide.vue')
+const BookingConfirmationView = () => import('@/views/BookingConfirmation/BookingConfirmationView.vue')
 const EditorRoute = () => import('@/views/Editor/EditorRoute.vue')
 const CreateListingRoute = () => import('@/views/CreateListing/CreateListingRoute.vue')
 const CreateListingPublicRoute = () => import('@/views/CreateListing/CreateListingPublicRoute.vue')
@@ -115,6 +116,12 @@ const router = createRouter({
       name: 'listing-guide',
       component: ListingGuide,
       meta: { hideNav: true },
+    },
+    {
+      path: '/booking/confirmation/:reservationId',
+      name: 'booking-confirmation',
+      component: BookingConfirmationView,
+      meta: { navVariant: 'public', hideNav: true },
     },
     {
       path: '/donation',
@@ -308,7 +315,7 @@ const router = createRouter({
 router.beforeEach((to) => {
   if (typeof window === 'undefined') return true
   if (!isManagedListingHostname(window.location.hostname)) return true
-  if (to.name === 'home' || to.name === 'listing' || to.name === 'listing-guide') return true
+  if (to.name === 'home' || to.name === 'listing' || to.name === 'listing-guide' || to.name === 'booking-confirmation') return true
   return { name: 'home' }
 })
 

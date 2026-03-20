@@ -94,6 +94,12 @@ export type RawReservationMessaging = {
   conversationId?: string
   messages: RawReservationMessage[]
 }
+export type RawReservationConfirmation = {
+  guideAccessKey?: string
+  guideAccessToken?: string
+  guideUrl?: string
+  generatedAt?: string
+}
 export type RawPricingCancellationPolicy = 'flexible' | 'moderate' | 'strict' | 'custom' | string
 export type RawPricingCancellation = RawPerkScoring & {
   policy?: RawPricingCancellationPolicy
@@ -199,7 +205,9 @@ export type RawBookingReservation = {
     lastName?: string
     phone?: string
     email?: string
+    confirmation?: RawReservationConfirmation
   }
+  confirmation?: RawReservationConfirmation
   createdAt?: string
   messaging?: RawReservationMessaging
 }

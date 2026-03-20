@@ -63,6 +63,7 @@ const envSchema = z.object({
   STRIPE_CONNECT_PLATFORM_FEE_BPS: z.coerce.number().int().min(0).max(10000).default(0),
   STRIPE_CONNECT_DEFAULT_APPLICATION_FEE_BPS: z.coerce.number().int().min(0).max(10000).default(0),
   ICAL_EXPORT_DEFAULT_PRODID: z.string().trim().min(1).default('IndieHost//Calendar//FR'),
+  BOOKING_GUIDE_ACCESS_SECRET: z.string().trim().min(1).default('indiehost_booking_guide_secret'),
   ICAL_SYNC_THROTTLE_SECONDS: z.coerce.number().int().min(60).default(300),
   ICAL_SYNC_FETCH_TIMEOUT_MS: z.coerce.number().int().min(1000).default(15000),
   PUBLIC_LISTING_ROOT_DOMAIN: z.string().trim().min(1).default('indiehost.fr'),

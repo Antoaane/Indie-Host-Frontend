@@ -47,3 +47,19 @@ export const updateBookingSchema = z.object({
   listingId: z.string().trim().min(1),
   patch: z.record(z.any()),
 });
+
+export const bookingConfirmationParamsSchema = z.object({
+  reservationId: z.string().trim().min(1),
+});
+
+export const bookingAccessQuerySchema = z.object({
+  token: z.string().trim().min(1),
+});
+
+export const bookingGuideParamsSchema = z.object({
+  guideKey: z.string().trim().min(1),
+});
+
+export const bookingGuideMessageSchema = z.object({
+  body: z.string().trim().min(1),
+});

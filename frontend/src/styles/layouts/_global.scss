@@ -68,7 +68,8 @@ body.is-ios.ios-landing-surface main {
 // (Utile si un lock global reste coincé suite à un overlay / lib externe.)
 html.force-scroll,
 body.force-scroll {
-  overflow: auto !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
 }
 
 body.force-scroll {

@@ -31,6 +31,25 @@
     }
   }
 
+  > .guide-locked {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--layout-gap-xs);
+    padding: var(--layout-gap-2xl);
+
+    > h1 {
+      margin: 0;
+      @include h1-title($color: $secondary-text, $layout-gap: false, $gradiant: true);
+    }
+
+    > p {
+      margin: 0;
+      @include base-text($color: rgba($secondary-text, 0.72));
+    }
+  }
+
   > .guide-hero {
     height: 35vh;
     background: $background;
@@ -148,6 +167,13 @@
       border: none;
       @include effects.big-shadow(rgba(0, 0, 0, 0.2));
     }
+
+    &--messaging {
+      background: $background;
+      color: $accent;
+      border: none;
+      @include effects.big-shadow(rgba(0, 0, 0, 0.2));
+    }
   }
 
   .panel-header {
@@ -244,6 +270,38 @@
     &.is-empty {
       @include little-text($color: rgba($secondary-text, 0.5));
       font-style: italic;
+    }
+  }
+
+  .guide-messaging-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--layout-gap-xs);
+  }
+
+  .guide-messaging-item {
+    padding: 0.65rem 0.8rem;
+    border-radius: 0.7rem;
+    border: 1px solid rgba($accent, 0.1);
+    background: rgba($accent, 0.04);
+    display: grid;
+    gap: 0.4rem;
+
+    &.is-host {
+      border-color: rgba($secondary, 0.2);
+      background: rgba($secondary, 0.08);
+    }
+
+    > .body {
+      margin: 0;
+      @include base-text($color: $accent);
+    }
+
+    > .meta {
+      margin: 0;
+      @include little-text($color: rgba($accent, 0.65));
     }
   }
 

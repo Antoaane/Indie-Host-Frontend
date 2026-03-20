@@ -66,11 +66,23 @@ const isKeepingBlockedFromOnboarding = ref(false)
 
 const errorMessage = ref<string | null>(null)
 const infoMessage = ref<string | null>(null)
+const isDevMode = import.meta.env.DEV
+const devLogs = ref<DevLogEntry[]>([])
 
 let onboardingListingCreationPromise: Promise<string | null> | null = null
 
 const handledCallbackSignature = ref<string | null>(null)
 const handledAutoStartKey = ref<string | null>(null)
+let devLogSequence = 0
+
+type DevLogLevel = 'info' | 'error'
+
+type DevLogEntry = {
+  id: number
+  level: DevLogLevel
+  message: string
+  timestampISO: string
+}
 
 function readQueryValue(value: unknown): string | null {
   if (typeof value === 'string' && value.trim()) return value.trim()
@@ -141,6 +153,32 @@ function resolveErrorMessage(error: unknown, fallback: string): string {
     }
   }
   return fallback
+}
+
+function pushDevLog(level: DevLogLevel, message: string) {
+  const normalized = message.trim()
+  if (!normalized) return
+
+  devLogSequence += 1
+  devLogs.value = [
+    {
+      id: devLogSequence,
+      level,
+      message: normalized,
+      timestampISO: new Date().toISOString(),
+    },
+    ...devLogs.value,
+  ].slice(0, 80)
+}
+
+function clearDevLogs() {
+  devLogs.value = []
+}
+
+function formatDevLogTime(timestampISO: string): string {
+  const parsedDate = new Date(timestampISO)
+  if (Number.isNaN(parsedDate.getTime())) return '--:--:--'
+  return parsedDate.toLocaleTimeString('fr-FR', { hour12: false })
 }
 
 function refreshOnboardingStateFromStorage() {
@@ -243,18 +281,6 @@ const isOnboardingConnectReady = computed(() => {
 
 const isOnboardingReadyForPublish = computed(() => Boolean(subscriptionState.value?.publicationReadiness?.canPublish))
 const onboardingMissingRequirements = computed(() => subscriptionState.value?.publicationReadiness?.missingRequirements ?? [])
-const onboardingMissingRequirementsLabels = computed(() => {
-  return onboardingMissingRequirements.value.map((item) => CONNECT_REQUIREMENT_LABELS[item] ?? item)
-})
-
-const hasConnectAccount = computed(() => Boolean(subscriptionState.value?.connect?.accountId))
-const connectStatusLabel = computed(() => {
-  const status = subscriptionState.value?.connect?.onboardingStatus ?? 'not_started'
-  if (status === 'completed') return 'Stripe Connect prêt'
-  if (status === 'pending') return 'Stripe Connect en attente'
-  if (status === 'restricted') return 'Stripe Connect restreint'
-  return 'Stripe Connect non démarré'
-})
 
 const hasAnyListings = computed(() => userListings.value.length > 0)
 const hasPublishedListings = computed(() => userListings.value.some((listing) => normalizeListingStatus(listing.status) === 'published'))
@@ -265,10 +291,6 @@ const onboardingListingStatus = computed(() => {
   return normalizeListingStatus(listing?.status)
 })
 const isOnboardingListingPublished = computed(() => onboardingListingStatus.value === 'published')
-
-const isFirstVisitChecklist = computed(() => {
-  return Boolean(isUserSignedIn.value && !hasPublishedListings.value && !hasConnectAccount.value)
-})
 
 const isOnboardingActionBusy = computed(() => {
   return Boolean(
@@ -281,7 +303,7 @@ const isOnboardingActionBusy = computed(() => {
   )
 })
 
-type ChecklistState = 'done' | 'active' | 'todo'
+type ChecklistState = 'done' | 'active' | 'upcoming'
 
 type ChecklistItem = {
   id: string
@@ -290,77 +312,175 @@ type ChecklistItem = {
   state: ChecklistState
 }
 
-const checklistItems = computed<ChecklistItem[]>(() => {
-  const items: ChecklistItem[] = []
+const checklistStateLabels: Record<ChecklistState, string> = {
+  done: 'Terminé',
+  active: 'À faire',
+  upcoming: 'À venir',
+}
 
+function resolveListingStepDetail({
+  authDone,
+  subscriptionDone,
+  connectDone,
+}: {
+  authDone: boolean
+  subscriptionDone: boolean
+  connectDone: boolean
+}): string {
+  if (isListingOnboardingActive.value) {
+    if (onboardingIntent.value === 'setup') {
+      if (onboardingListingId.value) return 'Annonce créée en mode privé. Vous pouvez finaliser quand vous voulez.'
+      if (subscriptionDone) return 'Votre annonce est en préparation automatique.'
+      return 'Votre annonce sera préparée après l’activation de l’abonnement.'
+    }
+
+    if (isOnboardingListingPublished.value) return 'Annonce publiée. Les réservations sont ouvertes.'
+    if (isOnboardingReadyForPublish.value) return 'Tout est prêt. Vous pouvez publier maintenant.'
+    if (onboardingListingId.value) {
+      if (!isOnboardingConnectMandatory.value || connectDone) return 'Finalisez la mise en ligne de votre annonce.'
+      return 'Activez Stripe Connect pour terminer la mise en ligne.'
+    }
+    if (subscriptionDone) return 'Votre annonce est en cours de préparation.'
+    if (!authDone) return 'Connectez-vous pour lancer la création de votre annonce.'
+    return 'Votre annonce sera créée après la validation de l’abonnement.'
+  }
+
+  if (hasPublishedListings.value) return 'Au moins une annonce est déjà en ligne.'
+  if (hasAnyListings.value) return 'Dernière étape: publiez votre première annonce depuis l’éditeur.'
+  return 'Créez et publiez votre première annonce depuis l’éditeur.'
+}
+
+const checklistItems = computed<ChecklistItem[]>(() => {
   const authDone = isUserSignedIn.value
   const subscriptionDone = isSubscriptionActive.value
   const connectDone = isOnboardingConnectReady.value
+  const listingDone = isListingOnboardingActive.value
+    ? onboardingIntent.value === 'setup'
+      ? Boolean(onboardingListingId.value)
+      : isOnboardingListingPublished.value
+    : hasPublishedListings.value
 
-  items.push({
-    id: 'auth',
-    title: 'Compte connecté',
-    detail: authDone ? 'Session utilisateur active.' : 'Connectez-vous pour lancer votre activation.',
-    state: authDone ? 'done' : 'active',
-  })
+  const listingReady = (() => {
+    if (!authDone || !subscriptionDone) return false
 
-  items.push({
-    id: 'subscription',
-    title: 'Abonnement actif',
-    detail: subscriptionDone
-      ? `Plan actif: ${currentPlanName.value}.`
-      : selectedPlanLabel.value
-        ? `Plan sélectionné: ${selectedPlanLabel.value}.`
-        : 'Sélectionnez un plan pour continuer.',
-    state: subscriptionDone ? 'done' : authDone ? 'active' : 'todo',
-  })
+    if (isListingOnboardingActive.value) {
+      if (onboardingIntent.value === 'setup') return true
+      if (isOnboardingConnectMandatory.value && !connectDone) return false
+      return Boolean(onboardingListingId.value) || isOnboardingReadyForPublish.value
+    }
 
-  items.push({
-    id: 'connect',
-    title: 'Stripe Connect configuré',
-    detail: connectDone
-      ? 'Les paiements et les virements sont activés.'
-      : 'Finalisez Stripe Connect pour encaisser vos réservations.',
-    state: connectDone ? 'done' : subscriptionDone ? 'active' : 'todo',
-  })
+    return connectDone
+  })()
 
-  if (isListingOnboardingActive.value) {
-    const listingDone = Boolean(onboardingListingId.value)
-    const publishDone = isOnboardingListingPublished.value
-
-    items.push({
+  return [
+    {
+      id: 'account',
+      title: 'Compte',
+      detail: authDone ? 'Votre compte est prêt.' : 'Créez votre compte pour commencer.',
+      state: authDone ? 'done' : 'active',
+    },
+    {
+      id: 'subscription',
+      title: 'Abonnement',
+      detail: subscriptionDone
+        ? `Plan ${currentPlanName.value} actif.`
+        : selectedPlanLabel.value
+          ? `Plan ${selectedPlanLabel.value} sélectionné.`
+          : 'Choisissez un plan adapté à votre activité.',
+      state: subscriptionDone ? 'done' : authDone ? 'active' : 'upcoming',
+    },
+    {
+      id: 'connect',
+      title: 'Stripe Connect',
+      detail: connectDone
+        ? 'Paiements configurés pour recevoir vos revenus.'
+        : isOnboardingConnectMandatory.value
+          ? 'Configurez Stripe Connect pour activer les encaissements.'
+          : 'Configuration recommandée pour activer les paiements.',
+      state: connectDone ? 'done' : subscriptionDone ? 'active' : 'upcoming',
+    },
+    {
       id: 'listing',
-      title: 'Annonce rattachée à l’onboarding',
-      detail: listingDone
-        ? `Annonce liée: ${onboardingListingId.value}.`
-        : 'Création de l’annonce en mode privé dès activation du plan.',
-      state: listingDone ? 'done' : connectDone ? 'active' : 'todo',
-    })
+      title: 'Annonce',
+      detail: resolveListingStepDetail({ authDone, subscriptionDone, connectDone }),
+      state: listingDone ? 'done' : listingReady ? 'active' : 'upcoming',
+    },
+  ]
+})
 
-    items.push({
-      id: 'publish',
-      title: 'Publication et réservations',
-      detail: publishDone
-        ? 'Annonce publiée: vous pouvez recevoir des réservations.'
-        : isOnboardingReadyForPublish.value
-          ? 'Tous les prérequis sont prêts, vous pouvez publier.'
-          : 'Publication en attente des prérequis.',
-      state: publishDone ? 'done' : listingDone && isOnboardingReadyForPublish.value ? 'active' : 'todo',
-    })
+const completedChecklistCount = computed(() => checklistItems.value.filter((item) => item.state === 'done').length)
+const checklistProgressPercent = computed(() => {
+  if (!checklistItems.value.length) return 0
+  return Math.round((completedChecklistCount.value / checklistItems.value.length) * 100)
+})
+const isChecklistComplete = computed(() => checklistItems.value.every((item) => item.state === 'done'))
+const nextChecklistItem = computed(() => checklistItems.value.find((item) => item.state === 'active') ?? null)
+const nextStepTitle = computed(() => {
+  if (isChecklistComplete.value) return 'Activation terminée'
+  return nextChecklistItem.value?.title ?? 'Finalisation en cours'
+})
+const nextStepDetail = computed(() => {
+  if (!isUserSignedIn.value) return 'Créez votre compte puis revenez ici pour poursuivre.'
+  if (isChecklistComplete.value) return 'Tout est prêt. Vous pouvez maintenant gérer vos annonces.'
+  return nextChecklistItem.value?.detail ?? 'Nous mettons à jour votre progression.'
+})
 
-    return items
+type PrimaryActionId = 'activate-plan' | 'choose-plan' | 'connect' | 'publish' | 'open-editor' | 'refresh'
+type PrimaryAction = {
+  id: PrimaryActionId
+  label: string
+}
+
+const primaryAction = computed<PrimaryAction>(() => {
+  if (selectedPlan.value && !isSubscriptionActive.value) {
+    return {
+      id: 'activate-plan',
+      label: resolveSignedInPlanCtaLabel(selectedPlan.value),
+    }
   }
 
-  items.push({
-    id: 'listing-live',
-    title: 'Annonce publiée',
-    detail: hasPublishedListings.value
-      ? 'Au moins une annonce est déjà publiée.'
-      : 'Publiez votre annonce depuis l’éditeur pour ouvrir les réservations.',
-    state: hasPublishedListings.value ? 'done' : connectDone ? 'active' : 'todo',
-  })
+  if (!selectedPlan.value && !isSubscriptionActive.value) {
+    return {
+      id: 'choose-plan',
+      label: 'Choisir mon abonnement',
+    }
+  }
 
-  return items
+  if (isSubscriptionActive.value && !isOnboardingConnectReady.value) {
+    return {
+      id: 'connect',
+      label: isLaunchingConnect.value ? 'Ouverture de Stripe...' : 'Configurer Stripe Connect',
+    }
+  }
+
+  if (onboardingListingId.value && isOnboardingReadyForPublish.value && !isOnboardingListingPublished.value) {
+    return {
+      id: 'publish',
+      label: isPublishingFromOnboarding.value ? 'Publication...' : 'Publier mon annonce',
+    }
+  }
+
+  if (isSubscriptionActive.value) {
+    return {
+      id: 'open-editor',
+      label: hasAnyListings.value || onboardingListingId.value ? 'Ouvrir mes annonces' : 'Créer ma première annonce',
+    }
+  }
+
+  return {
+    id: 'refresh',
+    label: 'Actualiser ma progression',
+  }
+})
+
+const canKeepListingBlocked = computed(() => {
+  if (!isUserSignedIn.value || !onboardingListingId.value) return false
+  if (!isSubscriptionActive.value) return false
+
+  if (!isOnboardingConnectMandatory.value && !isOnboardingConnectReady.value) return true
+  if (isOnboardingReadyForPublish.value && !isOnboardingListingPublished.value) return true
+
+  return false
 })
 
 const callbackSignature = computed(() => {
@@ -1009,38 +1129,55 @@ async function goToEditor() {
   })
 }
 
-async function retryCurrentStep() {
+async function handlePrimaryAction() {
   errorMessage.value = null
 
   if (!isUserSignedIn.value) return
 
-  if (callbackAction.value) {
-    handledCallbackSignature.value = null
-    await processCallbackIfNeeded()
-    return
+  switch (primaryAction.value.id) {
+    case 'activate-plan':
+      if (selectedPlan.value) {
+        await startPlanActivation(selectedPlan.value)
+      }
+      break
+    case 'choose-plan':
+      await goToPricingSelection()
+      break
+    case 'connect':
+      await launchConnectOnboarding()
+      break
+    case 'publish':
+      await publishListingNow()
+      break
+    case 'open-editor':
+      await goToEditor()
+      break
+    case 'refresh':
+      if (callbackAction.value) {
+        handledCallbackSignature.value = null
+        await processCallbackIfNeeded()
+      } else {
+        await hydrateSignedInContext({ sync: true })
+      }
+      break
   }
-
-  if (selectedPlan.value && !isSubscriptionActive.value) {
-    await startPlanActivation(selectedPlan.value)
-    return
-  }
-
-  if (isSubscriptionActive.value && !isOnboardingConnectReady.value) {
-    await launchConnectOnboarding()
-    return
-  }
-
-  if (
-    onboardingListingId.value
-    && isOnboardingReadyForPublish.value
-    && !isOnboardingListingPublished.value
-  ) {
-    await publishListingNow()
-    return
-  }
-
-  await hydrateSignedInContext({ sync: true })
 }
+
+watch(
+  () => infoMessage.value,
+  (message, previousMessage) => {
+    if (!message || message === previousMessage) return
+    pushDevLog('info', message)
+  },
+)
+
+watch(
+  () => errorMessage.value,
+  (message, previousMessage) => {
+    if (!message || message === previousMessage) return
+    pushDevLog('error', message)
+  },
+)
 
 watch(
   () => route.fullPath,
@@ -1072,76 +1209,64 @@ watch(
 <template>
   <main class="pricing-checklist-view">
     <section class="checklist-shell">
-      <div class="checklist-header">
+      <header class="checklist-header">
         <p class="eyebrow">Activation hôte</p>
-        <h1>Checklist avant les premières réservations</h1>
+        <h1>Finalisez votre espace avant les premières réservations</h1>
         <p class="subtitle">
-          Cette page centralise chaque étape de finalisation: abonnement, Stripe Connect et publication.
+          Suivez les étapes dans l’ordre. Nous mettons en avant uniquement la prochaine action utile.
         </p>
+      </header>
 
-        <div class="status-row">
-          <span>{{ isUserSignedIn ? 'Session connectée' : 'Session non connectée' }}</span>
-          <span>Plan actuel: {{ currentPlanName }}</span>
-          <span>{{ connectStatusLabel }}</span>
+      <section class="progress-panel">
+        <div class="progress-head">
+          <p class="progress-label">Progression</p>
+          <p class="progress-value">{{ completedChecklistCount }} / {{ checklistItems.length }} étapes</p>
         </div>
-      </div>
-
-      <section
-        v-if="isFirstVisitChecklist"
-        class="first-visit-card"
-      >
-        <h2>Première activation détectée</h2>
-        <p>
-          Aucune annonce publiée et aucun compte Connect actif: suivez les étapes ci-dessous pour ouvrir la réception des réservations.
-        </p>
+        <div
+          class="progress-track"
+          role="progressbar"
+          :aria-valuemin="0"
+          :aria-valuemax="100"
+          :aria-valuenow="checklistProgressPercent"
+        >
+          <span
+            class="progress-fill"
+            :style="{ width: `${checklistProgressPercent}%` }"
+          ></span>
+        </div>
       </section>
-
-      <p
-        v-if="isLoadingState || isLoadingListings || isProcessingCallback"
-        class="feedback is-neutral"
-      >
-        Synchronisation en cours...
-      </p>
-
-      <p
-        v-if="errorMessage"
-        class="feedback is-error"
-      >
-        {{ errorMessage }}
-      </p>
-
-      <p
-        v-if="infoMessage"
-        class="feedback is-info"
-      >
-        {{ infoMessage }}
-      </p>
 
       <ul class="checklist-items">
         <li
-          v-for="item in checklistItems"
+          v-for="(item, index) in checklistItems"
           :key="item.id"
           class="checklist-item"
           :class="[`is-${item.state}`]"
         >
-          <span class="bullet" aria-hidden="true"></span>
+          <span class="step-index">{{ index + 1 }}</span>
           <div class="content">
-            <h3>{{ item.title }}</h3>
+            <div class="title-row">
+              <h2>{{ item.title }}</h2>
+              <span class="state-chip">{{ checklistStateLabels[item.state] }}</span>
+            </div>
             <p>{{ item.detail }}</p>
           </div>
         </li>
       </ul>
 
-      <p
-        v-if="onboardingMissingRequirements.length"
-        class="feedback is-neutral"
-      >
-        Prérequis manquants: {{ onboardingMissingRequirementsLabels.join(', ') }}
-      </p>
+      <section class="next-step-card">
+        <p class="next-step-eyebrow">Prochaine étape</p>
+        <h2>{{ nextStepTitle }}</h2>
+        <p class="next-step-detail">{{ nextStepDetail }}</p>
+        <p
+          v-if="isLoadingState || isLoadingListings || isProcessingCallback"
+          class="sync-note"
+        >
+          Mise à jour de votre progression...
+        </p>
 
-      <section class="actions-panel">
         <SignedOut>
-          <div class="actions-row">
+          <div class="actions-panel">
             <SignUpButton
               mode="redirect"
               :force-redirect-url="buildAuthContinuationUrl(selectedPlan)"
@@ -1151,7 +1276,7 @@ watch(
                 type="button"
                 class="action-btn"
               >
-                Créer un compte
+                Créer mon compte
               </button>
             </SignUpButton>
 
@@ -1164,76 +1289,35 @@ watch(
                 type="button"
                 class="action-btn ghost"
               >
-                J’ai déjà un compte
+                Me connecter
               </button>
             </SignInButton>
           </div>
         </SignedOut>
 
         <SignedIn>
-          <div class="actions-row">
+          <div class="actions-panel">
             <button
-              v-if="selectedPlan && !isSubscriptionActive"
               type="button"
               class="action-btn"
               :disabled="isOnboardingActionBusy"
-              @click="startPlanActivation(selectedPlan)"
+              @click="handlePrimaryAction"
             >
-              {{ resolveSignedInPlanCtaLabel(selectedPlan) }}
+              {{ primaryAction.label }}
             </button>
 
             <button
-              v-else-if="!selectedPlan && !isSubscriptionActive"
-              type="button"
-              class="action-btn"
-              :disabled="isOnboardingActionBusy"
-              @click="goToPricingSelection"
-            >
-              Choisir un plan
-            </button>
-
-            <button
-              v-if="isSubscriptionActive && !isOnboardingConnectReady"
-              type="button"
-              class="action-btn"
-              :disabled="isOnboardingActionBusy"
-              @click="launchConnectOnboarding"
-            >
-              {{ isLaunchingConnect ? 'Ouverture...' : 'Configurer Stripe Connect' }}
-            </button>
-
-            <button
-              v-if="isSubscriptionActive && !isOnboardingConnectReady && !isOnboardingConnectMandatory && onboardingListingId"
+              v-if="canKeepListingBlocked"
               type="button"
               class="action-btn ghost"
               :disabled="isOnboardingActionBusy"
               @click="keepListingBlocked"
             >
-              Continuer avec annonce bloquée
+              Continuer plus tard
             </button>
 
             <button
-              v-if="onboardingListingId && isOnboardingReadyForPublish && !isOnboardingListingPublished"
-              type="button"
-              class="action-btn"
-              :disabled="isOnboardingActionBusy"
-              @click="publishListingNow"
-            >
-              {{ isPublishingFromOnboarding ? 'Publication...' : 'Publier maintenant' }}
-            </button>
-
-            <button
-              v-if="onboardingListingId && isOnboardingReadyForPublish && !isOnboardingListingPublished"
-              type="button"
-              class="action-btn ghost"
-              :disabled="isOnboardingActionBusy"
-              @click="keepListingBlocked"
-            >
-              Garder bloquée pour l’instant
-            </button>
-
-            <button
-              v-if="hasAnyListings || onboardingListingId"
+              v-if="(hasAnyListings || onboardingListingId) && primaryAction.id !== 'open-editor'"
               type="button"
               class="action-btn ghost"
               :disabled="isOnboardingActionBusy"
@@ -1243,16 +1327,46 @@ watch(
             </button>
           </div>
         </SignedIn>
+      </section>
 
-        <button
-          v-if="errorMessage"
-          type="button"
-          class="retry-btn"
-          :disabled="isOnboardingActionBusy"
-          @click="retryCurrentStep"
+      <section
+        v-if="isDevMode"
+        class="dev-console"
+      >
+        <div class="dev-console-head">
+          <h2>Console technique (dev)</h2>
+          <button
+            type="button"
+            class="dev-console-clear"
+            :disabled="!devLogs.length"
+            @click="clearDevLogs"
+          >
+            Vider
+          </button>
+        </div>
+
+        <p
+          v-if="!devLogs.length"
+          class="dev-console-empty"
         >
-          Réessayer cette étape
-        </button>
+          Aucun message technique.
+        </p>
+
+        <ul
+          v-else
+          class="dev-console-list"
+        >
+          <li
+            v-for="entry in devLogs"
+            :key="entry.id"
+            class="dev-console-item"
+            :class="[`is-${entry.level}`]"
+          >
+            <span class="time">{{ formatDevLogTime(entry.timestampISO) }}</span>
+            <span class="level">{{ entry.level }}</span>
+            <span class="message">{{ entry.message }}</span>
+          </li>
+        </ul>
       </section>
     </section>
   </main>
@@ -1264,111 +1378,93 @@ watch(
 
 .pricing-checklist-view {
   min-height: calc(100vh - 60px);
-  padding: clamp(5.5rem, 10vw, 7rem) clamp(0.9rem, 2.6vw, 1.6rem) clamp(1.25rem, 3vw, 2.25rem);
+  padding: clamp(5.4rem, 9vw, 6.8rem) clamp(1rem, 2.8vw, 1.85rem) clamp(1.8rem, 3vw, 2.8rem);
   background:
-    radial-gradient(circle at 6% 0%, rgba($secondary, 0.16), transparent 50%),
-    radial-gradient(circle at 95% 12%, rgba($good, 0.12), transparent 42%),
-    linear-gradient(170deg, rgba($accent, 1), rgba($accent, 0.94));
+    radial-gradient(circle at 8% 0%, rgba($secondary, 0.1), transparent 50%),
+    radial-gradient(circle at 92% 12%, rgba($secondary, 0.06), transparent 45%),
+    linear-gradient(170deg, rgba($accent, 1), rgba($accent, 0.97));
 
   > .checklist-shell {
-    width: min(100%, 72rem);
+    width: min(100%, 66rem);
     margin: 0 auto;
-    border-radius: clamp(1.1rem, 1.8vw, 1.6rem);
-    border: 1px solid rgba($secondary, 0.16);
-    background: rgba($accent, 0.92);
-    box-shadow: 0 2rem 3.2rem rgba($secondary, 0.12);
-    padding: clamp(1rem, 2vw, 1.5rem);
+    border-radius: clamp(1.1rem, 1.8vw, 1.7rem);
+    border: 1px solid rgba($secondary, 0.14);
+    background: rgba($accent, 0.94);
+    box-shadow: 0 1.6rem 3.2rem rgba($secondary, 0.1);
+    padding: clamp(1.05rem, 2.2vw, 1.7rem);
     display: flex;
     flex-direction: column;
-    gap: 0.95rem;
+    gap: clamp(0.9rem, 1.6vw, 1.2rem);
   }
 
   .checklist-header {
     display: flex;
     flex-direction: column;
-    gap: 0.55rem;
+    gap: 0.45rem;
 
     > .eyebrow {
       margin: 0;
       font-size: 0.76rem;
-      letter-spacing: 0.11em;
+      letter-spacing: 0.13em;
       text-transform: uppercase;
-      color: rgba($secondary, 0.7);
+      color: rgba($secondary, 0.68);
       font-weight: 700;
     }
 
     > h1 {
       margin: 0;
-      color: rgba($secondary-text, 0.96);
-      font-size: clamp(1.45rem, 2.3vw, 2rem);
+      color: rgba($secondary-text, 0.95);
+      font-size: clamp(1.42rem, 2.6vw, 2.18rem);
       line-height: 1.2;
     }
 
     > .subtitle {
       margin: 0;
       color: rgba($secondary-text, 0.72);
-      font-size: 0.98rem;
-      max-width: 56ch;
-    }
-
-    > .status-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-
-      > span {
-        border-radius: 999px;
-        border: 1px solid rgba($secondary, 0.16);
-        background: rgba($secondary, 0.05);
-        color: rgba($secondary-text, 0.76);
-        padding: 0.3rem 0.55rem;
-        font-size: 0.78rem;
-      }
+      font-size: 0.96rem;
+      max-width: 58ch;
     }
   }
 
-  .first-visit-card {
+  .progress-panel {
     border-radius: borders.$rounded-md;
-    border: 1px solid rgba($good, 0.3);
-    background: linear-gradient(140deg, rgba($good, 0.12), rgba($good, 0.04));
-    padding: 0.75rem;
+    border: 1px solid rgba($secondary, 0.14);
+    background: rgba($accent, 0.9);
+    padding: 0.72rem 0.82rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.42rem;
 
-    > h2 {
+    > .progress-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.55rem;
+    }
+
+    .progress-label,
+    .progress-value {
       margin: 0;
-      color: rgba($secondary-text, 0.94);
-      font-size: 1rem;
+      font-size: 0.82rem;
+      color: rgba($secondary-text, 0.72);
+      font-weight: 600;
     }
 
-    > p {
-      margin: 0.35rem 0 0;
-      color: rgba($secondary-text, 0.76);
-      font-size: 0.92rem;
-      line-height: 1.45;
-    }
-  }
+    > .progress-track {
+      width: 100%;
+      height: 0.52rem;
+      border-radius: borders.$rounded;
+      background: rgba($secondary, 0.12);
+      overflow: hidden;
 
-  .feedback {
-    margin: 0;
-    border-radius: 0.85rem;
-    padding: 0.55rem 0.7rem;
-    font-size: 0.9rem;
-
-    &.is-neutral {
-      border: 1px solid rgba($secondary, 0.18);
-      background: rgba($secondary, 0.06);
-      color: rgba($secondary-text, 0.74);
-    }
-
-    &.is-info {
-      border: 1px solid rgba($good, 0.22);
-      background: rgba($good, 0.1);
-      color: rgba($secondary-text, 0.84);
-    }
-
-    &.is-error {
-      border: 1px solid rgba($bad, 0.26);
-      background: rgba($bad, 0.12);
-      color: rgba($bad, 0.96);
+      > .progress-fill {
+        display: block;
+        height: 100%;
+        width: 0;
+        border-radius: inherit;
+        background: linear-gradient(90deg, rgba($secondary, 0.9), rgba($secondary, 0.68));
+        transition: width 0.22s ease;
+      }
     }
   }
 
@@ -1377,124 +1473,324 @@ watch(
     padding: 0;
     list-style: none;
     display: grid;
-    gap: 0.55rem;
+    gap: 0.58rem;
 
     > .checklist-item {
       display: grid;
       grid-template-columns: auto 1fr;
-      gap: 0.6rem;
+      gap: 0.7rem;
       align-items: flex-start;
       border-radius: 0.95rem;
-      border: 1px solid rgba($secondary, 0.12);
-      background: rgba($accent, 0.86);
-      padding: 0.62rem 0.7rem;
+      border: 1px solid rgba($secondary, 0.14);
+      background: rgba($accent, 0.9);
+      padding: 0.72rem 0.75rem;
 
-      > .bullet {
-        width: 0.86rem;
-        height: 0.86rem;
-        border-radius: 999px;
-        margin-top: 0.2rem;
-        border: 2px solid rgba($secondary, 0.2);
-        background: transparent;
+      > .step-index {
+        min-width: 1.55rem;
+        height: 1.55rem;
+        border-radius: borders.$rounded;
+        border: 1px solid rgba($secondary, 0.22);
+        background: rgba($secondary, 0.06);
+        color: rgba($secondary-text, 0.75);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.77rem;
+        font-weight: 700;
       }
 
       > .content {
-        > h3 {
-          margin: 0;
-          color: rgba($secondary-text, 0.92);
-          font-size: 0.96rem;
+        > .title-row {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: space-between;
+          align-items: center;
+          gap: 0.5rem;
+
+          > h2 {
+            margin: 0;
+            font-size: 0.97rem;
+            color: rgba($secondary-text, 0.92);
+            line-height: 1.25;
+          }
+
+          > .state-chip {
+            border-radius: borders.$rounded;
+            border: 1px solid rgba($secondary, 0.2);
+            background: rgba($secondary, 0.05);
+            color: rgba($secondary-text, 0.72);
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            padding: 0.2rem 0.52rem;
+            white-space: nowrap;
+          }
         }
 
         > p {
-          margin: 0.2rem 0 0;
-          color: rgba($secondary-text, 0.72);
-          font-size: 0.88rem;
-          line-height: 1.4;
+          margin: 0.32rem 0 0;
+          color: rgba($secondary-text, 0.7);
+          font-size: 0.89rem;
+          line-height: 1.42;
         }
       }
 
       &.is-done {
-        border-color: rgba($good, 0.32);
-        background: rgba($good, 0.08);
+        border-color: rgba($secondary, 0.26);
+        background: linear-gradient(140deg, rgba($secondary, 0.08), rgba($accent, 0.92));
 
-        > .bullet {
-          border-color: rgba($good, 0.9);
-          background: rgba($good, 0.85);
+        > .step-index {
+          border-color: rgba($secondary, 0.58);
+          background: rgba($secondary, 0.88);
+          color: rgba($accent, 1);
+        }
+
+        .state-chip {
+          border-color: rgba($secondary, 0.58);
+          background: rgba($secondary, 0.9);
+          color: rgba($accent, 1);
         }
       }
 
       &.is-active {
-        border-color: rgba($secondary, 0.26);
+        border-color: rgba($secondary, 0.3);
         background: rgba($secondary, 0.06);
 
-        > .bullet {
-          border-color: rgba($secondary, 0.72);
-          background: rgba($secondary, 0.16);
+        > .step-index {
+          border-color: rgba($secondary, 0.58);
+          background: rgba($secondary, 0.14);
+          color: rgba($secondary, 0.94);
+        }
+
+        .state-chip {
+          border-color: rgba($secondary, 0.3);
+          background: rgba($secondary, 0.14);
+          color: rgba($secondary, 0.9);
         }
       }
+
+      &.is-upcoming {
+        opacity: 0.78;
+
+        > .step-index {
+          border-style: dashed;
+        }
+      }
+    }
+  }
+
+  .next-step-card {
+    border-radius: 1rem;
+    border: 1px solid rgba($secondary, 0.16);
+    background: rgba($accent, 0.92);
+    padding: 0.88rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+
+    > .next-step-eyebrow {
+      margin: 0;
+      font-size: 0.74rem;
+      font-weight: 700;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+      color: rgba($secondary, 0.68);
+    }
+
+    > h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      color: rgba($secondary-text, 0.93);
+      line-height: 1.25;
+    }
+
+    > .next-step-detail {
+      margin: 0;
+      color: rgba($secondary-text, 0.72);
+      font-size: 0.92rem;
+      line-height: 1.46;
+    }
+
+    > .sync-note {
+      margin: 0;
+      color: rgba($secondary-text, 0.7);
+      font-size: 0.82rem;
     }
   }
 
   .actions-panel {
     display: flex;
-    flex-direction: column;
-    gap: 0.55rem;
-
-    > .actions-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.45rem;
-    }
+    flex-wrap: wrap;
+    gap: 0.5rem;
   }
 
-  .action-btn,
-  .retry-btn {
-    border: 0;
-    border-radius: 0.65rem;
-    padding: 0.58rem 0.85rem;
+  .action-btn {
+    border: 1px solid transparent;
+    border-radius: 0.72rem;
+    padding: 0.6rem 0.88rem;
     font-size: 0.88rem;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
-    background: rgba($secondary, 0.9);
+    background: rgba($secondary, 0.92);
     color: rgba($accent, 1);
-    transition: transform 0.16s ease, opacity 0.16s ease;
+    transition: transform 0.16s ease, opacity 0.16s ease, background-color 0.16s ease;
+    min-height: 2.35rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 
     &:hover {
       transform: translateY(-1px);
     }
 
     &:disabled {
-      opacity: 0.56;
+      opacity: 0.58;
       cursor: not-allowed;
       transform: none;
     }
 
     &.ghost {
-      background: rgba($secondary, 0.08);
-      color: rgba($secondary-text, 0.88);
-      border: 1px solid rgba($secondary, 0.2);
+      background: rgba($secondary, 0.06);
+      color: rgba($secondary-text, 0.87);
+      border-color: rgba($secondary, 0.22);
     }
   }
 
-  .retry-btn {
-    align-self: flex-start;
-    background: rgba($bad, 0.85);
-    color: rgba($accent, 1);
+  .dev-console {
+    border-radius: 1rem;
+    border: 1px solid rgba($secondary, 0.2);
+    background: rgba($secondary, 0.95);
+    color: rgba($accent, 0.92);
+    padding: 0.76rem 0.82rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.58rem;
+
+    > .dev-console-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.7rem;
+
+      > h2 {
+        margin: 0;
+        font-size: 0.87rem;
+        letter-spacing: 0.03em;
+      }
+    }
+
+    .dev-console-clear {
+      border: 1px solid rgba($accent, 0.3);
+      border-radius: 0.55rem;
+      padding: 0.34rem 0.62rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: rgba($accent, 0.96);
+      background: rgba($accent, 0.08);
+      transition: opacity 0.16s ease;
+      cursor: pointer;
+
+      &:disabled {
+        opacity: 0.44;
+        cursor: not-allowed;
+      }
+    }
+
+    .dev-console-empty {
+      margin: 0;
+      color: rgba($accent, 0.72);
+      font-size: 0.82rem;
+    }
+
+    .dev-console-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 0.4rem;
+      max-height: 12.8rem;
+      overflow: auto;
+    }
+
+    .dev-console-item {
+      margin: 0;
+      display: grid;
+      grid-template-columns: auto auto 1fr;
+      gap: 0.55rem;
+      align-items: start;
+      padding: 0.44rem 0.5rem;
+      border-radius: 0.62rem;
+      background: rgba($accent, 0.06);
+      border: 1px solid rgba($accent, 0.14);
+      font-size: 0.78rem;
+      line-height: 1.35;
+
+      > .time {
+        color: rgba($accent, 0.72);
+        font-variant-numeric: tabular-nums;
+      }
+
+      > .level {
+        color: rgba($accent, 0.78);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 700;
+      }
+
+      > .message {
+        color: rgba($accent, 0.9);
+      }
+
+      &.is-error {
+        border-color: rgba($accent, 0.3);
+        background: rgba($accent, 0.11);
+      }
+    }
   }
 
-  @media (max-width: 640px) {
+  @media (max-width: 760px) {
     > .checklist-shell {
-      padding: 0.85rem;
+      padding: 0.92rem;
+      gap: 0.8rem;
     }
 
-    .action-btn,
-    .retry-btn {
-      width: 100%;
-      justify-content: center;
+    .checklist-items > .checklist-item {
+      padding: 0.66rem;
+      gap: 0.58rem;
     }
 
-    .actions-panel > .actions-row {
+    .actions-panel {
       flex-direction: column;
+    }
+
+    .action-btn {
+      width: 100%;
+    }
+
+    .dev-console-item {
+      grid-template-columns: 1fr;
+      gap: 0.25rem;
+    }
+  }
+
+  @media (max-width: 520px) {
+    padding-top: clamp(5rem, 12vw, 5.8rem);
+
+    .checklist-header > h1 {
+      font-size: clamp(1.3rem, 6vw, 1.58rem);
+    }
+
+    .progress-panel .progress-value {
+      font-size: 0.76rem;
+    }
+
+    .checklist-items > .checklist-item > .content > .title-row {
+      align-items: flex-start;
+    }
+
+    .checklist-items > .checklist-item > .content > .title-row > .state-chip {
+      font-size: 0.68rem;
     }
   }
 }
