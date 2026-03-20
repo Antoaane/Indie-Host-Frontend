@@ -13,7 +13,11 @@
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  background-color: $background;
+  background-color: $secondary;
+
+  @include min-width(lg) {
+    background-color: $background;
+  }
 
   &::before {
     content: '';
@@ -22,14 +26,18 @@
     z-index: 0;
     pointer-events: none;
 
-    background-image: var(--listing-view-cover-image);
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: cover;
+    background-color: $secondary;
 
-    filter: blur(100px) saturate(1.05);
-    transform: scale(1.06);
-    opacity: 1;
+    @include min-width(lg) {
+      background-image: var(--listing-view-cover-image);
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+
+      filter: blur(100px) saturate(1.05);
+      transform: scale(1.06);
+      opacity: 1;
+    }
   }
 
   &::after {
@@ -242,7 +250,6 @@
   }
 
   >.footer {
-    background: $background;
     padding-top: var(--layout-gap-sm);
     padding-bottom: var(--layout-gap);
 
@@ -253,6 +260,12 @@
 
     padding-left: var(--layout-gap);
     padding-right: var(--layout-gap);
+
+    background-color: $secondary;
+
+    @include min-width(lg) {
+      background-color: $background;
+    }
 
     >.shape-container {
       width: borders.$rounded-xl;

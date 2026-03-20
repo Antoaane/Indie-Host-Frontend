@@ -32,7 +32,11 @@ body {
   overflow-x: hidden;
   min-height: 100dvh;
 
-  background-color: $background;
+  background-color: $secondary;
+
+  @include min-width(lg) {
+    background-color: $background;
+  }
 
   > main {
     z-index: 1;
