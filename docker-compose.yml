@@ -140,7 +140,7 @@ services:
             nginx -s reload || true
           done
         ) &
-        exec nginx -g "daemon off;"
+        exec /docker-entrypoint.sh nginx -g "daemon off;"
     volumes:
       - ./nginx/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
       - ./certbot/conf:/etc/letsencrypt
