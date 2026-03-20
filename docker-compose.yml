@@ -130,6 +130,17 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        (
+          while :; do
+            sleep 12h
+            nginx -s reload || true
+          done
+        ) &
+        exec nginx -g "daemon off;"
     volumes:
       - ./nginx/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
       - ./certbot/conf:/etc/letsencrypt
@@ -142,18 +153,24 @@ services:
       start_period: 10s
 
   certbot:
-    image: certbot/certbot:latest
+    image: certbot/dns-cloudflare:latest
     restart: unless-stopped
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
+      - ./secrets/cloudflare.ini:/run/secrets/cloudflare.ini:ro
     entrypoint:
       - /bin/sh
       - -ec
       - |
         trap exit TERM
         while :; do
-          certbot renew --webroot -w /var/www/certbot --quiet || true
+          certbot renew \
+            --non-interactive \
+            --quiet \
+            --dns-cloudflare \
+            --dns-cloudflare-credentials /run/secrets/cloudflare.ini \
+            --dns-cloudflare-propagation-seconds ${CLOUDFLARE_DNS_PROPAGATION_SECONDS:-30} || true
           sleep 12h
         done
 

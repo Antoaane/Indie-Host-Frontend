@@ -68,6 +68,7 @@ Cette commande crée, si absents:
 - `/secrets/stripe_secret_key.txt`
 - `/secrets/clerk_secret_key.txt`
 - `/secrets/imagekit_api_key.txt`
+- `/secrets/cloudflare.ini` (template wildcard HTTPS Cloudflare)
 
 ## Mode Standard (stack stable)
 
@@ -158,6 +159,47 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build --w
 - `GANDI_API_TOKEN`
 
 Templates disponibles dans `secret.example/`.
+
+## HTTPS wildcard Cloudflare (`*.indiehost.fr`)
+
+La stack standard est préparée pour certbot DNS Cloudflare.
+
+### Manuel (une seule fois)
+
+1. Éditer `secrets/cloudflare.ini` avec un token Cloudflare DNS Zone:
+
+```ini
+dns_cloudflare_api_token = <token_cloudflare_dns>
+```
+
+2. Vérifier les DNS Cloudflare:
+- `A indiehost.fr -> IP serveur`
+- `A *.indiehost.fr -> IP serveur`
+
+3. Générer le certificat wildcard initial:
+
+```bash
+docker compose run --rm --entrypoint certbot certbot certonly \
+  --dns-cloudflare \
+  --dns-cloudflare-credentials /run/secrets/cloudflare.ini \
+  --dns-cloudflare-propagation-seconds ${CLOUDFLARE_DNS_PROPAGATION_SECONDS:-30} \
+  -d indiehost.fr \
+  -d "*.indiehost.fr" \
+  --email "${SSL_EMAIL}" \
+  --agree-tos --no-eff-email
+```
+
+4. Relancer la stack:
+
+```bash
+docker compose up -d --build --wait
+```
+
+### Renouvellement automatique
+
+- Service `certbot` tourne en boucle (`renew` toutes les 12h).
+- Nginx recharge sa conf/cert toutes les 12h.
+- Le certificat doit donc se renouveler automatiquement tant que `secrets/cloudflare.ini` reste présent et valide.
 
 ## Commandes utiles
 

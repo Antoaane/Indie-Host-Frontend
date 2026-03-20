@@ -63,6 +63,7 @@ Copy-IfMissing -Source 'secret.example/database_url.example.txt' -Destination 's
 Copy-IfMissing -Source 'secret.example/stripe_secret_key.example.txt' -Destination 'secrets/stripe_secret_key.txt'
 Copy-IfMissing -Source 'secret.example/clerk_secret_key.example.txt' -Destination 'secrets/clerk_secret_key.txt'
 Copy-IfMissing -Source 'secret.example/imagekit_api_key.example.txt' -Destination 'secrets/imagekit_api_key.txt'
+Copy-IfMissing -Source 'secret.example/cloudflare.ini.example' -Destination 'secrets/cloudflare.ini'
 
 Write-Host ''
 Write-Host '[init] Next step: edit .env + secrets/*.txt with real values, then run ./start-indiehost.ps1'

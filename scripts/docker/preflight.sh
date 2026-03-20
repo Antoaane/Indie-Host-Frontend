@@ -103,6 +103,10 @@ else
   require_secret_exists "imagekit_api_key.txt"
 fi
 
+if [ ! -f "/secrets/cloudflare.ini" ]; then
+  log_warn "Secret optionnel absent: /secrets/cloudflare.ini (necessaire pour HTTPS wildcard Cloudflare auto)."
+fi
+
 if [ "$errors" -ne 0 ]; then
   log_error "Configuration invalide. Corrige .env et secrets/*.txt, puis relance docker compose."
   exit 1
