@@ -210,7 +210,10 @@ onMounted(async () => {
                   type="button"
                   @click="handleCreateSite"
                 >
-                  <span v-html="content.secondaryCta.label" />
+                  <span
+                    class="hero-secondary-cta-label"
+                    v-html="content.secondaryCta.label"
+                  />
                 </button>
               </div>
             </div>

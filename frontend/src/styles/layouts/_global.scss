@@ -147,7 +147,7 @@ main#landing-page {
     padding-bottom: calc(var(--layout-gap) * 4);
 
     @include min-width(lg) {
-      min-height: 100vh;
+      min-height: auto;
       margin-bottom: 0;
       padding-top: calc(var(--layout-gap) + 70px);
       padding-bottom: var(--layout-gap-4xl);

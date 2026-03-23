@@ -30,9 +30,27 @@
     // border-radius: borders.$rounded-xl;
     background-color: $accent;
 
-    &>svg {
-      width: auto;
-      height: 4rem;
+    >.create-listing-logo-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      margin-top: var(--layout-gap-sm);
+      margin-bottom: calc(var(--layout-gap-xs) / 2);
+
+      >svg {
+        width: auto;
+        height: 2.1rem;
+      }
+
+      @include min-width(lg) {
+        margin-top: var(--layout-gap);
+        margin-bottom: var(--layout-gap-xs);
+
+        >svg {
+          height: 2.35rem;
+        }
+      }
     }
 
     >.layout {
