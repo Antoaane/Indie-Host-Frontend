@@ -110,10 +110,10 @@ async function startCheckout() {
 
 <template>
   <section class="domain-panel">
-    <header class="domain-panel__header">
+    <div class="domain-panel__header">
       <h1>DomainPanel</h1>
       <p>Vérifiez la disponibilité d'un nom de domaine puis lancez le paiement via Grandi.net.</p>
-    </header>
+    </div>
 
     <div class="domain-panel__form">
       <label for="domain-input">Nom de domaine</label>

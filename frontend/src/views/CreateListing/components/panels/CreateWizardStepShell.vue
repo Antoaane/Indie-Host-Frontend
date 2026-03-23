@@ -47,6 +47,7 @@ const props = withDefaults(defineProps<{
 .create-wizard-step-shell {
   @extend %panel;
 
+  padding-bottom: 0 !important;
   width: 100%;
   height: 100%;
   flex: 1 1 auto;

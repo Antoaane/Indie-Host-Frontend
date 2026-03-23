@@ -9,25 +9,31 @@
 
   background: $background;
 
-  @include min-width(lg) {
-    padding-top: $nav-height;
-    padding-bottom: var(--layout-gap);
-    height: calc(100vh - $nav-height - var(--layout-gap));
+  // @include min-width(lg) {
+  //   padding-top: $nav-height;
+  //   padding-bottom: var(--layout-gap);
+  //   height: calc(100vh - $nav-height - var(--layout-gap));
 
-    padding-left: var(--layout-gap);
-    padding-right: var(--layout-gap);
-  }
+  //   padding-left: var(--layout-gap);
+  //   padding-right: var(--layout-gap);
+  // }
 
   .container {
     max-width: none !important;
     width: 100%;
     height: 100%;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
 
-    border-radius: borders.$rounded-xl;
+    // border-radius: borders.$rounded-xl;
     background-color: $accent;
+
+    &>svg {
+      width: auto;
+      height: 4rem;
+    }
 
     >.layout {
       position: relative;

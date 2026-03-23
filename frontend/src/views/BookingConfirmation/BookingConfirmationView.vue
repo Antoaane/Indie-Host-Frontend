@@ -358,6 +358,93 @@ const totalLabel = computed(() => {
   return formatCurrency(model.stay.totalAmount, model.stay.currency)
 })
 
+const arrivalLabel = computed(() => {
+  const model = confirmation.value
+  if (!model) return ''
+  return formatDateLabel(model.stay.startISO)
+})
+
+const departureLabel = computed(() => {
+  const model = confirmation.value
+  if (!model) return ''
+  return formatDateLabel(model.stay.endISO)
+})
+
+const nightsLabel = computed(() => {
+  const model = confirmation.value
+  if (!model) return ''
+  return `${model.stay.nights} nuit${model.stay.nights > 1 ? 's' : ''}`
+})
+
+function buildCalendarTitle(model: ConfirmationViewModel): string {
+  return `Séjour IndieHost - ${model.host.name}`
+}
+
+function buildCalendarDescription(model: ConfirmationViewModel): string {
+  const guideUrl = resolveAbsoluteUrl(model.guide.url)
+  const lines = [
+    `Réservation du ${formatDateLabel(model.stay.startISO)} au ${formatDateLabel(model.stay.endISO)} (${model.stay.nights} nuit${model.stay.nights > 1 ? 's' : ''}).`,
+    `Montant total: ${formatCurrency(model.stay.totalAmount, model.stay.currency)}.`,
+    guideUrl ? `Guide d'accueil: ${guideUrl}` : null,
+  ]
+
+  return lines.filter((line): line is string => Boolean(line && line.trim())).join('\n')
+}
+
+function buildGoogleCalendarUrl(model: ConfirmationViewModel): string {
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: buildCalendarTitle(model),
+    dates: `${toIcsDate(model.stay.startISO)}/${toIcsDate(model.stay.endISO)}`,
+    details: buildCalendarDescription(model),
+  })
+  return `https://calendar.google.com/calendar/render?${params.toString()}`
+}
+
+function buildOutlookCalendarUrl(model: ConfirmationViewModel): string {
+  const params = new URLSearchParams({
+    path: '/calendar/action/compose',
+    rru: 'addevent',
+    startdt: model.stay.startISO,
+    enddt: model.stay.endISO,
+    allday: 'true',
+    subject: buildCalendarTitle(model),
+    body: buildCalendarDescription(model),
+  })
+  return `https://outlook.live.com/calendar/0/deeplink/compose?${params.toString()}`
+}
+
+function buildYahooCalendarUrl(model: ConfirmationViewModel): string {
+  const params = new URLSearchParams({
+    v: '60',
+    view: 'd',
+    type: '20',
+    title: buildCalendarTitle(model),
+    st: toIcsDate(model.stay.startISO),
+    et: toIcsDate(model.stay.endISO),
+    desc: buildCalendarDescription(model),
+  })
+  return `https://calendar.yahoo.com/?${params.toString()}`
+}
+
+const googleCalendarUrl = computed(() => {
+  const model = confirmation.value
+  if (!model) return ''
+  return buildGoogleCalendarUrl(model)
+})
+
+const outlookCalendarUrl = computed(() => {
+  const model = confirmation.value
+  if (!model) return ''
+  return buildOutlookCalendarUrl(model)
+})
+
+const yahooCalendarUrl = computed(() => {
+  const model = confirmation.value
+  if (!model) return ''
+  return buildYahooCalendarUrl(model)
+})
+
 const hostContactLines = computed(() => {
   const model = confirmation.value
   if (!model) return [] as string[]
@@ -395,10 +482,13 @@ const guideActivationLabel = computed(() => {
 <template>
   <main class="booking-confirmation-page">
     <section class="confirmation-card">
-      <header class="confirmation-header">
+      <div class="confirmation-heading">
         <p class="eyebrow">Paiement confirmé</p>
         <h1>Votre réservation est validée</h1>
-      </header>
+        <p class="subtitle">
+          Votre séjour est enregistré. Retrouvez le détail et ajoutez-le à votre calendrier.
+        </p>
+      </div>
 
       <p
         v-if="isLoading"
@@ -414,33 +504,69 @@ const guideActivationLabel = computed(() => {
       </p>
 
       <template v-else-if="confirmation">
-        <section class="section-block">
-          <h2>Séjour</h2>
-          <p>{{ stayLabel }}</p>
-          <p class="amount">Montant total: {{ totalLabel }}</p>
+        <section class="panel stay-panel">
+          <div class="panel-head">
+            <h2>Séjour</h2>
+            <p class="stay-range">{{ stayLabel }}</p>
+          </div>
+
+          <dl class="stat-grid">
+            <div class="stat-item">
+              <dt>Arrivée</dt>
+              <dd>{{ arrivalLabel }}</dd>
+            </div>
+            <div class="stat-item">
+              <dt>Départ</dt>
+              <dd>{{ departureLabel }}</dd>
+            </div>
+            <div class="stat-item">
+              <dt>Durée</dt>
+              <dd>{{ nightsLabel }}</dd>
+            </div>
+            <div class="stat-item is-highlight">
+              <dt>Montant total</dt>
+              <dd>{{ totalLabel }}</dd>
+            </div>
+          </dl>
         </section>
 
-        <section class="section-block">
-          <h2>Contact hôte</h2>
-          <p>{{ confirmation.host.name }}</p>
+        <section class="panel">
+          <div class="panel-head">
+            <h2>Contact hôte</h2>
+          </div>
+          <p class="host-name">{{ confirmation.host.name }}</p>
           <p
             v-if="confirmation.host.status"
             class="muted"
           >
             {{ confirmation.host.status }}
           </p>
+          <ul
+            v-if="hostContactLines.length"
+            class="contact-list"
+          >
+            <li
+              v-for="line in hostContactLines"
+              :key="line"
+            >
+              {{ line }}
+            </li>
+          </ul>
           <p
-            v-for="line in hostContactLines"
-            :key="line"
+            v-else
             class="muted"
           >
-            {{ line }}
+            Les coordonnées de contact seront partagées prochainement.
           </p>
         </section>
 
-        <section class="actions">
+        <section class="panel actions-panel">
+          <div class="panel-head">
+            <h2>Actions rapides</h2>
+          </div>
+
           <a
-            class="btn"
+            class="btn primary"
             :class="{ disabled: !isGuideActive }"
             :href="guideAbsoluteUrl"
             target="_blank"
@@ -457,14 +583,56 @@ const guideActivationLabel = computed(() => {
             Le guide sera activé 48h avant l'arrivée: {{ guideActivationLabel }}.
           </p>
 
-          <a
-            v-if="stayIcalUrl"
-            class="btn secondary"
-            :href="stayIcalUrl"
-            download="reservation.ics"
-          >
-            Exporter dans mon calendrier (iCal)
-          </a>
+          <div class="calendar-actions">
+            <p class="calendar-title">Ajouter la réservation au calendrier</p>
+            <div class="calendar-links">
+              <a
+                v-if="googleCalendarUrl"
+                class="btn calendar secondary"
+                :href="googleCalendarUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Google Agenda
+              </a>
+              <a
+                v-if="outlookCalendarUrl"
+                class="btn calendar secondary"
+                :href="outlookCalendarUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Outlook
+              </a>
+              <a
+                v-if="yahooCalendarUrl"
+                class="btn calendar secondary"
+                :href="yahooCalendarUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Yahoo Calendar
+              </a>
+              <a
+                v-if="stayIcalUrl"
+                class="btn calendar secondary"
+                :href="stayIcalUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Apple Calendar
+              </a>
+            </div>
+
+            <a
+              v-if="stayIcalUrl"
+              class="btn tertiary"
+              :href="stayIcalUrl"
+              download="reservation.ics"
+            >
+              Télécharger le fichier iCal (.ics)
+            </a>
+          </div>
         </section>
       </template>
     </section>
@@ -472,98 +640,226 @@ const guideActivationLabel = computed(() => {
 </template>
 
 <style scoped lang="scss">
+@use '@/styles/variables/globals' as *;
+
 .booking-confirmation-page {
   min-height: 100dvh;
   display: flex;
   justify-content: center;
-  padding: 56px 20px;
-  background: #f6f7f9;
+  align-items: flex-start;
+  padding: 36px 16px;
+  background:
+    radial-gradient(120% 100% at 50% -10%, rgba($accent, 1) 0%, rgba($secondary-surface-1, 1) 72%);
 }
 
 .confirmation-card {
-  width: min(640px, 100%);
-  background: #fff;
-  border: 1px solid #e2e5ea;
-  border-radius: 18px;
-  padding: 28px;
+  width: min(560px, 100%);
+  background: rgba($accent, 1);
+  border: 1px solid rgba($secondary, 0.14);
+  border-radius: 16px;
+  padding: 20px;
   display: grid;
-  gap: 20px;
+  gap: 14px;
+  box-shadow: 0 10px 24px rgba($secondary, 0.08);
 }
 
-.confirmation-header {
+.confirmation-heading {
   display: grid;
-  gap: 8px;
+  gap: 4px;
 
   > .eyebrow {
     margin: 0;
-    color: #4f6b4f;
+    color: rgba($secondary-text, 0.8);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    font-size: 12px;
+    font-size: 11px;
   }
 
   > h1 {
     margin: 0;
-    color: #101316;
-    font-size: 30px;
+    color: rgba($secondary-text, 0.96);
+    font-size: 32px;
     line-height: 1.15;
+  }
+
+  > .subtitle {
+    margin: 2px 0 0;
+    color: rgba($secondary-text, 0.72);
+    font-size: 14px;
+    line-height: 1.35;
   }
 }
 
 .state {
   margin: 0;
-  color: #3f4852;
+  color: rgba($secondary-text, 0.78);
+  font-size: 14px;
 
   &.is-error {
-    color: #a11e2f;
+    color: rgba($bad, 0.92);
   }
 }
 
-.section-block {
-  display: grid;
-  gap: 8px;
-
-  > h2,
-  > p {
-    margin: 0;
-  }
-
-  > h2 {
-    font-size: 16px;
-    color: #2a3138;
-  }
-
-  > .amount {
-    font-weight: 700;
-    color: #11161b;
-  }
-
-  > .muted {
-    color: #5c6670;
-  }
-}
-
-.actions {
+.panel {
+  border: 1px solid rgba($secondary, 0.12);
+  border-radius: 12px;
+  background: rgba($accent, 0.96);
+  padding: 12px;
   display: grid;
   gap: 10px;
+}
+
+.panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+
+  > h2 {
+    margin: 0;
+    font-size: 16px;
+    color: rgba($secondary-text, 0.9);
+    line-height: 1.2;
+  }
+}
+
+.stay-range {
+  margin: 0;
+  color: rgba($secondary-text, 0.68);
+  font-size: 13px;
+  text-align: right;
+}
+
+.stat-grid {
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.stat-item {
+  margin: 0;
+  border: 1px solid rgba($secondary, 0.14);
+  border-radius: 10px;
+  padding: 10px;
+  background: rgba($accent, 1);
+  display: grid;
+  gap: 4px;
+
+  > dt {
+    margin: 0;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: rgba($secondary-text, 0.58);
+  }
+
+  > dd {
+    margin: 0;
+    font-size: 15px;
+    color: rgba($secondary-text, 0.96);
+    font-weight: 600;
+  }
+
+  &.is-highlight {
+    border-color: rgba($good, 0.34);
+    background: rgba($good, 0.1);
+  }
+}
+
+.host-name {
+  margin: 0;
+  color: rgba($secondary-text, 0.96);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.muted {
+  margin: 0;
+  color: rgba($secondary-text, 0.7);
+  font-size: 14px;
+}
+
+.contact-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+
+  > li {
+    margin: 0;
+    color: rgba($secondary-text, 0.88);
+    font-size: 14px;
+  }
+}
+
+.actions-panel {
+  gap: 8px;
+}
+
+.calendar-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.calendar-title {
+  margin: 2px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba($secondary-text, 0.78);
+}
+
+.calendar-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid #1f2933;
-  color: #1f2933;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  color: rgba($secondary-text, 0.9);
   text-decoration: none;
   font-weight: 600;
+  font-size: 14px;
+  line-height: 1.2;
+
+  box-sizing: border-box;
+
+  &.primary {
+    color: rgba($accent, 1);
+    background: rgba($secondary, 0.92);
+    border-color: rgba($secondary, 0.92);
+  }
 
   &.secondary {
-    border-color: #d3d7dc;
-    color: #1f2933;
-    background: #f8fafc;
+    border-color: rgba($secondary, 0.22);
+    color: rgba($secondary-text, 0.9);
+    background: rgba($accent, 1);
+  }
+
+  &.tertiary {
+    border-color: rgba($secondary, 0.14);
+    color: rgba($secondary-text, 0.82);
+    background: rgba($secondary-surface-0, 0.5);
+  }
+
+  &.calendar {
+    width: auto;
+    min-height: 34px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
   }
 
   &.disabled {
@@ -574,16 +870,29 @@ const guideActivationLabel = computed(() => {
 
 @media (max-width: 640px) {
   .booking-confirmation-page {
-    padding: 24px 12px;
+    padding: 18px 10px;
   }
 
   .confirmation-card {
-    padding: 20px;
+    padding: 14px;
     border-radius: 14px;
   }
 
-  .confirmation-header > h1 {
-    font-size: 24px;
+  .confirmation-heading > h1 {
+    font-size: 26px;
+  }
+
+  .stat-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stay-range {
+    text-align: left;
+  }
+
+  .panel-head {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 </style>

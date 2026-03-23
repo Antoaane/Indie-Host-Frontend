@@ -24,9 +24,9 @@ const slides = computed(() => props.slides ?? props.content.slides ?? [])
     <section id="habits-section">
       <div class="overflow">
         <div class="wrapper">
-          <header class="section-heading">
+          <div class="section-heading">
             <h2 v-html="props.content.title" />
-          </header>
+          </div>
           <Carousel
             v-if="vp.lg.value"
             :slides="slides"

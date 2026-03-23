@@ -1209,13 +1209,13 @@ watch(
 <template>
   <main class="pricing-checklist-view">
     <section class="checklist-shell">
-      <header class="checklist-header">
+      <div class="checklist-header">
         <p class="eyebrow">Activation hôte</p>
         <h1>Finalisez votre espace avant les premières réservations</h1>
         <p class="subtitle">
           Suivez les étapes dans l’ordre. Nous mettons en avant uniquement la prochaine action utile.
         </p>
-      </header>
+      </div>
 
       <section class="progress-panel">
         <div class="progress-head">
