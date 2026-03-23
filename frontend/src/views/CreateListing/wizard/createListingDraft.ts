@@ -1,6 +1,7 @@
 // File: src/views/CreateListing/wizard/createListingDraft.ts
 
 import type { RawBookings, RawCore, RawListingBundle, RawMedias } from '@/domain/listings/types'
+import { buildListingSlug } from '@/domain/listings/slug'
 import { normalizeListingStatus } from '@/domain/listings/status'
 
 export const CREATE_LISTING_STORAGE_PREFIX = 'indiehost:create-listing:draft:v1'
@@ -106,11 +107,19 @@ export function normalizeBundleForCreate(bundle: RawListingBundle): RawListingBu
   const sourceCore = (bundle.core ?? {}) as Partial<RawCore>
   const sourceBookings = (bundle.bookings ?? {}) as Partial<RawBookings>
   const sourceMedias = (bundle.medias ?? {}) as Partial<RawMedias>
+  const normalizedTitle = cleanText(sourceCore.title) || 'Nouvelle annonce'
+  const normalizedSlug = buildListingSlug({
+    existingSlug: sourceCore.slug,
+    title: normalizedTitle,
+    listingId: sourceCore.id,
+  })
 
   const normalizedCore: Partial<RawCore> = {
     ...sourceCore,
+    id: undefined,
+    slug: normalizedSlug,
     status: normalizeListingStatus(String(sourceCore.status ?? 'paused')) || 'paused',
-    title: cleanText(sourceCore.title) || 'Nouvelle annonce',
+    title: normalizedTitle,
     type: cleanText(sourceCore.type),
     precise_address: cleanText(sourceCore.precise_address),
     city: cleanText(sourceCore.city),

@@ -2,6 +2,7 @@ import fp from 'fastify-plugin';
 
 import { asObject } from '../../lib/json.js';
 import {
+  createConnectDashboardLinkSchema,
   activateSubscriptionSchema,
   confirmCheckoutSessionSchema,
   createConnectOnboardingLinkSchema,
@@ -40,6 +41,20 @@ export const paymentsPlugin = fp(async (fastify) => {
     }
 
     reply.code(201).send(result);
+  });
+
+  fastify.post('/payments/stripe/connect/dashboard-link', {
+    preHandler: fastify.authenticate,
+  }, async (request, reply) => {
+    const payload = createConnectDashboardLinkSchema.parse(asObject(request.body));
+    const result = await service.createConnectDashboardLink(payload, request.auth);
+
+    if (!result) {
+      reply.code(401).send({ message: 'Authentication required.' });
+      return;
+    }
+
+    reply.send(result);
   });
 
   fastify.get('/payments/stripe/connect/me', {

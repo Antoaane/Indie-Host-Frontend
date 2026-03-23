@@ -5,10 +5,8 @@ const props = withDefaults(defineProps<{
   title: string
   hint?: string | null
   validationError?: string | null
-  fillHeight?: boolean
   fitWidth?: boolean
 }>(), {
-  fillHeight: true,
   fitWidth: false,
 })
 </script>
@@ -17,7 +15,6 @@ const props = withDefaults(defineProps<{
   <section
     class="create-wizard-step-shell"
     :class="{
-      'is-auto-height': !props.fillHeight,
       'is-fit-width': props.fitWidth,
     }"
   >
@@ -50,23 +47,18 @@ const props = withDefaults(defineProps<{
 .create-wizard-step-shell {
   @extend %panel;
 
+  padding-bottom: 0 !important;
   width: 100%;
+  height: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 
   &.is-fit-width {
     width: auto;
     max-width: 100%;
-    flex: 0 1 auto;
-  }
-
-  &:not(.is-auto-height) {
-    height: auto;
-    flex: 1 1 auto;
-    min-height: 0;
-  }
-
-  &.is-fit-width:not(.is-auto-height) {
     flex: 0 1 auto;
   }
 
@@ -77,7 +69,12 @@ const props = withDefaults(defineProps<{
 
   > .content {
     @extend %panel-body;
+    flex: 1 1 auto;
+    min-height: 0;
     min-width: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
   &.is-fit-width > .content {
@@ -85,12 +82,11 @@ const props = withDefaults(defineProps<{
     max-width: 100%;
   }
 
-  &:not(.is-auto-height) > .content {
-    flex: 1 1 auto;
-    min-height: 0;
-  }
+  > .content {
+    > * {
+      min-width: 0;
+    }
 
-  &:not(.is-auto-height) > .content {
     > [class*='create-'][class$='-panel'],
     > [class*='editor-'][class$='-panel'] {
       height: 100%;
@@ -116,30 +112,6 @@ const props = withDefaults(defineProps<{
     > [class*='editor-'][class$='-panel'] {
       width: auto;
       max-width: 100%;
-    }
-  }
-
-  &.is-auto-height > .content {
-    flex: 0 0 auto;
-    min-height: auto;
-
-    > [class*='create-'][class$='-panel'],
-    > [class*='editor-'][class$='-panel'] {
-      height: auto;
-      flex: 0 0 auto;
-      min-height: auto;
-      border: none;
-      box-shadow: none;
-      background: transparent;
-      padding: 0;
-
-      > .header {
-        display: none;
-      }
-
-      > .body {
-        padding: 0;
-      }
     }
   }
 

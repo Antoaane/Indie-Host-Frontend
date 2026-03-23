@@ -4,6 +4,7 @@ import SignInView from '@/views/SignInView.vue'
 import SignUpView from '@/views/SignUpView.vue'
 import { createRouter, createWebHistory, type RouteLocationNormalized } from 'vue-router'
 import { isManagedListingHostname } from '@/domain/listings/publicDomain'
+import { normalizeListingSlug } from '@/domain/listings/slug'
 import { resolveRuntimeUserId } from '@/router/backOfficeUser'
 const HomePage = () => {
   if (typeof window !== 'undefined' && isManagedListingHostname(window.location.hostname)) {
@@ -12,8 +13,10 @@ const HomePage = () => {
   return import('@/views/Landing/_LandingPage.vue')
 }
 const PricingView = () => import('@/views/PricingView.vue')
+const PricingChecklistCallbackView = () => import('@/views/PricingCallbacks/PricingChecklistCallbackView.vue')
 const Listing = () => import('@/views/Listing/_Listing.vue')
 const ListingGuide = () => import('@/views/ListingGuide/_ListingGuide.vue')
+const BookingConfirmationView = () => import('@/views/BookingConfirmation/BookingConfirmationView.vue')
 const EditorRoute = () => import('@/views/Editor/EditorRoute.vue')
 const CreateListingRoute = () => import('@/views/CreateListing/CreateListingRoute.vue')
 const CreateListingPublicRoute = () => import('@/views/CreateListing/CreateListingPublicRoute.vue')
@@ -21,28 +24,14 @@ const MessagingRoute = () => import('@/views/Messaging/MessagingRoute.vue')
 const ManagementRoute = () => import('@/views/Management/ManagementRoute.vue')
 const DomainsRoute = () => import('@/views/Domains/DomainsRoute.vue')
 
-type BackOfficeUserRouteName =
-  | 'editor-user'
-  | 'create-listing-user'
-  | 'management-user'
-  | 'domains-user'
-  | 'messaging-user'
-
-async function resolveLegacyBackOfficeRedirect(
-  to: RouteLocationNormalized,
-  targetName: BackOfficeUserRouteName,
-) {
+async function resolveBackOfficeAccess(to: RouteLocationNormalized) {
   const userId = await resolveRuntimeUserId({
     waitMs: 1500,
     pollIntervalMs: 75,
   })
 
   if (userId) {
-    return {
-      name: targetName,
-      params: { userId },
-      query: to.query,
-    }
+    return true
   }
 
   return {
@@ -99,10 +88,28 @@ const router = createRouter({
       meta: { navVariant: 'public' },
     },
     {
-      path: '/listing/:id?',
-      name: 'listing',
-      component: Listing,
-      meta: { hideNav: true },
+      path: '/pricing/callback',
+      name: 'pricing-callback',
+      component: PricingChecklistCallbackView,
+      meta: { navVariant: 'public' },
+    },
+    {
+      path: '/pricing/callback/auth',
+      name: 'pricing-callback-auth',
+      component: PricingChecklistCallbackView,
+      meta: { navVariant: 'public' },
+    },
+    {
+      path: '/pricing/callback/checkout',
+      name: 'pricing-callback-checkout',
+      component: PricingChecklistCallbackView,
+      meta: { navVariant: 'public' },
+    },
+    {
+      path: '/pricing/callback/connect',
+      name: 'pricing-callback-connect',
+      component: PricingChecklistCallbackView,
+      meta: { navVariant: 'public' },
     },
     {
       path: '/listing/guide/:id',
@@ -111,13 +118,19 @@ const router = createRouter({
       meta: { hideNav: true },
     },
     {
+      path: '/booking/confirmation/:reservationId',
+      name: 'booking-confirmation',
+      component: BookingConfirmationView,
+      meta: { navVariant: 'public', hideNav: true },
+    },
+    {
       path: '/donation',
       name: 'Donation',
       component: () => import('@/views/Donation/_DonationPage.vue'),
       meta: { navVariant: 'landing' },
     },
     {
-      path: '/editor/create',
+      path: '/dashboard/editor/create',
       name: 'create-listing',
       component: CreateListingPublicRoute,
       meta: { navVariant: 'public', hideNav: true },
@@ -130,62 +143,171 @@ const router = createRouter({
       meta: { navVariant: 'public', hideNav: true },
     },
     {
-      path: '/editor/:userId/create',
+      path: '/dashboard/editor/:userId/create',
       name: 'create-listing-user',
       component: CreateListingRoute,
       meta: { navVariant: 'host', hideNav: true },
     },
     {
-      path: '/editor',
+      path: '/dashboard/editor',
       name: 'editor',
       component: EditorRoute,
       meta: { navVariant: 'host' },
-      beforeEnter: (to) => resolveLegacyBackOfficeRedirect(to, 'editor-user'),
+      beforeEnter: resolveBackOfficeAccess,
     },
     {
-      path: '/editor/:userId',
+      path: '/dashboard/editor/:userId',
       name: 'editor-user',
       component: EditorRoute,
       meta: { navVariant: 'host' },
     },
     {
-      path: '/management',
+      path: '/dashboard/management',
       name: 'management',
       component: ManagementRoute,
       meta: { navVariant: 'host' },
-      beforeEnter: (to) => resolveLegacyBackOfficeRedirect(to, 'management-user'),
+      beforeEnter: resolveBackOfficeAccess,
     },
     {
-      path: '/management/:userId',
+      path: '/dashboard/management/:userId',
       name: 'management-user',
       component: ManagementRoute,
       meta: { navVariant: 'host' },
     },
     {
-      path: '/domains',
+      path: '/dashboard/domains',
       name: 'domains',
       component: DomainsRoute,
       meta: { navVariant: 'host' },
-      beforeEnter: (to) => resolveLegacyBackOfficeRedirect(to, 'domains-user'),
+      beforeEnter: resolveBackOfficeAccess,
     },
     {
-      path: '/domains/:userId',
+      path: '/dashboard/domains/:userId',
       name: 'domains-user',
       component: DomainsRoute,
       meta: { navVariant: 'host' },
     },
     {
-      path: '/messagerie',
+      path: '/dashboard/messages',
       name: 'messaging',
       component: MessagingRoute,
       meta: { navVariant: 'host' },
-      beforeEnter: (to) => resolveLegacyBackOfficeRedirect(to, 'messaging-user'),
+      beforeEnter: resolveBackOfficeAccess,
     },
     {
-      path: '/messagerie/:userId',
+      path: '/dashboard/messages/:userId',
       name: 'messaging-user',
       component: MessagingRoute,
       meta: { navVariant: 'host' },
+    },
+    {
+      path: '/editor/create',
+      redirect: (to) => ({
+        name: 'create-listing',
+        query: to.query,
+        hash: to.hash,
+      }),
+    },
+    {
+      path: '/editor/:userId/create',
+      redirect: (to) => ({
+        name: 'create-listing-user',
+        params: to.params,
+        query: to.query,
+        hash: to.hash,
+      }),
+    },
+    {
+      path: '/editor',
+      redirect: (to) => ({
+        name: 'editor',
+        query: to.query,
+        hash: to.hash,
+      }),
+    },
+    {
+      path: '/editor/:userId',
+      redirect: (to) => ({
+        name: 'editor-user',
+        params: to.params,
+        query: to.query,
+        hash: to.hash,
+      }),
+    },
+    {
+      path: '/management',
+      redirect: (to) => ({
+        name: 'management',
+        query: to.query,
+        hash: to.hash,
+      }),
+    },
+    {
+      path: '/management/:userId',
+      redirect: (to) => ({
+        name: 'management-user',
+        params: to.params,
+        query: to.query,
+        hash: to.hash,
+      }),
+    },
+    {
+      path: '/messagerie',
+      redirect: (to) => ({
+        name: 'messaging',
+        query: to.query,
+        hash: to.hash,
+      }),
+    },
+    {
+      path: '/messagerie/:userId',
+      redirect: (to) => ({
+        name: 'messaging-user',
+        params: to.params,
+        query: to.query,
+        hash: to.hash,
+      }),
+    },
+    {
+      path: '/domains',
+      redirect: (to) => ({
+        name: 'domains',
+        query: to.query,
+        hash: to.hash,
+      }),
+    },
+    {
+      path: '/domains/:userId',
+      redirect: (to) => ({
+        name: 'domains-user',
+        params: to.params,
+        query: to.query,
+        hash: to.hash,
+      }),
+    },
+    {
+      path: '/listing',
+      redirect: { name: 'home' },
+    },
+    {
+      path: '/listing/:slug',
+      redirect: (to) => {
+        const raw = to.params.slug
+        const slug = normalizeListingSlug(typeof raw === 'string' ? raw : '')
+        if (!slug) return { name: 'home' }
+        return {
+          name: 'listing',
+          params: { slug },
+          query: to.query,
+          hash: to.hash,
+        }
+      },
+    },
+    {
+      path: '/:slug([a-z0-9-]+)',
+      name: 'listing',
+      component: Listing,
+      meta: { hideNav: true },
     },
   ],
 })
@@ -193,7 +315,7 @@ const router = createRouter({
 router.beforeEach((to) => {
   if (typeof window === 'undefined') return true
   if (!isManagedListingHostname(window.location.hostname)) return true
-  if (to.name === 'home' || to.name === 'listing' || to.name === 'listing-guide') return true
+  if (to.name === 'home' || to.name === 'listing' || to.name === 'listing-guide' || to.name === 'booking-confirmation') return true
   return { name: 'home' }
 })
 

@@ -9,6 +9,7 @@ import {
   listingResourceParamsSchema,
   patchListingResourceSchema,
   resolveListingHostnameSchema,
+  resolveListingSlugSchema,
   upsertListingDomainSchema,
 } from './listings.schemas.js';
 
@@ -28,16 +29,39 @@ export const listingsPlugin = fp(async (fastify) => {
     preHandler: fastify.authenticateOptional,
   }, async (request, reply) => {
     const query = listingDomainAvailabilitySchema.parse(request.query);
-    const availability = await service.checkSubdomainAvailability(query.slug, query.excludeListingId);
+    const availability = await service.checkSubdomainAvailability(query.slug, {
+      excludeListingId: query.excludeListingId,
+      auth: request.auth,
+    });
     reply.send(availability);
   });
 
-  fastify.get('/listings/domains/resolve', async (request, reply) => {
+  fastify.get('/listings/domains/resolve', {
+    preHandler: fastify.authenticateOptional,
+  }, async (request, reply) => {
     const query = resolveListingHostnameSchema.parse(request.query);
-    const resolved = await service.resolveListingByHostname(query.hostname);
+    const resolved = await service.resolveListingByHostname({
+      hostname: query.hostname,
+      listingSlug: query.listingSlug ?? null,
+      auth: request.auth,
+    });
 
     if (!resolved) {
       reply.code(404).send({ message: 'Listing not found for this hostname.' });
+      return;
+    }
+
+    reply.send(resolved);
+  });
+
+  fastify.get('/listings/resolve', {
+    preHandler: fastify.authenticateOptional,
+  }, async (request, reply) => {
+    const query = resolveListingSlugSchema.parse(request.query);
+    const resolved = await service.resolveListingBySlug(query.slug, request.auth);
+
+    if (!resolved) {
+      reply.code(404).send({ message: 'Listing not found for this slug.' });
       return;
     }
 
@@ -103,6 +127,11 @@ export const listingsPlugin = fp(async (fastify) => {
 
     if (domain === 'conflict') {
       reply.code(409).send({ message: 'This subdomain is already taken.' });
+      return;
+    }
+
+    if (domain === 'subscription_required') {
+      reply.code(403).send({ message: 'You need an active subscription plan to reserve a subdomain.' });
       return;
     }
 
@@ -177,9 +206,11 @@ export const listingsPlugin = fp(async (fastify) => {
     reply.code(201).send(created);
   });
 
-  fastify.get('/listings/bundle/:listingId', async (request, reply) => {
+  fastify.get('/listings/bundle/:listingId', {
+    preHandler: fastify.authenticateOptional,
+  }, async (request, reply) => {
     const params = listingIdParamsSchema.parse(request.params);
-    const bundle = await service.getListingBundle(params.listingId);
+    const bundle = await service.getListingBundle(params.listingId, request.auth);
 
     if (!bundle) {
       reply.code(404).send({ message: 'Listing not found.' });

@@ -11,6 +11,7 @@ import {
   type ListingDomainRecord,
   type ListingSubdomainAvailability,
 } from '@/domain/api/listingDomains'
+import { fetchMyStripeSubscriptionState } from '@/domain/api/stripeSubscriptions'
 import { getPublicListingRootDomain } from '@/domain/listings/publicDomain'
 
 const props = defineProps<{
@@ -21,17 +22,20 @@ const subdomainInput = ref('')
 const currentDomain = ref<ListingDomainRecord | null>(null)
 const availability = ref<ListingSubdomainAvailability | null>(null)
 const isLoadingCurrent = ref(false)
+const isLoadingSubscription = ref(false)
 const isCheckingAvailability = ref(false)
 const isSaving = ref(false)
 const isDeleting = ref(false)
 const errorMessage = ref<string | null>(null)
 const successMessage = ref<string | null>(null)
+const hasSelectedPlan = ref(false)
 
 const normalizedSlug = computed(() => subdomainInput.value.trim().toLowerCase())
 const rootDomain = getPublicListingRootDomain()
 const previewHostname = computed(() => normalizedSlug.value ? `${normalizedSlug.value}.${rootDomain}` : '')
 const previewUrl = computed(() => previewHostname.value ? `https://${previewHostname.value}` : '')
-const canSave = computed(() => Boolean(availability.value?.available && normalizedSlug.value))
+const canManageSubdomain = computed(() => hasSelectedPlan.value && !isLoadingSubscription.value)
+const canSave = computed(() => Boolean(canManageSubdomain.value && availability.value?.available && normalizedSlug.value))
 
 function resetFeedback() {
   errorMessage.value = null
@@ -67,11 +71,36 @@ async function loadCurrentDomain() {
   }
 }
 
+function computeHasSelectedPlanFromBillingState(state: Awaited<ReturnType<typeof fetchMyStripeSubscriptionState>>) {
+  const activePlan = state.subscription?.planCode ?? null
+  const pendingPlan = state.subscription?.pendingPlanCode ?? null
+  const currentPlan = state.currentPlanCode ?? null
+  return Boolean(activePlan || pendingPlan || currentPlan)
+}
+
+async function loadSubscriptionState() {
+  isLoadingSubscription.value = true
+  try {
+    const billingState = await fetchMyStripeSubscriptionState({ sync: false })
+    hasSelectedPlan.value = computeHasSelectedPlanFromBillingState(billingState)
+  } catch (error) {
+    console.error('[EditorDomainPanel] failed to load subscription state', error)
+    hasSelectedPlan.value = false
+  } finally {
+    isLoadingSubscription.value = false
+  }
+}
+
 async function checkAvailability() {
   if (isCheckingAvailability.value) return
 
   resetFeedback()
   availability.value = null
+
+  if (!canManageSubdomain.value) {
+    errorMessage.value = 'Sélectionnez un plan d abonnement pour réserver un sous-domaine.'
+    return
+  }
 
   if (!normalizedSlug.value || !isValidSlug(normalizedSlug.value)) {
     errorMessage.value = 'Utilisez un slug valide: lettres, chiffres et tirets uniquement.'
@@ -142,6 +171,7 @@ async function deleteDomain() {
 watch(
   () => props.listingId,
   () => {
+    void loadSubscriptionState()
     void loadCurrentDomain()
   },
 )
@@ -160,7 +190,13 @@ watch(subdomainInput, (value) => {
   successMessage.value = null
 })
 
+watch(hasSelectedPlan, (allowed) => {
+  if (allowed) return
+  availability.value = null
+})
+
 onMounted(() => {
+  void loadSubscriptionState()
   void loadCurrentDomain()
 })
 </script>
@@ -179,6 +215,7 @@ onMounted(() => {
           type="text"
           placeholder="ex: mon-logement"
           autocomplete="off"
+          :disabled="isLoadingCurrent || isLoadingSubscription || !hasSelectedPlan"
           @keydown.enter.prevent="checkAvailability"
         />
       </div>
@@ -191,7 +228,7 @@ onMounted(() => {
         <div class="manage">
           <button
             type="button"
-            :disabled="isCheckingAvailability || isLoadingCurrent"
+            :disabled="isCheckingAvailability || isLoadingCurrent || !canManageSubdomain"
             @click="checkAvailability"
           >
             {{ isCheckingAvailability ? 'Vérification...' : 'Vérifier la disponibilité' }}
@@ -247,6 +284,18 @@ onMounted(() => {
         <p><strong>Hostname :</strong> {{ availability.hostname }}</p>
       </div>
 
+      <p
+        v-if="!isLoadingSubscription && !hasSelectedPlan"
+        class="meta is-error"
+      >
+        Sélectionnez d abord un plan d abonnement pour réserver un sous-domaine.
+      </p>
+      <p
+        v-if="isLoadingSubscription"
+        class="meta"
+      >
+        Vérification du plan en cours...
+      </p>
       <p
         v-if="successMessage"
         class="meta is-success"

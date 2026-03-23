@@ -32,7 +32,11 @@ body {
   overflow-x: hidden;
   min-height: 100dvh;
 
-  background-color: $background;
+  background-color: $secondary;
+
+  @include min-width(lg) {
+    background-color: $background;
+  }
 
   > main {
     z-index: 1;
@@ -68,7 +72,8 @@ body.is-ios.ios-landing-surface main {
 // (Utile si un lock global reste coincé suite à un overlay / lib externe.)
 html.force-scroll,
 body.force-scroll {
-  overflow: auto !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
 }
 
 body.force-scroll {

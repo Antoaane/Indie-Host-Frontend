@@ -49,15 +49,14 @@ export function useListingOwnership(options: UseListingOwnershipOptions) {
 
     if (targetUserId) {
       return {
-        name: 'editor-user',
-        params: { userId: targetUserId },
+        name: 'editor',
         query,
       }
     }
 
     const fallbackRedirectUrl = targetListingId
-      ? `/editor?listingId=${encodeURIComponent(targetListingId)}`
-      : '/editor'
+      ? `/dashboard/editor?listingId=${encodeURIComponent(targetListingId)}`
+      : '/dashboard/editor'
 
     return {
       name: 'sign-in',

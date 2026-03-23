@@ -20,7 +20,8 @@ export type FetchListingsOptions = {
 export type ListingsController = {
   mode: ListingsDataMode
   fetchListings: (options?: FetchListingsOptions) => Promise<UserListingCard[]>
-  resolveListingIdByHostname: (hostname: string) => Promise<string | null>
+  resolveListingIdByHostname: (hostname: string, listingSlug?: string | null) => Promise<string | null>
+  resolveListingIdBySlug: (slug: string) => Promise<string | null>
   fetchListingBundle: (listingId: string) => Promise<RawListingBundle>
   fetchEditableListingBundle: (listingId: string) => Promise<RawListingBundle>
   fetchVolatileListingBundle: (listingId: string) => Promise<VolatileBundle>

@@ -11,7 +11,7 @@
     },
     "secondaryCta": {
       "label": "Meine Website kostenlos erstellen",
-      "href": "/editor/create",
+      "href": "/dashboard/editor/create",
       "target": "_self"
     },
     "images": [

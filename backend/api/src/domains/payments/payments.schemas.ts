@@ -53,6 +53,10 @@ export const createConnectOnboardingLinkSchema = z.object({
   country: z.string().trim().length(2).optional().default('FR'),
 });
 
+export const createConnectDashboardLinkSchema = z.object({
+  accountId: z.string().trim().optional(),
+});
+
 export const syncConnectStateSchema = z.object({
   accountId: z.string().trim().optional(),
 });

@@ -1,6 +1,11 @@
 // File: src/views/Listing/utils/fetchListingRaw.ts
 
 import { getListingsController } from '@/domain/listings/controller'
+import { isManagedListingHostname } from '@/domain/listings/publicDomain'
+import {
+  isListingIdLike,
+  normalizeListingSlug,
+} from '@/domain/listings/slug'
 import type {
   ListingAvailabilitySyncResult,
   RawBookings,
@@ -17,16 +22,86 @@ const controller = getListingsController()
 const inflightBundles = new Map<string, Promise<RawListingBundle>>()
 const inflightAvailabilitySync = new Map<string, Promise<ListingAvailabilitySyncResult>>()
 
-async function resolveListingId(explicitId?: string): Promise<string> {
-  if (explicitId && explicitId.trim()) return explicitId.trim()
+function decodePathSegment(value: string): string {
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
+}
+
+function canUseListingIdFallback(): boolean {
+  if (typeof window === 'undefined') return false
+  return window.location.pathname.startsWith('/listing/guide/')
+}
+
+async function resolveListingId(explicitKey?: string): Promise<string> {
+  const managedHostname = typeof window !== 'undefined' && isManagedListingHostname(window.location.hostname)
+  const normalizedExplicitKey = typeof explicitKey === 'string' ? explicitKey.trim() : ''
+  if (normalizedExplicitKey) {
+    if (managedHostname) {
+      const explicitSlug = normalizeListingSlug(normalizedExplicitKey)
+      if (explicitSlug) {
+        const listingIdFromManagedHostname = await controller.resolveListingIdByHostname(window.location.hostname, explicitSlug)
+        if (listingIdFromManagedHostname) return listingIdFromManagedHostname
+      }
+
+      const hostnameOnlyListingId = await controller.resolveListingIdByHostname(window.location.hostname)
+      if (hostnameOnlyListingId) return hostnameOnlyListingId
+
+      if (isListingIdLike(normalizedExplicitKey) && canUseListingIdFallback()) {
+        return normalizedExplicitKey
+      }
+
+      return '__missing-managed-listing__'
+    }
+
+    const explicitSlug = normalizeListingSlug(normalizedExplicitKey)
+    if (explicitSlug) {
+      const listingIdFromSlug = await controller.resolveListingIdBySlug(explicitSlug)
+      if (listingIdFromSlug) return listingIdFromSlug
+    }
+
+    if (isListingIdLike(normalizedExplicitKey) && canUseListingIdFallback()) {
+      return normalizedExplicitKey
+    }
+
+    return '__missing-public-listing__'
+  }
 
   if (typeof window !== 'undefined') {
+    const currentPath = window.location.pathname
+    if (managedHostname) {
+      const listingSlugFromManagedPath = currentPath.match(/^\/([^/]+)\/?$/)?.[1]
+      const normalizedManagedPathSlug = listingSlugFromManagedPath
+        ? normalizeListingSlug(decodePathSegment(listingSlugFromManagedPath))
+        : ''
+
+      if (normalizedManagedPathSlug) {
+        const listingIdFromHostnameAndSlug = await controller.resolveListingIdByHostname(
+          window.location.hostname,
+          normalizedManagedPathSlug,
+        )
+        if (listingIdFromHostnameAndSlug) return listingIdFromHostnameAndSlug
+      }
+
+      const hostnameOnlyListingId = await controller.resolveListingIdByHostname(window.location.hostname)
+      if (hostnameOnlyListingId) return hostnameOnlyListingId
+
+      return '__missing-managed-listing__'
+    }
+
     const hostnameListingId = await controller.resolveListingIdByHostname(window.location.hostname)
     if (hostnameListingId) return hostnameListingId
 
-    const currentPath = window.location.pathname
-    const listingIdFromRoute = currentPath.match(/^\/listing\/([^/]+)\/?$/)?.[1]
-    if (listingIdFromRoute) return listingIdFromRoute
+    const listingSlugFromRootRoute = currentPath.match(/^\/([^/]+)\/?$/)?.[1]
+    if (listingSlugFromRootRoute) {
+      const rootSlug = normalizeListingSlug(decodePathSegment(listingSlugFromRootRoute))
+      if (rootSlug) {
+        const listingIdFromRootSlug = await controller.resolveListingIdBySlug(rootSlug)
+        if (listingIdFromRootSlug) return listingIdFromRootSlug
+      }
+    }
   }
 
   const listings = await controller.fetchListings()

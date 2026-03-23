@@ -10,7 +10,7 @@ import BottomNav from '@/components/navs/BottomNav/BottomNav.vue'
 const route = useRoute()
 
 const isLanding = computed(() => route.path === '/' || route.path === '/donation' || route.path === '/pricing')
-const isAppNav = computed(() => route.path.startsWith('/listing'))
+const isAppNav = computed(() => route.name === 'listing' || route.name === 'listing-guide')
 </script>
 
 <template>

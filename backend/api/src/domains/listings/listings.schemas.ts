@@ -29,6 +29,11 @@ export const upsertListingDomainSchema = z.object({
 
 export const resolveListingHostnameSchema = z.object({
   hostname: z.string().trim().min(1),
+  listingSlug: z.string().trim().min(1).optional(),
+});
+
+export const resolveListingSlugSchema = z.object({
+  slug: z.string().trim().min(1),
 });
 
 export const createListingSchema = z.object({

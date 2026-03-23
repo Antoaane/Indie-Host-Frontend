@@ -6,7 +6,7 @@ import { useRoute } from 'vue-router'
 
 import { normalizeListingStatus } from '@/domain/listings/status'
 import { getUserMaxActiveListings } from '@/domain/user/subscription'
-import { readRouteUserId } from '@/router/backOfficeUser'
+import { readActiveUserId } from '@/router/backOfficeUser'
 import { normalizeSearchText } from '@/utils/search'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 import type { UserListingCard } from '@/views/Editor/utils/listingApi'
@@ -19,6 +19,7 @@ const props = defineProps<{
   isLoading?: boolean
   error?: unknown
   selectedListingId: string | null
+  isStripeConnectPublishLocked?: boolean
   canPreview?: boolean
 }>()
 
@@ -26,6 +27,7 @@ const emit = defineEmits<{
   (e: 'select', listingId: string): void
   (e: 'preview', listingId: string): void
   (e: 'status-change', payload: { listingId: string; status: string }): void
+  (e: 'configure-connect', listingId: string): void
 }>()
 
 const query = ref('')
@@ -53,20 +55,19 @@ const isActiveListingsLimitReached = computed(() => remainingActiveListings.valu
 const newListingActiveUsage = computed(() => listingContent.newListing.activeUsage.replace('{count}', String(activeListingsCount.value)).replace('{max}', String(maxActiveListings)))
 const newListingRemaining = computed(() => listingContent.newListing.remaining.replace('{count}', String(remainingActiveListings.value)))
 const newListingRemainingDisplay = computed(() => (isActiveListingsLimitReached.value ? `${newListingRemaining.value} ${listingContent.newListing.remainingAlertSuffix}` : newListingRemaining.value))
-const activeUserId = computed(() => readRouteUserId(route.params.userId))
+const activeUserId = computed(() => readActiveUserId(route.params.userId))
 
 const createListingRoute = computed(() => {
   const userId = activeUserId.value
   if (userId) {
     return {
-      name: 'create-listing-user',
-      params: { userId },
+      name: 'create-listing',
     }
   }
 
   return {
     name: 'sign-in',
-    query: { redirect_url: '/editor/create' },
+    query: { redirect_url: '/dashboard/editor/create' },
   }
 })
 
@@ -98,6 +99,11 @@ function handlePreview(listingId: string) {
 function setListingStatus(payload: { listingId: string; status: string }) {
   closeCardMenus()
   emit('status-change', payload)
+}
+
+function handleConfigureConnect(listingId: string) {
+  closeCardMenus()
+  emit('configure-connect', listingId)
 }
 
 function isStatusMenuOpen(listingId: string) {
@@ -179,6 +185,7 @@ onBeforeUnmount(() => {
           :isActionsMenuOpen="isActionsMenuOpen(listing.listingId)"
           :statusOptions="STATUS_OPTIONS"
           :listingContent="listingContent"
+          :isStripeConnectPublishLocked="props.isStripeConnectPublishLocked"
           :canPreview="props.canPreview !== false"
           @select="handleSelect"
           @preview="handlePreview"
@@ -186,6 +193,7 @@ onBeforeUnmount(() => {
           @toggle-actions-menu="toggleActionsMenu"
           @close-menus="closeCardMenus"
           @status-change="setListingStatus"
+          @configure-connect="handleConfigureConnect"
         />
 
         <EditorListingsCreateCard

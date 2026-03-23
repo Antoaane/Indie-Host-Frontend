@@ -11,7 +11,7 @@
     },
     "secondaryCta": {
       "label": "無料でサイトを作成",
-      "href": "/editor/create",
+      "href": "/dashboard/editor/create",
       "target": "_self"
     },
     "images": [

@@ -31,6 +31,7 @@ const props = defineProps<{
   isActionsMenuOpen: boolean
   statusOptions: readonly string[]
   listingContent: ListingContent
+  isStripeConnectPublishLocked?: boolean
   canPreview?: boolean
 }>()
 
@@ -41,6 +42,7 @@ const emit = defineEmits<{
   (e: 'toggle-actions-menu', listingId: string): void
   (e: 'close-menus'): void
   (e: 'status-change', payload: { listingId: string; status: string }): void
+  (e: 'configure-connect', listingId: string): void
 }>()
 
 const swiper = ref<SwiperInstance | null>(null)
@@ -82,12 +84,18 @@ const slides = computed<ListingSlide[]>(() => {
 
 const currentStatusLabel = computed(() => statusLabel(props.listing.status))
 const normalizedStatus = computed(() => normalizeListingStatus(props.listing.status))
+const isConnectPendingStatus = computed(() => normalizedStatus.value === 'blocked' || normalizedStatus.value === 'paused')
+const isPublishOptionLocked = computed(
+  () => Boolean(props.isStripeConnectPublishLocked) && isConnectPendingStatus.value && normalizedStatus.value !== 'published',
+)
+const showConfigureConnectOverlay = computed(() => Boolean(props.isStripeConnectPublishLocked) && isConnectPendingStatus.value)
 const hasNonPublishedStatus = computed(() => Boolean(normalizedStatus.value) && normalizedStatus.value !== 'published')
 const nonPublishedOverlayLabel = computed(() => {
   if (!hasNonPublishedStatus.value) return ''
   if (normalizedStatus.value === 'paused') return props.listingContent.statusOverlay.paused
   return props.listingContent.statusOverlay.blocked
 })
+const showStatusOverlay = computed(() => Boolean(nonPublishedOverlayLabel.value) && !showConfigureConnectOverlay.value)
 const statusMenuControlId = computed(() => `listing-status-menu-${props.listing.listingId}`)
 const actionsMenuControlId = computed(() => `listing-actions-menu-${props.listing.listingId}`)
 const deleteContent = computed(() => editorStatic.panels.listing.visibility.delete)
@@ -139,6 +147,11 @@ function handleToggleStatusMenu() {
 
 function handleToggleActionsMenu() {
   emit('toggle-actions-menu', props.listing.listingId)
+}
+
+function handleConfigureConnect() {
+  emit('close-menus')
+  emit('configure-connect', props.listing.listingId)
 }
 
 function handleSetListingStatus(status: string) {
@@ -221,6 +234,18 @@ function isStatusOptionSelected(currentStatus: string | undefined, option: strin
 
 function statusOptionAria(option: string) {
   return props.listingContent.statusMenu.changeTo.replace('{status}', statusLabel(option))
+}
+
+function statusOptionTitle(option: string) {
+  if (option === 'published' && isPublishOptionLocked.value) {
+    return props.listingContent.statusMenu.connectRequired
+  }
+  return statusOptionAria(option)
+}
+
+function isStatusOptionDisabled(option: string) {
+  if (isStatusOptionSelected(props.listing.status, option)) return true
+  return option === 'published' && isPublishOptionLocked.value
 }
 
 function ratingPercent(rating?: number) {
@@ -354,7 +379,7 @@ function goToImageLabel(index: number) {
         >
           <button
             class="status"
-            :class="statusVariant(props.listing.status)"
+            :class="[statusVariant(props.listing.status), { 'is-connect-locked': isPublishOptionLocked }]"
             type="button"
             :aria-label="props.listingContent.statusMenu.open"
             :title="props.listingContent.statusMenu.label"
@@ -383,9 +408,9 @@ function goToImageLabel(index: number) {
               type="button"
               role="menuitemradio"
               :aria-checked="isStatusOptionSelected(props.listing.status, status)"
-              :aria-label="statusOptionAria(status)"
-              :title="statusOptionAria(status)"
-              :disabled="isStatusOptionSelected(props.listing.status, status)"
+              :aria-label="statusOptionTitle(status)"
+              :title="statusOptionTitle(status)"
+              :disabled="isStatusOptionDisabled(status)"
               @pointerdown.stop
               @click.stop="handleSetListingStatus(status)"
             >
@@ -395,7 +420,24 @@ function goToImageLabel(index: number) {
         </div>
 
         <div
-          v-if="nonPublishedOverlayLabel"
+          v-if="showConfigureConnectOverlay"
+          class="connect-overlay"
+        >
+          <div class="connect-cta">
+            <button
+              type="button"
+              :aria-label="props.listingContent.connectCtaAria"
+              :title="props.listingContent.connectCta"
+              @pointerdown.stop
+              @click.stop="handleConfigureConnect"
+            >
+              {{ props.listingContent.connectCta }}
+            </button>
+          </div>
+        </div>
+
+        <div
+          v-if="showStatusOverlay"
           class="pending-changes status-overlay"
         >
           {{ nonPublishedOverlayLabel }}

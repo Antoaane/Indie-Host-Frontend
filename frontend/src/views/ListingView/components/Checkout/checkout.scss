@@ -210,7 +210,7 @@ html:has(#checkout) {
 
     &.is-complete {
       border-color: rgba($secondary, 0.9);
-      background: $background;
+      background: $secondary;
       color: $accent;
     }
 
@@ -363,7 +363,7 @@ html:has(#checkout) {
     }
 
     &.is-selected {
-      background: $background;
+      background: $secondary;
       color: $accent;
 
       .title {

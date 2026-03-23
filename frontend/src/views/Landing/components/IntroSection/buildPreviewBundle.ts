@@ -2,7 +2,7 @@
 
 import type { RawListingBundle } from '@/domain/listings/types'
 
-const PREVIEW_ID = 'landing-preview'
+const PREVIEW_ID = 'listing-preview'
 
 /**
  * Construit un RawListingBundle complet à partir du résultat partiel de

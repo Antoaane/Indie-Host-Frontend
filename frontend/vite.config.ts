@@ -56,6 +56,28 @@ function joinBasePath(basePath: string, rest: string): string {
   return rest.startsWith('/') ? `${normalizedBase}${rest}` : `${normalizedBase}/${rest}`
 }
 
+function inferApiTargetBasePath({
+  apiBasePath,
+  proxyTargetPath,
+}: {
+  apiBasePath?: string
+  proxyTargetPath?: string
+}): string {
+  const normalizedProxyTargetPath = normalizePathPrefix(proxyTargetPath ?? '/')
+  if (normalizedProxyTargetPath !== '/') return normalizedProxyTargetPath
+
+  const normalizedApiBasePath = normalizePathPrefix(apiBasePath ?? '/')
+
+  // In local dev we often expose `/api/*` from frontend and hit backend routes under `/*`.
+  // Example: `/api/v1/...` on Vite should target `/v1/...` on Fastify.
+  if (normalizedApiBasePath === '/api') return '/'
+  if (normalizedApiBasePath.startsWith('/api/')) {
+    return normalizePathPrefix(normalizedApiBasePath.slice('/api'.length))
+  }
+
+  return normalizedApiBasePath
+}
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
@@ -76,8 +98,10 @@ export default defineConfig(({ mode }) => {
   const scrapingProxyPath = parsedScrapingBase.path
 
   const apiTargetOrigin = parsedBase.origin || parsedProxyTarget.origin
-  const apiTargetBasePath =
-    parsedBase.path || (parsedProxyTarget.path && parsedProxyTarget.path !== '/' ? parsedProxyTarget.path : undefined)
+  const apiTargetBasePath = inferApiTargetBasePath({
+    apiBasePath: parsedBase.path,
+    proxyTargetPath: parsedProxyTarget.path,
+  })
   const scrapingTargetOrigin = parsedScrapingBase.origin || parsedScrapingProxyTarget.origin
   const scrapingTargetBasePath =
     parsedScrapingProxyTarget.path && parsedScrapingProxyTarget.path !== '/'

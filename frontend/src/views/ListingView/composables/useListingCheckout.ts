@@ -1,6 +1,7 @@
 // File: src/views/ListingView/composables/useListingCheckout.ts
 
 import { computed, reactive, ref, type ComputedRef, type Ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 import { deriveBookedDaysFromReservations, normalizeBookedDay, normalizeBookedDays, normalizeReservations, toUtcDay } from '@/domain/listings/bookings'
 import { resolveWeekendPricing } from '@/domain/listings/pricing'
@@ -12,7 +13,7 @@ import {
 } from '@/domain/listings/reservationRules'
 import { resolveCheckoutPaymentBreakdown } from '@/domain/payments/checkoutPayment'
 import { createBookingReservation } from '@/domain/api/bookings'
-import type { RawBookingReservation, RawBookings, RawCore, RawListingBundle } from '@/domain/listings/types'
+import type { RawBookingReservation, RawBookings, RawCore, RawListingBundle, RawReservationConfirmation } from '@/domain/listings/types'
 
 import type { ListingParsed } from '@/views/ListingView/types/listing'
 import type { ReservationPayload } from '@/views/ListingView/types/reservation'
@@ -39,6 +40,81 @@ function createReservationId(currentListingId: string, start: string, end: strin
   const base = sanitizeIdPart(currentListingId.trim() || 'listing')
   const suffix = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function' ? crypto.randomUUID().slice(0, 8) : Date.now().toString(36)
   return `reservation-${base}-${start}-${end}-${suffix}`
+}
+
+type ReservationConfirmationData = {
+  guideAccessKey: string
+  guideUrl: string
+  generatedAt: string
+}
+
+function readString(value: unknown): string | null {
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  return trimmed || null
+}
+
+function generateGuideAccessKey(seed: string) {
+  const normalizedSeed = seed.trim() || Date.now().toString(36)
+  let hash = 0
+  for (let index = 0; index < normalizedSeed.length; index += 1) {
+    hash = (hash * 31 + normalizedSeed.charCodeAt(index)) >>> 0
+  }
+  const signature = hash.toString(16).padStart(8, '0')
+
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return `rg.${normalizedSeed}.${crypto.randomUUID().replace(/-/g, '').slice(0, 20)}`
+  }
+  return `rg.${normalizedSeed}.${signature}${Math.random().toString(16).slice(2, 14)}`
+}
+
+function buildReservationGuideUrl(guideAccessKey: string, listingId: string, reservationId: string) {
+  const safeKey = guideAccessKey.trim()
+  const params = new URLSearchParams({
+    listingId: listingId.trim(),
+    reservationId: reservationId.trim(),
+  })
+  return `/listing/guide/${encodeURIComponent(safeKey)}?${params.toString()}`
+}
+
+function createReservationConfirmation(
+  listingId: string,
+  reservationId: string,
+  source?: RawReservationConfirmation | null,
+): ReservationConfirmationData {
+  const safeReservationId = reservationId.trim() || `${listingId.trim()}-${Date.now().toString(36)}`
+  const guideAccessKey = readString(source?.guideAccessKey) ?? readString(source?.guideAccessToken) ?? generateGuideAccessKey(safeReservationId)
+  return {
+    guideAccessKey,
+    guideUrl: buildReservationGuideUrl(guideAccessKey, listingId, safeReservationId),
+    generatedAt: readString(source?.generatedAt) ?? new Date().toISOString(),
+  }
+}
+
+function attachReservationConfirmation(
+  reservation: RawBookingReservation,
+  confirmation: ReservationConfirmationData,
+): RawBookingReservation {
+  const baseContact = reservation.contact && typeof reservation.contact === 'object'
+    ? reservation.contact
+    : {}
+
+  return {
+    ...reservation,
+    contact: {
+      ...baseContact,
+      confirmation: {
+        guideAccessKey: confirmation.guideAccessKey,
+        guideUrl: confirmation.guideUrl,
+        generatedAt: confirmation.generatedAt,
+      },
+    },
+    confirmation: {
+      guideAccessKey: confirmation.guideAccessKey,
+      guideUrl: confirmation.guideUrl,
+      generatedAt: confirmation.generatedAt,
+    },
+  }
 }
 
 function computeLegacyStayPricing({
@@ -261,6 +337,7 @@ function buildReservationFromCheckout(
 }
 
 export function useListingCheckout(options: UseListingCheckoutOptions) {
+  const router = useRouter()
   const checkoutPayload = ref<ReservationPayload | null>(null)
   const isCheckout = computed(() => Boolean(checkoutPayload.value))
   const checkoutStatus = reactive({
@@ -318,6 +395,24 @@ export function useListingCheckout(options: UseListingCheckoutOptions) {
   function cancelCheckout() {
     checkoutStatus.error = null
     checkoutPayload.value = null
+  }
+
+  async function redirectToBookingConfirmation(input: {
+    reservationId: string
+    listingId: string
+    confirmation: ReservationConfirmationData
+  }) {
+    const reservationId = input.reservationId.trim()
+    if (!reservationId) return
+
+    await router.push({
+      name: 'booking-confirmation',
+      params: { reservationId },
+      query: {
+        token: input.confirmation.guideAccessKey,
+        listingId: input.listingId,
+      },
+    })
   }
 
   async function confirmCheckout(payload: CheckoutConfirmationPayload) {
@@ -399,24 +494,39 @@ export function useListingCheckout(options: UseListingCheckoutOptions) {
         payload,
         reservationRules.payment,
       )
+      const localConfirmation = createReservationConfirmation(
+        targetListingId,
+        createdReservation.id,
+        createdReservation.confirmation ?? createdReservation.contact?.confirmation ?? null,
+      )
+      const reservationWithConfirmation = attachReservationConfirmation(createdReservation, localConfirmation)
 
       const isRangeAlreadyBooked = currentReservations.some((reservation) =>
-        rangesOverlap(createdReservation.start, createdReservation.end, reservation.start, reservation.end))
+        rangesOverlap(reservationWithConfirmation.start, reservationWithConfirmation.end, reservation.start, reservation.end))
 
       if (isRangeAlreadyBooked) {
         checkoutStatus.error = 'Cette période vient d être réservée.'
         return
       }
 
+      let redirectReservationId = reservationWithConfirmation.id
+      let redirectConfirmation = localConfirmation
+
       if (options.listingsMode === 'api') {
-        await createBookingReservation({
+        const created = await createBookingReservation({
           listingId: targetListingId,
-          reservation: createdReservation,
+          reservation: reservationWithConfirmation,
         })
+        redirectReservationId = (created.reservationId || reservationWithConfirmation.id).trim()
+        redirectConfirmation = createReservationConfirmation(
+          targetListingId,
+          redirectReservationId,
+          created.confirmation ?? reservationWithConfirmation.confirmation ?? null,
+        )
       } else {
         const nextReservations = normalizeReservations([
           ...currentReservations,
-          createdReservation,
+          reservationWithConfirmation,
         ])
         const nextBookedDays = deriveBookedDaysFromReservations(nextReservations)
 
@@ -430,6 +540,15 @@ export function useListingCheckout(options: UseListingCheckoutOptions) {
       }
 
       cancelCheckout()
+      try {
+        await redirectToBookingConfirmation({
+          reservationId: redirectReservationId,
+          listingId: targetListingId,
+          confirmation: redirectConfirmation,
+        })
+      } catch (navigationError) {
+        console.error('[ListingView] confirmation navigation failed', navigationError)
+      }
     } catch (error) {
       console.error('[ListingView] checkout reservation failed', error)
       checkoutStatus.error = resolveErrorMessage(error, 'Impossible de valider la réservation.')

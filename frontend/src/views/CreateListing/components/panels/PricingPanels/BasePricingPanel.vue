@@ -290,7 +290,7 @@ function deriveWeekendPercent(basePrice: number, weekendNightPrice: number): num
 @use '@/views/CreateListing/components/panels/panel.scss' as *;
 
 .create-base-pricing-panel {
-  @extend %panel;
+  // @extend %panel-style;
 
   min-width: 0;
 

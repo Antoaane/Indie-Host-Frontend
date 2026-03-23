@@ -67,6 +67,53 @@ function parseNumber(value: unknown, fallback: number): number {
   return fallback;
 }
 
+function normalizeListingSlug(value: unknown): string {
+  if (typeof value !== 'string') return '';
+  const input = value.trim();
+  if (!input) return '';
+
+  return input
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/œ/g, 'oe')
+    .replace(/æ/g, 'ae')
+    .replace(/ß/g, 'ss')
+    .replace(/['’`´]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function buildSlugFromCore(core: Record<string, unknown>, listingId: string): string {
+  const fromCore = normalizeListingSlug(core.slug);
+  if (fromCore) return fromCore;
+
+  const fromTitle = normalizeListingSlug(core.title);
+  if (fromTitle) return fromTitle;
+
+  const fromId = normalizeListingSlug(listingId);
+  return fromId || 'annonce';
+}
+
+function buildUniqueSlug(baseSlug: string, isTaken: (slug: string) => boolean): string {
+  const normalizedBase = normalizeListingSlug(baseSlug) || 'annonce';
+  if (!isTaken(normalizedBase)) return normalizedBase;
+
+  let index = 2;
+  while (isTaken(`${normalizedBase}-${index}`)) {
+    index += 1;
+  }
+
+  return `${normalizedBase}-${index}`;
+}
+
+function buildListingIdCandidate(): string {
+  const timestampPart = Date.now().toString(36);
+  const randomPart = Math.random().toString(36).slice(2, 8) || '000000';
+  return `listing-${timestampPart}-${randomPart}`;
+}
+
 function resolveCanonicalHostResource() {
   if (!fs.existsSync(USER_PROFILE_PATH)) {
     return { ...HOST_RESOURCE_TEMPLATE };
@@ -122,6 +169,74 @@ function findDatasetByListingId(listingId: string): DatasetPaths | null {
     const core = readJson(paths.core);
     if (core?.id === listingId) return paths;
   }
+  return null;
+}
+
+function buildUniqueListingId(): string {
+  let listingId = buildListingIdCandidate();
+  while (findDatasetByListingId(listingId)) {
+    listingId = buildListingIdCandidate();
+  }
+  return listingId;
+}
+
+function resolveListingIdFromCore(core: Record<string, unknown>, fallback: string): string {
+  const raw = typeof core.id === 'string' ? core.id.trim() : '';
+  return raw || fallback;
+}
+
+function isDatasetSlugTaken(targetSlug: string, exceptListingId?: string): boolean {
+  const normalizedTarget = normalizeListingSlug(targetSlug);
+  if (!normalizedTarget) return false;
+
+  const dirs = listDatasetDirs();
+  for (const dirName of dirs) {
+    const paths = getDatasetPaths(dirName);
+    if (!fs.existsSync(paths.core)) continue;
+    const core = readJson(paths.core) as Record<string, unknown>;
+    const listingId = resolveListingIdFromCore(core, dirName);
+    if (exceptListingId && listingId === exceptListingId) continue;
+    const coreSlug = buildSlugFromCore(core, listingId);
+    if (coreSlug === normalizedTarget) return true;
+  }
+
+  return false;
+}
+
+function ensureDatasetCoreIdentity(paths: DatasetPaths, listingIdOverride?: string): { listingId: string; slug: string; core: Record<string, unknown> } {
+  const currentCore = fs.existsSync(paths.core) ? readJson(paths.core) : {};
+  const mutableCore = (currentCore && typeof currentCore === 'object' && !Array.isArray(currentCore))
+    ? { ...currentCore } as Record<string, unknown>
+    : {} as Record<string, unknown>;
+
+  const listingId = resolveListingIdFromCore(mutableCore, listingIdOverride ?? buildUniqueListingId());
+  mutableCore.id = listingId;
+
+  const baseSlug = buildSlugFromCore(mutableCore, listingId);
+  const slug = buildUniqueSlug(baseSlug, (candidate) => isDatasetSlugTaken(candidate, listingId));
+  mutableCore.slug = slug;
+
+  const storedSlug = normalizeListingSlug(currentCore?.slug);
+  const storedId = typeof currentCore?.id === 'string' ? currentCore.id.trim() : '';
+  if (storedSlug !== slug || storedId !== listingId) {
+    writeJson(paths.core, mutableCore);
+  }
+
+  return { listingId, slug, core: mutableCore };
+}
+
+function findDatasetBySlug(slug: string): DatasetPaths | null {
+  const normalizedSlug = normalizeListingSlug(slug);
+  if (!normalizedSlug) return null;
+
+  const dirs = listDatasetDirs();
+  for (const dirName of dirs) {
+    const paths = getDatasetPaths(dirName);
+    if (!fs.existsSync(paths.core)) continue;
+    const identity = ensureDatasetCoreIdentity(paths, dirName);
+    if (identity.slug === normalizedSlug) return paths;
+  }
+
   return null;
 }
 
@@ -202,13 +317,15 @@ function buildFallbackResource(resource: ListingResourceKey, listingId: string):
 }
 
 function buildListingCard(paths: DatasetPaths) {
-  const core = fs.existsSync(paths.core) ? readJson(paths.core) : {};
+  const { listingId, slug, core } = ensureDatasetCoreIdentity(paths);
   const medias = fs.existsSync(paths.medias) ? readJson(paths.medias) : {};
   const bookings = fs.existsSync(paths.bookings) ? readJson(paths.bookings) : {};
   const notes = fs.existsSync(paths.notes) ? readJson(paths.notes) : {};
 
   return {
-    listingId: core.id,
+    listingId,
+    slug,
+    publicUrl: `/${slug}`,
     title: core.title,
     status: core.status,
     coverSrc: medias?.images?.[0]?.src,
@@ -277,6 +394,21 @@ export default function localJsonDataPlugin(): Plugin {
             return sendJson(res, 200, cards);
           }
 
+          if (parts.length === 2 && parts[0] === 'listings' && parts[1] === 'resolve' && method === 'GET') {
+            const slug = normalizeListingSlug(url.searchParams.get('slug') ?? '');
+            if (!slug) {
+              return sendJson(res, 400, { error: 'Missing slug' });
+            }
+
+            const dataset = findDatasetBySlug(slug);
+            if (!dataset) {
+              return sendJson(res, 404, { error: 'Listing not found' });
+            }
+
+            const identity = ensureDatasetCoreIdentity(dataset);
+            return sendJson(res, 200, { listingId: identity.listingId, slug: identity.slug });
+          }
+
           if (parts.length === 3 && parts[0] === 'user' && parts[2] === 'listings' && method === 'GET') {
             const userId = parts[1];
             console.log('[LocalJSON] fetch listings for user', userId);
@@ -326,6 +458,9 @@ export default function localJsonDataPlugin(): Plugin {
               dataset = newPaths;
             }
 
+            const identity = ensureDatasetCoreIdentity(dataset, listingId);
+            const canonicalListingId = identity.listingId;
+
             const resourcePath = dataset[resource];
 
             if (method === 'GET') {
@@ -338,10 +473,14 @@ export default function localJsonDataPlugin(): Plugin {
                 return sendJson(res, 200, canonicalHost);
               }
 
+              if (resource === 'core') {
+                return sendJson(res, 200, identity.core);
+              }
+
               if (fs.existsSync(resourcePath)) {
                 return sendJson(res, 200, readJson(resourcePath));
               }
-              const fallback = buildFallbackResource(resource, listingId);
+              const fallback = buildFallbackResource(resource, canonicalListingId);
               writeJson(resourcePath, fallback);
               return sendJson(res, 200, fallback);
             }
@@ -355,17 +494,36 @@ export default function localJsonDataPlugin(): Plugin {
               }
 
               const payload = await readBody(req);
-              const current = fs.existsSync(resourcePath) ? readJson(resourcePath) : buildFallbackResource(resource, listingId);
-              const next = deepMerge(current, payload ?? {});
+              const current = fs.existsSync(resourcePath) ? readJson(resourcePath) : buildFallbackResource(resource, canonicalListingId);
+              let next = deepMerge(current, payload ?? {});
+
+              if (resource === 'core') {
+                const nextCore = (next && typeof next === 'object' && !Array.isArray(next))
+                  ? { ...next } as Record<string, unknown>
+                  : {} as Record<string, unknown>;
+                delete nextCore.id;
+
+                const currentSlug = normalizeListingSlug(identity.core.slug);
+                if (currentSlug) {
+                  delete nextCore.slug;
+                }
+
+                const mergedCore = deepMerge(identity.core, nextCore) as Record<string, unknown>;
+                mergedCore.id = canonicalListingId;
+                const baseSlug = buildSlugFromCore(mergedCore, canonicalListingId);
+                mergedCore.slug = buildUniqueSlug(baseSlug, (candidate) => isDatasetSlugTaken(candidate, canonicalListingId));
+                next = mergedCore;
+              }
+
               writeJson(resourcePath, next);
-              console.log('[LocalJSON] patched resource', resource, listingId);
+              console.log('[LocalJSON] patched resource', resource, canonicalListingId);
               return sendJson(res, 200, next);
             }
           }
 
           if (parts.length === 1 && parts[0] === 'listings' && method === 'POST') {
             const payload = await readBody(req);
-            const listingId = payload?.core?.id ?? `listing-${Date.now()}`;
+            const listingId = buildUniqueListingId();
             const newDirName = `ListingTest_${Date.now()}`;
             const newPaths = getDatasetPaths(newDirName);
             ensureDir(newPaths.dir);
@@ -377,6 +535,8 @@ export default function localJsonDataPlugin(): Plugin {
                 : payload?.[key] ? deepMerge(fallback, payload[key]) : fallback;
               writeJson(newPaths[key], seeded);
             });
+
+            ensureDatasetCoreIdentity(newPaths, listingId);
 
             console.log('[LocalJSON] created listing', listingId, '->', newDirName);
             return sendJson(res, 201, { listingId });

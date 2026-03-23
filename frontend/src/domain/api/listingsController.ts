@@ -18,6 +18,7 @@ import type {
 } from '@/domain/listings/types'
 import type { FetchListingsOptions, ListingsController } from '@/domain/listings/controller'
 import { normalizeListingCardsMedia } from '@/domain/listings/cards'
+import { normalizeListingSlug } from '@/domain/listings/slug'
 import { filterDeletedListings } from '@/domain/listings/status'
 import { getCanonicalHost } from '@/domain/listings/host'
 import { ensurePublishedMediasStoredInImageKit } from '@/domain/api/imagekit'
@@ -51,8 +52,18 @@ const buildLegacyMyListingsUrl = () => `${BASE_API_URL}/user/me/listings`
 const buildMyListingsUrl = () => `${BASE_API_URL}/users/me/listings`
 const buildListingBundleUrl = (listingId: string) => `${BASE_API_URL}/listings/bundle/${listingId}`
 const buildCreateListingUrl = () => `${BASE_API_URL}/listings`
-const buildResolveListingHostnameUrl = (hostname: string) =>
-  `${BASE_API_URL}/listings/domains/resolve?hostname=${encodeURIComponent(hostname.trim())}`
+const buildResolveListingHostnameUrl = (hostname: string, listingSlug?: string | null) => {
+  const params = new URLSearchParams({
+    hostname: hostname.trim(),
+  })
+  const normalizedListingSlug = (listingSlug ?? '').trim()
+  if (normalizedListingSlug) {
+    params.set('listingSlug', normalizedListingSlug)
+  }
+  return `${BASE_API_URL}/listings/domains/resolve?${params.toString()}`
+}
+const buildResolveListingSlugUrl = (slug: string) =>
+  `${BASE_API_URL}/listings/resolve?slug=${encodeURIComponent(slug.trim())}`
 const buildListingAvailabilityRefreshUrl = (listingId: string) => `${BASE_API_URL}/calendar/listings/${listingId}/refresh`
 
 function waitForClerkToken({ timeoutMs, pollEveryMs }: { timeoutMs: number; pollEveryMs: number }): Promise<string | null> {
@@ -334,6 +345,32 @@ export function createApiListingsController(): ListingsController {
     console.log('[Domain][api] VITE_API_BASE_URL missing: using mock responses')
   }
 
+  function readResolvedListingId(payload: unknown): string | null {
+    const listingId = (payload as { listingId?: unknown })?.listingId
+    if (typeof listingId !== 'string') return null
+    const trimmed = listingId.trim()
+    return trimmed || null
+  }
+
+  async function resolveListingIdBySlug(slug: string): Promise<string | null> {
+    const normalizedSlug = normalizeListingSlug(slug)
+    if (!apiEnabled || !normalizedSlug) return null
+
+    const url = resolveUrl(buildResolveListingSlugUrl(normalizedSlug))
+
+    try {
+      const result = await fetchRemote<ListingHostnameResolution>(url)
+      return readResolvedListingId(result)
+    } catch (error) {
+      const status = readHttpStatus(error)
+      if (status === 400 || status === 401 || status === 403 || status === 404) {
+        return null
+      }
+      console.warn('[Domain][api] resolveListingIdBySlug failed', { slug: normalizedSlug, error })
+      return null
+    }
+  }
+
   return {
     mode: 'api',
     fetchListings: async (options?: FetchListingsOptions): Promise<UserListingCard[]> => {
@@ -380,17 +417,20 @@ export function createApiListingsController(): ListingsController {
         throw error
       }
     },
-    resolveListingIdByHostname: async (hostname: string): Promise<string | null> => {
+    resolveListingIdByHostname: async (hostname: string, listingSlug?: string | null): Promise<string | null> => {
       if (!apiEnabled || !hostname.trim()) return null
 
       try {
-        const result = await fetchRemote<ListingHostnameResolution>(resolveUrl(buildResolveListingHostnameUrl(hostname)))
-        return typeof result?.listingId === 'string' && result.listingId.trim() ? result.listingId.trim() : null
+        const result = await fetchRemote<ListingHostnameResolution>(
+          resolveUrl(buildResolveListingHostnameUrl(hostname, listingSlug)),
+        )
+        return readResolvedListingId(result)
       } catch (error) {
         if (readHttpStatus(error) === 404) return null
         throw error
       }
     },
+    resolveListingIdBySlug,
     fetchListingBundle: async (listingId: string): Promise<RawListingBundle> => {
       console.log('[Domain][api] fetchListingBundle', { listingId })
       if (!apiEnabled) {
@@ -486,6 +526,10 @@ export function createApiListingsController(): ListingsController {
 
       if (patch.notes) {
         requests.push(patchRemoteWithToken(resolveUrl(buildListingUrl('notes', listingId)), patch.notes, token))
+      }
+
+      if (patch.comments) {
+        requests.push(patchRemoteWithToken(resolveUrl(buildListingUrl('comments', listingId)), patch.comments, token))
       }
 
       if (requests.length) {

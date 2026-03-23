@@ -1,6 +1,17 @@
 // File: src/domain/listings/bookings.ts
 
-import type { RawBookedDay, RawBookingReservation, RawBookings, RawReservationMessage, RawReservationMessageAuthor, RawReservationMessaging, RawReservationMessageState, RawReservationGuests, RawReservationPayment } from '@/domain/listings/types'
+import type {
+  RawBookedDay,
+  RawBookingReservation,
+  RawBookings,
+  RawReservationConfirmation,
+  RawReservationMessage,
+  RawReservationMessageAuthor,
+  RawReservationMessaging,
+  RawReservationMessageState,
+  RawReservationGuests,
+  RawReservationPayment,
+} from '@/domain/listings/types'
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -209,6 +220,26 @@ function normalizeMessaging(input: Partial<RawReservationMessaging> | null | und
   }
 }
 
+function normalizeReservationConfirmation(
+  input: Partial<RawReservationConfirmation> | null | undefined,
+): RawReservationConfirmation | undefined {
+  if (!input || typeof input !== 'object') return undefined
+
+  const guideAccessKey = isNonEmptyString(input.guideAccessKey) ? input.guideAccessKey.trim() : undefined
+  const guideAccessToken = isNonEmptyString(input.guideAccessToken) ? input.guideAccessToken.trim() : undefined
+  const guideUrl = isNonEmptyString(input.guideUrl) ? input.guideUrl.trim() : undefined
+  const generatedAt = isNonEmptyString(input.generatedAt) ? input.generatedAt.trim() : undefined
+
+  if (!guideAccessKey && !guideAccessToken && !guideUrl && !generatedAt) return undefined
+
+  return {
+    ...(guideAccessKey ? { guideAccessKey } : {}),
+    ...(guideAccessToken ? { guideAccessToken } : {}),
+    ...(guideUrl ? { guideUrl } : {}),
+    ...(generatedAt ? { generatedAt } : {}),
+  }
+}
+
 export function normalizeReservation(input: Partial<RawBookingReservation> | null | undefined, index = 0): RawBookingReservation | null {
   if (!input || typeof input !== 'object') return null
 
@@ -229,6 +260,9 @@ export function normalizeReservation(input: Partial<RawBookingReservation> | nul
   const id = isNonEmptyString(input.id) ? input.id.trim() : `reservation-${range.start}-${range.end}-${index + 1}`
   const createdAt = isNonEmptyString(input.createdAt) ? input.createdAt.trim() : undefined
   const messaging = normalizeMessaging(input.messaging, createdAt)
+  const reservationConfirmation =
+    normalizeReservationConfirmation(input.confirmation)
+    ?? normalizeReservationConfirmation(input.contact?.confirmation)
 
   const contact =
     input.contact && typeof input.contact === 'object'
@@ -237,6 +271,7 @@ export function normalizeReservation(input: Partial<RawBookingReservation> | nul
           lastName: isNonEmptyString(input.contact.lastName) ? input.contact.lastName.trim() : undefined,
           phone: isNonEmptyString(input.contact.phone) ? input.contact.phone.trim() : undefined,
           email: isNonEmptyString(input.contact.email) ? input.contact.email.trim() : undefined,
+          ...(reservationConfirmation ? { confirmation: reservationConfirmation } : {}),
         }
       : undefined
 
@@ -251,6 +286,7 @@ export function normalizeReservation(input: Partial<RawBookingReservation> | nul
     guests,
     payment,
     ...(contact ? { contact } : {}),
+    ...(reservationConfirmation ? { confirmation: reservationConfirmation } : {}),
     ...(createdAt ? { createdAt } : {}),
     ...(messaging ? { messaging } : {}),
   }

@@ -243,6 +243,10 @@ $editor-listing-card-target-width: 20rem;
 
                 cursor: pointer;
 
+                &.is-connect-locked {
+                  opacity: 0.72;
+                }
+
                 &.is-published {
                   border-color: rgba($accent, 0.25);
                   background: rgba($accent, 0.75);
@@ -406,6 +410,24 @@ $editor-listing-card-target-width: 20rem;
                   transform: translateY(0);
                   pointer-events: auto;
                 }
+              }
+            }
+
+            >.connect-overlay {
+              position: absolute;
+              inset: 0;
+              z-index: 12;
+              pointer-events: none;
+
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              padding: 0.9rem;
+
+              >.connect-cta {
+                pointer-events: auto;
+
+                @include buttons.primary($cta: true, $theme: dark, $little: true);
               }
             }
 

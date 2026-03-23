@@ -42,6 +42,23 @@ export type ListingHostnameResolution = {
   publicUrl: string;
 };
 
+export type ListingSlugResolution = {
+  listingId: string;
+  slug: string;
+  publicUrl: string;
+};
+
+type ResolveListingByHostnameInput = {
+  hostname: string;
+  listingSlug?: string | null;
+  auth?: RequestAuth | null;
+};
+
+type CheckSubdomainAvailabilityInput = {
+  excludeListingId?: string;
+  auth?: RequestAuth | null;
+};
+
 export type ListingSitemapEntry = {
   listingId: string;
   publicUrl: string;
@@ -96,6 +113,46 @@ function readString(value: unknown): string | null {
 function readBoolean(value: unknown, fallback = false): boolean {
   if (typeof value === 'boolean') return value;
   return fallback;
+}
+
+function stripAccents(value: string): string {
+  return value
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+function normalizePublicListingSlug(value: unknown): string {
+  const input = typeof value === 'string' ? value.trim() : '';
+  if (!input) return '';
+
+  return stripAccents(input)
+    .toLowerCase()
+    .replace(/œ/g, 'oe')
+    .replace(/æ/g, 'ae')
+    .replace(/ß/g, 'ss')
+    .replace(/['’`´]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+const TRANSIENT_LISTING_SLUG_PATTERN = /^(?:landing|listing)-preview(?:-[a-z0-9]+)?$/i;
+
+function isTransientListingSlug(value: string): boolean {
+  return TRANSIENT_LISTING_SLUG_PATTERN.test(value);
+}
+
+function buildListingSlugFromCore(core: Record<string, unknown>, listingId: string): string {
+  const fromExisting = normalizePublicListingSlug(core.slug);
+  if (fromExisting && !isTransientListingSlug(fromExisting)) return fromExisting;
+
+  const fromTitle = normalizePublicListingSlug(core.title);
+  if (fromTitle) return fromTitle;
+
+  const fromListingId = normalizePublicListingSlug(listingId);
+  if (fromListingId && !isTransientListingSlug(fromListingId)) return fromListingId;
+
+  return 'annonce';
 }
 
 class ListingPublicationForbiddenError extends Error {
@@ -178,6 +235,68 @@ export class ListingsService {
     if (!readiness.canPublish) {
       throw new ListingPublicationForbiddenError(readiness);
     }
+  }
+
+  private hasSelectedSubscriptionPlan(user: User | null | undefined): boolean {
+    if (!user) return false;
+    const profile = asObject(user.stripeConnectProfile);
+    const billing = asObject(profile.billing);
+    const activePlanCode = readString(billing.planCode);
+    const pendingPlanCode = readString(billing.pendingPlanCode);
+    return Boolean(activePlanCode || pendingPlanCode);
+  }
+
+  private isActorOwner(listingOwnerId: string | null, actor: User | null) {
+    if (!listingOwnerId || !actor) return false;
+    return listingOwnerId === actor.id;
+  }
+
+  private getListingStatus(listing: Pick<Listing, 'id' | 'status' | 'core'>): string {
+    const core = asObject(listing.core, buildDefaultResource('core', listing.id));
+    const coreStatus = readString(core.status)?.toLowerCase();
+    if (coreStatus) return coreStatus;
+
+    const listingStatus = readString(listing.status)?.toLowerCase();
+    return listingStatus ?? 'draft';
+  }
+
+  private async buildUniqueListingSlug(baseSlug: string, exceptListingId?: string): Promise<string> {
+    const normalizedBase = normalizePublicListingSlug(baseSlug) || 'annonce';
+    const listings = await this.prisma.listing.findMany({
+      select: {
+        id: true,
+        core: true,
+      },
+    });
+
+    const takenSlugs = new Set<string>();
+
+    for (const listing of listings) {
+      if (exceptListingId && listing.id === exceptListingId) continue;
+      const core = asObject(listing.core, buildDefaultResource('core', listing.id));
+      const candidateSlug = buildListingSlugFromCore(core, listing.id);
+      if (candidateSlug) {
+        takenSlugs.add(candidateSlug);
+      }
+    }
+
+    if (!takenSlugs.has(normalizedBase)) return normalizedBase;
+
+    let suffix = 2;
+    let candidate = `${normalizedBase}-${suffix}`;
+    while (takenSlugs.has(candidate)) {
+      suffix += 1;
+      candidate = `${normalizedBase}-${suffix}`;
+    }
+
+    return candidate;
+  }
+
+  private buildManagedListingPublicUrl(subdomainSlug: string, listingSlug?: string | null): string {
+    const baseUrl = this.buildListingPublicUrl(subdomainSlug);
+    const normalizedListingSlug = normalizePublicListingSlug(listingSlug ?? '');
+    if (!normalizedListingSlug) return baseUrl;
+    return `${baseUrl}/${normalizedListingSlug}`;
   }
 
   private normalizeReservationId(value: unknown): string | null {
@@ -297,16 +416,46 @@ export class ListingsService {
     return `https://${this.buildListingHostname(slug)}`;
   }
 
-  private toDomainRecord(listing: { id: string; subdomainSlug: string | null }): ListingDomainRecord {
-    const slug = typeof listing.subdomainSlug === 'string' && listing.subdomainSlug.trim()
+  private async toDomainRecord(listing: {
+    id: string;
+    ownerId: string | null;
+    subdomainSlug: string | null;
+    core: unknown;
+  }): Promise<ListingDomainRecord> {
+    const normalizedSubdomain = typeof listing.subdomainSlug === 'string' && listing.subdomainSlug.trim()
       ? normalizeSlug(listing.subdomainSlug)
       : null;
 
+    if (!normalizedSubdomain) {
+      return {
+        listingId: listing.id,
+        subdomainSlug: null,
+        hostname: null,
+        publicUrl: null,
+      };
+    }
+
+    const listingCore = asObject(listing.core, buildDefaultResource('core', listing.id));
+    const listingSlug = buildListingSlugFromCore(listingCore, listing.id);
+
+    const ownerScopedCount = listing.ownerId
+      ? await this.prisma.listing.count({
+          where: {
+            ownerId: listing.ownerId,
+            subdomainSlug: normalizedSubdomain,
+          },
+        })
+      : 1;
+
+    const publicUrl = ownerScopedCount > 1
+      ? this.buildManagedListingPublicUrl(normalizedSubdomain, listingSlug)
+      : this.buildListingPublicUrl(normalizedSubdomain);
+
     return {
       listingId: listing.id,
-      subdomainSlug: slug,
-      hostname: slug ? this.buildListingHostname(slug) : null,
-      publicUrl: slug ? this.buildListingPublicUrl(slug) : null,
+      subdomainSlug: normalizedSubdomain,
+      hostname: this.buildListingHostname(normalizedSubdomain),
+      publicUrl,
     };
   }
 
@@ -328,6 +477,7 @@ export class ListingsService {
         id: true,
         ownerId: true,
         subdomainSlug: true,
+        core: true,
       },
     });
 
@@ -342,8 +492,15 @@ export class ListingsService {
   }
 
   private toSections(listing: ListingRecord): ListingSectionBundle {
+    const core = asObject(listing.core, buildDefaultResource('core', listing.id));
+    const slug = buildListingSlugFromCore(core, listing.id);
+
     return {
-      core: asObject(listing.core, buildDefaultResource('core', listing.id)),
+      core: {
+        ...core,
+        id: listing.id,
+        slug,
+      },
       bookings: asObject(listing.bookings, buildDefaultResource('bookings', listing.id)),
       medias: asObject(listing.medias, buildDefaultResource('medias', listing.id)),
       arrival: asObject(listing.arrival, buildDefaultResource('arrival', listing.id)),
@@ -374,6 +531,9 @@ export class ListingsService {
     const notes = payload.notes ? deepMerge(defaults.notes, payload.notes) : defaults.notes;
     const comments = payload.comments ? deepMerge(defaults.comments, payload.comments) : defaults.comments;
     const host = payload.host ? deepMerge(buildHostProfileFromUser(owner), payload.host) : buildHostProfileFromUser(owner);
+    core.id = listingId;
+    const requestedSlug = buildListingSlugFromCore(core, listingId);
+    core.slug = await this.buildUniqueListingSlug(requestedSlug);
     const listingStatus = this.extractStatus(core);
 
     if (listingStatus === 'published') {
@@ -423,13 +583,19 @@ export class ListingsService {
     return asObject(rawValue, fallback);
   }
 
-  async getListingBundle(listingId: string) {
+  async getListingBundle(listingId: string, auth: RequestAuth | null = null) {
     const listing = await this.prisma.listing.findUnique({
       where: { id: listingId },
       include: { owner: true },
     });
 
     if (!listing) return null;
+    const actor = await upsertUserFromAuth(this.prisma, auth);
+    const isOwner = this.isActorOwner(listing.ownerId, actor);
+
+    if (!isOwner && this.getListingStatus(listing) === 'deleted') {
+      return null;
+    }
 
     return this.toSections(listing);
   }
@@ -441,10 +607,11 @@ export class ListingsService {
     return this.toDomainRecord(access.listing);
   }
 
-  async checkSubdomainAvailability(slug: string, excludeListingId?: string): Promise<ListingDomainAvailability> {
+  async checkSubdomainAvailability(slug: string, options?: CheckSubdomainAvailabilityInput): Promise<ListingDomainAvailability> {
     const normalizedSlug = normalizeSlug(slug);
     const hostname = this.buildListingHostname(normalizedSlug);
     const publicUrl = this.buildListingPublicUrl(normalizedSlug);
+    const actor = await upsertUserFromAuth(this.prisma, options?.auth ?? null);
 
     if (this.reservedSlugs.has(normalizedSlug)) {
       return {
@@ -456,19 +623,45 @@ export class ListingsService {
       };
     }
 
-    const existing = await this.prisma.listing.findUnique({
+    if (!this.hasSelectedSubscriptionPlan(actor)) {
+      return {
+        slug: normalizedSlug,
+        available: false,
+        hostname,
+        publicUrl,
+        reason: 'Un plan d abonnement est requis pour réserver un sous-domaine.',
+      };
+    }
+
+    let allowedExcludeListingId: string | undefined;
+    const requestedExcludeListingId = options?.excludeListingId?.trim();
+    if (requestedExcludeListingId) {
+      const candidate = await this.prisma.listing.findUnique({
+        where: { id: requestedExcludeListingId },
+        select: { id: true, ownerId: true },
+      });
+      if (candidate && actor && (!candidate.ownerId || candidate.ownerId === actor.id)) {
+        allowedExcludeListingId = candidate.id;
+      }
+    }
+
+    const existing = await this.prisma.listing.findMany({
       where: { subdomainSlug: normalizedSlug },
-      select: { id: true },
+      select: { id: true, ownerId: true },
     });
 
-    const isOwnedByExcludedListing = Boolean(existing && excludeListingId && existing.id === excludeListingId);
+    const blockedByAnotherAccount = existing.some((item) => {
+      if (allowedExcludeListingId && item.id === allowedExcludeListingId) return false;
+      if (!item.ownerId) return true;
+      return item.ownerId !== actor?.id;
+    });
 
     return {
       slug: normalizedSlug,
-      available: !existing || isOwnedByExcludedListing,
+      available: !blockedByAnotherAccount,
       hostname,
       publicUrl,
-      reason: !existing || isOwnedByExcludedListing ? null : 'Ce sous-domaine est déjà pris.',
+      reason: blockedByAnotherAccount ? 'Ce sous-domaine est déjà pris par un autre compte.' : null,
     };
   }
 
@@ -480,9 +673,13 @@ export class ListingsService {
     const access = await this.findOwnedListing(args.listingId, args.auth);
     if (!access) return null;
     if (access === 'forbidden') return 'forbidden' as const;
+    if (!this.hasSelectedSubscriptionPlan(access.actor)) return 'subscription_required' as const;
 
     const normalizedSlug = normalizeSlug(args.slug);
-    const availability = await this.checkSubdomainAvailability(normalizedSlug, args.listingId);
+    const availability = await this.checkSubdomainAvailability(normalizedSlug, {
+      excludeListingId: args.listingId,
+      auth: args.auth,
+    });
     if (!availability.available) {
       return 'conflict' as const;
     }
@@ -501,7 +698,9 @@ export class ListingsService {
       },
       select: {
         id: true,
+        ownerId: true,
         subdomainSlug: true,
+        core: true,
       },
     });
 
@@ -523,33 +722,108 @@ export class ListingsService {
       },
       select: {
         id: true,
+        ownerId: true,
         subdomainSlug: true,
+        core: true,
       },
     });
 
     return this.toDomainRecord(updated);
   }
 
-  async resolveListingByHostname(hostname: string): Promise<ListingHostnameResolution | null> {
-    const slug = this.extractManagedSlug(hostname);
-    if (!slug) return null;
+  async resolveListingByHostname(input: ResolveListingByHostnameInput): Promise<ListingHostnameResolution | null> {
+    const managedSubdomain = this.extractManagedSlug(input.hostname);
+    if (!managedSubdomain) return null;
 
-    const listing = await this.prisma.listing.findUnique({
-      where: { subdomainSlug: slug },
+    const actor = await upsertUserFromAuth(this.prisma, input.auth ?? null);
+    const listings = await this.prisma.listing.findMany({
+      where: { subdomainSlug: managedSubdomain },
       select: {
         id: true,
-        subdomainSlug: true,
+        ownerId: true,
+        status: true,
+        core: true,
+      },
+      orderBy: {
+        updatedAt: 'desc',
       },
     });
 
-    if (!listing?.subdomainSlug) return null;
+    const visibleListings = listings.filter((listing) => {
+      const isOwner = this.isActorOwner(listing.ownerId, actor);
+      if (isOwner) return true;
+      return this.getListingStatus(listing) !== 'deleted';
+    });
 
+    if (!visibleListings.length) return null;
+
+    const normalizedListingSlug = normalizePublicListingSlug(input.listingSlug ?? '');
+    if (normalizedListingSlug) {
+      const matched = visibleListings.find((listing) => {
+        const listingCore = asObject(listing.core, buildDefaultResource('core', listing.id));
+        return buildListingSlugFromCore(listingCore, listing.id) === normalizedListingSlug;
+      });
+      if (!matched) return null;
+
+      return {
+        listingId: matched.id,
+        subdomainSlug: managedSubdomain,
+        hostname: this.buildListingHostname(managedSubdomain),
+        publicUrl: this.buildManagedListingPublicUrl(managedSubdomain, normalizedListingSlug),
+      };
+    }
+
+    if (visibleListings.length !== 1) {
+      return null;
+    }
+
+    const matched = visibleListings[0];
+    if (!matched) return null;
     return {
-      listingId: listing.id,
-      subdomainSlug: listing.subdomainSlug,
-      hostname: this.buildListingHostname(listing.subdomainSlug),
-      publicUrl: this.buildListingPublicUrl(listing.subdomainSlug),
+      listingId: matched.id,
+      subdomainSlug: managedSubdomain,
+      hostname: this.buildListingHostname(managedSubdomain),
+      publicUrl: this.buildListingPublicUrl(managedSubdomain),
     };
+  }
+
+  async resolveListingBySlug(slug: string, auth: RequestAuth | null = null): Promise<ListingSlugResolution | null> {
+    const normalizedSlug = normalizePublicListingSlug(slug);
+    if (!normalizedSlug) return null;
+
+    const actor = await upsertUserFromAuth(this.prisma, auth);
+    const listings = await this.prisma.listing.findMany({
+      select: {
+        id: true,
+        ownerId: true,
+        status: true,
+        subdomainSlug: true,
+        core: true,
+      },
+      orderBy: {
+        updatedAt: 'desc',
+      },
+    });
+
+    for (const listing of listings) {
+      if (listing.subdomainSlug) continue;
+      const core = asObject(listing.core, buildDefaultResource('core', listing.id));
+      const listingSlug = buildListingSlugFromCore(core, listing.id);
+      if (listingSlug !== normalizedSlug) continue;
+
+      const isOwner = this.isActorOwner(listing.ownerId, actor);
+      if (!isOwner && this.getListingStatus(listing) === 'deleted') {
+        continue;
+      }
+
+      return {
+        listingId: listing.id,
+        slug: listingSlug,
+        publicUrl: `/${listingSlug}`,
+      };
+    }
+
+    return null;
   }
 
   async listSitemapEntries(): Promise<ListingSitemapEntry[]> {
@@ -562,7 +836,9 @@ export class ListingsService {
       },
       select: {
         id: true,
+        ownerId: true,
         subdomainSlug: true,
+        core: true,
         updatedAt: true,
       },
       orderBy: {
@@ -570,13 +846,32 @@ export class ListingsService {
       },
     });
 
+    const ownerScopedSubdomainCounts = new Map<string, number>();
+
+    for (const listing of listings) {
+      if (!listing.ownerId || !listing.subdomainSlug) continue;
+      const key = `${listing.ownerId}::${listing.subdomainSlug}`;
+      ownerScopedSubdomainCounts.set(key, (ownerScopedSubdomainCounts.get(key) ?? 0) + 1);
+    }
+
     return listings
       .filter((listing): listing is typeof listing & { subdomainSlug: string } => Boolean(listing.subdomainSlug))
-      .map((listing) => ({
-        listingId: listing.id,
-        publicUrl: this.buildListingPublicUrl(listing.subdomainSlug),
-        updatedAt: listing.updatedAt.toISOString(),
-      }));
+      .map((listing) => {
+        const listingCore = asObject(listing.core, buildDefaultResource('core', listing.id));
+        const listingSlug = buildListingSlugFromCore(listingCore, listing.id);
+        const ownerScopedCount = listing.ownerId
+          ? ownerScopedSubdomainCounts.get(`${listing.ownerId}::${listing.subdomainSlug}`) ?? 1
+          : 1;
+        const publicUrl = ownerScopedCount > 1
+          ? this.buildManagedListingPublicUrl(listing.subdomainSlug, listingSlug)
+          : this.buildListingPublicUrl(listing.subdomainSlug);
+
+        return {
+          listingId: listing.id,
+          publicUrl,
+          updatedAt: listing.updatedAt.toISOString(),
+        };
+      });
   }
 
   async patchListingResource(args: {
@@ -616,7 +911,7 @@ export class ListingsService {
     const rawValue = (listing as Record<string, unknown>)[resource];
     const currentValue = asObject(rawValue, fallback);
     const merged = deepMerge(currentValue, patch);
-    const normalizedMerged = resource === 'bookings'
+    let normalizedMerged = resource === 'bookings'
       ? await this.normalizeBookingsResourceValue(listingId, merged)
       : merged;
 
@@ -625,6 +920,14 @@ export class ListingsService {
     };
 
     if (resource === 'core') {
+      normalizedMerged.id = listingId;
+      const currentSlug = normalizePublicListingSlug(currentValue.slug);
+      if (currentSlug && !isTransientListingSlug(currentSlug)) {
+        normalizedMerged.slug = currentSlug;
+      } else {
+        const requestedSlug = buildListingSlugFromCore(normalizedMerged, listingId);
+        normalizedMerged.slug = await this.buildUniqueListingSlug(requestedSlug, listingId);
+      }
       const nextStatus = this.extractStatus(normalizedMerged);
       if (nextStatus === 'published') {
         this.assertCanPublishListing(actor);
@@ -654,6 +957,13 @@ export class ListingsService {
   }
 
   listUserCards(listings: Listing[]) {
+    const ownerScopedSubdomainCounts = new Map<string, number>();
+    for (const listing of listings) {
+      if (!listing.ownerId || !listing.subdomainSlug) continue;
+      const key = `${listing.ownerId}::${listing.subdomainSlug}`;
+      ownerScopedSubdomainCounts.set(key, (ownerScopedSubdomainCounts.get(key) ?? 0) + 1);
+    }
+
     return listings.map((listing) => {
       const core = asObject(listing.core, buildDefaultResource('core', listing.id));
       const bookings = asObject(listing.bookings, buildDefaultResource('bookings', listing.id));
@@ -666,11 +976,21 @@ export class ListingsService {
 
       const coverSrc = typeof images[0]?.src === 'string' ? images[0].src : undefined;
       const noteRecord = asObject(notes.note);
+      const slug = buildListingSlugFromCore(core, listing.id);
+      const ownerScopedCount = listing.ownerId && listing.subdomainSlug
+        ? ownerScopedSubdomainCounts.get(`${listing.ownerId}::${listing.subdomainSlug}`) ?? 1
+        : 1;
+      const publicUrl = listing.subdomainSlug
+        ? ownerScopedCount > 1
+          ? this.buildManagedListingPublicUrl(listing.subdomainSlug, slug)
+          : this.buildListingPublicUrl(listing.subdomainSlug)
+        : undefined;
 
       return {
         listingId: listing.id,
+        slug,
         subdomainSlug: listing.subdomainSlug ?? undefined,
-        publicUrl: listing.subdomainSlug ? this.buildListingPublicUrl(listing.subdomainSlug) : undefined,
+        publicUrl,
         title: typeof core.title === 'string' ? core.title : undefined,
         status: typeof core.status === 'string' ? core.status : listing.status,
         hasPendingChanges: Boolean(listing.hasPendingChanges),

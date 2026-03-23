@@ -89,6 +89,12 @@ export type StripeConnectOnboardingLinkResponse = {
   mode: 'live' | 'mock'
 }
 
+export type StripeConnectDashboardLinkResponse = {
+  accountId: string
+  url: string
+  mode: 'live' | 'mock'
+}
+
 export type StripeConnectSyncResponse = {
   mode: 'live' | 'mock'
   connect: StripeConnectSummary
@@ -108,6 +114,7 @@ const STATE_PATH = '/payments/stripe/subscriptions/me'
 const ACTIVATE_PATH = '/payments/stripe/subscriptions/activate'
 const CONFIRM_CHECKOUT_PATH = '/payments/stripe/subscriptions/checkout/confirm'
 const CONNECT_ONBOARDING_LINK_PATH = '/payments/stripe/connect/onboarding-link'
+const CONNECT_DASHBOARD_LINK_PATH = '/payments/stripe/connect/dashboard-link'
 const CONNECT_SYNC_PATH = '/payments/stripe/connect/sync'
 
 function normalizePath(path: string): string {
@@ -336,6 +343,28 @@ export async function createStripeConnectOnboardingLink(input: {
     return data
   } catch (error) {
     throw new Error(toApiErrorMessage(error, 'Impossible de lancer la configuration Stripe Connect.'))
+  }
+}
+
+export async function createMyStripeConnectDashboardLink(input?: { accountId?: string }): Promise<StripeConnectDashboardLinkResponse> {
+  const axios = await getAxios()
+  const headers = await getHeaders({ requiresAuth: true })
+
+  try {
+    const { data } = await axios.post<StripeConnectDashboardLinkResponse>(
+      resolveUrl(buildApiUrl(CONNECT_DASHBOARD_LINK_PATH)),
+      {
+        accountId: input?.accountId,
+      },
+      {
+        withCredentials: false,
+        headers,
+      },
+    )
+
+    return data
+  } catch (error) {
+    throw new Error(toApiErrorMessage(error, 'Impossible de créer un lien vers le dashboard Stripe Connect.'))
   }
 }
 

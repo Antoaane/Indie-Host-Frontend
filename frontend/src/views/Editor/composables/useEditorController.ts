@@ -34,6 +34,7 @@ export function useEditorController(options: EditorControllerOptions) {
   const selectedListingId = ref<string | null>(null)
   const selectionToken = ref(0)
   const sourceToken = ref(0)
+  const isStripeConnectPublishLocked = ref(false)
 
   const listingState = useEditorListingState({
     getSource: () => options.source.value,
@@ -67,6 +68,37 @@ export function useEditorController(options: EditorControllerOptions) {
     publishedSnapshotByListingId: listingState.publishedSnapshotByListingId,
     syncListingPendingChanges: listingState.syncListingPendingChanges,
   })
+
+  function isStripeConnectConfiguredFromBillingState(input: Awaited<ReturnType<typeof fetchMyStripeSubscriptionState>>): boolean {
+    const readiness = input.publicationReadiness
+    if (readiness) {
+      return Boolean(
+        readiness.hasConnectAccount
+        && readiness.connectOnboardingCompleted
+        && readiness.chargesEnabled
+        && readiness.payoutsEnabled,
+      )
+    }
+
+    const connect = input.connect
+    return Boolean(
+      connect?.accountId
+      && connect?.onboardingStatus === 'completed'
+      && connect?.chargesEnabled
+      && connect?.payoutsEnabled,
+    )
+  }
+
+  async function refreshStripeConnectPublishLock({ sync = false }: { sync?: boolean } = {}) {
+    try {
+      const billingState = await fetchMyStripeSubscriptionState({ sync })
+      isStripeConnectPublishLocked.value = !isStripeConnectConfiguredFromBillingState(billingState)
+      return billingState
+    } catch (error) {
+      console.warn('[Editor] failed to refresh stripe connect publication lock state', { error })
+      return null
+    }
+  }
 
   function normalizeQueryParam(value: unknown): string | null {
     if (Array.isArray(value)) return normalizeQueryParam(value[0])
@@ -125,7 +157,10 @@ export function useEditorController(options: EditorControllerOptions) {
 
   async function initializeEditorState() {
     console.log('[Editor] initializeEditorState')
-    await listingState.loadListings()
+    await Promise.all([
+      listingState.loadListings(),
+      refreshStripeConnectPublishLock({ sync: true }),
+    ])
 
     if (!listingState.listings.value.length) {
       selectedListingId.value = null
@@ -176,12 +211,13 @@ export function useEditorController(options: EditorControllerOptions) {
     if (normalizedStatus === 'published') {
       try {
         const billingState = await fetchMyStripeSubscriptionState({ sync: true })
+        isStripeConnectPublishLocked.value = !isStripeConnectConfiguredFromBillingState(billingState)
         if (!billingState.publicationReadiness?.canPublish) {
           const missing = billingState.publicationReadiness?.missingRequirements ?? []
           const detail = missing.length ? ` (${missing.join(', ')})` : ''
           window.alert(`Publication bloquée: abonnement actif + Stripe Connect complet requis${detail}.`)
           await router.push({
-            name: 'pricing',
+            name: 'pricing-callback',
             query: {
               onboarding: 'listing',
               intent: 'publish',
@@ -397,6 +433,7 @@ export function useEditorController(options: EditorControllerOptions) {
     publishSelectedDraft,
     selectedListingId,
     selectedListingHasPendingChanges,
+    isStripeConnectPublishLocked,
     showListings,
     showPreview,
     stage,

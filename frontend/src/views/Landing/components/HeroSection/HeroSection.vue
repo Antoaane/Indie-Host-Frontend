@@ -79,7 +79,7 @@ function onSubmit(e?: Event) {
 function handleCreateSite() {
   submitError.value = ''
   submitUrl(url.value.trim())
-  void router.push(props.content.secondaryCta.href || '/editor/create')
+  void router.push(props.content.secondaryCta.href || '/dashboard/editor/create')
 }
 
 onMounted(async () => {
@@ -193,21 +193,14 @@ onMounted(async () => {
                 autocomplete="url"
                 @input="submitError = ''"
               />
-              <div class="platform-logos">
-                <img
-                  src="/assets/media/icons/airbnb-logo.svg"
-                  alt="Airbnb"
-                  class="platform-logo"
-                />
-                <img
-                  src="/assets/media/icons/booking-logo.svg"
-                  alt="Booking.com"
-                  class="platform-logo"
-                />
+              <div class="hero-search-action">
+                <button type="submit">
+                  <span v-html="content.primaryCta.label" />
+                </button>
               </div>
             </div>
             <div class="cta">
-              <div class="cta-primary">
+              <div class="cta-primary-mobile">
                 <button type="submit">
                   <span v-html="content.primaryCta.label" />
                 </button>

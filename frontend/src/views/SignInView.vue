@@ -5,6 +5,7 @@
 import { SignIn } from '@clerk/vue'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { clerkLocalization } from '@/locales/clerk'
 
 const route = useRoute()
 
@@ -18,7 +19,7 @@ function readQueryValue(value: unknown): string | null {
 }
 
 const redirectUrl = computed(() => {
-  return readQueryValue(route.query.redirect_url) ?? '/pricing'
+  return readQueryValue(route.query.redirect_url) ?? '/pricing/callback'
 })
 
 const signUpUrl = computed(() => {
@@ -34,6 +35,7 @@ const signUpUrl = computed(() => {
       routing="path"
       :force-redirect-url="redirectUrl"
       :sign-up-url="signUpUrl"
+      :localization="clerkLocalization"
     />
   </div>
 </template>

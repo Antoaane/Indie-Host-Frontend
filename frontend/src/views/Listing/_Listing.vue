@@ -3,20 +3,27 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useHead } from '@unhead/vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 // COMOOENENTS
 import ListingView from '@/views/ListingView/_ListingView.vue'
 import ListingUnavailable from '@/views/Listing/ListingUnavailable.vue'
 import { loadBookings, loadComments, loadCore, loadHost, loadMedias, loadNotes, refreshListingAvailability } from '@/views/Listing/utils/fetchListingRaw'
 import type { RawListingBundle } from '@/domain/listings/types'
 import { getListingStatusFlags } from '@/domain/listings/status'
+import { isManagedListingHostname } from '@/domain/listings/publicDomain'
+import { buildListingSlug, normalizeListingSlug } from '@/domain/listings/slug'
 
 const route = useRoute()
-const listingKey = computed(() => {
-  const id = route.params.id
-  if (typeof id === 'string' && id.trim()) return id.trim()
-  if (Array.isArray(id) && id[0]?.trim()) return id[0].trim()
+const router = useRouter()
+
+function readRouteParam(value: unknown): string | undefined {
+  if (typeof value === 'string' && value.trim()) return value.trim()
+  if (Array.isArray(value) && typeof value[0] === 'string' && value[0].trim()) return value[0].trim()
   return undefined
+}
+
+const listingKey = computed(() => {
+  return readRouteParam(route.params.slug) ?? readRouteParam(route.params.id)
 })
 
 const rawListing = ref<RawListingBundle | null>(null)
@@ -65,6 +72,11 @@ const canonicalUrl = computed(() => {
   if (typeof window === 'undefined') return undefined
   return window.location.href
 })
+const canonicalSlug = computed(() => buildListingSlug({
+  existingSlug: rawListing.value?.core?.slug,
+  title: rawListing.value?.core?.title,
+  listingId: rawListing.value?.core?.id,
+}))
 
 useHead(() => ({
   title: seoTitle.value,
@@ -109,6 +121,10 @@ async function fetchRawListing() {
     if (resolvedListingId) {
       void refreshAvailabilityInBackground(resolvedListingId, fetchId)
     }
+  } catch (error) {
+    if (fetchId !== activeFetchId) return
+    rawListing.value = null
+    console.warn('[Listing] failed to fetch public listing', { listingKey: listingKey.value, error })
   } finally {
     if (fetchId === activeFetchId) {
       isLoading.value = false
@@ -144,6 +160,23 @@ watch(
     void fetchRawListing()
   },
   { immediate: true },
+)
+
+watch(
+  [() => route.name, listingKey, canonicalSlug],
+  ([routeName, currentListingKey, targetSlug]) => {
+    if (routeName !== 'listing') return
+    if (typeof window !== 'undefined' && isManagedListingHostname(window.location.hostname)) return
+    const normalizedCurrent = normalizeListingSlug(currentListingKey)
+    if (!targetSlug || normalizedCurrent === targetSlug) return
+
+    void router.replace({
+      name: 'listing',
+      params: { slug: targetSlug },
+      query: route.query,
+      hash: route.hash,
+    })
+  },
 )
 </script>
 

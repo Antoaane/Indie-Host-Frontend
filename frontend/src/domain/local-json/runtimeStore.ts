@@ -15,6 +15,11 @@ import type {
   VolatileBundle,
 } from '@/domain/listings/types'
 import { getCanonicalHost } from '@/domain/listings/host'
+import {
+  buildListingSlug,
+  buildUniqueListingSlug,
+  normalizeListingSlug,
+} from '@/domain/listings/slug'
 
 type RuntimeListingResources = {
   core: Partial<RawCore>
@@ -256,6 +261,7 @@ function buildInitialDatasets(): Map<string, RuntimeListingResources> {
 
 export type RuntimeLocalJsonStore = {
   listListings: () => UserListingCard[]
+  resolveListingIdBySlug: (slug: string) => string | null
   getBundle: (listingId: string) => RawListingBundle
   getEditableBundle: (listingId: string) => RawListingBundle
   getVolatileBundle: (listingId: string) => VolatileBundle
@@ -267,16 +273,87 @@ export type RuntimeLocalJsonStore = {
 export function createRuntimeLocalJsonStore(): RuntimeLocalJsonStore {
   const listingsById = buildInitialDatasets()
 
+  function buildListingIdCandidate(): string {
+    const timestampPart = Date.now().toString(36)
+    const randomPart = Math.random().toString(36).slice(2, 8) || '000000'
+    return `listing-${timestampPart}-${randomPart}`
+  }
+
+  function buildUniqueListingId(): string {
+    let listingId = buildListingIdCandidate()
+    while (listingsById.has(listingId)) {
+      listingId = buildListingIdCandidate()
+    }
+    return listingId
+  }
+
+  function isSlugTaken(targetSlug: string, exceptListingId?: string): boolean {
+    for (const [
+      listingId,
+      record,
+    ] of listingsById.entries()) {
+      if (exceptListingId && listingId === exceptListingId) continue
+      const core = asObject(record.core)
+      const recordSlug = buildListingSlug({
+        existingSlug: core?.slug,
+        title: core?.title,
+        listingId,
+      })
+      if (recordSlug === targetSlug) return true
+    }
+
+    return false
+  }
+
+  function resolveRecordSlug(listingId: string, record: RuntimeListingResources): string {
+    const core = asObject(record.core)
+    const baseSlug = buildListingSlug({
+      existingSlug: core?.slug,
+      title: core?.title,
+      listingId,
+    })
+    const slug = buildUniqueListingSlug(baseSlug, (candidate) => isSlugTaken(candidate, listingId))
+    record.core = {
+      ...(record.core ?? {}),
+      id: listingId,
+      slug,
+    }
+    return slug
+  }
+
+  function sanitizeIncomingCorePatch(record: RuntimeListingResources, input: Partial<RawCore>): Partial<RawCore> {
+    const sanitized: Partial<RawCore> = {
+      ...input,
+    }
+    delete sanitized.id
+
+    const existingSlug = normalizeListingSlug(asObject(record.core)?.slug)
+    if (existingSlug) {
+      delete sanitized.slug
+    }
+
+    return sanitized
+  }
+
+  const initialListingIds = Array.from(listingsById.keys()).sort((a, b) => a.localeCompare(b))
+  for (const listingId of initialListingIds) {
+    const record = listingsById.get(listingId)
+    if (!record) continue
+    resolveRecordSlug(listingId, record)
+  }
+
   function ensureListing(listingIdRaw: string): { listingId: string; record: RuntimeListingResources } {
-    const listingId = listingIdRaw.trim() || `listing-${Date.now()}`
+    const listingId = listingIdRaw.trim() || buildUniqueListingId()
     const existing = listingsById.get(listingId)
     if (existing) {
       existing.host = deepClone(getCanonicalHost())
+      resolveRecordSlug(listingId, existing)
       return { listingId, record: existing }
     }
 
     const created = createResourceBundle(listingId)
     listingsById.set(listingId, created)
+    resolveRecordSlug(listingId, created)
     return { listingId, record: created }
   }
 
@@ -292,9 +369,12 @@ export function createRuntimeLocalJsonStore(): RuntimeLocalJsonStore {
     const firstImage = images?.[0]
     const noteValue = parseFiniteNumber(notes?.note)
     const nestedNote = asObject(notes?.note)
+    const slug = resolveRecordSlug(listingId, record)
 
     return {
       listingId,
+      slug,
+      publicUrl: `/${slug}`,
       title: typeof core?.title === 'string' ? core.title : undefined,
       status: typeof core?.status === 'string' ? core.status : undefined,
       coverSrc: typeof firstImage?.src === 'string' ? firstImage.src : undefined,
@@ -310,6 +390,29 @@ export function createRuntimeLocalJsonStore(): RuntimeLocalJsonStore {
       listingId,
       record,
     ]) => toListingCard(listingId, record))
+  }
+
+  function resolveListingIdBySlug(slug: string): string | null {
+    const normalizedSlug = normalizeListingSlug(slug)
+    if (!normalizedSlug) return null
+
+    for (const [
+      listingId,
+      record,
+    ] of listingsById.entries()) {
+      const core = asObject(record.core)
+      const recordSlug = buildListingSlug({
+        existingSlug: core?.slug,
+        title: core?.title,
+        listingId,
+      })
+      if (recordSlug === normalizedSlug) {
+        resolveRecordSlug(listingId, record)
+        return listingId
+      }
+    }
+
+    return null
   }
 
   function getBundle(listingId: string): RawListingBundle {
@@ -349,7 +452,7 @@ export function createRuntimeLocalJsonStore(): RuntimeLocalJsonStore {
     const { record } = ensureListing(listingId)
 
     if (patch.core) {
-      record.core = deepMerge(record.core, patch.core)
+      record.core = deepMerge(record.core, sanitizeIncomingCorePatch(record, patch.core))
     }
     if (patch.bookings) {
       record.bookings = deepMerge(record.bookings, patch.bookings)
@@ -363,6 +466,10 @@ export function createRuntimeLocalJsonStore(): RuntimeLocalJsonStore {
     if (patch.notes) {
       record.notes = deepMerge(record.notes, patch.notes)
     }
+    if (patch.comments) {
+      record.comments = deepMerge(record.comments, patch.comments)
+    }
+    resolveRecordSlug(listingId, record)
     record.host = deepClone(getCanonicalHost())
   }
 
@@ -370,7 +477,7 @@ export function createRuntimeLocalJsonStore(): RuntimeLocalJsonStore {
     const { record } = ensureListing(listingId)
 
     if (draft.core) {
-      record.core = deepMerge(record.core, draft.core)
+      record.core = deepMerge(record.core, sanitizeIncomingCorePatch(record, draft.core))
     }
     if (draft.bookings) {
       record.bookings = deepMerge(record.bookings, draft.bookings)
@@ -387,24 +494,19 @@ export function createRuntimeLocalJsonStore(): RuntimeLocalJsonStore {
     if (draft.comments) {
       record.comments = deepMerge(record.comments, draft.comments)
     }
+    resolveRecordSlug(listingId, record)
     record.host = deepClone(getCanonicalHost())
   }
 
   function createListing(payload?: Partial<RawListingBundle>): { listingId: string } {
-    const rawId = payload?.core?.id
-    const baseId = typeof rawId === 'string' && rawId.trim() ? rawId.trim() : `listing-${Date.now()}`
-    let listingId = baseId
-    let index = 1
-    while (listingsById.has(listingId)) {
-      listingId = `${baseId}-${index}`
-      index += 1
-    }
-
+    const listingId = buildUniqueListingId()
     const created = createResourceBundle(listingId)
     listingsById.set(listingId, created)
 
     if (payload) {
       publishDraft(listingId, payload as RawListingBundle)
+    } else {
+      resolveRecordSlug(listingId, created)
     }
 
     return { listingId }
@@ -412,6 +514,7 @@ export function createRuntimeLocalJsonStore(): RuntimeLocalJsonStore {
 
   return {
     listListings,
+    resolveListingIdBySlug,
     getBundle,
     getEditableBundle,
     getVolatileBundle,

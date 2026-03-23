@@ -9,8 +9,6 @@ import { vp } from '@/utils/viewport'
 // ICONS
 import { Search, Plane, UserRound, MessageCircle } from 'lucide-vue-next'
 
-const LISTING_PATH = '/listing/33333333-3333-3333-3333-333333333333'
-
 const navItems = [
   { id: 'search', label: 'Rechercher', icon: Search },
   { id: 'trips', label: 'Voyages', icon: Plane },
@@ -19,9 +17,15 @@ const navItems = [
 ] as const
 
 const route = useRoute()
+const listingPath = computed(() => {
+  if (route.name === 'listing' && typeof route.path === 'string' && route.path.trim()) {
+    return route.path
+  }
+  return '/annonce'
+})
 
 const activeHash = computed(() => {
-  if (route.path !== LISTING_PATH) return ''
+  if (route.name !== 'listing') return ''
 
   return route.hash || '#search'
 })
@@ -37,7 +41,7 @@ const isActive = (id: string) => activeHash.value === `#${id}`
     <RouterLink
       v-for="item in navItems"
       :key="item.id"
-      :to="`${LISTING_PATH}#${item.id}`"
+      :to="`${listingPath}#${item.id}`"
       class="item"
       :class="{ 'is-active': isActive(item.id) }"
     >

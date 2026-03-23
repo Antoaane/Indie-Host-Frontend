@@ -9,7 +9,7 @@
   height: 60px;
 
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--dock-columns, 5), minmax(0, 1fr));
   align-items: stretch;
   gap: 0.35rem;
 

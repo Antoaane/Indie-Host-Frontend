@@ -32,6 +32,7 @@ export type RawPerkSetting = RawPerkScoring & {
   enabled?: boolean
 }
 export type RawCore = Override<RawCoreBase, {
+  slug?: string
   amenities?: RawAmenity[]
   perkSettings?: RawPerkSetting[]
   precise_address?: string
@@ -92,6 +93,12 @@ export type RawReservationMessage = {
 export type RawReservationMessaging = {
   conversationId?: string
   messages: RawReservationMessage[]
+}
+export type RawReservationConfirmation = {
+  guideAccessKey?: string
+  guideAccessToken?: string
+  guideUrl?: string
+  generatedAt?: string
 }
 export type RawPricingCancellationPolicy = 'flexible' | 'moderate' | 'strict' | 'custom' | string
 export type RawPricingCancellation = RawPerkScoring & {
@@ -198,7 +205,9 @@ export type RawBookingReservation = {
     lastName?: string
     phone?: string
     email?: string
+    confirmation?: RawReservationConfirmation
   }
+  confirmation?: RawReservationConfirmation
   createdAt?: string
   messaging?: RawReservationMessaging
 }
@@ -244,6 +253,7 @@ export type DraftPatch = {
   medias?: Partial<RawMedias> | null
   arrival?: Partial<RawArrival> | null
   notes?: Partial<RawNotes> | null
+  comments?: Partial<RawComments> | null
 }
 
 export type VolatileBundle = Pick<RawListingBundle, 'bookings' | 'notes' | 'comments' | 'host'>
@@ -277,6 +287,7 @@ export type ListingAvailabilitySyncResult = {
 
 export type UserListingCard = {
   listingId: string
+  slug?: string
   subdomainSlug?: string
   publicUrl?: string
   title?: string
