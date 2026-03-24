@@ -6,7 +6,7 @@ import { SignUpButton, SignedIn, SignedOut } from '@clerk/vue'
 import { useRouter } from 'vue-router'
 
 import { fetchStripeSubscriptionPlans, type StripeSubscriptionPlan, type SubscriptionPlanCode } from '@/domain/api/stripeSubscriptions'
-import { MARKETING_PRICING_PLANS, resolvePricingPlanPresentation } from '@/domain/payments/pricingPlanCatalog'
+import { MARKETING_PRICING_PLANS } from '@/domain/payments/pricingPlanCatalog'
 import type { PricingSectionContent } from '@/views/Landing/types/content'
 
 defineProps<{
@@ -37,11 +37,13 @@ type PricingPlan = {
   options?: string[]
   positioning: string
   cta: string
+  secondaryCta?: string
   helper: string
   tone: 'indigo' | 'gold' | 'red'
   highlight?: string
   available: boolean
   unavailableReason: string | null
+  watermark: string | null
 }
 
 const router = useRouter()
@@ -53,15 +55,17 @@ const plansFromApiByCode = computed(() => new Map(plansFromApi.value.map((plan) 
 const plans = computed<PricingPlan[]>(() => {
   return MARKETING_PRICING_PLANS.map((marketingPlan) => {
     const stripePlan = plansFromApiByCode.value.get(marketingPlan.code)
-    const presentation = resolvePricingPlanPresentation(marketingPlan, stripePlan)
+    const isForcedUnavailable = marketingPlan.available === false
+    const available = isForcedUnavailable ? false : (stripePlan?.available ?? true)
+    const unavailableReason = isForcedUnavailable
+      ? (marketingPlan.unavailableReason ?? 'Momentanément indisponible')
+      : (stripePlan?.unavailableReason ?? marketingPlan.unavailableReason ?? null)
 
     return {
       ...marketingPlan,
-      name: presentation.name,
-      summary: presentation.summary,
-      displayPrice: presentation.displayPrice,
-      available: stripePlan?.available ?? true,
-      unavailableReason: stripePlan?.unavailableReason ?? null,
+      available,
+      unavailableReason,
+      watermark: available ? null : (marketingPlan.watermark ?? unavailableReason ?? 'Momentanément indisponible'),
     }
   })
 })
@@ -81,6 +85,12 @@ function goToPricingCallbackAuth(planCode: SubscriptionPlanCode) {
       autostart: '1',
     },
   })
+}
+
+function hasSecondaryCta(plan: PricingPlan): boolean {
+  if (!plan.available) return false
+  if (plan.code !== 'indiehost' && plan.code !== 'superhost') return false
+  return typeof plan.secondaryCta === 'string' && plan.secondaryCta.trim().length > 0
 }
 
 async function loadPlans() {
@@ -130,17 +140,21 @@ onMounted(() => {
           :id="plan.id"
           :key="plan.id"
           class="plan"
-          :class="[`is-${plan.tone}`, { 'is-featured': plan.tone === 'gold', 'is-expanded': isExpanded(plan.id) }]"
+          :class="[`is-${plan.tone}`, { 'is-featured': plan.tone === 'gold', 'is-expanded': isExpanded(plan.id), 'is-unavailable': !plan.available }]"
           data-sr
           data-sr-y="50"
           :data-sr-delay="index * 0.15"
         >
           <div class="plan-topline"></div>
+          <p
+            v-if="!plan.available && plan.code !== 'megahost'"
+            class="plan-watermark"
+            aria-hidden="true"
+          >
+            {{ plan.watermark }}
+          </p>
 
           <div class="plan-head">
-            <div class="plan-badge">
-              <span class="plan-tier">{{ plan.tier }}</span>
-            </div>
             <p
               v-if="plan.highlight"
               class="plan-highlight"
@@ -174,6 +188,15 @@ onMounted(() => {
                   >
                     {{ plan.cta }}
                   </button>
+                  <button
+                    v-if="hasSecondaryCta(plan)"
+                    type="button"
+                    class="plan-cta ghost"
+                    :disabled="!plan.available"
+                    @click="goToPricingCallbackAuth(plan.code)"
+                  >
+                    {{ plan.secondaryCta }}
+                  </button>
                 </SignedIn>
                 <SignedOut>
                   <SignUpButton
@@ -186,6 +209,19 @@ onMounted(() => {
                       :disabled="!plan.available"
                     >
                       {{ plan.cta }}
+                    </button>
+                  </SignUpButton>
+                  <SignUpButton
+                    v-if="hasSecondaryCta(plan)"
+                    mode="redirect"
+                    :force-redirect-url="buildPricingCallbackAuthUrl(plan.code)"
+                  >
+                    <button
+                      type="button"
+                      class="plan-cta ghost"
+                      :disabled="!plan.available"
+                    >
+                      {{ plan.secondaryCta }}
                     </button>
                   </SignUpButton>
                 </SignedOut>
@@ -201,23 +237,6 @@ onMounted(() => {
               </div>
             </div>
 
-            <button
-              type="button"
-              class="plan-toggle"
-              :aria-expanded="isExpanded(plan.id)"
-              :aria-controls="`plan-body-${plan.id}`"
-              :id="`plan-toggle-${plan.id}`"
-              @click="togglePlan(plan.id)"
-            >
-              <span class="plan-toggle-label">
-                {{ isExpanded(plan.id) ? content.toggleCollapseLabel : content.toggleExpandLabel }}
-              </span>
-              <span class="plan-toggle-icon" aria-hidden="true">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
-              </span>
-            </button>
           </div>
 
           <div
@@ -274,6 +293,15 @@ onMounted(() => {
                 >
                   {{ plan.cta }}
                 </button>
+                <button
+                  v-if="hasSecondaryCta(plan)"
+                  type="button"
+                  class="plan-cta ghost"
+                  :disabled="!plan.available"
+                  @click="goToPricingCallbackAuth(plan.code)"
+                >
+                  {{ plan.secondaryCta }}
+                </button>
               </SignedIn>
 
               <SignedOut>
@@ -289,6 +317,19 @@ onMounted(() => {
                     {{ plan.cta }}
                   </button>
                 </SignUpButton>
+                <SignUpButton
+                  v-if="hasSecondaryCta(plan)"
+                  mode="redirect"
+                  :force-redirect-url="buildPricingCallbackAuthUrl(plan.code)"
+                >
+                  <button
+                    type="button"
+                    class="plan-cta ghost"
+                    :disabled="!plan.available"
+                  >
+                    {{ plan.secondaryCta }}
+                  </button>
+                </SignUpButton>
               </SignedOut>
 
               <p class="plan-helper">
@@ -296,6 +337,24 @@ onMounted(() => {
               </p>
             </div>
           </div>
+
+          <button
+            type="button"
+            class="plan-toggle"
+            :aria-expanded="isExpanded(plan.id)"
+            :aria-controls="`plan-body-${plan.id}`"
+            :id="`plan-toggle-${plan.id}`"
+            @click="togglePlan(plan.id)"
+          >
+            <span class="plan-toggle-label">
+              {{ isExpanded(plan.id) ? content.toggleCollapseLabel : content.toggleExpandLabel }}
+            </span>
+            <span class="plan-toggle-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </span>
+          </button>
         </article>
       </div>
 

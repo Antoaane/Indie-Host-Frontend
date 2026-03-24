@@ -15,9 +15,13 @@ export type MarketingPricingPlan = {
   options?: string[]
   positioning: string
   cta: string
+  secondaryCta?: string
   helper: string
   tone: PricingPlanTone
   highlight?: string
+  available?: boolean
+  unavailableReason?: string | null
+  watermark?: string | null
 }
 
 export type PricingPlanPresentation = {
@@ -37,55 +41,47 @@ const PLAN_CATALOG: Record<SubscriptionPlanCode, MarketingPricingPlan> = {
   indiehost: {
     id: 'indiehost',
     code: 'indiehost',
-    tier: 'Plan 1',
+    tier: 'Offre 1',
     name: 'IndieHost',
-    displayPrice: '16 € / mois TTC',
-    summary: "Pour les hôtes avec 1 logement listé comprenant au maximum 2 annonces.",
+    displayPrice: '29 € / mois TTC',
+    summary: "L'offre essentielle pour gérer 1 logement en ligne et démarrer rapidement.",
     includes: [
-      '1 page de réservation personnalisée',
-      'Paiement en ligne sécurisé (Stripe : CB, SEPA, Apple Pay)',
-      'Facturation automatique pour les paiements en ligne (résumé mensuel + export CSV)',
-      'Calendrier connecté iCAL + gestion des disponibilités et tarifs',
-      'Messagerie fluide hôte-voyageur sans compte',
-      'Sous-domaine inclus',
-      "Jusqu'à 8 séjours par mois",
+      '1 logement en ligne',
+      'Synchronisation des réservations',
+      'Messagerie intégrée',
     ],
-    positioning: '100 % opérationnel dès le jour 1 pour un particulier. Zéro commission.',
-    cta: 'Choisir IndieHost',
-    helper: 'Activation immédiate avec parcours Stripe sécurisé.',
+    positioning: 'Parfait pour poser des bases solides avec une expérience fluide dès le premier logement.',
+    cta: 'Essayer gratuitement',
+    secondaryCta: "S'abonner",
+    helper: "Essai gratuit inclus avant activation de l'abonnement à 29 € / mois.",
     tone: 'indigo',
   },
   superhost: {
     id: 'superhost',
     code: 'superhost',
-    tier: 'Plan 2',
+    tier: 'Offre 2',
     name: 'SuperHost',
     displayPrice: '39 € / mois TTC',
-    summary: 'Pour les hôtes semi-pros qui veulent gagner en autonomie et fidéliser.',
+    summary: "Pensé pour franchir un cap avec jusqu'à 3 logements gérés depuis une seule interface.",
     includes: [
-      'Tout le plan IndieHost',
-      "Jusqu'à 3 pages de réservation personnalisées",
-      'Connexion avec les channel managers (PMS)',
-      "Ajout manuel d'une nouvelle réservation dans le calendrier centralisé",
-      'Annonces avec thèmes personnalisés',
-      "Livret d'accueil physique personnalisable",
-      'Conditions de paiement étendues',
-      'Réservations illimitées',
+      '3 logements enregistrés',
+      'Page avec URL personnalisée',
+      'Ajout manuel de nouvelles réservations',
+      'Synchronisation des réservations',
+      'Messagerie intégrée',
+      'Paiements et acomptes sécurisés',
     ],
-    options: [
-      'URL personnalisée : + 5 € / mois',
-      'Google Travel intégration : + 12 € / mois',
-    ],
-    positioning: 'Le bon équilibre pour professionnaliser son activité sans perdre en simplicité.',
-    cta: "S'abonner à SuperHost",
-    helper: 'Paiement sécurisé et activation guidée via Stripe.',
+    positioning: 'Un palier naturel pour augmenter votre capacité et vos revenus sans complexifier votre quotidien.',
+    cta: 'Essayer gratuitement',
+    secondaryCta: "S'abonner",
+    helper: "Essai gratuit inclus puis abonnement à 39 € / mois avec activation guidée via Stripe.",
     tone: 'gold',
-    highlight: 'Le plus choisi',
+    highlight: 'La plus choisie',
   },
   megahost: {
     id: 'megahost',
     code: 'megahost',
-    tier: 'Plan 3',
+    tier: 'Offre 3',
     name: 'MegaHost',
     displayPrice: '99 € / mois TTC',
     summary: "Pour les pros de l'hébergement : gîte, hôtel, conciergerie ou portefeuille multi-biens.",
@@ -99,9 +95,12 @@ const PLAN_CATALOG: Record<SubscriptionPlanCode, MarketingPricingPlan> = {
       "Statistiques avancées (origine du trafic, CA/logement, taux d'occupation)",
     ],
     positioning: 'Pensé pour les structures qui veulent centraliser, scaler et piloter finement leur acquisition directe.',
-    cta: 'Souscrire à MegaHost',
-    helper: 'Activation directe avec retour sécurisé dans IndieHost.',
+    cta: 'Bientôt disponible',
+    helper: 'Offre en cours de validation produit pour les professionnels de l’hôtellerie.',
     tone: 'red',
+    available: false,
+    unavailableReason: 'Momentanément indisponible',
+    watermark: 'Momentanément indisponible',
   },
 }
 

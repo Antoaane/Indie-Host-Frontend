@@ -13,6 +13,7 @@ import {
   updateBookingSchema,
 } from './bookings.schemas.js';
 import { BookingsService } from './bookings.service.js';
+import { PaymentsService } from '../payments/payments.service.js';
 
 function firstHeaderValue(value: string | string[] | undefined): string {
   if (Array.isArray(value)) {
@@ -35,7 +36,8 @@ function resolvePublicBaseUrl(request: FastifyRequest): string | null {
 }
 
 export const bookingsPlugin = fp(async (fastify) => {
-  const service = new BookingsService(fastify.prisma);
+  const paymentsService = new PaymentsService(fastify.prisma);
+  const service = new BookingsService(fastify.prisma, paymentsService);
 
   fastify.get('/bookings/listings/:listingId', async (request, reply) => {
     const { listingId } = listingBookingsParamsSchema.parse(request.params);

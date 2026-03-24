@@ -6,6 +6,7 @@ import { env } from '../../config/env.js';
 import { deepMerge, asObject, toNumber } from '../../lib/json.js';
 import { buildMessageId, buildReservationId } from '../../lib/id.js';
 import { toPrismaJson } from '../../lib/prisma.js';
+import { PaymentsService } from '../payments/payments.service.js';
 
 type RawReservation = Record<string, unknown>;
 
@@ -144,7 +145,10 @@ function buildAbsoluteUrl(path: string, baseUrl?: string | null): string {
 }
 
 export class BookingsService {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(
+    private readonly prisma: PrismaClient,
+    private readonly paymentsService?: PaymentsService,
+  ) {}
 
   private buildGuideAccessKey(reservationId: string, listingId: string, startDate: Date | null | undefined): string {
     const safeReservationId = reservationId.trim();
@@ -1057,6 +1061,18 @@ export class BookingsService {
       guideUrl: responseConfirmation.guideUrl,
     });
 
+    if (this.paymentsService) {
+      try {
+        await this.paymentsService.enforceTrialReservationLimitForListing(listingId);
+      } catch (error) {
+        console.error('[bookings] failed to enforce trial reservation limit', {
+          listingId,
+          reservationId: responseReservationId,
+          error,
+        });
+      }
+    }
+
     return {
       reservationId: responseReservationId,
       listingId,
@@ -1213,6 +1229,18 @@ export class BookingsService {
       id: finalReservationId,
       guideUrl: finalConfirmation.guideUrl,
     });
+
+    if (this.paymentsService) {
+      try {
+        await this.paymentsService.enforceTrialReservationLimitForListing(listingId);
+      } catch (error) {
+        console.error('[bookings] failed to enforce trial reservation limit', {
+          listingId,
+          reservationId: finalReservationId,
+          error,
+        });
+      }
+    }
 
     return updatedReservation;
   }

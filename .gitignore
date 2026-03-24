@@ -2,6 +2,10 @@
 # Racine Indie-Host-Frontend
 ############################
 
+# Fichiers macOS
+.DS_Store
+.ds_store
+
 # Environnements virtuels Python (scraper)
 backend/microservices/microservice-scraping-py/.venv/
 backend/microservices/microservice-scraping-py/venv/
@@ -61,4 +65,3 @@ backend/api/.env
 /.env
 /.env.*
 !/.env.example
-

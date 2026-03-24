@@ -335,8 +335,8 @@
   },
   "pricingSection": {
     "eyebrow": "Tarifs",
-    "title": "Gratuit, SuperHost ou MegaHost : <strong>choisissez votre formule</strong>",
-    "subtitle": "Une formule gratuite pour démarrer, puis des abonnements pour plus de pages, d’outils et de réservations.",
+    "title": "Choisissez votre formule",
+    "subtitle": "Deux offres avec essai gratuit : IndieHost pour les hôtes qui lancent 1 logement, SuperHost pour ceux qui gèrent jusqu’à 3 logements.",
     "toggleExpandLabel": "Voir le détail des fonctionnalités",
     "toggleCollapseLabel": "Réduire le détail",
     "accountPrefix": "Déjà client ?",

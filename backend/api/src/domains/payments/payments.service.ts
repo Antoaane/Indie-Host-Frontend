@@ -180,15 +180,15 @@ const PLAN_CODES: SubscriptionPlanCode[] = [
 const PLAN_TEMPLATES: Record<SubscriptionPlanCode, PlanTemplate> = {
   indiehost: {
     name: 'IndieHost',
-    description: 'Plan de base pour démarrer sans commission.',
-    maxActiveListings: 2,
+    description: 'Plan pour les hôtes qui lancent un premier logement.',
+    maxActiveListings: 1,
     defaultCurrency: 'eur',
-    defaultMonthlyPriceMinor: 1600,
+    defaultMonthlyPriceMinor: 2900,
   },
   superhost: {
     name: 'SuperHost',
-    description: 'Plan pour les hôtes semi-pro avec plus de capacité.',
-    maxActiveListings: 5,
+    description: 'Plan pour gerer jusqu\'a 3 logements avec plus d\'outils.',
+    maxActiveListings: 3,
     defaultCurrency: 'eur',
     defaultMonthlyPriceMinor: 3900,
   },
@@ -200,6 +200,9 @@ const PLAN_TEMPLATES: Record<SubscriptionPlanCode, PlanTemplate> = {
     defaultMonthlyPriceMinor: 9900,
   },
 };
+
+const SUBSCRIPTION_TRIAL_PERIOD_DAYS = 30;
+const SUBSCRIPTION_TRIAL_RESERVATION_LIMIT = 15;
 
 const ONGOING_SUBSCRIPTION_STATUSES = new Set([
   'trialing',
@@ -369,8 +372,16 @@ function oneMonthFromNowIso(): string {
   return d.toISOString();
 }
 
+function daysFromNowIso(days: number): string {
+  return new Date(Date.now() + (days * DAY_MS)).toISOString();
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isTrialEligiblePlanCode(planCode: SubscriptionPlanCode | null | undefined): planCode is SubscriptionPlanCode {
+  return planCode === 'indiehost' || planCode === 'superhost';
 }
 
 function clampInteger(value: unknown, min: number, max: number, fallback: number): number {
@@ -1149,6 +1160,50 @@ export class PaymentsService {
     return match?.code ?? null;
   }
 
+  private buildSubscriptionCheckoutMetadata(user: User, planCode: SubscriptionPlanCode): Record<string, string> {
+    return {
+      userId: user.id,
+      clerkUserId: user.clerkUserId ?? '',
+      planCode,
+    };
+  }
+
+  private buildSubscriptionCheckoutData(
+    planCode: SubscriptionPlanCode,
+    metadata: Record<string, string>,
+  ): Stripe.Checkout.SessionCreateParams.SubscriptionData {
+    if (!isTrialEligiblePlanCode(planCode)) {
+      return { metadata };
+    }
+
+    return {
+      metadata,
+      trial_period_days: SUBSCRIPTION_TRIAL_PERIOD_DAYS,
+      trial_settings: {
+        end_behavior: {
+          missing_payment_method: 'cancel',
+        },
+      },
+    };
+  }
+
+  private parseIsoDate(value: string | null | undefined): Date | null {
+    const raw = readString(value);
+    if (!raw) return null;
+
+    const parsed = new Date(raw);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  private deriveMockTrialStartDate(billing: BillingSnapshot): Date | null {
+    const currentPeriodEnd = this.parseIsoDate(billing.currentPeriodEndISO);
+    if (currentPeriodEnd) {
+      return new Date(currentPeriodEnd.getTime() - (SUBSCRIPTION_TRIAL_PERIOD_DAYS * DAY_MS));
+    }
+
+    return this.parseIsoDate(billing.updatedAtISO);
+  }
+
   private serializeStripeSubscription(
     subscription: Stripe.Subscription,
     plans: SubscriptionPlan[],
@@ -1606,6 +1661,7 @@ export class PaymentsService {
     }
 
     const successUrl = addRawQueryParam(input.successUrl, 'session_id', '{CHECKOUT_SESSION_ID}');
+    const checkoutMetadata = this.buildSubscriptionCheckoutMetadata(user, selectedPlan.code);
 
     const session = await this.stripe.checkout.sessions.create({
       mode: 'subscription',
@@ -1620,18 +1676,8 @@ export class PaymentsService {
         },
       ],
       allow_promotion_codes: true,
-      metadata: {
-        userId: user.id,
-        clerkUserId: user.clerkUserId ?? '',
-        planCode: selectedPlan.code,
-      },
-      subscription_data: {
-        metadata: {
-          userId: user.id,
-          clerkUserId: user.clerkUserId ?? '',
-          planCode: selectedPlan.code,
-        },
-      },
+      metadata: checkoutMetadata,
+      subscription_data: this.buildSubscriptionCheckoutData(selectedPlan.code, checkoutMetadata),
     });
 
     if (!session.url) {
@@ -1689,8 +1735,10 @@ export class PaymentsService {
         billingPatch: {
           subscriptionId: billing.subscriptionId ?? generateMockId('sub_mock_'),
           planCode,
-          status: 'active',
-          currentPeriodEndISO: oneMonthFromNowIso(),
+          status: isTrialEligiblePlanCode(planCode) ? 'trialing' : 'active',
+          currentPeriodEndISO: isTrialEligiblePlanCode(planCode)
+            ? daysFromNowIso(SUBSCRIPTION_TRIAL_PERIOD_DAYS)
+            : oneMonthFromNowIso(),
           cancelAtPeriodEnd: false,
           updatedAtISO: nowIso(),
           pendingPlanCode: null,
@@ -1774,6 +1822,108 @@ export class PaymentsService {
       publicationReadiness: this.toPublicationReadiness(user),
       message: null,
     };
+  }
+
+  async enforceTrialReservationLimitForListing(listingId: string): Promise<void> {
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      select: {
+        ownerId: true,
+      },
+    });
+
+    const ownerId = readString(listing?.ownerId);
+    if (!ownerId) return;
+
+    let user = await this.prisma.user.findUnique({
+      where: { id: ownerId },
+    });
+    if (!user) return;
+
+    const billing = this.readBillingSnapshot(user);
+    if (!isTrialEligiblePlanCode(billing.planCode) || billing.status !== 'trialing') return;
+
+    if (!this.stripe) {
+      const reservationsDuringTrial = await this.prisma.reservation.count({
+        where: {
+          listing: { ownerId },
+          createdAt: {
+            gte: this.deriveMockTrialStartDate(billing) ?? new Date(0),
+          },
+        },
+      });
+
+      if (reservationsDuringTrial < SUBSCRIPTION_TRIAL_RESERVATION_LIMIT) return;
+
+      await this.updateUserStripeState({
+        user,
+        billingPatch: {
+          status: 'active',
+          updatedAtISO: nowIso(),
+        },
+      });
+      return;
+    }
+
+    let subscription: Stripe.Subscription | null = null;
+
+    if (billing.subscriptionId) {
+      try {
+        subscription = await this.stripe.subscriptions.retrieve(billing.subscriptionId);
+      } catch {
+        subscription = null;
+      }
+    }
+
+    if (!subscription && billing.customerId) {
+      subscription = await this.getCurrentStripeSubscription({
+        customerId: billing.customerId,
+        subscriptionId: billing.subscriptionId,
+      });
+    }
+
+    if (!subscription) return;
+
+    if (subscription.status !== 'trialing') {
+      user = await this.updateUserStripeState({
+        user,
+        billingPatch: this.serializeStripeSubscription(subscription, [], billing.planCode),
+      });
+      return;
+    }
+
+    const trialStart = toIsoFromUnixSeconds(subscription.trial_start)
+      ?? toIsoFromUnixSeconds(subscription.created)
+      ?? billing.updatedAtISO;
+    const trialStartDate = this.parseIsoDate(trialStart) ?? new Date(0);
+
+    const reservationsDuringTrial = await this.prisma.reservation.count({
+      where: {
+        listing: { ownerId },
+        createdAt: {
+          gte: trialStartDate,
+        },
+      },
+    });
+
+    if (reservationsDuringTrial < SUBSCRIPTION_TRIAL_RESERVATION_LIMIT) return;
+
+    const updatedSubscription = await this.stripe.subscriptions.update(subscription.id, {
+      trial_end: 'now',
+      proration_behavior: 'none',
+      metadata: {
+        ...subscription.metadata,
+        planCode: billing.planCode,
+        trialStopReason: 'reservation_limit_reached',
+        trialReservationCount: String(reservationsDuringTrial),
+        trialReservationLimit: String(SUBSCRIPTION_TRIAL_RESERVATION_LIMIT),
+      },
+    });
+
+    await this.updateUserStripeState({
+      user,
+      billingPatch: this.serializeStripeSubscription(updatedSubscription, [], billing.planCode),
+    });
   }
 
   async createPaymentIntent(input: CreatePaymentIntentInput, auth: RequestAuth | null) {

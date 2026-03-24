@@ -28,7 +28,7 @@ const panelContent = editorStatic.panels.listing.location
 const locationValidation = editorStatic.validation.listing.location
 const textDefaults = editorStatic.validation.defaults.simpleText
 const CUSTOM_HOUSING_TYPE_VALUE = '__custom__'
-const housingTypeOptions = ['Appartement', "Chambre d'hôtel", 'Maison', 'Villa', 'Studio', 'Loft', 'Chalet', 'Cabane', 'Péniche']
+const housingTypeOptions = ['Appartement', "Chambre d'hôtel", 'Chambre de gîte', 'Maison', 'Villa', 'Studio', 'Loft', 'Chalet', 'Cabane', 'Péniche']
 const locationLimits = {
   type: resolveTextMaxLength(locationValidation.typeMax, textDefaults),
   preciseAddress: resolveTextMaxLength(locationValidation.preciseAddressMax, textDefaults),
