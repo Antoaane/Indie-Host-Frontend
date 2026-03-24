@@ -157,6 +157,7 @@
 
     > .add-room {
       @include buttons.primary($theme: dark, $fullwidth: true);
+      padding-bottom: var(--layout-gap-md);
     }
   }
 
@@ -182,6 +183,7 @@
         bottom: calc(env(safe-area-inset-bottom) + var(--layout-gap-2xs));
         z-index: 4;
         padding-top: var(--layout-gap-xs);
+        padding-bottom: calc(env(safe-area-inset-bottom) + var(--layout-gap-xs));
         background: linear-gradient(
           180deg,
           rgba($accent, 0) 0%,

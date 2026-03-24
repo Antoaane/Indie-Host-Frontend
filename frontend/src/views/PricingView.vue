@@ -1,8 +1,8 @@
 <!-- File: src/views/PricingView.vue -->
 
 <script setup lang="ts">
-import { SignInButton, SignUpButton, SignedIn, SignedOut, useUser } from '@clerk/vue'
-import { computed, onMounted, ref } from 'vue'
+import { SignUpButton, SignedIn, SignedOut, useUser } from '@clerk/vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import {
@@ -18,12 +18,15 @@ import {
   type ListingOnboardingState,
 } from '@/domain/onboarding/listingOnboarding'
 import {
-  getMarketingPricingPlan,
+  MARKETING_PRICING_PLANS,
   resolvePricingPlanPresentation,
   type MarketingPricingPlan,
 } from '@/domain/payments/pricingPlanCatalog'
+import landingFr from '@/locales/landing/fr.json'
+import type { PricingSectionContent } from '@/views/Landing/types/content'
 
 const PLAN_ORDER: SubscriptionPlanCode[] = ['indiehost', 'superhost', 'megahost']
+const PREVIEW_INCLUDES_COUNT = 3
 
 const route = useRoute()
 const router = useRouter()
@@ -34,8 +37,11 @@ const listingOnboardingState = ref<ListingOnboardingState | null>(readListingOnb
 
 const isLoadingPlans = ref(false)
 const actionPlanCode = ref<SubscriptionPlanCode | null>(null)
+const expandedPlanId = ref<string | null>(null)
 
 const errorMessage = ref<string | null>(null)
+
+const PRICING_SURFACE_CLASS = 'pricing-surface'
 
 function readQueryValue(value: unknown): string | null {
   if (typeof value === 'string' && value.trim()) return value.trim()
@@ -72,10 +78,6 @@ const isListingOnboardingQueryEnabled = computed(() => isListingOnboardingQuery(
 const onboardingIntentQuery = computed<ListingOnboardingIntent | null>(() => parseListingOnboardingIntentQuery(route.query.intent))
 const onboardingListingIdQuery = computed(() => readQueryValue(route.query.listingId))
 
-const sortedPlans = computed(() => {
-  return [...plans.value].sort((left, right) => PLAN_ORDER.indexOf(left.code) - PLAN_ORDER.indexOf(right.code))
-})
-
 type PricingDisplayPlan = StripeSubscriptionPlan & {
   marketing: MarketingPricingPlan
   displayName: string
@@ -83,21 +85,41 @@ type PricingDisplayPlan = StripeSubscriptionPlan & {
   displayPrice: string
 }
 
-const displayPlans = computed<PricingDisplayPlan[]>(() => {
-  return sortedPlans.value.map((plan) => {
-    const marketing = getMarketingPricingPlan(plan.code)
-    const presentation = resolvePricingPlanPresentation(marketing, plan)
+const plansFromApiByCode = computed(() => new Map(plans.value.map((plan) => [plan.code, plan])))
 
-    return {
-      ...plan,
-      marketing,
-      displayName: presentation.name,
-      displaySummary: presentation.summary,
-      displayPrice: presentation.displayPrice,
-    }
-  })
+const displayPlans = computed<PricingDisplayPlan[]>(() => {
+  return MARKETING_PRICING_PLANS
+    .slice()
+    .sort((left, right) => PLAN_ORDER.indexOf(left.code) - PLAN_ORDER.indexOf(right.code))
+    .map((marketing) => {
+      const stripePlan = plansFromApiByCode.value.get(marketing.code)
+      const isForcedUnavailable = marketing.available === false
+      const available = isForcedUnavailable ? false : (stripePlan?.available ?? true)
+      const unavailableReason = isForcedUnavailable
+        ? (marketing.unavailableReason ?? 'Momentanément indisponible')
+        : (stripePlan?.unavailableReason ?? marketing.unavailableReason ?? null)
+      const presentation = resolvePricingPlanPresentation(marketing, stripePlan)
+
+      return {
+        code: marketing.code,
+        name: stripePlan?.name ?? marketing.name,
+        description: stripePlan?.description ?? marketing.summary,
+        maxActiveListings: stripePlan?.maxActiveListings ?? 0,
+        currency: stripePlan?.currency ?? 'eur',
+        monthlyPriceMinor: stripePlan?.monthlyPriceMinor ?? 0,
+        billingInterval: stripePlan?.billingInterval ?? 'month',
+        stripePriceId: stripePlan?.stripePriceId ?? null,
+        available,
+        unavailableReason,
+        marketing,
+        displayName: presentation.name,
+        displaySummary: presentation.summary,
+        displayPrice: presentation.displayPrice,
+      }
+    })
 })
 
+const pricingContent = landingFr.pricingSection as PricingSectionContent
 const isUserSignedIn = computed(() => Boolean(isSignedIn.value))
 const isListingOnboardingActive = computed(() => isListingOnboardingQueryEnabled.value || Boolean(listingOnboardingState.value))
 const onboardingEmail = computed(() => listingOnboardingState.value?.email ?? '')
@@ -113,10 +135,17 @@ const onboardingListingId = computed(() => {
 })
 
 const signUpInitialValues = computed(() => (onboardingEmail.value ? { emailAddress: onboardingEmail.value } : undefined))
-const signInInitialValues = computed(() => (onboardingEmail.value ? { emailAddress: onboardingEmail.value } : undefined))
 
 function isPlanBusy(planCode: SubscriptionPlanCode): boolean {
   return actionPlanCode.value === planCode
+}
+
+function togglePlan(planId: string) {
+  expandedPlanId.value = expandedPlanId.value === planId ? null : planId
+}
+
+function isExpanded(planId: string): boolean {
+  return expandedPlanId.value === planId
 }
 
 function buildPersistentCallbackQuery(
@@ -192,9 +221,15 @@ async function goToPlanContinuation(planCode: SubscriptionPlanCode) {
   }
 }
 
-function resolveSignedInButtonLabel(plan: PricingDisplayPlan): string {
+function resolveSignedInPrimaryButtonLabel(plan: PricingDisplayPlan): string {
   if (isPlanBusy(plan.code)) return 'Redirection...'
-  return `Continuer avec ${plan.displayName}`
+  return plan.marketing.cta
+}
+
+function hasSecondaryCta(plan: PricingDisplayPlan): boolean {
+  if (!plan.available) return false
+  if (plan.code !== 'indiehost' && plan.code !== 'superhost') return false
+  return typeof plan.marketing.secondaryCta === 'string' && plan.marketing.secondaryCta.trim().length > 0
 }
 
 async function loadPlans() {
@@ -210,9 +245,21 @@ async function loadPlans() {
   }
 }
 
+function setPricingSurfaceState(isActive: boolean) {
+  if (typeof document === 'undefined') return
+
+  document.documentElement.classList.toggle(PRICING_SURFACE_CLASS, isActive)
+  document.body.classList.toggle(PRICING_SURFACE_CLASS, isActive)
+}
+
 onMounted(async () => {
+  setPricingSurfaceState(true)
   refreshOnboardingStateFromStorage()
   await loadPlans()
+})
+
+onUnmounted(() => {
+  setPricingSurfaceState(false)
 })
 </script>
 
@@ -220,25 +267,16 @@ onMounted(async () => {
   <main class="pricing-unified app-pricing">
     <section class="pricing-shell">
       <div class="pricing-title">
-        <p class="pricing-eyebrow">Activation IndieHost</p>
-        <h1>Choisissez votre abonnement</h1>
+        <p class="pricing-eyebrow">{{ pricingContent.eyebrow }}</p>
+        <h1 v-html="pricingContent.title"></h1>
         <p class="pricing-subtitle">
-          Sélectionnez votre plan puis poursuivez sur la checklist d’activation (abonnement, Stripe Connect, publication).
+          {{ pricingContent.subtitle }}
         </p>
 
         <div class="status-row">
           <span>{{ isUserSignedIn ? 'Session connectée' : 'Session non connectée' }}</span>
         </div>
 
-        <div
-          v-if="isListingOnboardingActive"
-          class="pricing-feedback is-neutral"
-        >
-          <strong>Onboarding annonce en cours.</strong>
-          <span v-if="onboardingIntent === 'publish'">Objectif: publication immédiate.</span>
-          <span v-else-if="onboardingIntent === 'setup'">Objectif: création de compte sans publication immédiate.</span>
-          <span v-else>Annonce locale en attente de finalisation.</span>
-        </div>
       </div>
 
       <p
@@ -271,9 +309,6 @@ onMounted(async () => {
           <div class="plan-topline"></div>
 
           <div class="plan-head">
-            <div class="plan-badge">
-              <span class="plan-tier">{{ plan.marketing.tier }}</span>
-            </div>
             <p
               v-if="plan.marketing.highlight"
               class="plan-highlight"
@@ -283,9 +318,93 @@ onMounted(async () => {
             <h3>{{ plan.displayName }}</h3>
             <p class="price">{{ plan.displayPrice }}</p>
             <p class="summary">{{ plan.displaySummary }}</p>
+
+            <div
+              v-if="!isExpanded(plan.marketing.id)"
+              class="plan-preview"
+            >
+              <ul class="plan-preview-list">
+                <li
+                  v-for="item in plan.marketing.includes.slice(0, PREVIEW_INCLUDES_COUNT)"
+                  :key="item"
+                >
+                  {{ item }}
+                </li>
+              </ul>
+
+              <div class="plan-actions plan-actions-preview">
+                <SignedIn>
+                  <button
+                    type="button"
+                    class="plan-cta"
+                    :disabled="!plan.available || isPlanBusy(plan.code)"
+                    @click="goToPlanContinuation(plan.code)"
+                  >
+                    {{ resolveSignedInPrimaryButtonLabel(plan) }}
+                  </button>
+                  <button
+                    v-if="hasSecondaryCta(plan)"
+                    type="button"
+                    class="plan-cta ghost"
+                    :disabled="!plan.available || isPlanBusy(plan.code)"
+                    @click="goToPlanContinuation(plan.code)"
+                  >
+                    {{ plan.marketing.secondaryCta }}
+                  </button>
+                </SignedIn>
+
+                <SignedOut>
+                  <SignUpButton
+                    mode="redirect"
+                    :force-redirect-url="buildPostAuthRedirectUrl(plan.code)"
+                    :initial-values="signUpInitialValues"
+                  >
+                    <button
+                      type="button"
+                      class="plan-cta"
+                      :disabled="!plan.available"
+                    >
+                      {{ plan.marketing.cta }}
+                    </button>
+                  </SignUpButton>
+                  <SignUpButton
+                    v-if="hasSecondaryCta(plan)"
+                    mode="redirect"
+                    :force-redirect-url="buildPostAuthRedirectUrl(plan.code)"
+                    :initial-values="signUpInitialValues"
+                  >
+                    <button
+                      type="button"
+                      class="plan-cta ghost"
+                      :disabled="!plan.available"
+                    >
+                      {{ plan.marketing.secondaryCta }}
+                    </button>
+                  </SignUpButton>
+                </SignedOut>
+
+                <p
+                  v-if="!plan.available && plan.unavailableReason"
+                  class="plan-unavailable"
+                >
+                  {{ plan.unavailableReason }}
+                </p>
+
+                <p class="plan-helper">
+                  {{ plan.marketing.helper }}
+                </p>
+              </div>
+            </div>
           </div>
 
-          <div class="plan-body is-expanded">
+          <div
+            :id="`plan-body-${plan.marketing.id}`"
+            class="plan-body"
+            :class="{ 'is-expanded': isExpanded(plan.marketing.id) }"
+            role="region"
+            :aria-labelledby="`plan-toggle-${plan.marketing.id}`"
+            :aria-hidden="!isExpanded(plan.marketing.id)"
+          >
             <div class="block">
               <p class="block-label">Inclus</p>
               <ul>
@@ -330,7 +449,16 @@ onMounted(async () => {
                   :disabled="!plan.available || isPlanBusy(plan.code)"
                   @click="goToPlanContinuation(plan.code)"
                 >
-                  {{ resolveSignedInButtonLabel(plan) }}
+                  {{ resolveSignedInPrimaryButtonLabel(plan) }}
+                </button>
+                <button
+                  v-if="hasSecondaryCta(plan)"
+                  type="button"
+                  class="plan-cta ghost"
+                  :disabled="!plan.available || isPlanBusy(plan.code)"
+                  @click="goToPlanContinuation(plan.code)"
+                >
+                  {{ plan.marketing.secondaryCta }}
                 </button>
               </SignedIn>
 
@@ -348,20 +476,20 @@ onMounted(async () => {
                     {{ plan.marketing.cta }}
                   </button>
                 </SignUpButton>
-
-                <SignInButton
+                <SignUpButton
+                  v-if="hasSecondaryCta(plan)"
                   mode="redirect"
                   :force-redirect-url="buildPostAuthRedirectUrl(plan.code)"
-                  :initial-values="signInInitialValues"
+                  :initial-values="signUpInitialValues"
                 >
                   <button
                     type="button"
                     class="plan-cta ghost"
                     :disabled="!plan.available"
                   >
-                    J’ai déjà un compte
+                    {{ plan.marketing.secondaryCta }}
                   </button>
-                </SignInButton>
+                </SignUpButton>
               </SignedOut>
             </div>
 
@@ -369,22 +497,48 @@ onMounted(async () => {
               {{ plan.marketing.helper }}
             </p>
           </div>
+
+          <button
+            type="button"
+            class="plan-toggle"
+            :aria-expanded="isExpanded(plan.marketing.id)"
+            :aria-controls="`plan-body-${plan.marketing.id}`"
+            :id="`plan-toggle-${plan.marketing.id}`"
+            @click="togglePlan(plan.marketing.id)"
+          >
+            <span class="plan-toggle-label">
+              {{ isExpanded(plan.marketing.id) ? pricingContent.toggleCollapseLabel : pricingContent.toggleExpandLabel }}
+            </span>
+            <span class="plan-toggle-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </span>
+          </button>
         </article>
       </section>
 
       <p class="account-link">
-        Déjà client ? <RouterLink to="/sign-in?redirect_url=%2Fpricing%2Fcallback">Se connecter</RouterLink>
+        {{ pricingContent.accountPrefix }} <RouterLink to="/sign-in?redirect_url=%2Fpricing%2Fcallback">{{ pricingContent.accountLinkLabel }}</RouterLink>
       </p>
     </section>
   </main>
 </template>
 
 <style lang="scss">
+@use '@/styles/variables/globals' as *;
 @use '@/views/Landing/components/PricingSection/pricing-section.scss';
+
+html.pricing-surface,
+body.pricing-surface,
+body.pricing-surface #app,
+body.pricing-surface main {
+  background: $secondary;
+}
 
 .pricing-unified.app-pricing {
   width: 100%;
-  min-height: auto;
+  min-height: 100dvh;
   padding-top: clamp(6.25rem, 11vw, 8.5rem);
   padding-bottom: clamp(1rem, 2.4vw, 2rem);
 
@@ -402,23 +556,8 @@ onMounted(async () => {
 
   .plans {
     grid-template-columns: repeat(auto-fit, minmax(18.5rem, 1fr));
-    align-items: stretch;
+    align-items: start;
     gap: clamp(0.9rem, 1.8vw, 1.25rem);
-  }
-
-  .plan .plan-body,
-  .plan .plan-body.is-expanded {
-    max-height: none;
-    opacity: 1;
-    overflow: visible;
-    padding: 1rem 1.25rem 1.25rem;
-  }
-
-  @media (min-width: 1024px) {
-    .plan .plan-body,
-    .plan .plan-body.is-expanded {
-      padding: 1.5rem;
-    }
   }
 }
 </style>
