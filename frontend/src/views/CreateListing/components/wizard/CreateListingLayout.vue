@@ -1,7 +1,7 @@
 <!-- File: src/views/CreateListing/components/wizard/CreateListingLayout.vue -->
 
 <script setup lang="ts">
-import { icons } from '@/components/svgs'
+
 </script>
 
 <template>
@@ -10,13 +10,6 @@ import { icons } from '@/components/svgs'
     class="create-listing"
   >
   <div class="container">
-    <component
-      :is="icons.logoFull.adapt"
-      title="IndieHost"
-      desc="Logo de IndieHost, plateforme de gestion de locations saisonnières"
-      role="img"
-    />
-
     <div class="layout">
       <slot />
     </div>

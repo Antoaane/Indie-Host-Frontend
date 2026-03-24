@@ -30,11 +30,6 @@
     // border-radius: borders.$rounded-xl;
     background-color: $accent;
 
-    &>svg {
-      width: auto;
-      height: 4rem;
-    }
-
     >.layout {
       position: relative;
       height: 100%;
@@ -52,6 +47,14 @@
       border-radius: borders.$rounded-xl;
 
       padding: var(--layout-gap);
+
+      &>svg {
+        // width: auto;
+        // height: 4rem;
+        padding-bottom: 1rem;
+
+        flex: 0 0 4rem;
+      }
 
       >.header {
         display: flex;
