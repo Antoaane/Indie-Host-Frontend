@@ -150,13 +150,14 @@
     @include min-width(lg) {
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 1.25rem;
-      align-items: stretch;
+      align-items: start;
     }
   }
 
   .plan {
     position: relative;
-    min-height: 100%;
+    min-height: auto;
+    align-self: start;
     display: flex;
     flex-direction: column;
     border-radius: borders.$rounded-xl;
@@ -192,8 +193,47 @@
         rgba($accent, 0.05);
     }
 
+    &.is-indigo {
+      border-color: rgba($accent, 0.1);
+      background:
+        linear-gradient(180deg, rgba($accent, 0.06) 0%, rgba($accent, 0.03) 100%),
+        rgba($accent, 0.015);
+    }
+
+    &.is-gold {
+      border-color: rgba($secondary_gradiant_first, 0.34);
+      box-shadow:
+        0 20px 56px rgba($secondary_gradiant_first, 0.14),
+        0 16px 48px rgba(0, 0, 0, 0.22);
+    }
+
     &.is-unavailable {
-      opacity: 0.72;
+      border-color: rgba($accent, 0.2);
+
+      .plan-head,
+      .plan-body {
+        opacity: 0.86;
+      }
+    }
+
+    &.is-red.is-unavailable {
+      &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        pointer-events: none;
+        background: linear-gradient(180deg, rgba(8, 10, 14, 0.2) 0%, rgba(8, 10, 14, 0.44) 100%);
+      }
+
+      > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .plan-watermark {
+        z-index: 4;
+      }
     }
 
     .plan-topline {
@@ -201,6 +241,47 @@
       height: 0.25rem;
       flex: 0 0 auto;
       background: linear-gradient(90deg, $primary_gradiant_first 0%, $primary_gradiant_second 50%, $primary_gradiant_third 100%);
+    }
+
+    &.is-indigo .plan-topline {
+      background: linear-gradient(90deg, rgba($accent, 0.5) 0%, rgba($accent, 0.25) 100%);
+    }
+
+    .plan-watermark {
+      position: absolute;
+      top: 52%;
+      left: 50%;
+      z-index: 3;
+      width: 180%;
+      padding: 0.52rem 1rem;
+      border-top: 1px solid rgba($accent, 0.36);
+      border-bottom: 1px solid rgba($accent, 0.36);
+      background: linear-gradient(
+        90deg,
+        rgba($secondary, 0) 0%,
+        rgba($secondary, 0.48) 14%,
+        rgba($secondary, 0.66) 50%,
+        rgba($secondary, 0.48) 86%,
+        rgba($secondary, 0) 100%
+      );
+      color: rgba($accent, 0.9);
+      text-align: center;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      text-shadow: 0 1px 1px rgba(0, 0, 0, 0.3);
+      transform: translate(-50%, -50%) rotate(-12deg);
+      pointer-events: none;
+      box-shadow:
+        0 14px 34px rgba(0, 0, 0, 0.24),
+        inset 0 1px 0 rgba($accent, 0.12),
+        inset 0 -1px 0 rgba($accent, 0.12);
+      backdrop-filter: blur(1.5px);
+      -webkit-backdrop-filter: blur(1.5px);
+      @include little-text($accent, $thin: false);
+
+      @include min-width(lg) {
+        letter-spacing: 0.24em;
+      }
     }
 
     &.is-gold .plan-topline {
@@ -250,6 +331,16 @@
       background: rgba($secondary_gradiant_first, 0.16);
       color: $accent;
       @include little-text($accent, $thin: false);
+    }
+
+    &.is-gold .plan-highlight {
+      border: 1px solid rgba($secondary_gradiant_first, 0.5);
+      background: linear-gradient(
+        90deg,
+        rgba($secondary_gradiant_first, 0.28) 0%,
+        rgba($secondary_gradiant_second, 0.24) 100%
+      );
+      box-shadow: 0 8px 20px rgba($secondary_gradiant_first, 0.18);
     }
 
     h3 {
@@ -306,7 +397,7 @@
     }
 
     &.is-indigo .plan-preview-list li::before {
-      background: $primary_gradiant_second;
+      background: rgba($accent, 0.58);
     }
 
     &.is-gold .plan-preview-list li::before {
@@ -433,7 +524,7 @@
     }
 
     &.is-indigo li::before {
-      background: $primary_gradiant_second;
+      background: rgba($accent, 0.58);
     }
 
     &.is-gold li::before {
