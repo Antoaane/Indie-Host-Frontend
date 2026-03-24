@@ -10,7 +10,7 @@
       "target": "_self"
     },
     "secondaryCta": {
-      "label": "Créer mon site gratuitement",
+      "label": "Créer ma page de zéro",
       "href": "/dashboard/editor/create",
       "target": "_self"
     },

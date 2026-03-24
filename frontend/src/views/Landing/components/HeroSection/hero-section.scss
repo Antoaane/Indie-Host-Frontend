@@ -224,7 +224,7 @@
           padding: 0.35rem 0.35rem 0.35rem 1rem;
           margin: 0;
 
-          background: $tertiary;
+          background: $accent;
           border: 1px solid rgba($secondary, 0.18);
           border-radius: 1rem;
           box-shadow: 0 10px 30px rgba($secondary, 0.15);
@@ -257,11 +257,11 @@
 
           .hero-search-action {
             flex-shrink: 0;
-            @include buttons.primary($theme: black);
+            @include buttons.primary($theme: black, $cta: true);
 
             & > * {
-              min-height: 3.05rem;
-              padding-inline: 1.3rem;
+              // min-height: 3.05rem;
+              // padding-inline: 1.3rem;
               white-space: nowrap;
               box-shadow: none;
             }
@@ -291,13 +291,24 @@
           }
 
           .cta-secondary {
-            @include buttons.secondary($theme: white, $padding: false);
             width: max-content;
+            margin-left: 0.5rem;
+            @include buttons.secondary($theme: black, $padding: false);
 
             & > * {
               padding: 0;
               box-shadow: none !important;
               text-shadow: none !important;
+            }
+
+            button {
+              display: inline-flex !important;
+              align-items: flex-end;
+              gap: 0.5rem;
+            }
+
+            svg {
+              stroke: $accent !important;
             }
 
             .hero-secondary-cta-label {

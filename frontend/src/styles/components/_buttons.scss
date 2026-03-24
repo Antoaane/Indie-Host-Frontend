@@ -157,11 +157,11 @@ $button-themes: (
   @if $cta {
     &::after {
       content: '';
-      width: 102.5%;
-      height: 105%;
+      width: calc(100% + 2px);
+      height: calc(100% + 2px);
 
       position: absolute;
-      top: 0.125rem;
+      top: 1.5px;
       left: 50%;
       z-index: -1;
 

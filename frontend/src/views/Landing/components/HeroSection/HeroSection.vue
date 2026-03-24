@@ -3,9 +3,9 @@
 <script setup lang="ts">
 // DEPS
 import gsap from 'gsap'
-import { Search } from 'lucide-vue-next'
 // ASSETS
 import ShapesBgCroped from '@/components/svgs/images/ShapesBgCroped.vue'
+import { ArrowRight } from 'lucide-vue-next'
 // CONTENT
 import type { HeroContent } from '@/views/Landing/types/content'
 import { useLandingImport } from '@/views/Landing/composables/useLandingImport'
@@ -185,7 +185,6 @@ onMounted(async () => {
             @submit.prevent="onSubmit"
           >
             <div class="hero-search">
-              <Search class="icon" />
               <input
                 v-model="url"
                 type="url"
@@ -210,6 +209,7 @@ onMounted(async () => {
                   type="button"
                   @click="handleCreateSite"
                 >
+                  <ArrowRight size="18"/>
                   <span
                     class="hero-secondary-cta-label"
                     v-html="content.secondaryCta.label"
