@@ -49,7 +49,8 @@ export function useListingOwnership(options: UseListingOwnershipOptions) {
 
     if (targetUserId) {
       return {
-        name: 'editor',
+        name: 'editor-user',
+        params: { userId: targetUserId },
         query,
       }
     }

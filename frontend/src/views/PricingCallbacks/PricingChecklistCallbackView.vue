@@ -3,7 +3,7 @@
 <script setup lang="ts">
 import { SignInButton, SignUpButton, SignedIn, SignedOut, useAuth, useUser } from '@clerk/vue'
 import { computed, ref, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute, useRouter, type RouteLocationRaw } from 'vue-router'
 
 import {
   activateStripeSubscriptionPlan,
@@ -45,7 +45,7 @@ const CONNECT_REQUIREMENT_LABELS: Record<string, string> = {
 
 const route = useRoute()
 const router = useRouter()
-const { isSignedIn } = useUser()
+const { isSignedIn, user } = useUser()
 const { getToken } = useAuth()
 const listingsController = getListingsController()
 
@@ -229,6 +229,24 @@ const checkoutStatus = computed(() => parseCheckoutStatus(route.query.checkout))
 const checkoutSessionId = computed(() => readQueryValue(route.query.session_id))
 const connectCallbackState = computed(() => parseConnectCallbackState(route.query.state))
 const accountQuery = computed(() => readQueryValue(route.query.account))
+
+function buildEditorRouteLocation(listingId?: string): RouteLocationRaw {
+  const query = listingId ? { listingId } : {}
+  const userId = typeof user.value?.id === 'string' ? user.value.id.trim() : ''
+
+  if (userId) {
+    return {
+      name: 'editor-user',
+      params: { userId },
+      query,
+    }
+  }
+
+  return {
+    name: 'editor',
+    query,
+  }
+}
 
 const isListingOnboardingQueryEnabled = computed(() => isListingOnboardingQuery(route.query.onboarding))
 const onboardingIntentQuery = computed<ListingOnboardingIntent | null>(() => parseListingOnboardingIntentQuery(route.query.intent))
@@ -782,10 +800,7 @@ async function keepListingBlocked() {
     listingOnboardingState.value = null
 
     infoMessage.value = 'Annonce conservée en mode bloqué.'
-    await router.push({
-      name: 'editor',
-      query: { listingId },
-    })
+    await router.push(buildEditorRouteLocation(listingId))
   } catch (error) {
     errorMessage.value = resolveErrorMessage(error, 'Impossible de verrouiller votre annonce en mode bloqué.')
   } finally {
@@ -815,10 +830,7 @@ async function publishListingNow() {
     listingOnboardingState.value = null
 
     infoMessage.value = 'Votre annonce est publiée.'
-    await router.push({
-      name: 'editor',
-      query: { listingId },
-    })
+    await router.push(buildEditorRouteLocation(listingId))
   } catch (error) {
     errorMessage.value = resolveErrorMessage(error, 'Impossible de publier votre annonce.')
   } finally {
@@ -1123,10 +1135,7 @@ function resolvePreferredEditorListingId(): string | null {
 
 async function goToEditor() {
   const listingId = resolvePreferredEditorListingId()
-  await router.push({
-    name: 'editor',
-    query: listingId ? { listingId } : {},
-  })
+  await router.push(buildEditorRouteLocation(listingId ?? undefined))
 }
 
 async function handlePrimaryAction() {

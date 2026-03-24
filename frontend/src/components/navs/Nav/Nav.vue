@@ -19,6 +19,7 @@ import {
   fetchMyStripeSubscriptionState,
 } from '@/domain/api/stripeSubscriptions'
 import { isManagedListingHostname } from '@/domain/listings/publicDomain'
+import { readActiveUserId } from '@/router/backOfficeUser'
 import { vp } from '@/utils/viewport'
 import clerkToken from '@/utils/clerkToken'
 
@@ -83,6 +84,14 @@ const isHost = computed(() => navVariant.value === 'host')
 const isBackOfficeDockMode = computed(() => isHost.value && !vp.lg.value)
 
 type BackOfficeRouteName = 'editor' | 'create-listing' | 'management' | 'messaging'
+type BackOfficeUserRouteName = 'editor-user' | 'create-listing-user' | 'management-user' | 'messaging-user'
+
+const BACK_OFFICE_USER_ROUTE_BY_ENTRY_ROUTE: Record<BackOfficeRouteName, BackOfficeUserRouteName> = {
+  editor: 'editor-user',
+  'create-listing': 'create-listing-user',
+  management: 'management-user',
+  messaging: 'messaging-user',
+}
 
 type BackOfficeDockItem = {
   id: string
@@ -100,6 +109,7 @@ const currentRouteName = computed(() => {
   if (typeof value === 'string') return value
   return ''
 })
+const activeBackOfficeUserId = computed(() => readActiveUserId(route.params.userId))
 
 function toggleReservation(event?: MouseEvent) {
   if (!reservationOpen.value) {
@@ -230,6 +240,10 @@ const resolveRouteLink = (
 
 function resolveBackOfficeRouteLink(name: BackOfficeRouteName, fallbackPath: string) {
   if (isSignedIn.value) {
+    const userId = activeBackOfficeUserId.value
+    if (userId) {
+      return resolveRouteLink(BACK_OFFICE_USER_ROUTE_BY_ENTRY_ROUTE[name], { params: { userId } })
+    }
     return resolveRouteLink(name)
   }
   return resolveRouteLink('sign-in', { query: { redirect_url: fallbackPath } })

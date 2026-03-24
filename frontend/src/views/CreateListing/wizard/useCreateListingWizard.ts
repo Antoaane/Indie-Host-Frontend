@@ -87,6 +87,7 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
     () => !submitState.isSubmitting && !isGuestTransitionStage.value && (isPreviewStage.value || !isFirstStep.value),
   )
   const canSubmit = computed(() => !submitState.isSubmitting && isPreviewStage.value && !isGuestTransitionStage.value)
+  const activeUserId = computed(() => cleanText(toValue(options.userId)))
   const stepItems = computed<CreateListingStepItem[]>(() =>
     steps.map((step, index) => ({
       id: step.id,
@@ -513,6 +514,7 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
     }
     await router.push(
       buildEditorRoute({
+        userId: activeUserId.value,
       }),
     )
   }
@@ -552,6 +554,7 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
       clearStorageDraft()
       await router.push(
         buildEditorRoute({
+          userId: activeUserId.value,
           listingId,
         }),
       )

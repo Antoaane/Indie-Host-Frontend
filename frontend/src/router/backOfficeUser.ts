@@ -126,6 +126,7 @@ export function requireActiveUserId(value: unknown): string {
 export async function resolveRuntimeUserId(options?: ResolveRuntimeUserIdOptions): Promise<string | null> {
   const waitMs = Number.isFinite(options?.waitMs) ? Math.max(0, Number(options?.waitMs)) : 0
   const pollIntervalMs = Number.isFinite(options?.pollIntervalMs) ? Math.max(10, Number(options?.pollIntervalMs)) : 50
+  const sessionPollIntervalMs = Math.max(250, pollIntervalMs * 3)
 
   const immediate = readRuntimeUserIdSync()
   if (immediate) return immediate
@@ -136,6 +137,8 @@ export async function resolveRuntimeUserId(options?: ResolveRuntimeUserIdOptions
   if (waitMs <= 0) return null
 
   const deadline = Date.now() + waitMs
+  let nextSessionPollAt = Date.now()
+
   while (Date.now() < deadline) {
     await new Promise((resolve) => {
       globalThis.setTimeout(resolve, pollIntervalMs)
@@ -143,7 +146,14 @@ export async function resolveRuntimeUserId(options?: ResolveRuntimeUserIdOptions
 
     const fromRuntime = readRuntimeUserIdSync()
     if (fromRuntime) return fromRuntime
+
+    const now = Date.now()
+    if (now < nextSessionPollAt) continue
+
+    nextSessionPollAt = now + sessionPollIntervalMs
+    const fromSession = await readSessionTokenUserId()
+    if (fromSession) return fromSession
   }
 
-  return readSessionTokenUserId()
+  return readRuntimeUserIdSync() ?? readSessionTokenUserId()
 }

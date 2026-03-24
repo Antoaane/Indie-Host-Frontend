@@ -2,6 +2,7 @@
 
 <script setup lang="ts">
 import type { Component } from 'vue'
+import { useRouter } from 'vue-router'
 
 defineProps<{
   items: Array<{
@@ -16,8 +17,30 @@ defineProps<{
   }>
 }>()
 
-function handleItemAction(item: { action?: (event?: MouseEvent) => void }, event: MouseEvent) {
-  item.action?.(event)
+const router = useRouter()
+
+function isInternalRouteLink(link: string | undefined): link is string {
+  return typeof link === 'string' && link.startsWith('/') && !link.startsWith('//')
+}
+
+function isDefaultPrimaryClick(event: MouseEvent): boolean {
+  if (event.defaultPrevented) return false
+  if (event.button !== 0) return false
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return false
+  return true
+}
+
+function handleItemClick(item: { action?: (event?: MouseEvent) => void; link?: string }, event: MouseEvent) {
+  if (item.action) {
+    item.action(event)
+    return
+  }
+
+  if (!isDefaultPrimaryClick(event)) return
+  if (!isInternalRouteLink(item.link)) return
+
+  event.preventDefault()
+  void router.push(item.link)
 }
 </script>
 
@@ -36,7 +59,7 @@ function handleItemAction(item: { action?: (event?: MouseEvent) => void }, event
       :type="item.action ? 'button' : undefined"
       :href="item.link"
       v-bind="item.attrs"
-      @click="item.action ? handleItemAction(item, $event) : undefined"
+      @click="handleItemClick(item, $event)"
     >
       <component
         :is="item.icon"

@@ -264,7 +264,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <main class="pricing-unified app-pricing">
+  <section class="pricing-unified app-pricing">
     <section class="pricing-shell">
       <div class="pricing-title">
         <p class="pricing-eyebrow">{{ pricingContent.eyebrow }}</p>
@@ -522,7 +522,7 @@ onUnmounted(() => {
         {{ pricingContent.accountPrefix }} <RouterLink to="/sign-in?redirect_url=%2Fpricing%2Fcallback">{{ pricingContent.accountLinkLabel }}</RouterLink>
       </p>
     </section>
-  </main>
+  </section>
 </template>
 
 <style lang="scss">
@@ -530,10 +530,22 @@ onUnmounted(() => {
 @use '@/views/Landing/components/PricingSection/pricing-section.scss';
 
 html.pricing-surface,
-body.pricing-surface,
-body.pricing-surface #app,
-body.pricing-surface main {
+body.pricing-surface {
   background: $secondary;
+  overflow-y: auto;
+}
+
+body.pricing-surface #app,
+body.pricing-surface #app > main,
+body.pricing-surface #app > main > *,
+body.pricing-surface .pricing-unified {
+  background: $secondary;
+}
+
+body.pricing-surface #app > main,
+body.pricing-surface #app > main > * {
+  min-height: 0;
+  overflow: visible;
 }
 
 .pricing-unified.app-pricing {

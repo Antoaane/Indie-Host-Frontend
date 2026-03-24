@@ -4,7 +4,7 @@
 import { SignedIn, SignedOut, UserButton, useAuth, useUser } from '@clerk/vue'
 import { ExternalLink, UserRound } from 'lucide-vue-next'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import RelativeOverlay from '@/components/overlays/RelativeOverlay.vue'
 import type { NavItem } from '@/components/navs/Nav/navTypes'
@@ -40,6 +40,7 @@ const props = withDefaults(
 
 const itemsUndefined = computed(() => typeof props.items === 'undefined')
 const route = useRoute()
+const router = useRouter()
 const { isSignedIn } = useUser()
 const { getToken } = useAuth()
 const signedOutAnchor = ref<HTMLElement | null>(null)
@@ -116,6 +117,26 @@ function handleAuthKeydown(event: KeyboardEvent) {
 function handleAction(item: NavItem, event: MouseEvent, closeMenuAfterClick: boolean = false) {
   item.action?.(event)
   if (closeMenuAfterClick) closeMobileMenu()
+}
+
+function isInternalRouteLink(link: string | undefined): link is string {
+  return typeof link === 'string' && link.startsWith('/') && !link.startsWith('//')
+}
+
+function isDefaultPrimaryClick(event: MouseEvent): boolean {
+  if (event.defaultPrevented) return false
+  if (event.button !== 0) return false
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return false
+  return true
+}
+
+function handleLinkNavigation(item: NavItem, event: MouseEvent, closeMenuAfterClick: boolean = false) {
+  if (closeMenuAfterClick) closeMobileMenu()
+  if (!isDefaultPrimaryClick(event)) return
+  if (!isInternalRouteLink(item.link)) return
+
+  event.preventDefault()
+  void router.push(item.link)
 }
 
 async function refreshStripeConnectMenuAvailability() {
@@ -283,6 +304,7 @@ onBeforeUnmount(() => {
             :href="item.link"
             v-bind="item.attrs"
             :ref="item.ref"
+            @click="(event) => handleLinkNavigation(item, event)"
           >
             {{ item.name }}
           </a>
@@ -425,7 +447,7 @@ onBeforeUnmount(() => {
                 v-else
                 :href="item.link"
                 v-bind="item.attrs"
-                @click="closeMobileMenu"
+                @click="(event) => handleLinkNavigation(item, event, true)"
               >
                 {{ item.name }}
               </a>

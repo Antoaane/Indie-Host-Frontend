@@ -24,13 +24,33 @@ const MessagingRoute = () => import('@/views/Messaging/MessagingRoute.vue')
 const ManagementRoute = () => import('@/views/Management/ManagementRoute.vue')
 const DomainsRoute = () => import('@/views/Domains/DomainsRoute.vue')
 
+const BACK_OFFICE_USER_ROUTE_BY_ENTRY_NAME = {
+  editor: 'editor-user',
+  management: 'management-user',
+  domains: 'domains-user',
+  messaging: 'messaging-user',
+} as const
+
 async function resolveBackOfficeAccess(to: RouteLocationNormalized) {
   const userId = await resolveRuntimeUserId({
-    waitMs: 1500,
+    waitMs: 2500,
     pollIntervalMs: 75,
   })
 
   if (userId) {
+    const targetName = typeof to.name === 'string'
+      ? BACK_OFFICE_USER_ROUTE_BY_ENTRY_NAME[to.name as keyof typeof BACK_OFFICE_USER_ROUTE_BY_ENTRY_NAME]
+      : undefined
+
+    if (targetName) {
+      return {
+        name: targetName,
+        params: { userId },
+        query: to.query,
+        hash: to.hash,
+      }
+    }
+
     return true
   }
 
