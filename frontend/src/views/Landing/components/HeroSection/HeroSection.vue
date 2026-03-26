@@ -209,7 +209,7 @@ onMounted(async () => {
                   type="button"
                   @click="handleCreateSite"
                 >
-                  <ArrowRight size="18"/>
+                  <ArrowRight :size="18" />
                   <span
                     class="hero-secondary-cta-label"
                     v-html="content.secondaryCta.label"
