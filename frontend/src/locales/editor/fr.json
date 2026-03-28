@@ -22,8 +22,8 @@
       },
       "previewLink": "Ouvrir la prévisualisation interne",
       "externalLink": "Ouvrir l’annonce publique",
-      "connectCta": "Configurer Stripe Connect",
-      "connectCtaAria": "Configurer Stripe Connect pour activer la publication de cette annonce",
+      "connectCta": "Configurer mon compte",
+      "connectCtaAria": "Finaliser la configuration du compte pour activer la publication de cette annonce",
       "status": {
         "published": "Publiée",
         "archived": "Archivée",

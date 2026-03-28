@@ -203,6 +203,7 @@ const PLAN_TEMPLATES: Record<SubscriptionPlanCode, PlanTemplate> = {
 
 const SUBSCRIPTION_TRIAL_PERIOD_DAYS = 30;
 const SUBSCRIPTION_TRIAL_RESERVATION_LIMIT = 15;
+const SUBSCRIPTION_TRIAL_RESERVATION_LIMIT_ENABLED = false;
 
 const ONGOING_SUBSCRIPTION_STATUSES = new Set([
   'trialing',
@@ -1825,6 +1826,8 @@ export class PaymentsService {
   }
 
   async enforceTrialReservationLimitForListing(listingId: string): Promise<void> {
+    if (!SUBSCRIPTION_TRIAL_RESERVATION_LIMIT_ENABLED) return;
+
     const listing = await this.prisma.listing.findUnique({
       where: { id: listingId },
       select: {
