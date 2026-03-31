@@ -24,6 +24,7 @@ const url = ref('')
 const { submitUrl } = useLandingImport()
 const isIosMobile = ref(typeof document !== 'undefined' && document.documentElement.classList.contains('is-ios') && !vp.lg.value)
 const submitError = ref('')
+const heroSecondaryCtaIconSize = 18
 
 function detectSafariBrowser(): boolean {
   if (typeof navigator === 'undefined') return false
@@ -209,7 +210,7 @@ onMounted(async () => {
                   type="button"
                   @click="handleCreateSite"
                 >
-                  <ArrowRight :size="18" />
+                  <ArrowRight :size="heroSecondaryCtaIconSize" />
                   <span
                     class="hero-secondary-cta-label"
                     v-html="content.secondaryCta.label"
