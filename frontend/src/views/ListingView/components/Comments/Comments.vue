@@ -60,6 +60,8 @@ interface StaticContentRoot {
   }
 }
 
+type ImportedOtaNote = NonNullable<NotesModel['otas']>[number]
+
 const content = (staticLocale as StaticContentRoot).listing.commentsWidget
 const { isLg } = useListingViewport()
 
@@ -98,15 +100,30 @@ const visibleComments = computed(() => (
   props.visibility?.indiehost === false ? [] : comments.value
 ))
 
-const visibleImportedOtaNote = computed(() => {
-  const notes = (props.notes?.otas ?? []).filter((note) => typeof note.note === 'number' && !Number.isNaN(note.note))
+const OTA_PRIORITY: Record<string, number> = {
+  airbnb: 0,
+  booking: 1,
+}
 
-  return notes.find((note) => note.ota === 'airbnb' && props.visibility?.airbnb !== false)
-    ?? notes.find((note) => note.ota === 'booking' && props.visibility?.booking !== false)
-    ?? null
+const visibleImportedOtaNotes = computed<ImportedOtaNote[]>(() => {
+  const notes = (props.notes?.otas ?? [])
+    .filter((note): note is ImportedOtaNote => typeof note.note === 'number' && !Number.isNaN(note.note))
+    .filter((note) => {
+      if (note.ota === 'airbnb') return props.visibility?.airbnb !== false
+      if (note.ota === 'booking') return props.visibility?.booking !== false
+      return true
+    })
+    .slice()
+
+  notes.sort((a, b) => {
+    if (b.note !== a.note) return b.note - a.note
+    return (OTA_PRIORITY[a.ota] ?? Number.MAX_SAFE_INTEGER) - (OTA_PRIORITY[b.ota] ?? Number.MAX_SAFE_INTEGER)
+  })
+
+  return notes
 })
 
-const usesVisibleImportedOtaNote = computed(() => Boolean(visibleImportedOtaNote.value))
+const primaryImportedOtaNote = computed(() => visibleImportedOtaNotes.value[0] ?? null)
 
 const commentsCount = computed(() => {
   const count = visibleComments.value.length
@@ -114,9 +131,44 @@ const commentsCount = computed(() => {
   return count
 })
 
+const hasVisibleIndiehostOverall = computed(() => {
+  if (props.visibility?.indiehost === false) {
+    return false
+  }
+
+  const overall = props.notes?.overall
+  const source = props.notes?.source
+
+  return typeof overall === 'number'
+    && !Number.isNaN(overall)
+    && source !== 'airbnb'
+    && source !== 'booking'
+})
+
+const indiehostOverallScore = computed(() => {
+  if (hasVisibleIndiehostOverall.value) {
+    return props.notes?.overall ?? null
+  }
+
+  if (!commentsCount.value) {
+    return null
+  }
+
+  const sum = visibleComments.value.reduce((acc, comment) => acc + comment.note, 0)
+  return commentsCount.value ? sum / commentsCount.value : null
+})
+
+const hasVisibleIndiehostNotes = computed(() => (
+  hasVisibleIndiehostOverall.value || commentsCount.value > 0
+))
+
+const usesImportedAsPrimaryScore = computed(() => (
+  !hasVisibleIndiehostNotes.value && Boolean(primaryImportedOtaNote.value)
+))
+
 const countLabel = computed(() => {
-  const importedReviewCount = visibleImportedOtaNote.value?.reviewCount
-  if (!commentsCount.value && usesVisibleImportedOtaNote.value && typeof importedReviewCount === 'number') {
+  const importedReviewCount = primaryImportedOtaNote.value?.reviewCount
+  if (!commentsCount.value && usesImportedAsPrimaryScore.value && typeof importedReviewCount === 'number') {
     return formatICUMessage(content.summary.countLabel, { count: importedReviewCount })
   }
 
@@ -126,34 +178,16 @@ const countLabel = computed(() => {
 })
 
 const overallScore = computed(() => {
-  if (usesVisibleImportedOtaNote.value) {
-    return visibleImportedOtaNote.value?.note ?? null
+  if (usesImportedAsPrimaryScore.value) {
+    return primaryImportedOtaNote.value?.note ?? null
   }
 
-  const source = props.notes?.source
-  const shouldHideImportedSource =
-    (source === 'airbnb' && props.visibility?.airbnb === false)
-    || (source === 'booking' && props.visibility?.booking === false)
-  const overall = shouldHideImportedSource ? null : props.notes?.overall
-  if (typeof overall === 'number' && !Number.isNaN(overall)) {
-    // console.log(`${'✅'} [Comments.vue](overallScore) overallScore:computed fromNotes=${overall} reused`)
-    return overall
-  }
-
-  if (!commentsCount.value) {
-    // console.log(`${'❌'} [Comments.vue](overallScore) overallScore:computed unavailable=null noComments`)
-    return null
-  }
-
-  const sum = visibleComments.value.reduce((acc, comment) => acc + comment.note, 0)
-  const value = commentsCount.value ? sum / commentsCount.value : null
-  // console.log(`${typeof value === 'number' ? '✅' : '❌'} [Comments.vue](overallScore) overallScore:computed averaged=${value} calculated`)
-  return value
+  return indiehostOverallScore.value
 })
 
 function resolveDistribution(notes: NotesModel | undefined, list: CommentsModel) {
-  const source = usesVisibleImportedOtaNote.value
-    ? visibleImportedOtaNote.value?.distribution
+  const source = usesImportedAsPrimaryScore.value
+    ? primaryImportedOtaNote.value?.distribution
     : notes?.source === 'airbnb' || notes?.source === 'booking'
       ? undefined
       : notes?.distribution
@@ -205,19 +239,31 @@ const overlayComments = computed(() => {
 
 const canLoadOverlay = computed(() => overlayComments.value.length < visibleComments.value.length)
 
+const importedSummaryScores = computed(() => {
+  const notes = usesImportedAsPrimaryScore.value
+    ? visibleImportedOtaNotes.value.slice(1)
+    : visibleImportedOtaNotes.value
+
+  return notes.map((note) => ({
+    ota: note.ota,
+    note: note.note,
+    sourceLabel: note.sourceLabel,
+  }))
+})
+
 const sourceLabel = computed(() => (
-  usesVisibleImportedOtaNote.value
-    ? `Notes importees depuis ${visibleImportedOtaNote.value?.sourceLabel ?? visibleImportedOtaNote.value?.ota ?? 'une OTA'}`
+  usesImportedAsPrimaryScore.value
+    ? `Notes importees depuis ${primaryImportedOtaNote.value?.sourceLabel ?? primaryImportedOtaNote.value?.ota ?? 'une OTA'}`
     : ''
 ))
 
 const hasImportedReviewData = computed(() => {
-  if (typeof props.notes?.overall === 'number' && !Number.isNaN(props.notes.overall)) return true
-  if ((props.notes?.otas?.length ?? 0) > 0) return true
-  return false
+  return visibleImportedOtaNotes.value.length > 0
 })
 
-const hasVisibleContent = computed(() => comments.value.length > 0 || hasImportedReviewData.value)
+const hasVisibleContent = computed(() => (
+  hasVisibleIndiehostNotes.value || hasImportedReviewData.value
+))
 const showSummary = computed(() => overallScore.value !== null)
 const headerTitle = computed(() => (
   showSummary.value ? `${content.title} — ${countLabel.value}` : content.title
@@ -337,6 +383,7 @@ const swiperParams = computed(
           :rating-unit="content.summary.ratingUnit"
           :overall-label="content.summary.overallLabel"
           :count-label="countLabel"
+          :imported-scores="importedSummaryScores"
           :show-stars="overallScore !== null"
         />
         <p
@@ -426,6 +473,7 @@ const swiperParams = computed(
                 :rating-unit="content.summary.ratingUnit"
                 :overall-label="content.summary.overallLabel"
                 :count-label="countLabel"
+                :imported-scores="importedSummaryScores"
                 :show-stars="overallScore !== null"
               />
               <p

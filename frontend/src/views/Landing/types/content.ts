@@ -24,6 +24,7 @@ export interface HeroContent {
   description: string
   descriptionDesktop?: string
   inputPlaceholder: string
+  inputPlaceholders?: string[]
   primaryCta: CtaLink
   secondaryCta: CtaLink
   images: MediaAsset[]

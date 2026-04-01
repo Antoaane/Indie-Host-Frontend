@@ -3,9 +3,13 @@
     "title": "Votre site de réservation<br><strong>0%</strong> de commissions",
     "description": "Domaine inclus. Réservations directes. Paiements en ligne.",
     "descriptionDesktop": "Créez votre site de location saisonnière avec nom de domaine inclus. Acceptez les réservations directes et encaissez vos paiements en ligne sans aucune commission.",
-    "inputPlaceholder": "Collez le lien de votre logement",
+    "inputPlaceholder": "Lien de votre logement Airbnb ou Booking",
+    "inputPlaceholders" : [
+      "https://www.airbnb.fr/rooms/...",
+      "https://www.booking.com/hotel/..."
+    ],
     "primaryCta": {
-      "label": "Importer mon annonce existante",
+      "label": "Importer mon annonce",
       "href": "#intro-section",
       "target": "_self"
     },
@@ -25,7 +29,7 @@
   "introSection": {
     "title": "Créez <span class=\"text-gradiant\">votre site</span> depuis une annonce existante",
     "body": "Copiez le lien Airbnb ou Booking d’un de vos logements et nous créez votre page de réservation instantanément.",
-    "inputPlaceholder": "Collez le lien de votre logement",
+    "inputPlaceholder": "Lien de votre logement Airbnb ou Booking",
     "previewCtaLabel": "Générer mon site !",
     "createAccountCtaLabel": "Activer mon site gratuitement",
     "createAccountCtaHint": "Gratuit · Sans engagement · Sans commission",

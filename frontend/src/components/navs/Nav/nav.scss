@@ -8,7 +8,7 @@
 
 .navbar {
   width: 100%;
-  height: 52px;
+  height: 3.75rem;
 
   display: flex;
   justify-content: space-between;
@@ -18,7 +18,7 @@
   border: 1px solid rgba($accent, 0.25);
   background-color: $accent;
 
-  padding-left: var(--layout-gap-md);
+  padding-left: var(--layout-gap);
   padding-right: var(--layout-gap);
 
   @include halo();
@@ -42,8 +42,64 @@
     padding: 0 1rem;
   }
 
+  .menu-container {
+    flex: 1;
+
+    >.mobile-toggle {
+      width: 1.75rem;
+      height: 1.75rem;
+
+      position: relative;
+
+      cursor: pointer;
+
+      >.line {
+        width: 80%;
+        height: 0.18rem;
+
+        position: absolute;
+        left: 50%;
+
+        background-color: $secondary;
+        border-radius: borders.$rounded;
+
+        @include animations.transition;
+
+        &.is-top {
+          top: 25%;
+          transform: translate(-50%, 0%);
+
+          @include animations.transition;
+        }
+
+        &.is-bottom {
+          bottom: 25%;
+          transform: translate(-50%, 0%);
+
+          @include animations.transition;
+        }
+      }
+
+      &.is-active {
+        >.line {
+          height: 0.175rem;
+
+          &.is-top {
+            top: 50%;
+            transform: translate(-50%, -50%) rotate(45deg);
+          }
+
+          &.is-bottom {
+            bottom: 50%;
+            transform: translate(-50%, 50%) rotate(-45deg);
+          }
+        }
+      }
+    }
+  }
+
   >.logo {
-    width: min-content;
+    width: max-content;
     height: 100%;
 
     display: flex;
@@ -55,7 +111,7 @@
     cursor: pointer;
 
     >svg {
-      height: 2.25rem;
+      height: 2.75rem;
 
       @include min-width(lg) {
         height: 3.125rem;
@@ -64,6 +120,74 @@
       @media (min-width: 1024px) and (max-width: 1279px) {
         height: 2.65rem;
       }
+    }
+  }
+
+  >.auth-item {
+    --nav-auth-size: 2.25rem;
+
+    list-style: none;
+    display: flex;
+    align-items: center;
+    flex: 1;
+
+    display: flex;
+    justify-content: end;
+
+    >.auth-menu-anchor,
+    >.auth-user-button {
+      width: var(--nav-auth-size);
+      height: var(--nav-auth-size);
+      flex: 0 0 var(--nav-auth-size);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .auth-avatar-button {
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      border: none;
+      border-radius: 999px;
+      background: rgba($accent, 0.12);
+      color: rgba($secondary-button-reference, 0.9);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      outline: 2px solid rgba($secondary-button-reference, 0.14);
+      transition:
+        background-color 140ms ease,
+        color 140ms ease,
+        outline-color 140ms ease,
+        box-shadow 140ms ease,
+        transform 140ms ease;
+
+      &:hover {
+        background: rgba($secondary-button-reference, 0.88);
+        color: $accent;
+        outline-color: rgba($accent, 0.45);
+        box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.2);
+      }
+
+      &:focus-visible {
+        box-shadow: 0 0 0 3px rgba($accent, 0.35);
+        outline-color: rgba($accent, 0.72);
+      }
+    }
+
+    >.auth-user-button>.cl-rootBox {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    >.auth-user-button .cl-userButtonTrigger {
+      width: 100%;
+      height: 100%;
     }
   }
 
@@ -168,58 +292,6 @@
       >.auth-user-button .cl-userButtonTrigger {
         width: 100%;
         height: 100%;
-      }
-    }
-  }
-
-  >.mobile-toggle {
-    width: 1.75rem;
-    height: 1.75rem;
-
-    position: relative;
-
-    cursor: pointer;
-
-    >.line {
-      width: 80%;
-      height: 0.18rem;
-
-      position: absolute;
-      left: 50%;
-
-      background-color: $background;
-      border-radius: borders.$rounded;
-
-      @include animations.transition;
-
-      &.is-top {
-        top: 25%;
-        transform: translate(-50%, 0%);
-
-        @include animations.transition;
-      }
-
-      &.is-bottom {
-        bottom: 25%;
-        transform: translate(-50%, 0%);
-
-        @include animations.transition;
-      }
-    }
-
-    &.is-active {
-      >.line {
-        height: 0.175rem;
-
-        &.is-top {
-          top: 50%;
-          transform: translate(-50%, -50%) rotate(45deg);
-        }
-
-        &.is-bottom {
-          bottom: 50%;
-          transform: translate(-50%, 50%) rotate(-45deg);
-        }
       }
     }
   }

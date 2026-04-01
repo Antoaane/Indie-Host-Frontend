@@ -222,6 +222,20 @@ onBeforeUnmount(() => {
     class="navbar"
     :class="{ contained: !full }"
   >
+  <div class="menu-container">
+    <div
+      v-if="!vp.lg.value"
+      class="mobile-toggle"
+      :class="{ 'is-active': isMobileMenuOpen }"
+      @click="toggleMobileMenu"
+      aria-label="Ouvrir/fermer le menu"
+      role="button" title="Ouvrir/fermer le menu"
+    >
+      <span class="line is-top" />
+      <span class="line is-bottom" />
+    </div>
+  </div>
+
     <button
       v-if="logoMode === 'scroll'"
       type="button"
@@ -250,6 +264,88 @@ onBeforeUnmount(() => {
         role="img"
       />
     </a>
+
+    <div
+      v-if="showAuth"
+      class="auth-item"
+    >
+      <SignedOut>
+        <div
+          ref="signedOutAnchor"
+          class="auth-menu-anchor"
+          @mouseenter="openAuthMenu"
+          @mouseleave="scheduleAuthMenuClose()"
+          @focusin="openAuthMenu"
+          @focusout="handleAuthFocusOut"
+        >
+          <button
+            type="button"
+            class="auth-avatar-button"
+            aria-label="Ouvrir les options d'authentification"
+            aria-haspopup="menu"
+            :aria-expanded="authMenuOpen"
+            @click="authMenuOpen ? closeAuthMenu() : openAuthMenu()"
+            @keydown="handleAuthKeydown"
+          >
+            <UserRound :size="18" />
+          </button>
+
+          <RelativeOverlay
+            class="nav-auth-overlay"
+            :open="authMenuOpen"
+            :anchor="signedOutAnchor"
+            placement="bottom-end"
+            :offset="10"
+            role="menu"
+            aria-label="Menu d'authentification"
+            @close="closeAuthMenu"
+          >
+            <div
+              ref="authMenuPanel"
+              class="nav-auth-menu"
+              @mouseenter="openAuthMenu"
+              @mouseleave="scheduleAuthMenuClose()"
+              @focusin="openAuthMenu"
+              @focusout="handleAuthFocusOut"
+            >
+              <a
+                :href="signInHref"
+                role="menuitem"
+                data-auth-menu-item
+                @click="closeAuthMenu"
+              >
+                Se connecter
+              </a>
+              <a
+                :href="signUpHref"
+                role="menuitem"
+                data-auth-menu-item
+                @click="closeAuthMenu"
+              >
+                S'inscrire
+              </a>
+            </div>
+          </RelativeOverlay>
+        </div>
+      </SignedOut>
+      <SignedIn>
+        <div class="auth-user-button">
+          <UserButton>
+            <UserButton.MenuItems>
+              <UserButton.Action
+                v-if="showStripeConnectDashboardAction"
+                label="Mes revenus"
+                :on-click="handleOpenStripeConnectDashboard"
+              >
+                <template #labelIcon>
+                  <ExternalLink :size="16" />
+                </template>
+              </UserButton.Action>
+            </UserButton.MenuItems>
+          </UserButton>
+        </div>
+      </SignedIn>
+    </div>
 
     <div
       v-if="searchBar"
@@ -394,7 +490,7 @@ onBeforeUnmount(() => {
       </template>
     </ul>
 
-    <div
+    <!-- <div
       v-if="!vp.lg.value"
       class="mobile-toggle"
       :class="{ 'is-active': isMobileMenuOpen }"
@@ -404,7 +500,7 @@ onBeforeUnmount(() => {
     >
       <span class="line is-top" />
       <span class="line is-bottom" />
-    </div>
+    </div> -->
 
     <transition name="fade-slide">
       <div
