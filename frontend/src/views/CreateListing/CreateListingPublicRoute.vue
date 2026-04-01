@@ -11,18 +11,8 @@ const source = computed<EditorSource>(() => createStaticEditorSource())
 </script>
 
 <template>
-  <div class="create-listing-public-route">
-    <CreateListing
-      mode="static"
-      :source="source"
-    />
-  </div>
+  <CreateListing
+    mode="static"
+    :source="source"
+  />
 </template>
-
-<style lang="scss">
-/* File: src/views/CreateListing/create-listing-public-route.scss */
-
-.create-listing-public-route {
-  display: contents;
-}
-</style>

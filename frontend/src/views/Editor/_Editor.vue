@@ -104,7 +104,7 @@ watch(selectedListingId, (listingId) => {
 </script>
 
 <template>
-  <main
+  <section
     id="editor-page"
     class="editor"
   >
@@ -169,7 +169,7 @@ watch(selectedListingId, (listingId) => {
         </div>
       </section>
     </div>
-  </main>
+  </section>
 </template>
 
 <style lang="scss">

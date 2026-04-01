@@ -350,7 +350,7 @@ watch(selectedConversationId, (conversationId) => {
 </script>
 
 <template>
-  <main
+  <section
     id="messaging-page"
     class="messaging"
   >
@@ -392,7 +392,7 @@ watch(selectedConversationId, (conversationId) => {
         />
       </div>
     </div>
-  </main>
+  </section>
 </template>
 
 <style lang="scss">

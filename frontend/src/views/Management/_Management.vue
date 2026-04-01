@@ -1100,7 +1100,7 @@ const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !nor
 </script>
 
 <template>
-  <main
+  <section
     id="management-page"
     class="management"
   >
@@ -1403,7 +1403,7 @@ const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !nor
         </section>
       </div>
     </div>
-  </main>
+  </section>
 
   <ConfirmationDialog
     :open="isDeleteOverlayOpen"

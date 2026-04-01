@@ -17,19 +17,9 @@ const source = computed<EditorSource>(() => createUserEditorSource(userId.value)
 </script>
 
 <template>
-  <div class="create-listing-route">
-    <CreateListing
-      mode="user"
-      :source="source"
-      :userId="userId"
-    />
-  </div>
+  <CreateListing
+    mode="user"
+    :source="source"
+    :userId="userId"
+  />
 </template>
-
-<style lang="scss">
-/* File: src/views/CreateListing/create-listing-route.scss */
-
-.create-listing-route {
-  display: contents;
-}
-</style>

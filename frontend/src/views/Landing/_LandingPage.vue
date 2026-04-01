@@ -301,8 +301,7 @@ html.safari-landing-lite #landing-page *::after {
 
   html.mobile-landing-lite #landing-page,
   html.mobile-landing-lite #landing-page *,
-  html.mobile-landing-lite .layout-header,
-  html.mobile-landing-lite .layout-header * {
+  html.mobile-landing-lite .layout-header {
     animation: none !important;
     transition: none !important;
     scroll-behavior: auto !important;

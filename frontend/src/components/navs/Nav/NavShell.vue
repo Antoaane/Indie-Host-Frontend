@@ -222,7 +222,7 @@ onBeforeUnmount(() => {
     class="navbar"
     :class="{ contained: !full }"
   >
-  <div class="menu-container">
+  <div v-if="!vp.lg.value" class="menu-container">
     <div
       v-if="!vp.lg.value"
       class="mobile-toggle"
@@ -266,7 +266,7 @@ onBeforeUnmount(() => {
     </a>
 
     <div
-      v-if="showAuth"
+      v-if="showAuth && !vp.lg.value"
       class="auth-item"
     >
       <SignedOut>

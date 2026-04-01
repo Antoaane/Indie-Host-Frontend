@@ -17,18 +17,8 @@ const source = computed<EditorSource>(() => createUserEditorSource(userId.value)
 </script>
 
 <template>
-  <div class="messaging-route">
-    <MessagingView
-      mode="user"
-      :source="source"
-    />
-  </div>
+  <MessagingView
+    mode="user"
+    :source="source"
+  />
 </template>
-
-<style lang="scss">
-/* File: src/views/Messaging/messaging-route.scss */
-
-.messaging-route {
-  display: contents;
-}
-</style>

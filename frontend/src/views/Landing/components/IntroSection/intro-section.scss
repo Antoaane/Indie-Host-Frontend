@@ -467,68 +467,33 @@
     isolation: isolate;
     background: $secondary;
 
-    &::before,
-    &::after {
-      content: '';
-      position: absolute;
-      left: 0;
-      right: 0;
-      pointer-events: none;
-    }
-
-    &::before {
-      top: 0;
-      height: min(58vh, 34rem);
-      z-index: -2;
-      background-image: var(--mobile-preview-cover-image);
-      background-position: center top;
-      background-repeat: no-repeat;
-      background-size: cover;
-      transform: scale(1.03);
-      transform-origin: center top;
-    }
-
-    &::after {
-      inset: 0;
-      z-index: -1;
-      background: linear-gradient(
-        180deg,
-        rgba($secondary, 0.1) 0%,
-        rgba($secondary, 0.18) 16%,
-        rgba($background, 0.78) 42%,
-        rgba($background, 0.94) 56%,
-        $background 70%
-      );
-    }
-
     @include min-width(lg) {
       display: none;
     }
   }
 
   .mobile-preview-topbar {
+    height: max-content;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--layout-gap-sm);
-    position: relative;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
     overflow: hidden;
     isolation: isolate;
     padding:
       calc(env(safe-area-inset-top) + 0.75rem)
       var(--layout-gap-sm)
       var(--layout-gap-sm);
-    z-index: 1;
-    background: linear-gradient(180deg, rgba($secondary, 0.18) 0%, rgba($secondary, 0.42) 100%);
-    border-bottom: 1px solid rgba($accent, 0.08);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
+    background: linear-gradient(180deg, rgba($secondary, 1) 0%, rgba($secondary, 0) 100%);
   }
 
   .mobile-preview-back {
     @include buttons.primary($theme: white, $icon-only: true, $little: false);
     flex: 0 0 auto;
-    
+
     > button {
       width: 2.75rem;
       height: 2.75rem;
@@ -571,15 +536,6 @@
       height: 100%;
       min-height: 0;
       border-radius: 0;
-      background-color: transparent;
-    }
-
-    .listing-view > .main {
-      background: transparent;
-    }
-
-    .listing-view > .main > .core {
-      background: $background;
     }
   }
 

@@ -395,7 +395,14 @@
 .fade-slide-leave-active {
   transition:
     opacity 0.3s ease,
-    transform 0.3s ease;
+    transform 0.3s ease !important;
+}
+
+html.mobile-landing-lite .layout-header .fade-slide-enter-active,
+html.mobile-landing-lite .layout-header .fade-slide-leave-active {
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease !important;
 }
 
 .fade-slide-enter-from,

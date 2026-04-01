@@ -24,7 +24,7 @@ const dashboardLink = computed(() => {
 </script>
 
 <template>
-  <main
+  <section
     id="create-listing-page"
     class="create-listing"
   >
@@ -46,5 +46,5 @@ const dashboardLink = computed(() => {
         <slot />
       </div>
     </div>
-  </main>
+  </section>
 </template>

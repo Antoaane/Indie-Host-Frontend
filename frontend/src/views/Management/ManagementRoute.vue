@@ -17,18 +17,8 @@ const source = computed<EditorSource>(() => createUserEditorSource(userId.value)
 </script>
 
 <template>
-  <div class="management-route">
-    <Management
-      mode="user"
-      :source="source"
-    />
-  </div>
+  <Management
+    mode="user"
+    :source="source"
+  />
 </template>
-
-<style lang="scss">
-/* File: src/views/Management/management-route.scss */
-
-.management-route {
-  display: contents;
-}
-</style>
