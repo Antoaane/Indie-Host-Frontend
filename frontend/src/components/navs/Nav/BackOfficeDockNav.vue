@@ -67,9 +67,7 @@ function handleItemClick(item: { action?: (event?: MouseEvent) => void; link?: s
         :size="18"
         aria-hidden="true"
       />
-      <span class="label">
-        {{ item.label }}
-      </span>
+      <span class="label" v-html="item.label"/>
     </component>
   </nav>
 </template>

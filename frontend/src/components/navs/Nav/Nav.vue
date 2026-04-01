@@ -5,7 +5,7 @@ import { useAuth, useUser } from '@clerk/vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { Component } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { CalendarClock, LayoutGrid, MessageSquareMore, PlusSquare, Wallet } from 'lucide-vue-next'
+import { CalendarClock, LayoutGrid, MessageSquareMore, Plus, Wallet } from 'lucide-vue-next'
 
 import HostReservationOverlay from '@/components/navs/HostReservationOverlay.vue'
 import BackOfficeDockNav from '@/components/navs/Nav/BackOfficeDockNav.vue'
@@ -355,15 +355,15 @@ const backOfficeDockItems = computed(() => {
     },
     {
       id: 'dock-management',
-      label: 'Réserv.',
+      label: 'Réservations',
       icon: CalendarClock,
       link: resolveBackOfficeRouteLink('management', '/dashboard/management'),
       isActive: isManagementRoute,
     },
     {
       id: 'dock-add-reservation',
-      label: 'Ajout résa',
-      icon: PlusSquare,
+      label: 'Ajouter une<br>réservation',
+      icon: Plus,
       isPrimary: true,
       action: toggleReservation,
       attrs: {
@@ -379,13 +379,13 @@ const backOfficeDockItems = computed(() => {
       link: resolveBackOfficeRouteLink('messaging', '/dashboard/messages'),
       isActive: isMessagingRoute,
     },
-    {
-      id: 'dock-create',
-      label: 'Créer',
-      icon: PlusSquare,
-      link: resolveBackOfficeRouteLink('create-listing', '/dashboard/editor/create'),
-      isActive: isCreateRoute,
-    },
+    // {
+    //   id: 'dock-create',
+    //   label: 'Créer',
+    //   icon: Plus,
+    //   link: resolveBackOfficeRouteLink('create-listing', '/dashboard/editor/create'),
+    //   isActive: isCreateRoute,
+    // },
   ]
 
   if (canOpenStripeConnectDashboard.value) {
