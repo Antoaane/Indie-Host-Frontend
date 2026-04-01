@@ -9,12 +9,12 @@
 
   padding-top: var(--layout-gap-sm);
   padding-bottom: calc(var(--editor-mobile-dock-height) + env(safe-area-inset-bottom));
-  min-height: 100vh;
-  min-height: 100dvh;
+  height: calc(100vh - var(--layout-gap-sm) - var(--editor-mobile-dock-height) - env(safe-area-inset-bottom));
+  height: calc(100dvh - var(--layout-gap-sm) - var(--editor-mobile-dock-height) - env(safe-area-inset-bottom));
   padding-inline: var(--layout-gap-sm);
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
+  overflow: hidden;
 
   @include min-width(lg) {
     --editor-mobile-dock-height: calc(70px + var(--layout-gap) + var(--layout-gap-md));

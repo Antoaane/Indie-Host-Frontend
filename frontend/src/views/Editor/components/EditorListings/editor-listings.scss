@@ -31,14 +31,17 @@ $editor-listing-card-target-width: 20rem;
   }
 
   >.scroll-container {
-    overflow: hidden;
-    overflow-y: scroll;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 
     >.grid {
       height: max-content;
-      flex: 1 1 auto;
+      min-height: 100%;
       min-width: 0;
-      overflow: auto;
+      overflow: visible;
       scrollbar-width: none;
 
       padding: var(--layout-gap-md);
