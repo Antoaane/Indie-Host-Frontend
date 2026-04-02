@@ -48,6 +48,7 @@ $editor-listing-card-target-width: 20rem;
       display: grid;
       @include responsive-grid-columns(var(--editor-listing-card-min-width), auto-fill);
       gap: var(--layout-gap-md);
+      align-items: start;
 
       >.new-card {
         width: 100%;
