@@ -24,7 +24,9 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: RangeISO | null): void
 }>()
 
-const { isLg } = useListingViewport()
+const { mode } = useListingViewport()
+
+const calendarMonthsCount = computed(() => (mode.value === 'xxl' ? 3 : 2))
 
 const selection = computed<RangeISO | null>({
   get: () => props.modelValue,
@@ -42,7 +44,7 @@ const disabledDates = computed<RangeISO[]>(() => (props.data?.bookedDays ?? []).
     <DatePicker
       v-model:model-value="selection"
       :disabled-dates="disabledDates"
-      :numberOfMonths="isLg ? 3 : 2"
+      :numberOfMonths="calendarMonthsCount"
     />
   </section>
 </template>

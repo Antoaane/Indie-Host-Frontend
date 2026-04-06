@@ -9,12 +9,12 @@
 
   padding-top: var(--layout-gap-sm);
   padding-bottom: calc(var(--editor-mobile-dock-height) + env(safe-area-inset-bottom));
-  height: calc(100vh - var(--layout-gap-sm) - var(--editor-mobile-dock-height) - env(safe-area-inset-bottom));
-  height: calc(100dvh - var(--layout-gap-sm) - var(--editor-mobile-dock-height) - env(safe-area-inset-bottom));
+  min-height: 100vh;
+  min-height: 100dvh;
   padding-inline: var(--layout-gap-sm);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-x: hidden;
 
   @include min-width(lg) {
     --editor-mobile-dock-height: calc(70px + var(--layout-gap) + var(--layout-gap-md));
@@ -22,13 +22,13 @@
     padding-top: var(--editor-mobile-dock-height);
     padding-bottom: 0;
     min-height: 0;
-    height: calc(100vh - var(--editor-mobile-dock-height));
-    height: calc(100dvh - var(--editor-mobile-dock-height));
+    height: 100vh;
+    height: 100dvh;
     overflow: hidden;
     padding-inline: 0;
   }
 
-  >.layout {
+  > .layout {
     flex: 1 1 auto;
     min-height: 0;
     position: relative;
@@ -53,7 +53,7 @@
       padding-bottom: var(--layout-gap);
     }
 
-    >.sidebar-shell {
+    > .sidebar-shell {
       position: absolute;
       inset: 0;
       z-index: 20;
@@ -71,13 +71,15 @@
       opacity: 0;
       pointer-events: none;
       transform: translateX(105%);
-      transition: transform 240ms ease, opacity 200ms ease;
+      transition:
+        transform 240ms ease,
+        opacity 200ms ease;
 
       @include min-width(lg) {
         background: $translucent;
       }
 
-      >.editor-sidebar {
+      > .editor-sidebar {
         flex: 1 1 auto;
         min-height: 0;
         border-radius: 0;
@@ -85,14 +87,14 @@
     }
 
     &.is-mobile-editing {
-      >.sidebar-shell.is-mobile-open {
+      > .sidebar-shell.is-mobile-open {
         opacity: 1;
         pointer-events: auto;
         transform: translateX(0);
       }
     }
 
-    >.stage {
+    > .stage {
       flex: 1 1 auto;
       min-width: 0;
       min-height: 0;
@@ -104,15 +106,24 @@
 
       // overflow: hidden;
 
-      >.content {
+      > .content {
         flex: 1 1 auto;
         min-height: 0;
         position: relative;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+
+        > .editor-listings,
+        > .editor-preview {
+          flex: 1 1 auto;
+          min-height: 0;
+        }
       }
     }
 
     @include min-width(lg) {
-      >.sidebar-shell {
+      > .sidebar-shell {
         position: relative;
         inset: auto;
         z-index: 2;
@@ -125,7 +136,7 @@
         pointer-events: auto;
         transform: translateX(0);
 
-        >.editor-sidebar {
+        > .editor-sidebar {
           height: 100%;
         }
       }
@@ -135,7 +146,9 @@
 
 .editor-sidebar-enter-active,
 .editor-sidebar-leave-active {
-  transition: transform 240ms ease, opacity 240ms ease;
+  transition:
+    transform 240ms ease,
+    opacity 240ms ease;
   will-change: transform, opacity;
 }
 

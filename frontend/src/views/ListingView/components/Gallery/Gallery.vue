@@ -23,7 +23,9 @@ const props = withDefaults(
   { previewOnly: false },
 )
 
-const { isLg } = useListingViewport()
+const { isLg, mode } = useListingViewport()
+
+const isTabletMode = computed(() => mode.value === 'tablet')
 
 const orderedImages = computed(() => orderByIndex(props.medias.images))
 
@@ -52,6 +54,18 @@ function openSlideLightbox(startIndexRaw: number) {
 }
 
 const slides = computed(() => orderedImages.value)
+
+const mosaicMinSlots = computed(() => {
+  if (isTabletMode.value) return 2
+  return props.previewOnly ? Math.min(6, mosaicImages.value.length || 2) : 2
+})
+
+const mosaicMaxSlots = computed(() => {
+  if (isTabletMode.value) return 2
+  return props.previewOnly ? Math.max(6, mosaicImages.value.length || 3) : 3
+})
+
+const mosaicMinTileH = computed(() => (isTabletMode.value ? 60 : 20))
 
 const swiperBaseParams = createListingMediaSwiperParams({
   autoplay: false,
@@ -90,10 +104,10 @@ const swiperParams = swiperBaseParams as unknown as Record<string, unknown>
       :items="mosaicImages"
       :lightbox-items="lightboxItems"
       :intervalMs="10000"
-      :minSlots="props.previewOnly ? Math.min(6, mosaicImages.length || 2) : 2"
-      :maxSlots="props.previewOnly ? Math.max(6, mosaicImages.length || 3) : 3"
+      :minSlots="mosaicMinSlots"
+      :maxSlots="mosaicMaxSlots"
       :minTileW="20"
-      :minTileH="20"
+      :minTileH="mosaicMinTileH"
     />
   </section>
 

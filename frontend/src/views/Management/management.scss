@@ -24,8 +24,8 @@
     padding-top: var(--editor-mobile-dock-height);
     padding-bottom: 0;
     min-height: 0;
-    height: calc(100vh - var(--editor-mobile-dock-height));
-    height: calc(100dvh - var(--editor-mobile-dock-height));
+    height: 100vh;
+    height: 100dvh;
     overflow: hidden;
     padding-inline: 0;
   }

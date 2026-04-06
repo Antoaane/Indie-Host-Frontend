@@ -9,6 +9,7 @@
 .listing-booking-min {
   width: 100%;
   max-width: 760px;
+  position: relative;
 
   >.bar {
     width: 100%;
@@ -61,7 +62,7 @@
       padding: 0.6rem 0.8rem;
 
       display: flex;
-      justify-content: space-between;
+      align-items: center;
 
       background: $accent-surface-1;
       border-radius: borders.$rounded-md;
@@ -71,15 +72,22 @@
         font-weight: 800;
         white-space: nowrap;
       }
-
-      >small {
-        @include little-text($color: rgba($secondary-text, 0.65));
-      }
     }
 
     >.cta {
       @include buttons.primary($cta: true, $fullwidth: true);
     }
+  }
+
+  >.price-indicative {
+    position: absolute;
+    left: var(--layout-gap-md);
+    top: calc(100% - 0.15rem);
+    opacity: 0.5;
+    pointer-events: none;
+    font-size: 0.75rem !important;
+
+    @include little-text($color: $accent);
   }
 }
 

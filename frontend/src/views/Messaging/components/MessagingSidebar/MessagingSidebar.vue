@@ -110,20 +110,6 @@ const filteredConversations = computed(() => {
       </ul>
     </div>
 
-    <template
-      v-if="props.isLoading || props.error || !filteredConversations.length"
-      #footer
-    >
-      <div class="state">
-        <template v-if="props.isLoading"> Chargement des conversations... </template>
-        <template v-else-if="props.error">
-          {{ props.error }}
-        </template>
-        <template v-else>
-          {{ props.searchEmptyLabel }}
-        </template>
-      </div>
-    </template>
   </BaseSidebar>
 </template>
 

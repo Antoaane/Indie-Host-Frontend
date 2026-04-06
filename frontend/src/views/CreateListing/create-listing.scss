@@ -3,14 +3,24 @@
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
 @use '@/styles/variables/effects' as effects;
+@use '@/styles/components/buttons' as buttons;
 
 .create-listing#create-listing-page {
+  position: relative;
   min-height: 100vh;
   min-height: 100dvh;
   padding-bottom: env(safe-area-inset-bottom);
   overflow-x: hidden;
 
   background: $background;
+
+  >.create-listing-quit {
+    position: absolute;
+    top: max(var(--layout-gap-xs), env(safe-area-inset-top));
+    left: var(--layout-gap-xs);
+    z-index: 4;
+    @include buttons.secondary;
+  }
 
   @include min-width(lg) {
     height: 100vh;

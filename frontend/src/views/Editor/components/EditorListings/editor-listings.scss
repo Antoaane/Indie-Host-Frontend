@@ -7,11 +7,14 @@
 @use '@/styles/components/buttons' as buttons;
 @use '@/styles/components/inputs' as inputs;
 
-$editor-listing-card-target-width: 20rem;
-
 .editor-listings {
-  --editor-listing-card-min-width: #{$editor-listing-card-target-width};
+  --editor-listing-card-min-width: 10rem;
 
+  @include min-width(lg) {
+    --editor-listing-card-min-width: 20rem;
+  }
+
+  flex: 1 1 auto;
   height: 100%;
   min-height: 0;
 
@@ -21,23 +24,23 @@ $editor-listing-card-target-width: 20rem;
   background: $accent;
   border-radius: borders.$rounded-xl;
 
-  >.toolbar {
+  > .toolbar {
     padding: var(--layout-gap-sm);
     border-bottom: 1px solid rgba($secondary, 0.08);
 
-    >.search {
+    > .search {
       @include inputs.search($theme: accent);
     }
   }
 
-  >.scroll-container {
+  > .scroll-container {
     flex: 1 1 auto;
     min-height: 0;
     overflow-x: hidden;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
 
-    >.grid {
+    > .grid {
       height: max-content;
       min-height: 100%;
       min-width: 0;
@@ -46,17 +49,18 @@ $editor-listing-card-target-width: 20rem;
 
       padding: var(--layout-gap-md);
       display: grid;
-      @include responsive-grid-columns(var(--editor-listing-card-min-width), auto-fill);
       gap: var(--layout-gap-md);
       align-items: start;
 
-      >.new-card {
+      @include responsive-grid-columns(var(--editor-listing-card-min-width), auto-fill);
+
+      > .new-card {
         width: 100%;
         min-width: 0;
         aspect-ratio: 9 / 13;
         display: flex;
 
-        >* {
+        > * {
           width: 100%;
           text-decoration: none;
           padding: var(--layout-gap-md);
@@ -70,7 +74,7 @@ $editor-listing-card-target-width: 20rem;
           align-items: center;
           justify-content: center;
 
-          >.content {
+          > .content {
             width: 100%;
             display: flex;
             flex-direction: column;
@@ -80,12 +84,12 @@ $editor-listing-card-target-width: 20rem;
 
             color: rgba($secondary-text, 0.75);
 
-            >small {
+            > small {
               font-size: 0.85rem;
               font-weight: 300;
             }
 
-            >small.remaining {
+            > small.remaining {
               &.is-limit-reached {
                 color: rgba($bad, 1);
                 font-weight: 700;
@@ -95,14 +99,14 @@ $editor-listing-card-target-width: 20rem;
         }
       }
 
-      >.card {
+      > .card {
         min-width: 0;
         aspect-ratio: 9 / 13;
 
         position: relative;
         isolation: isolate;
 
-        >.select {
+        > .select {
           height: 100%;
           padding: 0.5rem;
 
@@ -121,7 +125,7 @@ $editor-listing-card-target-width: 20rem;
             transform: translateY(-1px);
           }
 
-          >.media {
+          > .media {
             position: relative;
             aspect-ratio: 1 / 1;
             background: $accent-surface-2;
@@ -140,17 +144,17 @@ $editor-listing-card-target-width: 20rem;
               background: linear-gradient(180deg, rgba($background, 0) 0%, rgba($background, 0.24) 100%);
             }
 
-            >.swiper-hitbox {
+            > .swiper-hitbox {
               width: 100%;
               height: 100%;
 
-              >.swiper {
+              > .swiper {
                 width: 100%;
                 height: 100%;
 
-                >.swiper-wrapper {
-                  >.swiper-slide {
-                    >img {
+                > .swiper-wrapper {
+                  > .swiper-slide {
+                    > img {
                       width: 100%;
                       height: 100%;
                       object-fit: cover;
@@ -161,14 +165,14 @@ $editor-listing-card-target-width: 20rem;
               }
             }
 
-            >img {
+            > img {
               width: 100%;
               height: 100%;
               object-fit: cover;
               display: block;
             }
 
-            >.placeholder {
+            > .placeholder {
               width: 100%;
               height: 100%;
               background: linear-gradient(180deg, rgba($background, 0.06) 0%, rgba($background, 0.02) 100%);
@@ -183,7 +187,7 @@ $editor-listing-card-target-width: 20rem;
                 background: radial-gradient(circle at 50% 40%, rgba($background, 0.08), rgba($background, 0) 55%);
               }
 
-              >.icon {
+              > .icon {
                 position: relative;
                 z-index: 1;
                 color: rgba($secondary-text, 0.25);
@@ -191,15 +195,15 @@ $editor-listing-card-target-width: 20rem;
             }
 
             &.is-non-published {
-              >.swiper-hitbox,
-              >img,
-              >.placeholder {
+              > .swiper-hitbox,
+              > img,
+              > .placeholder {
                 opacity: 0.62;
                 @include animations.transition(180ms);
               }
             }
 
-            >.status-menu {
+            > .status-menu {
               position: absolute;
               top: 0.75rem;
               left: 0.75rem;
@@ -215,7 +219,7 @@ $editor-listing-card-target-width: 20rem;
                 height: 0.35rem;
               }
 
-              >.status {
+              > .status {
                 padding: 0.4rem 0.65rem;
                 border-radius: borders.$rounded;
                 border: 1px solid;
@@ -228,7 +232,7 @@ $editor-listing-card-target-width: 20rem;
 
                 @include little-text($thin: false);
 
-                >.text {
+                > .text {
                   display: inline-flex;
                   align-items: center;
                   gap: 0.45rem;
@@ -241,7 +245,7 @@ $editor-listing-card-target-width: 20rem;
                   }
                 }
 
-                >svg {
+                > svg {
                   flex: 0 0 auto;
                 }
 
@@ -263,7 +267,7 @@ $editor-listing-card-target-width: 20rem;
                     stroke: rgba($secondary-text, 1);
                   }
 
-                  >.text::after {
+                  > .text::after {
                     background: rgba($good, 1);
                     border: 1px solid rgba($secondary, 0.25);
                   }
@@ -281,7 +285,7 @@ $editor-listing-card-target-width: 20rem;
                     stroke: rgba($accent, 0.75);
                   }
 
-                  >.text::after {
+                  > .text::after {
                     background: rgba($bad, 1);
                   }
                 }
@@ -298,7 +302,7 @@ $editor-listing-card-target-width: 20rem;
                     stroke: rgba($accent, 1);
                   }
 
-                  >.text::after {
+                  > .text::after {
                     background: rgba($progressing, 1);
                     border: 1px solid rgba($secondary, 0.25);
 
@@ -318,8 +322,7 @@ $editor-listing-card-target-width: 20rem;
                     stroke: rgba($accent, 1);
                   }
 
-
-                  >.text::after {
+                  > .text::after {
                     background: rgba($bad, 1);
                     border: 1px solid rgba($secondary, 0.25);
                   }
@@ -337,13 +340,13 @@ $editor-listing-card-target-width: 20rem;
                     stroke: rgba($secondary-text, 0.6);
                   }
 
-                  >.text::after {
+                  > .text::after {
                     background: rgba($background, 0.5);
                   }
                 }
               }
 
-              >.status-options {
+              > .status-options {
                 position: absolute;
                 top: 100%;
                 left: 0;
@@ -370,7 +373,7 @@ $editor-listing-card-target-width: 20rem;
                 pointer-events: none;
                 @include animations.transition(160ms);
 
-                >.status-option {
+                > .status-option {
                   width: 100%;
                   padding: 0.45rem 0.5rem;
                   border: 0;
@@ -399,7 +402,7 @@ $editor-listing-card-target-width: 20rem;
 
               &:hover,
               &:focus-within {
-                >.status-options {
+                > .status-options {
                   opacity: 1;
                   visibility: visible;
                   transform: translateY(0);
@@ -408,7 +411,7 @@ $editor-listing-card-target-width: 20rem;
               }
 
               &.is-open {
-                >.status-options {
+                > .status-options {
                   opacity: 1;
                   visibility: visible;
                   transform: translateY(0);
@@ -417,7 +420,7 @@ $editor-listing-card-target-width: 20rem;
               }
             }
 
-            >.connect-overlay {
+            > .connect-overlay {
               position: absolute;
               inset: 0;
               z-index: 12;
@@ -428,14 +431,14 @@ $editor-listing-card-target-width: 20rem;
               justify-content: center;
               padding: 0.9rem;
 
-              >.connect-cta {
+              > .connect-cta {
                 pointer-events: auto;
 
                 @include buttons.primary($cta: true, $theme: dark, $little: true);
               }
             }
 
-            >.pending-changes {
+            > .pending-changes {
               position: absolute;
               top: 50%;
               left: 50%;
@@ -466,14 +469,13 @@ $editor-listing-card-target-width: 20rem;
               }
             }
 
-
-            >.carousel {
+            > .carousel {
               position: absolute;
               inset: 0;
               z-index: 2;
               pointer-events: none;
 
-              >.nav {
+              > .nav {
                 position: absolute;
                 top: 0;
                 bottom: 0;
@@ -519,7 +521,7 @@ $editor-listing-card-target-width: 20rem;
                 }
               }
 
-              >.dots {
+              > .dots {
                 position: absolute;
                 left: 50%;
                 bottom: 10px;
@@ -531,7 +533,7 @@ $editor-listing-card-target-width: 20rem;
                 gap: 6px;
                 pointer-events: auto;
 
-                >.dot {
+                > .dot {
                   width: 6px;
                   height: 6px;
                   border-radius: borders.$rounded;
@@ -549,7 +551,7 @@ $editor-listing-card-target-width: 20rem;
             }
           }
 
-          >.body {
+          > .body {
             padding: 0rem 0.25rem 0.25rem 0.25rem;
             flex-grow: 1;
 
@@ -557,8 +559,8 @@ $editor-listing-card-target-width: 20rem;
             flex-direction: column;
             justify-content: space-between;
 
-            >.main {
-              >.title {
+            > .main {
+              > .title {
                 margin: 0;
 
                 font-size: 1rem;
@@ -575,7 +577,7 @@ $editor-listing-card-target-width: 20rem;
                 @include base-text($bold: true);
               }
 
-              >.meta {
+              > .meta {
                 margin: 0;
                 color: rgba($secondary-text, 0.7);
                 text-align: left;
@@ -584,20 +586,20 @@ $editor-listing-card-target-width: 20rem;
               }
             }
 
-            >.footer {
+            > .footer {
               margin-top: 0.15rem;
               display: flex;
               align-items: flex-end;
               justify-content: space-between;
               gap: var(--layout-gap-xs);
 
-              >.pricing {
+              > .pricing {
                 display: flex;
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 0.5rem !important;
 
-                >.price {
+                > .price {
                   font-size: 0.95rem;
                   font-weight: 700;
                   color: rgba($secondary-text, 0.92);
@@ -606,13 +608,13 @@ $editor-listing-card-target-width: 20rem;
                   align-items: baseline;
                   gap: 0.25rem;
 
-                  >.suffix {
+                  > .suffix {
                     @include little-text($thin: true);
                     color: rgba($secondary-text, 0.7);
                   }
                 }
 
-                >.rating {
+                > .rating {
                   --rating-percent: 0%;
                   position: relative;
                   display: inline-block;
@@ -644,31 +646,22 @@ $editor-listing-card-target-width: 20rem;
                 }
               }
 
-              >.actions {
+              > .actions {
                 display: flex;
                 gap: var(--layout-gap-sm);
 
-                >.preview {
-
+                > .preview {
                   button {
-                    @include buttons.low-btn($color: $secondary,
-                      $hover: $tertiary,
-                      $text-color: $accent,
-                      $text-hover-color: $secondary);
+                    @include buttons.low-btn($color: $secondary, $hover: $tertiary, $text-color: $accent, $text-hover-color: $secondary);
                   }
                 }
 
-                >.dots {
+                > .dots {
                   position: relative;
 
-                  >.trigger {
-
+                  > .trigger {
                     button {
-                      @include buttons.low-btn($color: $tertiary,
-                        $hover: $quaternary,
-                        $text-color: $secondary,
-                        $text-hover-color: $secondary,
-                        $icon-only: true, );
+                      @include buttons.low-btn($color: $tertiary, $hover: $quaternary, $text-color: $secondary, $text-hover-color: $secondary, $icon-only: true);
                     }
                   }
 
@@ -681,7 +674,7 @@ $editor-listing-card-target-width: 20rem;
                     height: 0.35rem;
                   }
 
-                  >.status-options {
+                  > .status-options {
                     position: absolute;
                     bottom: calc(100% + 0.4rem);
                     top: auto;
@@ -709,7 +702,7 @@ $editor-listing-card-target-width: 20rem;
                     pointer-events: none;
                     @include animations.transition(160ms);
 
-                    >.status-option {
+                    > .status-option {
                       width: 100%;
                       padding: 0.45rem 0.5rem;
                       border: 0;
@@ -742,7 +735,7 @@ $editor-listing-card-target-width: 20rem;
 
                   &:hover,
                   &:focus-within {
-                    >.status-options {
+                    > .status-options {
                       opacity: 1;
                       visibility: visible;
                       transform: translateY(0);
@@ -751,7 +744,7 @@ $editor-listing-card-target-width: 20rem;
                   }
 
                   &.is-open {
-                    >.status-options {
+                    > .status-options {
                       opacity: 1;
                       visibility: visible;
                       transform: translateY(0);
@@ -765,20 +758,20 @@ $editor-listing-card-target-width: 20rem;
         }
 
         &.is-selected {
-          >.select {
+          > .select {
             outline: 3px solid rgba($secondary, 1);
           }
         }
 
         &:focus-within {
-          >.select {
+          > .select {
             outline: 3px solid rgba($secondary, 1);
           }
         }
       }
     }
 
-    >.state {
+    > .state {
       padding: var(--layout-gap-sm);
       text-align: center;
       font-weight: 400;
@@ -789,13 +782,13 @@ $editor-listing-card-target-width: 20rem;
 
 @media (hover: hover) and (pointer: fine) {
   .editor-listings {
-    >.scroll-container {
-      >.grid {
-        >.card {
-          >.select {
-            >.media {
-              >.carousel {
-                >.nav {
+    > .scroll-container {
+      > .grid {
+        > .card {
+          > .select {
+            > .media {
+              > .carousel {
+                > .nav {
                   opacity: 0.6;
                 }
               }
@@ -803,10 +796,10 @@ $editor-listing-card-target-width: 20rem;
           }
 
           &:hover {
-            >.select {
-              >.media {
-                >.carousel {
-                  >.nav {
+            > .select {
+              > .media {
+                > .carousel {
+                  > .nav {
                     opacity: 0.95;
                   }
                 }

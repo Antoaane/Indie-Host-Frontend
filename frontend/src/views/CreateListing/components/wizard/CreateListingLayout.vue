@@ -8,6 +8,9 @@ import { readActiveUserId } from '@/router/backOfficeUser'
 import { icons } from '@/components/svgs'
 
 const route = useRoute()
+const emit = defineEmits<{
+  (event: 'cancel'): void
+}>()
 
 const dashboardLink = computed(() => {
   const userId = readActiveUserId(route.params.userId)
@@ -28,6 +31,15 @@ const dashboardLink = computed(() => {
     id="create-listing-page"
     class="create-listing"
   >
+    <div class="create-listing-quit">
+      <button
+        type="button"
+        @click="emit('cancel')"
+      >
+        Quitter
+      </button>
+    </div>
+
     <div class="container">
       <RouterLink
         class="create-listing-logo-link"

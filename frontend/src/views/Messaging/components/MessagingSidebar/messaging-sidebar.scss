@@ -223,14 +223,6 @@
     }
   }
 
-  >.base-sidebar__footer {
-    >.state {
-      border-top: 1px solid rgba($secondary, 0.08);
-      padding: 0.75rem 1rem;
-      font-size: 0.82rem;
-      color: rgba($secondary-text, 0.66);
-    }
-  }
 }
 
 .messaging-sidebar .avatar[data-tone] {

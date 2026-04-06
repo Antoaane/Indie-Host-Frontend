@@ -83,7 +83,7 @@ function handleNext() {
 </script>
 
 <template>
-  <CreateListingLayout>
+  <CreateListingLayout @cancel="cancelCreation">
     <!-- <CreateListingHeader
       v-if="!isPreviewStage"
       :active-step-index="activeStepIndex"

@@ -19,6 +19,7 @@
   background: $accent;
   box-shadow: 0 8px 22px rgba($secondary, 0.16);
   position: relative;
+  z-index: 10;
 
   > .item {
     min-width: 0;
@@ -68,7 +69,6 @@
     }
 
     &.is-primary {
-
       color: $secondary;
       z-index: 2;
 
@@ -82,6 +82,7 @@
         aspect-ratio: 1 / 1;
         padding: 6px;
         border-radius: borders.$rounded;
+        // border: 1px solid $accent;
 
         background: rgba($secondary, 1);
         transform: scale(1.4) translateY(-0.75rem);
@@ -105,4 +106,68 @@
       }
     }
   }
+
+  > .dock-options-menu {
+    min-width: 170px;
+    max-width: min(230px, calc(100vw - 2rem));
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    position: absolute;
+    right: var(--layout-gap-xs);
+    bottom: calc(100% + 0.5rem);
+    z-index: 12;
+
+    border-radius: borders.$rounded-lg;
+    border: 1px solid rgba($secondary, 0.15);
+    background: $accent;
+    box-shadow: 0px 10px 24px rgba(0, 0, 0, 0.22);
+
+    > .dock-options-item {
+      border: 0;
+      border-bottom: 1px solid rgba($secondary, 0.08);
+      background: transparent;
+      color: $secondary-text;
+      text-decoration: none;
+      text-align: left;
+      font: inherit;
+      font-size: 0.82rem;
+      padding: 0.75rem 0.9rem;
+      cursor: pointer;
+      transition:
+        background-color 140ms ease,
+        color 140ms ease;
+
+      &:last-child {
+        border-bottom: 0;
+      }
+
+      &:hover:not(:disabled) {
+        background: rgba($background, 0.06);
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+        color: rgba($secondary-text, 0.45);
+      }
+
+      &.is-danger {
+        color: rgba($bad, 0.95);
+      }
+    }
+  }
+}
+
+.dock-options-slide-enter-active,
+.dock-options-slide-leave-active {
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.dock-options-slide-enter-from,
+.dock-options-slide-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
 }

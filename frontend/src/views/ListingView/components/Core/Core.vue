@@ -162,7 +162,7 @@ html:has(#core) {
   gap: calc(var(--layout-gap-2xl) * 2);
 
   background-color: $accent;
-  border-radius: borders.$rounded-xxl;
+  border-radius: borders.$rounded-lg;
 
   padding: var(--layout-gap);
 

@@ -1,9 +1,11 @@
 <!-- File: src/views/ListingView/_ListingView.vue -->
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useUser } from '@clerk/vue'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
 import { vp } from '@/utils/viewport'
 import { orderByIndex } from '@/utils/medias/order'
@@ -25,6 +27,10 @@ import {
 
 import ListingDesktopLayout from '@/views/ListingView/components/Layout/ListingDesktopLayout.vue'
 import ListingMobileLayout from '@/views/ListingView/components/Layout/ListingMobileLayout.vue'
+
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger)
+}
 
 const props = withDefaults(
   defineProps<{
@@ -106,22 +112,183 @@ const listingViewStyles = computed<Record<string, string | number>>(() => ({
   '--listing-view-cover-image': listingCoverImage.value ? `url(${JSON.stringify(listingCoverImage.value)})` : 'none',
 }))
 
-const resolvedViewportMode = computed<ListingViewportMode | null>(() => props.forcedViewportMode ?? null)
-
-const showDesktopLayout = computed(() => {
-  if (resolvedViewportMode.value) {
-    return resolvedViewportMode.value === 'xxl'
-  }
-  return vp.lg.value
+const viewportMode = computed<ListingViewportMode>(() => {
+  if (props.forcedViewportMode) return props.forcedViewportMode
+  if (vp.xl.value) return 'xxl'
+  if (vp.md.value) return 'tablet'
+  return 'sm'
 })
 
-provideListingViewportMode(resolvedViewportMode)
+const isTabletLayout = computed(() => viewportMode.value === 'tablet')
+const isTabletGalleryCollapsed = ref(false)
+const tabletGalleryCollapseProgress = ref(0)
+
+const showDesktopLayout = computed(() => {
+  return viewportMode.value === 'xxl' || viewportMode.value === 'tablet'
+})
+
+const isTabletGalleryCollapseEnabled = computed(() => {
+  return isTabletLayout.value && !isCheckout.value && !props.previewOnly
+})
+
+const isTabletGalleryScrollLocked = computed(() => {
+  return isTabletGalleryCollapseEnabled.value && !isTabletGalleryCollapsed.value
+})
+
+const TABLET_GALLERY_COLLAPSE_DISTANCE_PX = 320
+const TABLET_GALLERY_COLLAPSE_DONE_THRESHOLD = 0.995
+
+let tabletGalleryObserver: ReturnType<typeof ScrollTrigger.observe> | null = null
+let setTabletGalleryCollapse: ((value: number) => void) | null = null
+let tabletCoreScrollEl: HTMLElement | null = null
+let tabletCoreExpandWheelHandler: ((event: WheelEvent) => void) | null = null
+
+function clampProgress(value: number) {
+  if (!Number.isFinite(value)) return 0
+  return Math.max(0, Math.min(1, value))
+}
+
+function killTabletGalleryObserver() {
+  tabletGalleryObserver?.kill()
+  tabletGalleryObserver = null
+}
+
+function applyTabletGalleryCollapseProgress(progress: number) {
+  const normalized = clampProgress(progress)
+  tabletGalleryCollapseProgress.value = normalized
+  setTabletGalleryCollapse?.(normalized)
+  isTabletGalleryCollapsed.value = normalized >= TABLET_GALLERY_COLLAPSE_DONE_THRESHOLD
+  if (isTabletGalleryCollapsed.value) {
+    tabletGalleryObserver?.disable()
+    return
+  }
+  tabletGalleryObserver?.enable()
+}
+
+function resetTabletGalleryCollapseState() {
+  tabletGalleryCollapseProgress.value = 0
+  isTabletGalleryCollapsed.value = false
+
+  const root = listingView.value
+  if (!root) return
+  root.style.setProperty('--tablet-gallery-collapse', '0')
+}
+
+function teardownTabletGalleryCollapse(reset = true) {
+  if (tabletCoreScrollEl && tabletCoreExpandWheelHandler) {
+    tabletCoreScrollEl.removeEventListener('wheel', tabletCoreExpandWheelHandler)
+  }
+  tabletCoreExpandWheelHandler = null
+  killTabletGalleryObserver()
+  setTabletGalleryCollapse = null
+  tabletCoreScrollEl = null
+
+  if (!reset) return
+  resetTabletGalleryCollapseState()
+}
+
+function consumeObserverEvent(self: { event?: Event }) {
+  const event = self.event
+  if (!event || !event.cancelable) return
+  event.preventDefault()
+}
+
+function setupTabletGalleryCollapse() {
+  if (typeof window === 'undefined') return
+  if (!isTabletGalleryCollapseEnabled.value) return
+
+  const root = listingView.value
+  if (!root) return
+
+  const gallery = root.querySelector('.gallery')
+  if (!(gallery instanceof HTMLElement)) return
+  tabletCoreScrollEl = root.querySelector('#core')
+
+  const quickToCollapse = gsap.quickTo(root, '--tablet-gallery-collapse', {
+    duration: 0.24,
+    ease: 'power2.out',
+  })
+
+  setTabletGalleryCollapse = (value: number) => {
+    quickToCollapse(clampProgress(value))
+  }
+
+  tabletCoreExpandWheelHandler = (event: WheelEvent) => {
+    if (!isTabletGalleryCollapseEnabled.value) return
+    if (!isTabletGalleryCollapsed.value) return
+    if (!tabletCoreScrollEl) return
+    if (tabletCoreScrollEl.scrollTop > 0.5) return
+    if (event.deltaY >= 0) return
+    if (!event.cancelable) return
+
+    event.preventDefault()
+    tabletGalleryObserver?.enable()
+    const nextProgress = tabletGalleryCollapseProgress.value + (event.deltaY / TABLET_GALLERY_COLLAPSE_DISTANCE_PX)
+    applyTabletGalleryCollapseProgress(nextProgress)
+  }
+
+  tabletCoreScrollEl?.addEventListener('wheel', tabletCoreExpandWheelHandler, { passive: false })
+
+  applyTabletGalleryCollapseProgress(0)
+
+  tabletGalleryObserver = ScrollTrigger.observe({
+    target: root,
+    type: 'wheel,touch,pointer',
+    preventDefault: true,
+    allowClicks: true,
+    tolerance: 2,
+    onChangeY(self) {
+      if (!isTabletGalleryScrollLocked.value) return
+      const deltaY = Number(self.deltaY) || 0
+      if (!deltaY) return
+
+      if (deltaY > 0) {
+        consumeObserverEvent(self)
+        const nextProgress = tabletGalleryCollapseProgress.value + (deltaY / TABLET_GALLERY_COLLAPSE_DISTANCE_PX)
+        applyTabletGalleryCollapseProgress(nextProgress)
+        return
+      }
+
+      consumeObserverEvent(self)
+      const nextProgress = tabletGalleryCollapseProgress.value + (deltaY / TABLET_GALLERY_COLLAPSE_DISTANCE_PX)
+      applyTabletGalleryCollapseProgress(nextProgress)
+    },
+  })
+}
+
+watch(
+  isTabletGalleryCollapseEnabled,
+  async (enabled) => {
+    teardownTabletGalleryCollapse(true)
+    if (!enabled) return
+
+    await nextTick()
+    setupTabletGalleryCollapse()
+  },
+  { immediate: true },
+)
+
+watch(
+  () => props.rawListing?.core?.id,
+  async () => {
+    if (!isTabletGalleryCollapseEnabled.value) return
+    teardownTabletGalleryCollapse(true)
+    await nextTick()
+    setupTabletGalleryCollapse()
+  },
+)
+
+onBeforeUnmount(() => {
+  teardownTabletGalleryCollapse(false)
+})
+
+provideListingViewportMode(computed<ListingViewportMode | null>(() => viewportMode.value))
 </script>
 
 <template>
   <template v-if="showDesktopLayout">
     <div
-      :class="{ 'listing-view': true, editor: props.aspect, 'is-checkout': isCheckout, 'preview-only': props.previewOnly }"
+      :class="{ 'listing-view': true, editor: props.aspect, 'is-checkout': isCheckout, 'preview-only': props.previewOnly, 'is-tablet-layout': isTabletLayout, 'is-tablet-gallery-scroll-lock': isTabletGalleryScrollLocked, 'is-tablet-gallery-collapsed': isTabletGalleryCollapsed }"
       ref="listingView"
       :style="listingViewStyles"
     >
@@ -151,7 +318,7 @@ provideListingViewportMode(resolvedViewportMode)
 
   <template v-else>
     <div
-      :class="{ 'listing-view': true, editor: props.aspect, 'is-checkout': isCheckout, 'preview-only': props.previewOnly }"
+      :class="{ 'listing-view': true, editor: props.aspect, 'is-checkout': isCheckout, 'preview-only': props.previewOnly, 'is-tablet-layout': isTabletLayout, 'is-tablet-gallery-scroll-lock': isTabletGalleryScrollLocked, 'is-tablet-gallery-collapsed': isTabletGalleryCollapsed }"
       ref="listingView"
       :style="listingViewStyles"
     >

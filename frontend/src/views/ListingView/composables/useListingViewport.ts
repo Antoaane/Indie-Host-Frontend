@@ -4,7 +4,7 @@ import { computed, inject, provide, type ComputedRef, type InjectionKey } from '
 
 import { vp } from '@/utils/viewport'
 
-export type ListingViewportMode = 'xxl' | 'lg' | 'sm'
+export type ListingViewportMode = 'xxl' | 'lg' | 'tablet' | 'sm'
 
 type ListingViewportContext = {
   mode: ComputedRef<ListingViewportMode | null>
@@ -15,7 +15,7 @@ const listingViewportContextKey: InjectionKey<ListingViewportContext> = Symbol('
 
 function resolveIsLg(mode: ListingViewportMode | null): boolean {
   if (!mode) return vp.lg.value
-  return mode === 'xxl'
+  return mode === 'xxl' || mode === 'tablet'
 }
 
 export function provideListingViewportMode(mode: ComputedRef<ListingViewportMode | null>) {

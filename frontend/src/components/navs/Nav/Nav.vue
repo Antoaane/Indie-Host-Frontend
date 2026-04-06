@@ -1,11 +1,11 @@
 <!-- File: src/components/navs/Nav/Nav.vue -->
 
 <script setup lang="ts">
-import { useAuth, useUser } from '@clerk/vue'
+import { useAuth, useClerk, useUser } from '@clerk/vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { Component } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { CalendarClock, LayoutGrid, MessageSquareMore, Plus, Wallet } from 'lucide-vue-next'
+import { CalendarClock, LayoutGrid, MessageSquareMore, MoreHorizontal, Plus } from 'lucide-vue-next'
 
 import HostReservationOverlay from '@/components/navs/HostReservationOverlay.vue'
 import BackOfficeDockNav from '@/components/navs/Nav/BackOfficeDockNav.vue'
@@ -14,10 +14,7 @@ import NavLandingVariant from '@/components/navs/Nav/NavLandingVariant.vue'
 import NavPublicVariant from '@/components/navs/Nav/NavPublicVariant.vue'
 import type { NavItem, NavVariant } from '@/components/navs/Nav/navTypes'
 import { closeMobileMenu, isMobileMenuOpen, isNavForcedHidden } from '@/components/navs/navUtils'
-import {
-  createMyStripeConnectDashboardLink,
-  fetchMyStripeSubscriptionState,
-} from '@/domain/api/stripeSubscriptions'
+import { createMyStripeConnectDashboardLink, fetchMyStripeSubscriptionState } from '@/domain/api/stripeSubscriptions'
 import { isManagedListingHostname } from '@/domain/listings/publicDomain'
 import { readActiveUserId } from '@/router/backOfficeUser'
 import { vp } from '@/utils/viewport'
@@ -25,8 +22,9 @@ import clerkToken from '@/utils/clerkToken'
 
 const route = useRoute()
 const router = useRouter()
-const { getToken } = useAuth()
+const { getToken, signOut } = useAuth()
 const { isSignedIn } = useUser()
+const clerk = useClerk()
 
 const navRoot = ref<HTMLElement | null>(null)
 const reservationAnchor = ref<HTMLElement | null>(null)
@@ -36,6 +34,7 @@ const canOpenStripeConnectDashboard = ref(false)
 const stripeConnectAccountId = ref<string | null>(null)
 const isOpeningStripeConnectDashboard = ref(false)
 const stripeConnectAvailabilityRequestId = ref(0)
+const dockOptionsOpen = ref(false)
 
 let lastScrollY = 0
 const SCROLL_THRESHOLD = 80
@@ -100,7 +99,17 @@ type BackOfficeDockItem = {
   icon: Component
   isActive?: boolean
   isPrimary?: boolean
-  action?: (event?: MouseEvent) => void
+  action?: (event?: MouseEvent) => void | Promise<void>
+  attrs?: Record<string, string | number | boolean>
+}
+
+type BackOfficeDockOptionsItem = {
+  id: string
+  label: string
+  link?: string
+  action?: (event?: MouseEvent) => void | Promise<void>
+  isDanger?: boolean
+  disabled?: boolean
   attrs?: Record<string, string | number | boolean>
 }
 
@@ -112,6 +121,8 @@ const currentRouteName = computed(() => {
 const activeBackOfficeUserId = computed(() => readActiveUserId(route.params.userId))
 
 function toggleReservation(event?: MouseEvent) {
+  closeDockOptions()
+
   if (!reservationOpen.value) {
     const target = event?.currentTarget
     if (target instanceof HTMLElement) {
@@ -123,6 +134,16 @@ function toggleReservation(event?: MouseEvent) {
 
 function closeReservation() {
   reservationOpen.value = false
+}
+
+function toggleDockOptions(event?: MouseEvent) {
+  event?.preventDefault()
+  closeReservation()
+  dockOptionsOpen.value = !dockOptionsOpen.value
+}
+
+function closeDockOptions() {
+  dockOptionsOpen.value = false
 }
 
 function resetStripeConnectDashboardAccess() {
@@ -148,10 +169,7 @@ async function refreshStripeConnectDashboardAvailability() {
     if (requestId !== stripeConnectAvailabilityRequestId.value) return
 
     const accountId = state.connect?.accountId ?? null
-    const onboardingCompleted = Boolean(
-      state.publicationReadiness?.connectOnboardingCompleted
-      || state.connect?.onboardingStatus === 'completed',
-    )
+    const onboardingCompleted = Boolean(state.publicationReadiness?.connectOnboardingCompleted || state.connect?.onboardingStatus === 'completed')
 
     stripeConnectAccountId.value = accountId
     canOpenStripeConnectDashboard.value = Boolean(accountId) && onboardingCompleted
@@ -180,15 +198,28 @@ async function handleOpenStripeConnectDashboard(_event?: MouseEvent) {
       window.location.assign(dashboard.url)
     }
   } catch (error) {
-    console.warn('[Nav] impossible d\'ouvrir les revenus Stripe Connect', { error })
+    console.warn("[Nav] impossible d'ouvrir les revenus Stripe Connect", { error })
   } finally {
     isOpeningStripeConnectDashboard.value = false
+  }
+}
+
+function handleOpenMyAccount() {
+  clerk.value?.openUserProfile()
+}
+
+async function handleSignOut() {
+  try {
+    await signOut.value({ redirectUrl: '/' })
+  } catch (error) {
+    console.warn('[Nav] impossible de se déconnecter', { error })
   }
 }
 
 watch(isHost, (value) => {
   if (!value) {
     closeReservation()
+    closeDockOptions()
     resetStripeConnectDashboardAccess()
     return
   }
@@ -197,12 +228,18 @@ watch(isHost, (value) => {
 
 watch(vp.lg, (value) => {
   if (!value) closeReservation()
+  closeDockOptions()
+})
+
+watch(isBackOfficeDockMode, (value) => {
+  if (!value) closeDockOptions()
 })
 
 watch(
   () => route.fullPath,
   () => {
     closeReservation()
+    closeDockOptions()
     closeMobileMenu()
     isNavHiddenByScroll.value = false
     lastScrollY = window.scrollY
@@ -338,14 +375,33 @@ const navVariantComponentMap: Record<NavVariant, Component> = {
 
 const activeNavComponent = computed(() => navVariantComponentMap[navVariant.value])
 
+const backOfficeDockOptionsItems = computed<BackOfficeDockOptionsItem[]>(() => [
+  {
+    id: 'dock-options-stripe-dashboard',
+    label: 'Dashboard Stripe',
+    action: handleOpenStripeConnectDashboard,
+    disabled: !canOpenStripeConnectDashboard.value || isOpeningStripeConnectDashboard.value,
+  },
+  {
+    id: 'dock-options-my-account',
+    label: 'Mon compte',
+    action: handleOpenMyAccount,
+  },
+  {
+    id: 'dock-options-sign-out',
+    label: 'Se déconnecter',
+    action: handleSignOut,
+    isDanger: true,
+  },
+])
+
 const backOfficeDockItems = computed(() => {
   const routeName = currentRouteName.value
   const isEditorRoute = routeName === 'editor' || routeName === 'editor-user'
-  const isCreateRoute = routeName === 'create-listing' || routeName === 'create-listing-user'
   const isManagementRoute = routeName === 'management' || routeName === 'management-user'
   const isMessagingRoute = routeName === 'messaging' || routeName === 'messaging-user'
 
-  const items: BackOfficeDockItem[] = [
+  return [
     {
       id: 'dock-listings',
       label: 'Annonces',
@@ -379,28 +435,19 @@ const backOfficeDockItems = computed(() => {
       link: resolveBackOfficeRouteLink('messaging', '/dashboard/messages'),
       isActive: isMessagingRoute,
     },
-    // {
-    //   id: 'dock-create',
-    //   label: 'Créer',
-    //   icon: Plus,
-    //   link: resolveBackOfficeRouteLink('create-listing', '/dashboard/editor/create'),
-    //   isActive: isCreateRoute,
-    // },
-  ]
-
-  if (canOpenStripeConnectDashboard.value) {
-    items.push({
-      id: 'dock-revenues',
-      label: 'Mes revenus',
-      icon: Wallet,
-      action: handleOpenStripeConnectDashboard,
+    {
+      id: 'dock-options',
+      label: 'Options',
+      icon: MoreHorizontal,
+      action: toggleDockOptions,
+      isActive: dockOptionsOpen.value,
       attrs: {
-        disabled: isOpeningStripeConnectDashboard.value,
+        'aria-expanded': dockOptionsOpen.value,
+        'aria-controls': 'back-office-dock-options-menu',
+        'aria-haspopup': 'menu',
       },
-    })
-  }
-
-  return items
+    },
+  ] satisfies BackOfficeDockItem[]
 })
 
 function animateNavIn() {
@@ -425,6 +472,7 @@ function animateNavIn() {
 watch(isNavVisible, (visible) => {
   if (!visible) {
     closeReservation()
+    closeDockOptions()
     closeMobileMenu()
     return
   }
@@ -461,6 +509,9 @@ onBeforeUnmount(() => {
     <BackOfficeDockNav
       v-if="isBackOfficeDockMode"
       :items="backOfficeDockItems"
+      :options-open="dockOptionsOpen"
+      :options-items="backOfficeDockOptionsItems"
+      @request-close-options="closeDockOptions"
     />
 
     <component

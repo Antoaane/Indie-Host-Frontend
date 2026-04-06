@@ -81,7 +81,6 @@ function closeOverlay() {
       <div class="info">
         <div class="price">
           <span class="amount">{{ pricePerNightLabel }}</span>
-          <small>Prix indicatif</small>
         </div>
 
         <!-- <div class="dates">
@@ -100,6 +99,8 @@ function closeOverlay() {
         </button>
       </div>
     </div>
+
+    <small class="price-indicative">Prix indicatif</small>
 
     <AbsoluteOverlay
       id="booking-min-dialog"

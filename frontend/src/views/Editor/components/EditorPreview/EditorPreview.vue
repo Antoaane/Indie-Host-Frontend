@@ -198,7 +198,7 @@ onBeforeUnmount(() => {
   border-radius: borders.$rounded-xxl;
   overflow: hidden;
 
-  box-shadow: 0px 0px 20px 0px rgba($secondary, 0.3);
+  // box-shadow: 0px 0px 20px 0px rgba($secondary, 0.3);
 
   .toolbar {
     position: absolute;
