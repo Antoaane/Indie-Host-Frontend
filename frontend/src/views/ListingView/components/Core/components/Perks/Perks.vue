@@ -66,7 +66,7 @@ function resolveIcon(name: string) {
     grid-template-columns: repeat(1, 1fr);
     gap: var(--layout-gap-md);
 
-    @include min-width(lg) {
+    .listing-view:not(.is-mobile-layout) & {
       grid-template-columns: repeat(2, 1fr);
     }
 

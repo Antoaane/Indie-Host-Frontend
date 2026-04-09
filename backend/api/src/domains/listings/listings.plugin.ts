@@ -10,6 +10,7 @@ import {
   patchListingResourceSchema,
   resolveListingHostnameSchema,
   resolveListingSlugSchema,
+  transferListingOwnershipSchema,
   upsertListingDomainSchema,
 } from './listings.schemas.js';
 
@@ -204,6 +205,37 @@ export const listingsPlugin = fp(async (fastify) => {
     const payload = createListingSchema.parse(asObject(request.body));
     const created = await service.createListing(payload, request.auth);
     reply.code(201).send(created);
+  });
+
+  fastify.post('/listings/admin/:listingId/transfer', {
+    preHandler: fastify.authenticate,
+  }, async (request, reply) => {
+    const params = listingIdParamsSchema.parse(request.params);
+    const payload = transferListingOwnershipSchema.parse(asObject(request.body));
+
+    const transferred = await service.transferListingOwnership({
+      listingId: params.listingId,
+      targetUserId: payload.targetUserId,
+      trialDays: payload.trialDays,
+      auth: request.auth,
+    });
+
+    if (!transferred) {
+      reply.code(404).send({ message: 'Listing not found.' });
+      return;
+    }
+
+    if (transferred === 'target_not_found') {
+      reply.code(404).send({ message: 'Target user not found.' });
+      return;
+    }
+
+    if (transferred === 'forbidden') {
+      reply.code(403).send({ message: 'Admin access required.' });
+      return;
+    }
+
+    reply.send(transferred);
   });
 
   fastify.get('/listings/bundle/:listingId', {

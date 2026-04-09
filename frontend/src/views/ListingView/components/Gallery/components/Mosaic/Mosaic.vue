@@ -106,6 +106,12 @@ function refreshOrientations() {
 }
 
 function nextLayout() {
+  if (!orderedItems.value.length || !props.items.length) {
+    slots.splice(0, slots.length)
+    appearanceCursor = 0
+    return
+  }
+
   const visibleCount = randInt(minSlots.value, maxSlots.value)
   const layout = generateLayout(visibleCount, minTileW.value, minTileH.value)
 
@@ -180,6 +186,10 @@ function assignLayoutToAll(rects: Rect[], visibleReal: number[]) {
 ---------------------------*/
 
 function start() {
+  if (!orderedItems.value.length || !props.items.length) {
+    stop()
+    return
+  }
   nextLayout()
   stop()
   timer = window.setInterval(() => nextLayout(), intervalMs.value) as unknown as number
@@ -220,9 +230,11 @@ watch(
 )
 
 function openLightbox(startIndexReal: number) {
+  const clicked = props.items[startIndexReal]
+  if (!clicked) return
+
   // Lightbox dans l'ordre `index`
   const items = orderedLightboxItems.value.map((it) => ({ src: it.src, type: 'image', alt: it.alt }))
-  const clicked = props.items[startIndexReal]
   const startIndex = Math.max(
     0,
     orderedLightboxItems.value.findIndex((i) => i.src === clicked.src),

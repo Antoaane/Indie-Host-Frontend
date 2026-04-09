@@ -898,6 +898,11 @@ export class BookingsService {
 
   async createBooking(input: Record<string, unknown>) {
     const listingId = String(input.listingId ?? '').trim();
+    if (this.paymentsService) {
+      const reservable = await this.paymentsService.ensureListingReservable(listingId);
+      if (!reservable) return null;
+    }
+
     const listing = await this.prisma.listing.findUnique({
       where: { id: listingId },
       select: {

@@ -1,19 +1,15 @@
 <!-- File: src/components/navs/Nav/NavShell.vue -->
 
 <script setup lang="ts">
-import { SignedIn, SignedOut, UserButton, useAuth, useUser } from '@clerk/vue'
-import { ExternalLink, UserRound } from 'lucide-vue-next'
+import { SignedIn, SignedOut, useAuth, useClerk, useUser } from '@clerk/vue'
+import { UserRound } from 'lucide-vue-next'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import HostProfileDialog from '@/components/navs/Nav/HostProfileDialog.vue'
 import RelativeOverlay from '@/components/overlays/RelativeOverlay.vue'
 import type { NavItem } from '@/components/navs/Nav/navTypes'
 import { closeMobileMenu, isMobileMenuOpen, scrollToTarget, toggleMobileMenu } from '@/components/navs/navUtils'
-import {
-  createMyStripeConnectDashboardLink,
-  fetchMyStripeSubscriptionState,
-} from '@/domain/api/stripeSubscriptions'
-import clerkToken from '@/utils/clerkToken'
 import { vp } from '@/utils/viewport'
 
 import { icons } from '@/components/svgs'
@@ -41,22 +37,43 @@ const props = withDefaults(
 const itemsUndefined = computed(() => typeof props.items === 'undefined')
 const route = useRoute()
 const router = useRouter()
-const { isSignedIn } = useUser()
-const { getToken } = useAuth()
+const { isSignedIn, user } = useUser()
+const { signOut } = useAuth()
+const clerk = useClerk()
+
 const signedOutAnchor = ref<HTMLElement | null>(null)
 const authMenuPanel = ref<HTMLElement | null>(null)
 const authMenuOpen = ref(false)
-const canOpenStripeConnectDashboard = ref(false)
-const stripeConnectAccountId = ref<string | null>(null)
-const isOpeningStripeConnectDashboard = ref(false)
-const stripeConnectAvailabilityRequestId = ref(0)
+
+const signedInAnchor = ref<HTMLElement | null>(null)
+const profileMenuPanel = ref<HTMLElement | null>(null)
+const profileMenuOpen = ref(false)
+const myProfileDialogOpen = ref(false)
 
 let authMenuCloseTimeout: number | null = null
+let profileMenuCloseTimeout: number | null = null
 
 const redirectUrl = computed(() => encodeURIComponent(route.fullPath || '/'))
 const signInHref = computed(() => `/sign-in?redirect_url=${redirectUrl.value}`)
 const signUpHref = computed(() => `/sign-up?redirect_url=${redirectUrl.value}`)
-const showStripeConnectDashboardAction = computed(() => canOpenStripeConnectDashboard.value)
+
+const profileImageUrl = computed(() => {
+  const imageUrl = user.value?.imageUrl
+  if (typeof imageUrl !== 'string') return ''
+  return imageUrl.trim()
+})
+
+const profileDisplayName = computed(() => {
+  const firstName = typeof user.value?.firstName === 'string' ? user.value.firstName.trim() : ''
+  const lastName = typeof user.value?.lastName === 'string' ? user.value.lastName.trim() : ''
+  const combined = [firstName, lastName].filter(Boolean).join(' ').trim()
+  if (combined) return combined
+
+  const username = typeof user.value?.username === 'string' ? user.value.username.trim() : ''
+  if (username) return username
+
+  return 'mon profil'
+})
 
 const goBack = () => {
   if (window.history.length > 1) window.history.back()
@@ -114,6 +131,58 @@ function handleAuthKeydown(event: KeyboardEvent) {
   }
 }
 
+function clearProfileMenuCloseTimeout() {
+  if (profileMenuCloseTimeout === null) return
+  window.clearTimeout(profileMenuCloseTimeout)
+  profileMenuCloseTimeout = null
+}
+
+function openProfileMenu() {
+  clearProfileMenuCloseTimeout()
+  profileMenuOpen.value = true
+}
+
+function closeProfileMenu() {
+  clearProfileMenuCloseTimeout()
+  profileMenuOpen.value = false
+}
+
+function scheduleProfileMenuClose(delayMs = 110) {
+  clearProfileMenuCloseTimeout()
+  profileMenuCloseTimeout = window.setTimeout(() => {
+    profileMenuOpen.value = false
+    profileMenuCloseTimeout = null
+  }, delayMs)
+}
+
+function isTargetInsideProfileControls(target: EventTarget | null): boolean {
+  const node = target instanceof Node ? target : null
+  if (!node) return false
+  if (signedInAnchor.value?.contains(node)) return true
+  if (profileMenuPanel.value?.contains(node)) return true
+  return false
+}
+
+function handleProfileFocusOut(event: FocusEvent) {
+  if (isTargetInsideProfileControls(event.relatedTarget)) return
+  scheduleProfileMenuClose(0)
+}
+
+function handleProfileKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape') {
+    closeProfileMenu()
+    return
+  }
+
+  if (event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowDown') {
+    event.preventDefault()
+    openProfileMenu()
+    window.requestAnimationFrame(() => {
+      profileMenuPanel.value?.querySelector<HTMLElement>('[data-auth-menu-item]')?.focus()
+    })
+  }
+}
+
 function handleAction(item: NavItem, event: MouseEvent, closeMenuAfterClick: boolean = false) {
   item.action?.(event)
   if (closeMenuAfterClick) closeMobileMenu()
@@ -139,56 +208,27 @@ function handleLinkNavigation(item: NavItem, event: MouseEvent, closeMenuAfterCl
   void router.push(item.link)
 }
 
-async function refreshStripeConnectMenuAvailability() {
-  const requestId = stripeConnectAvailabilityRequestId.value + 1
-  stripeConnectAvailabilityRequestId.value = requestId
-
-  if (!isSignedIn.value) {
-    canOpenStripeConnectDashboard.value = false
-    stripeConnectAccountId.value = null
-    return
-  }
-
-  try {
-    clerkToken.value = await getToken.value()
-    const state = await fetchMyStripeSubscriptionState()
-    if (requestId !== stripeConnectAvailabilityRequestId.value) return
-
-    const accountId = state.connect?.accountId ?? null
-    const onboardingCompleted = Boolean(
-      state.publicationReadiness?.connectOnboardingCompleted
-      || state.connect?.onboardingStatus === 'completed',
-    )
-
-    stripeConnectAccountId.value = accountId
-    canOpenStripeConnectDashboard.value = Boolean(accountId) && onboardingCompleted
-  } catch {
-    if (requestId !== stripeConnectAvailabilityRequestId.value) return
-    canOpenStripeConnectDashboard.value = false
-    stripeConnectAccountId.value = null
-  }
+function handleOpenMyInformations() {
+  closeProfileMenu()
+  clerk.value?.openUserProfile()
 }
 
-async function handleOpenStripeConnectDashboard() {
-  if (isOpeningStripeConnectDashboard.value) return
-  if (!canOpenStripeConnectDashboard.value) return
+function handleOpenMyProfile() {
+  closeProfileMenu()
+  myProfileDialogOpen.value = true
+}
 
-  isOpeningStripeConnectDashboard.value = true
+function closeMyProfileDialog() {
+  myProfileDialogOpen.value = false
+}
+
+async function handleSignOut() {
+  closeProfileMenu()
 
   try {
-    clerkToken.value = await getToken.value()
-    const dashboard = await createMyStripeConnectDashboardLink({
-      accountId: stripeConnectAccountId.value ?? undefined,
-    })
-
-    const opened = window.open(dashboard.url, '_blank', 'noopener,noreferrer')
-    if (!opened) {
-      window.location.assign(dashboard.url)
-    }
+    await signOut.value({ redirectUrl: '/' })
   } catch (error) {
-    console.warn('[NavShell] impossible d\'ouvrir le dashboard Stripe Connect', { error })
-  } finally {
-    isOpeningStripeConnectDashboard.value = false
+    console.warn('[NavShell] impossible de se deconnecter', { error })
   }
 }
 
@@ -196,24 +236,28 @@ watch(
   () => route.fullPath,
   () => {
     closeAuthMenu()
-    void refreshStripeConnectMenuAvailability()
+    closeProfileMenu()
+    closeMyProfileDialog()
   },
 )
 
 watch(vp.lg, (isDesktop) => {
   if (!isDesktop) closeAuthMenu()
+  if (!isDesktop) closeProfileMenu()
 })
 
 watch(
   () => isSignedIn.value,
-  () => {
-    void refreshStripeConnectMenuAvailability()
+  (signedIn) => {
+    if (signedIn) return
+    closeProfileMenu()
+    closeMyProfileDialog()
   },
-  { immediate: true },
 )
 
 onBeforeUnmount(() => {
   clearAuthMenuCloseTimeout()
+  clearProfileMenuCloseTimeout()
 })
 </script>
 
@@ -222,27 +266,32 @@ onBeforeUnmount(() => {
     class="navbar"
     :class="{ contained: !full }"
   >
-  <div v-if="!vp.lg.value" class="menu-container">
     <div
       v-if="!vp.lg.value"
-      class="mobile-toggle"
-      :class="{ 'is-active': isMobileMenuOpen }"
-      @click="toggleMobileMenu"
-      aria-label="Ouvrir/fermer le menu"
-      role="button" title="Ouvrir/fermer le menu"
+      class="menu-container"
     >
-      <span class="line is-top" />
-      <span class="line is-bottom" />
+      <div
+        v-if="!vp.lg.value"
+        class="mobile-toggle"
+        :class="{ 'is-active': isMobileMenuOpen }"
+        aria-label="Ouvrir/fermer le menu"
+        role="button"
+        title="Ouvrir/fermer le menu"
+        @click="toggleMobileMenu"
+      >
+        <span class="line is-top" />
+        <span class="line is-bottom" />
+      </div>
     </div>
-  </div>
 
     <button
       v-if="logoMode === 'scroll'"
       type="button"
       :data-target="logoScrollTarget"
       class="logo"
+      aria-label="IndieHost - Revenir en haut de page"
+      title="IndieHost - Revenir en haut de page"
       @click="scrollToTarget($event, false)"
-      aria-label="IndieHost - Revenir en haut de page" title="IndieHost - Revenir en haut de page"
     >
       <component
         :is="icons.logoFull.adapt"
@@ -251,11 +300,13 @@ onBeforeUnmount(() => {
         role="img"
       />
     </button>
+
     <a
       v-else
       :href="logoHref"
       class="logo"
-      aria-label="IndieHost - Aller à l'accueil" title="IndieHost - Aller à l'accueil"
+      aria-label="IndieHost - Aller à l'accueil"
+      title="IndieHost - Aller à l'accueil"
     >
       <component
         :is="icons.logoFull.adapt"
@@ -328,21 +379,83 @@ onBeforeUnmount(() => {
           </RelativeOverlay>
         </div>
       </SignedOut>
+
       <SignedIn>
-        <div class="auth-user-button">
-          <UserButton>
-            <UserButton.MenuItems>
-              <UserButton.Action
-                v-if="showStripeConnectDashboardAction"
-                label="Mes revenus"
-                :on-click="handleOpenStripeConnectDashboard"
+        <div
+          ref="signedInAnchor"
+          class="auth-menu-anchor"
+          @mouseenter="openProfileMenu"
+          @mouseleave="scheduleProfileMenuClose()"
+          @focusin="openProfileMenu"
+          @focusout="handleProfileFocusOut"
+        >
+          <button
+            type="button"
+            class="auth-avatar-button"
+            :class="{ 'has-image': profileImageUrl }"
+            aria-label="Ouvrir les options du profil"
+            aria-haspopup="menu"
+            :aria-expanded="profileMenuOpen"
+            @click="profileMenuOpen ? closeProfileMenu() : openProfileMenu()"
+            @keydown="handleProfileKeydown"
+          >
+            <img
+              v-if="profileImageUrl"
+              class="auth-avatar-image"
+              :src="profileImageUrl"
+              :alt="`Photo de profil de ${profileDisplayName}`"
+            />
+            <UserRound
+              v-else
+              :size="18"
+            />
+          </button>
+
+          <RelativeOverlay
+            class="nav-auth-overlay"
+            :open="profileMenuOpen"
+            :anchor="signedInAnchor"
+            placement="bottom-end"
+            :offset="10"
+            role="menu"
+            aria-label="Menu du profil"
+            @close="closeProfileMenu"
+          >
+            <div
+              ref="profileMenuPanel"
+              class="nav-auth-menu"
+              @mouseenter="openProfileMenu"
+              @mouseleave="scheduleProfileMenuClose()"
+              @focusin="openProfileMenu"
+              @focusout="handleProfileFocusOut"
+            >
+              <button
+                type="button"
+                role="menuitem"
+                data-auth-menu-item
+                @click="handleOpenMyInformations"
               >
-                <template #labelIcon>
-                  <ExternalLink :size="16" />
-                </template>
-              </UserButton.Action>
-            </UserButton.MenuItems>
-          </UserButton>
+                Mes informations
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                data-auth-menu-item
+                @click="handleOpenMyProfile"
+              >
+                Mon profil
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                class="is-danger"
+                data-auth-menu-item
+                @click="handleSignOut"
+              >
+                Se déconnecter
+              </button>
+            </div>
+          </RelativeOverlay>
         </div>
       </SignedIn>
     </div>
@@ -469,38 +582,88 @@ onBeforeUnmount(() => {
               </RelativeOverlay>
             </div>
           </SignedOut>
+
           <SignedIn>
-            <div class="auth-user-button">
-              <UserButton>
-                <UserButton.MenuItems>
-                  <UserButton.Action
-                    v-if="showStripeConnectDashboardAction"
-                    label="Mes revenus"
-                    :on-click="handleOpenStripeConnectDashboard"
+            <div
+              ref="signedInAnchor"
+              class="auth-menu-anchor"
+              @mouseenter="openProfileMenu"
+              @mouseleave="scheduleProfileMenuClose()"
+              @focusin="openProfileMenu"
+              @focusout="handleProfileFocusOut"
+            >
+              <button
+                type="button"
+                class="auth-avatar-button"
+                :class="{ 'has-image': profileImageUrl }"
+                aria-label="Ouvrir les options du profil"
+                aria-haspopup="menu"
+                :aria-expanded="profileMenuOpen"
+                @click="profileMenuOpen ? closeProfileMenu() : openProfileMenu()"
+                @keydown="handleProfileKeydown"
+              >
+                <img
+                  v-if="profileImageUrl"
+                  class="auth-avatar-image"
+                  :src="profileImageUrl"
+                  :alt="`Photo de profil de ${profileDisplayName}`"
+                />
+                <UserRound
+                  v-else
+                  :size="18"
+                />
+              </button>
+
+              <RelativeOverlay
+                class="nav-auth-overlay"
+                :open="profileMenuOpen"
+                :anchor="signedInAnchor"
+                placement="bottom-end"
+                :offset="10"
+                role="menu"
+                aria-label="Menu du profil"
+                @close="closeProfileMenu"
+              >
+                <div
+                  ref="profileMenuPanel"
+                  class="nav-auth-menu"
+                  @mouseenter="openProfileMenu"
+                  @mouseleave="scheduleProfileMenuClose()"
+                  @focusin="openProfileMenu"
+                  @focusout="handleProfileFocusOut"
+                >
+                  <button
+                    type="button"
+                    role="menuitem"
+                    data-auth-menu-item
+                    @click="handleOpenMyInformations"
                   >
-                    <template #labelIcon>
-                      <ExternalLink :size="16" />
-                    </template>
-                  </UserButton.Action>
-                </UserButton.MenuItems>
-              </UserButton>
+                    Mes informations
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    data-auth-menu-item
+                    @click="handleOpenMyProfile"
+                  >
+                    Mon profil
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    class="is-danger"
+                    data-auth-menu-item
+                    @click="handleSignOut"
+                  >
+                    Se déconnecter
+                  </button>
+                </div>
+              </RelativeOverlay>
             </div>
           </SignedIn>
         </li>
       </template>
     </ul>
-
-    <!-- <div
-      v-if="!vp.lg.value"
-      class="mobile-toggle"
-      :class="{ 'is-active': isMobileMenuOpen }"
-      @click="toggleMobileMenu"
-      aria-label="Ouvrir/fermer le menu"
-      role="button" title="Ouvrir/fermer le menu"
-    >
-      <span class="line is-top" />
-      <span class="line is-bottom" />
-    </div> -->
 
     <transition name="fade-slide">
       <div
@@ -563,6 +726,11 @@ onBeforeUnmount(() => {
         </ul>
       </div>
     </transition>
+
+    <HostProfileDialog
+      :open="myProfileDialogOpen"
+      @close="closeMyProfileDialog"
+    />
   </nav>
 </template>
 

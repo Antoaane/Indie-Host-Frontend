@@ -118,7 +118,9 @@ function getRoomDisplayName(roomName: string, index: number) {
     grid-template-columns: repeat(1, 1fr);
 
     @include min-width(md) {
-      grid-template-columns: repeat(2, 1fr);
+      .listing-view:not(.is-mobile-layout) & {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
 
     // @include min-width(lg) {
@@ -126,7 +128,9 @@ function getRoomDisplayName(roomName: string, index: number) {
     // }
 
     @include min-width(xl) {
-      grid-template-columns: repeat(3, 1fr);
+      .listing-view:not(.is-mobile-layout) & {
+        grid-template-columns: repeat(3, 1fr);
+      }
     }
 
     > li {

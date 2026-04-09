@@ -7,7 +7,6 @@ import { useUser } from '@clerk/vue'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
-import { vp } from '@/utils/viewport'
 import { orderByIndex } from '@/utils/medias/order'
 import { core } from '@/views/ListingView/utils/useParseContent'
 import { getListingsController } from '@/domain/listings/controller'
@@ -112,14 +111,70 @@ const listingViewStyles = computed<Record<string, string | number>>(() => ({
   '--listing-view-cover-image': listingCoverImage.value ? `url(${JSON.stringify(listingCoverImage.value)})` : 'none',
 }))
 
+const previewContainerWidth = computed(() => {
+  const width = Number(props.aspect?.width ?? 0)
+  if (!Number.isFinite(width) || width <= 0) return null
+  return width
+})
+
+const listingViewContainerWidth = ref<number | null>(null)
+let listingViewResizeObserver: ResizeObserver | null = null
+
+function updateListingViewContainerWidth() {
+  const element = listingView.value
+  if (!element) {
+    listingViewContainerWidth.value = null
+    return
+  }
+
+  const width = Number(element.clientWidth)
+  if (!Number.isFinite(width) || width <= 0) {
+    listingViewContainerWidth.value = null
+    return
+  }
+
+  listingViewContainerWidth.value = width
+}
+
+watch(
+  listingView,
+  (element) => {
+    listingViewResizeObserver?.disconnect()
+    listingViewResizeObserver = null
+
+    if (!element || typeof ResizeObserver === 'undefined') {
+      updateListingViewContainerWidth()
+      return
+    }
+
+    listingViewResizeObserver = new ResizeObserver(() => {
+      updateListingViewContainerWidth()
+    })
+    listingViewResizeObserver.observe(element)
+    updateListingViewContainerWidth()
+  },
+  { immediate: true },
+)
+
+const effectiveContainerWidth = computed<number | null>(() => {
+  if (previewContainerWidth.value !== null) return previewContainerWidth.value
+  if (listingViewContainerWidth.value !== null) return listingViewContainerWidth.value
+  return null
+})
+
 const viewportMode = computed<ListingViewportMode>(() => {
   if (props.forcedViewportMode) return props.forcedViewportMode
-  if (vp.xl.value) return 'xxl'
-  if (vp.md.value) return 'tablet'
+  if (effectiveContainerWidth.value !== null) {
+    if (effectiveContainerWidth.value >= 1024) return 'xxl'
+    if (effectiveContainerWidth.value >= 768) return 'tablet'
+    return 'sm'
+  }
   return 'sm'
 })
 
 const isTabletLayout = computed(() => viewportMode.value === 'tablet')
+const isMobileLayout = computed(() => viewportMode.value === 'sm')
+const isDesktopLayout = computed(() => viewportMode.value === 'xxl')
 const isTabletGalleryCollapsed = ref(false)
 const tabletGalleryCollapseProgress = ref(0)
 
@@ -280,6 +335,8 @@ watch(
 
 onBeforeUnmount(() => {
   teardownTabletGalleryCollapse(false)
+  listingViewResizeObserver?.disconnect()
+  listingViewResizeObserver = null
 })
 
 provideListingViewportMode(computed<ListingViewportMode | null>(() => viewportMode.value))
@@ -288,7 +345,7 @@ provideListingViewportMode(computed<ListingViewportMode | null>(() => viewportMo
 <template>
   <template v-if="showDesktopLayout">
     <div
-      :class="{ 'listing-view': true, editor: props.aspect, 'is-checkout': isCheckout, 'preview-only': props.previewOnly, 'is-tablet-layout': isTabletLayout, 'is-tablet-gallery-scroll-lock': isTabletGalleryScrollLocked, 'is-tablet-gallery-collapsed': isTabletGalleryCollapsed }"
+      :class="{ 'listing-view': true, editor: props.aspect, 'is-checkout': isCheckout, 'preview-only': props.previewOnly, 'is-mobile-layout': isMobileLayout, 'is-tablet-layout': isTabletLayout, 'is-desktop-layout': isDesktopLayout, 'is-tablet-gallery-scroll-lock': isTabletGalleryScrollLocked, 'is-tablet-gallery-collapsed': isTabletGalleryCollapsed }"
       ref="listingView"
       :style="listingViewStyles"
     >
@@ -318,7 +375,7 @@ provideListingViewportMode(computed<ListingViewportMode | null>(() => viewportMo
 
   <template v-else>
     <div
-      :class="{ 'listing-view': true, editor: props.aspect, 'is-checkout': isCheckout, 'preview-only': props.previewOnly, 'is-tablet-layout': isTabletLayout, 'is-tablet-gallery-scroll-lock': isTabletGalleryScrollLocked, 'is-tablet-gallery-collapsed': isTabletGalleryCollapsed }"
+      :class="{ 'listing-view': true, editor: props.aspect, 'is-checkout': isCheckout, 'preview-only': props.previewOnly, 'is-mobile-layout': isMobileLayout, 'is-tablet-layout': isTabletLayout, 'is-desktop-layout': isDesktopLayout, 'is-tablet-gallery-scroll-lock': isTabletGalleryScrollLocked, 'is-tablet-gallery-collapsed': isTabletGalleryCollapsed }"
       ref="listingView"
       :style="listingViewStyles"
     >

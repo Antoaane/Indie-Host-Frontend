@@ -33,6 +33,7 @@ const props = defineProps<{
   listingContent: ListingContent
   isStripeConnectPublishLocked?: boolean
   canPreview?: boolean
+  canTransfer?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -43,6 +44,7 @@ const emit = defineEmits<{
   (e: 'close-menus'): void
   (e: 'status-change', payload: { listingId: string; status: string }): void
   (e: 'configure-connect', listingId: string): void
+  (e: 'transfer', listingId: string): void
 }>()
 
 const swiper = ref<SwiperInstance | null>(null)
@@ -185,6 +187,11 @@ function handleActionsMenuEscape() {
 function openDeleteOverlay() {
   emit('close-menus')
   isDeleteOverlayOpen.value = true
+}
+
+function handleTransfer() {
+  emit('close-menus')
+  emit('transfer', props.listing.listingId)
 }
 
 function closeDeleteOverlay() {
@@ -485,6 +492,20 @@ function goToImageLabel(index: number) {
 
           <div class="actions">
             <div
+              v-if="props.canTransfer"
+              class="transfer"
+            >
+              <button
+                type="button"
+                aria-label="Transférer cette annonce"
+                title="Transférer cette annonce"
+                @click.stop="handleTransfer"
+                @pointerdown.stop
+              >
+                Transférer
+              </button>
+            </div>
+            <div
               v-if="props.canPreview !== false"
               class="preview"
             >
@@ -527,6 +548,17 @@ function goToImageLabel(index: number) {
                 :aria-label="deleteContent.title"
                 :title="deleteContent.title"
               >
+                <button
+                  v-if="props.canTransfer"
+                  class="status-option"
+                  type="button"
+                  role="menuitem"
+                  aria-label="Transférer cette annonce"
+                  title="Transférer cette annonce"
+                  @click.stop="handleTransfer"
+                >
+                  Transférer
+                </button>
                 <button
                   class="status-option is-danger"
                   type="button"

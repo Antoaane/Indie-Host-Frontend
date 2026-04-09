@@ -16,7 +16,7 @@ export function useListingAspect(aspect: Ref<ListingViewAspect | undefined>) {
   const lvWidth = ref<number | null>(0)
   const lvHeight = ref<number | null>(0)
 
-  const scaleDiff = ref<number | null>(0)
+  const scaleDiff = ref<number>(1)
   const offsetX = ref<number>(0)
   const offsetY = ref<number>(0)
   let listingViewResizeObserver: ResizeObserver | null = null
@@ -36,9 +36,25 @@ export function useListingAspect(aspect: Ref<ListingViewAspect | undefined>) {
     }
   })
 
+  function resolveFallbackPreviewSize(containerWidth: number, containerHeight: number) {
+    const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : containerWidth / 0.9
+    const baseWidth = Math.max(1, viewportWidth * 0.9)
+    const ratio = containerWidth > 0 && containerHeight > 0 ? containerHeight / containerWidth : 9 / 16
+    const baseHeight = Math.max(1, baseWidth * ratio)
+
+    return {
+      width: baseWidth,
+      height: baseHeight,
+    }
+  }
+
   function setAspect() {
-    pvWidth.value = aspect.value?.width
-    pvHeight.value = aspect.value?.height
+    const nextWidth = Number(aspect.value?.width ?? 0)
+    const nextHeight = Number(aspect.value?.height ?? 0)
+    if (!Number.isFinite(nextWidth) || !Number.isFinite(nextHeight) || nextWidth <= 0 || nextHeight <= 0) return
+
+    pvWidth.value = nextWidth
+    pvHeight.value = nextHeight
 
     const container = listingView.value
     if (container) {
@@ -46,15 +62,17 @@ export function useListingAspect(aspect: Ref<ListingViewAspect | undefined>) {
       lvHeight.value = container.clientHeight
     }
 
-    if (lvWidth.value && pvWidth.value && lvHeight.value && pvHeight.value) {
-      const widthScale = pvWidth.value / lvWidth.value
-      const heightScale = pvHeight.value / lvHeight.value
-      const nextScale = Math.min(widthScale, heightScale)
+    const fallback = resolveFallbackPreviewSize(nextWidth, nextHeight)
+    const baseWidth = Number(lvWidth.value) > 0 ? Number(lvWidth.value) : fallback.width
+    const baseHeight = Number(lvHeight.value) > 0 ? Number(lvHeight.value) : fallback.height
 
-      scaleDiff.value = nextScale
-      offsetX.value = Math.max(0, (pvWidth.value - (lvWidth.value * nextScale)) / 2)
-      offsetY.value = Math.max(0, (pvHeight.value - (lvHeight.value * nextScale)) / 2)
-    }
+    const widthScale = nextWidth / baseWidth
+    const heightScale = nextHeight / baseHeight
+    const nextScale = Math.min(widthScale, heightScale)
+
+    scaleDiff.value = nextScale
+    offsetX.value = Math.max(0, (nextWidth - (baseWidth * nextScale)) / 2)
+    offsetY.value = Math.max(0, (nextHeight - (baseHeight * nextScale)) / 2)
   }
 
   watch(
@@ -79,6 +97,8 @@ export function useListingAspect(aspect: Ref<ListingViewAspect | undefined>) {
         setAspect()
       })
       listingViewResizeObserver.observe(element)
+
+      setAspect()
     },
     { immediate: true },
   )
@@ -86,6 +106,16 @@ export function useListingAspect(aspect: Ref<ListingViewAspect | undefined>) {
   onBeforeUnmount(() => {
     listingViewResizeObserver?.disconnect()
     listingViewResizeObserver = null
+  })
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('resize', setAspect)
+  }
+
+  onBeforeUnmount(() => {
+    if (typeof window !== 'undefined') {
+      window.removeEventListener('resize', setAspect)
+    }
   })
 
   return {

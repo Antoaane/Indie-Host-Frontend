@@ -175,6 +175,13 @@
         box-shadow: 0 0 0 3px rgba($accent, 0.35);
         outline-color: rgba($accent, 0.72);
       }
+
+      > .auth-avatar-image {
+        width: 100%;
+        height: 100%;
+        border-radius: 999px;
+        object-fit: cover;
+      }
     }
 
     >.auth-user-button>.cl-rootBox {
@@ -279,6 +286,13 @@
           box-shadow: 0 0 0 3px rgba($accent, 0.35);
           outline-color: rgba($accent, 0.72);
         }
+
+        > .auth-avatar-image {
+          width: 100%;
+          height: 100%;
+          border-radius: 999px;
+          object-fit: cover;
+        }
       }
 
       >.auth-user-button>.cl-rootBox {
@@ -364,14 +378,18 @@
     background: $accent;
     box-shadow: 0px 8px 22px rgba(0, 0, 0, 0.2);
 
-    >a {
+    >a,
+    >button {
       border: 0;
       border-bottom: 1px solid rgba($secondary, 0.08);
       background: transparent;
       color: $secondary-text;
       text-decoration: none;
+      text-align: left;
+      font: inherit;
       padding: 0.82rem 0.95rem;
       font-size: 0.9rem;
+      cursor: pointer;
       transition:
         background-color 140ms ease,
         color 140ms ease;
@@ -386,6 +404,10 @@
 
       &:focus-visible {
         @include halo(xs, false, $secondary-text, 0.22);
+      }
+
+      &.is-danger {
+        color: rgba($bad, 0.95);
       }
     }
   }

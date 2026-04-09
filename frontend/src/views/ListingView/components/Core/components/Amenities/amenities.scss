@@ -23,7 +23,9 @@
     gap: var(--layout-gap-sm);
 
     @include min-width(md) {
-      grid-template-columns: repeat(2, 1fr);
+      .listing-view:not(.is-mobile-layout) & {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
 
     // @include min-width(lg) {
@@ -108,7 +110,9 @@
           grid-template-columns: repeat(1, 1fr);
 
           @include min-width(md) {
-            grid-template-columns: repeat(2, 1fr);
+            .listing-view:not(.is-mobile-layout) & {
+              grid-template-columns: repeat(2, 1fr);
+            }
           }
 
           >.item {

@@ -157,7 +157,7 @@ function closePopup() {
   padding-top: max(var(--layout-gap), env(safe-area-inset-top));
   padding-bottom: max(var(--layout-gap-sm), env(safe-area-inset-bottom));
 
-  @include min-width(lg) {
+  .listing-view:not(.is-mobile-layout) & {
     align-items: center;
   }
 
@@ -171,7 +171,7 @@ function closePopup() {
     min-height: 0;
     overflow: hidden;
 
-    @include min-width(lg) {
+    .listing-view:not(.is-mobile-layout) & {
       height: 100%;
       max-height: 100%;
       padding: var(--layout-gap-4xl);
@@ -196,7 +196,7 @@ function closePopup() {
       overflow-wrap: anywhere;
       word-break: break-word;
 
-      @include min-width(lg) {
+      .listing-view:not(.is-mobile-layout) & {
         padding-bottom: var(--layout-gap);
       }
 
@@ -227,7 +227,7 @@ function closePopup() {
       top: var(--layout-gap-sm);
       right: var(--layout-gap-sm);
 
-      @include min-width(lg) {
+      .listing-view:not(.is-mobile-layout) & {
         top: var(--layout-gap-md);
         right: var(--layout-gap-md);
       }

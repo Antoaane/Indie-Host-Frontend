@@ -4,6 +4,7 @@ import Stripe from 'stripe';
 import { env } from '../../config/env.js';
 import { asObject, toNumber } from '../../lib/json.js';
 import { toPrismaJson } from '../../lib/prisma.js';
+import { hasAdminAccess } from '../../lib/authRole.js';
 import type { RequestAuth } from '../../types/auth.js';
 import { upsertUserFromAuth } from '../users/users.repository.js';
 
@@ -99,6 +100,12 @@ type BillingSnapshot = {
   updatedAtISO: string | null;
   pendingPlanCode: SubscriptionPlanCode | null;
   pendingCheckoutSessionId: string | null;
+  giftedTrialSource?: string | null;
+  giftedTrialListingId?: string | null;
+  giftedTrialGrantedByUserId?: string | null;
+  giftedTrialGrantedAtISO?: string | null;
+  giftedTrialEndsAtISO?: string | null;
+  giftedTrialExpiredAtISO?: string | null;
 };
 
 type PublicBillingSnapshot = {
@@ -217,6 +224,8 @@ const PUBLICATION_ALLOWED_SUBSCRIPTION_STATUSES = new Set([
   'trialing',
   'active',
 ]);
+const ADMIN_LISTING_TRANSFER_TRIAL_SOURCE = 'admin_listing_transfer';
+const ADMIN_LISTING_TRANSFER_TRIAL_EXPIRED_STATUS = 'canceled';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_CAPACITY = 1;
@@ -442,6 +451,18 @@ function createBadRequestError(message: string, code = 'INVALID_PAYMENT_REQUEST'
     details?: Record<string, unknown>;
   };
   error.statusCode = 400;
+  error.code = code;
+  if (details) error.details = details;
+  return error;
+}
+
+function createForbiddenRequestError(message: string, code = 'FORBIDDEN_REQUEST', details?: Record<string, unknown>) {
+  const error = new Error(message) as Error & {
+    statusCode: number;
+    code: string;
+    details?: Record<string, unknown>;
+  };
+  error.statusCode = 403;
   error.code = code;
   if (details) error.details = details;
   return error;
@@ -899,6 +920,12 @@ export class PaymentsService {
       updatedAtISO: readString(billing.updatedAtISO),
       pendingPlanCode: normalizePlanCode(billing.pendingPlanCode),
       pendingCheckoutSessionId: readString(billing.pendingCheckoutSessionId),
+      giftedTrialSource: readString(billing.giftedTrialSource),
+      giftedTrialListingId: readString(billing.giftedTrialListingId),
+      giftedTrialGrantedByUserId: readString(billing.giftedTrialGrantedByUserId),
+      giftedTrialGrantedAtISO: readString(billing.giftedTrialGrantedAtISO),
+      giftedTrialEndsAtISO: readString(billing.giftedTrialEndsAtISO),
+      giftedTrialExpiredAtISO: readString(billing.giftedTrialExpiredAtISO),
     };
   }
 
@@ -937,7 +964,143 @@ export class PaymentsService {
     return PUBLICATION_ALLOWED_SUBSCRIPTION_STATUSES.has(status);
   }
 
-  private toPublicationReadiness(user: User): PublicationReadiness {
+  private resolveListingLifecycleStatus(listing: {
+    id: string;
+    status: string | null;
+    core: unknown;
+  }): string {
+    const listingCore = asObject(listing.core);
+    const fromCore = readString(listingCore.status)?.toLowerCase();
+    if (fromCore) return fromCore;
+
+    const fromColumn = readString(listing.status)?.toLowerCase();
+    return fromColumn ?? 'draft';
+  }
+
+  private async blockPublishedListingsForOwner(ownerId: string): Promise<void> {
+    const listings = await this.prisma.listing.findMany({
+      where: {
+        ownerId,
+        status: 'published',
+      },
+      select: {
+        id: true,
+        core: true,
+      },
+    });
+
+    if (!listings.length) return;
+
+    await this.prisma.$transaction(
+      listings.map((listing) => {
+        const nextCore = {
+          ...asObject(listing.core),
+          status: 'blocked',
+        };
+
+        return this.prisma.listing.update({
+          where: { id: listing.id },
+          data: {
+            status: 'blocked',
+            core: toPrismaJson(nextCore),
+            updatedAt: new Date(),
+          },
+        });
+      }),
+    );
+  }
+
+  private async enforceAdminListingTransferTrialExpiration(user: User): Promise<User> {
+    const billing = this.readBillingSnapshot(user);
+    if (billing.giftedTrialSource !== ADMIN_LISTING_TRANSFER_TRIAL_SOURCE) return user;
+    if (billing.status === 'active') return user;
+
+    const trialEndsAt = this.parseIsoDate(billing.giftedTrialEndsAtISO);
+    if (!trialEndsAt) return user;
+    if (Date.now() < trialEndsAt.getTime()) return user;
+
+    await this.blockPublishedListingsForOwner(user.id);
+
+    const shouldPersistExpiration = billing.status === 'trialing' || !billing.giftedTrialExpiredAtISO;
+    if (!shouldPersistExpiration) return user;
+
+    return this.updateUserStripeState({
+      user,
+      billingPatch: {
+        status: billing.status === 'trialing'
+          ? ADMIN_LISTING_TRANSFER_TRIAL_EXPIRED_STATUS
+          : billing.status ?? ADMIN_LISTING_TRANSFER_TRIAL_EXPIRED_STATUS,
+        currentPeriodEndISO: billing.currentPeriodEndISO ?? billing.giftedTrialEndsAtISO ?? nowIso(),
+        updatedAtISO: nowIso(),
+        giftedTrialExpiredAtISO: billing.giftedTrialExpiredAtISO ?? nowIso(),
+      },
+    });
+  }
+
+  async ensureListingReservable(listingId: string): Promise<{ listingId: string } | null> {
+    const normalizedListingId = listingId.trim();
+    if (!normalizedListingId) return null;
+
+    let listing = await this.prisma.listing.findUnique({
+      where: { id: normalizedListingId },
+      select: {
+        id: true,
+        ownerId: true,
+        status: true,
+        core: true,
+      },
+    });
+
+    if (!listing) return null;
+
+    if (listing.ownerId) {
+      const owner = await this.prisma.user.findUnique({
+        where: { id: listing.ownerId },
+      });
+      if (owner) {
+        await this.enforceAdminListingTransferTrialExpiration(owner);
+      }
+
+      listing = await this.prisma.listing.findUnique({
+        where: { id: normalizedListingId },
+        select: {
+          id: true,
+          ownerId: true,
+          status: true,
+          core: true,
+        },
+      });
+
+      if (!listing) return null;
+    }
+
+    const status = this.resolveListingLifecycleStatus(listing);
+    if (status !== 'published') {
+      throw createForbiddenRequestError(
+        'Cette annonce n accepte pas de nouvelles reservations.',
+        'LISTING_NOT_BOOKABLE',
+      );
+    }
+
+    return { listingId: listing.id };
+  }
+
+  private toPublicationReadiness(
+    user: User,
+    options?: { allowAdmin?: boolean },
+  ): PublicationReadiness {
+    if (options?.allowAdmin) {
+      return {
+        canPublish: true,
+        hasActiveSubscription: true,
+        hasConnectAccount: true,
+        connectOnboardingCompleted: true,
+        chargesEnabled: true,
+        payoutsEnabled: true,
+        missingRequirements: [],
+      };
+    }
+
     const billing = this.readBillingSnapshot(user);
     const connect = this.readConnectState(user);
     const hasActiveSubscription = this.hasPublicationEligibleSubscription(billing.status);
@@ -1003,6 +1166,12 @@ export class PaymentsService {
       updatedAtISO: billingPatch?.updatedAtISO,
       pendingPlanCode: billingPatch?.pendingPlanCode,
       pendingCheckoutSessionId: billingPatch?.pendingCheckoutSessionId,
+      giftedTrialSource: billingPatch?.giftedTrialSource,
+      giftedTrialListingId: billingPatch?.giftedTrialListingId,
+      giftedTrialGrantedByUserId: billingPatch?.giftedTrialGrantedByUserId,
+      giftedTrialGrantedAtISO: billingPatch?.giftedTrialGrantedAtISO,
+      giftedTrialEndsAtISO: billingPatch?.giftedTrialEndsAtISO,
+      giftedTrialExpiredAtISO: billingPatch?.giftedTrialExpiredAtISO,
     });
 
     const nextProfile = applyDefinedPatch(currentProfile, connectPatch);
@@ -1455,8 +1624,10 @@ export class PaymentsService {
   }
 
   async getMySubscriptionState(auth: RequestAuth | null, options?: { sync?: boolean }): Promise<MySubscriptionStateResult | null> {
+    const allowAdmin = hasAdminAccess(auth);
     let user = await upsertUserFromAuth(this.prisma, auth);
     if (!user) return null;
+    user = await this.enforceAdminListingTransferTrialExpiration(user);
 
     const plans = await this.resolvePlanCatalog();
     const subscriptionMode = this.getSubscriptionExecutionMode();
@@ -1490,17 +1661,19 @@ export class PaymentsService {
       currentPlan,
       subscription: this.toPublicBillingSnapshot(currentBilling),
       connect: this.readConnectState(user),
-      publicationReadiness: this.toPublicationReadiness(user),
+      publicationReadiness: this.toPublicationReadiness(user, { allowAdmin }),
     };
   }
 
   async activateSubscription(input: ActivateSubscriptionInput, auth: RequestAuth | null): Promise<SubscriptionActivationResult | null> {
+    const allowAdmin = hasAdminAccess(auth);
     const mode = this.getSubscriptionExecutionMode();
     const plans = await this.resolvePlanCatalog();
     const selectedPlan = plans.find((plan) => plan.code === input.planCode) ?? null;
 
     let user = await upsertUserFromAuth(this.prisma, auth);
     if (!user) return null;
+    user = await this.enforceAdminListingTransferTrialExpiration(user);
 
     if (!selectedPlan || !selectedPlan.available) {
       return {
@@ -1509,7 +1682,7 @@ export class PaymentsService {
         plan: selectedPlan,
         subscription: this.toPublicBillingSnapshot(this.readBillingSnapshot(user)),
         connect: this.toConnectSummary(user, false),
-        publicationReadiness: this.toPublicationReadiness(user),
+        publicationReadiness: this.toPublicationReadiness(user, { allowAdmin }),
         checkout: null,
         message: selectedPlan?.unavailableReason ?? 'Plan indisponible.',
       };
@@ -1545,7 +1718,7 @@ export class PaymentsService {
           plan: selectedPlan,
           subscription: this.toPublicBillingSnapshot(this.readBillingSnapshot(next)),
           connect: this.toConnectSummary(next, false),
-          publicationReadiness: this.toPublicationReadiness(next),
+          publicationReadiness: this.toPublicationReadiness(next, { allowAdmin }),
           checkout: null,
           message: isSamePlan
             ? 'Ce plan est déjà actif sur votre compte.'
@@ -1571,7 +1744,7 @@ export class PaymentsService {
         plan: selectedPlan,
         subscription: this.toPublicBillingSnapshot(this.readBillingSnapshot(next)),
         connect: this.toConnectSummary(next, false),
-        publicationReadiness: this.toPublicationReadiness(next),
+        publicationReadiness: this.toPublicationReadiness(next, { allowAdmin }),
         checkout: {
           sessionId,
           url: checkoutUrl,
@@ -1606,7 +1779,7 @@ export class PaymentsService {
           plan: selectedPlan,
           subscription: this.toPublicBillingSnapshot(this.readBillingSnapshot(next)),
           connect: this.toConnectSummary(next, false),
-          publicationReadiness: this.toPublicationReadiness(next),
+          publicationReadiness: this.toPublicationReadiness(next, { allowAdmin }),
           checkout: null,
           message: 'Ce plan est déjà actif sur votre compte.',
         };
@@ -1642,7 +1815,7 @@ export class PaymentsService {
         plan: selectedPlan,
         subscription: this.toPublicBillingSnapshot(this.readBillingSnapshot(next)),
         connect: this.toConnectSummary(next, false),
-        publicationReadiness: this.toPublicationReadiness(next),
+        publicationReadiness: this.toPublicationReadiness(next, { allowAdmin }),
         checkout: null,
         message: `Votre plan a été mis à jour vers ${selectedPlan.name}.`,
       };
@@ -1655,7 +1828,7 @@ export class PaymentsService {
         plan: selectedPlan,
         subscription: this.toPublicBillingSnapshot(currentBilling),
         connect: this.toConnectSummary(user, false),
-        publicationReadiness: this.toPublicationReadiness(user),
+        publicationReadiness: this.toPublicationReadiness(user, { allowAdmin }),
         checkout: null,
         message: `Aucun prix Stripe valide n'a été trouvé pour ${selectedPlan.name}.`,
       };
@@ -1700,7 +1873,7 @@ export class PaymentsService {
       plan: selectedPlan,
       subscription: this.toPublicBillingSnapshot(this.readBillingSnapshot(next)),
       connect: this.toConnectSummary(next, false),
-      publicationReadiness: this.toPublicationReadiness(next),
+      publicationReadiness: this.toPublicationReadiness(next, { allowAdmin }),
       checkout: {
         sessionId: session.id,
         url: session.url,
@@ -1710,8 +1883,10 @@ export class PaymentsService {
   }
 
   async confirmSubscriptionCheckout(input: ConfirmCheckoutInput, auth: RequestAuth | null): Promise<ConfirmSubscriptionCheckoutResult | null> {
+    const allowAdmin = hasAdminAccess(auth);
     let user = await upsertUserFromAuth(this.prisma, auth);
     if (!user) return null;
+    user = await this.enforceAdminListingTransferTrialExpiration(user);
 
     const plans = await this.resolvePlanCatalog();
     const mode = this.getSubscriptionExecutionMode();
@@ -1726,7 +1901,7 @@ export class PaymentsService {
           plan: null,
           subscription: this.toPublicBillingSnapshot(billing),
           connect: this.toConnectSummary(user, false),
-          publicationReadiness: this.toPublicationReadiness(user),
+          publicationReadiness: this.toPublicationReadiness(user, { allowAdmin }),
           message: 'Aucun plan à confirmer pour cette session.',
         };
       }
@@ -1756,7 +1931,7 @@ export class PaymentsService {
         plan: currentPlan,
         subscription: this.toPublicBillingSnapshot(nextBilling),
         connect: this.toConnectSummary(next, false),
-        publicationReadiness: this.toPublicationReadiness(next),
+        publicationReadiness: this.toPublicationReadiness(next, { allowAdmin }),
         message: null,
       };
     }
@@ -1779,7 +1954,7 @@ export class PaymentsService {
         plan: null,
         subscription: this.toPublicBillingSnapshot(billing),
         connect: this.toConnectSummary(user, false),
-        publicationReadiness: this.toPublicationReadiness(user),
+        publicationReadiness: this.toPublicationReadiness(user, { allowAdmin }),
         message: 'Cette session checkout ne correspond pas à l’utilisateur authentifié.',
       };
     }
@@ -1798,7 +1973,7 @@ export class PaymentsService {
         plan: null,
         subscription: this.toPublicBillingSnapshot(billing),
         connect: this.toConnectSummary(user, false),
-        publicationReadiness: this.toPublicationReadiness(user),
+        publicationReadiness: this.toPublicationReadiness(user, { allowAdmin }),
         message: 'La session Stripe ne contient aucun abonnement confirmé.',
       };
     }
@@ -1820,7 +1995,7 @@ export class PaymentsService {
       plan: currentPlan,
       subscription: this.toPublicBillingSnapshot(nextBilling),
       connect: this.toConnectSummary(user, false),
-      publicationReadiness: this.toPublicationReadiness(user),
+      publicationReadiness: this.toPublicationReadiness(user, { allowAdmin }),
       message: null,
     };
   }
@@ -1930,6 +2105,9 @@ export class PaymentsService {
   }
 
   async createPaymentIntent(input: CreatePaymentIntentInput, auth: RequestAuth | null) {
+    const reservableListing = await this.ensureListingReservable(input.listingId);
+    if (!reservableListing) return null;
+
     const listing = await this.prisma.listing.findUnique({
       where: { id: input.listingId },
       select: {
@@ -2100,6 +2278,7 @@ export class PaymentsService {
   async createConnectOnboardingLink(input: CreateConnectOnboardingLinkInput, auth: RequestAuth | null) {
     let user = await upsertUserFromAuth(this.prisma, auth);
     if (!user) return null;
+    user = await this.enforceAdminListingTransferTrialExpiration(user);
 
     try {
       const connect = await this.ensureStripeConnectAccount(user, {
@@ -2157,8 +2336,9 @@ export class PaymentsService {
     input: CreateConnectDashboardLinkInput,
     auth: RequestAuth | null,
   ): Promise<ConnectDashboardLinkResult | null> {
-    const user = await upsertUserFromAuth(this.prisma, auth);
+    let user = await upsertUserFromAuth(this.prisma, auth);
     if (!user) return null;
+    user = await this.enforceAdminListingTransferTrialExpiration(user);
 
     const connect = this.readConnectState(user);
     const profileAccountId = readString(this.readStripeProfile(user).accountId);
@@ -2210,8 +2390,10 @@ export class PaymentsService {
     input: SyncConnectStateInput,
     auth: RequestAuth | null,
   ): Promise<SyncConnectStateResult | null> {
+    const allowAdmin = hasAdminAccess(auth);
     let user = await upsertUserFromAuth(this.prisma, auth);
     if (!user) return null;
+    user = await this.enforceAdminListingTransferTrialExpiration(user);
 
     const requestedAccountId = readString(input.accountId) ?? user.stripeConnectAccountId ?? null;
     if (!requestedAccountId) {
@@ -2231,7 +2413,7 @@ export class PaymentsService {
       return {
         mode: this.getExecutionMode(),
         connect: this.readConnectState(next),
-        publicationReadiness: this.toPublicationReadiness(next),
+        publicationReadiness: this.toPublicationReadiness(next, { allowAdmin }),
       };
     }
 
@@ -2257,7 +2439,7 @@ export class PaymentsService {
       return {
         mode: this.getExecutionMode(),
         connect: this.readConnectState(next),
-        publicationReadiness: this.toPublicationReadiness(next),
+        publicationReadiness: this.toPublicationReadiness(next, { allowAdmin }),
       };
     }
 
@@ -2279,13 +2461,14 @@ export class PaymentsService {
     return {
       mode: this.getExecutionMode(),
       connect: this.readConnectState(next),
-      publicationReadiness: this.toPublicationReadiness(next),
+      publicationReadiness: this.toPublicationReadiness(next, { allowAdmin }),
     };
   }
 
   async getMyStripeConnectProfile(auth: RequestAuth | null) {
-    const user = await upsertUserFromAuth(this.prisma, auth);
+    let user = await upsertUserFromAuth(this.prisma, auth);
     if (!user) return null;
+    user = await this.enforceAdminListingTransferTrialExpiration(user);
 
     return {
       accountId: user.stripeConnectAccountId,

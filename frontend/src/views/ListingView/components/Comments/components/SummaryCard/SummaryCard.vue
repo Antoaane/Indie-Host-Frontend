@@ -177,7 +177,7 @@ const importedScoreCards = computed(() => (
       -webkit-text-fill-color: transparent;
       color: transparent;
 
-      @include min-width(lg) {
+      .listing-view:not(.is-mobile-layout) & {
         font-size: 32px;
         line-height: 30px;
       }

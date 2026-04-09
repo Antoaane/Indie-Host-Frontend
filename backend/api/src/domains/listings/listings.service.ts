@@ -3,8 +3,14 @@ import type { Listing, Prisma, PrismaClient, User } from '@prisma/client';
 import { env } from '../../config/env.js';
 import { deepMerge, asObject, toNumber } from '../../lib/json.js';
 import { buildListingId, buildReservationId } from '../../lib/id.js';
+import { toPrismaJson } from '../../lib/prisma.js';
+import { hasAdminAccess } from '../../lib/authRole.js';
 import type { RequestAuth } from '../../types/auth.js';
-import { buildHostProfileFromUser, upsertUserFromAuth } from '../users/users.repository.js';
+import {
+  buildHostProfileFromUser,
+  resolveUserByIdentifier,
+  upsertUserFromAuth,
+} from '../users/users.repository.js';
 import { buildDefaultResource, type ListingResourceKey } from './listings.constants.js';
 import type { CreateListingInput } from './listings.schemas.js';
 
@@ -76,10 +82,25 @@ type ListingPublicationReadiness = {
   missingRequirements: string[];
 };
 
+export type TransferListingOwnershipResult = {
+  listingId: string;
+  previousOwnerId: string | null;
+  ownerId: string;
+  transferredAtISO: string;
+  trial: {
+    applied: boolean;
+    days: number;
+    startsAtISO: string | null;
+    endsAtISO: string | null;
+  };
+};
+
 const PUBLICATION_ELIGIBLE_SUBSCRIPTION_STATUSES = new Set([
   'active',
   'trialing',
 ]);
+const ADMIN_LISTING_TRANSFER_TRIAL_SOURCE = 'admin_listing_transfer';
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 function toJsonInput(value: Record<string, unknown>): Prisma.InputJsonValue {
   return value as Prisma.InputJsonValue;
@@ -192,7 +213,23 @@ export class ListingsService {
     return 'draft';
   }
 
-  private buildPublicationReadiness(user: User | null | undefined): ListingPublicationReadiness {
+  private buildPublicationReadiness(
+    user: User | null | undefined,
+    options?: { allowAdmin?: boolean },
+  ): ListingPublicationReadiness {
+    if (options?.allowAdmin) {
+      return {
+        canPublish: true,
+        hasAuthenticatedUser: true,
+        hasActiveSubscription: true,
+        hasConnectAccount: true,
+        connectOnboardingCompleted: true,
+        chargesEnabled: true,
+        payoutsEnabled: true,
+        missingRequirements: [],
+      };
+    }
+
     const hasAuthenticatedUser = Boolean(user);
     const profile = user ? asObject(user.stripeConnectProfile) : {};
     const billing = asObject(profile.billing);
@@ -230,14 +267,21 @@ export class ListingsService {
     };
   }
 
-  private assertCanPublishListing(user: User | null | undefined) {
-    const readiness = this.buildPublicationReadiness(user);
+  private assertCanPublishListing(
+    user: User | null | undefined,
+    options?: { allowAdmin?: boolean },
+  ) {
+    const readiness = this.buildPublicationReadiness(user, options);
     if (!readiness.canPublish) {
       throw new ListingPublicationForbiddenError(readiness);
     }
   }
 
-  private hasSelectedSubscriptionPlan(user: User | null | undefined): boolean {
+  private hasSelectedSubscriptionPlan(
+    user: User | null | undefined,
+    options?: { allowAdmin?: boolean },
+  ): boolean {
+    if (options?.allowAdmin) return true;
     if (!user) return false;
     const profile = asObject(user.stripeConnectProfile);
     const billing = asObject(profile.billing);
@@ -246,9 +290,73 @@ export class ListingsService {
     return Boolean(activePlanCode || pendingPlanCode);
   }
 
-  private isActorOwner(listingOwnerId: string | null, actor: User | null) {
+  private isActorOwner(
+    listingOwnerId: string | null,
+    actor: User | null,
+    options?: { allowAdmin?: boolean },
+  ) {
+    if (options?.allowAdmin) return true;
     if (!listingOwnerId || !actor) return false;
     return listingOwnerId === actor.id;
+  }
+
+  private normalizeTrialDays(value: unknown): number {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return 0;
+    return Math.max(0, Math.min(365, Math.trunc(parsed)));
+  }
+
+  private buildTransferredListingTrialBilling(
+    user: User,
+    listingId: string,
+    grantedByUserId: string | null,
+    trialDays: number,
+  ) {
+    const now = new Date();
+    const startsAtISO = now.toISOString();
+    const endsAtISO = new Date(now.getTime() + (trialDays * DAY_MS)).toISOString();
+
+    const profile = asObject(user.stripeConnectProfile);
+    const currentBilling = asObject(profile.billing);
+    const currentStatus = readString(currentBilling.status)?.toLowerCase() ?? null;
+    const hasOngoingSubscription = currentStatus === 'active' || currentStatus === 'trialing';
+
+    if (hasOngoingSubscription) {
+      return {
+        applied: false,
+        startsAtISO: null,
+        endsAtISO: null,
+        stripeConnectProfile: profile,
+      };
+    }
+
+    const nextBilling = {
+      ...currentBilling,
+      giftedTrialSource: ADMIN_LISTING_TRANSFER_TRIAL_SOURCE,
+      giftedTrialListingId: listingId,
+      giftedTrialGrantedByUserId: grantedByUserId,
+      giftedTrialGrantedAtISO: startsAtISO,
+      giftedTrialEndsAtISO: endsAtISO,
+      giftedTrialExpiredAtISO: null,
+    } as Record<string, unknown>;
+
+    nextBilling.planCode = 'indiehost';
+    nextBilling.status = 'trialing';
+    nextBilling.currentPeriodEndISO = endsAtISO;
+    nextBilling.cancelAtPeriodEnd = true;
+    nextBilling.pendingPlanCode = null;
+    nextBilling.pendingCheckoutSessionId = null;
+    nextBilling.updatedAtISO = startsAtISO;
+
+    return {
+      applied: true,
+      startsAtISO,
+      endsAtISO,
+      stripeConnectProfile: {
+        ...profile,
+        billing: nextBilling,
+      },
+    };
   }
 
   private getListingStatus(listing: Pick<Listing, 'id' | 'status' | 'core'>): string {
@@ -484,7 +592,8 @@ export class ListingsService {
     if (!listing) return null;
 
     const actor = await upsertUserFromAuth(this.prisma, auth);
-    if (listing.ownerId && (!actor || listing.ownerId !== actor.id)) {
+    const allowAdmin = hasAdminAccess(auth);
+    if (listing.ownerId && !allowAdmin && (!actor || listing.ownerId !== actor.id)) {
       return 'forbidden' as const;
     }
 
@@ -537,7 +646,9 @@ export class ListingsService {
     const listingStatus = this.extractStatus(core);
 
     if (listingStatus === 'published') {
-      this.assertCanPublishListing(owner);
+      this.assertCanPublishListing(owner, {
+        allowAdmin: hasAdminAccess(auth),
+      });
     }
 
     await this.prisma.listing.create({
@@ -591,7 +702,9 @@ export class ListingsService {
 
     if (!listing) return null;
     const actor = await upsertUserFromAuth(this.prisma, auth);
-    const isOwner = this.isActorOwner(listing.ownerId, actor);
+    const isOwner = this.isActorOwner(listing.ownerId, actor, {
+      allowAdmin: hasAdminAccess(auth),
+    });
 
     if (!isOwner && this.getListingStatus(listing) === 'deleted') {
       return null;
@@ -611,7 +724,9 @@ export class ListingsService {
     const normalizedSlug = normalizeSlug(slug);
     const hostname = this.buildListingHostname(normalizedSlug);
     const publicUrl = this.buildListingPublicUrl(normalizedSlug);
-    const actor = await upsertUserFromAuth(this.prisma, options?.auth ?? null);
+    const auth = options?.auth ?? null;
+    const allowAdmin = hasAdminAccess(auth);
+    const actor = await upsertUserFromAuth(this.prisma, auth);
 
     if (this.reservedSlugs.has(normalizedSlug)) {
       return {
@@ -623,7 +738,7 @@ export class ListingsService {
       };
     }
 
-    if (!this.hasSelectedSubscriptionPlan(actor)) {
+    if (!this.hasSelectedSubscriptionPlan(actor, { allowAdmin })) {
       return {
         slug: normalizedSlug,
         available: false,
@@ -640,7 +755,7 @@ export class ListingsService {
         where: { id: requestedExcludeListingId },
         select: { id: true, ownerId: true },
       });
-      if (candidate && actor && (!candidate.ownerId || candidate.ownerId === actor.id)) {
+      if (candidate && (allowAdmin || (actor && (!candidate.ownerId || candidate.ownerId === actor.id)))) {
         allowedExcludeListingId = candidate.id;
       }
     }
@@ -673,7 +788,9 @@ export class ListingsService {
     const access = await this.findOwnedListing(args.listingId, args.auth);
     if (!access) return null;
     if (access === 'forbidden') return 'forbidden' as const;
-    if (!this.hasSelectedSubscriptionPlan(access.actor)) return 'subscription_required' as const;
+    if (!this.hasSelectedSubscriptionPlan(access.actor, {
+      allowAdmin: hasAdminAccess(args.auth),
+    })) return 'subscription_required' as const;
 
     const normalizedSlug = normalizeSlug(args.slug);
     const availability = await this.checkSubdomainAvailability(normalizedSlug, {
@@ -735,7 +852,9 @@ export class ListingsService {
     const managedSubdomain = this.extractManagedSlug(input.hostname);
     if (!managedSubdomain) return null;
 
-    const actor = await upsertUserFromAuth(this.prisma, input.auth ?? null);
+    const auth = input.auth ?? null;
+    const actor = await upsertUserFromAuth(this.prisma, auth);
+    const allowAdmin = hasAdminAccess(auth);
     const listings = await this.prisma.listing.findMany({
       where: { subdomainSlug: managedSubdomain },
       select: {
@@ -750,7 +869,7 @@ export class ListingsService {
     });
 
     const visibleListings = listings.filter((listing) => {
-      const isOwner = this.isActorOwner(listing.ownerId, actor);
+      const isOwner = this.isActorOwner(listing.ownerId, actor, { allowAdmin });
       if (isOwner) return true;
       return this.getListingStatus(listing) !== 'deleted';
     });
@@ -792,6 +911,7 @@ export class ListingsService {
     if (!normalizedSlug) return null;
 
     const actor = await upsertUserFromAuth(this.prisma, auth);
+    const allowAdmin = hasAdminAccess(auth);
     const listings = await this.prisma.listing.findMany({
       select: {
         id: true,
@@ -811,7 +931,7 @@ export class ListingsService {
       const listingSlug = buildListingSlugFromCore(core, listing.id);
       if (listingSlug !== normalizedSlug) continue;
 
-      const isOwner = this.isActorOwner(listing.ownerId, actor);
+      const isOwner = this.isActorOwner(listing.ownerId, actor, { allowAdmin });
       if (!isOwner && this.getListingStatus(listing) === 'deleted') {
         continue;
       }
@@ -899,8 +1019,9 @@ export class ListingsService {
     if (!listing) return null;
 
     const actor = await upsertUserFromAuth(this.prisma, auth);
+    const allowAdmin = hasAdminAccess(auth);
 
-    if (listing.ownerId && (!actor || listing.ownerId !== actor.id)) {
+    if (listing.ownerId && !allowAdmin && (!actor || listing.ownerId !== actor.id)) {
       return 'forbidden' as const;
     }
 
@@ -930,7 +1051,7 @@ export class ListingsService {
       }
       const nextStatus = this.extractStatus(normalizedMerged);
       if (nextStatus === 'published') {
-        this.assertCanPublishListing(actor);
+        this.assertCanPublishListing(actor, { allowAdmin });
       }
       data.core = toJsonInput(normalizedMerged);
       data.status = nextStatus;
@@ -954,6 +1075,105 @@ export class ListingsService {
     });
 
     return normalizedMerged;
+  }
+
+  async transferListingOwnership(args: {
+    listingId: string;
+    targetUserId: string;
+    trialDays?: number;
+    auth: RequestAuth | null;
+  }) {
+    if (!hasAdminAccess(args.auth)) return 'forbidden' as const;
+
+    const [actor, listing, targetUser] = await Promise.all([
+      upsertUserFromAuth(this.prisma, args.auth),
+      this.prisma.listing.findUnique({
+        where: { id: args.listingId },
+        select: {
+          id: true,
+          ownerId: true,
+        },
+      }),
+      resolveUserByIdentifier(this.prisma, args.targetUserId),
+    ]);
+
+    if (!listing) return null;
+    if (!targetUser) return 'target_not_found' as const;
+
+    const normalizedTrialDays = this.normalizeTrialDays(args.trialDays);
+    const transferredAt = new Date();
+    const transferredAtISO = transferredAt.toISOString();
+    const hostProfile = buildHostProfileFromUser(targetUser);
+
+    let trialApplied = false;
+    let trialStartsAtISO: string | null = null;
+    let trialEndsAtISO: string | null = null;
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.listing.update({
+        where: { id: listing.id },
+        data: {
+          owner: {
+            connect: { id: targetUser.id },
+          },
+          host: toPrismaJson(hostProfile),
+          updatedAt: transferredAt,
+        },
+      });
+
+      await tx.conversation.updateMany({
+        where: {
+          listingId: listing.id,
+        },
+        data: {
+          hostUserId: targetUser.id,
+        },
+      });
+
+      await tx.message.updateMany({
+        where: {
+          listingId: listing.id,
+          authorRole: 'host',
+        },
+        data: {
+          authorUserId: targetUser.id,
+        },
+      });
+
+      if (normalizedTrialDays > 0) {
+        const transferTrial = this.buildTransferredListingTrialBilling(
+          targetUser,
+          listing.id,
+          actor?.id ?? null,
+          normalizedTrialDays,
+        );
+
+        trialApplied = transferTrial.applied;
+        trialStartsAtISO = transferTrial.startsAtISO;
+        trialEndsAtISO = transferTrial.endsAtISO;
+        if (trialApplied) {
+          await tx.user.update({
+            where: { id: targetUser.id },
+            data: {
+              stripeConnectProfile: toPrismaJson(transferTrial.stripeConnectProfile),
+            },
+          });
+        }
+      }
+    });
+
+    return {
+      listingId: listing.id,
+      previousOwnerId: listing.ownerId,
+      ownerId: targetUser.id,
+      transferredAtISO,
+      trial: {
+        applied: trialApplied,
+        days: normalizedTrialDays,
+        startsAtISO: trialStartsAtISO,
+        endsAtISO: trialEndsAtISO,
+      },
+    } satisfies TransferListingOwnershipResult;
   }
 
   listUserCards(listings: Listing[]) {

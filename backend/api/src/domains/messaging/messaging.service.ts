@@ -1,6 +1,7 @@
 import type { PrismaClient } from '@prisma/client';
 
 import { buildMessageId } from '../../lib/id.js';
+import { hasAdminAccess } from '../../lib/authRole.js';
 import type { RequestAuth } from '../../types/auth.js';
 import { upsertUserFromAuth } from '../users/users.repository.js';
 
@@ -30,6 +31,7 @@ export class MessagingService {
 
   async listConversations(query: ListConversationsInput, auth: RequestAuth | null) {
     const actor = await upsertUserFromAuth(this.prisma, auth);
+    const allowAdmin = hasAdminAccess(auth);
 
     const where: Record<string, unknown> = {};
 
@@ -38,7 +40,7 @@ export class MessagingService {
 
     if (query.guestTempId) {
       where.guestTempId = query.guestTempId;
-    } else if (actor) {
+    } else if (actor && !allowAdmin) {
       where.OR = [
         { hostUserId: actor.id },
         {
@@ -100,6 +102,7 @@ export class MessagingService {
 
   async listMessages(conversationId: string, auth: RequestAuth | null, guestTempId?: string) {
     const actor = await upsertUserFromAuth(this.prisma, auth);
+    const allowAdmin = hasAdminAccess(auth);
     const conversation = await this.prisma.conversation.findUnique({
       where: { id: conversationId },
     });
@@ -108,8 +111,8 @@ export class MessagingService {
 
     const authorizedAsGuest = Boolean(guestTempId && conversation.guestTempId === guestTempId);
     const authorizedAsHost = Boolean(
-      actor &&
-      (conversation.hostUserId === actor.id || conversation.guestUserId === actor.id),
+      allowAdmin
+      || (actor && (conversation.hostUserId === actor.id || conversation.guestUserId === actor.id)),
     );
 
     if (!authorizedAsGuest && !authorizedAsHost) {
@@ -124,6 +127,7 @@ export class MessagingService {
 
   async sendMessage(conversationId: string, input: SendMessageInput, auth: RequestAuth | null) {
     const actor = await upsertUserFromAuth(this.prisma, auth);
+    const allowAdmin = hasAdminAccess(auth);
 
     const conversation = await this.prisma.conversation.findUnique({
       where: { id: conversationId },
@@ -131,7 +135,10 @@ export class MessagingService {
 
     if (!conversation) return null;
 
-    const isHostActor = Boolean(actor && (conversation.hostUserId === actor.id || conversation.guestUserId === actor.id));
+    const isHostActor = Boolean(
+      allowAdmin
+      || (actor && (conversation.hostUserId === actor.id || conversation.guestUserId === actor.id)),
+    );
     const isGuestActor = Boolean(input.guestTempId && conversation.guestTempId === input.guestTempId);
 
     if (!isHostActor && !isGuestActor) {
@@ -165,6 +172,7 @@ export class MessagingService {
 
   async markMessageRead(messageId: string, auth: RequestAuth | null, guestTempId?: string) {
     const actor = await upsertUserFromAuth(this.prisma, auth);
+    const allowAdmin = hasAdminAccess(auth);
 
     const message = await this.prisma.message.findUnique({
       where: { id: messageId },
@@ -175,7 +183,7 @@ export class MessagingService {
 
     if (!message) return null;
 
-    const isHostActor = Boolean(actor && message.conversation.hostUserId === actor.id);
+    const isHostActor = Boolean(allowAdmin || (actor && message.conversation.hostUserId === actor.id));
     const isGuestActor = Boolean(guestTempId && message.conversation.guestTempId === guestTempId);
 
     if (!isHostActor && !isGuestActor) {

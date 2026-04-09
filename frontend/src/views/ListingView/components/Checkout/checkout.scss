@@ -26,7 +26,7 @@ html:has(#checkout) {
     flex-shrink: 0;
   }
 
-  @include min-width(lg) {
+  .listing-view:not(.is-mobile-layout) & {
     border-radius: borders.$rounded-lg;
   }
 
@@ -745,7 +745,7 @@ html:has(#checkout) {
     }
   }
 
-  @include min-width(md) {
+  .listing-view:not(.is-mobile-layout) & {
     gap: var(--layout-gap-xl);
 
     .checkout-header>h2 {
@@ -753,20 +753,14 @@ html:has(#checkout) {
     }
   }
 
-  @include min-width(lg) {
+  .listing-view.is-desktop-layout & {
     gap: var(--layout-gap);
   }
-}
 
-@media (max-width: 1023px) {
-  .listing-checkout#checkout {
+  .listing-view.is-mobile-layout & {
     height: auto;
     overflow: visible;
-  }
-}
 
-@media (max-width: 640px) {
-  .listing-checkout#checkout {
     .traveler-identity-grid {
       grid-template-columns: 1fr;
     }

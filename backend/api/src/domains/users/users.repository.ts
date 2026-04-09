@@ -9,6 +9,17 @@ function readString(payload: Record<string, unknown>, key: string): string | nul
   return trimmed || null;
 }
 
+function readOptionalString(value: string | null | undefined): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  return trimmed || null;
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  return value as Record<string, unknown>;
+}
+
 function toHostProfile(user: Partial<User>) {
   const fallbackName = [user.firstName, user.lastName].filter(Boolean).join(' ').trim() || 'Hote';
   const displayName = user.displayName ?? fallbackName;
@@ -61,6 +72,15 @@ export async function upsertUserFromAuth(prisma: PrismaClient, auth: RequestAuth
   const targetUser = byClerkUserId ?? byExternalUserId;
 
   if (targetUser) {
+    const existingHostProfile = asRecord(targetUser.hostProfile);
+    const mergedHostProfile = {
+      ...hostProfile,
+      ...existingHostProfile,
+    };
+
+    const persistedDisplayName = readOptionalString(targetUser.displayName);
+    const persistedAvatarUrl = readOptionalString(targetUser.avatarUrl);
+
     return prisma.user.update({
       where: {
         id: targetUser.id,
@@ -68,12 +88,12 @@ export async function upsertUserFromAuth(prisma: PrismaClient, auth: RequestAuth
       data: {
         ...(byClerkUserId?.id === targetUser.id || !byClerkUserId ? { clerkUserId: auth.userId } : {}),
         ...(byExternalUserId?.id === targetUser.id || !byExternalUserId ? { externalUserId: auth.userId } : {}),
-        email,
-        firstName,
-        lastName,
-        displayName,
-        avatarUrl,
-        hostProfile,
+        email: email ?? targetUser.email,
+        firstName: firstName ?? targetUser.firstName,
+        lastName: lastName ?? targetUser.lastName,
+        displayName: persistedDisplayName ?? displayName,
+        avatarUrl: persistedAvatarUrl ?? avatarUrl,
+        hostProfile: mergedHostProfile,
       },
     });
   }

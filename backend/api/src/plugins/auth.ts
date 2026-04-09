@@ -3,7 +3,18 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import { createRemoteJWKSet, jwtVerify } from 'jose';
 
 import { env } from '../config/env.js';
+import { readRoleFromAuthPayload } from '../lib/authRole.js';
 import type { RequestAuth } from '../types/auth.js';
+
+const CLERK_API_BASE_URL = 'https://api.clerk.com/v1';
+const CLERK_ROLE_CACHE_TTL_MS = 5 * 60 * 1000;
+
+type ClerkRoleCacheEntry = {
+  role: string | null;
+  expiresAt: number;
+};
+
+const clerkRoleCache = new Map<string, ClerkRoleCacheEntry>();
 
 function resolveBearerToken(request: FastifyRequest): string | null {
   const header = request.headers.authorization;
@@ -34,16 +45,85 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
   }
 }
 
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  return value as Record<string, unknown>;
+}
+
+function mergeRoleIntoPayload(payload: Record<string, unknown>, role: string | null): Record<string, unknown> {
+  if (!role) return payload;
+
+  const privateMetadata = asRecord(payload.private_metadata ?? payload.privateMetadata) ?? {};
+  const nextPrivateMetadata = {
+    ...privateMetadata,
+    role,
+  };
+
+  return {
+    ...payload,
+    private_metadata: nextPrivateMetadata,
+    privateMetadata: nextPrivateMetadata,
+  };
+}
+
+async function fetchClerkRole(userId: string): Promise<string | null> {
+  if (!env.CLERK_SECRET_KEY) return null;
+
+  try {
+    const response = await fetch(`${CLERK_API_BASE_URL}/users/${encodeURIComponent(userId)}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${env.CLERK_SECRET_KEY}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) return null;
+    const data = await response.json();
+    return readRoleFromAuthPayload(data);
+  } catch {
+    return null;
+  }
+}
+
+async function enrichPayloadWithClerkRole(payload: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const userId = typeof payload.sub === 'string' ? payload.sub.trim() : '';
+  if (!userId) return payload;
+
+  const roleFromToken = readRoleFromAuthPayload(payload);
+  if (roleFromToken) {
+    clerkRoleCache.set(userId, {
+      role: roleFromToken,
+      expiresAt: Date.now() + CLERK_ROLE_CACHE_TTL_MS,
+    });
+    return mergeRoleIntoPayload(payload, roleFromToken);
+  }
+
+  const cached = clerkRoleCache.get(userId);
+  if (cached && cached.expiresAt > Date.now()) {
+    return mergeRoleIntoPayload(payload, cached.role);
+  }
+
+  const fetchedRole = await fetchClerkRole(userId);
+  clerkRoleCache.set(userId, {
+    role: fetchedRole,
+    expiresAt: Date.now() + CLERK_ROLE_CACHE_TTL_MS,
+  });
+
+  return mergeRoleIntoPayload(payload, fetchedRole);
+}
+
 function buildAuthFromPayload(payload: Record<string, unknown>): RequestAuth | null {
   const userId = typeof payload.sub === 'string' ? payload.sub.trim() : '';
   if (!userId) return null;
   return { userId, payload };
 }
 
-function readDevAuthFallback(token: string): RequestAuth | null {
+async function readDevAuthFallback(token: string): Promise<RequestAuth | null> {
   const payload = decodeJwtPayload(token);
   if (!payload) return null;
-  return buildAuthFromPayload(payload);
+  const enriched = await enrichPayloadWithClerkRole(payload);
+  return buildAuthFromPayload(enriched);
 }
 
 let jwksResolver: ReturnType<typeof createRemoteJWKSet> | null = null;
@@ -75,7 +155,8 @@ async function verifyToken(request: FastifyRequest): Promise<RequestAuth | null>
       audience: env.CLERK_AUDIENCE.length ? env.CLERK_AUDIENCE : undefined,
     });
 
-    const auth = buildAuthFromPayload(payload as Record<string, unknown>);
+    const enrichedPayload = await enrichPayloadWithClerkRole(payload as Record<string, unknown>);
+    const auth = buildAuthFromPayload(enrichedPayload);
     if (!auth) {
       throw new Error('Invalid Clerk JWT: missing subject claim.');
     }
@@ -83,7 +164,7 @@ async function verifyToken(request: FastifyRequest): Promise<RequestAuth | null>
     return auth;
   } catch (error) {
     if (env.NODE_ENV === 'development') {
-      const fallbackAuth = readDevAuthFallback(token);
+      const fallbackAuth = await readDevAuthFallback(token);
       if (fallbackAuth) {
         request.log.warn({ err: error }, 'JWT verification failed, using development fallback auth.');
         return fallbackAuth;

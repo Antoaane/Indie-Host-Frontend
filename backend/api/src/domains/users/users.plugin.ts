@@ -1,15 +1,16 @@
 import fp from 'fastify-plugin';
 
 import { env } from '../../config/env.js';
+import { hasAdminAccess, readRoleFromAuthPayload } from '../../lib/authRole.js';
 import { asObject } from '../../lib/json.js';
 import type { RequestAuth } from '../../types/auth.js';
-import { userIdParamsSchema, updateMeSchema } from './users.schemas.js';
+import { adminUserSearchQuerySchema, userIdParamsSchema, updateMeSchema } from './users.schemas.js';
 import { UsersService } from './users.service.js';
 
-function decodeBearerSubject(authorizationHeader: string | string[] | undefined): string | null {
+function decodeBearerPayload(authorizationHeader: string | string[] | undefined): Record<string, unknown> | null {
   if (!authorizationHeader) return null;
   const header = Array.isArray(authorizationHeader) ? authorizationHeader[0] : authorizationHeader;
-  if (!header) return null;
+  if (typeof header !== 'string' || !header.trim()) return null;
 
   const [scheme, token] = header.split(' ');
   if (scheme?.toLowerCase() !== 'bearer' || !token?.trim()) return null;
@@ -23,9 +24,9 @@ function decodeBearerSubject(authorizationHeader: string | string[] | undefined)
       .replace(/_/g, '/')
       .padEnd(Math.ceil(encodedPayload.length / 4) * 4, '=');
 
-    const payload = JSON.parse(Buffer.from(normalized, 'base64').toString('utf8')) as { sub?: unknown };
-    const subject = typeof payload.sub === 'string' ? payload.sub.trim() : '';
-    return subject || null;
+    const payload = JSON.parse(Buffer.from(normalized, 'base64').toString('utf8'));
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return null;
+    return payload as Record<string, unknown>;
   } catch {
     return null;
   }
@@ -35,12 +36,13 @@ function resolveAuth(requestAuth: RequestAuth | null, authorizationHeader: strin
   if (requestAuth) return requestAuth;
   if (env.NODE_ENV !== 'development') return null;
 
-  const subject = decodeBearerSubject(authorizationHeader);
+  const payload = decodeBearerPayload(authorizationHeader);
+  const subject = typeof payload?.sub === 'string' ? payload.sub.trim() : '';
   if (!subject) return null;
 
   return {
     userId: subject,
-    payload: { sub: subject },
+    payload: payload as RequestAuth['payload'],
   };
 }
 
@@ -107,7 +109,30 @@ export const usersPlugin = fp(async (fastify) => {
       return;
     }
 
-    reply.send(user);
+    reply.send({
+      ...user,
+      isAdmin: hasAdminAccess(auth),
+      authRole: readRoleFromAuthPayload(auth.payload),
+    });
+  });
+
+  fastify.get('/users/admin/search', {
+    preHandler: fastify.authenticateOptional,
+  }, async (request, reply) => {
+    const auth = resolveAuth(request.auth, request.headers.authorization);
+    if (!auth) {
+      reply.code(401).send({ message: 'Authentication required.' });
+      return;
+    }
+
+    const query = adminUserSearchQuerySchema.parse(request.query);
+    const users = await service.searchUsersForAdmin(query, auth);
+    if (users === 'forbidden') {
+      reply.code(403).send({ message: 'Admin access required.' });
+      return;
+    }
+
+    reply.send({ users });
   });
 
   fastify.patch('/users/me', {

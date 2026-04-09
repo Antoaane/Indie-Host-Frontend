@@ -6,6 +6,7 @@
 @use '@/styles/variables/effects' as effects;
 @use '@/styles/components/buttons' as buttons;
 @use '@/styles/components/inputs' as inputs;
+@use '@/styles/components/overlays' as overlays;
 
 .editor-listings {
   --editor-listing-card-min-width: 10rem;
@@ -650,6 +651,12 @@
                 display: flex;
                 gap: var(--layout-gap-sm);
 
+                > .transfer {
+                  button {
+                    @include buttons.low-btn($color: $quaternary, $hover: $tertiary, $text-color: $secondary, $text-hover-color: $secondary);
+                  }
+                }
+
                 > .preview {
                   button {
                     @include buttons.low-btn($color: $secondary, $hover: $tertiary, $text-color: $accent, $text-hover-color: $secondary);
@@ -776,6 +783,124 @@
       text-align: center;
       font-weight: 400;
       color: rgba($secondary-text, 0.65);
+    }
+  }
+}
+
+.editor-transfer-overlay {
+  > .editor-transfer-panel {
+    @extend %overlay-panel;
+    width: min(52rem, 94vw);
+    max-height: min(86vh, 52rem);
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-sm);
+
+    > .header {
+      > h3 {
+        margin: 0;
+        @include h3-title;
+      }
+
+      > p {
+        margin: 0.15rem 0 0;
+        color: rgba($secondary-text, 0.68);
+        @include base-text($thin: true);
+      }
+    }
+
+    > .body {
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-sm);
+      min-height: 0;
+
+      > .field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+
+        > span {
+          @include little-text($thin: false);
+          color: rgba($secondary-text, 0.8);
+        }
+
+        > small {
+          color: rgba($secondary-text, 0.58);
+          @include little-text($thin: true);
+        }
+
+        @include inputs.field($theme: accent, $compact: true);
+      }
+
+      > .users-list {
+        border: 1px solid rgba($secondary, 0.12);
+        border-radius: borders.$rounded-md;
+        background: rgba($accent-surface-1, 0.72);
+        min-height: 14rem;
+        max-height: 19rem;
+        overflow: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+        padding: 0.4rem;
+
+        > .state {
+          margin: 0;
+          padding: 0.35rem;
+          color: rgba($secondary-text, 0.7);
+          @include little-text($thin: false);
+
+          &.is-error {
+            color: rgba($bad, 0.92);
+          }
+        }
+
+        > .user-item {
+          width: 100%;
+          border: 0;
+          border-radius: borders.$rounded-sm;
+          padding: 0.48rem 0.52rem;
+          background: transparent;
+          color: rgba($secondary-text, 0.9);
+          text-align: left;
+          cursor: pointer;
+          display: flex;
+          flex-direction: column;
+          gap: 0.12rem;
+
+          > .name {
+            @include base-text($thin: false);
+          }
+
+          > .meta {
+            color: rgba($secondary-text, 0.58);
+            @include little-text($thin: true);
+          }
+
+          &:hover {
+            background: rgba($background, 0.08);
+          }
+
+          &.is-selected {
+            background: rgba($background, 0.16);
+          }
+        }
+      }
+    }
+
+    > .footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: var(--layout-gap-sm);
+
+      > button:first-child {
+        @include buttons.primary($theme: dark);
+      }
+
+      > button:last-child {
+        @include buttons.primary($theme: white);
+      }
     }
   }
 }

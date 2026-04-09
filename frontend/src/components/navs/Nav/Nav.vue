@@ -9,6 +9,7 @@ import { CalendarClock, LayoutGrid, MessageSquareMore, MoreHorizontal, Plus } fr
 
 import HostReservationOverlay from '@/components/navs/HostReservationOverlay.vue'
 import BackOfficeDockNav from '@/components/navs/Nav/BackOfficeDockNav.vue'
+import HostProfileDialog from '@/components/navs/Nav/HostProfileDialog.vue'
 import NavHostVariant from '@/components/navs/Nav/NavHostVariant.vue'
 import NavLandingVariant from '@/components/navs/Nav/NavLandingVariant.vue'
 import NavPublicVariant from '@/components/navs/Nav/NavPublicVariant.vue'
@@ -35,6 +36,7 @@ const stripeConnectAccountId = ref<string | null>(null)
 const isOpeningStripeConnectDashboard = ref(false)
 const stripeConnectAvailabilityRequestId = ref(0)
 const dockOptionsOpen = ref(false)
+const myProfileDialogOpen = ref(false)
 
 let lastScrollY = 0
 const SCROLL_THRESHOLD = 80
@@ -208,6 +210,14 @@ function handleOpenMyAccount() {
   clerk.value?.openUserProfile()
 }
 
+function handleOpenMyProfile() {
+  myProfileDialogOpen.value = true
+}
+
+function closeMyProfileDialog() {
+  myProfileDialogOpen.value = false
+}
+
 async function handleSignOut() {
   try {
     await signOut.value({ redirectUrl: '/' })
@@ -240,6 +250,7 @@ watch(
   () => {
     closeReservation()
     closeDockOptions()
+    closeMyProfileDialog()
     closeMobileMenu()
     isNavHiddenByScroll.value = false
     lastScrollY = window.scrollY
@@ -384,8 +395,13 @@ const backOfficeDockOptionsItems = computed<BackOfficeDockOptionsItem[]>(() => [
   },
   {
     id: 'dock-options-my-account',
-    label: 'Mon compte',
+    label: 'Mes informations',
     action: handleOpenMyAccount,
+  },
+  {
+    id: 'dock-options-my-profile',
+    label: 'Mon profil',
+    action: handleOpenMyProfile,
   },
   {
     id: 'dock-options-sign-out',
@@ -526,6 +542,11 @@ onBeforeUnmount(() => {
       :anchor="reservationAnchor"
       @close="closeReservation"
       @submit="closeReservation"
+    />
+
+    <HostProfileDialog
+      :open="myProfileDialogOpen"
+      @close="closeMyProfileDialog"
     />
   </header>
 </template>

@@ -166,7 +166,7 @@ html:has(#core) {
 
   padding: var(--layout-gap);
 
-  @include min-width(lg) {
+  .listing-view:not(.is-mobile-layout) & {
     overflow: hidden;
     overflow-y: scroll;
     border-radius: borders.$rounded-lg;

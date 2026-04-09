@@ -31,6 +31,7 @@ const orderedImages = computed(() => orderByIndex(props.medias.images))
 
 const coverImage = computed(() => orderedImages.value.find((img) => (img.position ?? 0) === 0) ?? orderedImages.value[0])
 const mosaicImages = computed(() => orderedImages.value.filter((img) => img !== coverImage.value))
+const hasMosaicImages = computed(() => mosaicImages.value.length > 0)
 
 const lightboxItems = computed<Item[]>(() => {
   return orderedImages.value
@@ -84,7 +85,7 @@ const swiperParams = swiperBaseParams as unknown as Record<string, unknown>
 <template>
   <section
     v-if="isLg"
-    class="listing-gallery"
+    :class="{ 'listing-gallery': true, 'has-no-mosaic': !hasMosaicImages }"
   >
     <div
       v-if="coverImage"
@@ -101,6 +102,7 @@ const swiperParams = swiperBaseParams as unknown as Record<string, unknown>
       />
     </div>
     <Mosaic
+      v-if="hasMosaicImages"
       :items="mosaicImages"
       :lightbox-items="lightboxItems"
       :intervalMs="10000"

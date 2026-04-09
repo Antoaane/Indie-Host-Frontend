@@ -155,6 +155,25 @@ export function useEditorController(options: EditorControllerOptions) {
     }
   }
 
+  async function handleListingTransferred(payload: { listingId: string }) {
+    const listingId = payload.listingId.trim()
+    if (!listingId) return
+
+    await patchQueue.drainPatchQueue()
+    listingState.removeListingState(listingId)
+
+    if (selectedListingId.value === listingId) {
+      selectedListingId.value = null
+      draftLifecycle.draft.value = null
+      stage.value = 'listings'
+
+      const nextListingId = listingState.listings.value[0]?.listingId ?? null
+      if (nextListingId) {
+        await handleSelectListing(nextListingId, { force: true })
+      }
+    }
+  }
+
   async function initializeEditorState() {
     console.log('[Editor] initializeEditorState')
     await Promise.all([
@@ -421,6 +440,7 @@ export function useEditorController(options: EditorControllerOptions) {
     cancelSelectedDraftChanges,
     draft: draftLifecycle.draft,
     draftStatus: draftLifecycle.draftStatus,
+    handleListingTransferred,
     handleSelectListing,
     hasAnyPendingChanges,
     hasMultiplePendingListings,

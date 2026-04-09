@@ -46,8 +46,14 @@ export const createListingSchema = z.object({
   host: nullableRawJsonSchema.optional(),
 });
 
+export const transferListingOwnershipSchema = z.object({
+  targetUserId: z.string().trim().min(1),
+  trialDays: z.coerce.number().int().min(0).max(365).optional().default(0),
+});
+
 export const patchListingResourceSchema = rawJsonSchema;
 
 export type CreateListingInput = z.infer<typeof createListingSchema>;
 export type ListingDomainAvailabilityInput = z.infer<typeof listingDomainAvailabilitySchema>;
 export type UpsertListingDomainInput = z.infer<typeof upsertListingDomainSchema>;
+export type TransferListingOwnershipInput = z.infer<typeof transferListingOwnershipSchema>;

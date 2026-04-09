@@ -15,10 +15,6 @@
   isolation: isolate;
   background-color: $secondary;
 
-  @include min-width(lg) {
-    background-color: $background;
-  }
-
   &::before {
     content: '';
     position: absolute;
@@ -27,17 +23,6 @@
     pointer-events: none;
 
     background-color: $secondary;
-
-    @include min-width(lg) {
-      background-image: var(--listing-view-cover-image);
-      background-position: center;
-      background-repeat: no-repeat;
-      background-size: cover;
-
-      filter: blur(100px) saturate(1.05);
-      transform: scale(1.06);
-      opacity: 1;
-    }
   }
 
   &::after {
@@ -99,16 +84,30 @@
   }
 
   @include min-width(lg) {
-    flex-direction: row;
-    gap: var(--layout-gap-md);
-    padding-left: var(--layout-gap);
-    padding-right: var(--layout-gap);
-    padding-top: var(--layout-gap);
-    padding-bottom: var(--layout-gap);
+    &:not(.is-mobile-layout) {
+      background-color: $background;
+      flex-direction: row;
+      gap: var(--layout-gap-md);
+      padding-left: var(--layout-gap);
+      padding-right: var(--layout-gap);
+      padding-top: var(--layout-gap);
+      padding-bottom: var(--layout-gap);
 
-    >.owner-edit-overlay {
-      top: var(--layout-gap);
-      right: var(--layout-gap);
+      &::before {
+        background-image: var(--listing-view-cover-image);
+        background-position: center;
+        background-repeat: no-repeat;
+        background-size: cover;
+
+        filter: blur(100px) saturate(1.05);
+        transform: scale(1.06);
+        opacity: 1;
+      }
+
+      >.owner-edit-overlay {
+        top: var(--layout-gap);
+        right: var(--layout-gap);
+      }
     }
   }
 
@@ -248,13 +247,17 @@
     width: 90vw;
     height: auto;
     min-height: 0;
-    display: flex;
-    flex-direction: column;
     position: absolute;
     border-radius: borders.$rounded-xxl;
     overflow: hidden;
 
-    @include min-width(lg) {
+    &.is-mobile-layout {
+      display: flex;
+      flex-direction: column;
+    }
+
+    &.is-desktop-layout {
+      display: flex;
       flex-direction: row;
       gap: var(--layout-gap-md);
       padding: var(--layout-gap);
@@ -265,13 +268,17 @@
     width: 90vw;
     height: auto;
     min-height: 0;
-    display: flex;
-    flex-direction: column;
     position: absolute;
     border-radius: borders.$rounded-xxl;
     overflow: hidden;
 
-    @include min-width(lg) {
+    &.is-mobile-layout {
+      display: flex;
+      flex-direction: column;
+    }
+
+    &.is-desktop-layout {
+      display: flex;
       flex-direction: row;
       gap: var(--layout-gap-md);
       padding: var(--layout-gap);
@@ -334,10 +341,6 @@
       padding-left: var(--layout-gap-sm);
       padding-right: var(--layout-gap-sm);
 
-      @include min-width(lg) {
-        position: static;
-      }
-
       >.panel {
         background-color: $accent;
         border-radius: borders.$rounded-xl;
@@ -372,11 +375,13 @@
   &.editor,
   &.create-listing {
     @include min-width(lg) {
+      &:not(.is-mobile-layout) {
       >.gallery,
       >.core,
       >.stay {
         border-radius: borders.$rounded-xl;
         overflow: hidden;
+      }
       }
     }
   }
@@ -394,10 +399,6 @@
     padding-right: var(--layout-gap);
 
     background-color: $secondary;
-
-    @include min-width(lg) {
-      background-color: $background;
-    }
 
     >.shape-container {
       width: borders.$rounded-xl;

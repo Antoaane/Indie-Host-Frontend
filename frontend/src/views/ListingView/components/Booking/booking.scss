@@ -280,8 +280,10 @@
         line-height: 1.125rem;
 
         @include min-width(md) {
-          font-size: 0.75rem;
-          line-height: 1.125rem;
+          .listing-view:not(.is-mobile-layout) & {
+            font-size: 0.75rem;
+            line-height: 1.125rem;
+          }
         }
 
         * {
@@ -298,8 +300,10 @@
   }
 
   @include min-width(md) {
-    >.card {
-      padding: var(--layout-gap);
+    .listing-view:not(.is-mobile-layout) & {
+      >.card {
+        padding: var(--layout-gap);
+      }
     }
   }
 }

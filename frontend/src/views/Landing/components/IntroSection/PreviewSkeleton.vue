@@ -41,10 +41,14 @@ import { vp } from '@/utils/viewport'
 
 <style lang="scss" scoped>
 @use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
 @use '@/views/ListingView/listing-view.scss';
 
 .preview-skeleton {
   --listing-view-cover-image: none;
+
+  background: rgba($accent, 0.35) !important;
+  backdrop-filter: blur(20px);
 
   &::before {
     display: none;
@@ -54,8 +58,10 @@ import { vp } from '@/utils/viewport'
     width: 100%;
     height: 100%;
     min-height: 4rem;
-    background: $translucent-surface-1;
-    border-radius: 4px;
+    border-radius: borders.$rounded-md;
+
+    background: rgba($accent, 0.35) !important;
+    backdrop-filter: blur(40px);
   }
 
   .gallery-placeholder {
@@ -70,13 +76,11 @@ import { vp } from '@/utils/viewport'
   }
 
   .booking-placeholder {
-    min-height: 6rem;
-    flex: 0 0 auto;
+    flex: 0 1 33%;
   }
 
   .comments-placeholder {
-    flex: 1;
-    min-height: 4rem;
+    flex: 1 0 4rem;
   }
 }
 </style>

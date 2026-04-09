@@ -28,7 +28,7 @@
     background-color: rgba($background, 0.5);
   }
 
-  @include min-width(lg) {
+  .listing-view:not(.is-mobile-layout) & {
     height: auto;
     padding-right: 0;
     margin-bottom: var(--layout-gap-xl);
@@ -83,7 +83,7 @@
       align-items: end;
       gap: var(--layout-gap-sm);
 
-      @include min-width(lg) {
+      .listing-view:not(.is-mobile-layout) & {
         margin-bottom: 0;
       }
 
@@ -116,7 +116,7 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
 
-    @include min-width(lg) {
+    .listing-view:not(.is-mobile-layout) & {
       min-height: none;
       display: inline;
       text-overflow: unset;

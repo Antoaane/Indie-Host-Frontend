@@ -11,7 +11,6 @@ import EditorPreview from '@/views/Editor/components/EditorPreview/EditorPreview
 
 import { useEditorController } from '@/views/Editor/composables/useEditorController'
 import type { EditorMode, EditorSource } from '@/views/Editor/types/editor'
-import type { ListingViewportMode } from '@/views/ListingView/composables/useListingViewport'
 
 const props = defineProps<{
   mode: EditorMode
@@ -27,6 +26,7 @@ const {
   cancelSelectedDraftChanges,
   draft,
   draftStatus,
+  handleListingTransferred,
   handleSelectListing,
   hasAnyPendingChanges,
   hasMultiplePendingListings,
@@ -51,7 +51,6 @@ const {
 const isMobileSidebarOpen = ref(false)
 
 const isPreviewAvailable = computed(() => vp.lg.value)
-const previewDisplayMode = computed<ListingViewportMode>(() => (vp.xxl.value ? 'xxl' : 'lg'))
 const isMobileViewport = computed(() => !vp.lg.value)
 const isMobileEditingStep = computed(
   () => isMobileViewport.value && isMobileSidebarOpen.value && Boolean(selectedListingId.value && draft.value),
@@ -152,6 +151,7 @@ watch(selectedListingId, (listingId) => {
               @preview="showPreview"
               @status-change="applyListingStatusPatch"
               @configure-connect="handleConfigureStripeConnect"
+              @listing-transferred="handleListingTransferred"
             />
           </Transition>
 
@@ -162,7 +162,6 @@ watch(selectedListingId, (listingId) => {
               :listingId="selectedListingId"
               :isLoading="draftStatus.isLoading"
               :isShowed="stage === 'preview' && isPreviewAvailable"
-              :displayMode="isPreviewAvailable ? previewDisplayMode : null"
               @back="showListings"
             />
           </Transition>
