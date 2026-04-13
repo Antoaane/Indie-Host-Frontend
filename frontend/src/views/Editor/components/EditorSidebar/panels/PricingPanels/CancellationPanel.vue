@@ -62,26 +62,20 @@ const POLICY_PRESETS: Record<
 > = {
   flexible: {
     severity: 'low',
-    days: 7,
-    feePercent: 30,
+    days: 3,
+    feePercent: 10,
   },
   moderate: {
     severity: 'medium',
-    days: 14,
-    feePercent: 50,
+    days: 7,
+    feePercent: 20,
   },
   strict: {
     severity: 'high',
-    days: 30,
-    feePercent: 100,
+    days: 14,
+    feePercent: 35,
   },
 }
-
-const presetPolicies: CancellationPresetPolicy[] = [
-  'flexible',
-  'moderate',
-  'strict',
-]
 
 function updatePricing(next: Partial<PricingSettings>) {
   emit('patch', {
@@ -126,30 +120,22 @@ function clampPercent(value: number) {
   return clampInteger(value, pricingLimits.discountMin, pricingLimits.discountMax, pricingLimits.discountMin)
 }
 
+function resolveLateFeePercent(feePercent: number) {
+  return clampPercent(feePercent + 20)
+}
+
 function getPolicyRules(policyKey: CancellationPresetPolicy, values?: Partial<CancellationCustom>) {
   const defaults = POLICY_PRESETS[policyKey]
   const days = Number.isFinite(Number(values?.days)) ? Math.max(pricingLimits.cancellationDaysMin, Number(values?.days)) : defaults.days
   const feePercent = Number.isFinite(Number(values?.feePercent)) ? clampPercent(Number(values?.feePercent)) : defaults.feePercent
+  const lateFeePercent = resolveLateFeePercent(feePercent)
 
   return [
     panelContent.rules.fullRefund.replace('{days}', String(days)),
     panelContent.rules.partialRefund.replace('{days}', String(days)).replace('{feePercent}', String(feePercent)),
-    panelContent.rules.lateCancellation,
+    panelContent.rules.lateCancellation.replace('{lateFeePercent}', String(lateFeePercent)),
   ]
 }
-
-const displayedPolicies = computed(() =>
-  presetPolicies.map((policyKey) => {
-    const preset = POLICY_PRESETS[policyKey]
-    return {
-      key: policyKey,
-      label: panelContent.policies[policyKey],
-      severityLabel: panelContent.severities[preset.severity],
-      isSelected: policy.value === policyKey,
-      rules: getPolicyRules(policyKey),
-    }
-  }),
-)
 
 const customRules = computed(() =>
   getPolicyRules('moderate', {
@@ -157,6 +143,32 @@ const customRules = computed(() =>
     feePercent: customFee.value ?? pricingLimits.discountMin,
   }),
 )
+
+const selectedPolicyDetails = computed<{
+  key: CancellationPolicy
+  label: string
+  severityLabel: string | null
+  rules: string[]
+}>(() => {
+  if (policy.value === 'custom') {
+    return {
+      key: 'custom',
+      label: panelContent.policies.custom,
+      severityLabel: null,
+      rules: customRules.value,
+    }
+  }
+
+  const selectedPolicy = policy.value as CancellationPresetPolicy
+  const preset = POLICY_PRESETS[selectedPolicy]
+
+  return {
+    key: selectedPolicy,
+    label: panelContent.policies[selectedPolicy],
+    severityLabel: panelContent.severities[preset.severity],
+    rules: getPolicyRules(selectedPolicy),
+  }
+})
 
 function onPolicyChange(nextPolicy: CancellationPolicy) {
   if (nextPolicy === 'custom') {
@@ -211,26 +223,20 @@ function parseOptionalNumber(raw: string): number | null {
         </div>
         <div class="severity-rules">
           <article
-            v-for="item in displayedPolicies"
-            :key="item.key"
+            :key="selectedPolicyDetails.key"
             :class="{
               'rule-card': true,
-              'is-active': item.isSelected,
+              'is-active': true,
             }"
-            role="button"
-            tabindex="0"
-            @click="onPolicyChange(item.key)"
-            @keydown.enter.prevent="onPolicyChange(item.key)"
-            @keydown.space.prevent="onPolicyChange(item.key)"
           >
             <div class="rule-head">
-              <p>{{ item.label }}</p>
-              <span>{{ panelContent.severityLabel }}: {{ item.severityLabel }}</span>
+              <p>{{ selectedPolicyDetails.label }}</p>
+              <span v-if="selectedPolicyDetails.severityLabel">{{ panelContent.severityLabel }}: {{ selectedPolicyDetails.severityLabel }}</span>
             </div>
             <ul>
               <li
-                v-for="rule in item.rules"
-                :key="`${item.key}-${rule}`"
+                v-for="rule in selectedPolicyDetails.rules"
+                :key="`${selectedPolicyDetails.key}-${rule}`"
               >
                 {{ rule }}
               </li>
@@ -294,6 +300,7 @@ function parseOptionalNumber(raw: string): number | null {
 /* File: src/views/Editor/components/EditorSidebar/panels/PricingPanels/cancellation-panel.scss */
 
 @use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
 @use '@/styles/components/inputs' as inputs;
 @use '@/views/Editor/components/EditorSidebar/panels/panel.scss' as *;
 
@@ -333,18 +340,12 @@ function parseOptionalNumber(raw: string): number | null {
       display: grid;
       gap: var(--layout-gap-xs);
       padding: var(--layout-gap-xs);
-      border-radius: 12px;
+      border-radius: borders.$rounded-md;
       border: 1px solid rgba($secondary, 0.12);
       background: rgba($secondary, 0.015);
-      cursor: pointer;
       transition:
         border-color 0.2s ease,
         background-color 0.2s ease;
-
-      &:focus-visible {
-        outline: 2px solid rgba($accent, 0.4);
-        outline-offset: 2px;
-      }
 
       &.is-active {
         border-color: rgba($accent, 0.55);
@@ -383,7 +384,7 @@ function parseOptionalNumber(raw: string): number | null {
 
     .custom-preview {
       padding: var(--layout-gap-xs);
-      border-radius: 12px;
+      border-radius: borders.$rounded-md;
       border: 1px dashed rgba($secondary, 0.24);
       background: rgba($secondary, 0.015);
 

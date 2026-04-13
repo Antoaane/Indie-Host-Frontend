@@ -115,7 +115,7 @@ const descriptionStatic = {
       :staticContent="descriptionStatic"
     />
     <HostProfile
-      v-if="!props.previewOnly"
+      v-if="!props.previewOnly && props.data.hostProfile.name"
       :data="props.data.hostProfile"
       :staticContent="staticContent.listing.host"
     />

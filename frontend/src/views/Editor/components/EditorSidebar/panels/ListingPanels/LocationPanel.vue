@@ -461,6 +461,7 @@ async function maybeResolvePreciseAddress(rawAddress?: string) {
 /* File: src/views/Editor/components/EditorSidebar/panels/ListingPanels/location-panel.scss */
 
 @use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
 @use '@/styles/components/inputs' as inputs;
 @use '@/views/Editor/components/EditorSidebar/panels/panel.scss' as *;
 
@@ -498,7 +499,7 @@ async function maybeResolvePreciseAddress(rawAddress?: string) {
       > .resolve-button {
         width: fit-content;
         border: 1px solid rgba($secondary, 0.12);
-        border-radius: 0.75rem;
+        border-radius: borders.$rounded-md;
         background: $accent-surface-0;
         color: $secondary;
         font-weight: 600;
@@ -562,7 +563,7 @@ async function maybeResolvePreciseAddress(rawAddress?: string) {
 
     > .map-preview {
       border: 1px solid rgba($secondary, 0.12);
-      border-radius: 0.75rem;
+      border-radius: borders.$rounded-md;
       overflow: hidden;
 
       > .frame {

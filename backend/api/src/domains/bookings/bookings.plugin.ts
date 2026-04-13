@@ -4,6 +4,7 @@ import fp from 'fastify-plugin';
 import { asObject } from '../../lib/json.js';
 import {
   bookingAccessQuerySchema,
+  cancelBookingSchema,
   bookingGuideMessageSchema,
   bookingGuideParamsSchema,
   bookingConfirmationParamsSchema,
@@ -133,6 +134,27 @@ export const bookingsPlugin = fp(async (fastify) => {
     }
 
     reply.send(confirmation);
+  });
+
+  fastify.post('/bookings/:reservationId/cancel', async (request, reply) => {
+    const { reservationId } = bookingConfirmationParamsSchema.parse(request.params);
+    const payload = cancelBookingSchema.parse(asObject(request.body));
+    const canceled = await service.cancelBooking(reservationId, payload.token, {
+      reason: payload.reason,
+      publicBaseUrl: resolvePublicBaseUrl(request),
+    });
+
+    if (!canceled) {
+      reply.code(404).send({ message: 'Reservation not found.' });
+      return;
+    }
+
+    if (canceled === 'forbidden') {
+      reply.code(403).send({ message: 'Invalid reservation access token.' });
+      return;
+    }
+
+    reply.send(canceled);
   });
 
   fastify.get('/bookings/:reservationId/stay.ics', async (request, reply) => {

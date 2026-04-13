@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { Camera, ChevronDown, ChevronLeft, ChevronRight, EllipsisVertical, Eye } from 'lucide-vue-next'
+import { Camera, ChevronDown, ChevronLeft, ChevronRight, EllipsisVertical, Eye, Upload } from 'lucide-vue-next'
 import type { Swiper as SwiperInstance } from 'swiper/types'
 import type { SwiperOptions } from 'swiper/types'
 import { Swiper, SwiperSlide } from 'swiper/vue'
@@ -101,6 +101,44 @@ const showStatusOverlay = computed(() => Boolean(nonPublishedOverlayLabel.value)
 const statusMenuControlId = computed(() => `listing-status-menu-${props.listing.listingId}`)
 const actionsMenuControlId = computed(() => `listing-actions-menu-${props.listing.listingId}`)
 const deleteContent = computed(() => editorStatic.panels.listing.visibility.delete)
+
+function normalizeIdentityToken(value: string): string {
+  return value
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[@\s._-]+/g, '')
+    .trim()
+}
+
+function isDeprecatedHostIdentity(value: string | null | undefined): boolean {
+  if (!value) return false
+  const normalized = normalizeIdentityToken(value)
+  return normalized === 'hote' || normalized === 'host'
+}
+
+const ownerLabel = computed(() => {
+  const displayNameRaw = (props.listing.ownerDisplayName ?? '').trim()
+  const displayName = displayNameRaw && !isDeprecatedHostIdentity(displayNameRaw) ? displayNameRaw : ''
+  if (displayName) return displayName
+  const usernameRaw = (props.listing.ownerUsername ?? '').trim()
+  const username = usernameRaw && !isDeprecatedHostIdentity(usernameRaw) ? usernameRaw : ''
+  if (username) return `@${username}`
+  const email = (props.listing.ownerEmail ?? '').trim()
+  if (email) return email
+  return ''
+})
+const ownerMeta = computed(() => {
+  const email = (props.listing.ownerEmail ?? '').trim()
+  const usernameRaw = (props.listing.ownerUsername ?? '').trim()
+  const username = usernameRaw && !isDeprecatedHostIdentity(usernameRaw) ? usernameRaw : ''
+  if (email && username) return `${email} · @${username}`
+  if (email) return email
+  if (username) return `@${username}`
+  return ''
+})
+const showOwnerMeta = computed(() => Boolean(props.canTransfer && ownerLabel.value))
+const isPreviewIconOnly = computed(() => Boolean(props.canTransfer))
 
 const cardSwiperBaseParams = createListingMediaSwiperParams({
   autoplay: false,
@@ -465,10 +503,22 @@ function goToImageLabel(index: number) {
             {{ props.listing.title || props.listingContent.untitled }}
           </p>
           <p
+            v-if="showOwnerMeta"
+            class="owner"
+          >
+            Hôte: {{ ownerLabel }}
+          </p>
+          <p
             v-if="props.listing.guestCapacity"
             class="meta"
           >
             {{ guestLabel(props.listing.guestCapacity) }}
+          </p>
+          <p
+            v-if="showOwnerMeta && ownerMeta"
+            class="meta owner-meta"
+          >
+            {{ ownerMeta }}
           </p>
         </div>
 
@@ -502,7 +552,7 @@ function goToImageLabel(index: number) {
                 @click.stop="handleTransfer"
                 @pointerdown.stop
               >
-                Transférer
+                <Upload :size="20" />
               </button>
             </div>
             <div
@@ -511,12 +561,13 @@ function goToImageLabel(index: number) {
             >
               <button
                 type="button"
+                :class="{ 'is-icon-only': isPreviewIconOnly }"
                 :aria-label="props.listingContent.previewLink"
                 :title="props.listingContent.previewLink"
                 @click.stop="handlePreview"
                 @pointerdown.stop
               >
-                Voir l'aperçu
+                <span v-if="!isPreviewIconOnly">Voir l'aperçu</span>
                 <Eye :size="20" />
               </button>
             </div>

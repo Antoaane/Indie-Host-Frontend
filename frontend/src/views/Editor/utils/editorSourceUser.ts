@@ -3,13 +3,18 @@
 import { getListingsController } from '@/domain/listings/controller'
 import type { EditorSource } from '@/views/Editor/types/editor'
 
-export function createUserEditorSource(userId: string): EditorSource {
+type UserEditorSourceOptions = {
+  adminViewAllListings?: boolean
+}
+
+export function createUserEditorSource(userId: string, options?: UserEditorSourceOptions): EditorSource {
   const controller = getListingsController()
+  const adminViewAllListings = Boolean(options?.adminViewAllListings)
 
   return {
     fetchListings: async () => {
-      console.log('[Editor][source][user] fetchListings', { userId })
-      return controller.fetchListings({ userId })
+      console.log('[Editor][source][user] fetchListings', { userId, adminViewAllListings })
+      return controller.fetchListings({ userId, adminViewAll: adminViewAllListings })
     },
     fetchEditableListingBundle: async (listingId: string) => {
       console.log('[Editor][source][user] fetchEditableListingBundle', { listingId })

@@ -53,6 +53,27 @@ export type BookingConfirmationPayload = {
     isActive: boolean
     activeAfterISO: string
   }
+  cancellation: {
+    status: 'active' | 'canceled'
+    canCancel: boolean
+    canceledAtISO: string | null
+    reason: string | null
+    policy: {
+      policy: 'flexible' | 'moderate' | 'strict' | 'custom'
+      days: number
+      feePercent: number
+      lateFeePercent: number
+    }
+    refund: {
+      stage: 'full_refund' | 'partial_refund' | 'late_cancellation' | 'after_arrival'
+      currency: string
+      chargedAmount: number
+      refundableAmount: number
+      retainedAmount: number
+      retainedPercent: number
+      paymentIntentId: string | null
+    }
+  }
   messaging: {
     conversationId: string
   }
@@ -279,6 +300,24 @@ function toTrimmedString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
 }
 
+function normalizeIdentityToken(value: string): string {
+  return value
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[@\s._-]+/g, '')
+    .trim()
+}
+
+function isDeprecatedHostIdentity(value: string): boolean {
+  const normalized = normalizeIdentityToken(value)
+  return normalized === 'hote' || normalized === 'host'
+}
+
+function readEmailLocalPart(email: string): string {
+  return email.split('@')[0]?.trim() ?? ''
+}
+
 function toOptionalString(value: unknown): string | null {
   const normalized = toTrimmedString(value)
   return normalized || null
@@ -301,7 +340,39 @@ function normalizeBookingConfirmation(payload: Record<string, unknown> | null | 
   const stay = (source.stay && typeof source.stay === 'object') ? source.stay as Record<string, unknown> : {}
   const host = (source.host && typeof source.host === 'object') ? source.host as Record<string, unknown> : {}
   const guide = (source.guide && typeof source.guide === 'object') ? source.guide as Record<string, unknown> : {}
+  const cancellation = (source.cancellation && typeof source.cancellation === 'object')
+    ? source.cancellation as Record<string, unknown>
+    : {}
+  const cancellationPolicy = (cancellation.policy && typeof cancellation.policy === 'object')
+    ? cancellation.policy as Record<string, unknown>
+    : {}
+  const cancellationRefund = (cancellation.refund && typeof cancellation.refund === 'object')
+    ? cancellation.refund as Record<string, unknown>
+    : {}
   const messaging = (source.messaging && typeof source.messaging === 'object') ? source.messaging as Record<string, unknown> : {}
+  const rawCancellationStatus = toTrimmedString(cancellation.status)
+  const cancellationStatus: BookingConfirmationPayload['cancellation']['status'] = rawCancellationStatus === 'canceled'
+    ? 'canceled'
+    : 'active'
+  const rawPolicy = toTrimmedString(cancellationPolicy.policy)
+  const policy: BookingConfirmationPayload['cancellation']['policy']['policy'] =
+    rawPolicy === 'moderate' || rawPolicy === 'strict' || rawPolicy === 'custom' || rawPolicy === 'flexible'
+      ? rawPolicy
+      : 'flexible'
+  const rawRefundStage = toTrimmedString(cancellationRefund.stage)
+  const refundStage: BookingConfirmationPayload['cancellation']['refund']['stage'] =
+    rawRefundStage === 'full_refund'
+      ? 'full_refund'
+      : rawRefundStage === 'late_cancellation'
+        ? 'late_cancellation'
+        : rawRefundStage === 'after_arrival'
+          ? 'after_arrival'
+          : 'partial_refund'
+  const hostEmail = toTrimmedString(host.email)
+  const rawHostName = toTrimmedString(host.name)
+  const hostName = (rawHostName && !isDeprecatedHostIdentity(rawHostName) ? rawHostName : '')
+    || (hostEmail ? readEmailLocalPart(hostEmail) : '')
+    || 'Proprietaire'
 
   return {
     reservationId: toTrimmedString(source.reservationId),
@@ -314,7 +385,7 @@ function normalizeBookingConfirmation(payload: Record<string, unknown> | null | 
       currency: toTrimmedString(stay.currency) || 'eur',
     },
     host: {
-      name: toTrimmedString(host.name) || 'Hote',
+      name: hostName,
       status: toOptionalString(host.status),
       avatar: toOptionalString(host.avatar),
       catalogLink: toOptionalString(host.catalogLink),
@@ -328,6 +399,27 @@ function normalizeBookingConfirmation(payload: Record<string, unknown> | null | 
       guideAccessKey: toTrimmedString(guide.guideAccessKey || guide.guideAccessToken),
       isActive: Boolean(guide.isActive),
       activeAfterISO: toTrimmedString(guide.activeAfterISO),
+    },
+    cancellation: {
+      status: cancellationStatus,
+      canCancel: Boolean(cancellation.canCancel) && cancellationStatus !== 'canceled',
+      canceledAtISO: toOptionalString(cancellation.canceledAtISO),
+      reason: toOptionalString(cancellation.reason),
+      policy: {
+        policy,
+        days: Math.max(0, toNonNegativeInt(cancellationPolicy.days)),
+        feePercent: Math.min(100, Math.max(0, toNonNegativeInt(cancellationPolicy.feePercent))),
+        lateFeePercent: Math.min(100, Math.max(0, toNonNegativeInt(cancellationPolicy.lateFeePercent))),
+      },
+      refund: {
+        stage: refundStage,
+        currency: toTrimmedString(cancellationRefund.currency) || 'eur',
+        chargedAmount: toNonNegativeNumber(cancellationRefund.chargedAmount),
+        refundableAmount: toNonNegativeNumber(cancellationRefund.refundableAmount),
+        retainedAmount: toNonNegativeNumber(cancellationRefund.retainedAmount),
+        retainedPercent: Math.min(100, Math.max(0, toNonNegativeInt(cancellationRefund.retainedPercent))),
+        paymentIntentId: toOptionalString(cancellationRefund.paymentIntentId),
+      },
     },
     messaging: {
       conversationId: toTrimmedString(messaging.conversationId),
@@ -344,6 +436,11 @@ function normalizeGuideAccessPayload(payload: Record<string, unknown> | null | u
   const messaging = (source.messaging && typeof source.messaging === 'object') ? source.messaging as Record<string, unknown> : {}
   const rawStatus = toTrimmedString(source.status)
   const status: ReservationGuideAccessPayload['status'] = rawStatus === 'active' ? 'active' : 'locked'
+  const hostEmail = toTrimmedString(host.email)
+  const rawHostName = toTrimmedString(host.name)
+  const hostName = (rawHostName && !isDeprecatedHostIdentity(rawHostName) ? rawHostName : '')
+    || (hostEmail ? readEmailLocalPart(hostEmail) : '')
+    || 'Proprietaire'
 
   return {
     guideKey: toTrimmedString(source.guideKey),
@@ -360,7 +457,7 @@ function normalizeGuideAccessPayload(payload: Record<string, unknown> | null | u
       id: toTrimmedString(listing.id),
     },
     host: {
-      name: toTrimmedString(host.name) || 'Hote',
+      name: hostName,
       status: toOptionalString(host.status),
       avatar: toOptionalString(host.avatar),
       email: toOptionalString(host.email),
@@ -500,6 +597,41 @@ export async function fetchBookingConfirmation(input: {
     return normalizeBookingConfirmation(data)
   } catch (error) {
     throw new Error(resolveErrorMessage(error, 'Impossible de charger la confirmation de réservation.'))
+  }
+}
+
+export async function cancelBookingReservation(input: {
+  reservationId: string
+  token: string
+  reason?: string
+}): Promise<BookingConfirmationPayload> {
+  const reservationId = input.reservationId.trim()
+  const token = input.token.trim()
+  const reason = toTrimmedString(input.reason)
+
+  if (!reservationId) {
+    throw new Error('Identifiant de réservation manquant.')
+  }
+  if (!token) {
+    throw new Error('Jeton de confirmation manquant.')
+  }
+
+  const axios = await getAxios()
+
+  try {
+    const { data } = await axios.post<Record<string, unknown>>(
+      resolveUrl(buildBookingResourceUrl(reservationId, 'cancel')),
+      {
+        token,
+        ...(reason ? { reason } : {}),
+      },
+      {
+        withCredentials: false,
+      },
+    )
+    return normalizeBookingConfirmation(data)
+  } catch (error) {
+    throw new Error(resolveErrorMessage(error, 'Impossible d annuler la réservation.'))
   }
 }
 

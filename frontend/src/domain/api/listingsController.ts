@@ -50,6 +50,7 @@ const buildListingUrl = (resource: ListingResourceKey, listingId: string) =>
 const buildUserListingsUrl = (userId: string) => `${BASE_API_URL}/user/${userId}/listings`
 const buildLegacyMyListingsUrl = () => `${BASE_API_URL}/user/me/listings`
 const buildMyListingsUrl = () => `${BASE_API_URL}/users/me/listings`
+const buildAdminListingsUrl = () => `${BASE_API_URL}/users/admin/listings`
 const buildListingBundleUrl = (listingId: string) => `${BASE_API_URL}/listings/bundle/${listingId}`
 const buildCreateListingUrl = () => `${BASE_API_URL}/listings`
 const buildResolveListingHostnameUrl = (hostname: string, listingSlug?: string | null) => {
@@ -375,11 +376,27 @@ export function createApiListingsController(): ListingsController {
     mode: 'api',
     fetchListings: async (options?: FetchListingsOptions): Promise<UserListingCard[]> => {
       const userId = options?.userId
-      console.log('[Domain][api] fetchListings', { userId })
+      const adminViewAll = Boolean(options?.adminViewAll)
+      console.log('[Domain][api] fetchListings', { userId, adminViewAll })
 
       if (!apiEnabled) return []
       const token = await getAuthToken({ waitForReady: true })
       if (!token) return []
+
+      if (adminViewAll) {
+        try {
+          const listings = await fetchRemoteWithToken<UserListingCard[]>(
+            resolveUrl(buildAdminListingsUrl()),
+            token,
+          )
+          return filterDeletedListings(normalizeListingCardsMedia(listings), options?.includeDeleted)
+        } catch (error) {
+          const status = readHttpStatus(error)
+          if (status !== 401 && status !== 403 && status !== 404) {
+            throw error
+          }
+        }
+      }
 
       try {
         const listings = await fetchRemoteWithToken<UserListingCard[]>(resolveUrl(buildMyListingsUrl()), token)

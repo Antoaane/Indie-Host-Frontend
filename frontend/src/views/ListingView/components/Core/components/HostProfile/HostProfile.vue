@@ -36,6 +36,7 @@ const seniorityText = computed(() => {
       />
       <ul class="meta">
         <li
+          v-if="data.status"
           class="item"
           v-html="data.status"
         />

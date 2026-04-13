@@ -578,12 +578,22 @@
                 @include base-text($bold: true);
               }
 
+              > .owner {
+                margin: 0.2rem 0 0;
+                color: rgba($secondary-text, 0.84);
+                @include little-text($thin: false);
+              }
+
               > .meta {
                 margin: 0;
                 color: rgba($secondary-text, 0.7);
                 text-align: left;
 
                 @include little-text($thin: true);
+
+                &.owner-meta {
+                  color: rgba($secondary-text, 0.56);
+                }
               }
             }
 
@@ -660,6 +670,10 @@
                 > .preview {
                   button {
                     @include buttons.low-btn($color: $secondary, $hover: $tertiary, $text-color: $accent, $text-hover-color: $secondary);
+
+                    &.is-icon-only {
+                      @include buttons.low-btn($color: $secondary, $hover: $tertiary, $text-color: $accent, $text-hover-color: $secondary, $icon-only: true);
+                    }
                   }
                 }
 
@@ -815,6 +829,50 @@
       gap: var(--layout-gap-sm);
       min-height: 0;
 
+      > .transfer-context-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: var(--layout-gap-xs);
+
+        @media (max-width: 860px) {
+          grid-template-columns: 1fr;
+        }
+
+        > .context-card {
+          border: 1px solid rgba($secondary, 0.12);
+          border-radius: borders.$rounded-md;
+          background: rgba($accent-surface-1, 0.72);
+          padding: 0.55rem 0.62rem;
+          display: flex;
+          flex-direction: column;
+          gap: 0.12rem;
+          min-width: 0;
+
+          > .label {
+            @include little-text($thin: true);
+            color: rgba($secondary-text, 0.58);
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+          }
+
+          > .value {
+            @include base-text($thin: false);
+            color: rgba($secondary-text, 0.9);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+
+          > .meta {
+            @include little-text($thin: true);
+            color: rgba($secondary-text, 0.6);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+        }
+      }
+
       > .field {
         display: flex;
         flex-direction: column;
@@ -831,6 +889,91 @@
         }
 
         @include inputs.field($theme: accent, $compact: true);
+      }
+
+      > .trial-field {
+        border: 1px solid rgba($secondary, 0.12);
+        border-radius: borders.$rounded-md;
+        background: rgba($accent-surface-1, 0.72);
+        padding: 0.6rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+
+        > header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: var(--layout-gap-sm);
+
+          > .label {
+            @include little-text($thin: false);
+            color: rgba($secondary-text, 0.82);
+          }
+
+          > .value {
+            @include little-text($thin: false);
+            color: rgba($secondary, 0.86);
+            border: 1px solid rgba($secondary, 0.15);
+            border-radius: borders.$rounded;
+            padding: 0.22rem 0.45rem;
+            background: rgba($accent, 0.72);
+          }
+        }
+
+        > .ui-number-stepper {
+          --ui-stepper-value-width: 5rem;
+          width: 100%;
+          grid-template-columns: auto 1fr;
+          row-gap: 0.25rem;
+
+          > .value {
+            width: 100%;
+          }
+        }
+
+        > .presets {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.4rem;
+
+          > button {
+            border: 1px solid rgba($secondary, 0.15);
+            border-radius: borders.$rounded;
+            background: rgba($accent, 0.72);
+            color: rgba($secondary-text, 0.82);
+            padding: 0.28rem 0.5rem;
+            cursor: pointer;
+            @include little-text($thin: false);
+
+            &:hover {
+              background: rgba($background, 0.08);
+            }
+
+            &.is-active {
+              border-color: rgba($secondary, 0.3);
+              background: rgba($background, 0.16);
+              color: rgba($secondary, 0.95);
+            }
+          }
+        }
+
+        > small {
+          margin: 0;
+          color: rgba($secondary-text, 0.58);
+          @include little-text($thin: true);
+        }
+      }
+
+      > .users-caption {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: -0.15rem;
+
+        > span {
+          color: rgba($secondary-text, 0.6);
+          @include little-text($thin: true);
+        }
       }
 
       > .users-list {
@@ -859,23 +1002,72 @@
         > .user-item {
           width: 100%;
           border: 0;
-          border-radius: borders.$rounded-sm;
-          padding: 0.48rem 0.52rem;
+          border-radius: borders.$rounded-md;
+          padding: 0.55rem 0.62rem;
           background: transparent;
           color: rgba($secondary-text, 0.9);
           text-align: left;
           cursor: pointer;
-          display: flex;
-          flex-direction: column;
-          gap: 0.12rem;
+          display: grid;
+          grid-template-columns: auto 1fr;
+          align-items: center;
+          column-gap: 0.6rem;
 
-          > .name {
-            @include base-text($thin: false);
+          > .avatar {
+            width: 2.1rem;
+            height: 2.1rem;
+            border-radius: borders.$rounded;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: rgba($background, 0.12);
+            color: rgba($secondary-text, 0.72);
+            @include little-text($thin: false);
+
+            > img {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+              display: block;
+            }
           }
 
-          > .meta {
-            color: rgba($secondary-text, 0.58);
-            @include little-text($thin: true);
+          > .identity {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.12rem;
+
+            > .line {
+              display: flex;
+              align-items: baseline;
+              gap: 0.35rem;
+              min-width: 0;
+
+              > .name {
+                @include base-text($thin: false);
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+              }
+
+              > .alias {
+                @include little-text($thin: true);
+                color: rgba($secondary-text, 0.56);
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+              }
+            }
+
+            > .meta {
+              color: rgba($secondary-text, 0.58);
+              @include little-text($thin: true);
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            }
           }
 
           &:hover {
@@ -884,8 +1076,15 @@
 
           &.is-selected {
             background: rgba($background, 0.16);
+            box-shadow: inset 0 0 0 1px rgba($secondary, 0.22);
           }
         }
+      }
+
+      > .transfer-warning {
+        margin: 0;
+        color: rgba($bad, 0.94);
+        @include little-text($thin: false);
       }
     }
 

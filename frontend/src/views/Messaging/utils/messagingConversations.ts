@@ -208,7 +208,11 @@ function deriveConversationStatus(
 }
 
 function buildHostParticipant(listingId: string, host: Partial<RawHost> | null | undefined): MessagingParticipant {
-  const name = typeof host?.name === 'string' && host.name.trim() ? host.name.trim() : 'Hôte'
+  const hostName = typeof host?.name === 'string' && host.name.trim() ? host.name.trim() : ''
+  const hostRecord = (host ?? {}) as Record<string, unknown>
+  const hostEmail = typeof hostRecord.email === 'string' && hostRecord.email.trim() ? hostRecord.email.trim() : ''
+  const fallbackName = hostEmail ? (hostEmail.split('@')[0]?.trim() ?? '') : ''
+  const name = hostName || fallbackName || 'Utilisateur'
   return {
     id: `host-${listingId}`,
     name,

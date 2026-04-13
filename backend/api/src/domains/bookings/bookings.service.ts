@@ -1,12 +1,14 @@
 import { createHmac } from 'node:crypto';
 import type { MessageState, PrismaClient } from '@prisma/client';
 import ical, { ICalCalendarMethod, ICalEventStatus } from 'ical-generator';
+import Stripe from 'stripe';
 
 import { env } from '../../config/env.js';
 import { deepMerge, asObject, toNumber } from '../../lib/json.js';
 import { buildMessageId, buildReservationId } from '../../lib/id.js';
 import { toPrismaJson } from '../../lib/prisma.js';
 import { PaymentsService } from '../payments/payments.service.js';
+import { isDeprecatedHostIdentity } from '../users/users.repository.js';
 
 type RawReservation = Record<string, unknown>;
 
@@ -40,8 +42,10 @@ type ReservationAccessContext = {
   listingHost: Record<string, unknown>;
   listingArrival: Record<string, unknown>;
   listingCore: Record<string, unknown>;
+  listingBookings: Record<string, unknown>;
   ownerId: string | null;
   ownerEmail: string | null;
+  ownerDisplayName: string | null;
   confirmation: ReservationConfirmation;
 };
 
@@ -58,8 +62,72 @@ type ReservationConversation = {
   messages: ReservationThreadMessage[];
 };
 
+type CancellationPolicyKey = 'flexible' | 'moderate' | 'strict' | 'custom';
+type CancellationStage = 'full_refund' | 'partial_refund' | 'late_cancellation' | 'after_arrival';
+
+type ResolvedCancellationPolicy = {
+  policy: CancellationPolicyKey;
+  days: number;
+  feePercent: number;
+  lateFeePercent: number;
+};
+
+type CancellationQuote = {
+  stage: CancellationStage;
+  canCancel: boolean;
+  chargedAmountMinor: number;
+  refundableAmountMinor: number;
+  retainedAmountMinor: number;
+  retainedPercent: number;
+  canceledAtISO: string;
+};
+
+type ReservationCancellationState = {
+  status: 'active' | 'canceled';
+  canceledAtISO: string | null;
+  reason: string | null;
+  stage: CancellationStage;
+  chargedAmountMinor: number;
+  refundableAmountMinor: number;
+  retainedAmountMinor: number;
+  retainedPercent: number;
+  paymentIntentId: string | null;
+  stripeAction: string | null;
+  stripeStatus: string | null;
+  stripeRefundId: string | null;
+};
+
+type StripeCancellationResult = {
+  action: 'none' | 'mock_refund' | 'canceled' | 'partially_refunded' | 'refunded';
+  stripeStatus: string | null;
+  stripeRefundId: string | null;
+  refundedAmountMinor: number;
+};
+
 const INTERNAL_RESERVATION_SOURCE = 'indiehost_reservation';
 const GUIDE_ACTIVATION_WINDOW_MS = 48 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const HOUR_MS = 60 * 60 * 1000;
+const CANCELLATION_DAYS_MAX = 365;
+const CANCELLATION_FEE_MAX = 100;
+const CANCELLATION_LATE_FEE_STEP = 20;
+const CANCELLATION_PRESETS: Record<'flexible' | 'moderate' | 'strict', {
+  days: number;
+  feePercent: number;
+}> = {
+  flexible: {
+    days: 3,
+    feePercent: 10,
+  },
+  moderate: {
+    days: 7,
+    feePercent: 20,
+  },
+  strict: {
+    days: 14,
+    feePercent: 35,
+  },
+};
 
 function parseDate(value: unknown): Date | null {
   if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
@@ -123,6 +191,221 @@ function readString(value: unknown): string | null {
   return trimmed || null;
 }
 
+function readEmailLocalPart(value: string | null | undefined): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const localPart = trimmed.split('@')[0]?.trim() ?? '';
+  return localPart || null;
+}
+
+function readOwnerUsernameFromProfile(hostProfile: unknown): string | null {
+  const record = asObject(hostProfile);
+  const candidates = [
+    record.pseudo,
+    record.displayName,
+    record.display_name,
+    record.name,
+    record.username,
+    record.userName,
+    record.user_name,
+  ];
+
+  for (const candidate of candidates) {
+    const normalized = readString(candidate);
+    if (!normalized) continue;
+    if (isDeprecatedHostIdentity(normalized)) continue;
+    return normalized;
+  }
+
+  return null;
+}
+
+function resolveOwnerDisplayName(owner: Record<string, unknown>): string | null {
+  const directDisplay = readString(owner.displayName);
+  if (directDisplay && !isDeprecatedHostIdentity(directDisplay)) return directDisplay;
+
+  const firstName = readString(owner.firstName);
+  const lastName = readString(owner.lastName);
+  const fullName = [firstName, lastName].filter(Boolean).join(' ').trim();
+  if (fullName && !isDeprecatedHostIdentity(fullName)) return fullName;
+
+  const username = readOwnerUsernameFromProfile(owner.hostProfile);
+  if (username) return username;
+
+  return readEmailLocalPart(readString(owner.email));
+}
+
+function clampInteger(value: unknown, min: number, max: number, fallback: number): number {
+  const next = Number(value);
+  if (!Number.isFinite(next)) return fallback;
+  return Math.min(max, Math.max(min, Math.trunc(next)));
+}
+
+function toMinorUnit(amount: number): number {
+  const normalized = Number.isFinite(amount) ? amount : 0;
+  return Math.max(0, Math.round(normalized * 100));
+}
+
+function toMajorUnit(minorAmount: number): number {
+  return Math.max(0, Math.round(minorAmount / 100));
+}
+
+function createRequestError(
+  message: string,
+  statusCode: number,
+  code: string,
+  details?: Record<string, unknown>,
+): Error {
+  const error = new Error(message) as Error & {
+    statusCode: number;
+    code: string;
+    details?: Record<string, unknown>;
+  };
+  error.statusCode = statusCode;
+  error.code = code;
+  if (details) error.details = details;
+  return error;
+}
+
+function isCancellationPolicyKey(value: unknown): value is CancellationPolicyKey {
+  return value === 'flexible' || value === 'moderate' || value === 'strict' || value === 'custom';
+}
+
+function resolveCancellationPolicyFromBookings(bookings: Record<string, unknown>): ResolvedCancellationPolicy {
+  const pricing = asObject(bookings.pricing);
+  const cancellation = asObject(pricing.cancellation);
+  const policy = isCancellationPolicyKey(cancellation.policy) ? cancellation.policy : 'flexible';
+  const basePreset = CANCELLATION_PRESETS[policy === 'custom' ? 'moderate' : policy];
+
+  const custom = asObject(cancellation.custom);
+  const days = policy === 'custom'
+    ? clampInteger(custom.days, 0, CANCELLATION_DAYS_MAX, basePreset.days)
+    : basePreset.days;
+  const feePercent = policy === 'custom'
+    ? clampInteger(custom.feePercent, 0, CANCELLATION_FEE_MAX, basePreset.feePercent)
+    : basePreset.feePercent;
+  const lateFeePercent = clampInteger(
+    feePercent + CANCELLATION_LATE_FEE_STEP,
+    0,
+    CANCELLATION_FEE_MAX,
+    Math.min(CANCELLATION_FEE_MAX, feePercent + CANCELLATION_LATE_FEE_STEP),
+  );
+
+  return {
+    policy,
+    days,
+    feePercent,
+    lateFeePercent,
+  };
+}
+
+function resolveCancellationQuote(input: {
+  policy: ResolvedCancellationPolicy;
+  startDate: Date;
+  chargedAmountMinor: number;
+  now?: Date;
+}): CancellationQuote {
+  const now = input.now ?? new Date();
+  const canceledAtISO = now.toISOString();
+  const chargedAmountMinor = Math.max(0, Math.round(input.chargedAmountMinor));
+  const msUntilArrival = input.startDate.getTime() - now.getTime();
+  const fullRefundThresholdMs = input.policy.days * DAY_MS;
+
+  let stage: CancellationStage = 'partial_refund';
+  let retainedPercent = input.policy.feePercent;
+  let canCancel = true;
+
+  if (msUntilArrival <= 0) {
+    stage = 'after_arrival';
+    retainedPercent = CANCELLATION_FEE_MAX;
+    canCancel = false;
+  } else if (msUntilArrival < 24 * HOUR_MS) {
+    stage = 'late_cancellation';
+    retainedPercent = input.policy.lateFeePercent;
+  } else if (msUntilArrival >= fullRefundThresholdMs) {
+    stage = 'full_refund';
+    retainedPercent = 0;
+  }
+
+  const refundableAmountMinor = canCancel
+    ? Math.max(0, Math.round(chargedAmountMinor * (1 - retainedPercent / 100)))
+    : 0;
+  const retainedAmountMinor = Math.max(0, chargedAmountMinor - refundableAmountMinor);
+
+  return {
+    stage,
+    canCancel,
+    chargedAmountMinor,
+    refundableAmountMinor,
+    retainedAmountMinor,
+    retainedPercent,
+    canceledAtISO,
+  };
+}
+
+function readChargedAmountMinor(paymentRaw: Record<string, unknown>): number {
+  const stripe = asObject(paymentRaw.stripe);
+  const chargeNowAmountMajor = toNumber(
+    stripe.chargeNowAmount,
+    toNumber(paymentRaw.deposit, toNumber(paymentRaw.total, 0)),
+  );
+  return toMinorUnit(chargeNowAmountMajor);
+}
+
+function readReservationCancellationState(paymentRaw: Record<string, unknown>): ReservationCancellationState {
+  const cancellation = asObject(paymentRaw.cancellation);
+  const status = readString(cancellation.status) === 'canceled' ? 'canceled' : 'active';
+  const chargedAmountMinor = clampInteger(
+    cancellation.chargedAmountMinor,
+    0,
+    Number.MAX_SAFE_INTEGER,
+    readChargedAmountMinor(paymentRaw),
+  );
+  const refundableAmountMinor = clampInteger(
+    cancellation.refundableAmountMinor,
+    0,
+    Number.MAX_SAFE_INTEGER,
+    chargedAmountMinor,
+  );
+  const retainedAmountMinor = clampInteger(
+    cancellation.retainedAmountMinor,
+    0,
+    Number.MAX_SAFE_INTEGER,
+    Math.max(0, chargedAmountMinor - refundableAmountMinor),
+  );
+  const retainedPercent = clampInteger(
+    cancellation.retainedPercent,
+    0,
+    CANCELLATION_FEE_MAX,
+    chargedAmountMinor <= 0 ? 0 : Math.round((retainedAmountMinor / chargedAmountMinor) * 100),
+  );
+  const stageRaw = readString(cancellation.stage);
+  const stage: CancellationStage =
+    stageRaw === 'late_cancellation'
+      ? 'late_cancellation'
+      : stageRaw === 'full_refund'
+        ? 'full_refund'
+        : stageRaw === 'after_arrival'
+          ? 'after_arrival'
+          : 'partial_refund';
+
+  return {
+    status,
+    canceledAtISO: readString(cancellation.canceledAtISO),
+    reason: readString(cancellation.reason),
+    stage,
+    chargedAmountMinor,
+    refundableAmountMinor,
+    retainedAmountMinor,
+    retainedPercent,
+    paymentIntentId: readString(cancellation.paymentIntentId),
+    stripeAction: readString(cancellation.stripeAction),
+    stripeStatus: readString(cancellation.stripeStatus),
+    stripeRefundId: readString(cancellation.stripeRefundId),
+  };
+}
+
 function toIsoDay(value: Date): string {
   return value.toISOString().slice(0, 10);
 }
@@ -145,10 +428,18 @@ function buildAbsoluteUrl(path: string, baseUrl?: string | null): string {
 }
 
 export class BookingsService {
+  private readonly stripe: Stripe | null;
+
   constructor(
     private readonly prisma: PrismaClient,
     private readonly paymentsService?: PaymentsService,
-  ) {}
+  ) {
+    this.stripe = env.STRIPE_SECRET_KEY
+      ? new Stripe(env.STRIPE_SECRET_KEY, {
+          apiVersion: '2025-02-24.acacia',
+        })
+      : null;
+  }
 
   private buildGuideAccessKey(reservationId: string, listingId: string, startDate: Date | null | undefined): string {
     const safeReservationId = reservationId.trim();
@@ -251,6 +542,149 @@ export class BookingsService {
       activeAfter,
       isActive: now.getTime() >= activeAfter.getTime(),
     };
+  }
+
+  private resolvePaymentIntentId(
+    payment: Record<string, unknown>,
+    cancellationState: ReservationCancellationState,
+  ): string | null {
+    return cancellationState.paymentIntentId ?? readString(asObject(payment.stripe).paymentIntentId);
+  }
+
+  private resolvePaymentCurrency(payment: Record<string, unknown>): string {
+    const stripePayment = asObject(payment.stripe);
+    return (readString(stripePayment.currency) ?? 'eur').toLowerCase();
+  }
+
+  private buildReservationCancellationDetails(
+    access: ReservationAccessContext,
+    options?: { now?: Date },
+  ) {
+    const now = options?.now ?? new Date();
+    const policy = resolveCancellationPolicyFromBookings(access.listingBookings);
+    const currentState = readReservationCancellationState(access.payment);
+    const paymentIntentId = this.resolvePaymentIntentId(access.payment, currentState);
+    const quote = resolveCancellationQuote({
+      policy,
+      startDate: access.startDate,
+      chargedAmountMinor: currentState.chargedAmountMinor,
+      now,
+    });
+    const effectiveState = currentState.status === 'canceled'
+      ? currentState
+      : {
+          ...currentState,
+          stage: quote.stage,
+          chargedAmountMinor: quote.chargedAmountMinor,
+          refundableAmountMinor: quote.refundableAmountMinor,
+          retainedAmountMinor: quote.retainedAmountMinor,
+          retainedPercent: quote.retainedPercent,
+        };
+
+    return {
+      policy,
+      quote,
+      paymentIntentId,
+      state: effectiveState,
+      canCancel: currentState.status !== 'canceled' && quote.canCancel,
+      currency: this.resolvePaymentCurrency(access.payment),
+    };
+  }
+
+  private async applyStripeCancellation(input: {
+    paymentIntentId: string | null;
+    chargedAmountMinor: number;
+    refundableAmountMinor: number;
+    reservationId: string;
+    listingId: string;
+  }): Promise<StripeCancellationResult> {
+    const chargedAmountMinor = Math.max(0, Math.round(input.chargedAmountMinor));
+    const refundableAmountMinor = Math.max(0, Math.round(input.refundableAmountMinor));
+
+    if (!input.paymentIntentId || chargedAmountMinor <= 0) {
+      return {
+        action: 'none',
+        stripeStatus: null,
+        stripeRefundId: null,
+        refundedAmountMinor: 0,
+      };
+    }
+
+    if (!this.stripe) {
+      return {
+        action: refundableAmountMinor > 0 ? 'mock_refund' : 'none',
+        stripeStatus: 'mock',
+        stripeRefundId: null,
+        refundedAmountMinor: refundableAmountMinor,
+      };
+    }
+
+    try {
+      const paymentIntent = await this.stripe.paymentIntents.retrieve(input.paymentIntentId);
+      const currentStatus = paymentIntent.status ?? null;
+      const cancellableStatuses = new Set([
+        'requires_payment_method',
+        'requires_confirmation',
+        'requires_action',
+        'requires_capture',
+      ]);
+
+      if (cancellableStatuses.has(paymentIntent.status)) {
+        const canceledIntent = await this.stripe.paymentIntents.cancel(input.paymentIntentId);
+        return {
+          action: 'canceled',
+          stripeStatus: canceledIntent.status ?? currentStatus,
+          stripeRefundId: null,
+          refundedAmountMinor: chargedAmountMinor,
+        };
+      }
+
+      if (refundableAmountMinor <= 0) {
+        return {
+          action: 'none',
+          stripeStatus: currentStatus,
+          stripeRefundId: null,
+          refundedAmountMinor: 0,
+        };
+      }
+
+      const amountReceived = Math.max(
+        0,
+        paymentIntent.amount_received || paymentIntent.amount || chargedAmountMinor,
+      );
+      const amountToRefund = Math.max(0, Math.min(amountReceived, refundableAmountMinor));
+      if (amountToRefund <= 0) {
+        return {
+          action: 'none',
+          stripeStatus: currentStatus,
+          stripeRefundId: null,
+          refundedAmountMinor: 0,
+        };
+      }
+
+      const refund = await this.stripe.refunds.create({
+        payment_intent: input.paymentIntentId,
+        amount: amountToRefund,
+        reason: 'requested_by_customer',
+        metadata: {
+          reservationId: input.reservationId,
+          listingId: input.listingId,
+        },
+      });
+
+      return {
+        action: amountToRefund < amountReceived ? 'partially_refunded' : 'refunded',
+        stripeStatus: currentStatus,
+        stripeRefundId: refund.id,
+        refundedAmountMinor: refund.amount,
+      };
+    } catch (error) {
+      const message = readString(asObject(error).message) ?? 'Le remboursement Stripe a échoué.';
+      throw createRequestError(message, 400, 'STRIPE_CANCELLATION_FAILED', {
+        reservationId: input.reservationId,
+        listingId: input.listingId,
+      });
+    }
   }
 
   private composeCalendarDescription(message: string | null, guideUrl: string | null): string | null {
@@ -633,12 +1067,17 @@ export class BookingsService {
         listing: {
           select: {
             core: true,
+            bookings: true,
             host: true,
             arrival: true,
             owner: {
               select: {
                 id: true,
                 email: true,
+                firstName: true,
+                lastName: true,
+                displayName: true,
+                hostProfile: true,
               },
             },
           },
@@ -674,8 +1113,10 @@ export class BookingsService {
       listingHost: asObject(reservation.listing.host),
       listingArrival: asObject(reservation.listing.arrival),
       listingCore: asObject(reservation.listing.core),
+      listingBookings: asObject(reservation.listing.bookings),
       ownerId: readString(reservation.listing.owner?.id),
       ownerEmail: readString(reservation.listing.owner?.email),
+      ownerDisplayName: resolveOwnerDisplayName(asObject(reservation.listing.owner)),
       confirmation,
     };
   }
@@ -690,15 +1131,20 @@ export class BookingsService {
     const conversation = await this.ensureReservationConversation(access);
 
     const payment = access.payment;
-    const stripePayment = asObject(payment.stripe);
     const host = access.listingHost;
     const hostContact = asObject(host.contact);
     const practical = asObject(access.listingArrival.practical);
     const services = asObject(practical.services);
     const activation = this.resolveGuideActivation(access.startDate);
+    const cancellationDetails = this.buildReservationCancellationDetails(access);
 
     const totalAmount = Math.max(0, Math.round(toNumber(payment.total, 0)));
-    const currency = (readString(stripePayment.currency) ?? 'eur').toLowerCase();
+    const currency = cancellationDetails.currency;
+
+    const hostNameFromListing = readString(host.name);
+    const resolvedHostName = (
+      hostNameFromListing && !isDeprecatedHostIdentity(hostNameFromListing) ? hostNameFromListing : null
+    ) ?? access.ownerDisplayName ?? readEmailLocalPart(access.ownerEmail) ?? 'Proprietaire';
 
     return {
       reservationId: access.reservationId,
@@ -711,7 +1157,7 @@ export class BookingsService {
         currency,
       },
       host: {
-        name: readString(host.name) ?? 'Hote',
+        name: resolvedHostName,
         status: readString(host.status),
         avatar: readString(host.avatar),
         catalogLink: readString(host['catalog-link']) ?? readString(host.catalogLink),
@@ -725,6 +1171,27 @@ export class BookingsService {
         guideAccessKey: access.confirmation.guideAccessKey,
         isActive: activation.isActive,
         activeAfterISO: activation.activeAfter.toISOString(),
+      },
+      cancellation: {
+        status: cancellationDetails.state.status,
+        canCancel: cancellationDetails.canCancel,
+        canceledAtISO: cancellationDetails.state.canceledAtISO,
+        reason: cancellationDetails.state.reason,
+        policy: {
+          policy: cancellationDetails.policy.policy,
+          days: cancellationDetails.policy.days,
+          feePercent: cancellationDetails.policy.feePercent,
+          lateFeePercent: cancellationDetails.policy.lateFeePercent,
+        },
+        refund: {
+          stage: cancellationDetails.state.stage,
+          currency,
+          chargedAmount: toMajorUnit(cancellationDetails.state.chargedAmountMinor),
+          refundableAmount: toMajorUnit(cancellationDetails.state.refundableAmountMinor),
+          retainedAmount: toMajorUnit(cancellationDetails.state.retainedAmountMinor),
+          retainedPercent: cancellationDetails.state.retainedPercent,
+          paymentIntentId: cancellationDetails.paymentIntentId,
+        },
       },
       messaging: {
         conversationId: conversation.id,
@@ -747,6 +1214,10 @@ export class BookingsService {
     const absoluteGuideUrl = buildAbsoluteUrl(access.confirmation.guideUrl, options?.publicBaseUrl);
     const host = access.listingHost;
     const hostContact = asObject(host.contact);
+    const hostNameFromListing = readString(host.name);
+    const resolvedHostName = (
+      hostNameFromListing && !isDeprecatedHostIdentity(hostNameFromListing) ? hostNameFromListing : null
+    ) ?? access.ownerDisplayName ?? readEmailLocalPart(access.ownerEmail) ?? 'Proprietaire';
 
     return {
       guideKey: access.confirmation.guideAccessKey,
@@ -763,7 +1234,7 @@ export class BookingsService {
         id: access.listingId,
       },
       host: {
-        name: readString(host.name) ?? 'Hote',
+        name: resolvedHostName,
         status: readString(host.status),
         avatar: readString(host.avatar),
         email: readString(host.email) ?? readString(hostContact.email) ?? access.ownerEmail,
@@ -894,6 +1365,204 @@ export class BookingsService {
     });
 
     return calendar.toString();
+  }
+
+  async cancelBooking(
+    reservationId: string,
+    token: string,
+    options?: { reason?: string | null; publicBaseUrl?: string | null },
+  ) {
+    const access = await this.resolveReservationAccessContext(reservationId, token);
+    if (!access || access === 'forbidden') return access;
+
+    const cancellationDetails = this.buildReservationCancellationDetails(access);
+    if (cancellationDetails.state.status === 'canceled') {
+      return this.getBookingConfirmation(reservationId, token, {
+        publicBaseUrl: options?.publicBaseUrl,
+      });
+    }
+
+    if (!cancellationDetails.canCancel) {
+      throw createRequestError(
+        'Cette réservation ne peut plus être annulée en ligne.',
+        409,
+        'BOOKING_NOT_CANCELLABLE',
+        {
+          reservationId: access.reservationId,
+          stage: cancellationDetails.quote.stage,
+        },
+      );
+    }
+
+    const reason = readString(options?.reason) ?? null;
+    const canceledAtISO = new Date().toISOString();
+    const stripeResult = await this.applyStripeCancellation({
+      paymentIntentId: cancellationDetails.paymentIntentId,
+      chargedAmountMinor: cancellationDetails.quote.chargedAmountMinor,
+      refundableAmountMinor: cancellationDetails.quote.refundableAmountMinor,
+      reservationId: access.reservationId,
+      listingId: access.listingId,
+    });
+
+    const effectiveRefundMinor = (cancellationDetails.paymentIntentId && this.stripe)
+      ? Math.max(0, Math.min(cancellationDetails.quote.chargedAmountMinor, stripeResult.refundedAmountMinor))
+      : cancellationDetails.quote.refundableAmountMinor;
+    const effectiveRetainedMinor = Math.max(0, cancellationDetails.quote.chargedAmountMinor - effectiveRefundMinor);
+    const effectiveRetainedPercent = cancellationDetails.quote.chargedAmountMinor > 0
+      ? Math.round((effectiveRetainedMinor / cancellationDetails.quote.chargedAmountMinor) * 100)
+      : 0;
+
+    const nextPayment = {
+      ...access.payment,
+      cancellation: {
+        status: 'canceled',
+        canceledAtISO,
+        reason,
+        stage: cancellationDetails.quote.stage,
+        chargedAmountMinor: cancellationDetails.quote.chargedAmountMinor,
+        refundableAmountMinor: effectiveRefundMinor,
+        retainedAmountMinor: effectiveRetainedMinor,
+        retainedPercent: effectiveRetainedPercent,
+        paymentIntentId: cancellationDetails.paymentIntentId,
+        stripeAction: stripeResult.action,
+        stripeStatus: stripeResult.stripeStatus,
+        stripeRefundId: stripeResult.stripeRefundId,
+      },
+    };
+
+    await this.prisma.reservation.update({
+      where: {
+        id: access.reservationId,
+      },
+      data: {
+        payment: toPrismaJson(nextPayment),
+      },
+    });
+
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: access.listingId },
+      select: { bookings: true },
+    });
+
+    if (listing) {
+      const bookings = asObject(listing.bookings, {
+        price: 0,
+        fees: [],
+        'booked-days': [],
+        'external-booked-days': [],
+        reservations: [],
+      });
+      const reservations = extractReservations(bookings);
+      const bookedDays = extractBookedDays(bookings);
+      const reservationIndex = reservations.findIndex((row) => reservationIdFromRow(row) === access.reservationId);
+
+      if (reservationIndex >= 0) {
+        const removedReservation = reservations[reservationIndex];
+        const nextReservations = reservations.filter((_, index) => index !== reservationIndex);
+        const removedStart = normalizeDayValue(removedReservation?.start);
+        const removedEnd = normalizeDayValue(removedReservation?.end);
+        const hasSameRangeRemaining = Boolean(
+          removedStart
+          && removedEnd
+          && nextReservations.some((row) => normalizeDayValue(row.start) === removedStart && normalizeDayValue(row.end) === removedEnd),
+        );
+
+        let removedBookedDay = false;
+        const nextBookedDays = bookedDays.filter((row) => {
+          if (hasSameRangeRemaining || !removedStart || !removedEnd) return true;
+          if (removedBookedDay) return true;
+          const start = normalizeDayValue(row.start);
+          const end = normalizeDayValue(row.end);
+          const isTarget = start === removedStart && end === removedEnd;
+          if (isTarget) {
+            removedBookedDay = true;
+            return false;
+          }
+          return true;
+        });
+
+        await this.prisma.listing.update({
+          where: { id: access.listingId },
+          data: {
+            bookings: toPrismaJson({
+              ...bookings,
+              reservations: nextReservations,
+              'booked-days': nextBookedDays,
+            }),
+          },
+        });
+      }
+    }
+
+    await this.removeInternalReservationEvent(access.listingId, access.reservationId);
+
+    const paymentLookup = [
+      {
+        reservationId: access.reservationId,
+        listingId: access.listingId,
+      },
+      ...(cancellationDetails.paymentIntentId
+        ? [{
+            stripePaymentIntentId: cancellationDetails.paymentIntentId,
+            listingId: access.listingId,
+          }]
+        : []),
+    ];
+    const linkedPayment = await this.prisma.payment.findFirst({
+      where: {
+        OR: paymentLookup,
+      },
+      select: {
+        id: true,
+        metadata: true,
+        rawResponse: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    if (linkedPayment) {
+      const nextStatus = effectiveRefundMinor <= 0
+        ? 'canceled'
+        : effectiveRefundMinor < cancellationDetails.quote.chargedAmountMinor
+          ? 'partially_refunded'
+          : 'refunded';
+      const cancellationPayload = {
+        canceledAtISO,
+        reason,
+        stage: cancellationDetails.quote.stage,
+        chargedAmountMinor: cancellationDetails.quote.chargedAmountMinor,
+        refundableAmountMinor: effectiveRefundMinor,
+        retainedAmountMinor: effectiveRetainedMinor,
+        retainedPercent: effectiveRetainedPercent,
+        paymentIntentId: cancellationDetails.paymentIntentId,
+        stripeAction: stripeResult.action,
+        stripeStatus: stripeResult.stripeStatus,
+        stripeRefundId: stripeResult.stripeRefundId,
+      };
+
+      await this.prisma.payment.update({
+        where: {
+          id: linkedPayment.id,
+        },
+        data: {
+          status: nextStatus,
+          metadata: toPrismaJson({
+            ...asObject(linkedPayment.metadata),
+            bookingCancellation: cancellationPayload,
+          }),
+          rawResponse: toPrismaJson({
+            ...asObject(linkedPayment.rawResponse),
+            bookingCancellation: cancellationPayload,
+          }),
+        },
+      });
+    }
+
+    return this.getBookingConfirmation(access.reservationId, token, {
+      publicBaseUrl: options?.publicBaseUrl,
+    });
   }
 
   async createBooking(input: Record<string, unknown>) {

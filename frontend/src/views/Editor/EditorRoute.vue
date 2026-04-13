@@ -13,7 +13,9 @@ const route = useRoute()
 
 const userId = computed(() => requireActiveUserId(route.params.userId))
 
-const source = computed<EditorSource>(() => createUserEditorSource(userId.value))
+const source = computed<EditorSource>(() => createUserEditorSource(userId.value, {
+  adminViewAllListings: true,
+}))
 </script>
 
 <template>

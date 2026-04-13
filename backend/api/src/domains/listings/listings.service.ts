@@ -5,9 +5,11 @@ import { deepMerge, asObject, toNumber } from '../../lib/json.js';
 import { buildListingId, buildReservationId } from '../../lib/id.js';
 import { toPrismaJson } from '../../lib/prisma.js';
 import { hasAdminAccess } from '../../lib/authRole.js';
+import { buildRequestAuthFromClerkUser, fetchClerkUserById, type ClerkUserProfile } from '../../lib/clerkUsers.js';
 import type { RequestAuth } from '../../types/auth.js';
 import {
   buildHostProfileFromUser,
+  isDeprecatedHostIdentity,
   resolveUserByIdentifier,
   upsertUserFromAuth,
 } from '../users/users.repository.js';
@@ -15,6 +17,21 @@ import { buildDefaultResource, type ListingResourceKey } from './listings.consta
 import type { CreateListingInput } from './listings.schemas.js';
 
 type ListingRecord = Listing & { owner: User | null };
+type OwnerIdentitySource = {
+  email?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  displayName?: string | null;
+  avatarUrl?: string | null;
+  hostProfile?: unknown;
+  clerkUserId?: string | null;
+  externalUserId?: string | null;
+};
+type ListingCardOwner = Pick<
+  User,
+  'id' | 'email' | 'firstName' | 'lastName' | 'displayName' | 'avatarUrl' | 'hostProfile' | 'clerkUserId' | 'externalUserId'
+>;
+type ListingCardRecord = Listing & { owner?: ListingCardOwner | null };
 
 type ListingSectionBundle = {
   core: Record<string, unknown>;
@@ -134,6 +151,136 @@ function readString(value: unknown): string | null {
 function readBoolean(value: unknown, fallback = false): boolean {
   if (typeof value === 'boolean') return value;
   return fallback;
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  return value as Record<string, unknown>;
+}
+
+function readOwnerUsernameFromHostProfile(hostProfile: unknown): string | null {
+  const record = asRecord(hostProfile);
+  if (!record) return null;
+
+  const candidates = [
+    record.pseudo,
+    record.displayName,
+    record.display_name,
+    record.name,
+    record.username,
+    record.userName,
+    record.user_name,
+  ];
+
+  for (const candidate of candidates) {
+    const normalized = readString(candidate);
+    if (!normalized) continue;
+    if (isDeprecatedHostIdentity(normalized)) continue;
+    return normalized;
+  }
+
+  return null;
+}
+
+function isLikelyClerkUserId(value: string): boolean {
+  return /^user_[a-zA-Z0-9]+$/.test(value);
+}
+
+function readOwnerLookupClerkUserId(owner: Pick<OwnerIdentitySource, 'clerkUserId' | 'externalUserId'> | null | undefined): string | null {
+  const clerkUserId = readString(owner?.clerkUserId);
+  if (clerkUserId && isLikelyClerkUserId(clerkUserId)) return clerkUserId;
+
+  const externalUserId = readString(owner?.externalUserId);
+  if (externalUserId && isLikelyClerkUserId(externalUserId)) return externalUserId;
+
+  return null;
+}
+
+function readOwnerUsername(owner: OwnerIdentitySource | null | undefined, clerkUser: ClerkUserProfile | null): string | null {
+  const fromHostProfile = readOwnerUsernameFromHostProfile(owner?.hostProfile);
+  if (fromHostProfile) return fromHostProfile;
+
+  const clerkUsername = readString(clerkUser?.username);
+  if (clerkUsername && !isDeprecatedHostIdentity(clerkUsername)) return clerkUsername;
+
+  return null;
+}
+
+function readEmailLocalPart(value: string | null | undefined): string | null {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const localPart = trimmed.split('@')[0]?.trim() ?? '';
+  return localPart || null;
+}
+
+function resolveOwnerDisplayName(owner: OwnerIdentitySource | null | undefined, clerkUser: ClerkUserProfile | null): string | null {
+  const directDisplayName = readString(owner?.displayName);
+  if (directDisplayName && !isDeprecatedHostIdentity(directDisplayName)) return directDisplayName;
+
+  const fullName = [owner?.firstName, owner?.lastName].filter(Boolean).join(' ').trim();
+  if (fullName && !isDeprecatedHostIdentity(fullName)) return fullName;
+
+  const ownerUsername = readOwnerUsername(owner, clerkUser);
+  if (ownerUsername) return ownerUsername;
+
+  const clerkDisplayName = readString(clerkUser?.displayName);
+  if (clerkDisplayName && !isDeprecatedHostIdentity(clerkDisplayName)) return clerkDisplayName;
+
+  const clerkFullName = [clerkUser?.firstName, clerkUser?.lastName].filter(Boolean).join(' ').trim();
+  if (clerkFullName && !isDeprecatedHostIdentity(clerkFullName)) return clerkFullName;
+
+  return readEmailLocalPart(readString(clerkUser?.email) ?? readString(owner?.email));
+}
+
+function resolveOwnerEmail(owner: OwnerIdentitySource | null | undefined, clerkUser: ClerkUserProfile | null): string | null {
+  return readString(clerkUser?.email) ?? readString(owner?.email);
+}
+
+function resolveOwnerAvatarUrl(owner: OwnerIdentitySource | null | undefined, clerkUser: ClerkUserProfile | null): string | null {
+  return readString(clerkUser?.avatarUrl) ?? readString(owner?.avatarUrl);
+}
+
+function mergeHostResourceWithDynamicIdentity(rawHost: unknown, dynamicHost: Record<string, unknown>): Record<string, unknown> {
+  const hostRecord = asObject(rawHost) ?? {};
+  const dynamicName = readString(dynamicHost.name) ?? '';
+  const dynamicAvatar = readString(dynamicHost.avatar) ?? '';
+
+  const merged: Record<string, unknown> = {
+    ...dynamicHost,
+    ...hostRecord,
+    name: dynamicName,
+    avatar: dynamicAvatar,
+  };
+
+  if (dynamicName) {
+    merged.displayName = dynamicName;
+    merged.pseudo = dynamicName;
+  } else {
+    delete merged.displayName;
+    delete merged.pseudo;
+  }
+
+  return merged;
+}
+
+function readHostResourceIdentityName(value: unknown): string | null {
+  const record = asRecord(value);
+  if (!record) return null;
+
+  return (
+    readString(record.name)
+    ?? readString(record.displayName)
+    ?? readString(record.display_name)
+    ?? readString(record.pseudo)
+    ?? null
+  );
+}
+
+function hasLegacyHostIdentity(value: unknown): boolean {
+  const identity = readHostResourceIdentityName(value);
+  if (!identity) return false;
+  return isDeprecatedHostIdentity(identity);
 }
 
 function stripAccents(value: string): string {
@@ -600,9 +747,36 @@ export class ListingsService {
     return { listing, actor };
   }
 
-  private toSections(listing: ListingRecord): ListingSectionBundle {
+  private async buildDynamicOwnerHostProfile(owner: User | null): Promise<Record<string, unknown>> {
+    if (!owner) {
+      return buildHostProfileFromUser(owner);
+    }
+
+    const lookupClerkUserId = readOwnerLookupClerkUserId(owner);
+    const clerkOwner = lookupClerkUserId ? await fetchClerkUserById(lookupClerkUserId) : null;
+    const resolvedDisplayName = resolveOwnerDisplayName(owner, clerkOwner);
+    const resolvedEmail = resolveOwnerEmail(owner, clerkOwner);
+    const resolvedAvatarUrl = resolveOwnerAvatarUrl(owner, clerkOwner);
+    const resolvedFirstName = readString(clerkOwner?.firstName) ?? readString(owner.firstName);
+    const resolvedLastName = readString(clerkOwner?.lastName) ?? readString(owner.lastName);
+
+    const enrichedOwner: User = {
+      ...owner,
+      firstName: resolvedFirstName,
+      lastName: resolvedLastName,
+      displayName: resolvedDisplayName ?? null,
+      email: resolvedEmail ?? null,
+      avatarUrl: resolvedAvatarUrl ?? null,
+    };
+
+    return buildHostProfileFromUser(enrichedOwner);
+  }
+
+  private async toSections(listing: ListingRecord): Promise<ListingSectionBundle> {
     const core = asObject(listing.core, buildDefaultResource('core', listing.id));
     const slug = buildListingSlugFromCore(core, listing.id);
+    const dynamicHostProfile = await this.buildDynamicOwnerHostProfile(listing.owner);
+    const host = mergeHostResourceWithDynamicIdentity(listing.host, dynamicHostProfile);
 
     return {
       core: {
@@ -615,7 +789,7 @@ export class ListingsService {
       arrival: asObject(listing.arrival, buildDefaultResource('arrival', listing.id)),
       notes: asObject(listing.notes, buildDefaultResource('notes', listing.id)),
       comments: asObject(listing.comments, buildDefaultResource('comments', listing.id)),
-      host: asObject(listing.host, buildHostProfileFromUser(listing.owner)),
+      host,
     };
   }
 
@@ -688,9 +862,22 @@ export class ListingsService {
 
     const owner = (listing as { owner?: User | null }).owner ?? null;
     const fallback = resource === 'host'
-      ? buildHostProfileFromUser(owner)
+      ? await this.buildDynamicOwnerHostProfile(owner)
       : buildDefaultResource(resource, listingId);
     const rawValue = (listing as Record<string, unknown>)[resource];
+    if (resource === 'host') {
+      const resolvedHost = mergeHostResourceWithDynamicIdentity(rawValue, fallback);
+      if (hasLegacyHostIdentity(rawValue)) {
+        await this.prisma.listing.update({
+          where: { id: listingId },
+          data: {
+            host: toPrismaJson(resolvedHost),
+          },
+        });
+      }
+      return resolvedHost;
+    }
+
     return asObject(rawValue, fallback);
   }
 
@@ -710,7 +897,17 @@ export class ListingsService {
       return null;
     }
 
-    return this.toSections(listing);
+    const sections = await this.toSections(listing);
+    if (hasLegacyHostIdentity(listing.host)) {
+      await this.prisma.listing.update({
+        where: { id: listing.id },
+        data: {
+          host: toPrismaJson(sections.host),
+        },
+      });
+    }
+
+    return sections;
   }
 
   async getListingDomain(listingId: string, auth: RequestAuth | null) {
@@ -1061,7 +1258,11 @@ export class ListingsService {
     if (resource === 'arrival') data.arrival = toJsonInput(normalizedMerged);
     if (resource === 'notes') data.notes = toJsonInput(normalizedMerged);
     if (resource === 'comments') data.comments = toJsonInput(normalizedMerged);
-    if (resource === 'host') data.host = toJsonInput(normalizedMerged);
+    if (resource === 'host') {
+      const dynamicHostProfile = await this.buildDynamicOwnerHostProfile(owner);
+      normalizedMerged = mergeHostResourceWithDynamicIdentity(normalizedMerged, dynamicHostProfile);
+      data.host = toJsonInput(normalizedMerged);
+    }
 
     if (!listing.ownerId && actor) {
       data.owner = {
@@ -1085,7 +1286,7 @@ export class ListingsService {
   }) {
     if (!hasAdminAccess(args.auth)) return 'forbidden' as const;
 
-    const [actor, listing, targetUser] = await Promise.all([
+    const [actor, listing] = await Promise.all([
       upsertUserFromAuth(this.prisma, args.auth),
       this.prisma.listing.findUnique({
         where: { id: args.listingId },
@@ -1094,10 +1295,19 @@ export class ListingsService {
           ownerId: true,
         },
       }),
-      resolveUserByIdentifier(this.prisma, args.targetUserId),
     ]);
 
     if (!listing) return null;
+
+    let targetUser = await resolveUserByIdentifier(this.prisma, args.targetUserId);
+    if (!targetUser) {
+      const clerkUser = await fetchClerkUserById(args.targetUserId);
+      if (clerkUser) {
+        const authPayload = buildRequestAuthFromClerkUser(clerkUser);
+        targetUser = await upsertUserFromAuth(this.prisma, authPayload);
+      }
+    }
+
     if (!targetUser) return 'target_not_found' as const;
 
     const normalizedTrialDays = this.normalizeTrialDays(args.trialDays);
@@ -1176,13 +1386,28 @@ export class ListingsService {
     } satisfies TransferListingOwnershipResult;
   }
 
-  listUserCards(listings: Listing[]) {
+  async listUserCards(listings: ListingCardRecord[]) {
     const ownerScopedSubdomainCounts = new Map<string, number>();
     for (const listing of listings) {
       if (!listing.ownerId || !listing.subdomainSlug) continue;
       const key = `${listing.ownerId}::${listing.subdomainSlug}`;
       ownerScopedSubdomainCounts.set(key, (ownerScopedSubdomainCounts.get(key) ?? 0) + 1);
     }
+
+    const ownerClerkIds = new Set<string>();
+    for (const listing of listings) {
+      const ownerLookupId = readOwnerLookupClerkUserId(listing.owner ?? null);
+      if (!ownerLookupId) continue;
+      ownerClerkIds.add(ownerLookupId);
+    }
+
+    const clerkUsersById = new Map<string, ClerkUserProfile | null>();
+    await Promise.all(
+      [...ownerClerkIds].map(async (ownerClerkId) => {
+        const clerkUser = await fetchClerkUserById(ownerClerkId);
+        clerkUsersById.set(ownerClerkId, clerkUser);
+      }),
+    );
 
     return listings.map((listing) => {
       const core = asObject(listing.core, buildDefaultResource('core', listing.id));
@@ -1205,12 +1430,24 @@ export class ListingsService {
           ? this.buildManagedListingPublicUrl(listing.subdomainSlug, slug)
           : this.buildListingPublicUrl(listing.subdomainSlug)
         : undefined;
+      const owner = listing.owner ?? null;
+      const ownerLookupId = readOwnerLookupClerkUserId(owner);
+      const clerkOwner = ownerLookupId ? (clerkUsersById.get(ownerLookupId) ?? null) : null;
+      const ownerDisplayName = resolveOwnerDisplayName(owner, clerkOwner);
+      const ownerEmail = resolveOwnerEmail(owner, clerkOwner);
+      const ownerUsername = readOwnerUsername(owner, clerkOwner);
+      const ownerAvatarUrl = resolveOwnerAvatarUrl(owner, clerkOwner);
 
       return {
         listingId: listing.id,
         slug,
         subdomainSlug: listing.subdomainSlug ?? undefined,
         publicUrl,
+        ownerId: listing.ownerId ?? undefined,
+        ownerDisplayName: ownerDisplayName || undefined,
+        ownerEmail: ownerEmail || undefined,
+        ownerUsername: ownerUsername || undefined,
+        ownerAvatarUrl: ownerAvatarUrl || undefined,
         title: typeof core.title === 'string' ? core.title : undefined,
         status: typeof core.status === 'string' ? core.status : listing.status,
         hasPendingChanges: Boolean(listing.hasPendingChanges),

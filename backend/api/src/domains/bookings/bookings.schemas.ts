@@ -56,6 +56,11 @@ export const bookingAccessQuerySchema = z.object({
   token: z.string().trim().min(1),
 });
 
+export const cancelBookingSchema = z.object({
+  token: z.string().trim().min(1),
+  reason: z.string().trim().max(1000).optional(),
+});
+
 export const bookingGuideParamsSchema = z.object({
   guideKey: z.string().trim().min(1),
 });

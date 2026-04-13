@@ -4,7 +4,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
-import { fetchBookingConfirmation, buildReservationStayIcalUrl } from '@/domain/api/bookings'
+import { fetchBookingConfirmation, buildReservationStayIcalUrl, cancelBookingReservation } from '@/domain/api/bookings'
 import { normalizeReservations } from '@/domain/listings/bookings'
 import { getListingsController } from '@/domain/listings/controller'
 import type { RawHost } from '@/domain/listings/types'
@@ -35,6 +35,27 @@ type ConfirmationViewModel = {
     isActive: boolean
     activeAfterISO: string
   }
+  cancellation: {
+    status: 'active' | 'canceled'
+    canCancel: boolean
+    canceledAtISO: string | null
+    reason: string | null
+    policy: {
+      policy: 'flexible' | 'moderate' | 'strict' | 'custom'
+      days: number
+      feePercent: number
+      lateFeePercent: number
+    }
+    refund: {
+      stage: 'full_refund' | 'partial_refund' | 'late_cancellation' | 'after_arrival'
+      currency: string
+      chargedAmount: number
+      refundableAmount: number
+      retainedAmount: number
+      retainedPercent: number
+      paymentIntentId: string | null
+    }
+  }
 }
 
 const route = useRoute()
@@ -43,6 +64,9 @@ const isLoading = ref(true)
 const loadError = ref<string | null>(null)
 const confirmation = ref<ConfirmationViewModel | null>(null)
 const localIcalBlobUrl = ref<string | null>(null)
+const isCanceling = ref(false)
+const cancelError = ref<string | null>(null)
+const cancelSuccess = ref<string | null>(null)
 
 function readRouteString(value: unknown): string {
   if (typeof value === 'string') return value.trim()
@@ -59,6 +83,21 @@ function readHostString(host: Partial<RawHost> | null | undefined, key: string):
   if (typeof value !== 'string') return null
   const trimmed = value.trim()
   return trimmed || null
+}
+
+function normalizeIdentityToken(value: string): string {
+  return value
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[@\s._-]+/g, '')
+    .trim()
+}
+
+function isDeprecatedHostIdentity(value: string | null | undefined): boolean {
+  if (!value) return false
+  const normalized = normalizeIdentityToken(value)
+  return normalized === 'hote' || normalized === 'host'
 }
 
 function resolveAbsoluteUrl(path: string): string {
@@ -203,6 +242,12 @@ async function loadFromLocalFallback(params: {
   }
 
   const host = (bundle.host ?? null) as Partial<RawHost> | null
+  const hostEmail = readHostString(host, 'email') ?? ''
+  const hostRawName = readHostString(host, 'name')
+  const hostName = hostRawName && !isDeprecatedHostIdentity(hostRawName) ? hostRawName : null
+  const hostFallbackName = hostEmail.trim()
+    ? hostEmail.split('@')[0]?.trim() ?? ''
+    : ''
   const guideUrl =
     reservation.confirmation?.guideUrl
     ?? reservation.contact?.confirmation?.guideUrl
@@ -225,7 +270,7 @@ async function loadFromLocalFallback(params: {
       currency,
     },
     host: {
-      name: readHostString(host, 'name') ?? 'Hote',
+      name: hostName ?? (hostFallbackName || 'Proprietaire'),
       status: readHostString(host, 'status'),
       avatar: readHostString(host, 'avatar'),
       catalogLink: readHostString(host, 'catalog-link') ?? readHostString(host, 'catalogLink'),
@@ -240,12 +285,35 @@ async function loadFromLocalFallback(params: {
       isActive: activation.isActive,
       activeAfterISO: activation.activeAfterISO,
     },
+    cancellation: {
+      status: 'active',
+      canCancel: false,
+      canceledAtISO: null,
+      reason: null,
+      policy: {
+        policy: 'flexible',
+        days: 3,
+        feePercent: 10,
+        lateFeePercent: 30,
+      },
+      refund: {
+        stage: 'partial_refund',
+        currency,
+        chargedAmount: Math.max(0, Math.round(Number(reservation.payment?.deposit ?? reservation.payment?.total ?? 0) || 0)),
+        refundableAmount: 0,
+        retainedAmount: Math.max(0, Math.round(Number(reservation.payment?.deposit ?? reservation.payment?.total ?? 0) || 0)),
+        retainedPercent: 100,
+        paymentIntentId: null,
+      },
+    },
   }
 }
 
 async function loadConfirmation() {
   isLoading.value = true
   loadError.value = null
+  cancelError.value = null
+  cancelSuccess.value = null
   confirmation.value = null
 
   const reservationId = readRouteString(route.params.reservationId)
@@ -275,6 +343,7 @@ async function loadConfirmation() {
         isActive: response.guide.isActive,
         activeAfterISO: response.guide.activeAfterISO,
       },
+      cancellation: response.cancellation,
     }
   } catch (error) {
     if (!listingId) {
@@ -477,6 +546,102 @@ const guideActivationLabel = computed(() => {
     timeZone: 'UTC',
   }).format(parsed)
 })
+
+const cancellationPolicyLabel = computed(() => {
+  const model = confirmation.value
+  if (!model) return ''
+  const { policy } = model.cancellation.policy
+  if (policy === 'moderate') return 'Modérée'
+  if (policy === 'strict') return 'Stricte'
+  if (policy === 'custom') return 'Personnalisée'
+  return 'Flexible'
+})
+
+const cancellationStageLabel = computed(() => {
+  const model = confirmation.value
+  if (!model) return ''
+  const stage = model.cancellation.refund.stage
+  if (stage === 'full_refund') return 'Remboursement intégral'
+  if (stage === 'late_cancellation') return 'Annulation tardive'
+  if (stage === 'after_arrival') return 'Arrivée dépassée'
+  return 'Remboursement partiel'
+})
+
+const cancellationChargedLabel = computed(() => {
+  const model = confirmation.value
+  if (!model) return ''
+  return formatCurrency(model.cancellation.refund.chargedAmount, model.cancellation.refund.currency)
+})
+
+const cancellationRefundableLabel = computed(() => {
+  const model = confirmation.value
+  if (!model) return ''
+  return formatCurrency(model.cancellation.refund.refundableAmount, model.cancellation.refund.currency)
+})
+
+const cancellationRetainedLabel = computed(() => {
+  const model = confirmation.value
+  if (!model) return ''
+  return formatCurrency(model.cancellation.refund.retainedAmount, model.cancellation.refund.currency)
+})
+
+const cancellationSummaryLine = computed(() => {
+  const model = confirmation.value
+  if (!model) return ''
+  return `Annulation jusqu'à ${model.cancellation.policy.days} jour${model.cancellation.policy.days > 1 ? 's' : ''} avant arrivée: sans frais.`
+})
+
+const cancellationPenaltyLine = computed(() => {
+  const model = confirmation.value
+  if (!model) return ''
+  return `Ensuite: retenue de ${model.cancellation.policy.feePercent}% (retenue de ${model.cancellation.policy.lateFeePercent}% sous 24h).`
+})
+
+const canTriggerCancellation = computed(() => {
+  const model = confirmation.value
+  if (!model) return false
+  return listingsController.mode === 'api' && model.cancellation.canCancel && !isLoading.value && !isCanceling.value
+})
+
+async function cancelCurrentReservation() {
+  const model = confirmation.value
+  if (!model) return
+
+  cancelError.value = null
+  cancelSuccess.value = null
+
+  if (listingsController.mode !== 'api') {
+    cancelError.value = 'Annulation indisponible hors mode API.'
+    return
+  }
+
+  if (!model.cancellation.canCancel) {
+    cancelError.value = 'Cette réservation ne peut plus être annulée en ligne.'
+    return
+  }
+
+  isCanceling.value = true
+  try {
+    const updated = await cancelBookingReservation({
+      reservationId: model.reservationId,
+      token: model.guide.guideAccessKey,
+    })
+    confirmation.value = {
+      reservationId: updated.reservationId,
+      listingId: updated.listingId,
+      stay: updated.stay,
+      host: updated.host,
+      guide: updated.guide,
+      cancellation: updated.cancellation,
+    }
+    cancelSuccess.value = 'Réservation annulée avec succès.'
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Impossible d annuler la réservation.'
+    cancelError.value = message
+  } finally {
+    isCanceling.value = false
+  }
+}
 </script>
 
 <template>
@@ -557,6 +722,66 @@ const guideActivationLabel = computed(() => {
             class="muted"
           >
             Les coordonnées de contact seront partagées prochainement.
+          </p>
+        </section>
+
+        <section class="panel cancellation-panel">
+          <div class="panel-head">
+            <h2>Annulation</h2>
+            <p class="stay-range">{{ cancellationPolicyLabel }}</p>
+          </div>
+          <p class="muted">
+            {{ cancellationSummaryLine }}
+          </p>
+          <p class="muted">
+            {{ cancellationPenaltyLine }}
+          </p>
+
+          <dl class="stat-grid cancellation-stats">
+            <div class="stat-item">
+              <dt>Statut</dt>
+              <dd>{{ cancellationStageLabel }}</dd>
+            </div>
+            <div class="stat-item">
+              <dt>Payé maintenant</dt>
+              <dd>{{ cancellationChargedLabel }}</dd>
+            </div>
+            <div class="stat-item is-highlight">
+              <dt>Remboursable</dt>
+              <dd>{{ cancellationRefundableLabel }}</dd>
+            </div>
+            <div class="stat-item">
+              <dt>Retenu</dt>
+              <dd>{{ cancellationRetainedLabel }}</dd>
+            </div>
+          </dl>
+
+          <p
+            v-if="confirmation.cancellation.status === 'canceled' && confirmation.cancellation.canceledAtISO"
+            class="muted"
+          >
+            Réservation annulée le {{ formatDateLabel(confirmation.cancellation.canceledAtISO.slice(0, 10)) }}.
+          </p>
+
+          <button
+            type="button"
+            class="btn danger"
+            :disabled="!canTriggerCancellation"
+            @click="cancelCurrentReservation"
+          >
+            {{ isCanceling ? 'Annulation en cours...' : 'Annuler la réservation' }}
+          </button>
+          <p
+            v-if="cancelSuccess"
+            class="state is-success"
+          >
+            {{ cancelSuccess }}
+          </p>
+          <p
+            v-if="cancelError"
+            class="state is-error"
+          >
+            {{ cancelError }}
           </p>
         </section>
 
@@ -696,6 +921,10 @@ const guideActivationLabel = computed(() => {
   color: rgba($secondary-text, 0.78);
   font-size: 14px;
 
+  &.is-success {
+    color: rgba($good, 0.92);
+  }
+
   &.is-error {
     color: rgba($bad, 0.92);
   }
@@ -800,6 +1029,10 @@ const guideActivationLabel = computed(() => {
   gap: 8px;
 }
 
+.cancellation-panel {
+  gap: 8px;
+}
+
 .calendar-actions {
   display: grid;
   gap: 8px;
@@ -853,6 +1086,12 @@ const guideActivationLabel = computed(() => {
     background: rgba($secondary-surface-0, 0.5);
   }
 
+  &.danger {
+    border-color: rgba($bad, 0.36);
+    color: rgba($bad, 0.96);
+    background: rgba($bad, 0.1);
+  }
+
   &.calendar {
     width: auto;
     min-height: 34px;
@@ -865,6 +1104,11 @@ const guideActivationLabel = computed(() => {
   &.disabled {
     opacity: 0.52;
     pointer-events: none;
+  }
+
+  &:disabled {
+    opacity: 0.52;
+    cursor: not-allowed;
   }
 }
 

@@ -162,6 +162,7 @@ function updateTaxes(patch: Partial<PricingTaxes>) {
 /* File: src/views/Editor/components/EditorSidebar/panels/PricingPanels/taxes-panel.scss */
 
 @use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
 @use '@/styles/components/inputs' as inputs;
 @use '@/styles/components/buttons' as buttons;
 @use '@/views/Editor/components/EditorSidebar/panels/panel.scss' as *;
@@ -210,7 +211,7 @@ function updateTaxes(patch: Partial<PricingTaxes>) {
 
       input[type='radio'] {
         @include buttons.checkbox(white);
-        border-radius: 999px;
+        border-radius: borders.$rounded;
       }
     }
 

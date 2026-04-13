@@ -264,6 +264,7 @@ function parseOptionalNumber(raw: string): number | null {
 /* File: src/views/Editor/components/EditorSidebar/panels/PricingPanels/payment-panel.scss */
 
 @use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
 @use '@/styles/components/inputs' as inputs;
 @use '@/styles/components/buttons' as buttons;
 @use '@/views/Editor/components/EditorSidebar/panels/panel.scss' as *;
@@ -298,7 +299,7 @@ function parseOptionalNumber(raw: string): number | null {
 
       input[type='radio'] {
         @include buttons.checkbox(white);
-        border-radius: 999px;
+        border-radius: borders.$rounded;
       }
     }
 

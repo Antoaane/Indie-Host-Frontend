@@ -6,6 +6,8 @@ import { useRoute } from 'vue-router'
 import { useUser } from '@clerk/vue'
 
 import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'
+import ConfirmationDialog from '@/components/overlays/ConfirmationDialog.vue'
+import NumberStepper from '@/components/inputs/NumberStepper.vue'
 import { fetchMyUser, searchAdminPlatformUsers, transferListingOwnershipAsAdmin, type AdminPlatformUser } from '@/domain/api/users'
 import { normalizeListingStatus } from '@/domain/listings/status'
 import { getUserMaxActiveListings } from '@/domain/user/subscription'
@@ -109,6 +111,46 @@ const isTransferUsersLoading = ref(false)
 const isTransferSubmitting = ref(false)
 const transferErrorMessage = ref<string | null>(null)
 const hasLoadedTransferUsers = ref(false)
+const isTransferConfirmationOpen = ref(false)
+const TRANSFER_TRIAL_MIN_DAYS = 0
+const TRANSFER_TRIAL_MAX_DAYS = 365
+const transferTrialPresetDays = [
+  0,
+  7,
+  14,
+  30,
+] as const
+
+function normalizeTransferTrialDays(value: unknown): number {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed)) return TRANSFER_TRIAL_MIN_DAYS
+  return Math.max(TRANSFER_TRIAL_MIN_DAYS, Math.min(TRANSFER_TRIAL_MAX_DAYS, Math.trunc(parsed)))
+}
+
+function setTransferTrialDays(value: unknown) {
+  transferTrialDays.value = normalizeTransferTrialDays(value)
+}
+
+function stepTransferTrialDays(delta: number) {
+  setTransferTrialDays(transferTrialDays.value + delta)
+}
+
+const normalizedTransferTrialDays = computed(() => normalizeTransferTrialDays(transferTrialDays.value))
+const transferTrialSummary = computed(() => {
+  const days = normalizedTransferTrialDays.value
+  if (days <= 0) return 'Aucun essai gratuit.'
+
+  const endsAt = new Date()
+  endsAt.setHours(0, 0, 0, 0)
+  endsAt.setDate(endsAt.getDate() + days)
+  const endDateLabel = new Intl.DateTimeFormat('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(endsAt)
+
+  return `Essai actif pendant ${days} jour${days > 1 ? 's' : ''}, jusqu’au ${endDateLabel}.`
+})
 
 function handleSelect(listingId: string) {
   emit('select', listingId)
@@ -137,11 +179,27 @@ function toApiErrorMessage(error: unknown, fallback: string): string {
   return fallback
 }
 
+function normalizeIdentityToken(value: string): string {
+  return value
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[@\s._-]+/g, '')
+    .trim()
+}
+
+function isDeprecatedHostIdentity(value: string | null | undefined): boolean {
+  if (!value) return false
+  const normalized = normalizeIdentityToken(value)
+  return normalized === 'hote' || normalized === 'host'
+}
+
 function normalizeTransferSearchField(user: AdminPlatformUser): string {
   return normalizeSearchText([
     user.firstName ?? '',
     user.lastName ?? '',
     user.displayName ?? '',
+    user.username ?? '',
     user.email ?? '',
     `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim(),
     `${user.lastName ?? ''} ${user.firstName ?? ''}`.trim(),
@@ -150,14 +208,30 @@ function normalizeTransferSearchField(user: AdminPlatformUser): string {
 
 const transferFilteredUsers = computed(() => {
   const queryValue = normalizeSearchText(transferSearch.value)
-  if (!queryValue) return transferUsers.value
+  const base = queryValue
+    ? transferUsers.value.filter((user) => {
+      const searchable = normalizeTransferSearchField(user)
+      if (!searchable) return false
+      return searchable.includes(queryValue)
+    })
+    : transferUsers.value
 
-  return transferUsers.value.filter((user) => {
-    const searchable = normalizeTransferSearchField(user)
-    if (!searchable) return false
-    return searchable.includes(queryValue)
+  return [...base].sort((left, right) => {
+    const scoreDelta = transferUserVisibilityScore(right) - transferUserVisibilityScore(left)
+    if (scoreDelta !== 0) return scoreDelta
+    return formatTransferUserLabel(left).localeCompare(formatTransferUserLabel(right), 'fr', { sensitivity: 'base' })
   })
 })
+
+function transferUserVisibilityScore(user: AdminPlatformUser): number {
+  let score = 0
+  if (user.email) score += 3
+  if (user.username) score += 2
+  if (user.displayName) score += 2
+  if (user.firstName || user.lastName) score += 2
+  if (user.avatarUrl) score += 1
+  return score
+}
 
 const selectedTransferUser = computed(() => {
   const userId = transferSelectedUserId.value
@@ -169,22 +243,121 @@ const isTransferActionDisabled = computed(() => {
   if (!isAdminUser.value) return true
   if (!transferListing.value) return true
   if (!selectedTransferUser.value) return true
+  if (isTransferTargetCurrentOwner.value) return true
   return isTransferSubmitting.value
+})
+
+const isTransferTargetCurrentOwner = computed(() => {
+  const listing = transferListing.value
+  const target = selectedTransferUser.value
+  if (!listing || !target) return false
+
+  const ownerId = (listing.ownerId ?? '').trim()
+  if (!ownerId) return false
+  return ownerId === target.id.trim()
 })
 
 function formatTransferUserLabel(user: AdminPlatformUser): string {
   const fullName = [user.firstName, user.lastName].filter(Boolean).join(' ').trim()
   if (fullName) return fullName
-  if (user.displayName) return user.displayName
-  if (user.email) return user.email
-  return user.id
+  if (user.displayName && !isDeprecatedHostIdentity(user.displayName)) return user.displayName
+  if (user.username && !isDeprecatedHostIdentity(user.username)) return user.username
+  if (user.email) return user.email.split('@')[0] ?? user.email
+  return 'Profil utilisateur'
 }
 
 function formatTransferUserMeta(user: AdminPlatformUser): string {
-  const meta = [user.displayName, user.email].filter(Boolean).join(' · ').trim()
+  const email = (user.email ?? '').trim()
+  const usernameRaw = (user.username ?? '').trim()
+  const username = usernameRaw && !isDeprecatedHostIdentity(usernameRaw) ? usernameRaw : ''
+  if (email && username) return `${email} · @${username}`
+  if (email) return email
+  if (username) return `@${username}`
+  const meta = [user.displayName].filter((value) => Boolean(value) && !isDeprecatedHostIdentity(value ?? '')).join(' · ').trim()
   if (meta) return meta
-  return user.id
+  return 'Profil à compléter'
 }
+
+function formatTransferUserAlias(user: AdminPlatformUser): string | null {
+  const username = (user.username ?? '').trim()
+  if (!username) return null
+  if (isDeprecatedHostIdentity(username)) return null
+  const normalizedUsername = normalizeSearchText(username)
+  const normalizedPrimary = normalizeSearchText(formatTransferUserLabel(user))
+  if (normalizedUsername === normalizedPrimary) return null
+  return `@${username}`
+}
+
+function formatTransferUserInitials(user: AdminPlatformUser): string {
+  const source = formatTransferUserLabel(user).replace(/@/g, ' ').trim()
+  const segments = source.split(/\s+/).filter(Boolean).slice(0, 2)
+  if (segments.length >= 2) {
+    const first = segments[0]?.[0] ?? ''
+    const second = segments[1]?.[0] ?? ''
+    return `${first}${second}`.toUpperCase()
+  }
+  const one = segments[0]?.slice(0, 2) ?? 'U'
+  return one.toUpperCase()
+}
+
+function formatTransferUsersCount(count: number): string {
+  return `${count} profil${count > 1 ? 's' : ''}`
+}
+
+function formatListingOwnerLabel(listing: UserListingCard | null): string {
+  if (!listing) return 'Propriétaire inconnu'
+
+  const displayNameRaw = (listing.ownerDisplayName ?? '').trim()
+  const displayName = displayNameRaw && !isDeprecatedHostIdentity(displayNameRaw) ? displayNameRaw : ''
+  if (displayName) return displayName
+
+  const usernameRaw = (listing.ownerUsername ?? '').trim()
+  const username = usernameRaw && !isDeprecatedHostIdentity(usernameRaw) ? usernameRaw : ''
+  if (username) return `@${username}`
+
+  const email = (listing.ownerEmail ?? '').trim()
+  if (email) return email
+
+  return 'Propriétaire inconnu'
+}
+
+function formatListingOwnerMeta(listing: UserListingCard | null): string {
+  if (!listing) return 'Profil à compléter'
+
+  const email = (listing.ownerEmail ?? '').trim()
+  const usernameRaw = (listing.ownerUsername ?? '').trim()
+  const username = usernameRaw && !isDeprecatedHostIdentity(usernameRaw) ? usernameRaw : ''
+  if (email && username) return `${email} · @${username}`
+  if (email) return email
+  if (username) return `@${username}`
+  return 'Profil à compléter'
+}
+
+const transferCurrentOwnerLabel = computed(() => formatListingOwnerLabel(transferListing.value))
+const transferCurrentOwnerMeta = computed(() => formatListingOwnerMeta(transferListing.value))
+const transferSelectedTargetLabel = computed(() => {
+  if (!selectedTransferUser.value) return 'Aucun utilisateur sélectionné'
+  return formatTransferUserLabel(selectedTransferUser.value)
+})
+const transferSelectedTargetMeta = computed(() => {
+  if (!selectedTransferUser.value) return 'Choisissez un utilisateur dans la liste ci-dessous.'
+  return formatTransferUserMeta(selectedTransferUser.value)
+})
+const transferConfirmationMessage = computed(() => {
+  const listing = transferListing.value
+  const target = selectedTransferUser.value
+  const trialDays = normalizedTransferTrialDays.value
+
+  if (!listing || !target) {
+    return 'Ce transfert modifie définitivement le propriétaire de l’annonce.'
+  }
+
+  const trialMessage = trialDays > 0
+    ? ` Un essai gratuit de ${trialDays} jour${trialDays > 1 ? 's' : ''} sera appliqué.`
+    : ' Aucun essai gratuit ne sera appliqué.'
+
+  return `Le propriétaire actuel (${formatListingOwnerLabel(listing)}) sera remplacé par ${formatTransferUserLabel(target)}.${trialMessage}`
+})
 
 async function loadTransferUsers() {
   if (!isAdminUser.value) return
@@ -241,7 +414,7 @@ function openTransferDialog(listingId: string) {
   transferListing.value = listing
   transferSearch.value = ''
   transferSelectedUserId.value = null
-  transferTrialDays.value = 0
+  setTransferTrialDays(0)
   transferErrorMessage.value = null
   isTransferDialogOpen.value = true
 
@@ -253,11 +426,12 @@ function openTransferDialog(listingId: string) {
 function closeTransferDialogInternal(options?: { force?: boolean }) {
   if (isTransferSubmitting.value && !options?.force) return
 
+  isTransferConfirmationOpen.value = false
   isTransferDialogOpen.value = false
   transferListing.value = null
   transferSearch.value = ''
   transferSelectedUserId.value = null
-  transferTrialDays.value = 0
+  setTransferTrialDays(0)
   transferErrorMessage.value = null
 }
 
@@ -274,13 +448,9 @@ async function submitTransfer() {
   transferErrorMessage.value = null
 
   try {
-    const normalizedTrialDays = Number.isFinite(Number(transferTrialDays.value))
-      ? Math.max(0, Math.min(365, Math.trunc(Number(transferTrialDays.value))))
-      : 0
-
     await transferListingOwnershipAsAdmin(listing.listingId, {
       targetUserId: target.id,
-      trialDays: normalizedTrialDays,
+      trialDays: normalizedTransferTrialDays.value,
     })
 
     emit('listing-transferred', { listingId: listing.listingId })
@@ -290,6 +460,22 @@ async function submitTransfer() {
   } finally {
     isTransferSubmitting.value = false
   }
+}
+
+function openTransferConfirmationDialog() {
+  if (isTransferActionDisabled.value) return
+  isTransferConfirmationOpen.value = true
+}
+
+function closeTransferConfirmationDialog() {
+  if (isTransferSubmitting.value) return
+  isTransferConfirmationOpen.value = false
+}
+
+async function confirmTransferFromDialog() {
+  if (isTransferActionDisabled.value) return
+  isTransferConfirmationOpen.value = false
+  await submitTransfer()
 }
 
 function isStatusMenuOpen(listingId: string) {
@@ -430,6 +616,24 @@ watch(
         </div>
 
         <div class="body">
+          <div class="transfer-context-grid">
+            <div class="context-card">
+              <span class="label">Annonce</span>
+              <span class="value">{{ transferListing?.title || 'Annonce sans titre' }}</span>
+              <span class="meta">ID: {{ transferListing?.listingId || 'n/a' }}</span>
+            </div>
+            <div class="context-card">
+              <span class="label">Propriétaire actuel</span>
+              <span class="value">{{ transferCurrentOwnerLabel }}</span>
+              <span class="meta">{{ transferCurrentOwnerMeta }}</span>
+            </div>
+            <div class="context-card">
+              <span class="label">Cible du transfert</span>
+              <span class="value">{{ transferSelectedTargetLabel }}</span>
+              <span class="meta">{{ transferSelectedTargetMeta }}</span>
+            </div>
+          </div>
+
           <label class="field">
             <span>Rechercher un utilisateur</span>
             <input
@@ -439,6 +643,10 @@ watch(
               autocomplete="off"
             />
           </label>
+
+          <div class="users-caption">
+            <span>{{ formatTransferUsersCount(transferFilteredUsers.length) }}</span>
+          </div>
 
           <div class="users-list">
             <p
@@ -464,8 +672,30 @@ watch(
                 :class="{ 'is-selected': userItem.id === transferSelectedUserId }"
                 @click="transferSelectedUserId = userItem.id"
               >
-                <span class="name">{{ formatTransferUserLabel(userItem) }}</span>
-                <span class="meta">{{ formatTransferUserMeta(userItem) }}</span>
+                <span
+                  class="avatar"
+                  aria-hidden="true"
+                >
+                  <img
+                    v-if="userItem.avatarUrl"
+                    :src="userItem.avatarUrl"
+                    :alt="formatTransferUserLabel(userItem)"
+                    loading="lazy"
+                  />
+                  <span v-else>{{ formatTransferUserInitials(userItem) }}</span>
+                </span>
+                <span class="identity">
+                  <span class="line">
+                    <span class="name">{{ formatTransferUserLabel(userItem) }}</span>
+                    <span
+                      v-if="formatTransferUserAlias(userItem)"
+                      class="alias"
+                    >
+                      {{ formatTransferUserAlias(userItem) }}
+                    </span>
+                  </span>
+                  <span class="meta">{{ formatTransferUserMeta(userItem) }}</span>
+                </span>
               </button>
 
               <p
@@ -477,18 +707,49 @@ watch(
             </template>
           </div>
 
-          <label class="field">
-            <span>Durée d’essai gratuit (en jours)</span>
-            <input
-              v-model.number="transferTrialDays"
-              type="number"
-              min="0"
-              max="365"
-              step="1"
-              inputmode="numeric"
+          <section class="trial-field">
+            <header>
+              <span class="label">Durée d’essai gratuit</span>
+              <span class="value">{{ normalizedTransferTrialDays }} jour{{ normalizedTransferTrialDays > 1 ? 's' : '' }}</span>
+            </header>
+
+            <NumberStepper
+              :value="normalizedTransferTrialDays"
+              :min="TRANSFER_TRIAL_MIN_DAYS"
+              :max="TRANSFER_TRIAL_MAX_DAYS"
+              :decrement-disabled="normalizedTransferTrialDays <= TRANSFER_TRIAL_MIN_DAYS"
+              :increment-disabled="normalizedTransferTrialDays >= TRANSFER_TRIAL_MAX_DAYS"
+              :disable-wheel="true"
+              decrement-aria-label="Réduire la durée d’essai"
+              increment-aria-label="Augmenter la durée d’essai"
+              decrement-title="Réduire la durée d’essai"
+              increment-title="Augmenter la durée d’essai"
+              @decrement="stepTransferTrialDays(-1)"
+              @increment="stepTransferTrialDays(1)"
+              @input="setTransferTrialDays($event.number)"
             />
-            <small>0 = aucun essai gratuit</small>
-          </label>
+
+            <div class="presets">
+              <button
+                v-for="days in transferTrialPresetDays"
+                :key="days"
+                type="button"
+                :class="{ 'is-active': normalizedTransferTrialDays === days }"
+                @click="setTransferTrialDays(days)"
+              >
+                {{ days === 0 ? 'Aucun essai' : `${days} jours` }}
+              </button>
+            </div>
+
+            <small>{{ transferTrialSummary }}</small>
+          </section>
+
+          <p
+            v-if="isTransferTargetCurrentOwner"
+            class="transfer-warning"
+          >
+            L’utilisateur sélectionné est déjà propriétaire de cette annonce.
+          </p>
         </div>
 
         <div class="footer">
@@ -502,13 +763,33 @@ watch(
           <button
             type="button"
             :disabled="isTransferActionDisabled"
-            @click="submitTransfer"
+            @click="openTransferConfirmationDialog"
           >
             {{ isTransferSubmitting ? 'Transfert...' : 'Transférer' }}
           </button>
         </div>
       </div>
     </AbsoluteOverlay>
+
+    <ConfirmationDialog
+      :open="isTransferConfirmationOpen"
+      :level="2"
+      title="Confirmer le transfert"
+      :subject="transferListing?.title || 'Annonce'"
+      :message="transferConfirmationMessage"
+      confirm-word="confirmer"
+      typing-hint='Tapez "confirmer" pour valider le transfert total de propriété.'
+      confirm-label="Confirmer le transfert"
+      cancel-label="Retour"
+      :confirm-disabled="isTransferActionDisabled || isTransferSubmitting"
+      :cancel-disabled="isTransferSubmitting"
+      :close-on-backdrop="!isTransferSubmitting"
+      :close-on-escape="!isTransferSubmitting"
+      aria-label="Confirmation du transfert d’annonce"
+      @confirm="confirmTransferFromDialog"
+      @cancel="closeTransferConfirmationDialog"
+      @close="closeTransferConfirmationDialog"
+    />
   </section>
 </template>
 

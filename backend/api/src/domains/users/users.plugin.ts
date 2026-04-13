@@ -135,6 +135,24 @@ export const usersPlugin = fp(async (fastify) => {
     reply.send({ users });
   });
 
+  fastify.get('/users/admin/listings', {
+    preHandler: fastify.authenticateOptional,
+  }, async (request, reply) => {
+    const auth = resolveAuth(request.auth, request.headers.authorization);
+    if (!auth) {
+      reply.code(401).send({ message: 'Authentication required.' });
+      return;
+    }
+
+    const listings = await service.listAllListingsForAdmin(auth);
+    if (listings === 'forbidden') {
+      reply.code(403).send({ message: 'Admin access required.' });
+      return;
+    }
+
+    reply.send(listings);
+  });
+
   fastify.patch('/users/me', {
     preHandler: fastify.authenticateOptional,
   }, async (request, reply) => {

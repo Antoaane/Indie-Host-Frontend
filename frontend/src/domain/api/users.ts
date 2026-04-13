@@ -29,6 +29,7 @@ export type AdminPlatformUser = {
   firstName: string | null
   lastName: string | null
   displayName: string | null
+  username: string | null
   avatarUrl: string | null
 }
 
@@ -311,6 +312,7 @@ function normalizeAdminPlatformUser(data: Record<string, unknown> | null | undef
     firstName: normalizeOptionalText(payload.firstName),
     lastName: normalizeOptionalText(payload.lastName),
     displayName: normalizeOptionalText(payload.displayName),
+    username: normalizeOptionalText(payload.username),
     avatarUrl: normalizeOptionalText(payload.avatarUrl),
   }
 }

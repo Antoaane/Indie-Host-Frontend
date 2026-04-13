@@ -43,6 +43,21 @@ const NON_SLEEPING_ROOM_TYPES = new Set([
   'bathroom',
 ]);
 
+function normalizeIdentityToken(value: string): string {
+  return value
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[@\s._-]+/g, '')
+    .trim();
+}
+
+function isDeprecatedHostIdentity(value: string | null | undefined): boolean {
+  if (!value) return false;
+  const normalized = normalizeIdentityToken(value);
+  return normalized === 'hote' || normalized === 'host';
+}
+
 function normalizeRoomType(type: unknown): string {
   return String(type ?? '').trim().toLowerCase();
 }
@@ -162,8 +177,10 @@ function parsePerks(raw: RawListingBundle): PerksModel {
 }
 
 function parseHost(host: Maybe<Partial<RawHost>>): HostProfileModel {
+  const rawName = typeof host?.name === 'string' ? host.name.trim() : '';
+  const safeName = rawName && !isDeprecatedHostIdentity(rawName) ? rawName : '';
   return {
-    name: host?.name ?? '',
+    name: safeName,
     status: host?.status,
     seniority: host?.seniority ?? 0,
     globalNote: host?.['global-note'],

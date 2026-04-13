@@ -516,7 +516,7 @@
           "rules": {
             "fullRefund": "Remboursement intégral jusqu’à {days} jours avant l’arrivée.",
             "partialRefund": "À moins de {days} jours : retenue de {feePercent}% du montant total.",
-            "lateCancellation": "À moins de 24h de l’arrivée ou en cas de non-présentation : retenue de 100%."
+            "lateCancellation": "À moins de 24h de l’arrivée ou en cas de non-présentation : retenue de {lateFeePercent}%."
           },
           "daysBefore": "Jours avant arrivée",
           "feePercent": "% retenu après délai",

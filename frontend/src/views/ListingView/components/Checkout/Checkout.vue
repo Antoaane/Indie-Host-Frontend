@@ -48,6 +48,21 @@ const ACCEPTED_PAYMENT_INTENT_STATUSES = new Set([
 const OFFLINE_CONNECTED_ACCOUNT_ID = 'acct_offline_demo'
 const OFFLINE_PAYMENT_INTENT_STATUS = 'succeeded'
 
+function normalizeIdentityToken(value: string): string {
+  return value
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[@\s._-]+/g, '')
+    .trim()
+}
+
+function isDeprecatedHostIdentity(value: string | null | undefined): boolean {
+  if (!value) return false
+  const normalized = normalizeIdentityToken(value)
+  return normalized === 'hote' || normalized === 'host'
+}
+
 const props = withDefaults(
   defineProps<{
     reservation: ReservationPayload
@@ -211,8 +226,9 @@ const paymentBrands = computed(() => {
 const listingTitle = computed(() => props.listing.title.title)
 const listingHost = computed(() => {
   const host = props.listing.hostProfile
-  if (!host?.name) return ''
-  return `à ${host.name}`
+  const hostName = typeof host?.name === 'string' ? host.name.trim() : ''
+  if (!hostName || isDeprecatedHostIdentity(hostName)) return ''
+  return `à ${hostName}`
 })
 const listingLocation = computed(() => {
   const title = props.listing.title

@@ -290,6 +290,11 @@ export type UserListingCard = {
   slug?: string
   subdomainSlug?: string
   publicUrl?: string
+  ownerId?: string
+  ownerDisplayName?: string
+  ownerEmail?: string
+  ownerUsername?: string
+  ownerAvatarUrl?: string
   title?: string
   status?: string
   hasPendingChanges?: boolean
