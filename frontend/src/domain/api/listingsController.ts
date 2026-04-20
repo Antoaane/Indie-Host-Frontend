@@ -332,18 +332,20 @@ function fallbackEditableBundle(listingId: string): RawListingBundle {
   }
 }
 
-function fallbackVolatileBundle(): VolatileBundle {
-  return { bookings: null, notes: null, comments: null, host: getCanonicalHost() }
-}
-
 type ListingHostnameResolution = {
   listingId: string
 }
 
 export function createApiListingsController(): ListingsController {
   const apiEnabled = Boolean(BASE_API_URL)
+  const apiDisabledErrorPrefix = '[Domain][api] Missing VITE_API_BASE_URL while VITE_LISTINGS_DATA_MODE=api.'
   if (!apiEnabled) {
-    console.log('[Domain][api] VITE_API_BASE_URL missing: using mock responses')
+    console.error(`${apiDisabledErrorPrefix} API calls are disabled.`)
+  }
+
+  function assertApiEnabled(operation: string) {
+    if (apiEnabled) return
+    throw new Error(`${apiDisabledErrorPrefix} Impossible de ${operation}.`)
   }
 
   function readResolvedListingId(payload: unknown): string | null {
@@ -379,7 +381,7 @@ export function createApiListingsController(): ListingsController {
       const adminViewAll = Boolean(options?.adminViewAll)
       console.log('[Domain][api] fetchListings', { userId, adminViewAll })
 
-      if (!apiEnabled) return []
+      assertApiEnabled('charger les annonces')
       const token = await getAuthToken({ waitForReady: true })
       if (!token) return []
 
@@ -450,14 +452,7 @@ export function createApiListingsController(): ListingsController {
     resolveListingIdBySlug,
     fetchListingBundle: async (listingId: string): Promise<RawListingBundle> => {
       console.log('[Domain][api] fetchListingBundle', { listingId })
-      if (!apiEnabled) {
-        return {
-          ...fallbackEditableBundle(listingId),
-          notes: null,
-          comments: null,
-          host: getCanonicalHost(),
-        }
-      }
+      assertApiEnabled('charger une annonce')
 
       const bundle = await fetchRemote<RawListingBundle>(resolveUrl(buildListingBundleUrl(listingId)))
       const fallback = fallbackEditableBundle(listingId)
@@ -473,7 +468,7 @@ export function createApiListingsController(): ListingsController {
     },
     fetchEditableListingBundle: async (listingId: string): Promise<RawListingBundle> => {
       console.log('[Domain][api] fetchEditableListingBundle', { listingId })
-      if (!apiEnabled) return fallbackEditableBundle(listingId)
+      assertApiEnabled('charger le brouillon de cette annonce')
 
       const [core, bookings, medias, arrival] = await Promise.all([
         fetchRemote<RawCore>(resolveUrl(buildListingUrl('core', listingId))),
@@ -486,7 +481,7 @@ export function createApiListingsController(): ListingsController {
     },
     fetchVolatileListingBundle: async (listingId: string): Promise<VolatileBundle> => {
       console.log('[Domain][api] fetchVolatileListingBundle', { listingId })
-      if (!apiEnabled) return fallbackVolatileBundle()
+      assertApiEnabled('charger les donnees de reservation')
 
       const [bookings, notes, comments, host] = await Promise.all([
         fetchRemote<RawBookings>(resolveUrl(buildListingUrl('bookings', listingId))),
@@ -499,19 +494,7 @@ export function createApiListingsController(): ListingsController {
     },
     syncListingAvailability: async (listingId: string): Promise<ListingAvailabilitySyncResult> => {
       console.log('[Domain][api] syncListingAvailability', { listingId })
-      if (!apiEnabled) {
-        return {
-          listingId,
-          refreshedAt: new Date().toISOString(),
-          hasSources: false,
-          availabilityUpdated: false,
-          syncedSources: 0,
-          throttledSources: 0,
-          failedSources: 0,
-          skippedSources: 0,
-          sources: [],
-        }
-      }
+      assertApiEnabled('synchroniser les disponibilites')
 
       return postRemotePublic<ListingAvailabilitySyncResult>(
         resolveUrl(buildListingAvailabilityRefreshUrl(listingId)),
@@ -520,7 +503,7 @@ export function createApiListingsController(): ListingsController {
     },
     patchListingDraft: async (listingId: string, patch: DraftPatch): Promise<void> => {
       console.log('[Domain][api] patchListingDraft', { listingId, patch })
-      if (!apiEnabled) return
+      assertApiEnabled('mettre a jour le brouillon')
       const token = await getAuthToken({ waitForReady: true })
 
       const requests: Promise<unknown>[] = []
@@ -555,7 +538,7 @@ export function createApiListingsController(): ListingsController {
     },
     publishListingDraft: async (listingId: string, draft: RawListingBundle): Promise<void> => {
       console.log('[Domain][api] publishListingDraft', { listingId, draft })
-      if (!apiEnabled) return
+      assertApiEnabled('publier cette annonce')
       const token = await getAuthToken({ waitForReady: true })
       const medias = await ensurePublishedMediasStoredInImageKit(draft.medias, {
         listingId,
@@ -590,7 +573,7 @@ export function createApiListingsController(): ListingsController {
     },
     createListing: async (payload?: Partial<RawListingBundle>): Promise<{ listingId: string }> => {
       console.log('[Domain][api] createListing', { payload })
-      if (!apiEnabled) return { listingId: 'listing-mock' }
+      assertApiEnabled('creer une annonce')
 
       const url = resolveUrl(buildCreateListingUrl())
       return postRemote<{ listingId: string }>(url, payload ?? {})

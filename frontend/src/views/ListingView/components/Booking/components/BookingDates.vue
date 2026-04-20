@@ -25,6 +25,7 @@ const selection = computed<RangeISO | null>({
 })
 
 const calendarLayer = ref<HTMLElement | null>(null)
+const overlayId = `booking-dates-overlay-${Math.random().toString(36).slice(2, 10)}`
 </script>
 
 <template>
@@ -37,6 +38,9 @@ const calendarLayer = ref<HTMLElement | null>(null)
         <button
           type="button"
           class="field is-full"
+          aria-haspopup="dialog"
+          :aria-expanded="open ? 'true' : 'false'"
+          :aria-controls="overlayId"
           @click="emit('open')"
           v-html="rangeLabel"
         />
@@ -47,6 +51,7 @@ const calendarLayer = ref<HTMLElement | null>(null)
       class="listing-booking-dates-overlay"
       :open="open"
       :anchor="calendarLayer"
+      :id="overlayId"
       placement="bottom-start"
       :offset="6"
       :z-index="10002"

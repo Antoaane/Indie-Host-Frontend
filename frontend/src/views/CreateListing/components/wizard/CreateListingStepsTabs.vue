@@ -13,7 +13,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <!-- <div class="steps">
+  <div class="steps">
     <button
       v-for="item in props.items"
       :key="item.id"
@@ -29,5 +29,5 @@ const emit = defineEmits<{
       <span>{{ item.index + 1 }}</span>
       <small>{{ item.label }}</small>
     </button>
-  </div> -->
+  </div>
 </template>

@@ -150,10 +150,6 @@ const descriptionStatic = {
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
 
-html:has(#core) {
-  overflow: hidden;
-}
-
 .core#core {
   height: 100%;
 

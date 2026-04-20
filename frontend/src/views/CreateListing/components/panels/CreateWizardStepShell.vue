@@ -73,6 +73,7 @@ const props = withDefaults(defineProps<{
 
   > .content {
     @extend %panel-body;
+    overflow: scroll;
     flex: 1 1 auto;
     min-height: 0;
     min-width: 0;

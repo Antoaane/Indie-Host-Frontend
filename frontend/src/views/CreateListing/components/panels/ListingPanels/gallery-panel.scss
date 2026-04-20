@@ -5,8 +5,16 @@
 @use '@/styles/variables/animations' as animations;
 @use '@/styles/variables/effects' as effects;
 @use '@/styles/components/buttons' as buttons;
+@use '@/views/CreateListing/components/panels/panel.scss' as *;
 
 .create-gallery-panel {
+  @extend %panel;
+
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+
   &.is-drop-instant {
     >.body {
       >.gallery {
@@ -37,9 +45,14 @@
   }
 
   >.body {
-    display: flex;
-    flex-direction: column;
-    gap: var(--layout-gap);
+    @extend %panel-body;
+
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-gutter: stable;
 
     >.gallery {
       display: grid;

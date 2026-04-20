@@ -37,6 +37,17 @@
         }
       }
 
+      >.state {
+        margin: 0;
+        padding: var(--layout-gap-sm);
+        color: rgba($secondary-text, 0.78);
+        @include little-text($thin: false);
+
+        &.is-error {
+          color: rgba($bad, 0.95);
+        }
+      }
+
       >.conversation-list {
         list-style: none;
         margin: 0;

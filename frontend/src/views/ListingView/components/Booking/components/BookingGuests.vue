@@ -29,6 +29,7 @@ const emit = defineEmits<{
 }>()
 
 const guestsLayer = ref<HTMLElement | null>(null)
+const overlayId = `booking-guests-overlay-${Math.random().toString(36).slice(2, 10)}`
 
 function canDecrease(row: GuestRow): boolean {
   return row.value > row.min
@@ -56,6 +57,9 @@ function plusLabel(row: GuestRow): string {
       <button
         type="button"
         class="field is-full"
+        aria-haspopup="dialog"
+        :aria-expanded="open ? 'true' : 'false'"
+        :aria-controls="overlayId"
         @click="emit('toggle')"
       >
         <span>pour</span>
@@ -67,6 +71,7 @@ function plusLabel(row: GuestRow): string {
       class="listing-booking-guests-overlay"
       :open="open"
       :anchor="guestsLayer"
+      :id="overlayId"
       placement="bottom-start"
       :offset="6"
       :match-anchor-width="true"

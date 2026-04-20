@@ -28,6 +28,7 @@ const listingKey = computed(() => {
 
 const rawListing = ref<RawListingBundle | null>(null)
 const isLoading = ref(false)
+const loadErrorMessage = ref<string | null>(null)
 let activeFetchId = 0
 
 const statusFlags = computed(() => getListingStatusFlags(rawListing.value?.core?.status))
@@ -78,6 +79,14 @@ const canonicalSlug = computed(() => buildListingSlug({
   listingId: rawListing.value?.core?.id,
 }))
 
+function resolveFetchErrorMessage(error: unknown): string {
+  const status = (error as { response?: { status?: unknown } })?.response?.status
+  if (status === 404) return 'Cette annonce est introuvable ou a été retirée.'
+  if (status === 403) return 'Cette annonce n est pas accessible depuis votre session.'
+  if (typeof status === 'number' && status >= 500) return 'Le service est temporairement indisponible. Réessayez dans quelques instants.'
+  return 'Cette annonce ne peut pas être affichée pour le moment.'
+}
+
 useHead(() => ({
   title: seoTitle.value,
   link: canonicalUrl.value ? [{ rel: 'canonical', href: canonicalUrl.value }] : [],
@@ -99,6 +108,7 @@ async function fetchRawListing() {
   const fetchId = activeFetchId + 1
   activeFetchId = fetchId
   isLoading.value = true
+  loadErrorMessage.value = null
   try {
     const [
       core,
@@ -124,6 +134,7 @@ async function fetchRawListing() {
   } catch (error) {
     if (fetchId !== activeFetchId) return
     rawListing.value = null
+    loadErrorMessage.value = resolveFetchErrorMessage(error)
     console.warn('[Listing] failed to fetch public listing', { listingKey: listingKey.value, error })
   } finally {
     if (fetchId === activeFetchId) {
@@ -157,6 +168,7 @@ watch(
   listingKey,
   () => {
     rawListing.value = null
+    loadErrorMessage.value = null
     void fetchRawListing()
   },
   { immediate: true },
@@ -202,9 +214,14 @@ watch(
       :key="listingKey ?? rawListing.core?.id ?? 'listing'"
       :rawListing="rawListing"
     />
+    <ListingUnavailable
+      v-else-if="loadErrorMessage"
+      title="Impossible de charger cette annonce"
+      :message="loadErrorMessage"
+    />
     <template v-else>
       <div class="skeleton">
-        {{ isLoading ? 'Chargement…' : 'Aucune donnée' }}
+        {{ isLoading ? 'Chargement…' : 'Annonce indisponible.' }}
       </div>
     </template>
   </main>

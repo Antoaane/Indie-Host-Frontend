@@ -83,6 +83,11 @@ function disableIphoneLandingAnimations() {
   setTimeout(() => clearMotionStyles(), 250)
 }
 
+function releaseLandingScrollLockSafely() {
+  forceReleaseScrollLock()
+  requestAnimationFrame(() => forceReleaseScrollLock())
+}
+
 onMounted(() => {
   isSafariLanding.value = detectSafariBrowser()
   document.documentElement.classList.add('force-scroll')
@@ -109,14 +114,8 @@ onMounted(() => {
     void nextTick().then(() => disableIphoneLandingAnimations())
   }
 
-  // Failsafe: si un overlay a laissé un scroll-lock actif, on le libère sur la landing.
-  // Sans ça, la page peut devenir impossible à scroller.
-  forceReleaseScrollLock()
-  // Certains scroll-locks (ou libs) réappliquent l'état sur le tick suivant.
-  // On retente sur quelques frames pour stabiliser.
-  requestAnimationFrame(() => forceReleaseScrollLock())
-  setTimeout(() => forceReleaseScrollLock(), 0)
-  setTimeout(() => forceReleaseScrollLock(), 250)
+  // Failsafe: si un overlay a laisse un scroll-lock actif, on le libere sur la landing.
+  releaseLandingScrollLockSafely()
 
   // if (vp.lg.value) {
   //   smoother = ScrollSmoother.create({

@@ -116,19 +116,40 @@ const router = createRouter({
     {
       path: '/pricing/callback/auth',
       name: 'pricing-callback-auth',
-      component: PricingChecklistCallbackView,
+      redirect: (to) => ({
+        name: 'pricing-callback',
+        query: {
+          ...to.query,
+          action: 'auth',
+        },
+        hash: to.hash,
+      }),
       meta: { navVariant: 'public' },
     },
     {
       path: '/pricing/callback/checkout',
       name: 'pricing-callback-checkout',
-      component: PricingChecklistCallbackView,
+      redirect: (to) => ({
+        name: 'pricing-callback',
+        query: {
+          ...to.query,
+          action: 'checkout',
+        },
+        hash: to.hash,
+      }),
       meta: { navVariant: 'public' },
     },
     {
       path: '/pricing/callback/connect',
       name: 'pricing-callback-connect',
-      component: PricingChecklistCallbackView,
+      redirect: (to) => ({
+        name: 'pricing-callback',
+        query: {
+          ...to.query,
+          action: 'connect',
+        },
+        hash: to.hash,
+      }),
       meta: { navVariant: 'public' },
     },
     {

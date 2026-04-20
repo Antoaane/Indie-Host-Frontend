@@ -18,7 +18,7 @@ function readQueryValue(value: unknown): string | null {
 }
 
 const redirectUrl = computed(() => {
-  return readQueryValue(route.query.redirect_url) ?? '/pricing/callback'
+  return readQueryValue(route.query.redirect_url) ?? '/dashboard/editor'
 })
 
 const signInUrl = computed(() => {

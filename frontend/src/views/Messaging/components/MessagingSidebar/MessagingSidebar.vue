@@ -43,11 +43,19 @@ const filteredConversations = computed(() => {
   if (!normalized) return props.conversations
   return props.conversations.filter((conversation) => conversation.searchIndex.includes(normalized))
 })
+
+const hasConversations = computed(() => props.conversations.length > 0)
+const hasFilteredResults = computed(() => filteredConversations.value.length > 0)
+const showGlobalEmpty = computed(() => !props.isLoading && !props.error && !hasConversations.value)
+const showSearchEmpty = computed(() => !props.isLoading && !props.error && hasConversations.value && !hasFilteredResults.value)
 </script>
 
 <template>
   <BaseSidebar class="messaging-sidebar">
-    <div class="scroll-container">
+    <div
+      class="scroll-container"
+      :aria-busy="props.isLoading ? 'true' : 'false'"
+    >
       <div class="toolbar">
         <div class="search">
           <Search class="icon" />
@@ -59,7 +67,31 @@ const filteredConversations = computed(() => {
           />
         </div>
       </div>
-      <ul class="conversation-list">
+      <p
+        v-if="props.isLoading"
+        class="state"
+        aria-live="polite"
+      >
+        Chargement des conversations...
+      </p>
+      <p
+        v-else-if="props.error"
+        class="state is-error"
+        role="alert"
+      >
+        {{ props.error }}
+      </p>
+      <p
+        v-else-if="showSearchEmpty || showGlobalEmpty"
+        class="state"
+        aria-live="polite"
+      >
+        {{ showSearchEmpty ? props.searchEmptyLabel : 'Aucune conversation disponible.' }}
+      </p>
+      <ul
+        v-else
+        class="conversation-list"
+      >
         <li
           v-for="conversation in filteredConversations"
           :key="conversation.id"
@@ -109,7 +141,6 @@ const filteredConversations = computed(() => {
         </li>
       </ul>
     </div>
-
   </BaseSidebar>
 </template>
 

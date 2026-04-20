@@ -1,44 +1,123 @@
 .domain-panel {
-  width: min(860px, 100%);
+  width: min(980px, 100%);
   margin: 5rem auto 3rem;
-  padding: 1.5rem;
-  border: 1px solid rgba(10, 21, 41, 0.08);
-  border-radius: 20px;
-  background: #fff;
-  box-shadow: 0 14px 36px rgba(8, 15, 35, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  &__header,
+  &__section {
+    padding: 1.1rem;
+    border: 1px solid rgba(10, 21, 41, 0.08);
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 10px 24px rgba(8, 15, 35, 0.06);
+  }
 
   &__header {
-    margin-bottom: 1.25rem;
-
-    h1 {
-      margin: 0 0 0.35rem;
+    > h1 {
+      margin: 0 0 0.45rem;
       font-size: clamp(1.2rem, 2.5vw, 1.65rem);
       line-height: 1.2;
       color: #0b1220;
     }
 
-    p {
+    > p {
       margin: 0;
       color: #41506b;
     }
   }
 
-  &__form {
-    display: grid;
-    gap: 0.6rem;
-    margin-bottom: 1rem;
+  &__section {
+    > h2 {
+      margin: 0;
+      font-size: 1.05rem;
+      color: #0b1220;
+    }
 
-    label {
+    > label {
+      display: block;
+      margin-top: 0.75rem;
+      margin-bottom: 0.35rem;
       font-weight: 600;
       color: #0b1220;
     }
 
-    input {
+    > select {
+      width: 100%;
+      max-width: 540px;
       border: 1px solid #c6d0e3;
-      border-radius: 12px;
-      min-height: 44px;
-      padding: 0 0.85rem;
-      font-size: 0.98rem;
+      border-radius: 10px;
+      min-height: 42px;
+      padding: 0 0.65rem;
+      font-size: 0.95rem;
+      background: #fff;
+      color: #0b1220;
+    }
+  }
+
+  &__hint {
+    margin: 0.35rem 0 0;
+    color: #41506b;
+  }
+
+  &__feedback {
+    margin: 0.65rem 0 0;
+    color: #1f2d43;
+
+    &.is-success {
+      color: #147d4f;
+    }
+
+    &.is-error {
+      color: #c02237;
+    }
+  }
+
+  &__legacy {
+    &.is-disabled {
+      border-style: dashed;
+      background: #f9fbff;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.85em;
+      color: #223655;
+      background: #eef4ff;
+      border-radius: 6px;
+      padding: 0.15rem 0.35rem;
+    }
+  }
+}
+
+.domain-custom-purchase {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e6ebf4;
+
+  &__intro {
+    margin: 0;
+    color: #41506b;
+  }
+
+  &__form {
+    display: grid;
+    gap: 0.6rem;
+    margin-top: 0.9rem;
+    margin-bottom: 0.95rem;
+
+    > label {
+      font-weight: 600;
+      color: #0b1220;
+    }
+
+    > input {
+      border: 1px solid #c6d0e3;
+      border-radius: 10px;
+      min-height: 42px;
+      padding: 0 0.75rem;
+      font-size: 0.95rem;
 
       &:focus-visible {
         outline: 2px solid #4f7ef7;
@@ -46,11 +125,11 @@
       }
     }
 
-    button {
+    > button {
       justify-self: start;
       border: 0;
       border-radius: 999px;
-      min-height: 42px;
+      min-height: 40px;
       padding: 0 1rem;
       font-weight: 600;
       color: #fff;
@@ -89,10 +168,10 @@
   }
 
   &__checkout {
-    margin-top: 0.9rem;
+    margin-top: 0.85rem;
     border: 0;
     border-radius: 999px;
-    min-height: 42px;
+    min-height: 40px;
     padding: 0 1rem;
     font-weight: 600;
     color: #fff;

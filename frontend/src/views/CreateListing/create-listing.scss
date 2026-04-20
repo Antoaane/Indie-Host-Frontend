@@ -162,6 +162,7 @@
       }
 
       >.steps {
+        padding-bottom: 10px !important;
         flex: 0 0 auto;
         min-width: 0;
         max-width: 100%;
@@ -208,17 +209,17 @@
           }
 
           &.is-done {
-            border-color: rgba($secondary, 0.22);
+            border-color: $secondary;
 
             >span {
-              background: rgba($background, 0.9);
+              background: $secondary;
               color: $accent;
             }
           }
 
           &.is-active {
-            border-color: rgba($secondary, 0.7);
-            background: $background;
+            // border-color: rgba($secondary, 0.7);
+            background: $secondary;
 
             >span {
               background: rgba($accent, 0.95);

@@ -21,7 +21,7 @@ const listingPath = computed(() => {
   if (route.name === 'listing' && typeof route.path === 'string' && route.path.trim()) {
     return route.path
   }
-  return '/annonce'
+  return '/'
 })
 
 const activeHash = computed(() => {

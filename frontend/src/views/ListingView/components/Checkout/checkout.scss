@@ -6,10 +6,6 @@
 @use '@/styles/components/buttons' as buttons;
 @use '@/styles/components/inputs' as inputs;
 
-html:has(#checkout) {
-  overflow: hidden;
-}
-
 .listing-checkout#checkout {
   height: 100%;
   display: flex;
