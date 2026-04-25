@@ -186,6 +186,7 @@ function deriveWeekendPercent(basePrice: number, weekendNightPrice: number): num
           :min="pricingLimits.moneyMin"
           :max="pricingLimits.moneyMax"
           :suffix="panelContent.pricePerNightSuffix"
+          suffix-placement="outside"
           value-font-size="clamp(3.5rem, 10vw, 5rem)"
           suffix-font-size="clamp(1.5rem, 4vw, 2rem)"
           @input="setPricePerNight($event.number)"
@@ -214,6 +215,7 @@ function deriveWeekendPercent(basePrice: number, weekendNightPrice: number): num
             :min="pricingLimits.moneyMin"
             :max="pricingLimits.moneyMax"
             :suffix="panelContent.weekendPriceSuffix"
+            suffix-placement="outside"
             value-font-size="clamp(3rem, 8vw, 5rem)"
             suffix-font-size="clamp(1.35rem, 3.5vw, 2rem)"
             @input="setWeekendPrice($event.number)"
@@ -223,6 +225,7 @@ function deriveWeekendPercent(basePrice: number, weekendNightPrice: number): num
             min="0"
             :max="weekendPercentMax"
             :suffix="panelContent.weekendPercentSuffix"
+            suffix-placement="outside"
             value-font-size="clamp(3rem, 8vw, 5rem)"
             suffix-font-size="clamp(1.35rem, 3.5vw, 2rem)"
             @input="setWeekendPercent($event.number)"
@@ -256,6 +259,7 @@ function deriveWeekendPercent(basePrice: number, weekendNightPrice: number): num
             :min="pricingLimits.moneyMin"
             :max="pricingLimits.moneyMax"
             :suffix="panelContent.extraGuestsSuffix"
+            suffix-placement="outside"
             value-font-size="clamp(3rem, 8vw, 5rem)"
             suffix-font-size="clamp(1.35rem, 3.5vw, 2rem)"
             @input="updateExtraGuests({ price: $event.number })"
@@ -306,9 +310,9 @@ function deriveWeekendPercent(basePrice: number, weekendNightPrice: number): num
       @extend %panel-field;
       min-width: 0;
       padding: var(--layout-gap-sm);
-      border-radius: 1.25rem;
-      background: linear-gradient(180deg, rgba($secondary, 0.04) 0%, rgba($secondary, 0.02) 100%);
-      border: 1px solid rgba($secondary, 0.08);
+      // border-radius: 1.25rem;
+      // background: linear-gradient(180deg, rgba($secondary, 0.04) 0%, rgba($secondary, 0.02) 100%);
+      // border: 1px solid rgba($secondary, 0.08);
     }
 
     .field-label {
@@ -325,6 +329,14 @@ function deriveWeekendPercent(basePrice: number, weekendNightPrice: number): num
     .ui-stepper-input {
       min-width: 0;
       max-width: 100%;
+
+      .field {
+        input {
+          text-decoration: underline;
+          text-underline-offset: 1rem;
+          text-decoration-thickness: 0.5rem;
+        }
+      }
     }
 
     .row {

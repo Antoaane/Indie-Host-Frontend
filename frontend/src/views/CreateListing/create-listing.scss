@@ -162,20 +162,28 @@
       }
 
       >.steps {
-        padding-bottom: 10px !important;
+        border-radius: borders.$rounded;
         flex: 0 0 auto;
         min-width: 0;
         max-width: 100%;
-        display: flex;
-        align-items: center;
-        gap: var(--layout-gap-xs);
-        overflow-x: auto;
-        overflow-y: hidden;
-        overscroll-behavior-x: contain;
-        -webkit-overflow-scrolling: touch;
-        padding-bottom: 0.15rem;
+        overflow: hidden;
 
-        >.step {
+        >.swiper {
+          width: 100%;
+          min-width: 0;
+
+          >.swiper-wrapper {
+            align-items: center;
+            transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+          }
+        }
+
+        .step-slide {
+          width: auto;
+        }
+
+        .step {
+          margin: 1px;
           flex: 0 0 auto;
           border: 1px solid rgba($secondary, 0.15);
           border-radius: borders.$rounded;
