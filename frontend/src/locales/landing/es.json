@@ -3,14 +3,13 @@
     "title": "Tu sitio de reservas directas<br><strong>0%</strong> de comisiones",
     "description": "Dominio incluido. Reservas directas. Pagos online.",
     "descriptionDesktop": "Crea tu web de alquiler vacacional con dominio incluido. Acepta reservas directas y cobra online—sin comisiones de OTAs, nunca.",
-    "inputPlaceholder": "Pega el enlace de tu anuncio",
     "primaryCta": {
-      "label": "Importar mi anuncio existente",
-      "href": "#intro-section",
+      "label": "Crear mi anuncio",
+      "href": "/dashboard/editor/create",
       "target": "_self"
     },
     "secondaryCta": {
-      "label": "Crear mi sitio gratis",
+      "label": "Configurar mi página",
       "href": "/dashboard/editor/create",
       "target": "_self"
     },
@@ -22,40 +21,20 @@
       }
     ]
   },
-  "introSection": {
-    "title": "Crea <span class=\"text-gradiant\">tu sitio</span> desde un anuncio existente",
-    "body": "Pega el enlace de Airbnb o Booking.com de cualquiera de tus propiedades—generamos tu página de reservas en segundos.",
-    "inputPlaceholder": "Pega el enlace de tu anuncio",
-    "previewCtaLabel": "Genera mi sitio",
-    "createAccountCtaLabel": "Activar mi sitio gratis",
-    "createAccountCtaHint": "Gratis · Sin tarjeta de crédito · Cero comisiones",
-    "backButtonAriaLabel": "Volver a la página principal",
-    "primaryCta": {
-      "label": "Probar la importación gratuita",
-      "href": "#join-section",
-      "target": "_self"
-    }
-  },
   "benefits": {
     "title": "<strong>Todo</strong> es para <strong>ti</strong>"
   },
   "usage": {
     "steps": [
       {
-        "id": "importListing",
-        "title": "Importa tu anuncio desde Airbnb o Booking.com",
-        "description": "Un clic para importar tu anuncio de forma segura—fotos, descripción, valoraciones y equipamientos. Nos encargamos de todo.<br /><br />Destaca tu anuncio o empieza desde cero con el <strong>editor en vivo de IndieHost</strong>.",
-        "videos": [
-          {
-            "webm": "/assets/media/videos/import-auto.webm",
-            "mp4": "/assets/media/videos/import-auto.mp4"
-          }
-        ],
+        "id": "createListing",
+        "title": "Crea tu anuncio en IndieHost",
+        "description": "Crea tu anuncio desde el editor de IndieHost: título, fotos, descripción, equipamientos y reglas de reserva.<br /><br />Mantienes el control de cada detalle con el <strong>editor completo de IndieHost</strong>.",
         "images": [
           {
-            "webp": "/assets/media/images/webp/auto-import.webp",
-            "png": "/assets/media/images/png/auto-import.png",
-            "alt": "Ilustración de importación de anuncio desde Airbnb o Booking"
+            "webp": "/assets/media/images/webp/auto-generated.webp",
+            "png": "/assets/media/images/png/auto-generated.png",
+            "alt": "Ilustración de creación de anuncio IndieHost"
           }
         ]
       },
@@ -94,7 +73,7 @@
       {
         "id": "proof-metric-1",
         "value": "15 min",
-        "label": "para importar, personalizar y publicar una primera página en un escenario tipo",
+        "label": "para crear, personalizar y publicar una primera página",
         "detail": "Estimación ilustrativa para un anuncio ya estructurado"
       },
       {
@@ -269,7 +248,7 @@
       {
         "id": "modifiezEtPersonnalisezVosAnnonces",
         "title": "Edita y <strong>personaliza</strong> tus anuncios",
-        "description": "Una vez importado tu anuncio, personalízalo libremente con un editor visual simple e intuitivo. Previsualiza cada cambio en tiempo real y edita tu contenido con un clic: haz clic en un elemento en la vista previa y te redirigirás instantáneamente al campo correcto.<br /><br />Un anuncio creado y no publicado permanecerá como borrador; siempre conservarás tus modificaciones.",
+        "description": "Una vez creado tu anuncio, personalízalo libremente con un editor visual simple e intuitivo. Previsualiza cada cambio en tiempo real y edita tu contenido con un clic.<br /><br />Un anuncio creado y no publicado permanecerá como borrador; siempre conservarás tus modificaciones.",
         "images": [
           {
             "webp": "/assets/media/images/webp/editeur.webp",

@@ -573,7 +573,8 @@ function getBedIconComponent(iconKey: unknown) {
 
 function roomLabel(room: RoomDraftExtended, index: number) {
   const label = String(room['room-name'] ?? '').trim()
-  return label || roomTypeLabels[room.type ?? ''] || panelContent.roomLabelFallback.replace('{index}', String(index + 1))
+  const roomType = String(room.type ?? '')
+  return label || roomTypeLabels[roomType] || panelContent.roomLabelFallback.replace('{index}', String(index + 1))
 }
 
 function roomDisplayLabel(index: number) {

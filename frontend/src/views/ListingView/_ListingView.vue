@@ -78,7 +78,6 @@ const currentUserId = computed(() => {
 const ownerStripeConnectAccountId = computed(() => getOwnerStripeConnectAccountId())
 
 const { checkoutPayload, isCheckout, checkoutStatus, onReserve, cancelCheckout, confirmCheckout } = useListingCheckout({
-  listingsMode: controller.mode,
   listingData,
   listingId,
   rawListing: computed(() => props.rawListing ?? null),

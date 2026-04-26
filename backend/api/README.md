@@ -12,7 +12,6 @@ Backend REST TypeScript pour le frontend IndieHost.
 - Clerk JWT (validation via JWKS)
 - Stripe Connect (payment intents + onboarding)
 - iCal import/export
-- **Gandi.net API v5** (disponibilité + checkout noms de domaine)
 
 ---
 
@@ -65,24 +64,12 @@ CLERK_AUDIENCE=
 
 # Stripe (optionnel — mode mock si vide)
 STRIPE_SECRET_KEY=sk_test_xxx
-STRIPE_WEBHOOK_SECRET=whsec_xxx
 STRIPE_CONNECT_PLATFORM_FEE_BPS=0
 STRIPE_CONNECT_DEFAULT_APPLICATION_FEE_BPS=0
 
 # iCal
 ICAL_EXPORT_DEFAULT_PRODID=IndieHost//Calendar//FR
-
-# Gandi.net — noms de domaine
-# Générez un Personal Access Token sur https://account.gandi.net
-#   → Sécurité → Personal Access Tokens → Créer
-#   → Scope requis : domain:read
-GANDI_API_TOKEN=pat_votre-token-gandi
-GANDI_API_BASE_URL=https://api.gandi.net/v5
-GANDI_CHECKOUT_BASE_URL=https://www.gandi.net/en/domain/checkout
 ```
-
-> **Important Gandi** : utilisez un **Personal Access Token** (PAT) depuis votre compte Gandi.net.
-> Les anciennes clés API (`Apikey`) sont dépréciées et peuvent retourner des erreurs 403.
 
 ### Bootstrap des plans Stripe en dev
 
@@ -115,46 +102,6 @@ L’API lit ensuite directement ces produits/prix depuis Stripe (plus besoin de 
 | `POST` | `/v1/payments/stripe/connect/onboarding-link` | Lien d'onboarding Stripe Connect |
 | `GET` | `/v1/payments/stripe/connect/me` | Profil Stripe Connect |
 
-### Noms de domaine (Gandi)
-
-| Méthode | Route | Description |
-|---|---|---|
-| `GET` | `/v1/domains/grandi/availability?domain=<fqdn>` | Disponibilité + prix TTC (1 an) |
-| `POST` | `/v1/domains/grandi/checkout` | URL de paiement Gandi pré-remplie |
-
-**Exemple disponibilité :**
-```bash
-curl "http://localhost:4000/v1/domains/grandi/availability?domain=mon-gite.fr" \
-  -H "Authorization: Bearer <clerk-token>"
-```
-
-**Réponse :**
-```json
-{
-  "domain": "mon-gite.fr",
-  "available": true,
-  "premium": false,
-  "priceCents": 1499,
-  "currency": "EUR",
-  "reason": null
-}
-```
-
-**Exemple checkout :**
-```bash
-curl -X POST "http://localhost:4000/v1/domains/grandi/checkout" \
-  -H "Content-Type: application/json" \
-  -d '{ "domain": "mon-gite.fr" }'
-```
-
-**Réponse :**
-```json
-{
-  "id": "gandi_lx3k2a_a8f3c1",
-  "checkoutUrl": "https://www.gandi.net/en/domain/checkout?domain=mon-gite.fr"
-}
-```
-
 ### Autres domaines
 
 - `bookings` — réservations et calendrier
@@ -163,13 +110,14 @@ curl -X POST "http://localhost:4000/v1/domains/grandi/checkout" \
 - `messaging` — messagerie hôte/voyageur
 - `users` — profils utilisateurs
 - `calendar` → `GET /v1/calendar/listings/:listingId.ics`
+- `domains` — rattachement des domaines et sous-domaines gérés côté IndieHost
 
 ---
 
 ## Auth Clerk
 
 - Les routes privées utilisent `fastify.authenticate`.
-- Les routes ouvertes utilisent `fastify.authenticateOptional` (Gandi inclus).
+- Les routes ouvertes utilisent `fastify.authenticateOptional`.
 - Token JWT à envoyer en `Authorization: Bearer <token>`.
 - Variables requises pour validation réelle : `CLERK_JWKS_URL`, `CLERK_ISSUER`.
 
@@ -191,4 +139,3 @@ Ce script fait automatiquement :
 Le `docker-compose.yml` (à la racine du projet) expose :
 - `api` derrière Nginx via `http://localhost/api/...`
 - `postgres:16` comme service interne Docker (`postgres:5432`)
-- `scraping` derrière Nginx via `http://localhost/scraping/...`

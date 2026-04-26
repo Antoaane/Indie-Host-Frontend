@@ -1,11 +1,28 @@
 // File: src/domain/listings/host.ts
 
-import ownerUserJSON from '@/content/fr/user/user.json'
 import type { RawHost } from '@/domain/listings/types'
 
-export type RawOwnerUser = typeof ownerUserJSON
+export type RawOwnerUser = {
+  hosting?: {
+    publicProfile?: {
+      displayName?: unknown
+      badge?: unknown
+      experienceMonths?: unknown
+      rating?: unknown
+      avatarUrl?: unknown
+      catalogUrl?: unknown
+    }
+  }
+}
 
-const HOST_DEFAULTS: RawHost = {
+const HOST_DEFAULTS: RawHost & {
+  name: string
+  status: string
+  seniority: number
+  'global-note': number
+  avatar: string
+  'catalog-link': string
+} = {
   name: '',
   status: '',
   seniority: 0,
@@ -45,7 +62,7 @@ export function buildHostFromOwnerUser(user: RawOwnerUser): RawHost {
   }
 }
 
-const CANONICAL_HOST: RawHost = buildHostFromOwnerUser(ownerUserJSON)
+const CANONICAL_HOST: RawHost = { ...HOST_DEFAULTS }
 
 export function getCanonicalHost(): RawHost {
   return { ...CANONICAL_HOST }

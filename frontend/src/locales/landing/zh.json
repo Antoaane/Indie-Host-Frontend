@@ -3,14 +3,13 @@
     "title": "您的直订预订页<br><strong>0%</strong> 佣金",
     "description": "含独立域名。直订预订。在线收款。",
     "descriptionDesktop": "创建您的短租/民宿网站，域名包含在内。接受直订、在线收款，无需向OTA支付佣金。",
-    "inputPlaceholder": "粘贴您的房源链接",
     "primaryCta": {
-      "label": "导入现有房源",
-      "href": "#intro-section",
+      "label": "创建我的房源",
+      "href": "/dashboard/editor/create",
       "target": "_self"
     },
     "secondaryCta": {
-      "label": "免费创建我的网站",
+      "label": "设置我的页面",
       "href": "/dashboard/editor/create",
       "target": "_self"
     },
@@ -22,34 +21,21 @@
       }
     ]
   },
-  "introSection": {
-    "title": "从已有房源<span class=\"text-gradiant\">一键生成</span>您的预订页",
-    "body": "粘贴您在爱彼迎或缤客的房源链接，我们即可在几秒内生成您的直订预订页。",
-    "inputPlaceholder": "粘贴您的房源链接",
-    "previewCtaLabel": "生成我的页面",
-    "createAccountCtaLabel": "免费激活我的页面",
-    "createAccountCtaHint": "免费 · 无绑定 · 零佣金",
-    "backButtonAriaLabel": "返回首页",
-    "primaryCta": {
-      "label": "免费体验导入",
-      "href": "/pricing",
-      "target": "_self"
-    }
-  },
   "benefits": {
     "title": "<strong>一切</strong>都为<strong>您</strong>"
   },
   "usage": {
     "steps": [
       {
-        "id": "importListing",
-        "title": "从爱彼迎或缤客导入您的房源",
-        "description": "一键安全导入房源信息：照片、描述、评分、设施等，我们全包。<br /><br />用<strong>IndieHost 实时编辑器</strong>突出特色或从零打造。",
-        "videos": [
-          { "webm": "/assets/media/videos/import-auto.webm", "mp4": "/assets/media/videos/import-auto.mp4" }
-        ],
+        "id": "createListing",
+        "title": "在 IndieHost 中创建房源",
+        "description": "通过 IndieHost 编辑器创建房源：标题、照片、描述、设施和预订规则。<br /><br />你可以使用 <strong>IndieHost 完整编辑器</strong> 控制每个细节。",
         "images": [
-          { "webp": "/assets/media/images/webp/auto-import.webp", "png": "/assets/media/images/png/auto-import.png", "alt": "从爱彼迎或缤客导入房源示意图" }
+          {
+            "webp": "/assets/media/images/webp/auto-generated.webp",
+            "png": "/assets/media/images/png/auto-generated.png",
+            "alt": "IndieHost 房源创建示意图"
+          }
         ]
       },
       {
@@ -57,7 +43,11 @@
         "title": "设置价格与政策",
         "description": "在一个后台配置每套房源的支付方式（现金、定金或全款在线）及取消政策。",
         "images": [
-          { "webp": "/assets/media/images/webp/annonce-reservation-2.webp", "png": "/assets/media/images/png/annonce-reservation-2.png", "alt": "页面自动生成示意图" }
+          {
+            "webp": "/assets/media/images/webp/annonce-reservation-2.webp",
+            "png": "/assets/media/images/png/annonce-reservation-2.png",
+            "alt": "页面自动生成示意图"
+          }
         ]
       },
       {
@@ -65,7 +55,11 @@
         "title": "上线即接单，收获首批直订",
         "description": "选定您的网址，即可在<strong>搜索引擎</strong>展示。<br /><br />马上<strong>分享给房客</strong>，IndieHost 不抽成。",
         "images": [
-          { "webp": "/assets/media/images/webp/auto-generated.webp", "png": "/assets/media/images/png/auto-generated.png", "alt": "含入住指南与消息二维码的宣传册" }
+          {
+            "webp": "/assets/media/images/webp/auto-generated.webp",
+            "png": "/assets/media/images/png/auto-generated.png",
+            "alt": "含入住指南与消息二维码的宣传册"
+          }
         ]
       }
     ]
@@ -76,14 +70,41 @@
     "subtitle": "此处不展示虚假用户评价，而是演示产品已能实现的典型流程与效果。",
     "demoVideoLabel": "实时编辑房源演示",
     "metrics": [
-      { "id": "proof-metric-1", "value": "15 分钟", "label": "在典型场景下完成导入、编辑并发布首页", "detail": "针对已成型房源的大致估算" },
-      { "id": "proof-metric-2", "value": "0%", "label": "IndieHost 对直订收取的佣金", "detail": "不含 Stripe 标准支付手续费" },
-      { "id": "proof-metric-3", "value": "1 个链接", "label": "即可分享并开始接收直订", "detail": "前期方案含 IndieHost 子域名" }
+      {
+        "id": "proof-metric-1",
+        "value": "15 分钟",
+        "label": "用于创建、个性化并发布第一个页面",
+        "detail": "针对已成型房源的大致估算"
+      },
+      {
+        "id": "proof-metric-2",
+        "value": "0%",
+        "label": "IndieHost 对直订收取的佣金",
+        "detail": "不含 Stripe 标准支付手续费"
+      },
+      {
+        "id": "proof-metric-3",
+        "value": "1 个链接",
+        "label": "即可分享并开始接收直订",
+        "detail": "前期方案含 IndieHost 子域名"
+      }
     ],
     "cards": [
-      { "id": "proof-card-1", "title": "爱彼迎/缤客引导式导入", "description": "基于现有房源起步，无需从零重建。照片、文案与页面结构已就绪。" },
-      { "id": "proof-card-2", "title": "上线即可在线收款", "description": "预订流程接入 Stripe，支持银行卡、SEPA、Apple Pay，无需自建支付。" },
-      { "id": "proof-card-3", "title": "可立即发布与分享的页面", "description": "每套房源拥有独立链接，按方案可定制。简单易上线，便于分享与收录。" }
+      {
+        "id": "proof-card-1",
+        "title": "爱彼迎/缤客引导式导入",
+        "description": "基于现有房源起步，无需从零重建。照片、文案与页面结构已就绪。"
+      },
+      {
+        "id": "proof-card-2",
+        "title": "上线即可在线收款",
+        "description": "预订流程接入 Stripe，支持银行卡、SEPA、Apple Pay，无需自建支付。"
+      },
+      {
+        "id": "proof-card-3",
+        "title": "可立即发布与分享的页面",
+        "description": "每套房源拥有独立链接，按方案可定制。简单易上线，便于分享与收录。"
+      }
     ]
   },
   "features": {
@@ -94,7 +115,11 @@
         "description": "房客直接向您付款，无OTA抽成。<br>支持预付，直订也可要求先付。<br>支持房客常用的各类支付方式。",
         "layout": "hzt",
         "images": [
-          { "webp": "/assets/media/images/png/paiement-en-ligne.png", "png": "/assets/media/images/png/paiement-en-ligne.png", "alt": "集成在线确认与支付" }
+          {
+            "webp": "/assets/media/images/png/paiement-en-ligne.png",
+            "png": "/assets/media/images/png/paiement-en-ligne.png",
+            "alt": "集成在线确认与支付"
+          }
         ]
       },
       {
@@ -102,9 +127,18 @@
         "title": "编辑并<strong>个性化</strong>您的房源",
         "description": "用直观的可视化编辑器改文案、图片，实时预览，点击即编辑。简单、快速。",
         "layout": "hzt",
-        "videos": [{ "webm": "/assets/media/videos/annonces.webm", "mp4": "/assets/media/videos/annonces.mp4" }],
+        "videos": [
+          {
+            "webm": "/assets/media/videos/annonces.webm",
+            "mp4": "/assets/media/videos/annonces.mp4"
+          }
+        ],
         "images": [
-          { "webp": "/assets/media/images/webp/editeur.webp", "png": "/assets/media/images/png/editeur.png", "alt": "房源编辑页" }
+          {
+            "webp": "/assets/media/images/webp/editeur.webp",
+            "png": "/assets/media/images/png/editeur.png",
+            "alt": "房源编辑页"
+          }
         ]
       },
       {
@@ -112,9 +146,18 @@
         "title": "提升在<strong>谷歌</strong>的曝光",
         "description": "内置 SEO 与独立子域名助您被搜索到。我们优化展示，让房客找到您，且不抽佣。",
         "layout": "vtc",
-        "videos": [{ "webm": "/assets/media/videos/seo.webm", "mp4": "/assets/media/videos/seo.mp4" }],
+        "videos": [
+          {
+            "webm": "/assets/media/videos/seo.webm",
+            "mp4": "/assets/media/videos/seo.mp4"
+          }
+        ],
         "images": [
-          { "webp": "/assets/media/images/webp/seo.webp", "png": "/assets/media/images/png/seo.png", "alt": "房源编辑页" }
+          {
+            "webp": "/assets/media/images/webp/seo.webp",
+            "png": "/assets/media/images/png/seo.png",
+            "alt": "房源编辑页"
+          }
         ]
       },
       {
@@ -122,9 +165,18 @@
         "title": "所有预订一个<strong>日历时控</strong>",
         "description": "爱彼迎、缤客等日历一处同步，避免重复预订，入住/退房与收款状态一目了然。",
         "layout": "hzt",
-        "videos": [{ "webm": "/assets/media/videos/calendrier.webm", "mp4": "/assets/media/videos/calendrier.mp4" }],
+        "videos": [
+          {
+            "webm": "/assets/media/videos/calendrier.webm",
+            "mp4": "/assets/media/videos/calendrier.mp4"
+          }
+        ],
         "images": [
-          { "webp": "/assets/media/images/webp/calendrier.webp", "png": "/assets/media/images/png/calendrier.png", "alt": "房源编辑页" }
+          {
+            "webp": "/assets/media/images/webp/calendrier.webp",
+            "png": "/assets/media/images/png/calendrier.png",
+            "alt": "房源编辑页"
+          }
         ]
       },
       {
@@ -132,9 +184,18 @@
         "title": "为房客<strong>自动</strong>发消息",
         "description": "预约短信、邮件或应用通知：入住信息、钥匙码、退房提醒等。设置一次，每次自动发送。",
         "layout": "vtc",
-        "videos": [{ "webm": "/assets/media/videos/notification.webm", "mp4": "/assets/media/videos/notification.mp4" }],
+        "videos": [
+          {
+            "webm": "/assets/media/videos/notification.webm",
+            "mp4": "/assets/media/videos/notification.mp4"
+          }
+        ],
         "images": [
-          { "webp": "/assets/media/images/webp/notification.webp", "png": "/assets/media/images/png/notification.png", "alt": "房源编辑页" }
+          {
+            "webp": "/assets/media/images/webp/notification.webp",
+            "png": "/assets/media/images/png/notification.png",
+            "alt": "房源编辑页"
+          }
         ]
       },
       {
@@ -142,9 +203,18 @@
         "title": "房源风格<strong>随您</strong>",
         "description": "选用设计师主题或自定义外观，不同房源不同风格（现代、乡村、轻奢）。预订页体现您的特色。",
         "layout": "vtc",
-        "videos": [{ "webm": "/assets/media/videos/glass-theme.webm", "mp4": "/assets/media/videos/glass-theme.mp4" }],
+        "videos": [
+          {
+            "webm": "/assets/media/videos/glass-theme.webm",
+            "mp4": "/assets/media/videos/glass-theme.mp4"
+          }
+        ],
         "images": [
-          { "webp": "/assets/media/images/webp/glass-theme.webp", "png": "/assets/media/images/png/glass-theme.png", "alt": "房源编辑页" }
+          {
+            "webp": "/assets/media/images/webp/glass-theme.webp",
+            "png": "/assets/media/images/png/glass-theme.png",
+            "alt": "房源编辑页"
+          }
         ]
       },
       {
@@ -152,9 +222,18 @@
         "title": "每次入住都变成<strong>下一次直订</strong>",
         "description": "免费入住指南册带二维码——来自爱彼迎/缤客的房客可通过 IndieHost 联系您，无需注册。<br /><br />可写入门禁、设施、本地推荐等。一扫即连。<br /><br />沟通更简单，每次入住都是直订机会。",
         "layout": "vtc",
-        "videos": [{ "webm": "/assets/media/videos/guide-accueil.webm", "mp4": "/assets/media/videos/guide-accueil.mp4" }],
+        "videos": [
+          {
+            "webm": "/assets/media/videos/guide-accueil.webm",
+            "mp4": "/assets/media/videos/guide-accueil.mp4"
+          }
+        ],
         "images": [
-          { "webp": "/assets/media/images/webp/guide.webp", "png": "/assets/media/images/png/guide.png", "alt": "房源编辑页" }
+          {
+            "webp": "/assets/media/images/webp/guide.webp",
+            "png": "/assets/media/images/png/guide.png",
+            "alt": "房源编辑页"
+          }
         ]
       }
     ]
@@ -169,32 +248,62 @@
       {
         "id": "modifiezEtPersonnalisezVosAnnonces",
         "title": "编辑并<strong>个性化</strong>房源",
-        "description": "导入后用简单直观的可视化编辑器自由修改，实时预览、点击即编。未发布则保持草稿，修改都会保存。",
-        "images": [{ "webp": "/assets/media/images/webp/editeur.webp", "png": "/assets/media/images/png/editeur.png", "alt": "房源编辑页" }]
+        "description": "房源创建后，你可以使用简单直观的可视化编辑器自由个性化设置。实时预览每次更改，并一键编辑内容。<br /><br />已创建但未发布的房源会保留为草稿，你的修改会被保存。",
+        "images": [
+          {
+            "webp": "/assets/media/images/webp/editeur.webp",
+            "png": "/assets/media/images/png/editeur.png",
+            "alt": "房源编辑页"
+          }
+        ]
       },
       {
         "id": "vosFacturesEtVosPerformancesAuMemeEndroit",
         "title": "收入与发票<strong>一处看</strong>",
         "description": "收入、入住率、房客复购一目了然。可导出月度明细，一键查看所有发票。",
-        "images": [{ "webp": "/assets/media/images/webp/dashboard-vue-ensemble.webp", "png": "/assets/media/images/png/dashboard-vue-ensemble.png", "alt": "仪表盘页" }]
+        "images": [
+          {
+            "webp": "/assets/media/images/webp/dashboard-vue-ensemble.webp",
+            "png": "/assets/media/images/png/dashboard-vue-ensemble.png",
+            "alt": "仪表盘页"
+          }
+        ]
       },
       {
         "id": "vosReservationsSynchroniseesEtTrieesDansUnEspaceIntuitif",
         "title": "预订同步，<strong>清晰</strong>看板",
         "description": "添加爱彼迎/缤客日历链接后，别处已订日期自动在此锁定，避免重复预订。按房源看历史、房客与付款状态。",
-        "images": [{ "webp": "/assets/media/images/webp/dashboard-detail-logement.webp", "png": "/assets/media/images/png/dashboard-detail-logement.png", "alt": "房源管理页" }]
+        "images": [
+          {
+            "webp": "/assets/media/images/webp/dashboard-detail-logement.webp",
+            "png": "/assets/media/images/png/dashboard-detail-logement.png",
+            "alt": "房源管理页"
+          }
+        ]
       },
       {
         "id": "desPaiementsPratiquesFlexiblesEtSecurisees",
         "title": "灵活、<strong>安全</strong>的支付",
         "description": "不因支付方式流失房客。支持全款在线、定金+尾款或现金，按您需要配置。Stripe 保障，房客放心订。",
-        "images": [{ "webp": "/assets/media/images/webp/annonce-reservation.webp", "png": "/assets/media/images/png/annonce-reservation.png", "alt": "支付页" }]
+        "images": [
+          {
+            "webp": "/assets/media/images/webp/annonce-reservation.webp",
+            "png": "/assets/media/images/png/annonce-reservation.png",
+            "alt": "支付页"
+          }
+        ]
       },
       {
         "id": "communiquezSimplement",
         "title": "<strong>简单</strong>沟通",
         "description": "通过 IndieHost 与房客安全沟通，即时、统一收件箱。扫入住指南的访客无需注册即可联系您，即便来自爱彼迎/缤客。",
-        "images": [{ "webp": "/assets/media/images/webp/messagerie.webp", "png": "/assets/media/images/png/messagerie.png", "alt": "消息页" }]
+        "images": [
+          {
+            "webp": "/assets/media/images/webp/messagerie.webp",
+            "png": "/assets/media/images/png/messagerie.png",
+            "alt": "消息页"
+          }
+        ]
       }
     ]
   },
@@ -263,42 +372,118 @@
     "title": "不错吧？来自法国！",
     "description": "<strong>IndieHost</strong> 由<strong>房东为房东</strong>打造。❤️ 诞生于山、海与不稳定 Wi-Fi 之间。",
     "flagIcon": "IconFrenchFlag",
-    "cta": { "label": "先试为敬！", "href": "#join-section", "target": "_self", "rel": "nofollow", "ariaLabel": "前往报名表单" },
+    "cta": {
+      "label": "先试为敬！",
+      "href": "#join-section",
+      "target": "_self",
+      "rel": "nofollow",
+      "ariaLabel": "前往报名表单"
+    },
     "form": {
       "title": "<strong>加入等候名单</strong>",
       "description": "我们也不喜欢垃圾邮件：<strong>只发一封</strong>邮件通知进展——或<a href='/donation'>捐赠支持项目</a>。",
       "variant": "NewsletterForm",
-      "fields": [{ "type": "email", "name": "email", "placeholder": "您的邮箱", "required": true }],
+      "fields": [
+        {
+          "type": "email",
+          "name": "email",
+          "placeholder": "您的邮箱",
+          "required": true
+        }
+      ],
       "groups": [
         {
           "type": "checkbox-group",
           "name": "platforms",
           "legend": "我已在以下平台发布…",
           "options": [
-            { "label": "爱彼迎", "value": "airbnb" },
-            { "label": "缤客", "value": "booking" },
-            { "label": "Abritel", "value": "abritel" },
-            { "label": "Expedia 集团", "value": "expedia" },
-            { "label": "自有网站", "value": "website" },
-            { "label": "其他", "value": "autre" },
-            { "label": "刚起步", "value": "debutant" }
+            {
+              "label": "爱彼迎",
+              "value": "airbnb"
+            },
+            {
+              "label": "缤客",
+              "value": "booking"
+            },
+            {
+              "label": "Abritel",
+              "value": "abritel"
+            },
+            {
+              "label": "Expedia 集团",
+              "value": "expedia"
+            },
+            {
+              "label": "自有网站",
+              "value": "website"
+            },
+            {
+              "label": "其他",
+              "value": "autre"
+            },
+            {
+              "label": "刚起步",
+              "value": "debutant"
+            }
           ]
         }
       ],
       "consents": [
-        { "type": "checkbox", "name": "early_access", "label": "希望收到上线通知并参与抢先体验", "required": true }
+        {
+          "type": "checkbox",
+          "name": "early_access",
+          "label": "希望收到上线通知并参与抢先体验",
+          "required": true
+        }
       ],
       "validation": {
-        "defaults": { "simpleText": { "maxLength": 255, "hideIndicatorAt": 255 } },
-        "fields": {
-          "text": { "maxLength": 80, "autocomplete": "off", "inputMode": "text" },
-          "email": { "minLength": 5, "maxLength": 160, "autocomplete": "email", "inputMode": "email", "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$", "patternTitle": "格式：name@域名.tld" },
-          "tel": { "minLength": 6, "maxLength": 25, "autocomplete": "tel", "inputMode": "tel", "pattern": "^\\+?[0-9().\\s-]{6,25}$", "patternTitle": "仅限数字、空格、括号、+ 或 -" },
-          "zip": { "maxLength": 12, "autocomplete": "postal-code", "inputMode": "numeric", "pattern": "^[0-9A-Za-z\\s-]{3,12}$", "patternTitle": "邮政编码无效" }
+        "defaults": {
+          "simpleText": {
+            "maxLength": 255,
+            "hideIndicatorAt": 255
+          }
         },
-        "nameAutocomplete": { "first": "given-name", "last": "family-name", "name": "name", "default": "off" }
+        "fields": {
+          "text": {
+            "maxLength": 80,
+            "autocomplete": "off",
+            "inputMode": "text"
+          },
+          "email": {
+            "minLength": 5,
+            "maxLength": 160,
+            "autocomplete": "email",
+            "inputMode": "email",
+            "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+            "patternTitle": "格式：name@域名.tld"
+          },
+          "tel": {
+            "minLength": 6,
+            "maxLength": 25,
+            "autocomplete": "tel",
+            "inputMode": "tel",
+            "pattern": "^\\+?[0-9().\\s-]{6,25}$",
+            "patternTitle": "仅限数字、空格、括号、+ 或 -"
+          },
+          "zip": {
+            "maxLength": 12,
+            "autocomplete": "postal-code",
+            "inputMode": "numeric",
+            "pattern": "^[0-9A-Za-z\\s-]{3,12}$",
+            "patternTitle": "邮政编码无效"
+          }
+        },
+        "nameAutocomplete": {
+          "first": "given-name",
+          "last": "family-name",
+          "name": "name",
+          "default": "off"
+        }
       },
-      "submit": { "label": "提交", "icon": "SendIcon" }
+      "submit": {
+        "label": "提交",
+        "icon": "SendIcon"
+      }
     }
   },
   "faq": {
@@ -310,91 +495,239 @@
         "id": "cat-comprendre",
         "title": "了解 IndieHost",
         "children": [
-          { "id": "q-1", "question": "IndieHost 是什么？", "answer": "IndieHost 是一站式短租/民宿平台，把控制权还给房东。我们提供网站、预订、支付、日历，零佣金。" },
-          { "id": "q-2", "question": "和爱彼迎、缤客有什么不同？", "answer": "与 OTA 不同，IndieHost 不抽成。您拥有房客关系、品牌与定价。可自定义页面、使用自有域名。" },
-          { "id": "q-3", "question": "不抽佣金怎么盈利？", "answer": "模式透明。提供 100% 免费的 IndieHost 方案（支付、日历、2 套房源）。通过可选月付（SuperHost、MegaHost）及单卖项（如 Google Travel、KYC）获得收入。" },
-          { "id": "q-4", "question": "适合哪类房东？", "answer": "个人（免费方案）、半职业（SuperHost）、职业（MegaHost）均可。各方案按您的体量与专业度适配。" },
-          { "id": "q-5", "question": "什么是直订？", "answer": "房客直接向您预订，无中间商。IndieHost 提供技术，您在自家页面接单。好处：零佣金且完全掌握客户关系。" }
+          {
+            "id": "q-1",
+            "question": "IndieHost 是什么？",
+            "answer": "IndieHost 是一站式短租/民宿平台，把控制权还给房东。我们提供网站、预订、支付、日历，零佣金。"
+          },
+          {
+            "id": "q-2",
+            "question": "和爱彼迎、缤客有什么不同？",
+            "answer": "与 OTA 不同，IndieHost 不抽成。您拥有房客关系、品牌与定价。可自定义页面、使用自有域名。"
+          },
+          {
+            "id": "q-3",
+            "question": "不抽佣金怎么盈利？",
+            "answer": "模式透明。提供 100% 免费的 IndieHost 方案（支付、日历、2 套房源）。通过可选月付（SuperHost、MegaHost）及单卖项（如 Google Travel、KYC）获得收入。"
+          },
+          {
+            "id": "q-4",
+            "question": "适合哪类房东？",
+            "answer": "个人（免费方案）、半职业（SuperHost）、职业（MegaHost）均可。各方案按您的体量与专业度适配。"
+          },
+          {
+            "id": "q-5",
+            "question": "什么是直订？",
+            "answer": "房客直接向您预订，无中间商。IndieHost 提供技术，您在自家页面接单。好处：零佣金且完全掌握客户关系。"
+          }
         ]
       },
       {
         "id": "cat-nos-offres",
         "title": "价格与订阅",
         "children": [
-          { "id": "q-7", "question": "IndieHost 方案真的免费吗？有隐藏费用吗？", "answer": "是，0 欧元/月，我们无隐藏费用。含 2 套房源、在线支付（Stripe）、发票、iCal、消息与仪表盘。仅 Stripe 标准交易费适用。" },
-          { "id": "q-8", "question": "付费订阅可随时取消吗？", "answer": "可以。无绑定，随时在仪表盘取消，无取消费。当前计费周期内继续有效，下一周期不再扣费。" },
-          { "id": "q-9", "question": "能不换方案只加选项吗？", "answer": "可以。例如免费方案可单独购买 Google Travel、自定义域名、接受定金等，无需升级 SuperHost。" },
-          { "id": "q-10", "question": "多套异地房源怎么办？", "answer": "同一账户下房源须属同一主体。若代管他人房产，每位业主需单独注册 IndieHost。" }
+          {
+            "id": "q-7",
+            "question": "IndieHost 方案真的免费吗？有隐藏费用吗？",
+            "answer": "是，0 欧元/月，我们无隐藏费用。含 2 套房源、在线支付（Stripe）、发票、iCal、消息与仪表盘。仅 Stripe 标准交易费适用。"
+          },
+          {
+            "id": "q-8",
+            "question": "付费订阅可随时取消吗？",
+            "answer": "可以。无绑定，随时在仪表盘取消，无取消费。当前计费周期内继续有效，下一周期不再扣费。"
+          },
+          {
+            "id": "q-9",
+            "question": "能不换方案只加选项吗？",
+            "answer": "可以。例如免费方案可单独购买 Google Travel、自定义域名、接受定金等，无需升级 SuperHost。"
+          },
+          {
+            "id": "q-10",
+            "question": "多套异地房源怎么办？",
+            "answer": "同一账户下房源须属同一主体。若代管他人房产，每位业主需单独注册 IndieHost。"
+          }
         ]
       },
       {
         "id": "cat-paiements-en-ligne",
         "title": "在线支付",
         "children": [
-          { "id": "q-12", "question": "房客的钱怎么到我账上？", "answer": "使用 Stripe Connect。注册时绑定银行账户，房客付款经 Stripe 处理后直接到您账户，IndieHost 不经手资金。" },
-          { "id": "q-13", "question": "IndieHost 会从支付里抽成吗？", "answer": "不会。您收到房客支付金额的 100%（扣除 Stripe 标准交易费）。" },
-          { "id": "q-14", "question": "可以只收定金吗？", "answer": "可以。您自定规则。接受定金在免费方案为付费选项（5 欧元/月），SuperHost/MegaHost 已含。" },
-          { "id": "q-15", "question": "对房客来说支付安全吗？", "answer": "安全。Stripe Connect 符合 PCI DSS 等严格标准，房客可放心支付。" },
-          { "id": "q-16", "question": "预订款何时到账？", "answer": "为保障双方，款项在确认预订后由 Stripe 托管，房客确认入住后转至您账户。到账后按 Stripe 惯例转入您银行。" }
+          {
+            "id": "q-12",
+            "question": "房客的钱怎么到我账上？",
+            "answer": "使用 Stripe Connect。注册时绑定银行账户，房客付款经 Stripe 处理后直接到您账户，IndieHost 不经手资金。"
+          },
+          {
+            "id": "q-13",
+            "question": "IndieHost 会从支付里抽成吗？",
+            "answer": "不会。您收到房客支付金额的 100%（扣除 Stripe 标准交易费）。"
+          },
+          {
+            "id": "q-14",
+            "question": "可以只收定金吗？",
+            "answer": "可以。您自定规则。接受定金在免费方案为付费选项（5 欧元/月），SuperHost/MegaHost 已含。"
+          },
+          {
+            "id": "q-15",
+            "question": "对房客来说支付安全吗？",
+            "answer": "安全。Stripe Connect 符合 PCI DSS 等严格标准，房客可放心支付。"
+          },
+          {
+            "id": "q-16",
+            "question": "预订款何时到账？",
+            "answer": "为保障双方，款项在确认预订后由 Stripe 托管，房客确认入住后转至您账户。到账后按 Stripe 惯例转入您银行。"
+          }
         ]
       },
       {
         "id": "cat-start",
         "title": "在 IndieHost 起步",
         "children": [
-          { "id": "q-17", "question": "怎么在 IndieHost 创建房源？", "answer": "用实时编辑器：左侧填信息，右侧即时预览，几分钟即可分享。" },
-          { "id": "q-18", "question": "能创建多少套房源？", "answer": "免费 2 套，SuperHost 5 套，MegaHost 最多 15 套（可申请扩展）。" },
-          { "id": "q-19", "question": "注册需要哪些信息？", "answer": "基本行政信息，用于合规、Stripe 支付及（若为个人）旅游税代缴。" },
-          { "id": "q-20", "question": "不熟悉网络的人会用吗？", "answer": "会。编辑器步骤清晰，仪表盘集中展示收入与房客。另有手机应用可管理房源与预订。" }
+          {
+            "id": "q-17",
+            "question": "怎么在 IndieHost 创建房源？",
+            "answer": "用实时编辑器：左侧填信息，右侧即时预览，几分钟即可分享。"
+          },
+          {
+            "id": "q-18",
+            "question": "能创建多少套房源？",
+            "answer": "免费 2 套，SuperHost 5 套，MegaHost 最多 15 套（可申请扩展）。"
+          },
+          {
+            "id": "q-19",
+            "question": "注册需要哪些信息？",
+            "answer": "基本行政信息，用于合规、Stripe 支付及（若为个人）旅游税代缴。"
+          },
+          {
+            "id": "q-20",
+            "question": "不熟悉网络的人会用吗？",
+            "answer": "会。编辑器步骤清晰，仪表盘集中展示收入与房客。另有手机应用可管理房源与预订。"
+          }
         ]
       },
       {
         "id": "cat-synchronisation",
         "title": "预订管理与同步",
         "children": [
-          { "id": "q-21", "question": "iCal 日历同步怎么用？", "answer": "双向同步。您提供爱彼迎/缤客等 iCal 链接导入外部预订，IndieHost 提供 iCal 供您贴到其他平台。一处预订，处处锁定。" },
-          { "id": "q-22", "question": "能手动加电话预订吗？", "answer": "可以，SuperHost 与 MegaHost 含此功能，直接在 IndieHost 日历中添加或修改以锁定日期。" },
-          { "id": "q-23", "question": "日历如何显示预订？", "answer": "IndieHost 日历集中显示，并标明来源（IndieHost、爱彼迎、缤客、手动等），支持月/周视图。" },
-          { "id": "q-24", "question": "新预订如何通知？", "answer": "通过应用、短信或邮件实时通知新请求与支付确认。" },
-          { "id": "q-25", "question": "能自动发短信/通知吗？", "answer": "能。SuperHost 与 MegaHost 含自动消息：可预约在确认、入住前一日、退房等节点发送短信与通知。" }
+          {
+            "id": "q-21",
+            "question": "iCal 日历同步怎么用？",
+            "answer": "双向同步。您提供爱彼迎/缤客等 iCal 链接导入外部预订，IndieHost 提供 iCal 供您贴到其他平台。一处预订，处处锁定。"
+          },
+          {
+            "id": "q-22",
+            "question": "能手动加电话预订吗？",
+            "answer": "可以，SuperHost 与 MegaHost 含此功能，直接在 IndieHost 日历中添加或修改以锁定日期。"
+          },
+          {
+            "id": "q-23",
+            "question": "日历如何显示预订？",
+            "answer": "IndieHost 日历集中显示，并标明来源（IndieHost、爱彼迎、缤客、手动等），支持月/周视图。"
+          },
+          {
+            "id": "q-24",
+            "question": "新预订如何通知？",
+            "answer": "通过应用、短信或邮件实时通知新请求与支付确认。"
+          },
+          {
+            "id": "q-25",
+            "question": "能自动发短信/通知吗？",
+            "answer": "能。SuperHost 与 MegaHost 含自动消息：可预约在确认、入住前一日、退房等节点发送短信与通知。"
+          }
         ]
       },
       {
         "id": "cat-attirer-voyageurs",
         "title": "零佣金吸引更多房客",
         "children": [
-          { "id": "q-28", "question": "不在爱彼迎上，房客怎么找到我？", "answer": "IndieHost 提供直订工具：可分享链接到社交、谷歌地图等。另有付费选项：Google Travel 整合。" },
-          { "id": "q-29", "question": "Google Travel 整合是什么？", "answer": "在 Google Travel/Google 酒店搜索结果中展示您的房源。免费/SuperHost 为付费选项，MegaHost 已含。" },
-          { "id": "q-30", "question": "用 IndieHost 上 Google Travel 有什么好处？", "answer": "因无佣金，可在 Google Travel 展示比爱彼迎/缤客低 15–20% 的价格，更有竞争力，吸引直订。" },
-          { "id": "q-31", "question": "IndieHost 有房客搜索吗？", "answer": "有。除单套房源页外，还有按地点、日期、人数搜索，供访客发现您的房源。" },
-          { "id": "q-32", "question": "能帮复购和建立直连关系吗？", "answer": "能。入住指南与二维码提供直连沟通渠道；MegaHost 另有邮件营销工具，可再触达老房客。" }
+          {
+            "id": "q-28",
+            "question": "不在爱彼迎上，房客怎么找到我？",
+            "answer": "IndieHost 提供直订工具：可分享链接到社交、谷歌地图等。另有付费选项：Google Travel 整合。"
+          },
+          {
+            "id": "q-29",
+            "question": "Google Travel 整合是什么？",
+            "answer": "在 Google Travel/Google 酒店搜索结果中展示您的房源。免费/SuperHost 为付费选项，MegaHost 已含。"
+          },
+          {
+            "id": "q-30",
+            "question": "用 IndieHost 上 Google Travel 有什么好处？",
+            "answer": "因无佣金，可在 Google Travel 展示比爱彼迎/缤客低 15–20% 的价格，更有竞争力，吸引直订。"
+          },
+          {
+            "id": "q-31",
+            "question": "IndieHost 有房客搜索吗？",
+            "answer": "有。除单套房源页外，还有按地点、日期、人数搜索，供访客发现您的房源。"
+          },
+          {
+            "id": "q-32",
+            "question": "能帮复购和建立直连关系吗？",
+            "answer": "能。入住指南与二维码提供直连沟通渠道；MegaHost 另有邮件营销工具，可再触达老房客。"
+          }
         ]
       },
       {
         "id": "cat-url-thèmes",
         "title": "域名与主题",
         "children": [
-          { "id": "q-38", "question": "能用自己域名吗？", "answer": "能。可购买或绑定已有域名到账户/房源。MegaHost 已含，SuperHost 可付费开通。" },
-          { "id": "q-39", "question": "没有域名呢？", "answer": "没问题。将获得 IndieHost 标准链接（如 indiehost.com/您的房源），可立即分享。" },
-          { "id": "q-40", "question": "「主题库」是什么？", "answer": "预订页的视觉主题，可选设计、配色、字体，匹配房源风格（现代、乡村、轻奢等）。" },
-          { "id": "q-41", "question": "能个性化到什么程度？", "answer": "控制力强：实时编辑器管内容（图、文、设施），主题管视觉，可做出独特专业的预订页。" }
+          {
+            "id": "q-38",
+            "question": "能用自己域名吗？",
+            "answer": "能。可购买或绑定已有域名到账户/房源。MegaHost 已含，SuperHost 可付费开通。"
+          },
+          {
+            "id": "q-39",
+            "question": "没有域名呢？",
+            "answer": "没问题。将获得 IndieHost 标准链接（如 indiehost.com/您的房源），可立即分享。"
+          },
+          {
+            "id": "q-40",
+            "question": "「主题库」是什么？",
+            "answer": "预订页的视觉主题，可选设计、配色、字体，匹配房源风格（现代、乡村、轻奢等）。"
+          },
+          {
+            "id": "q-41",
+            "question": "能个性化到什么程度？",
+            "answer": "控制力强：实时编辑器管内容（图、文、设施），主题管视觉，可做出独特专业的预订页。"
+          }
         ]
       },
       {
         "id": "cat-sécurité",
         "title": "安全与合规",
         "children": [
-          { "id": "q-42", "question": "KYC 验证是什么？", "answer": "KYC（了解您的客户）为身份验证，防欺诈、增信任。我们核验身份、产权证明及当地住宿登记号。" },
-          { "id": "q-43", "question": "KYC 必须做吗？", "answer": "SuperHost/MegaHost 含并推荐。免费方案为付费选项。通过后房源显示「已验证」标识，提升信任与转化。" },
-          { "id": "q-44", "question": "IndieHost 怎么处理旅游税？", "answer": "针对个人房东，系统可代收并转交旅游税给当地机构。" },
-          { "id": "q-45", "question": "能验证房客吗？", "answer": "计划提供房客身份验证选项，适合需要签租赁合同、核实租户身份的房东。" }
+          {
+            "id": "q-42",
+            "question": "KYC 验证是什么？",
+            "answer": "KYC（了解您的客户）为身份验证，防欺诈、增信任。我们核验身份、产权证明及当地住宿登记号。"
+          },
+          {
+            "id": "q-43",
+            "question": "KYC 必须做吗？",
+            "answer": "SuperHost/MegaHost 含并推荐。免费方案为付费选项。通过后房源显示「已验证」标识，提升信任与转化。"
+          },
+          {
+            "id": "q-44",
+            "question": "IndieHost 怎么处理旅游税？",
+            "answer": "针对个人房东，系统可代收并转交旅游税给当地机构。"
+          },
+          {
+            "id": "q-45",
+            "question": "能验证房客吗？",
+            "answer": "计划提供房客身份验证选项，适合需要签租赁合同、核实租户身份的房东。"
+          }
         ]
       },
       {
         "id": "cat-pms",
         "title": "与 PMS/RMS 整合",
         "children": [
-          { "id": "q-43", "question": "IndieHost 兼容我的渠道管理/PMS 或收益管理系统吗？", "answer": "兼容。SuperHost 与 MegaHost 含第三方管理工具整合，可从中央系统同步房源、价格、房态与预订。" }
+          {
+            "id": "q-43",
+            "question": "IndieHost 兼容我的渠道管理/PMS 或收益管理系统吗？",
+            "answer": "兼容。SuperHost 与 MegaHost 含第三方管理工具整合，可从中央系统同步房源、价格、房态与预订。"
+          }
         ]
       }
     ]
@@ -403,8 +736,16 @@
     "eyebrow": "立即行动",
     "title": "导入房源、激活页面，开始试水<strong>直订渠道</strong>",
     "body": "可从现有房源起步、快速上线，再逐步优化页面、价格与策略。",
-    "primaryCta": { "label": "免费试用", "href": "#intro-section", "target": "_self" },
-    "secondaryCta": { "label": "查看价格", "href": "#pricing-section", "target": "_self" },
+    "primaryCta": {
+      "label": "免费试用",
+      "href": "#intro-section",
+      "target": "_self"
+    },
+    "secondaryCta": {
+      "label": "查看价格",
+      "href": "#pricing-section",
+      "target": "_self"
+    },
     "note": "直订零佣金。流程简单，适配手机。"
   }
 }

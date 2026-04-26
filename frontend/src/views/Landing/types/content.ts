@@ -23,8 +23,6 @@ export interface HeroContent {
   title: string
   description: string
   descriptionDesktop?: string
-  inputPlaceholder: string
-  inputPlaceholders?: string[]
   primaryCta: CtaLink
   secondaryCta: CtaLink
   images: MediaAsset[]
@@ -32,17 +30,6 @@ export interface HeroContent {
 
 export interface BenefitsContent {
   title: string
-}
-
-export interface IntroSectionContent {
-  title: string
-  body: string
-  inputPlaceholder: string
-  previewCtaLabel: string
-  createAccountCtaLabel: string
-  createAccountCtaHint?: string
-  backButtonAriaLabel?: string
-  primaryCta: CtaLink
 }
 
 export interface UsageStep {
@@ -262,7 +249,6 @@ export interface PricingSectionContent {
 
 export interface LandingContent {
   hero: HeroContent
-  introSection: IntroSectionContent
   benefits: BenefitsContent
   usage: { steps: UsageStep[] }
   features: FeaturesContent

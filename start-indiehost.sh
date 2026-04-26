@@ -11,4 +11,3 @@ docker compose ps
 echo
 echo "Frontend: http://localhost"
 echo "API health: http://localhost/api/health"
-echo "Scraping health: http://localhost/scraping/health"

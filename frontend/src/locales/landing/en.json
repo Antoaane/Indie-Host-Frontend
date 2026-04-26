@@ -3,14 +3,13 @@
     "title": "Your direct booking site<br><strong>0%</strong> commission",
     "description": "Domain included. Direct bookings. Online payments.",
     "descriptionDesktop": "Build your vacation rental website with a custom domain included. Accept direct bookings and get paid online—no OTA commissions, ever.",
-    "inputPlaceholder": "Paste your listing link",
     "primaryCta": {
-      "label": "Import my existing listing",
-      "href": "#intro-section",
+      "label": "Create my listing",
+      "href": "/dashboard/editor/create",
       "target": "_self"
     },
     "secondaryCta": {
-      "label": "Create my site for free",
+      "label": "Set up my page",
       "href": "/dashboard/editor/create",
       "target": "_self"
     },
@@ -22,40 +21,20 @@
       }
     ]
   },
-  "introSection": {
-    "title": "Create <span class=\"text-gradiant\">your site</span> from an existing listing",
-    "body": "Paste the Airbnb or Booking.com link of any of your properties—we'll generate your booking page in seconds.",
-    "inputPlaceholder": "Paste your listing link",
-    "previewCtaLabel": "Generate my site",
-    "createAccountCtaLabel": "Activate my site for free",
-    "createAccountCtaHint": "Free · No credit card required · Zero commission",
-    "backButtonAriaLabel": "Back to homepage",
-    "primaryCta": {
-      "label": "Try the free import",
-      "href": "#join-section",
-      "target": "_self"
-    }
-  },
   "benefits": {
     "title": "<strong>Everything</strong> is for <strong>you</strong>"
   },
   "usage": {
     "steps": [
       {
-        "id": "importListing",
-        "title": "Import your listing from Airbnb or Booking.com",
-        "description": "One click to import your listing securely—photos, description, ratings, and amenities. We handle it all.<br /><br />Make your listing stand out or start from scratch with <strong>IndieHost's live editor</strong>.",
-        "videos": [
-          {
-            "webm": "/assets/media/videos/import-auto.webm",
-            "mp4": "/assets/media/videos/import-auto.mp4"
-          }
-        ],
+        "id": "createListing",
+        "title": "Create your listing in IndieHost",
+        "description": "Create your listing from the IndieHost editor: title, photos, description, amenities and booking rules.<br /><br />You keep control of every detail with the <strong>complete IndieHost editor</strong>.",
         "images": [
           {
-            "webp": "/assets/media/images/webp/auto-import.webp",
-            "png": "/assets/media/images/png/auto-import.png",
-            "alt": "Illustration of listing import from Airbnb or Booking"
+            "webp": "/assets/media/images/webp/auto-generated.webp",
+            "png": "/assets/media/images/png/auto-generated.png",
+            "alt": "IndieHost listing creation illustration"
           }
         ]
       },
@@ -94,7 +73,7 @@
       {
         "id": "proof-metric-1",
         "value": "15 min",
-        "label": "to import, customize, and publish a first booking page in a typical scenario",
+        "label": "to create, personalize and publish a first page",
         "detail": "Illustrative estimate for a listing that is already structured"
       },
       {
@@ -269,7 +248,7 @@
       {
         "id": "modifiezEtPersonnalisezVosAnnonces",
         "title": "Edit and <strong>customize</strong> your listings",
-        "description": "Once your listing is imported, customize it freely with a simple, intuitive visual editor. Preview every change in real time, and edit your content with one click: click on an element in the preview and you're instantly taken to the right field.<br /><br />An unpublished listing stays as a draft, and you'll always keep your changes.",
+        "description": "Once your listing is created, customize it freely with a simple visual editor. Preview every change in real time and edit content in one click: select an element in the preview and jump straight to the right field.<br /><br />A created but unpublished listing stays as a draft, so your changes remain saved.",
         "images": [
           {
             "webp": "/assets/media/images/webp/editeur.webp",

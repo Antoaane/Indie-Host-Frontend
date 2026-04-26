@@ -3,14 +3,13 @@
     "title": "Seu site de reservas<br><strong>0%</strong> de comissão",
     "description": "Domínio incluído. Reservas diretas. Pagamentos online.",
     "descriptionDesktop": "Crie seu site de alojamento local com domínio incluído. Aceite reservas diretas e receba pagamentos online, sem comissões de OTA.",
-    "inputPlaceholder": "Cole o link do seu anúncio",
     "primaryCta": {
-      "label": "Importar meu anúncio existente",
-      "href": "#intro-section",
+      "label": "Criar meu anúncio",
+      "href": "/dashboard/editor/create",
       "target": "_self"
     },
     "secondaryCta": {
-      "label": "Criar meu site grátis",
+      "label": "Configurar minha página",
       "href": "/dashboard/editor/create",
       "target": "_self"
     },
@@ -22,40 +21,20 @@
       }
     ]
   },
-  "introSection": {
-    "title": "Crie <span class=\"text-gradiant\">seu site</span> a partir de um anúncio existente",
-    "body": "Cole o link do seu alojamento no Airbnb ou Booking e geramos sua página de reserva em segundos.",
-    "inputPlaceholder": "Cole o link do seu anúncio",
-    "previewCtaLabel": "Gerar meu site",
-    "createAccountCtaLabel": "Ativar meu site grátis",
-    "createAccountCtaHint": "Grátis · Sem compromisso · Sem comissão",
-    "backButtonAriaLabel": "Voltar ao início",
-    "primaryCta": {
-      "label": "Testar a importação grátis",
-      "href": "/pricing",
-      "target": "_self"
-    }
-  },
   "benefits": {
     "title": "<strong>Tudo</strong> é para <strong>si</strong>"
   },
   "usage": {
     "steps": [
       {
-        "id": "importListing",
-        "title": "Importe o seu anúncio do Airbnb ou Booking.com",
-        "description": "Com um clique importe o seu anúncio em segurança: fotos, descrição, avaliações e equipamentos. Nós tratamos de tudo.<br /><br />Destaque o seu anúncio ou comece do zero com o <strong>editor em direto da IndieHost</strong>.",
-        "videos": [
-          {
-            "webm": "/assets/media/videos/import-auto.webm",
-            "mp4": "/assets/media/videos/import-auto.mp4"
-          }
-        ],
+        "id": "createListing",
+        "title": "Crie o seu anúncio no IndieHost",
+        "description": "Crie o seu anúncio no editor IndieHost: título, fotos, descrição, comodidades e regras de reserva.<br /><br />Você mantém o controle de cada detalhe com o <strong>editor completo do IndieHost</strong>.",
         "images": [
           {
-            "webp": "/assets/media/images/webp/auto-import.webp",
-            "png": "/assets/media/images/png/auto-import.png",
-            "alt": "Importação de anúncio a partir do Airbnb ou Booking"
+            "webp": "/assets/media/images/webp/auto-generated.webp",
+            "png": "/assets/media/images/png/auto-generated.png",
+            "alt": "Ilustração de criação de anúncio IndieHost"
           }
         ]
       },
@@ -94,7 +73,7 @@
       {
         "id": "proof-metric-1",
         "value": "15 min",
-        "label": "para importar, personalizar e publicar uma primeira página de reserva num cenário típico",
+        "label": "para criar, personalizar e publicar uma primeira página",
         "detail": "Estimativa ilustrativa para um anúncio já estruturado"
       },
       {
@@ -269,7 +248,7 @@
       {
         "id": "modifiezEtPersonnalisezVosAnnonces",
         "title": "Edite e <strong>personalize</strong> os seus anúncios",
-        "description": "Depois de importar, personalize livremente com o editor visual. Pré-visualize em tempo real e edite com um clique. Um anúncio não publicado fica em rascunho e as alterações são guardadas.",
+        "description": "Depois de criar o anúncio, personalize-o livremente com um editor visual simples e intuitivo. Veja cada alteração em tempo real e edite o conteúdo com um clique.<br /><br />Um anúncio criado e não publicado permanece como rascunho, mantendo as suas alterações.",
         "images": [
           {
             "webp": "/assets/media/images/webp/editeur.webp",
@@ -418,13 +397,34 @@
           "name": "platforms",
           "legend": "Já anuncio em…",
           "options": [
-            { "label": "Airbnb", "value": "airbnb" },
-            { "label": "Booking", "value": "booking" },
-            { "label": "Abritel", "value": "abritel" },
-            { "label": "Expedia Grp.", "value": "expedia" },
-            { "label": "Meu site", "value": "website" },
-            { "label": "Outro", "value": "autre" },
-            { "label": "Estou a começar", "value": "debutant" }
+            {
+              "label": "Airbnb",
+              "value": "airbnb"
+            },
+            {
+              "label": "Booking",
+              "value": "booking"
+            },
+            {
+              "label": "Abritel",
+              "value": "abritel"
+            },
+            {
+              "label": "Expedia Grp.",
+              "value": "expedia"
+            },
+            {
+              "label": "Meu site",
+              "value": "website"
+            },
+            {
+              "label": "Outro",
+              "value": "autre"
+            },
+            {
+              "label": "Estou a começar",
+              "value": "debutant"
+            }
           ]
         }
       ],
@@ -437,16 +437,53 @@
         }
       ],
       "validation": {
-        "defaults": { "simpleText": { "maxLength": 255, "hideIndicatorAt": 255 } },
-        "fields": {
-          "text": { "maxLength": 80, "autocomplete": "off", "inputMode": "text" },
-          "email": { "minLength": 5, "maxLength": 160, "autocomplete": "email", "inputMode": "email", "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$", "patternTitle": "Formato: nome@domínio.tld" },
-          "tel": { "minLength": 6, "maxLength": 25, "autocomplete": "tel", "inputMode": "tel", "pattern": "^\\+?[0-9().\\s-]{6,25}$", "patternTitle": "Use apenas números, espaços, parênteses, + ou -" },
-          "zip": { "maxLength": 12, "autocomplete": "postal-code", "inputMode": "numeric", "pattern": "^[0-9A-Za-z\\s-]{3,12}$", "patternTitle": "Código postal inválido" }
+        "defaults": {
+          "simpleText": {
+            "maxLength": 255,
+            "hideIndicatorAt": 255
+          }
         },
-        "nameAutocomplete": { "first": "given-name", "last": "family-name", "name": "name", "default": "off" }
+        "fields": {
+          "text": {
+            "maxLength": 80,
+            "autocomplete": "off",
+            "inputMode": "text"
+          },
+          "email": {
+            "minLength": 5,
+            "maxLength": 160,
+            "autocomplete": "email",
+            "inputMode": "email",
+            "pattern": "^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$",
+            "patternTitle": "Formato: nome@domínio.tld"
+          },
+          "tel": {
+            "minLength": 6,
+            "maxLength": 25,
+            "autocomplete": "tel",
+            "inputMode": "tel",
+            "pattern": "^\\+?[0-9().\\s-]{6,25}$",
+            "patternTitle": "Use apenas números, espaços, parênteses, + ou -"
+          },
+          "zip": {
+            "maxLength": 12,
+            "autocomplete": "postal-code",
+            "inputMode": "numeric",
+            "pattern": "^[0-9A-Za-z\\s-]{3,12}$",
+            "patternTitle": "Código postal inválido"
+          }
+        },
+        "nameAutocomplete": {
+          "first": "given-name",
+          "last": "family-name",
+          "name": "name",
+          "default": "off"
+        }
       },
-      "submit": { "label": "Enviar", "icon": "SendIcon" }
+      "submit": {
+        "label": "Enviar",
+        "icon": "SendIcon"
+      }
     }
   },
   "faq": {
@@ -458,91 +495,239 @@
         "id": "cat-comprendre",
         "title": "Entender a IndieHost",
         "children": [
-          { "id": "q-1", "question": "O que é a IndieHost?", "answer": "A IndieHost é uma plataforma de alojamento local que devolve o controlo aos anfitriões. Libertamo-lo das comissões OTA com site próprio, motor de reservas, pagamentos e calendário — zero comissão sobre a sua receita." },
-          { "id": "q-2", "question": "Em que é que a IndieHost é diferente do Airbnb ou Booking.com?", "answer": "Ao contrário das OTA, a IndieHost não cobra comissão nas suas reservas. É dono da relação com o hóspede, da sua marca e dos seus preços. Personalize a página e use o seu domínio." },
-          { "id": "q-3", "question": "Se não cobram comissão, como ganham dinheiro?", "answer": "O modelo é transparente. Oferecemos um plano IndieHost 100% grátis (pagamento, calendário, 2 anúncios). Ganhamos com subscrições opcionais (SuperHost, MegaHost) e opções à la carte (Google Travel, KYC)." },
-          { "id": "q-4", "question": "Para que tipo de anfitrião é a IndieHost?", "answer": "Para todos: particulares (plano grátis), semi-profissionais (SuperHost), profissionais (MegaHost). Cada plano adapta-se ao seu nível de atividade." },
-          { "id": "q-5", "question": "O que significa reserva direta?", "answer": "O hóspede reserva diretamente consigo, sem intermediário. A IndieHost fornece a tecnologia. Benefícios: zero comissão e controlo total da relação com o cliente." }
+          {
+            "id": "q-1",
+            "question": "O que é a IndieHost?",
+            "answer": "A IndieHost é uma plataforma de alojamento local que devolve o controlo aos anfitriões. Libertamo-lo das comissões OTA com site próprio, motor de reservas, pagamentos e calendário — zero comissão sobre a sua receita."
+          },
+          {
+            "id": "q-2",
+            "question": "Em que é que a IndieHost é diferente do Airbnb ou Booking.com?",
+            "answer": "Ao contrário das OTA, a IndieHost não cobra comissão nas suas reservas. É dono da relação com o hóspede, da sua marca e dos seus preços. Personalize a página e use o seu domínio."
+          },
+          {
+            "id": "q-3",
+            "question": "Se não cobram comissão, como ganham dinheiro?",
+            "answer": "O modelo é transparente. Oferecemos um plano IndieHost 100% grátis (pagamento, calendário, 2 anúncios). Ganhamos com subscrições opcionais (SuperHost, MegaHost) e opções à la carte (Google Travel, KYC)."
+          },
+          {
+            "id": "q-4",
+            "question": "Para que tipo de anfitrião é a IndieHost?",
+            "answer": "Para todos: particulares (plano grátis), semi-profissionais (SuperHost), profissionais (MegaHost). Cada plano adapta-se ao seu nível de atividade."
+          },
+          {
+            "id": "q-5",
+            "question": "O que significa reserva direta?",
+            "answer": "O hóspede reserva diretamente consigo, sem intermediário. A IndieHost fornece a tecnologia. Benefícios: zero comissão e controlo total da relação com o cliente."
+          }
         ]
       },
       {
         "id": "cat-nos-offres",
         "title": "Preços e subscrições",
         "children": [
-          { "id": "q-7", "question": "O plano IndieHost é mesmo grátis? Há taxas escondidas?", "answer": "Sim, 0 €/mês, sem taxas escondidas da nossa parte. Inclui 2 anúncios, pagamento online (Stripe), faturação, iCal, mensagens e painel. Apenas as taxas de transação normais do Stripe se aplicam." },
-          { "id": "q-8", "question": "Posso cancelar a subscrição paga (SuperHost/MegaHost) quando quiser?", "answer": "Sim. As subscrições são sem compromisso e podem ser canceladas a qualquer momento no painel. O plano mantém-se até ao fim do período de faturação em curso." },
-          { "id": "q-9", "question": "Posso adicionar opções sem mudar de plano?", "answer": "Sim. No plano grátis pode subscrever opções como integração Google Travel, domínio próprio ou aceitar entradas, sem passar ao SuperHost." },
-          { "id": "q-10", "question": "E se tiver vários alojamentos em locais diferentes?", "answer": "Os anúncios da mesma conta têm de pertencer à mesma pessoa. Se gerir imóveis de vários proprietários, cada um deve criar a sua conta IndieHost." }
+          {
+            "id": "q-7",
+            "question": "O plano IndieHost é mesmo grátis? Há taxas escondidas?",
+            "answer": "Sim, 0 €/mês, sem taxas escondidas da nossa parte. Inclui 2 anúncios, pagamento online (Stripe), faturação, iCal, mensagens e painel. Apenas as taxas de transação normais do Stripe se aplicam."
+          },
+          {
+            "id": "q-8",
+            "question": "Posso cancelar a subscrição paga (SuperHost/MegaHost) quando quiser?",
+            "answer": "Sim. As subscrições são sem compromisso e podem ser canceladas a qualquer momento no painel. O plano mantém-se até ao fim do período de faturação em curso."
+          },
+          {
+            "id": "q-9",
+            "question": "Posso adicionar opções sem mudar de plano?",
+            "answer": "Sim. No plano grátis pode subscrever opções como integração Google Travel, domínio próprio ou aceitar entradas, sem passar ao SuperHost."
+          },
+          {
+            "id": "q-10",
+            "question": "E se tiver vários alojamentos em locais diferentes?",
+            "answer": "Os anúncios da mesma conta têm de pertencer à mesma pessoa. Se gerir imóveis de vários proprietários, cada um deve criar a sua conta IndieHost."
+          }
         ]
       },
       {
         "id": "cat-paiements-en-ligne",
         "title": "Pagamentos online",
         "children": [
-          { "id": "q-12", "question": "Como sou pago pelos hóspedes?", "answer": "Usamos o Stripe Connect. Ao inscrever-se, associa a sua conta bancária. O pagamento do hóspede é processado pelo Stripe e transferido para a sua conta. A IndieHost nunca é intermediária financeira." },
-          { "id": "q-13", "question": "A IndieHost cobra comissão no pagamento?", "answer": "Não, nunca. Recebe 100% do valor pago pelo hóspede (menos as taxas de transação do Stripe)." },
-          { "id": "q-14", "question": "Posso pedir entrada em vez de pagamento total?", "answer": "Sim. Pode configurar as suas regras. A opção de aceitar entradas é paga (5 €/mês) no plano grátis e está incluída no SuperHost e MegaHost." },
-          { "id": "q-15", "question": "O pagamento é seguro para os meus clientes?", "answer": "Sim. O Stripe Connect cumpre as normas de segurança mais exigentes (PCI DSS). Os hóspedes podem pagar com confiança." },
-          { "id": "q-16", "question": "Quando recebo o dinheiro da reserva?", "answer": "O valor fica em custódia no Stripe após confirmação e é transferido para a sua conta quando o hóspede confirmar o check-in. Depois aparece no Stripe e é transferido para a sua conta bancária conforme o calendário habitual." }
+          {
+            "id": "q-12",
+            "question": "Como sou pago pelos hóspedes?",
+            "answer": "Usamos o Stripe Connect. Ao inscrever-se, associa a sua conta bancária. O pagamento do hóspede é processado pelo Stripe e transferido para a sua conta. A IndieHost nunca é intermediária financeira."
+          },
+          {
+            "id": "q-13",
+            "question": "A IndieHost cobra comissão no pagamento?",
+            "answer": "Não, nunca. Recebe 100% do valor pago pelo hóspede (menos as taxas de transação do Stripe)."
+          },
+          {
+            "id": "q-14",
+            "question": "Posso pedir entrada em vez de pagamento total?",
+            "answer": "Sim. Pode configurar as suas regras. A opção de aceitar entradas é paga (5 €/mês) no plano grátis e está incluída no SuperHost e MegaHost."
+          },
+          {
+            "id": "q-15",
+            "question": "O pagamento é seguro para os meus clientes?",
+            "answer": "Sim. O Stripe Connect cumpre as normas de segurança mais exigentes (PCI DSS). Os hóspedes podem pagar com confiança."
+          },
+          {
+            "id": "q-16",
+            "question": "Quando recebo o dinheiro da reserva?",
+            "answer": "O valor fica em custódia no Stripe após confirmação e é transferido para a sua conta quando o hóspede confirmar o check-in. Depois aparece no Stripe e é transferido para a sua conta bancária conforme o calendário habitual."
+          }
         ]
       },
       {
         "id": "cat-start",
         "title": "Começar na IndieHost",
         "children": [
-          { "id": "q-17", "question": "Como crio o meu anúncio na IndieHost?", "answer": "Com o nosso editor em direto. À esquerda preenche as informações; à direita vê o resultado. Em minutos a página está pronta para partilhar." },
-          { "id": "q-18", "question": "Quantos anúncios posso criar?", "answer": "No plano grátis até 2; no SuperHost, 5; no MegaHost, até 15 (extensível sob pedido)." },
-          { "id": "q-19", "question": "Que informações são pedidas na inscrição?", "answer": "Informações administrativas básicas necessárias para conformidade legal, gestão de pagamentos via Stripe e, se for particular, redistribuição de taxas de turismo." },
-          { "id": "q-20", "question": "A ferramenta é complicada para quem não é muito técnico?", "answer": "Não. O editor em direto guia passo a passo e o painel centraliza a informação (receitas, hóspedes). Existe também uma app móvel para gerir anúncios e reservas." }
+          {
+            "id": "q-17",
+            "question": "Como crio o meu anúncio na IndieHost?",
+            "answer": "Com o nosso editor em direto. À esquerda preenche as informações; à direita vê o resultado. Em minutos a página está pronta para partilhar."
+          },
+          {
+            "id": "q-18",
+            "question": "Quantos anúncios posso criar?",
+            "answer": "No plano grátis até 2; no SuperHost, 5; no MegaHost, até 15 (extensível sob pedido)."
+          },
+          {
+            "id": "q-19",
+            "question": "Que informações são pedidas na inscrição?",
+            "answer": "Informações administrativas básicas necessárias para conformidade legal, gestão de pagamentos via Stripe e, se for particular, redistribuição de taxas de turismo."
+          },
+          {
+            "id": "q-20",
+            "question": "A ferramenta é complicada para quem não é muito técnico?",
+            "answer": "Não. O editor em direto guia passo a passo e o painel centraliza a informação (receitas, hóspedes). Existe também uma app móvel para gerir anúncios e reservas."
+          }
         ]
       },
       {
         "id": "cat-synchronisation",
         "title": "Gestão e sincronização de reservas",
         "children": [
-          { "id": "q-21", "question": "Como funciona a sincronização do calendário iCal?", "answer": "É bidirecional. Dá à IndieHost os seus links iCal (Airbnb, Booking, etc.) e a IndieHost devolve um link iCal para colar noutras plataformas. Uma reserva numa plataforma bloqueia as datas em todas." },
-          { "id": "q-22", "question": "Posso adicionar manualmente uma reserva feita por telefone?", "answer": "Sim, nos planos SuperHost e MegaHost. Pode adicionar ou alterar reservas manualmente no calendário IndieHost para bloquear datas." },
-          { "id": "q-23", "question": "Como o calendário mostra as minhas reservas?", "answer": "O calendário IndieHost centraliza tudo e mostra a origem (IndieHost, Airbnb, Booking, Manual). Tem várias vistas (mensal, semanal)." },
-          { "id": "q-24", "question": "Como sou avisado de uma nova reserva?", "answer": "Recebe notificações em tempo real por app, SMS ou e-mail para novos pedidos ou confirmações de pagamento." },
-          { "id": "q-25", "question": "Posso automatizar a comunicação (SMS, notificações)?", "answer": "Sim. Os planos SuperHost e MegaHost incluem mensagens automatizadas. Pode agendar SMS e notificações em momentos-chave (confirmação, J-7, instruções de chegada, etc.)." }
+          {
+            "id": "q-21",
+            "question": "Como funciona a sincronização do calendário iCal?",
+            "answer": "É bidirecional. Dá à IndieHost os seus links iCal (Airbnb, Booking, etc.) e a IndieHost devolve um link iCal para colar noutras plataformas. Uma reserva numa plataforma bloqueia as datas em todas."
+          },
+          {
+            "id": "q-22",
+            "question": "Posso adicionar manualmente uma reserva feita por telefone?",
+            "answer": "Sim, nos planos SuperHost e MegaHost. Pode adicionar ou alterar reservas manualmente no calendário IndieHost para bloquear datas."
+          },
+          {
+            "id": "q-23",
+            "question": "Como o calendário mostra as minhas reservas?",
+            "answer": "O calendário IndieHost centraliza tudo e mostra a origem (IndieHost, Airbnb, Booking, Manual). Tem várias vistas (mensal, semanal)."
+          },
+          {
+            "id": "q-24",
+            "question": "Como sou avisado de uma nova reserva?",
+            "answer": "Recebe notificações em tempo real por app, SMS ou e-mail para novos pedidos ou confirmações de pagamento."
+          },
+          {
+            "id": "q-25",
+            "question": "Posso automatizar a comunicação (SMS, notificações)?",
+            "answer": "Sim. Os planos SuperHost e MegaHost incluem mensagens automatizadas. Pode agendar SMS e notificações em momentos-chave (confirmação, J-7, instruções de chegada, etc.)."
+          }
         ]
       },
       {
         "id": "cat-attirer-voyageurs",
         "title": "Atrair mais hóspedes sem comissão",
         "children": [
-          { "id": "q-28", "question": "Se não estiver no Airbnb, como os hóspedes me encontram?", "answer": "A IndieHost dá ferramentas de aquisição direta. Pode partilhar o link nas redes sociais, Google Maps, etc. Oferecemos também a opção de integração no Google Travel." },
-          { "id": "q-29", "question": "O que é a integração Google Travel?", "answer": "Opção (paga no grátis/SuperHost, incluída no MegaHost) que coloca o seu anúncio nos resultados do Google Travel / Google Hotels." },
-          { "id": "q-30", "question": "Qual a vantagem de estar no Google Travel com a IndieHost?", "answer": "Como não paga comissão na IndieHost, pode mostrar no Google Travel um preço 15–20% mais baixo do que no Booking ou Airbnb e captar reservas diretas." },
-          { "id": "q-31", "question": "A IndieHost tem motor de busca para hóspedes?", "answer": "Sim. Além da sua página de anúncio, a IndieHost tem uma busca (local, datas, número de pessoas) para os visitantes descobrirem o seu alojamento." },
-          { "id": "q-32", "question": "Ajudam a fidelizar clientes e a criar relação direta?", "answer": "Sim. O livretto de acolhimento com QR code dá um canal de comunicação direto com o hóspede. Nos planos MegaHost há também campanhas de e-mail para recontactar clientes." }
+          {
+            "id": "q-28",
+            "question": "Se não estiver no Airbnb, como os hóspedes me encontram?",
+            "answer": "A IndieHost dá ferramentas de aquisição direta. Pode partilhar o link nas redes sociais, Google Maps, etc. Oferecemos também a opção de integração no Google Travel."
+          },
+          {
+            "id": "q-29",
+            "question": "O que é a integração Google Travel?",
+            "answer": "Opção (paga no grátis/SuperHost, incluída no MegaHost) que coloca o seu anúncio nos resultados do Google Travel / Google Hotels."
+          },
+          {
+            "id": "q-30",
+            "question": "Qual a vantagem de estar no Google Travel com a IndieHost?",
+            "answer": "Como não paga comissão na IndieHost, pode mostrar no Google Travel um preço 15–20% mais baixo do que no Booking ou Airbnb e captar reservas diretas."
+          },
+          {
+            "id": "q-31",
+            "question": "A IndieHost tem motor de busca para hóspedes?",
+            "answer": "Sim. Além da sua página de anúncio, a IndieHost tem uma busca (local, datas, número de pessoas) para os visitantes descobrirem o seu alojamento."
+          },
+          {
+            "id": "q-32",
+            "question": "Ajudam a fidelizar clientes e a criar relação direta?",
+            "answer": "Sim. O livretto de acolhimento com QR code dá um canal de comunicação direto com o hóspede. Nos planos MegaHost há também campanhas de e-mail para recontactar clientes."
+          }
         ]
       },
       {
         "id": "cat-url-thèmes",
         "title": "Domínio e temas",
         "children": [
-          { "id": "q-38", "question": "Posso usar o meu próprio domínio?", "answer": "Sim. Pode comprar ou ligar um domínio à sua conta/anúncio. Incluído no MegaHost e disponível como opção no SuperHost." },
-          { "id": "q-39", "question": "E se não tiver domínio?", "answer": "Sem problema. Terá uma URL IndieHost (ex.: indiehost.com/sua-propriedade) para partilhar de imediato." },
-          { "id": "q-40", "question": "O que é a 'banco de temas'?", "answer": "São temas gráficos para a sua página de reserva. Pode escolher design, cores e tipografia que combinem com o seu alojamento." },
-          { "id": "q-41", "question": "Até que ponto posso personalizar o anúncio?", "answer": "Tem controlo avançado: editor em direto para conteúdo (fotos, texto, equipamentos) e escolha de temas para o design. Página única e profissional." }
+          {
+            "id": "q-38",
+            "question": "Posso usar o meu próprio domínio?",
+            "answer": "Sim. Pode comprar ou ligar um domínio à sua conta/anúncio. Incluído no MegaHost e disponível como opção no SuperHost."
+          },
+          {
+            "id": "q-39",
+            "question": "E se não tiver domínio?",
+            "answer": "Sem problema. Terá uma URL IndieHost (ex.: indiehost.com/sua-propriedade) para partilhar de imediato."
+          },
+          {
+            "id": "q-40",
+            "question": "O que é a 'banco de temas'?",
+            "answer": "São temas gráficos para a sua página de reserva. Pode escolher design, cores e tipografia que combinem com o seu alojamento."
+          },
+          {
+            "id": "q-41",
+            "question": "Até que ponto posso personalizar o anúncio?",
+            "answer": "Tem controlo avançado: editor em direto para conteúdo (fotos, texto, equipamentos) e escolha de temas para o design. Página única e profissional."
+          }
         ]
       },
       {
         "id": "cat-sécurité",
         "title": "Segurança e conformidade",
         "children": [
-          { "id": "q-42", "question": "O que é a verificação KYC?", "answer": "KYC (Know Your Customer) é a verificação de identidade para prevenir fraudes e tranquilizar os hóspedes. Verificamos a sua identidade, prova de propriedade e número de registo de alojamento local." },
-          { "id": "q-43", "question": "A verificação KYC é obrigatória?", "answer": "Está incluída e recomendada no SuperHost e MegaHost. No plano grátis é opção paga. O KYC dá um selo 'Verificado' no anúncio e aumenta a confiança e a conversão." },
-          { "id": "q-44", "question": "Como a IndieHost trata a taxa de turismo?", "answer": "Para particulares, o sistema pode gerir a redistribuição automática da taxa de turismo às entidades competentes." },
-          { "id": "q-45", "question": "É possível verificar os hóspedes?", "answer": "Sim, prevemos uma opção de verificação de identidade do hóspede, útil se emitir contratos de arrendamento." }
+          {
+            "id": "q-42",
+            "question": "O que é a verificação KYC?",
+            "answer": "KYC (Know Your Customer) é a verificação de identidade para prevenir fraudes e tranquilizar os hóspedes. Verificamos a sua identidade, prova de propriedade e número de registo de alojamento local."
+          },
+          {
+            "id": "q-43",
+            "question": "A verificação KYC é obrigatória?",
+            "answer": "Está incluída e recomendada no SuperHost e MegaHost. No plano grátis é opção paga. O KYC dá um selo 'Verificado' no anúncio e aumenta a confiança e a conversão."
+          },
+          {
+            "id": "q-44",
+            "question": "Como a IndieHost trata a taxa de turismo?",
+            "answer": "Para particulares, o sistema pode gerir a redistribuição automática da taxa de turismo às entidades competentes."
+          },
+          {
+            "id": "q-45",
+            "question": "É possível verificar os hóspedes?",
+            "answer": "Sim, prevemos uma opção de verificação de identidade do hóspede, útil se emitir contratos de arrendamento."
+          }
         ]
       },
       {
         "id": "cat-pms",
         "title": "Integrações com PMS e RMS",
         "children": [
-          { "id": "q-43", "question": "A IndieHost é compatível com o meu Channel Manager (PMS) ou RMS?", "answer": "Sim. A integração de ferramentas de gestão externas está incluída nos planos SuperHost e MegaHost. Pode sincronizar anúncios, preços, disponibilidade e reservas a partir do seu sistema." }
+          {
+            "id": "q-43",
+            "question": "A IndieHost é compatível com o meu Channel Manager (PMS) ou RMS?",
+            "answer": "Sim. A integração de ferramentas de gestão externas está incluída nos planos SuperHost e MegaHost. Pode sincronizar anúncios, preços, disponibilidade e reservas a partir do seu sistema."
+          }
         ]
       }
     ]
@@ -551,8 +736,16 @@
     "eyebrow": "Agir",
     "title": "Importe o seu anúncio, ative a página e comece a testar o seu <strong>canal direto</strong>",
     "body": "Pode começar com um anúncio existente, publicar depressa e depois refinar a página, preços e estratégia.",
-    "primaryCta": { "label": "Experimentar grátis", "href": "#intro-section", "target": "_self" },
-    "secondaryCta": { "label": "Ver preços", "href": "#pricing-section", "target": "_self" },
+    "primaryCta": {
+      "label": "Experimentar grátis",
+      "href": "#intro-section",
+      "target": "_self"
+    },
+    "secondaryCta": {
+      "label": "Ver preços",
+      "href": "#pricing-section",
+      "target": "_self"
+    },
     "note": "Sem comissão IndieHost nas reservas diretas. Fluxo simples e pensado para mobile."
   }
 }

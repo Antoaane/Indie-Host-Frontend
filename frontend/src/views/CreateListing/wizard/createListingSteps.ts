@@ -3,7 +3,6 @@
 import type { RawListingBundle } from '@/domain/listings/types'
 import CreateAmenitiesStepPanel from '@/views/CreateListing/components/panels/CreateAmenitiesStepPanel.vue'
 import CreateBasePricingStepPanel from '@/views/CreateListing/components/panels/CreateBasePricingStepPanel.vue'
-import CreateImportStepPanel from '@/views/CreateListing/components/panels/CreateImportStepPanel.vue'
 import CreateCapacityStepPanel from '@/views/CreateListing/components/panels/CreateCapacityStepPanel.vue'
 import CreateDescriptionStepPanel from '@/views/CreateListing/components/panels/CreateDescriptionStepPanel.vue'
 import CreateGalleryStepPanel from '@/views/CreateListing/components/panels/CreateGalleryStepPanel.vue'
@@ -87,18 +86,6 @@ function validatePricing(bundle: RawListingBundle): string | null {
 
 export function createListingSteps(): CreateListingStep[] {
   return [
-    {
-      id: 'import',
-      label: 'Import',
-      description:
-        'Importez une annonce existante depuis Airbnb ou créez manuellement.',
-      component: CreateImportStepPanel,
-      props: (draft) => ({
-        listingId: resolveDraftListingId(draft),
-        listingStatus: draft.core?.status,
-      }),
-      acceptsPatch: true,
-    },
     {
       id: 'location',
       label: 'Adresse',

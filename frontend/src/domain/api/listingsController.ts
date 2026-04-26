@@ -338,7 +338,7 @@ type ListingHostnameResolution = {
 
 export function createApiListingsController(): ListingsController {
   const apiEnabled = Boolean(BASE_API_URL)
-  const apiDisabledErrorPrefix = '[Domain][api] Missing VITE_API_BASE_URL while VITE_LISTINGS_DATA_MODE=api.'
+  const apiDisabledErrorPrefix = '[Domain][api] Missing VITE_API_BASE_URL.'
   if (!apiEnabled) {
     console.error(`${apiDisabledErrorPrefix} API calls are disabled.`)
   }

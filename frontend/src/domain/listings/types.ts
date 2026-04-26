@@ -1,16 +1,5 @@
 // File: src/domain/listings/types.ts
 
-import coreJSON from '@/content/fr/ListingTest_0/core.json'
-import bookingsJSON from '@/content/fr/ListingTest_0/bookings.json'
-import mediasJSON from '@/content/fr/ListingTest_0/medias.json'
-import notesJSON from '@/content/fr/ListingTest_0/notes.json'
-import commentsJSON from '@/content/fr/ListingTest_0/comments.json'
-import hostJSON from '@/content/fr/ListingTest_0/host.json'
-import arrivalJSON from '@/content/fr/ListingTest_0/arrival.json'
-
-type Override<T, U> = Omit<T, keyof U> & U
-
-export type RawCoreBase = typeof coreJSON
 export type RawPerkScoring = {
   perkEligible?: boolean
   perkScore?: number
@@ -31,18 +20,45 @@ export type RawPerkSetting = RawPerkScoring & {
   icon: string
   enabled?: boolean
 }
-export type RawCore = Override<RawCoreBase, {
+export type RawRoomBed = Record<string, unknown> & {
+  id?: string
+  type?: string
+  capacity?: number
+  quantity?: number
+}
+export type RawRoom = Record<string, unknown> & {
+  id?: string
+  'room-name'?: string
+  name?: string
+  beds?: RawRoomBed[]
+}
+export type RawCore = Record<string, unknown> & {
+  id?: string
   slug?: string
+  status?: string
+  pause_message?: string
+  title?: string
+  type?: string
+  description?: string
+  city?: string
+  country?: string
+  region?: string
+  guest_capacity?: number
+  rooms?: RawRoom[]
   amenities?: RawAmenity[]
   perkSettings?: RawPerkSetting[]
+  'reviews-display'?: {
+    indiehost?: boolean
+    airbnb?: boolean
+    booking?: boolean
+  }
   precise_address?: string
   latitude?: number
   longitude?: number
   lat?: number
   lng?: number
   zoom?: number
-}>
-type RawBookingsBase = typeof bookingsJSON
+}
 export type RawBookedDay = {
   start: string
   end: string
@@ -189,6 +205,12 @@ export type RawPricingSettings = Record<string, unknown> & {
   occupancy?: RawPricingOccupancy
   deposit?: RawPricingDeposit
 }
+export type RawFee = Record<string, unknown> & {
+  id?: string
+  label?: string
+  amount?: number
+  type?: string
+}
 export type RawBookingReservation = {
   id: string
   start: string
@@ -211,14 +233,29 @@ export type RawBookingReservation = {
   createdAt?: string
   messaging?: RawReservationMessaging
 }
-export type RawBookings = Override<RawBookingsBase, {
-  'booked-days': RawBookedDay[]
+export type RawBookings = Record<string, unknown> & {
+  price?: number
+  fees?: RawFee[]
+  'booked-days'?: RawBookedDay[]
   'external-booked-days'?: RawBookedDay[]
   reservations?: RawBookingReservation[]
   pricing?: RawPricingSettings
-}>
-export type RawMedias = typeof mediasJSON
-export type RawNotes = Override<typeof notesJSON, {
+}
+export type RawMediaImage = Record<string, unknown> & {
+  src: string
+  alt?: string
+  position?: number
+}
+export type RawMediaVideo = Record<string, unknown> & {
+  src: string
+  type?: string
+  poster?: string
+}
+export type RawMedias = Record<string, unknown> & {
+  images?: RawMediaImage[]
+  videos?: RawMediaVideo[]
+}
+export type RawNotes = Record<string, unknown> & {
   note?: {
     note?: number
     distribution?: Record<string, number>
@@ -232,10 +269,54 @@ export type RawNotes = Override<typeof notesJSON, {
     reviewCount?: number
     sourceLabel?: string
   }>
-}>
-export type RawComments = typeof commentsJSON
-export type RawHost = typeof hostJSON
-export type RawArrival = typeof arrivalJSON
+}
+export type RawComment = Record<string, unknown> & {
+  id?: string
+  author?: string
+  'profile-pic'?: string
+  name?: string
+  comment?: string
+  note?: number
+  'stay-dates'?: {
+    start?: string
+    end?: string
+  }
+}
+export type RawComments = Record<string, unknown> & {
+  comments?: RawComment[][]
+}
+export type RawHost = Record<string, unknown> & {
+  name?: string
+  status?: string
+  seniority?: number
+  'global-note'?: number
+  avatar?: string
+  email?: string
+  phone?: string
+  'catalog-link'?: string
+}
+export type RawArrivalIntro = {
+  title: string
+  subtitle: string
+  tagline: string
+}
+export type RawArrivalFieldSection = Record<string, string>
+export type RawArrivalPractical = {
+  savings: RawArrivalFieldSection
+  access: RawArrivalFieldSection
+  services: RawArrivalFieldSection
+  rules: string
+  shops: string
+}
+export type RawArrivalGuide = {
+  title: string
+  content: string
+}
+export type RawArrival = Record<string, unknown> & {
+  intro: RawArrivalIntro
+  practical: RawArrivalPractical
+  guide: RawArrivalGuide
+}
 
 export type RawListingBundle = {
   core?: Partial<RawCore> | null

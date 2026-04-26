@@ -9,4 +9,3 @@ docker compose ps
 Write-Host ''
 Write-Host 'Frontend: http://localhost'
 Write-Host 'API health: http://localhost/api/health'
-Write-Host 'Scraping health: http://localhost/scraping/health'

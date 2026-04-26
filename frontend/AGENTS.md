@@ -90,7 +90,7 @@ Ton style :
 
 - Backend : Golang (monolithe principal), PostgreSQL
 - Frontend : Vue.js + SASS + GSAP
-- Microservices : Python (scraping, IA, agenda)
+- Services : API Fastify, PostgreSQL, intégrations externes côté backend
 - Paiements : Stripe Connect
 - Architecture multi-tenant, templating dynamique par sous-domaine
 - Fichiers .ics reconstruits dynamiquement (optimisation scalabilité)

@@ -8,14 +8,10 @@ import { getListingsController } from '@/domain/listings/controller'
 import type { UserListingCard } from '@/domain/listings/types'
 import { readActiveUserId } from '@/router/backOfficeUser'
 import ListingSubdomainPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/DomainPanel.vue'
-import DomainCustomPurchaseLegacyPanel from '@/views/Domains/DomainCustomPurchaseLegacyPanel.vue'
 
 const route = useRoute()
 const router = useRouter()
 const listingsController = getListingsController()
-
-const CUSTOM_DOMAIN_PURCHASE_ENABLED_RAW = (import.meta.env.VITE_CUSTOM_DOMAIN_PURCHASE_ENABLED ?? '').toString().trim().toLowerCase()
-const isCustomDomainPurchaseEnabled = ['1', 'true', 'yes', 'on'].includes(CUSTOM_DOMAIN_PURCHASE_ENABLED_RAW)
 
 const listings = ref<UserListingCard[]>([])
 const selectedListingId = ref('')
@@ -195,21 +191,11 @@ onMounted(() => {
       </p>
     </section>
 
-    <section
-      class="domain-panel__section domain-panel__legacy"
-      :class="{ 'is-disabled': !isCustomDomainPurchaseEnabled }"
-    >
-      <h2>Achat domaine custom</h2>
-
-      <p
-        v-if="!isCustomDomainPurchaseEnabled"
-        class="domain-panel__feedback"
-      >
-        Cette fonctionnalite est desactivee temporairement. Le code est conserve et reactivable via
-        <code>VITE_CUSTOM_DOMAIN_PURCHASE_ENABLED=true</code>.
+    <section class="domain-panel__section domain-panel__legacy is-disabled">
+      <h2>Domaine personnalise</h2>
+      <p class="domain-panel__feedback">
+        L achat de domaines personnalises est retire du produit. La configuration disponible en production est le sous-domaine IndieHost.
       </p>
-
-      <DomainCustomPurchaseLegacyPanel v-else />
     </section>
   </section>
 </template>

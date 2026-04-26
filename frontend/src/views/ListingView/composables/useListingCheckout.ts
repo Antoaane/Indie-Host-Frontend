@@ -3,7 +3,7 @@
 import { computed, reactive, ref, type ComputedRef, type Ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import { deriveBookedDaysFromReservations, normalizeBookedDay, normalizeBookedDays, normalizeReservations, toUtcDay } from '@/domain/listings/bookings'
+import { normalizeBookedDay, normalizeBookedDays, normalizeReservations, toUtcDay } from '@/domain/listings/bookings'
 import { resolveWeekendPricing } from '@/domain/listings/pricing'
 import {
   computeReservationPricing,
@@ -23,7 +23,6 @@ type FetchEditableListingBundle = (listingId: string) => Promise<RawListingBundl
 type PatchListingDraft = (listingId: string, payload: { bookings: Partial<RawBookings> }) => Promise<unknown>
 
 type UseListingCheckoutOptions = {
-  listingsMode: 'api' | 'local-json'
   listingData: ComputedRef<ListingParsed | null>
   listingId: ComputedRef<string | null>
   rawListing: Ref<RawListingBundle | null | undefined>
@@ -512,32 +511,16 @@ export function useListingCheckout(options: UseListingCheckoutOptions) {
       let redirectReservationId = reservationWithConfirmation.id
       let redirectConfirmation = localConfirmation
 
-      if (options.listingsMode === 'api') {
-        const created = await createBookingReservation({
-          listingId: targetListingId,
-          reservation: reservationWithConfirmation,
-        })
-        redirectReservationId = (created.reservationId || reservationWithConfirmation.id).trim()
-        redirectConfirmation = createReservationConfirmation(
-          targetListingId,
-          redirectReservationId,
-          created.confirmation ?? reservationWithConfirmation.confirmation ?? null,
-        )
-      } else {
-        const nextReservations = normalizeReservations([
-          ...currentReservations,
-          reservationWithConfirmation,
-        ])
-        const nextBookedDays = deriveBookedDaysFromReservations(nextReservations)
-
-        await options.patchListingDraft(targetListingId, {
-          bookings: {
-            ...(currentBookings ?? {}),
-            reservations: nextReservations,
-            'booked-days': nextBookedDays,
-          },
-        })
-      }
+      const created = await createBookingReservation({
+        listingId: targetListingId,
+        reservation: reservationWithConfirmation,
+      })
+      redirectReservationId = (created.reservationId || reservationWithConfirmation.id).trim()
+      redirectConfirmation = createReservationConfirmation(
+        targetListingId,
+        redirectReservationId,
+        created.confirmation ?? reservationWithConfirmation.confirmation ?? null,
+      )
 
       cancelCheckout()
       try {

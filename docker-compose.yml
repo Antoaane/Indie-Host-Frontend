@@ -57,30 +57,11 @@ services:
       retries: 12
       start_period: 20s
 
-  scraping:
-    build:
-      context: ./backend/microservices/microservice-scraping-py
-    restart: unless-stopped
-    depends_on:
-      preflight:
-        condition: service_completed_successfully
-    environment:
-      SCRAPFLY_KEY: ${SCRAPFLY_KEY:-}
-    expose:
-      - "8000"
-    healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request,sys;sys.exit(0) if urllib.request.urlopen('http://localhost:8000/health', timeout=3).status==200 else sys.exit(1)\""]
-      interval: 10s
-      timeout: 5s
-      retries: 12
-      start_period: 25s
-
   frontend:
     build:
       context: ./frontend
       args:
         VITE_DONATION_LINK: ${VITE_DONATION_LINK:-}
-        VITE_LISTINGS_DATA_MODE: ${VITE_LISTINGS_DATA_MODE:-api}
         VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api/v1}
         VITE_API_REQUEST_TIMEOUT_MS: ${VITE_API_REQUEST_TIMEOUT_MS:-20000}
         VITE_BOOKINGS_API_BASE_URL: ${VITE_BOOKINGS_API_BASE_URL:-/api/v1}
@@ -92,14 +73,10 @@ services:
         VITE_STRIPE_PAYMENT_INTENT_PATH: ${VITE_STRIPE_PAYMENT_INTENT_PATH:-/payments/stripe/payment-intents}
         VITE_STRIPE_PAYMENT_RETURN_URL: ${VITE_STRIPE_PAYMENT_RETURN_URL:-http://localhost}
         VITE_STRIPE_CHECKOUT_OFFLINE_MODE: ${VITE_STRIPE_CHECKOUT_OFFLINE_MODE:-false}
-        VITE_GANDI_API_BASE_URL: ${VITE_GANDI_API_BASE_URL:-/api/v1}
-        VITE_GANDI_AVAILABILITY_PATH: ${VITE_GANDI_AVAILABILITY_PATH:-/domains/grandi/availability}
-        VITE_GANDI_CHECKOUT_PATH: ${VITE_GANDI_CHECKOUT_PATH:-/domains/grandi/checkout}
         VITE_IMAGEKIT_ENDPOINT: ${VITE_IMAGEKIT_ENDPOINT:-}
         VITE_IMAGEKIT_UPLOAD_PATH: ${VITE_IMAGEKIT_UPLOAD_PATH:-/medias/imagekit/upload}
         VITE_IMAGEKIT_IMPORT_PATH: ${VITE_IMAGEKIT_IMPORT_PATH:-/medias/imagekit/import}
         VITE_PUBLIC_LISTING_ROOT_DOMAIN: ${VITE_PUBLIC_LISTING_ROOT_DOMAIN:-localhost}
-        VITE_SCRAPING_API_URL: ${VITE_SCRAPING_API_URL:-/scraping}
     restart: unless-stopped
     depends_on:
       preflight:
@@ -124,8 +101,6 @@ services:
       frontend:
         condition: service_healthy
       api:
-        condition: service_healthy
-      scraping:
         condition: service_healthy
     ports:
       - "80:80"

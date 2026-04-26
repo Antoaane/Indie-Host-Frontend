@@ -8,8 +8,6 @@ const SECRET_FALLBACK_KEYS = [
   'IMAGEKIT_API_KEY',
   'CLERK_SECRET_KEY',
   'STRIPE_SECRET_KEY',
-  'STRIPE_WEBHOOK_SECRET',
-  'GANDI_API_TOKEN',
 ] as const;
 
 type SecretFallbackKey = (typeof SECRET_FALLBACK_KEYS)[number];
@@ -59,7 +57,6 @@ const envSchema = z.object({
   CLERK_AUDIENCE: z.string().trim().optional().default(''),
   CLERK_SECRET_KEY: z.string().trim().optional().default(''),
   STRIPE_SECRET_KEY: z.string().trim().optional().default(''),
-  STRIPE_WEBHOOK_SECRET: z.string().trim().optional().default(''),
   STRIPE_CONNECT_PLATFORM_FEE_BPS: z.coerce.number().int().min(0).max(10000).default(0),
   STRIPE_CONNECT_DEFAULT_APPLICATION_FEE_BPS: z.coerce.number().int().min(0).max(10000).default(0),
   ICAL_EXPORT_DEFAULT_PRODID: z.string().trim().min(1).default('IndieHost//Calendar//FR'),
@@ -67,9 +64,6 @@ const envSchema = z.object({
   ICAL_SYNC_THROTTLE_SECONDS: z.coerce.number().int().min(60).default(300),
   ICAL_SYNC_FETCH_TIMEOUT_MS: z.coerce.number().int().min(1000).default(15000),
   PUBLIC_LISTING_ROOT_DOMAIN: z.string().trim().min(1).default('indiehost.fr'),
-  GANDI_API_TOKEN: z.string().trim().optional().default(''),
-  GANDI_API_BASE_URL: z.string().trim().optional().default('https://api.gandi.net/v5'),
-  GANDI_CHECKOUT_BASE_URL: z.string().trim().optional().default('https://www.gandi.net/en/domain/checkout'),
 });
 
 const parsed = envSchema.safeParse(resolveEnvWithSecretFallback());

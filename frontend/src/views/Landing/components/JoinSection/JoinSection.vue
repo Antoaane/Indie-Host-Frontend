@@ -46,25 +46,32 @@ const formProps = computed(() => ({
 
 let widgetId: number | null = null
 
-function waitForHcaptcha(): Promise<void> {
-  if ((window as any).hcaptcha) return Promise.resolve()
-  return new Promise((res) => {
-    const t = setInterval(() => {
+function waitForHcaptcha(timeoutMs = 5000): Promise<boolean> {
+  if ((window as any).hcaptcha) return Promise.resolve(true)
+  return new Promise((resolve) => {
+    const startedAt = Date.now()
+    const timer = setInterval(() => {
       if ((window as any).hcaptcha) {
-        clearInterval(t)
-        res()
+        clearInterval(timer)
+        resolve(true)
+        return
+      }
+      if (Date.now() - startedAt >= timeoutMs) {
+        clearInterval(timer)
+        resolve(false)
       }
     }, 50)
   })
 }
 
 onMounted(async () => {
-  // si tu charges via GTM/Axeptio: api.js doit être avec `?render=explicit`
-  await waitForHcaptcha()
+  const hasHcaptcha = await waitForHcaptcha()
+  if (!hasHcaptcha) return
   await nextTick() // s’assurer que le DOM de JoinSection est là
 
   const el = document.querySelector('.h-captcha') as HTMLElement | null
-  if (!el) return
+  const hc = (window as any).hcaptcha
+  if (!el || !hc || widgetId != null) return
 
   // sécurité contre les conteneurs invisibles au moment du render
   const start = Date.now()
@@ -72,7 +79,7 @@ onMounted(async () => {
     await new Promise((r) => setTimeout(r, 50))
   }
 
-  widgetId = (window as any).hcaptcha.render(el, {
+  widgetId = hc.render(el, {
     sitekey: el.getAttribute('data-sitekey') || 'TA_CLE_PUBLIQUE',
     size: 'normal',
     theme: 'light',

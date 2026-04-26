@@ -7,7 +7,6 @@ import { env } from './config/env.js';
 import { arrivalPlugin } from './domains/arrival/arrival.plugin.js';
 import { bookingsPlugin } from './domains/bookings/bookings.plugin.js';
 import { calendarPlugin } from './domains/calendar/calendar.plugin.js';
-import { grandiPlugin } from './domains/grandi/grandi.plugin.js';
 import { listingsPlugin } from './domains/listings/listings.plugin.js';
 import { mediasPlugin } from './domains/medias/medias.plugin.js';
 import { messagingPlugin } from './domains/messaging/messaging.plugin.js';
@@ -98,7 +97,6 @@ export async function buildApp() {
     await v1.register(messagingPlugin);
     await v1.register(paymentsPlugin);
     await v1.register(calendarPlugin);
-    await v1.register(grandiPlugin);
   }, {
     prefix: `/${env.API_PREFIX.replace(/^\/+/, '')}`,
   });

@@ -9,7 +9,6 @@ declare module '*.vue' {
 }
 
 interface ImportMetaEnv {
-  readonly VITE_LISTINGS_DATA_MODE?: 'local-json' | 'api' | string
   readonly VITE_API_BASE_URL?: string
   readonly VITE_API_PROXY_TARGET?: string
   readonly VITE_IMAGEKIT_UPLOAD_PATH?: string

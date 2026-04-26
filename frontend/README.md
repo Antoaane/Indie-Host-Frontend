@@ -11,15 +11,13 @@ Vite + Vue 3 + TypeScript — interface hôte pour la gestion d'annonces, réser
 
 ## Architecture — Services à lancer
 
-Le projet peut tourner en **mode local-json** (sans API) ou en **mode API** :
+Le frontend fonctionne en **mode API**.
 
 | # | Service | Commande | Port | Requis |
 |---|---|---|---|---|
-| 1 | **PostgreSQL** (Docker) | `docker compose up -d postgres` | `5432` | ✅ Obligatoire (mode API) |
-| 2 | **Backend API** (Fastify) | `npm run dev` dans `backend/api/` | `4000` | ✅ Obligatoire (mode API) |
+| 1 | **PostgreSQL** (Docker) | `docker compose up -d postgres` | `5432` | ✅ Obligatoire |
+| 2 | **Backend API** (Fastify) | `npm run dev` dans `backend/api/` | `4000` | ✅ Obligatoire |
 | 3 | **Frontend** (Vite) | `npm run dev` dans `frontend/` | `5179` | ✅ Obligatoire |
-
-> Le microservice scraping Python (`backend/microservices/`) est optionnel — uniquement pour l'import d'annonces Airbnb/Booking.
 
 ---
 
@@ -36,7 +34,7 @@ docker compose up -d postgres
 ```bash
 cd backend/api/
 cp .env.example .env
-# → Renseignez DATABASE_URL, GANDI_API_TOKEN, etc.
+# → Renseignez DATABASE_URL et les clés externes nécessaires.
 npm install
 npm run prisma:generate
 npm run prisma:push
@@ -50,7 +48,6 @@ npm run dev
 # Windows (PowerShell)
 cd frontend/
 Copy-Item .env.example .env
-# → Pour le mode API, utilisez VITE_LISTINGS_DATA_MODE=api
 npm install
 npm run dev
 # → http://localhost:5179
@@ -69,12 +66,6 @@ npm run dev
 ## Variables d'environnement frontend (`frontend/.env`)
 
 ```env
-VITE_LISTINGS_DATA_MODE=local-json
-# VITE_LISTINGS_DATA_MODE=api
-# VITE_API_BASE_URL=http://localhost:4000/v1
-
-VITE_SCRAPING_API_URL=/scraping
-
 VITE_CLERK_PUBLISHABLE_KEY=pk_test_XXXXXXXXXXXXXXXX
 
 VITE_STRIPE_PUBLISHABLE_KEY=pk_test_XXXXXXXXXXXXXXXX
@@ -92,13 +83,6 @@ VITE_STRIPE_CHECKOUT_OFFLINE_MODE=false
 
 ```env
 DATABASE_URL=postgresql://indiehost:indiehost_dev_password@localhost:5432/indiehost_db?schema=public
-
-# Gandi.net — noms de domaine (DomainPanel)
-# Générez un PAT sur https://account.gandi.net → Sécurité → Personal Access Tokens
-# Scope requis : domain:read
-GANDI_API_TOKEN=pat_votre-token-gandi
-GANDI_API_BASE_URL=https://api.gandi.net/v5
-GANDI_CHECKOUT_BASE_URL=https://www.gandi.net/en/domain/checkout
 ```
 
 ---
@@ -108,12 +92,7 @@ GANDI_CHECKOUT_BASE_URL=https://www.gandi.net/en/domain/checkout
 ### DomainPanel (sidebar éditeur)
 
 Le `DomainPanel` est intégré dans la sidebar de l'éditeur, juste sous "Titre de l'annonce".
-Il permet de :
-1. **Vérifier la disponibilité** d'un nom de domaine via l'API Gandi v5
-2. **Lancer le paiement** — redirige vers la page d'achat Gandi pré-remplie
-
-**Backend requis :** `GET /v1/domains/grandi/availability` et `POST /v1/domains/grandi/checkout`
-**Token requis :** Personal Access Token Gandi avec le scope `domain:read`
+Il expose les informations de sous-domaine et de domaine rattachées à l'annonce via l'API IndieHost.
 
 ---
 
@@ -135,4 +114,3 @@ npm run watch       # SASS input.scss → output.css
 
 - **file-path-comment** : ajoute/synchronise la première ligne `// File: <path>` dans chaque fichier source.
 - **svg-to-vue** : convertit les SVG de `public/assets/media/` en composants Vue SFC avec bindings a11y.
-- **local-json-data** : expose les fichiers JSON de `src/content/` via `/__local-json/*` (mode statique sans backend).

@@ -3,12 +3,9 @@
 //
 // Structure des amenities et icônes IndieHost :
 // - Catalogue : frontend/src/views/Editor/mocks/amenitiesCatalog.ts (id, name, category, relevance).
-// - Mapping id → icône : frontend/src/content/fr/amenities-icons.json (amenityId → nom Lucide en kebab-case).
-// - Résolution : getAmenityIconName(id) lit le JSON ; resolveAmenityIconComponent(id) renvoie le composant Lucide.
+// - Résolution : getAmenityIconName(id) infère l’icône par règles ; resolveAmenityIconComponent(id) renvoie le composant Lucide.
 // - Utilisation : Amenities.vue (ListingView), AmenitiesPanel (Editor), perks.ts (perks = getAmenityIconName(id) ?? 'star').
-// - Ajouter une icône : ajouter une entrée dans amenities-icons.json avec un nom d’icône Lucide (ex. "bike", "key-round").
 
-import amenitiesIcons from '@/content/fr/amenities-icons.json'
 import * as LucideIcons from 'lucide-vue-next'
 
 export type AmenityId = string
@@ -149,17 +146,9 @@ function inferAmenityIconName(input: AmenityIconInput): LucideIconName | null {
 }
 
 export function getAmenityIconName(input: AmenityIconInput): LucideIconName | null {
-  const context = getAmenityIconContext(input)
-  const amenityId = context.id.trim()
-  if (amenityId) {
-    const icon = (amenitiesIcons as Record<string, string | undefined>)[amenityId]
-    if (icon) return icon
-  }
-
   return inferAmenityIconName(input)
 }
 
 export function resolveAmenityIconComponent(input: AmenityIconInput) {
   return resolveLucideComponent(getAmenityIconName(input))
 }
-

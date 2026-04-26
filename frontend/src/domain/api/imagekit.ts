@@ -40,7 +40,6 @@ type UploadImageOptions = {
 
 const RAW_BASE_API_URL = (import.meta.env.VITE_API_BASE_URL ?? '').trim()
 const BASE_API_URL = normalizeApiBaseUrl(RAW_BASE_API_URL)
-const LISTINGS_MODE = (import.meta.env.VITE_LISTINGS_DATA_MODE ?? 'local-json').toString().trim().toLowerCase()
 const IMAGEKIT_UPLOAD_PATH = normalizePath((import.meta.env.VITE_IMAGEKIT_UPLOAD_PATH ?? '/medias/imagekit/upload').toString())
 const IMAGEKIT_IMPORT_PATH = normalizePath((import.meta.env.VITE_IMAGEKIT_IMPORT_PATH ?? '/medias/imagekit/import').toString())
 const IMAGEKIT_ENDPOINT = (import.meta.env.VITE_IMAGEKIT_ENDPOINT ?? '').toString().trim().replace(/\/+$/, '')
@@ -310,7 +309,7 @@ async function uploadDataUrlImageToImageKit(
 }
 
 export function isApiImageStorageEnabled(): boolean {
-  return LISTINGS_MODE === 'api' && Boolean(BASE_API_URL)
+  return Boolean(BASE_API_URL)
 }
 
 export function isImageKitHostedUrl(src: unknown): boolean {

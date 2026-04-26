@@ -403,15 +403,10 @@ const guideAbsoluteUrl = computed(() => {
 const stayIcalUrl = computed(() => {
   const model = confirmation.value
   if (!model) return ''
-
-  if (listingsController.mode === 'api') {
-    return buildReservationStayIcalUrl({
-      reservationId: model.reservationId,
-      guideAccessKey: model.guide.guideAccessKey,
-    })
-  }
-
-  return localIcalBlobUrl.value ?? ''
+  return buildReservationStayIcalUrl({
+    reservationId: model.reservationId,
+    guideAccessKey: model.guide.guideAccessKey,
+  })
 })
 
 const stayLabel = computed(() => {

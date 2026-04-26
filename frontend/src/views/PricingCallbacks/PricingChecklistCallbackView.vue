@@ -848,7 +848,7 @@ async function waitForSubscriptionActivation(): Promise<boolean> {
         return true
       }
     } catch {
-      // Retry: Stripe webhooks / backend sync may still be propagating.
+      // Retry: Stripe checkout state may still be propagating.
     }
 
     attempt += 1

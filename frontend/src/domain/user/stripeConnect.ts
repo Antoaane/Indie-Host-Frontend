@@ -1,7 +1,5 @@
 // File: src/domain/user/stripeConnect.ts
 
-import ownerUserJSON from '@/content/fr/user/user.json'
-
 export type StripeConnectOnboardingStatus = 'not_started' | 'pending' | 'completed' | 'restricted'
 
 export type OwnerStripeConnectProfile = {
@@ -32,17 +30,13 @@ function parseOnboardingStatus(value: unknown): StripeConnectOnboardingStatus {
 }
 
 export function getOwnerStripeConnectProfile(): OwnerStripeConnectProfile {
-  const connect = ownerUserJSON?.billing?.stripeConnect ?? {}
-  const legacyAccountId = parseString(ownerUserJSON?.billing?.stripeConnectAccountId, '')
-  const accountId = parseString(connect.accountId, legacyAccountId) || null
-
   return {
-    accountId,
-    onboardingStatus: parseOnboardingStatus(connect.onboardingStatus),
-    chargesEnabled: parseBoolean(connect.chargesEnabled, false),
-    payoutsEnabled: parseBoolean(connect.payoutsEnabled, false),
-    defaultCurrency: parseString(connect.defaultCurrency, 'eur').toLowerCase(),
-    transferSchedule: parseString(connect.transferSchedule, 'manual'),
+    accountId: null,
+    onboardingStatus: 'not_started',
+    chargesEnabled: false,
+    payoutsEnabled: false,
+    defaultCurrency: 'eur',
+    transferSchedule: 'manual',
   }
 }
 

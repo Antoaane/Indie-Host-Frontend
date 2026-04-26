@@ -1,7 +1,7 @@
 <!-- File: src/views/CreateListing/_CreateListing.vue -->
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
 import type { EditorMode, EditorSource } from '@/views/Editor/types/editor'
 import CreateListingFooterNavigation from '@/views/CreateListing/components/wizard/CreateListingFooterNavigation.vue'
@@ -58,28 +58,6 @@ const {
 })
 
 const submitError = computed(() => submitState.error)
-const importUrl = ref('')
-const importRequestToken = ref(0)
-
-const stageExtraProps = computed<Record<string, unknown> | undefined>(() => {
-  if (currentStep.value.id !== 'import' || isPreviewStage.value) return undefined
-  return {
-    importUrl: importUrl.value,
-    importRequestToken: importRequestToken.value,
-    'onUpdate:importUrl': (value: string) => {
-      importUrl.value = value
-    },
-  }
-})
-
-function handleNext() {
-  if (!isPreviewStage.value && currentStep.value.id === 'import' && importUrl.value.trim()) {
-    importRequestToken.value += 1
-    return
-  }
-
-  goToNextStep()
-}
 </script>
 
 <template>
@@ -110,7 +88,6 @@ function handleNext() {
       :step="currentStep"
       :draft="draft"
       :step-error="stepError"
-      :extra-props="stageExtraProps"
       @patch="applyDraftPatch"
       @next="goToNextStep"
     />
@@ -160,7 +137,7 @@ function handleNext() {
       submit-label="Créer mon annonce"
       submit-loading-label="Création de votre annonce..."
       @previous="goToPreviousStep"
-      @next="handleNext"
+      @next="goToNextStep"
       @submit="submitCreateListing"
     />
   </CreateListingLayout>

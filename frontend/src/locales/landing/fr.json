@@ -3,18 +3,13 @@
     "title": "Votre site de réservation<br><strong>0%</strong> de commissions",
     "description": "Domaine inclus. Réservations directes. Paiements en ligne.",
     "descriptionDesktop": "Créez votre site de location saisonnière avec nom de domaine inclus. Acceptez les réservations directes et encaissez vos paiements en ligne sans aucune commission.",
-    "inputPlaceholder": "Lien de votre logement Airbnb ou Booking",
-    "inputPlaceholders" : [
-      "https://www.airbnb.fr/rooms/...",
-      "https://www.booking.com/hotel/..."
-    ],
     "primaryCta": {
-      "label": "Importer mon annonce",
-      "href": "#intro-section",
+      "label": "Créer mon annonce",
+      "href": "/dashboard/editor/create",
       "target": "_self"
     },
     "secondaryCta": {
-      "label": "Créer ma page de zéro",
+      "label": "Configurer ma page",
       "href": "/dashboard/editor/create",
       "target": "_self"
     },
@@ -26,40 +21,20 @@
       }
     ]
   },
-  "introSection": {
-    "title": "Créez <span class=\"text-gradiant\">votre site</span> depuis une annonce existante",
-    "body": "Copiez le lien Airbnb ou Booking d’un de vos logements et nous créez votre page de réservation instantanément.",
-    "inputPlaceholder": "Lien de votre logement Airbnb ou Booking",
-    "previewCtaLabel": "Générer mon site !",
-    "createAccountCtaLabel": "Activer mon site gratuitement",
-    "createAccountCtaHint": "Gratuit · Sans engagement · Sans commission",
-    "backButtonAriaLabel": "Retour à la page d'accueil",
-    "primaryCta": {
-      "label": "Essayer l'import gratuit",
-      "href": "/pricing",
-      "target": "_self"
-    }
-  },
   "benefits": {
     "title": "<strong>Tout</strong> est pour <strong>vous</strong>"
   },
   "usage": {
     "steps": [
       {
-        "id": "importListing",
-        "title": "Vous importez votre annonce depuis Airbnb ou Booking.com",
-        "description": "En 1 clic, vous importez les informations de votre annonce en toute sécurité. Nous nous occupons de tout : vos photos, votre description, votre note, vos équipements, etc.<br /><br />Rendez votre annonce unique ou partez de zéro en la façonnant grâce à <strong>l’outil d’édition complet d’IndieHost</strong>.",
-        "videos": [
-          {
-            "webm": "/assets/media/videos/import-auto.webm",
-            "mp4": "/assets/media/videos/import-auto.mp4"
-          }
-        ],
+        "id": "createListing",
+        "title": "Vous créez votre annonce dans IndieHost",
+        "description": "Créez votre annonce depuis l’éditeur IndieHost : titre, photos, description, équipements et règles de réservation.<br /><br />Vous gardez la main sur chaque détail grâce à <strong>l’outil d’édition complet d’IndieHost</strong>.",
         "images": [
           {
-            "webp": "/assets/media/images/webp/auto-import.webp",
-            "png": "/assets/media/images/png/auto-import.png",
-            "alt": "Illustration d'importation d'annonce depuis Airbnb ou Booking"
+            "webp": "/assets/media/images/webp/auto-generated.webp",
+            "png": "/assets/media/images/png/auto-generated.png",
+            "alt": "Illustration de création d’annonce IndieHost"
           }
         ]
       },
@@ -98,7 +73,7 @@
       {
         "id": "proof-metric-1",
         "value": "5 min",
-        "label": "pour importer, personnaliser puis publier une première page type",
+        "label": "pour créer, personnaliser puis publier une première page type",
         "detail": "Estimation indicative pour une annonce déjà structurée"
       },
       {
@@ -257,7 +232,7 @@
       {
         "id": "modifiezEtPersonnalisezVosAnnonces",
         "title": "Modifiez et <strong>personnalisez</strong> vos annonces",
-        "description": "Une fois votre annonce importée, personnalisez-la librement avec un éditeur visuel simple et intuitif. Prévisualisez chaque modification en temps réel, et modifiez vos contenus en un clic : cliquez sur un élément dans l’aperçu, vous êtes instantanément redirigé vers le bon champ. <br /><br />Une annonce crée et non publiée restera en brouillon, vous garderez toujours vos modifications.",
+        "description": "Une fois votre annonce créée, personnalisez-la librement avec un éditeur visuel simple et intuitif. Prévisualisez chaque modification en temps réel, et modifiez vos contenus en un clic : cliquez sur un élément dans l’aperçu, vous êtes instantanément redirigé vers le bon champ. <br /><br />Une annonce créée et non publiée restera en brouillon, vous garderez toujours vos modifications.",
         "images": [
           {
             "webp": "/assets/media/images/webp/editeur.webp",

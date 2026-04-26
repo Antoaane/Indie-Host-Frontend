@@ -3,14 +3,13 @@
     "title": "Ihre Buchungsseite<br><strong>0&nbsp;%</strong> Provision",
     "description": "Domain inklusive. Direktbuchungen. Online-Zahlung.",
     "descriptionDesktop": "Erstellen Sie Ihre Ferienvermietungs-Website mit inkludierter Domain. Akzeptieren Sie Direktbuchungen und erhalten Sie Online-Zahlungen – ohne OTA-Provisionen.",
-    "inputPlaceholder": "Link zu Ihrer Unterkunft einfügen",
     "primaryCta": {
-      "label": "Bestehende Anzeige importieren",
-      "href": "#intro-section",
+      "label": "Inserat erstellen",
+      "href": "/dashboard/editor/create",
       "target": "_self"
     },
     "secondaryCta": {
-      "label": "Meine Website kostenlos erstellen",
+      "label": "Seite einrichten",
       "href": "/dashboard/editor/create",
       "target": "_self"
     },
@@ -22,40 +21,20 @@
       }
     ]
   },
-  "introSection": {
-    "title": "Erstellen Sie <span class=\"text-gradiant\">Ihre Seite</span> aus einer bestehenden Anzeige",
-    "body": "Fügen Sie den Airbnb- oder Booking-Link einer Ihrer Unterkünfte ein – wir erstellen Ihre Buchungsseite in Sekunden.",
-    "inputPlaceholder": "Link zu Ihrer Unterkunft einfügen",
-    "previewCtaLabel": "Meine Seite erstellen",
-    "createAccountCtaLabel": "Meine Seite kostenlos aktivieren",
-    "createAccountCtaHint": "Kostenlos · Unverbindlich · Keine Provision",
-    "backButtonAriaLabel": "Zurück zur Startseite",
-    "primaryCta": {
-      "label": "Kostenlosen Import testen",
-      "href": "/pricing",
-      "target": "_self"
-    }
-  },
   "benefits": {
     "title": "<strong>Alles</strong> für <strong>Sie</strong>"
   },
   "usage": {
     "steps": [
       {
-        "id": "importListing",
-        "title": "Importieren Sie Ihre Anzeige von Airbnb oder Booking.com",
-        "description": "Mit einem Klick importieren Sie Ihre Anzeige sicher – Fotos, Beschreibung, Bewertungen und Ausstattung. Wir kümmern uns um alles.<br /><br />Heben Sie sich ab oder starten Sie mit dem <strong>IndieHost-Live-Editor</strong> von Grund auf neu.",
-        "videos": [
-          {
-            "webm": "/assets/media/videos/import-auto.webm",
-            "mp4": "/assets/media/videos/import-auto.mp4"
-          }
-        ],
+        "id": "createListing",
+        "title": "Erstelle dein Inserat in IndieHost",
+        "description": "Erstelle dein Inserat im IndieHost-Editor: Titel, Fotos, Beschreibung, Ausstattung und Buchungsregeln.<br /><br />Mit dem <strong>vollständigen IndieHost-Editor</strong> behältst du jedes Detail im Griff.",
         "images": [
           {
-            "webp": "/assets/media/images/webp/auto-import.webp",
-            "png": "/assets/media/images/png/auto-import.png",
-            "alt": "Illustration des Anzeigen-Imports von Airbnb oder Booking"
+            "webp": "/assets/media/images/webp/auto-generated.webp",
+            "png": "/assets/media/images/png/auto-generated.png",
+            "alt": "Illustration zur Erstellung eines IndieHost-Inserats"
           }
         ]
       },
@@ -94,7 +73,7 @@
       {
         "id": "proof-metric-1",
         "value": "15 Min",
-        "label": "zum Importieren, Anpassen und Veröffentlichen einer ersten Buchungsseite in einem typischen Szenario",
+        "label": "um eine erste Seite zu erstellen, anzupassen und zu veröffentlichen",
         "detail": "Veranschaulichende Schätzung für eine bereits strukturierte Anzeige"
       },
       {
@@ -269,7 +248,7 @@
       {
         "id": "modifiezEtPersonnalisezVosAnnonces",
         "title": "Anzeigen <strong>bearbeiten</strong> und <strong>anpassen</strong>",
-        "description": "Nach dem Import passen Sie Ihre Anzeige frei mit einem einfachen, intuitiven visuellen Editor an. Jede Änderung in Echtzeit vorschauen und mit einem Klick bearbeiten: Klicken Sie in der Vorschau auf ein Element – Sie gelangen sofort zum richtigen Feld.<br /><br />Eine unveröffentlichte Anzeige bleibt als Entwurf, Ihre Änderungen bleiben erhalten.",
+        "description": "Sobald dein Inserat erstellt ist, kannst du es mit einem einfachen visuellen Editor frei anpassen. Jede Änderung wird in Echtzeit angezeigt.<br /><br />Ein erstelltes, aber nicht veröffentlichtes Inserat bleibt als Entwurf gespeichert.",
         "images": [
           {
             "webp": "/assets/media/images/webp/editeur.webp",

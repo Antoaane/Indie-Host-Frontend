@@ -5,7 +5,6 @@ Plateforme SaaS pour hôtes de locations courte durée:
 - paiements Stripe
 - messagerie
 - domaines
-- import d'annonces Airbnb/Booking via microservice scraping
 
 Le projet fonctionne en **Docker-only**.
 
@@ -42,7 +41,6 @@ Sous PowerShell, utilise les versions `.ps1`.
 ├── nginx/
 ├── frontend/
 ├── backend/api/
-├── backend/microservices/microservice-scraping-py/
 ├── init-indiehost.sh(.ps1)
 ├── start-indiehost.sh(.ps1)
 └── start-indiehost-dev.sh(.ps1)
@@ -96,7 +94,6 @@ docker compose up -d --build --wait
 
 - App: `http://localhost`
 - API health: `http://localhost/api/health`
-- Scraping health: `http://localhost/scraping/health`
 
 ### Comportement de validation
 
@@ -106,10 +103,9 @@ Le service `preflight` vérifie la config avant de démarrer la stack:
 
 ## Mode Dev (hot reload complet)
 
-Le mode dev garde la même architecture globale (nginx + api + scraping + postgres) avec:
+Le mode dev garde la même architecture globale (nginx + api + postgres) avec:
 - frontend en **Vite dev server** (`HMR`)
 - api en `tsx watch`
-- scraping en `uvicorn --reload`
 - watcher frontend en polling (compatible Docker Desktop + Windows)
 
 ### Lancer
@@ -137,7 +133,6 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build --w
 - App via nginx: `http://localhost`
 - Vite direct: `http://localhost:5179`
 - API health: `http://localhost/api/health`
-- Scraping health: `http://localhost/scraping/health`
 
 ## Variables et secrets
 
@@ -151,12 +146,6 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build --w
 - `secrets/stripe_secret_key.txt`
 - `secrets/clerk_secret_key.txt`
 - `secrets/imagekit_api_key.txt`
-
-### Optionnels (env direct)
-
-- `STRIPE_WEBHOOK_SECRET`
-- `SCRAPFLY_KEY`
-- `GANDI_API_TOKEN`
 
 Templates disponibles dans `secret.example/`.
 

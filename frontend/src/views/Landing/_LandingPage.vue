@@ -17,7 +17,6 @@ import { useLandingLocale } from '@/views/Landing/composables/useLandingLocale'
 // COMPONENTS — above the fold : chargement synchrone (LCP critique)
 import HeroSection from '@/views/Landing/components/HeroSection/HeroSection.vue'
 import ReassuranceBandSection from '@/views/Landing/components/ReassuranceBandSection/ReassuranceBandSection.vue'
-import IntroSection from '@/views/Landing/components/IntroSection/IntroSection.vue'
 import FeaturesSection from '@/views/Landing/components/FeaturesSection/FeaturesSection.vue'
 import HowSection from '@/views/Landing/components/HowSection/HowSection.vue'
 import UsageSection from '@/views/Landing/components/UsageSection/UsageSection.vue'
@@ -25,6 +24,7 @@ import ProofSection from '@/views/Landing/components/ProofSection/ProofSection.v
 import StrengthsSection from '@/views/Landing/components/StrengthsSection/StrengthsSection.vue'
 import PricingSection from '@/views/Landing/components/PricingSection/PricingSection.vue'
 import RoiSection from '@/views/Landing/components/RoiSection/RoiSection.vue'
+import JoinSection from '@/views/Landing/components/JoinSection/JoinSection.vue'
 import FaqSection from '@/views/Landing/components/FaqSection/FaqSection.vue'
 import FinalCtaSection from '@/views/Landing/components/FinalCtaSection/FinalCtaSection.vue'
 
@@ -189,7 +189,6 @@ onBeforeUnmount(() => {
   <main id="landing-page">
     <HeroSection :content="content.hero" />
     <ReassuranceBandSection />
-    <IntroSection :content="content.introSection" />
     <!-- Section « Tout est pour vous » désactivée
     <BenefitsSection
       v-if="vp.lg.value"
@@ -207,12 +206,10 @@ onBeforeUnmount(() => {
     <StrengthsSection :content="content.strengths" />
     <PricingSection :content="content.pricingSection" />
     <RoiSection :content="content.roiSection" />
-    <!-- JoinSection désactivée
     <JoinSection
       :content="content.join"
       :slides="content.habits.slides"
     />
-    -->
     <FaqSection :content="content.faq" />
     <FinalCtaSection :content="content.finalCtaSection" />
   </main>

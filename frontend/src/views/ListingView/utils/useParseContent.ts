@@ -73,17 +73,17 @@ function isNonSleepingRoomType(type: unknown): boolean {
 // Normalise les rooms brutes du core.json -> RoomItem[]
 function normalizeRooms(core: Maybe<Partial<RawCore>>): RoomItem[] {
   return (core?.rooms ?? []).map(r => ({
-    name: r['room-name'],
-    type: r.type,
+    name: String(r['room-name'] ?? r.name ?? '').trim(),
+    type: String(r.type ?? '').trim(),
     // ƒªÎ‹÷? NE PAS forcer [] : on ne met "beds" que s'il y en a
     ...(isNonSleepingRoomType(r.type)
       ? {}
       : r.beds && r.beds.length
       ? {
         beds: r.beds.map(b => ({
-          type: b.type,
-          capacity: b.capacity,
-          quantity: b.quantity,
+          type: String(b.type ?? '').trim(),
+          capacity: Math.max(0, Number(b.capacity ?? 0) || 0),
+          quantity: Math.max(0, Number(b.quantity ?? 0) || 0),
         })),
       }
       : {}),
@@ -300,7 +300,7 @@ function parseMedias(medias: Maybe<Partial<RawMedias>>): MediasModel {
   return {
     images: validImages.map((i, idx) => ({
       src: i.src.trim(),
-      alt: i.alt,
+      alt: typeof i.alt === 'string' ? i.alt : '',
       position: typeof i.position === 'number' ? i.position : idx,
     })),
     videos: medias?.videos ?? [],
@@ -347,10 +347,13 @@ function parseComments(raw: Maybe<Partial<RawComments>>): { pages: CommentsPages
   const pages = (raw?.comments || []).map(page =>
     page.map(c => ({
       avatar: c['profile-pic'],
-      name: c.name,
-      note: c.note,
-      comment: c.comment,
-      stayDates: c['stay-dates'],
+      name: typeof c.name === 'string' ? c.name : '',
+      note: typeof c.note === 'number' ? c.note : 0,
+      comment: typeof c.comment === 'string' ? c.comment : '',
+      stayDates:
+        typeof c['stay-dates']?.start === 'string' && typeof c['stay-dates']?.end === 'string'
+          ? { start: c['stay-dates'].start, end: c['stay-dates'].end }
+          : undefined,
     })),
   );
 

@@ -8,8 +8,7 @@ import ShapesBgCroped from '@/components/svgs/images/ShapesBgCroped.vue'
 import { ArrowRight } from 'lucide-vue-next'
 // CONTENT
 import type { HeroContent } from '@/views/Landing/types/content'
-import { useLandingImport } from '@/views/Landing/composables/useLandingImport'
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { vp } from '@/utils/viewport'
 import detectOS from '@/utils/detectOs'
 import { useRouter } from 'vue-router'
@@ -20,27 +19,7 @@ const props = defineProps<{
 
 const sectionId = 'hero-section'
 const router = useRouter()
-const url = ref('')
-const { submitUrl } = useLandingImport()
 const isIosMobile = ref(typeof document !== 'undefined' && document.documentElement.classList.contains('is-ios') && !vp.lg.value)
-const submitError = ref('')
-const PLACEHOLDER_ROTATION_DELAY_MS = 2400
-const PLACEHOLDER_SCRAMBLE_DURATION_S = 0.75
-const SCRAMBLE_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789:/._-?=&'
-const animatedInputPlaceholder = ref(props.content.inputPlaceholder)
-let placeholderRotationTimer: ReturnType<typeof setTimeout> | null = null
-let placeholderScrambleTween: gsap.core.Tween | null = null
-let placeholderIndex = 0
-
-const heroInputPlaceholders = computed(() => {
-  const candidates = props.content.inputPlaceholders
-    ?.map((value) => value.trim())
-    .filter((value) => value.length > 0) ?? []
-  if (candidates.length > 0) return candidates
-
-  const fallback = props.content.inputPlaceholder.trim()
-  return fallback ? [fallback] : []
-})
 const heroSecondaryCtaIconSize = 18
 
 function detectSafariBrowser(): boolean {
@@ -70,111 +49,16 @@ const animatedTitle = computed(() => {
   )
 })
 
-function scrollToIntroTop() {
-  const target = document.querySelector<HTMLElement>('#intro-section')
-  if (!target) return
-
-  const top = window.scrollY + target.getBoundingClientRect().top
-  window.scrollTo({
-    top: Math.max(0, top),
-    behavior: 'smooth',
-  })
-}
-
 function onSubmit(e?: Event) {
   e?.preventDefault()
-  const trimmed = url.value.trim()
-  if (!trimmed && vp.lg.value) {
-    submitError.value = "Veuillez renseigner le lien Airbnb ou Booking de votre annonce pour lancer l'import automatique et créer votre site."
-    return
-  }
-
-  submitError.value = ''
-  submitUrl(trimmed)
-  scrollToIntroTop()
+  void router.push(props.content.primaryCta.href || '/dashboard/editor/create')
 }
 
 function handleCreateSite() {
-  submitError.value = ''
-  submitUrl(url.value.trim())
   void router.push(props.content.secondaryCta.href || '/dashboard/editor/create')
 }
 
-function clearPlaceholderAnimation() {
-  if (placeholderRotationTimer) {
-    clearTimeout(placeholderRotationTimer)
-    placeholderRotationTimer = null
-  }
-
-  placeholderScrambleTween?.kill()
-  placeholderScrambleTween = null
-}
-
-function randomScrambleChar() {
-  const index = Math.floor(Math.random() * SCRAMBLE_CHARS.length)
-  return SCRAMBLE_CHARS[index] ?? ''
-}
-
-function animatePlaceholderTo(nextValue: string, onComplete: () => void) {
-  placeholderScrambleTween?.kill()
-
-  const currentValue = animatedInputPlaceholder.value
-  const longestLength = Math.max(currentValue.length, nextValue.length)
-  const progress = { value: 0 }
-  placeholderScrambleTween = gsap.to(progress, {
-    value: 1,
-    duration: PLACEHOLDER_SCRAMBLE_DURATION_S,
-    ease: 'none',
-    onUpdate: () => {
-      const revealLength = Math.floor(progress.value * nextValue.length)
-      let nextDisplay = ''
-
-      for (let i = 0; i < longestLength; i += 1) {
-        if (i < revealLength) {
-          nextDisplay += nextValue[i] ?? ''
-          continue
-        }
-
-        if (i < nextValue.length) {
-          nextDisplay += randomScrambleChar()
-        }
-      }
-
-      animatedInputPlaceholder.value = nextDisplay
-    },
-    onComplete: () => {
-      animatedInputPlaceholder.value = nextValue
-      placeholderScrambleTween = null
-      onComplete()
-    },
-  })
-}
-
-function schedulePlaceholderRotation() {
-  const placeholders = heroInputPlaceholders.value
-  if (placeholders.length <= 1) {
-    animatedInputPlaceholder.value = placeholders[0] ?? props.content.inputPlaceholder
-    return
-  }
-
-  placeholderRotationTimer = setTimeout(() => {
-    placeholderRotationTimer = null
-    placeholderIndex = (placeholderIndex + 1) % placeholders.length
-    const nextPlaceholder = placeholders[placeholderIndex] ?? ''
-    animatePlaceholderTo(nextPlaceholder, schedulePlaceholderRotation)
-  }, PLACEHOLDER_ROTATION_DELAY_MS)
-}
-
-function restartPlaceholderRotation() {
-  clearPlaceholderAnimation()
-  const placeholders = heroInputPlaceholders.value
-  placeholderIndex = 0
-  animatedInputPlaceholder.value = placeholders[0] ?? props.content.inputPlaceholder
-  schedulePlaceholderRotation()
-}
-
 onMounted(async () => {
-  restartPlaceholderRotation()
   isSafari.value = detectSafariBrowser()
   if (!vp.lg.value || isSafari.value) {
     counterValue.value = 0
@@ -250,14 +134,6 @@ onMounted(async () => {
     nav?.style.removeProperty('transform')
   }, 650)
 })
-
-watch(heroInputPlaceholders, () => {
-  restartPlaceholderRotation()
-})
-
-onBeforeUnmount(() => {
-  clearPlaceholderAnimation()
-})
 </script>
 
 <template>
@@ -284,20 +160,6 @@ onBeforeUnmount(() => {
             class="hero-form"
             @submit.prevent="onSubmit"
           >
-            <div class="hero-search">
-              <input
-                v-model="url"
-                type="url"
-                :placeholder="animatedInputPlaceholder"
-                autocomplete="url"
-                @input="submitError = ''"
-              />
-              <div class="hero-search-action">
-                <button type="submit">
-                  <span v-html="content.primaryCta.label" />
-                </button>
-              </div>
-            </div>
             <div class="cta">
               <div class="cta-primary-mobile">
                 <button type="submit">
@@ -317,12 +179,6 @@ onBeforeUnmount(() => {
                 </button>
               </div>
             </div>
-            <p
-              v-if="submitError"
-              class="hero-submit-error"
-            >
-              {{ submitError }}
-            </p>
           </form>
         </div>
       </div>
