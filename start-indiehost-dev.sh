@@ -12,3 +12,4 @@ echo
 echo "Dev Frontend (via nginx): http://localhost"
 echo "Dev Frontend (direct Vite): http://localhost:5179"
 echo "API health: http://localhost/api/health"
+echo "Scraping health: http://localhost/scraping/health"

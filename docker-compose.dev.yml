@@ -30,6 +30,20 @@ services:
     ports:
       - "4000:4000"
 
+  scraping:
+    command:
+      - uvicorn
+      - api:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --reload
+    volumes:
+      - ./backend/microservices/microservice-scraping-py:/app
+    ports:
+      - "8000:8000"
+
   frontend:
     build:
       context: ./frontend
@@ -38,6 +52,8 @@ services:
     environment:
       VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api/v1}
       VITE_API_PROXY_TARGET: ${VITE_API_PROXY_TARGET:-http://api:4000}
+      VITE_SCRAPING_API_URL: ${VITE_SCRAPING_API_URL:-/scraping}
+      VITE_SCRAPING_PROXY_TARGET: ${VITE_SCRAPING_PROXY_TARGET:-http://scraping:8000}
       CHOKIDAR_USEPOLLING: "true"
       CHOKIDAR_INTERVAL: ${CHOKIDAR_INTERVAL:-300}
     command:

@@ -19,7 +19,8 @@
         "png": "/assets/media/images/png/hero-image.png",
         "alt": "オンライン予約用IndieHostリスティング（スマホ）とホスト用ダッシュボード（PC）"
       }
-    ]
+    ],
+    "inputPlaceholder": "リスティングのリンクを貼り付け"
   },
   "benefits": {
     "title": "<strong>すべて</strong>が<strong>ホスト</strong>のため"
@@ -747,5 +748,19 @@
       "target": "_self"
     },
     "note": "直接予約にIndieHost手数料なし。シンプルなフロー、モバイル対応。"
+  },
+  "introSection": {
+    "title": "既存のリスティングから<span class=\"text-gradiant\">予約ページ</span>を作成",
+    "body": "AirbnbまたはBookingの物件リンクを貼るだけで、数秒で予約ページを生成します。",
+    "inputPlaceholder": "リスティングのリンクを貼り付け",
+    "previewCtaLabel": "ページを生成",
+    "createAccountCtaLabel": "無料でページを有効化",
+    "createAccountCtaHint": "無料・契約なし・手数料なし",
+    "backButtonAriaLabel": "ホームに戻る",
+    "primaryCta": {
+      "label": "無料インポートを試す",
+      "href": "/pricing",
+      "target": "_self"
+    }
   }
 }

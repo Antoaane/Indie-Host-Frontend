@@ -8,6 +8,7 @@ Fichiers disponibles:
 - `clerk_secret_key.example.txt`
 - `imagekit_api_key.example.txt`
 - `cloudflare.ini.example` (wildcard HTTPS + renouvellement auto DNS-01)
+- `scrapfly_api_key.example.txt` (optionnel, scraping)
 
 Utilisation:
 - Copier ces templates vers `secrets/*.txt`.

@@ -19,7 +19,8 @@
         "png": "/assets/media/images/png/hero-image.png",
         "alt": "Anúncio IndieHost em mobile para reserva online e painel do anfitrião em desktop"
       }
-    ]
+    ],
+    "inputPlaceholder": "Cole o link do seu anúncio"
   },
   "benefits": {
     "title": "<strong>Tudo</strong> é para <strong>si</strong>"
@@ -747,5 +748,19 @@
       "target": "_self"
     },
     "note": "Sem comissão IndieHost nas reservas diretas. Fluxo simples e pensado para mobile."
+  },
+  "introSection": {
+    "title": "Crie <span class=\"text-gradiant\">seu site</span> a partir de um anúncio existente",
+    "body": "Cole o link do seu alojamento no Airbnb ou Booking e geramos sua página de reserva em segundos.",
+    "inputPlaceholder": "Cole o link do seu anúncio",
+    "previewCtaLabel": "Gerar meu site",
+    "createAccountCtaLabel": "Ativar meu site grátis",
+    "createAccountCtaHint": "Grátis · Sem compromisso · Sem comissão",
+    "backButtonAriaLabel": "Voltar ao início",
+    "primaryCta": {
+      "label": "Testar a importação grátis",
+      "href": "/pricing",
+      "target": "_self"
+    }
   }
 }

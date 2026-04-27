@@ -82,20 +82,30 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   const rawApiBaseUrl = (env.VITE_API_BASE_URL ?? '').trim()
   const rawApiProxyTarget = (env.VITE_API_PROXY_TARGET ?? '').trim()
+  const rawScrapingBaseUrl = (env.VITE_SCRAPING_API_URL ?? '/scraping').trim()
+  const rawScrapingProxyTarget = (env.VITE_SCRAPING_PROXY_TARGET ?? '').trim()
   const usePolling = (env.CHOKIDAR_USEPOLLING ?? '').toLowerCase() === 'true'
   const parsedPollingInterval = Number.parseInt(env.CHOKIDAR_INTERVAL ?? '300', 10)
   const pollingInterval = Number.isFinite(parsedPollingInterval) && parsedPollingInterval > 0 ? parsedPollingInterval : 300
 
   const parsedBase = parseEndpoint(rawApiBaseUrl)
   const parsedProxyTarget = parseEndpoint(rawApiProxyTarget)
+  const parsedScrapingBase = parseEndpoint(rawScrapingBaseUrl)
+  const parsedScrapingProxyTarget = parseEndpoint(rawScrapingProxyTarget)
 
   const apiProxyPath = parsedBase.path
+  const scrapingProxyPath = parsedScrapingBase.path
 
   const apiTargetOrigin = parsedBase.origin || parsedProxyTarget.origin
   const apiTargetBasePath = inferApiTargetBasePath({
     apiBasePath: parsedBase.path,
     proxyTargetPath: parsedProxyTarget.path,
   })
+  const scrapingTargetOrigin = parsedScrapingBase.origin || parsedScrapingProxyTarget.origin
+  const scrapingTargetBasePath =
+    parsedScrapingProxyTarget.path && parsedScrapingProxyTarget.path !== '/'
+      ? parsedScrapingProxyTarget.path
+      : '/'
 
   const proxy: Record<string, any> = {}
 
@@ -107,6 +117,30 @@ export default defineConfig(({ mode }) => {
       rewrite: (path: string) => {
         const proxyPrefix = normalizePathPrefix(apiProxyPath)
         const targetPrefix = normalizePathPrefix(apiTargetBasePath ?? proxyPrefix)
+
+        const remainder = stripPrefix(path, proxyPrefix)
+        if (
+          targetPrefix !== '/' &&
+          (remainder === targetPrefix ||
+            remainder.startsWith(`${targetPrefix}/`) ||
+            remainder.startsWith(`${targetPrefix}?`))
+        ) {
+          return remainder
+        }
+
+        return joinBasePath(targetPrefix, remainder)
+      },
+    }
+  }
+
+  if (scrapingProxyPath && scrapingTargetOrigin) {
+    proxy[scrapingProxyPath] = {
+      target: scrapingTargetOrigin,
+      changeOrigin: true,
+      secure: true,
+      rewrite: (path: string) => {
+        const proxyPrefix = normalizePathPrefix(scrapingProxyPath)
+        const targetPrefix = normalizePathPrefix(scrapingTargetBasePath ?? proxyPrefix)
 
         const remainder = stripPrefix(path, proxyPrefix)
         if (

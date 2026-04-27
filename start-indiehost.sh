@@ -51,3 +51,4 @@ docker compose ps
 echo
 echo "Frontend: https://$SSL_DOMAIN"
 echo "API health: https://$SSL_DOMAIN/api/health"
+echo "Scraping health: https://$SSL_DOMAIN/scraping/health"

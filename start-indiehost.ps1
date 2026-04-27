@@ -54,3 +54,4 @@ docker compose ps
 Write-Host ''
 Write-Host "Frontend: https://$sslDomain"
 Write-Host "API health: https://$sslDomain/api/health"
+Write-Host "Scraping health: https://$sslDomain/scraping/health"

@@ -19,6 +19,11 @@
         "png": "/assets/media/images/png/hero-image.png",
         "alt": "Illustration d'une annonce IndieHost en version mobile pour réserver un logement en ligne, ainsi que la page de gestion de l'hôte en version bureau"
       }
+    ],
+    "inputPlaceholder": "Lien de votre logement Airbnb ou Booking",
+    "inputPlaceholders": [
+      "https://www.airbnb.fr/rooms/...",
+      "https://www.booking.com/hotel/..."
     ]
   },
   "benefits": {
@@ -745,5 +750,19 @@
       "target": "_self"
     },
     "note": "Sans commission IndieHost sur vos réservations directes. Parcours simple et pensé pour mobile."
+  },
+  "introSection": {
+    "title": "Créez <span class=\"text-gradiant\">votre site</span> depuis une annonce existante",
+    "body": "Copiez le lien Airbnb ou Booking d’un de vos logements et nous créez votre page de réservation instantanément.",
+    "inputPlaceholder": "Lien de votre logement Airbnb ou Booking",
+    "previewCtaLabel": "Générer mon site !",
+    "createAccountCtaLabel": "Activer mon site gratuitement",
+    "createAccountCtaHint": "Gratuit · Sans engagement · Sans commission",
+    "backButtonAriaLabel": "Retour à la page d'accueil",
+    "primaryCta": {
+      "label": "Essayer l'import gratuit",
+      "href": "/pricing",
+      "target": "_self"
+    }
   }
 }

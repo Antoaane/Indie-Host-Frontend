@@ -460,14 +460,15 @@ export function useCreateListingWizard(options: UseCreateListingWizardOptions) {
         const landingParsed = JSON.parse(landingRaw)
         if (landingParsed && typeof landingParsed === 'object') {
           draft.value = normalizeDraft(landingParsed)
-          activeStepIndex.value = 0
-          furthestVisitedStepIndex.value = 0
+          const skipImportStepIndex = clampStepIndex(1)
+          activeStepIndex.value = skipImportStepIndex
+          furthestVisitedStepIndex.value = skipImportStepIndex
           isPreviewStage.value = false
           window.sessionStorage.removeItem(LANDING_CREATE_DRAFT_KEY)
           const payload: PersistedCreateDraft = {
             ...buildPersistedPayload(draft.value),
-            stepIndex: 0,
-            furthestStepIndex: 0,
+            stepIndex: skipImportStepIndex,
+            furthestStepIndex: skipImportStepIndex,
             isPreviewStage: false,
           }
           persistStoragePayload(payload)

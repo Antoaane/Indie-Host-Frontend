@@ -19,7 +19,8 @@
         "png": "/assets/media/images/png/hero-image.png",
         "alt": "IndieHost listing on mobile for online booking, plus host dashboard in desktop view"
       }
-    ]
+    ],
+    "inputPlaceholder": "Paste your listing link"
   },
   "benefits": {
     "title": "<strong>Everything</strong> is for <strong>you</strong>"
@@ -747,5 +748,19 @@
       "target": "_self"
     },
     "note": "No IndieHost commission on direct bookings. Simple flow designed for mobile too."
+  },
+  "introSection": {
+    "title": "Create <span class=\"text-gradiant\">your site</span> from an existing listing",
+    "body": "Paste the Airbnb or Booking.com link of any of your properties—we'll generate your booking page in seconds.",
+    "inputPlaceholder": "Paste your listing link",
+    "previewCtaLabel": "Generate my site",
+    "createAccountCtaLabel": "Activate my site for free",
+    "createAccountCtaHint": "Free · No credit card required · Zero commission",
+    "backButtonAriaLabel": "Back to homepage",
+    "primaryCta": {
+      "label": "Try the free import",
+      "href": "#join-section",
+      "target": "_self"
+    }
   }
 }

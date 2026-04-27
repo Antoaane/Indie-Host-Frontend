@@ -1,0 +1,604 @@
+/* File: src/views/Landing/components/IntroSection/intro-section.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/components/buttons' as buttons;
+@use '@/styles/components/inputs' as inputs;
+
+#intro-section {
+  position: relative;
+  min-height: 0;
+  overflow: clip;
+
+  background-color: $secondary;
+
+  // Dégradé très doux en haut (jonction avec la section précédente) — désactivé sur mobile
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: clamp(120px, 20vh, 280px);
+    pointer-events: none;
+    z-index: 0;
+    background: linear-gradient(
+      to bottom,
+      rgba($secondary, 1) 0%,
+      rgba($secondary, 0.7) 30%,
+      rgba($secondary, 0.3) 60%,
+      rgba($secondary, 0) 100%
+    );
+
+    @media (max-width: 1024px) {
+      display: none;
+    }
+  }
+
+  padding-top: 100px;
+  padding-bottom: calc(var(--layout-gap) * 4);
+
+  @media (max-width: 1024px) {
+    padding-top: 70px;
+    padding-bottom: var(--layout-gap-4xl);
+  }
+
+  @include min-width(lg) {
+    padding-top: 150px;
+    padding-bottom: calc(var(--layout-gap) * 6);
+  }
+
+  .gradiant-separator-wrapper {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+
+    /* Mobile : isolation du rendu pour fluidifier le scroll */
+    @media (max-width: 1024px) {
+      contain: layout paint;
+    }
+
+    // Fondu très smooth en bas — désactivé sur mobile
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 45%;
+      min-height: 200px;
+      pointer-events: none;
+      background: linear-gradient(
+        to top,
+        $secondary 0%,
+        rgba($secondary, 0.95) 10%,
+        rgba($secondary, 0.7) 25%,
+        rgba($secondary, 0.4) 45%,
+        rgba($secondary, 0.1) 70%,
+        transparent 100%
+      );
+
+      @media (max-width: 1024px) {
+        display: none;
+      }
+    }
+  }
+
+  html.safari-landing-lite & {
+    overflow: hidden;
+  }
+
+  html.safari-landing-lite & .gradiant-separator-wrapper {
+    isolation: isolate;
+  }
+
+  html.safari-landing-lite & .gradiant-separator-wrapper::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: min(58rem, 78vh);
+    pointer-events: none;
+    z-index: 0;
+    background:
+      radial-gradient(44rem 24rem at 8% 12%, rgba(#a499ff, 0.42) 0%, rgba(#a499ff, 0.18) 38%, rgba(#a499ff, 0) 72%),
+      radial-gradient(38rem 18rem at 46% 0%, rgba(#df99ff, 0.34) 0%, rgba(#df99ff, 0.14) 40%, rgba(#df99ff, 0) 74%),
+      radial-gradient(42rem 20rem at 92% 8%, rgba(#ffc4c5, 0.28) 0%, rgba(#ffc4c5, 0.12) 42%, rgba(#ffc4c5, 0) 76%),
+      linear-gradient(180deg, rgba($secondary, 0) 0%, rgba($secondary, 0.06) 48%, rgba($secondary, 0.18) 100%);
+    transform: translate3d(0, 0, 0);
+  }
+
+  .gradiant-separator {
+    width: 160%;
+    height: auto;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    pointer-events: none;
+    user-select: none;
+    transform-origin: top center;
+    transform: translate(-50%, 0) scaleY(2.4);
+
+    /* Mobile : SVG avec feGaussianBlur très lourd au scroll — masqué, remplacé par gradient CSS */
+    @media (max-width: 1024px) {
+      display: none;
+    }
+
+    @include min-width(lg) {
+      display: block;
+      transform: translate(-50%, 0) scaleY(1.9);
+    }
+  }
+
+  html.safari-landing-lite & .gradiant-separator {
+    opacity: 0;
+  }
+
+  /* Mobile : pas de gradient décoratif — fond $secondary uniforme partout */
+  @media (max-width: 1024px) {
+    .gradiant-separator-wrapper::before {
+      display: none;
+    }
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-left: var(--layout-gap-4xl);
+    padding-right: var(--layout-gap-4xl);
+  }
+
+  .block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: var(--layout-gap-md);
+    max-width: 56rem;
+    margin-inline: auto;
+
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    backdrop-filter: none;
+
+    @media (max-width: 1024px) {
+      gap: var(--layout-gap-sm);
+    }
+
+    @include min-width(md) {
+      padding: 0;
+      border-radius: 0;
+    }
+
+    @include min-width(lg) {
+      max-width: 56rem;
+      padding: 0;
+    }
+
+    h2 {
+      margin: 0;
+      @include lp-h2-title($accent, true, true, false);
+
+      .text-gradiant {
+        background: linear-gradient(to bottom, $secondary_text_gradiant_first 0%, $secondary_text_gradiant_second 100%);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        color: transparent;
+
+        @media (max-width: 1024px) {
+          background: linear-gradient(87deg, $primary_gradiant_second 0%, $primary_gradiant_third 100%);
+          background-clip: text;
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          color: transparent;
+        }
+      }
+    }
+
+    p {
+      margin: 0;
+      @include base-text($accent, $bigger: true);
+      line-height: 1.5;
+    }
+
+    .import-row {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: var(--layout-gap-sm);
+      margin-top: var(--layout-gap-sm);
+      position: relative;
+      z-index: 10;
+
+      @media (max-width: 1024px) {
+        gap: var(--layout-gap-2xl);
+        margin-top: var(--layout-gap-xl);
+      }
+
+      @include min-width(md) {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+      }
+    }
+
+    .import-input {
+      width: 100%;
+      @include inputs.search($theme: accent);
+      box-shadow: none;
+    }
+
+    .generate-btn {
+      width: 100%;
+      @include buttons.primary(true, light);
+      white-space: nowrap;
+      position: relative;
+      z-index: 1;
+
+      &::before,
+      &::after {
+        pointer-events: none;
+      }
+
+      & > button {
+        position: relative;
+        z-index: 2;
+        pointer-events: auto;
+      }
+
+      @media (max-width: 1024px) {
+        width: max-content;
+        margin-inline: auto;
+      }
+
+      @include min-width(md) {
+        width: max-content;
+      }
+
+      .icon {
+        width: 1.1rem;
+        height: 1.1rem;
+        margin-right: 0.5rem;
+      }
+    }
+
+    .preview-error {
+      margin: var(--layout-gap-sm) 0 0;
+      @include little-text($thin: false);
+      color: rgba($bad, 0.95);
+    }
+
+    .mobile-loading-hint {
+      width: min(100%, 28rem);
+      margin-top: var(--layout-gap-sm);
+      margin-inline: auto;
+
+      @include min-width(lg) {
+        display: none;
+      }
+    }
+
+    .mobile-import-teaser {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: var(--layout-gap-sm);
+
+      @include min-width(lg) {
+        display: none;
+      }
+
+      .teaser-badge {
+        @include little-text($color: $accent, $thin: true);
+        padding: 0.2rem 0.65rem;
+        border: 1px solid rgba($accent, 0.18);
+        border-radius: borders.$rounded;
+        background: rgba($accent, 0.05);
+        font-size: 0.75rem;
+        letter-spacing: 0.01em;
+      }
+
+      .teaser-sep {
+        @include little-text($color: $accent, $thin: true);
+        opacity: 0.35;
+        font-size: 0.75rem;
+      }
+    }
+
+    .mobile-import-demo {
+      width: 100%;
+      max-width: 22rem;
+      margin-top: var(--layout-gap-xl);
+      padding: 0;
+      border-radius: borders.$rounded-xl;
+      background: transparent;
+      box-shadow: none;
+
+      @media (min-width: 510px) and (max-width: 1023px) {
+        max-width: 30rem;
+      }
+
+      @include min-width(lg) {
+        display: none;
+      }
+
+      video {
+        display: block;
+        width: 100%;
+        height: auto;
+        border-radius: borders.$rounded-md;
+        background: $accent;
+        @include halo(sm, true, white, 0.5);
+      }
+    }
+
+    .activate-cta {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--layout-gap-sm);
+      width: 100%;
+      margin-top: var(--layout-gap-md);
+      padding-top: var(--layout-gap-md);
+      border-top: 1px solid rgba($accent, 0.12);
+
+      @media (max-width: 1024px) {
+        margin-top: var(--layout-gap-sm);
+        padding-top: var(--layout-gap-sm);
+      }
+    }
+
+    .activate-btn {
+      width: 100%;
+      @include buttons.primary($cta: true, $theme: light, $fullwidth: true);
+
+      > button {
+        gap: 0.6rem;
+
+        > .icon {
+          width: 1.1rem;
+          height: 1.1rem;
+          flex-shrink: 0;
+          transition: transform 200ms ease;
+        }
+
+        &:hover > .icon {
+          transform: translateX(3px);
+        }
+      }
+
+      @include min-width(md) {
+        width: max-content;
+        min-width: 22rem;
+      }
+    }
+
+    .activate-hint {
+      margin: 0;
+      @include little-text($thin: false);
+      color: rgba($accent, 0.55);
+      letter-spacing: 0.01em;
+    }
+  }
+
+  .embed-preview {
+    width: 100%;
+    max-width: 72rem;
+    height: 70vh;
+    margin-top: var(--layout-gap-2xl);
+    border-radius: borders.$rounded-xl;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba($secondary, 0.2);
+    position: relative;
+    z-index: 2;
+
+    /* Mobile : prévisualisation adaptée */
+    @media (max-width: 1024px) {
+      contain: layout paint;
+      height: min(60vh, 420px);
+      margin-top: var(--layout-gap-xl);
+      border-radius: borders.$rounded-lg;
+    }
+
+    @media (min-width: 768px) and (max-width: 1024px) {
+      height: min(74vh, 860px);
+      max-width: 56rem;
+      margin-top: var(--layout-gap-2xl);
+      border-radius: borders.$rounded-xl;
+    }
+
+    @include min-width(lg) {
+      max-width: 90rem;
+      height: 85vh;
+      margin-top: var(--layout-gap-3xl);
+      border-radius: borders.$rounded-xxl;
+    }
+
+    .embed-stage {
+      width: 100%;
+      height: 100%;
+    }
+
+    .embed-scale {
+      width: 100%;
+      height: 100%;
+    }
+
+    .embed-skeleton {
+      display: grid;
+      place-items: center;
+      width: 100%;
+      height: 100%;
+      padding: var(--layout-gap-2xl);
+
+      > .import-loading-state {
+        width: min(100%, 30rem);
+      }
+    }
+
+    // La listing-view doit avoir une hauteur définie pour que la chaîne
+    // height:100% arrive jusqu'au .listing-gallery-mosaic.
+    // Sans ça, les tuiles absolute du Mosaic resolvent à height:0 → images invisibles.
+    .listing-view {
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      flex-shrink: 0;
+      pointer-events: auto;
+    }
+  }
+
+  .mobile-preview-fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 10001;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    isolation: isolate;
+    background: $secondary;
+
+    @include min-width(lg) {
+      display: none;
+    }
+  }
+
+  .mobile-preview-topbar {
+    height: max-content;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--layout-gap-sm);
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    overflow: hidden;
+    isolation: isolate;
+    padding:
+      calc(env(safe-area-inset-top) + 0.75rem)
+      var(--layout-gap-sm)
+      var(--layout-gap-sm);
+    background: linear-gradient(180deg, rgba($secondary, 1) 0%, rgba($secondary, 0) 100%);
+  }
+
+  .mobile-preview-back {
+    @include buttons.primary($theme: white, $icon-only: true, $little: false);
+    flex: 0 0 auto;
+
+    > button {
+      width: 2.75rem;
+      height: 2.75rem;
+      border-radius: borders.$rounded;
+      box-shadow: 0 0.35rem 1rem rgba($dark, 0.18);
+
+      .icon {
+        width: 1.05rem;
+        height: 1.05rem;
+      }
+    }
+  }
+
+  .mobile-preview-cta {
+    @include buttons.primary($cta: true, $theme: light);
+    flex: 0 0 auto;
+
+    & > button {
+      min-height: 2.75rem;
+      padding-inline: 1rem;
+
+      .icon {
+        width: 1rem;
+        height: 1rem;
+        flex-shrink: 0;
+      }
+    }
+  }
+
+  .mobile-preview-stage {
+    min-height: 0;
+    flex: 1;
+    position: relative;
+    z-index: 1;
+    padding-bottom: env(safe-area-inset-bottom);
+    background: transparent;
+
+    .listing-view {
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      border-radius: 0;
+    }
+  }
+
+  .is-spinning {
+    animation: intro-import-spin 0.9s linear infinite;
+  }
+
+  @keyframes intro-import-spin {
+    from {
+      transform: rotate(0deg);
+    }
+
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  // Transition apparition bouton "Activer mon site"
+  // opacity démarre à 0.3s, transform attend 0.55s (petit délai avant le glissement)
+  .activate-reveal-enter-active {
+    transition:
+      opacity 0.45s ease 0.3s,
+      transform 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.55s;
+  }
+
+  .activate-reveal-leave-active {
+    transition: opacity 0.2s ease;
+  }
+
+  .activate-reveal-enter-from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  .activate-reveal-leave-to {
+    opacity: 0;
+  }
+
+  // Transition skeleton → ListingView
+  .preview-reveal-enter-active {
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+
+  .preview-reveal-leave-active {
+    transition: opacity 0.4s ease;
+  }
+
+  .preview-reveal-enter-from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  .preview-reveal-leave-to {
+    opacity: 0;
+  }
+
+  .mobile-preview-fullscreen-enter-active,
+  .mobile-preview-fullscreen-leave-active {
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+
+  .mobile-preview-fullscreen-enter-from,
+  .mobile-preview-fullscreen-leave-to {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}

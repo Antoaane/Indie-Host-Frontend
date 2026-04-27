@@ -17,6 +17,7 @@ import { useLandingLocale } from '@/views/Landing/composables/useLandingLocale'
 // COMPONENTS — above the fold : chargement synchrone (LCP critique)
 import HeroSection from '@/views/Landing/components/HeroSection/HeroSection.vue'
 import ReassuranceBandSection from '@/views/Landing/components/ReassuranceBandSection/ReassuranceBandSection.vue'
+import IntroSection from '@/views/Landing/components/IntroSection/IntroSection.vue'
 import FeaturesSection from '@/views/Landing/components/FeaturesSection/FeaturesSection.vue'
 import HowSection from '@/views/Landing/components/HowSection/HowSection.vue'
 import UsageSection from '@/views/Landing/components/UsageSection/UsageSection.vue'
@@ -189,6 +190,7 @@ onBeforeUnmount(() => {
   <main id="landing-page">
     <HeroSection :content="content.hero" />
     <ReassuranceBandSection />
+    <IntroSection :content="content.introSection" />
     <!-- Section « Tout est pour vous » désactivée
     <BenefitsSection
       v-if="vp.lg.value"

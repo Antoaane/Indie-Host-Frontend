@@ -19,7 +19,8 @@
         "png": "/assets/media/images/png/hero-image.png",
         "alt": "IndieHost-Anzeige auf dem Handy zur Online-Buchung sowie Host-Dashboard in der Desktop-Ansicht"
       }
-    ]
+    ],
+    "inputPlaceholder": "Link zu Ihrer Unterkunft einfügen"
   },
   "benefits": {
     "title": "<strong>Alles</strong> für <strong>Sie</strong>"
@@ -747,5 +748,19 @@
       "target": "_self"
     },
     "note": "Keine IndieHost-Provision auf Direktbuchungen. Einfacher Ablauf, auch für Mobilgeräte."
+  },
+  "introSection": {
+    "title": "Erstellen Sie <span class=\"text-gradiant\">Ihre Seite</span> aus einer bestehenden Anzeige",
+    "body": "Fügen Sie den Airbnb- oder Booking-Link einer Ihrer Unterkünfte ein – wir erstellen Ihre Buchungsseite in Sekunden.",
+    "inputPlaceholder": "Link zu Ihrer Unterkunft einfügen",
+    "previewCtaLabel": "Meine Seite erstellen",
+    "createAccountCtaLabel": "Meine Seite kostenlos aktivieren",
+    "createAccountCtaHint": "Kostenlos · Unverbindlich · Keine Provision",
+    "backButtonAriaLabel": "Zurück zur Startseite",
+    "primaryCta": {
+      "label": "Kostenlosen Import testen",
+      "href": "/pricing",
+      "target": "_self"
+    }
   }
 }

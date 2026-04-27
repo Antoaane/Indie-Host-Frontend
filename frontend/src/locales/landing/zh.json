@@ -19,7 +19,8 @@
         "png": "/assets/media/images/png/hero-image.png",
         "alt": "IndieHost 房源在手机上的在线预订界面及房东后台桌面版"
       }
-    ]
+    ],
+    "inputPlaceholder": "粘贴您的房源链接"
   },
   "benefits": {
     "title": "<strong>一切</strong>都为<strong>您</strong>"
@@ -747,5 +748,19 @@
       "target": "_self"
     },
     "note": "直订零佣金。流程简单，适配手机。"
+  },
+  "introSection": {
+    "title": "从已有房源<span class=\"text-gradiant\">一键生成</span>您的预订页",
+    "body": "粘贴您在爱彼迎或缤客的房源链接，我们即可在几秒内生成您的直订预订页。",
+    "inputPlaceholder": "粘贴您的房源链接",
+    "previewCtaLabel": "生成我的页面",
+    "createAccountCtaLabel": "免费激活我的页面",
+    "createAccountCtaHint": "免费 · 无绑定 · 零佣金",
+    "backButtonAriaLabel": "返回首页",
+    "primaryCta": {
+      "label": "免费体验导入",
+      "href": "/pricing",
+      "target": "_self"
+    }
   }
 }

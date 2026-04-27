@@ -4,6 +4,7 @@
 import type { RawListingBundle } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 
+import ImportPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/ImportPanel/ImportPanel.vue'
 import TitlePanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/TitlePanel.vue'
 import DomainPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/DomainPanel.vue'
 import CalendarPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/CalendarPanel.vue'
@@ -65,6 +66,11 @@ const emit = defineEmits<{
     @patch="emit('patch', $event)"
     />
     <CalendarPanel :listing-id="props.listingId" />
+    <ImportPanel
+    :listing-id="props.listingId"
+    :listing-status="props.draft.core?.status"
+    @patch="emit('patch', $event)"
+    />
     <VisibilityPanel
       :core="props.draft.core"
       @patch="emit('patch', $event)"
