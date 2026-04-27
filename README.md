@@ -15,7 +15,7 @@ Le projet fonctionne en **Docker-only**.
 
 ## TL;DR
 
-Mode standard:
+Mode prod Docker:
 
 ```bash
 ./start-indiehost.sh
@@ -33,7 +33,7 @@ Sous PowerShell, utilise les versions `.ps1`.
 
 ```text
 .
-├── docker-compose.yml                # stack standard (prod-like local)
+├── docker-compose.yml                # stack prod Docker
 ├── docker-compose.dev.yml            # override dev (hot reload)
 ├── .env.example
 ├── secret.example/                   # templates versionnés
@@ -68,7 +68,9 @@ Cette commande crée, si absents:
 - `/secrets/imagekit_api_key.txt`
 - `/secrets/cloudflare.ini` (template wildcard HTTPS Cloudflare)
 
-## Mode Standard (stack stable)
+## Mode Prod Docker
+
+Avant le premier lancement, renseigner `.env` et les fichiers `secrets/*.txt` avec de vraies valeurs de production. Avec `STRICT_EXTERNAL_CONFIG=true`, le preflight refuse notamment `NODE_ENV` différent de `production`, les domaines `localhost`, et les secrets externes vides.
 
 ### Lancer
 
@@ -84,21 +86,17 @@ Windows PowerShell:
 ./start-indiehost.ps1
 ```
 
-Commande équivalente:
-
-```bash
-docker compose up -d --build --wait
-```
+Le script lance le preflight, génère le certificat wildcard Cloudflare initial si absent, exécute les migrations Prisma via le service `migrate`, puis démarre la stack.
 
 ### URLs
 
-- App: `http://localhost`
-- API health: `http://localhost/api/health`
+- App: `https://<SSL_DOMAIN>`
+- API health: `https://<SSL_DOMAIN>/api/health`
 
 ### Comportement de validation
 
 Le service `preflight` vérifie la config avant de démarrer la stack:
-- `STRICT_EXTERNAL_CONFIG=true` (par défaut): configuration externe stricte (Clerk/Stripe/ImageKit)
+- `STRICT_EXTERNAL_CONFIG=true` (par défaut): configuration externe stricte (Clerk/Stripe/ImageKit/Cloudflare + valeurs de prod)
 - `STRICT_EXTERNAL_CONFIG=false`: mode plus permissif (utile en dev local)
 
 ## Mode Dev (hot reload complet)
@@ -153,7 +151,7 @@ Templates disponibles dans `secret.example/`.
 
 La stack standard est préparée pour certbot DNS Cloudflare.
 
-### Manuel (une seule fois)
+### Configuration
 
 1. Éditer `secrets/cloudflare.ini` avec un token Cloudflare DNS Zone:
 
@@ -165,24 +163,13 @@ dns_cloudflare_api_token = <token_cloudflare_dns>
 - `A indiehost.fr -> IP serveur`
 - `A *.indiehost.fr -> IP serveur`
 
-3. Générer le certificat wildcard initial:
+3. Lancer le script prod:
 
 ```bash
-docker compose run --rm --entrypoint certbot certbot certonly \
-  --dns-cloudflare \
-  --dns-cloudflare-credentials /run/secrets/cloudflare.ini \
-  --dns-cloudflare-propagation-seconds ${CLOUDFLARE_DNS_PROPAGATION_SECONDS:-30} \
-  -d indiehost.fr \
-  -d "*.indiehost.fr" \
-  --email "${SSL_EMAIL}" \
-  --agree-tos --no-eff-email
+./start-indiehost.sh
 ```
 
-4. Relancer la stack:
-
-```bash
-docker compose up -d --build --wait
-```
+Le certificat initial est créé automatiquement si `certbot/conf/live/<SSL_DOMAIN>/fullchain.pem` est absent.
 
 ### Renouvellement automatique
 
@@ -192,7 +179,13 @@ docker compose up -d --build --wait
 
 ## Commandes utiles
 
-Démarrer standard:
+Démarrer prod avec preflight + certificat initial:
+
+```bash
+./start-indiehost.sh
+```
+
+Démarrer la stack sans bootstrap de certificat:
 
 ```bash
 docker compose up -d --build --wait

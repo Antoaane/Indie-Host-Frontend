@@ -42,6 +42,35 @@ require_env_non_empty() {
   fi
 }
 
+require_env_equals() {
+  name="$1"
+  expected="$2"
+  value="$(read_env_var "$name")"
+  if [ "$value" != "$expected" ]; then
+    log_error "Variable .env invalide: $name doit valoir '$expected' (actuel: '${value:-<vide>}')"
+  fi
+}
+
+reject_env_value() {
+  name="$1"
+  rejected="$2"
+  value="$(read_env_var "$name" | tr '[:upper:]' '[:lower:]')"
+  rejected_normalized="$(printf '%s' "$rejected" | tr '[:upper:]' '[:lower:]')"
+  if [ "$value" = "$rejected_normalized" ]; then
+    log_error "Variable .env invalide pour la prod: $name ne doit pas valoir '$rejected'"
+  fi
+}
+
+reject_env_contains() {
+  name="$1"
+  rejected_fragment="$2"
+  value="$(read_env_var "$name" | tr '[:upper:]' '[:lower:]')"
+  fragment="$(printf '%s' "$rejected_fragment" | tr '[:upper:]' '[:lower:]')"
+  case "$value" in
+    *"$fragment"*) log_error "Variable .env invalide pour la prod: $name contient '$rejected_fragment'" ;;
+  esac
+}
+
 require_secret_non_empty() {
   file_name="$1"
   path="/secrets/$file_name"
@@ -87,15 +116,29 @@ require_secret_non_empty "database_url.txt"
 if is_truthy "$STRICT_EXTERNAL_CONFIG_RAW"; then
   log_info "Mode STRICT_EXTERNAL_CONFIG active: verification complete des integrations externes."
 
+  require_env_equals "NODE_ENV" "production"
+  require_env_non_empty "BASE_URL"
+  require_env_non_empty "SSL_DOMAIN"
+  require_env_non_empty "SSL_EMAIL"
+  require_env_non_empty "PUBLIC_LISTING_ROOT_DOMAIN"
   require_env_non_empty "VITE_CLERK_PUBLISHABLE_KEY"
   require_env_non_empty "VITE_STRIPE_PUBLISHABLE_KEY"
+  require_env_non_empty "VITE_STRIPE_PAYMENT_RETURN_URL"
+  require_env_non_empty "VITE_PUBLIC_LISTING_ROOT_DOMAIN"
   require_env_non_empty "CLERK_JWKS_URL"
   require_env_non_empty "CLERK_ISSUER"
   require_env_non_empty "IMAGEKIT_ENDPOINT"
 
+  reject_env_value "SSL_DOMAIN" "localhost"
+  reject_env_value "PUBLIC_LISTING_ROOT_DOMAIN" "localhost"
+  reject_env_value "VITE_PUBLIC_LISTING_ROOT_DOMAIN" "localhost"
+  reject_env_contains "BASE_URL" "localhost"
+  reject_env_contains "VITE_STRIPE_PAYMENT_RETURN_URL" "localhost"
+
   require_secret_non_empty "stripe_secret_key.txt"
   require_secret_non_empty "clerk_secret_key.txt"
   require_secret_non_empty "imagekit_api_key.txt"
+  require_secret_non_empty "cloudflare.ini"
 else
   log_warn "Mode STRICT_EXTERNAL_CONFIG desactive: seules les dependances minimales sont validees."
   require_secret_exists "stripe_secret_key.txt"

@@ -28,12 +28,30 @@ services:
       timeout: 5s
       retries: 20
 
+  migrate:
+    build:
+      context: ./backend/api
+    restart: "no"
+    depends_on:
+      preflight:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+    env_file: .env
+    secrets:
+      - database_url
+    environment:
+      DATABASE_URL_FILE: /run/secrets/database_url
+    command: ["npm", "run", "prisma:deploy:docker"]
+
   api:
     build:
       context: ./backend/api
     restart: unless-stopped
     depends_on:
       preflight:
+        condition: service_completed_successfully
+      migrate:
         condition: service_completed_successfully
       postgres:
         condition: service_healthy
