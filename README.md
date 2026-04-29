@@ -70,7 +70,18 @@ Cette commande crée, si absents:
 
 ## Mode Prod Docker
 
-Avant le premier lancement, renseigner `.env` et les fichiers `secrets/*.txt` avec de vraies valeurs de production. Avec `STRICT_EXTERNAL_CONFIG=true`, le preflight refuse notamment `NODE_ENV` différent de `production`, les domaines `localhost`, et les secrets externes vides.
+Avant le premier lancement, renseigner `.env` et les fichiers `secrets/*.txt` avec de vraies valeurs de production. Avec `STRICT_EXTERNAL_CONFIG=true`, le preflight refuse notamment `NODE_ENV` différent de `production`, les domaines `localhost`, les secrets externes vides, et une configuration Clerk incohérente entre la clé frontend et la validation JWT backend.
+
+Pour Clerk, `CLERK_ISSUER` et `CLERK_JWKS_URL` doivent correspondre au domaine encodé dans `VITE_CLERK_PUBLISHABLE_KEY`. Exemple:
+
+```dotenv
+VITE_CLERK_PUBLISHABLE_KEY=pk_live_...
+CLERK_ISSUER=https://<votre-instance-clerk>
+CLERK_JWKS_URL=https://<votre-instance-clerk>/.well-known/jwks.json
+CLERK_AUDIENCE=
+```
+
+Dans l'état actuel de l'app, laisser `CLERK_AUDIENCE` vide: le frontend demande les tokens Clerk avec `getToken()` sans audience/template. Une audience backend non vide ferait répondre `401` aux routes authentifiées en production alors que le dev fonctionne grâce au fallback local.
 
 ### Lancer
 

@@ -26,6 +26,7 @@ import { ensurePublishedMediasStoredInImageKit } from '@/domain/api/imagekit'
 const RAW_BASE_API_URL = (import.meta.env.VITE_API_BASE_URL ?? '').trim()
 const BASE_API_URL = normalizeApiBaseUrl(RAW_BASE_API_URL)
 const API_REQUEST_TIMEOUT_MS = resolveRequestTimeoutMs(import.meta.env.VITE_API_REQUEST_TIMEOUT_MS, 20000)
+const AUTH_TOKEN_MIN_VALIDITY_MS = 60_000
 
 function resolveRequestTimeoutMs(rawValue: unknown, fallback: number): number {
   const parsed = Number(rawValue)
@@ -105,7 +106,7 @@ function readJwtPayload(token: string): Record<string, unknown> | null {
   }
 }
 
-function hasValidLifetime(token: string, minValidityMs = 10_000): boolean {
+function hasValidLifetime(token: string, minValidityMs = AUTH_TOKEN_MIN_VALIDITY_MS): boolean {
   if (typeof window === 'undefined' || typeof window.atob !== 'function') return true
 
   const payload = readJwtPayload(token)
@@ -128,13 +129,13 @@ function readToken(): string | null {
   return token
 }
 
-async function readFreshTokenFromClerkRuntime(): Promise<string | null> {
+async function readFreshTokenFromClerkRuntime(options?: { skipCache?: boolean }): Promise<string | null> {
   if (typeof window === 'undefined') return null
 
   const clerk = (window as Window & {
     Clerk?: {
       session?: {
-        getToken?: () => Promise<string | null>
+        getToken?: (options?: { skipCache?: boolean }) => Promise<string | null>
       }
     }
   }).Clerk
@@ -143,8 +144,12 @@ async function readFreshTokenFromClerkRuntime(): Promise<string | null> {
   if (typeof getSessionToken !== 'function') return null
 
   try {
-    const token = (await getSessionToken())?.trim() ?? ''
-    if (!token || !hasValidLifetime(token)) return null
+    const token = (await getSessionToken(options?.skipCache ? { skipCache: true } : undefined))?.trim() ?? ''
+    if (!token) return null
+    if (!hasValidLifetime(token)) {
+      if (!options?.skipCache) return readFreshTokenFromClerkRuntime({ skipCache: true })
+      return null
+    }
     clerkToken.value = token
     return token
   } catch {
@@ -165,7 +170,7 @@ async function getAuthToken(options?: { waitForReady?: boolean }): Promise<strin
   if (!waitedToken) return null
   if (!hasValidLifetime(waitedToken)) {
     clerkToken.value = null
-    return readFreshTokenFromClerkRuntime()
+    return readFreshTokenFromClerkRuntime({ skipCache: true })
   }
   return waitedToken
 }
@@ -201,8 +206,8 @@ async function fetchRemoteWithToken<T>(url: string, token: string | null): Promi
     return data
   } catch (error) {
     if (readHttpStatus(error) === 401) {
-      const refreshedToken = await readFreshTokenFromClerkRuntime()
-      if (refreshedToken && refreshedToken !== token) {
+      const refreshedToken = await readFreshTokenFromClerkRuntime({ skipCache: true })
+      if (refreshedToken) {
         const { data } = await axios.get<T>(url, {
           withCredentials: false,
           timeout: API_REQUEST_TIMEOUT_MS,
@@ -223,7 +228,7 @@ async function fetchRemote<T>(url: string): Promise<T> {
 
 async function patchRemoteWithToken<T>(url: string, payload: unknown, token: string | null): Promise<T> {
   const axios = await getAxios()
-  const requestToken = token ?? await readFreshTokenFromClerkRuntime()
+  const requestToken = token ?? await readFreshTokenFromClerkRuntime({ skipCache: true })
 
   try {
     const { data } = await axios.patch<T>(url, payload, {
@@ -235,8 +240,8 @@ async function patchRemoteWithToken<T>(url: string, payload: unknown, token: str
     return data
   } catch (error) {
     if (readHttpStatus(error) === 401) {
-      const refreshedToken = await readFreshTokenFromClerkRuntime()
-      if (refreshedToken && refreshedToken !== requestToken) {
+      const refreshedToken = await readFreshTokenFromClerkRuntime({ skipCache: true })
+      if (refreshedToken) {
         const { data } = await axios.patch<T>(url, payload, {
           withCredentials: false,
           timeout: API_REQUEST_TIMEOUT_MS,
@@ -252,7 +257,7 @@ async function patchRemoteWithToken<T>(url: string, payload: unknown, token: str
 
 async function postRemoteWithToken<T>(url: string, payload: unknown, token: string | null): Promise<T> {
   const axios = await getAxios()
-  const requestToken = token ?? await readFreshTokenFromClerkRuntime()
+  const requestToken = token ?? await readFreshTokenFromClerkRuntime({ skipCache: true })
 
   try {
     const { data } = await axios.post<T>(url, payload, {
@@ -264,8 +269,8 @@ async function postRemoteWithToken<T>(url: string, payload: unknown, token: stri
     return data
   } catch (error) {
     if (readHttpStatus(error) === 401) {
-      const refreshedToken = await readFreshTokenFromClerkRuntime()
-      if (refreshedToken && refreshedToken !== requestToken) {
+      const refreshedToken = await readFreshTokenFromClerkRuntime({ skipCache: true })
+      if (refreshedToken) {
         const { data } = await axios.post<T>(url, payload, {
           withCredentials: false,
           timeout: API_REQUEST_TIMEOUT_MS,

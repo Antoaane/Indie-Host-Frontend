@@ -51,6 +51,15 @@ require_env_equals() {
   fi
 }
 
+reject_env_non_empty() {
+  name="$1"
+  reason="$2"
+  value="$(read_env_var "$name")"
+  if [ -n "$value" ]; then
+    log_error "Variable .env invalide: $name doit rester vide. $reason"
+  fi
+}
+
 reject_env_value() {
   name="$1"
   rejected="$2"
@@ -69,6 +78,60 @@ reject_env_contains() {
   case "$value" in
     *"$fragment"*) log_error "Variable .env invalide pour la prod: $name contient '$rejected_fragment'" ;;
   esac
+}
+
+trim_trailing_slash() {
+  printf '%s' "$1" | sed 's:/*$::'
+}
+
+decode_clerk_publishable_host() {
+  key="$(read_env_var "VITE_CLERK_PUBLISHABLE_KEY")"
+
+  case "$key" in
+    pk_test_*|pk_live_*) ;;
+    *)
+      log_error "Variable .env invalide: VITE_CLERK_PUBLISHABLE_KEY doit commencer par pk_test_ ou pk_live_"
+      return
+      ;;
+  esac
+
+  encoded="${key#pk_test_}"
+  encoded="${encoded#pk_live_}"
+
+  if [ -z "$encoded" ]; then
+    log_error "Variable .env invalide: VITE_CLERK_PUBLISHABLE_KEY ne contient pas de domaine encode"
+    return
+  fi
+
+  decoded="$(printf '%s' "$encoded" | base64 -d 2>/dev/null | tr -d '\r\n' || true)"
+  decoded="${decoded%$}"
+
+  if [ -z "$decoded" ]; then
+    log_error "Variable .env invalide: impossible de decoder VITE_CLERK_PUBLISHABLE_KEY"
+    return
+  fi
+
+  printf '%s' "$decoded"
+}
+
+validate_clerk_config() {
+  host="$(decode_clerk_publishable_host)"
+  if [ -z "$host" ]; then
+    return
+  fi
+
+  expected_issuer="https://$host"
+  expected_jwks="$expected_issuer/.well-known/jwks.json"
+  actual_issuer="$(trim_trailing_slash "$(read_env_var "CLERK_ISSUER")")"
+  actual_jwks="$(trim_trailing_slash "$(read_env_var "CLERK_JWKS_URL")")"
+
+  if [ "$actual_issuer" != "$expected_issuer" ]; then
+    log_error "Configuration Clerk incoherente: CLERK_ISSUER doit valoir '$expected_issuer' pour la cle VITE_CLERK_PUBLISHABLE_KEY courante (actuel: '${actual_issuer:-<vide>}')"
+  fi
+
+  if [ "$actual_jwks" != "$expected_jwks" ]; then
+    log_error "Configuration Clerk incoherente: CLERK_JWKS_URL doit valoir '$expected_jwks' pour la cle VITE_CLERK_PUBLISHABLE_KEY courante (actuel: '${actual_jwks:-<vide>}')"
+  fi
 }
 
 require_secret_non_empty() {
@@ -128,6 +191,8 @@ if is_truthy "$STRICT_EXTERNAL_CONFIG_RAW"; then
   require_env_non_empty "CLERK_JWKS_URL"
   require_env_non_empty "CLERK_ISSUER"
   require_env_non_empty "IMAGEKIT_ENDPOINT"
+  validate_clerk_config
+  reject_env_non_empty "CLERK_AUDIENCE" "Le frontend demande actuellement les tokens Clerk avec getToken() sans audience/template."
 
   reject_env_value "SSL_DOMAIN" "localhost"
   reject_env_value "PUBLIC_LISTING_ROOT_DOMAIN" "localhost"
