@@ -12,40 +12,11 @@ normalize_secret_path() {
     return
   fi
 
-  local src_basename
-  src_basename="$(basename "$src")"
-
-  local candidate=""
-  if [[ -f "$dst/$src_basename" ]]; then
-    candidate="$dst/$src_basename"
-  else
-    local files=()
-    local entry
-    shopt -s nullglob dotglob
-    for entry in "$dst"/*; do
-      if [[ -f "$entry" ]]; then
-        files+=("$entry")
-      fi
-    done
-    shopt -u nullglob dotglob
-
-    if [[ "${#files[@]}" -eq 1 ]]; then
-      candidate="${files[0]}"
-    fi
-  fi
-
-  local tmp_file
-  tmp_file="$(mktemp)"
-  if [[ -n "$candidate" ]]; then
-    cp "$candidate" "$tmp_file"
-    echo "[init] Replaced directory by file $dst (preserved content from $candidate)"
-  else
-    cp "$src" "$tmp_file"
-    echo "[init] Replaced directory by file $dst (template reapplied from $src)"
-  fi
-
-  rm -rf "$dst"
-  mv "$tmp_file" "$dst"
+  echo "[init][error] $dst est un dossier, mais un fichier est attendu." >&2
+  echo "[init][error] Par securite, ce script ne supprime jamais automatiquement des dossiers ou des secrets." >&2
+  echo "[init][error] Inspecte ce dossier, sauvegarde son contenu si necessaire, puis renomme-le ou supprime-le manuellement avant de relancer." >&2
+  echo "[init][error] Template attendu: $src" >&2
+  exit 1
 }
 
 copy_if_missing() {

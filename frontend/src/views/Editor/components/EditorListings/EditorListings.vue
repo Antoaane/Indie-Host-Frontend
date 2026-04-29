@@ -3,16 +3,14 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { useUser } from '@clerk/vue'
 
 import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'
 import ConfirmationDialog from '@/components/overlays/ConfirmationDialog.vue'
 import NumberStepper from '@/components/inputs/NumberStepper.vue'
-import { fetchMyUser, searchAdminPlatformUsers, transferListingOwnershipAsAdmin, type AdminPlatformUser } from '@/domain/api/users'
+import { searchAdminPlatformUsers, transferListingOwnershipAsAdmin, type AdminPlatformUser } from '@/domain/api/users'
 import { normalizeListingStatus } from '@/domain/listings/status'
 import { getUserMaxActiveListings } from '@/domain/user/subscription'
 import { readActiveUserId } from '@/router/backOfficeUser'
-import { hasClerkAdminRole } from '@/utils/clerkRole'
 import { normalizeSearchText } from '@/utils/search'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 import type { UserListingCard } from '@/views/Editor/utils/listingApi'
@@ -27,6 +25,7 @@ const props = defineProps<{
   selectedListingId: string | null
   isStripeConnectPublishLocked?: boolean
   canPreview?: boolean
+  isAdmin?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -39,7 +38,6 @@ const emit = defineEmits<{
 
 const query = ref('')
 const route = useRoute()
-const { user } = useUser()
 const listingContent = editorStatic.listings
 const ACTIVE_LISTING_STATUSES = new Set([
   'published',
@@ -56,8 +54,7 @@ type OpenCardMenuState = {
   type: CardMenuType
 }
 
-const apiAdminAccess = ref<boolean | null>(null)
-const isAdminUser = computed(() => Boolean(apiAdminAccess.value) || hasClerkAdminRole(user.value))
+const isAdminUser = computed(() => Boolean(props.isAdmin))
 const maxActiveListings = computed(() => (isAdminUser.value ? Number.POSITIVE_INFINITY : getUserMaxActiveListings()))
 const activeListingsCount = computed(() => props.listings.reduce((count, listing) => count + (isActiveListingStatus(listing.status) ? 1 : 0), 0))
 const maxActiveListingsDisplay = computed(() => (Number.isFinite(maxActiveListings.value) ? String(maxActiveListings.value) : '∞'))
@@ -162,6 +159,7 @@ function handlePreview(listingId: string) {
 
 function setListingStatus(payload: { listingId: string; status: string }) {
   closeCardMenus()
+  if (isAdminUser.value && normalizeListingStatus(payload.status) === 'published') return
   emit('status-change', payload)
 }
 
@@ -375,35 +373,6 @@ async function loadTransferUsers() {
   }
 }
 
-function waitMs(ms: number) {
-  return new Promise<void>((resolve) => {
-    setTimeout(resolve, ms)
-  })
-}
-
-async function loadAdminAccessFromApi() {
-  if (!user.value?.id) {
-    apiAdminAccess.value = null
-    return
-  }
-
-  const maxAttempts = 3
-  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
-    try {
-      const me = await fetchMyUser()
-      apiAdminAccess.value = Boolean(me.isAdmin)
-      return
-    } catch (error) {
-      if (attempt >= maxAttempts - 1) {
-        console.warn('[EditorListings] failed to resolve admin access from API, fallback to Clerk metadata', error)
-        apiAdminAccess.value = null
-        return
-      }
-      await waitMs(250)
-    }
-  }
-}
-
 function openTransferDialog(listingId: string) {
   if (!isAdminUser.value) return
   closeCardMenus()
@@ -538,13 +507,6 @@ onBeforeUnmount(() => {
   window.removeEventListener('keydown', handleStatusMenuDocumentKeyDown)
 })
 
-watch(
-  () => user.value?.id ?? null,
-  () => {
-    void loadAdminAccessFromApi()
-  },
-  { immediate: true },
-)
 </script>
 
 <template>
@@ -565,9 +527,10 @@ watch(
           :isActionsMenuOpen="isActionsMenuOpen(listing.listingId)"
           :statusOptions="STATUS_OPTIONS"
           :listingContent="listingContent"
-          :isStripeConnectPublishLocked="props.isStripeConnectPublishLocked"
+          :isStripeConnectPublishLocked="!isAdminUser && props.isStripeConnectPublishLocked"
           :canPreview="props.canPreview !== false"
           :canTransfer="isAdminUser"
+          :canPublishListing="!isAdminUser"
           @select="handleSelect"
           @preview="handlePreview"
           @toggle-status-menu="toggleStatusMenu"

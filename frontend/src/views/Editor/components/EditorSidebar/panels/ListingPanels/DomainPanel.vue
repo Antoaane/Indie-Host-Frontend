@@ -16,6 +16,7 @@ import { getPublicListingRootDomain } from '@/domain/listings/publicDomain'
 
 const props = defineProps<{
   listingId: string
+  isAdmin?: boolean
 }>()
 
 const subdomainInput = ref('')
@@ -34,7 +35,7 @@ const normalizedSlug = computed(() => subdomainInput.value.trim().toLowerCase())
 const rootDomain = getPublicListingRootDomain()
 const previewHostname = computed(() => normalizedSlug.value ? `${normalizedSlug.value}.${rootDomain}` : '')
 const previewUrl = computed(() => previewHostname.value ? `https://${previewHostname.value}` : '')
-const canManageSubdomain = computed(() => hasSelectedPlan.value && !isLoadingSubscription.value)
+const canManageSubdomain = computed(() => Boolean(props.isAdmin || (hasSelectedPlan.value && !isLoadingSubscription.value)))
 const canSave = computed(() => Boolean(canManageSubdomain.value && availability.value?.available && normalizedSlug.value))
 
 function resetFeedback() {
@@ -215,7 +216,7 @@ onMounted(() => {
           type="text"
           placeholder="ex: mon-logement"
           autocomplete="off"
-          :disabled="isLoadingCurrent || isLoadingSubscription || !hasSelectedPlan"
+          :disabled="isLoadingCurrent || (!props.isAdmin && isLoadingSubscription) || !canManageSubdomain"
           @keydown.enter.prevent="checkAvailability"
         />
       </div>
@@ -285,7 +286,7 @@ onMounted(() => {
       </div>
 
       <p
-        v-if="!isLoadingSubscription && !hasSelectedPlan"
+        v-if="!isLoadingSubscription && !props.isAdmin && !hasSelectedPlan"
         class="meta is-error"
       >
         Sélectionnez d abord un plan d abonnement pour réserver un sous-domaine.

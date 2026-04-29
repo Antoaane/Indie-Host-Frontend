@@ -1091,13 +1091,13 @@ export class PaymentsService {
   ): PublicationReadiness {
     if (options?.allowAdmin) {
       return {
-        canPublish: true,
+        canPublish: false,
         hasActiveSubscription: true,
         hasConnectAccount: true,
         connectOnboardingCompleted: true,
         chargesEnabled: true,
         payoutsEnabled: true,
-        missingRequirements: [],
+        missingRequirements: ['admin_publish_forbidden'],
       };
     }
 

@@ -34,6 +34,7 @@ const props = defineProps<{
   isStripeConnectPublishLocked?: boolean
   canPreview?: boolean
   canTransfer?: boolean
+  canPublishListing?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -87,6 +88,7 @@ const slides = computed<ListingSlide[]>(() => {
 const currentStatusLabel = computed(() => statusLabel(props.listing.status))
 const normalizedStatus = computed(() => normalizeListingStatus(props.listing.status))
 const isConnectPendingStatus = computed(() => normalizedStatus.value === 'blocked' || normalizedStatus.value === 'paused')
+const isPublishOptionForbidden = computed(() => props.canPublishListing === false && normalizedStatus.value !== 'published')
 const isPublishOptionLocked = computed(
   () => Boolean(props.isStripeConnectPublishLocked) && isConnectPendingStatus.value && normalizedStatus.value !== 'published',
 )
@@ -282,6 +284,9 @@ function statusOptionAria(option: string) {
 }
 
 function statusOptionTitle(option: string) {
+  if (option === 'published' && isPublishOptionForbidden.value) {
+    return 'Le rôle admin ne peut pas publier une annonce.'
+  }
   if (option === 'published' && isPublishOptionLocked.value) {
     return props.listingContent.statusMenu.connectRequired
   }
@@ -290,7 +295,7 @@ function statusOptionTitle(option: string) {
 
 function isStatusOptionDisabled(option: string) {
   if (isStatusOptionSelected(props.listing.status, option)) return true
-  return option === 'published' && isPublishOptionLocked.value
+  return option === 'published' && (isPublishOptionForbidden.value || isPublishOptionLocked.value)
 }
 
 function ratingPercent(rating?: number) {

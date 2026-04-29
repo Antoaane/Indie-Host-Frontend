@@ -11,6 +11,7 @@ import { formatValidationMessage, normalizeTextInput } from '@/utils/inputValida
 
 const props = defineProps<{
   core?: Partial<RawCore> | null
+  canPublishListing?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -23,6 +24,7 @@ const pauseMessageMax = visibilityValidation.pauseMessageMax
 
 const statusFlags = computed(() => getListingStatusFlags(props.core?.status))
 const currentStatus = computed(() => statusFlags.value.normalized || 'published')
+const canSelectActive = computed(() => props.canPublishListing !== false || statusFlags.value.isPublished)
 
 const selectedState = computed({
   get: () => {
@@ -39,6 +41,7 @@ const selectedState = computed({
       emit('patch', { core: { status: 'paused' } })
       return
     }
+    if (!canSelectActive.value) return
     emit('patch', { core: { status: 'published' } })
   },
 })
@@ -93,6 +96,8 @@ function confirmDelete() {
               v-model="selectedState"
               type="radio"
               value="active"
+              :disabled="!canSelectActive"
+              title="Le rôle admin ne peut pas publier une annonce."
             />
             <span class="text">
               <span class="title">{{ panelContent.options.active.title }}</span>

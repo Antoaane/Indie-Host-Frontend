@@ -4,6 +4,7 @@
 import { computed, ref, toRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import { useAdminAccess } from '@/composables/useAdminAccess'
 import { vp } from '@/utils/viewport'
 import EditorListings from '@/views/Editor/components/EditorListings/EditorListings.vue'
 import EditorSidebar from '@/views/Editor/components/EditorSidebar/EditorSidebar.vue'
@@ -19,6 +20,8 @@ const props = defineProps<{
 
 const route = useRoute()
 const router = useRouter()
+const { isAdminUser } = useAdminAccess()
+const canPublishListings = computed(() => !isAdminUser.value)
 
 const {
   applyDraftPatch,
@@ -46,6 +49,7 @@ const {
 } = useEditorController({
   route,
   source: toRef(props, 'source'),
+  canPublishListings,
 })
 
 const isMobileSidebarOpen = ref(false)
@@ -130,6 +134,8 @@ watch(selectedListingId, (listingId) => {
             :publishAllPending="publishAllPendingDrafts"
             :publish="publishSelectedDraft"
             :cancelPendingChanges="cancelSelectedDraftChanges"
+            :canPublishListing="canPublishListings"
+            :isAdmin="isAdminUser"
             @patch="applyDraftPatch"
             @mobile-back="handleMobileBackToListings"
           />
@@ -147,6 +153,7 @@ watch(selectedListingId, (listingId) => {
               :selectedListingId="selectedListingId"
               :isStripeConnectPublishLocked="isStripeConnectPublishLocked"
               :canPreview="isPreviewAvailable"
+              :isAdmin="isAdminUser"
               @select="handleListingSelect"
               @preview="showPreview"
               @status-change="applyListingStatusPatch"

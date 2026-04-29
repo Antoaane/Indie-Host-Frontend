@@ -366,14 +366,14 @@ export class ListingsService {
   ): ListingPublicationReadiness {
     if (options?.allowAdmin) {
       return {
-        canPublish: true,
+        canPublish: false,
         hasAuthenticatedUser: true,
         hasActiveSubscription: true,
         hasConnectAccount: true,
         connectOnboardingCompleted: true,
         chargesEnabled: true,
         payoutsEnabled: true,
-        missingRequirements: [],
+        missingRequirements: ['admin_publish_forbidden'],
       };
     }
 
@@ -1246,8 +1246,9 @@ export class ListingsService {
         const requestedSlug = buildListingSlugFromCore(normalizedMerged, listingId);
         normalizedMerged.slug = await this.buildUniqueListingSlug(requestedSlug, listingId);
       }
+      const currentStatus = this.extractStatus(currentValue);
       const nextStatus = this.extractStatus(normalizedMerged);
-      if (nextStatus === 'published') {
+      if (nextStatus === 'published' && (!allowAdmin || currentStatus !== 'published')) {
         this.assertCanPublishListing(actor, { allowAdmin });
       }
       data.core = toJsonInput(normalizedMerged);

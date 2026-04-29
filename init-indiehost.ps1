@@ -7,32 +7,12 @@ function Normalize-SecretPath {
   )
 
   if (Test-Path -LiteralPath $Destination -PathType Container) {
-    $sourceName = [System.IO.Path]::GetFileName($Source)
-    $preferredCandidate = Join-Path $Destination $sourceName
-    $candidate = $null
-
-    if (Test-Path -LiteralPath $preferredCandidate -PathType Leaf) {
-      $candidate = $preferredCandidate
-    }
-    else {
-      $files = Get-ChildItem -LiteralPath $Destination -File -Force
-      if ($files.Count -eq 1) {
-        $candidate = $files[0].FullName
-      }
-    }
-
-    $tmpFile = [System.IO.Path]::GetTempFileName()
-    if ($null -ne $candidate) {
-      Copy-Item -LiteralPath $candidate -Destination $tmpFile -Force
-      Write-Host "[init] Replaced directory by file $Destination (preserved content from $candidate)"
-    }
-    else {
-      Copy-Item -LiteralPath $Source -Destination $tmpFile -Force
-      Write-Host "[init] Replaced directory by file $Destination (template reapplied from $Source)"
-    }
-
-    Remove-Item -LiteralPath $Destination -Recurse -Force
-    Move-Item -LiteralPath $tmpFile -Destination $Destination -Force
+    Write-Error @"
+[init][error] $Destination est un dossier, mais un fichier est attendu.
+[init][error] Par securite, ce script ne supprime jamais automatiquement des dossiers ou des secrets.
+[init][error] Inspecte ce dossier, sauvegarde son contenu si necessaire, puis renomme-le ou supprime-le manuellement avant de relancer.
+[init][error] Template attendu: $Source
+"@
   }
 }
 

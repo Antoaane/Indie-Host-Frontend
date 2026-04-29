@@ -214,6 +214,8 @@ Arrêter:
 docker compose down
 ```
 
+Cette commande arrête les conteneurs sans supprimer le volume PostgreSQL. Ne pas ajouter `-v` en production: `down -v` supprime les volumes Docker, donc la base stockée dans `postgres_data`.
+
 Arrêter dev:
 
 ```bash
@@ -254,9 +256,11 @@ docker compose run --rm preflight
 - Relance propre:
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.dev.yml down -v
+docker compose -f docker-compose.yml -f docker-compose.dev.yml down
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build --wait
 ```
+
+Si tu dois vraiment supprimer les volumes d'un environnement de dev jetable, fais-le manuellement après avoir vérifié le projet Docker ciblé avec `docker compose ls` et `docker volume ls`. Ne jamais utiliser `down -v` sur la prod IndieHost.
 
 ### Le frontend ne hot-reload pas
 

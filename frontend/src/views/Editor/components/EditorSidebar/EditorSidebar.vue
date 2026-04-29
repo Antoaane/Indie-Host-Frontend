@@ -25,6 +25,8 @@ const props = defineProps<{
   hasAnyPendingChanges?: boolean
   hasMultiplePendingListings?: boolean
   pendingListingsCount?: number
+  canPublishListing?: boolean
+  isAdmin?: boolean
   publishAllPending: () => Promise<void>
   cancelPendingChanges: () => Promise<void>
   publish: () => Promise<void>
@@ -183,6 +185,8 @@ onBeforeUnmount(() => {
         v-if="tab === 'listing'"
         :listing-id="props.listingId"
         :draft="props.draft"
+        :canPublishListing="props.canPublishListing"
+        :isAdmin="props.isAdmin"
         @patch="handlePatch"
       />
       <PricingPanels

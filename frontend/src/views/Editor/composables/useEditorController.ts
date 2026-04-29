@@ -26,6 +26,7 @@ export type EditorStage = 'listings' | 'preview'
 type EditorControllerOptions = {
   route: RouteLocationNormalizedLoaded
   source: Ref<EditorSource>
+  canPublishListings?: Ref<boolean>
 }
 
 export function useEditorController(options: EditorControllerOptions) {
@@ -120,6 +121,25 @@ export function useEditorController(options: EditorControllerOptions) {
     }
   }
 
+  function canPublishListingStatus() {
+    return options.canPublishListings?.value !== false
+  }
+
+  function isPublishedStatusTransition(listingId: string, nextBundle: RawListingBundle): boolean {
+    const nextStatus = normalizeListingStatus(nextBundle.core?.status)
+    if (nextStatus !== 'published') return false
+
+    const publishedSnapshot = listingState.publishedSnapshotByListingId[listingId]
+    const currentListing = listingState.listings.value.find((item) => item.listingId === listingId)
+    const currentStatus = normalizeListingStatus(publishedSnapshot?.core?.status ?? currentListing?.status)
+
+    return currentStatus !== 'published'
+  }
+
+  function rejectAdminPublication() {
+    window.alert('Le rôle admin ne peut pas publier une annonce. Utilisez "Réservations bloquées" pour la rendre visible sans réservation.')
+  }
+
   async function handleSelectListing(listingId: string, selectionOptions?: { force?: boolean }) {
     const normalizedListingId = listingId.trim()
     if (!normalizedListingId) return
@@ -200,12 +220,25 @@ export function useEditorController(options: EditorControllerOptions) {
   }
 
   function applyDraftPatch(patch: DraftPatch) {
-    draftLifecycle.draft.value = applyPatchToDraftBundle(draftLifecycle.draft.value, patch)
-
     const listingId = selectedListingId.value
+    const nextDraft = applyPatchToDraftBundle(draftLifecycle.draft.value, patch)
+
+    if (
+      listingId
+      && patch.core?.status
+      && normalizeListingStatus(patch.core.status) === 'published'
+      && !canPublishListingStatus()
+      && isPublishedStatusTransition(listingId, nextDraft)
+    ) {
+      rejectAdminPublication()
+      return
+    }
+
+    draftLifecycle.draft.value = nextDraft
+
     if (listingId) {
       console.log('[Editor] apply patch', { listingId, patch })
-      const draftSnapshot = snapshotListingDraft(draftLifecycle.draft.value ?? {})
+      const draftSnapshot = snapshotListingDraft(nextDraft ?? {})
       persistListingDraft(listingId, draftSnapshot)
       listingState.draftSnapshotByListingId[listingId] = draftSnapshot
       listingState.syncListingPendingChanges(listingId)
@@ -226,6 +259,11 @@ export function useEditorController(options: EditorControllerOptions) {
     const currentListing = listingState.listings.value.find((item) => item.listingId === listingId)
     const currentStatus = normalizeListingStatus(currentListing?.status)
     if (currentStatus === normalizedStatus) return
+
+    if (normalizedStatus === 'published' && !canPublishListingStatus()) {
+      rejectAdminPublication()
+      return
+    }
 
     if (normalizedStatus === 'published') {
       try {
@@ -330,6 +368,11 @@ export function useEditorController(options: EditorControllerOptions) {
     if (selectedListingId.value !== listingId || !draftLifecycle.draft.value) return
 
     const snapshot = snapshotListingDraft(draftLifecycle.draft.value)
+    if (!canPublishListingStatus() && isPublishedStatusTransition(listingId, snapshot)) {
+      rejectAdminPublication()
+      throw new Error('Le rôle admin ne peut pas publier une annonce.')
+    }
+
     await options.source.value.publishListingDraft(listingId, snapshot)
     listingState.publishedSnapshotByListingId[listingId] = snapshotListingDraft(snapshot)
     listingState.draftSnapshotByListingId[listingId] = snapshotListingDraft(snapshot)
@@ -351,6 +394,11 @@ export function useEditorController(options: EditorControllerOptions) {
       if (!sourceSnapshot) continue
 
       const snapshot = snapshotListingDraft(sourceSnapshot)
+      if (!canPublishListingStatus() && isPublishedStatusTransition(listingId, snapshot)) {
+        rejectAdminPublication()
+        throw new Error('Le rôle admin ne peut pas publier une annonce.')
+      }
+
       await options.source.value.publishListingDraft(listingId, snapshot)
       listingState.publishedSnapshotByListingId[listingId] = snapshotListingDraft(snapshot)
       listingState.draftSnapshotByListingId[listingId] = snapshotListingDraft(snapshot)

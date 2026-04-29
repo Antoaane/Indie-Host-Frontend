@@ -20,6 +20,8 @@ import ReviewsPanel from '@/views/Editor/components/EditorSidebar/panels/Listing
 const props = defineProps<{
   listingId: string
   draft: RawListingBundle
+  canPublishListing?: boolean
+  isAdmin?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -33,7 +35,10 @@ const emit = defineEmits<{
       :core="props.draft.core"
       @patch="emit('patch', $event)"
     />
-    <DomainPanel :listing-id="props.listingId" />
+    <DomainPanel
+      :listing-id="props.listingId"
+      :isAdmin="props.isAdmin"
+    />
     <GalleryPanel
     :medias="props.draft.medias"
     :listing-id="props.listingId"
@@ -73,6 +78,7 @@ const emit = defineEmits<{
     />
     <VisibilityPanel
       :core="props.draft.core"
+      :canPublishListing="props.canPublishListing"
       @patch="emit('patch', $event)"
     />
   </div>
