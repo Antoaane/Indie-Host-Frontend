@@ -9,6 +9,7 @@ import ListingPanels from '@/views/Editor/components/EditorSidebar/panels/Listin
 import PricingPanels from '@/views/Editor/components/EditorSidebar/panels/PricingPanels/PricingPanels.vue'
 import ArrivalPanels from '@/views/Editor/components/EditorSidebar/panels/ArrivalPanels/ArrivalPanels.vue'
 import type { RawListingBundle } from '@/domain/listings/types'
+import type { ListingDomainRecord } from '@/domain/api/listingDomains'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 
@@ -34,6 +35,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'patch', patch: DraftPatch): void
+  (e: 'domain-updated', domain: ListingDomainRecord): void
   (e: 'mobile-back'): void
 }>()
 
@@ -188,6 +190,7 @@ onBeforeUnmount(() => {
         :canPublishListing="props.canPublishListing"
         :isAdmin="props.isAdmin"
         @patch="handlePatch"
+        @domain-updated="emit('domain-updated', $event)"
       />
       <PricingPanels
         v-else-if="tab === 'pricing'"

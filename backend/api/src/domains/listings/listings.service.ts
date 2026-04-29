@@ -995,7 +995,10 @@ export class ListingsService {
       auth: args.auth,
     });
     if (!availability.available) {
-      return 'conflict' as const;
+      return {
+        type: 'conflict' as const,
+        reason: availability.reason,
+      };
     }
 
     const updated = await this.prisma.listing.update({

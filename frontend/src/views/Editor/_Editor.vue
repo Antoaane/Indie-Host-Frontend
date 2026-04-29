@@ -27,8 +27,10 @@ const {
   applyDraftPatch,
   applyListingStatusPatch,
   cancelSelectedDraftChanges,
+  domainRevision,
   draft,
   draftStatus,
+  handleListingDomainUpdated,
   handleListingTransferred,
   handleSelectListing,
   hasAnyPendingChanges,
@@ -137,6 +139,7 @@ watch(selectedListingId, (listingId) => {
             :canPublishListing="canPublishListings"
             :isAdmin="isAdminUser"
             @patch="applyDraftPatch"
+            @domain-updated="handleListingDomainUpdated"
             @mobile-back="handleMobileBackToListings"
           />
         </div>
@@ -167,6 +170,7 @@ watch(selectedListingId, (listingId) => {
               v-show="stage === 'preview' && isPreviewAvailable"
               :rawListing="previewRawListing"
               :listingId="selectedListingId"
+              :domainRevision="domainRevision"
               :isLoading="draftStatus.isLoading"
               :isShowed="stage === 'preview' && isPreviewAvailable"
               @back="showListings"

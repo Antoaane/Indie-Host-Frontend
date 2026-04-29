@@ -2,6 +2,7 @@
 
 import { reactive, ref } from 'vue'
 
+import type { ListingDomainRecord } from '@/domain/api/listingDomains'
 import type { RawListingBundle } from '@/domain/listings/types'
 import { orderByIndex } from '@/utils/medias/order'
 import {
@@ -101,6 +102,31 @@ export function useEditorListingState(options: { getSource: () => EditorSource }
     listings.value.splice(index, 1, next)
   }
 
+  function applyDomainToListingCard(domain: ListingDomainRecord) {
+    const listingId = domain.listingId.trim()
+    if (!listingId) return
+
+    const index = listings.value.findIndex((item) => item.listingId === listingId)
+    if (index < 0) return
+
+    const current = listings.value[index]
+    const next = { ...current }
+
+    if (domain.subdomainSlug) {
+      next.subdomainSlug = domain.subdomainSlug
+    } else {
+      delete next.subdomainSlug
+    }
+
+    if (domain.publicUrl) {
+      next.publicUrl = domain.publicUrl
+    } else {
+      delete next.publicUrl
+    }
+
+    listings.value.splice(index, 1, next)
+  }
+
   function removeListingFromList(listingId: string) {
     const index = listings.value.findIndex((item) => item.listingId === listingId)
     if (index >= 0) {
@@ -180,6 +206,7 @@ export function useEditorListingState(options: { getSource: () => EditorSource }
     listingsStatus,
     draftSnapshotByListingId,
     publishedSnapshotByListingId,
+    applyDomainToListingCard,
     applyPatchToListingCard,
     loadListings,
     removeListingState,

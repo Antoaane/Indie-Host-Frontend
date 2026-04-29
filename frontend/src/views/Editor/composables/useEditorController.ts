@@ -3,6 +3,7 @@
 import { computed, onBeforeUnmount, ref, watch, type Ref } from 'vue'
 import { useRouter, type RouteLocationNormalizedLoaded } from 'vue-router'
 
+import type { ListingDomainRecord } from '@/domain/api/listingDomains'
 import type { RawListingBundle } from '@/domain/listings/types'
 import { normalizeListingStatus } from '@/domain/listings/status'
 import { fetchMyStripeSubscriptionState } from '@/domain/api/stripeSubscriptions'
@@ -36,6 +37,7 @@ export function useEditorController(options: EditorControllerOptions) {
   const selectionToken = ref(0)
   const sourceToken = ref(0)
   const isStripeConnectPublishLocked = ref(false)
+  const domainRevision = ref(0)
 
   const listingState = useEditorListingState({
     getSource: () => options.source.value,
@@ -192,6 +194,11 @@ export function useEditorController(options: EditorControllerOptions) {
         await handleSelectListing(nextListingId, { force: true })
       }
     }
+  }
+
+  function handleListingDomainUpdated(domain: ListingDomainRecord) {
+    listingState.applyDomainToListingCard(domain)
+    domainRevision.value += 1
   }
 
   async function initializeEditorState() {
@@ -488,7 +495,9 @@ export function useEditorController(options: EditorControllerOptions) {
     cancelSelectedDraftChanges,
     draft: draftLifecycle.draft,
     draftStatus: draftLifecycle.draftStatus,
+    domainRevision,
     handleListingTransferred,
+    handleListingDomainUpdated,
     handleSelectListing,
     hasAnyPendingChanges,
     hasMultiplePendingListings,

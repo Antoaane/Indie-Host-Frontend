@@ -4,6 +4,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import type { ListingDomainRecord } from '@/domain/api/listingDomains'
 import { getListingsController } from '@/domain/listings/controller'
 import type { UserListingCard } from '@/domain/listings/types'
 import { readActiveUserId } from '@/router/backOfficeUser'
@@ -62,6 +63,30 @@ function syncListingIdQuery(listingId: string | null) {
     query: nextQuery,
     hash: route.hash,
   })
+}
+
+function applyDomainToListing(domain: ListingDomainRecord) {
+  const listingId = domain.listingId.trim()
+  if (!listingId) return
+
+  const index = listings.value.findIndex((listing) => listing.listingId === listingId)
+  if (index < 0) return
+
+  const next = { ...listings.value[index] }
+
+  if (domain.subdomainSlug) {
+    next.subdomainSlug = domain.subdomainSlug
+  } else {
+    delete next.subdomainSlug
+  }
+
+  if (domain.publicUrl) {
+    next.publicUrl = domain.publicUrl
+  } else {
+    delete next.publicUrl
+  }
+
+  listings.value.splice(index, 1, next)
 }
 
 async function loadListings() {
@@ -180,6 +205,7 @@ onMounted(() => {
         <ListingSubdomainPanel
           v-if="selectedListingId"
           :listing-id="selectedListingId"
+          @updated="applyDomainToListing"
         />
       </template>
 

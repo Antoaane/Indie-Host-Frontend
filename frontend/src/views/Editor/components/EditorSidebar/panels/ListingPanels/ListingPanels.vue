@@ -2,6 +2,7 @@
 
 <script setup lang="ts">
 import type { RawListingBundle } from '@/domain/listings/types'
+import type { ListingDomainRecord } from '@/domain/api/listingDomains'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 
 import ImportPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/ImportPanel/ImportPanel.vue'
@@ -26,6 +27,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'patch', patch: DraftPatch): void
+  (e: 'domain-updated', domain: ListingDomainRecord): void
 }>()
 </script>
 
@@ -38,6 +40,7 @@ const emit = defineEmits<{
     <DomainPanel
       :listing-id="props.listingId"
       :isAdmin="props.isAdmin"
+      @updated="emit('domain-updated', $event)"
     />
     <GalleryPanel
     :medias="props.draft.medias"

@@ -122,17 +122,17 @@ export const listingsPlugin = fp(async (fastify) => {
     }
 
     if (domain === 'forbidden') {
-      reply.code(403).send({ message: 'You cannot edit this listing domain.' });
+      reply.code(403).send({ message: 'Vous ne pouvez pas modifier le sous-domaine de cette annonce.' });
       return;
     }
 
-    if (domain === 'conflict') {
-      reply.code(409).send({ message: 'This subdomain is already taken.' });
+    if (typeof domain === 'object' && 'type' in domain && domain.type === 'conflict') {
+      reply.code(409).send({ message: domain.reason ?? 'Ce sous-domaine n’est pas disponible.' });
       return;
     }
 
     if (domain === 'subscription_required') {
-      reply.code(403).send({ message: 'You need an active subscription plan to reserve a subdomain.' });
+      reply.code(403).send({ message: 'Un plan d abonnement est requis pour réserver un sous-domaine.' });
       return;
     }
 

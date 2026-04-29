@@ -13,6 +13,7 @@ import type { ListingViewportMode } from '@/views/ListingView/composables/useLis
 const props = defineProps<{
   rawListing: RawListingBundle | null
   listingId?: string | null
+  domainRevision?: number
   isShowed: boolean
   isLoading?: boolean
   displayMode?: ListingViewportMode | null
@@ -92,7 +93,7 @@ watch(
 )
 
 watch(
-  [resolvedListingId, publicListingSlug],
+  [resolvedListingId, publicListingSlug, () => props.domainRevision],
   () => {
     void resolvePublicListingHref()
   },

@@ -19,6 +19,10 @@ const props = defineProps<{
   isAdmin?: boolean
 }>()
 
+const emit = defineEmits<{
+  (e: 'updated', domain: ListingDomainRecord): void
+}>()
+
 const subdomainInput = ref('')
 const currentDomain = ref<ListingDomainRecord | null>(null)
 const availability = ref<ListingSubdomainAvailability | null>(null)
@@ -36,7 +40,12 @@ const rootDomain = getPublicListingRootDomain()
 const previewHostname = computed(() => normalizedSlug.value ? `${normalizedSlug.value}.${rootDomain}` : '')
 const previewUrl = computed(() => previewHostname.value ? `https://${previewHostname.value}` : '')
 const canManageSubdomain = computed(() => Boolean(props.isAdmin || (hasSelectedPlan.value && !isLoadingSubscription.value)))
-const canSave = computed(() => Boolean(canManageSubdomain.value && availability.value?.available && normalizedSlug.value))
+const canSave = computed(() => Boolean(
+  canManageSubdomain.value
+  && availability.value?.available
+  && availability.value.slug === normalizedSlug.value
+  && normalizedSlug.value,
+))
 
 function resetFeedback() {
   errorMessage.value = null
@@ -54,6 +63,14 @@ function isValidSlug(slug: string) {
   return /^[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])?$/.test(slug)
 }
 
+function resolveErrorMessage(error: unknown, fallback: string): string {
+  if (error && typeof error === 'object') {
+    const message = (error as { message?: unknown }).message
+    if (typeof message === 'string' && message.trim()) return message.trim()
+  }
+  return fallback
+}
+
 async function loadCurrentDomain() {
   if (!props.listingId.trim()) return
 
@@ -66,7 +83,7 @@ async function loadCurrentDomain() {
     subdomainInput.value = domain.subdomainSlug ?? ''
   } catch (error) {
     console.error('[EditorDomainPanel] failed to load current domain', error)
-    errorMessage.value = 'Impossible de charger le sous-domaine actuel.'
+    errorMessage.value = resolveErrorMessage(error, 'Impossible de charger le sous-domaine actuel.')
   } finally {
     isLoadingCurrent.value = false
   }
@@ -121,7 +138,7 @@ async function checkAvailability() {
     errorMessage.value = result.reason || 'Ce sous-domaine n’est pas disponible.'
   } catch (error) {
     console.error('[EditorDomainPanel] availability check failed', error)
-    errorMessage.value = 'Impossible de vérifier la disponibilité du sous-domaine.'
+    errorMessage.value = resolveErrorMessage(error, 'Impossible de vérifier la disponibilité du sous-domaine.')
   } finally {
     isCheckingAvailability.value = false
   }
@@ -138,12 +155,13 @@ async function saveDomain() {
     currentDomain.value = domain
     availability.value = null
     subdomainInput.value = domain.subdomainSlug ?? ''
+    emit('updated', domain)
     successMessage.value = domain.subdomainSlug
       ? `Le sous-domaine ${domain.subdomainSlug}.${rootDomain} est réservé pour cette annonce.`
       : 'Sous-domaine mis à jour.'
   } catch (error) {
     console.error('[EditorDomainPanel] failed to save subdomain', error)
-    errorMessage.value = 'Impossible d’enregistrer ce sous-domaine.'
+    errorMessage.value = resolveErrorMessage(error, 'Impossible d’enregistrer ce sous-domaine.')
   } finally {
     isSaving.value = false
   }
@@ -160,10 +178,11 @@ async function deleteDomain() {
     currentDomain.value = domain
     availability.value = null
     subdomainInput.value = ''
+    emit('updated', domain)
     successMessage.value = 'Le sous-domaine a été libéré.'
   } catch (error) {
     console.error('[EditorDomainPanel] failed to delete subdomain', error)
-    errorMessage.value = 'Impossible de libérer ce sous-domaine.'
+    errorMessage.value = resolveErrorMessage(error, 'Impossible de libérer ce sous-domaine.')
   } finally {
     isDeleting.value = false
   }
