@@ -12,8 +12,6 @@ import SlidesTitles from '@/views/Landing/components/HabitsSection/components/Sl
 import { vp } from '@/utils/viewport'
 // CONTENT
 import type { JoinContent, HabitsSlide } from '@/views/Landing/types/content'
-// ASSETS
-import RoadMapDark from '@/components/svgs/images/RoadMapDark.vue'
 
 // Map des variantes "component" du JSON → composants Vue
 const componentMap: Record<string, any> = {
@@ -125,13 +123,6 @@ onBeforeUnmount(() => {
         />
       </div>
 
-      <div
-        data-sr
-        data-sr-duration="1.5"
-        class="roadmap"
-      >
-        <RoadMapDark />
-      </div>
     </div>
     <div class="join-section-container">
       <div class="wrapper">

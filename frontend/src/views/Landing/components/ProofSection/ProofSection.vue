@@ -30,6 +30,7 @@ const demoVideo = {
           v-html="content.title"
         />
         <p
+          v-if="content.subtitle"
           data-sr
           data-sr-y="30"
           class="subtitle"

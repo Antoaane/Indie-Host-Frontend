@@ -16,7 +16,6 @@ import type { LandingContent } from '@/views/Landing/types/content'
 import { useLandingLocale } from '@/views/Landing/composables/useLandingLocale'
 // COMPONENTS — above the fold : chargement synchrone (LCP critique)
 import HeroSection from '@/views/Landing/components/HeroSection/HeroSection.vue'
-import ReassuranceBandSection from '@/views/Landing/components/ReassuranceBandSection/ReassuranceBandSection.vue'
 import IntroSection from '@/views/Landing/components/IntroSection/IntroSection.vue'
 import FeaturesSection from '@/views/Landing/components/FeaturesSection/FeaturesSection.vue'
 import HowSection from '@/views/Landing/components/HowSection/HowSection.vue'
@@ -24,7 +23,6 @@ import UsageSection from '@/views/Landing/components/UsageSection/UsageSection.v
 import ProofSection from '@/views/Landing/components/ProofSection/ProofSection.vue'
 import StrengthsSection from '@/views/Landing/components/StrengthsSection/StrengthsSection.vue'
 import PricingSection from '@/views/Landing/components/PricingSection/PricingSection.vue'
-import RoiSection from '@/views/Landing/components/RoiSection/RoiSection.vue'
 import JoinSection from '@/views/Landing/components/JoinSection/JoinSection.vue'
 import FaqSection from '@/views/Landing/components/FaqSection/FaqSection.vue'
 import FinalCtaSection from '@/views/Landing/components/FinalCtaSection/FinalCtaSection.vue'
@@ -40,6 +38,17 @@ const osReady = detectOS().then((res) => {
   os.value = res
 })
 const isSafariLanding = ref(false)
+const showBackToTop = ref(false)
+
+function updateBackToTopVisibility() {
+  if (typeof window === 'undefined') return
+  showBackToTop.value = window.scrollY > 480
+}
+
+function scrollToTop() {
+  if (typeof window === 'undefined') return
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
 
 function detectSafariBrowser(): boolean {
   if (typeof navigator === 'undefined') return false
@@ -91,6 +100,8 @@ function releaseLandingScrollLockSafely() {
 
 onMounted(() => {
   isSafariLanding.value = detectSafariBrowser()
+  updateBackToTopVisibility()
+  window.addEventListener('scroll', updateBackToTopVisibility, { passive: true })
   document.documentElement.classList.add('force-scroll')
   document.body.classList.add('force-scroll')
   document.documentElement.classList.add('ios-landing-surface')
@@ -167,6 +178,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  window.removeEventListener('scroll', updateBackToTopVisibility)
   document.documentElement.classList.remove('force-scroll')
   document.body.classList.remove('force-scroll')
   document.documentElement.classList.remove('ios-landing-surface')
@@ -189,7 +201,6 @@ onBeforeUnmount(() => {
   <!-- <VueLenis root> -->
   <main id="landing-page">
     <HeroSection :content="content.hero" />
-    <ReassuranceBandSection />
     <IntroSection :content="content.introSection" />
     <!-- Section « Tout est pour vous » désactivée
     <BenefitsSection
@@ -207,7 +218,6 @@ onBeforeUnmount(() => {
     <ProofSection :content="content.proofSection" />
     <StrengthsSection :content="content.strengths" />
     <PricingSection :content="content.pricingSection" />
-    <RoiSection :content="content.roiSection" />
     <JoinSection
       :content="content.join"
       :slides="content.habits.slides"
@@ -215,6 +225,15 @@ onBeforeUnmount(() => {
     <FaqSection :content="content.faq" />
     <FinalCtaSection :content="content.finalCtaSection" />
   </main>
+  <button
+    v-show="showBackToTop"
+    type="button"
+    class="landing-back-to-top"
+    aria-label="Revenir en haut de la page"
+    @click="scrollToTop"
+  >
+    ↑ Haut
+  </button>
   <!-- </VueLenis> -->
 </template>
 
@@ -223,6 +242,42 @@ onBeforeUnmount(() => {
 
 #landing-page {
   background: $secondary !important;
+}
+
+.landing-back-to-top {
+  position: fixed;
+  right: clamp(0.9rem, 2.4vw, 1.4rem);
+  bottom: clamp(0.9rem, 2.8vw, 1.6rem);
+  z-index: 70;
+  border: 1px solid rgba($accent, 0.24);
+  border-radius: 999px;
+  padding: 0.48rem 0.72rem;
+  background: rgba($secondary, 0.82);
+  color: rgba($accent, 0.9);
+  font-size: 0.84rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 8px 22px -16px rgba($dark, 0.9);
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    border-color: rgba($accent, 0.42);
+    background: rgba($secondary, 0.94);
+    color: $accent;
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba($primary_gradiant_second, 0.7);
+    outline-offset: 2px;
+  }
 }
 
 html.is-ios.ios-landing-lite {

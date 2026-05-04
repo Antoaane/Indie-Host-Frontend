@@ -147,6 +147,7 @@ onBeforeUnmount(() => {
   <section
     ref="sectionRef"
     id="reassurance-band-section"
+    :class="{ 'is-revealed': hasStarted }"
     aria-label="Indicateurs de réassurance"
   >
     <div class="wrapper">

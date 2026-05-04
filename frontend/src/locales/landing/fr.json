@@ -72,7 +72,7 @@
   "proofSection": {
     "eyebrow": "Preuve produit",
     "title": "Comment nos utilisateurs deviennent <strong>plus autonomes</strong>",
-    "subtitle": "Sans faux témoignages : des démos et des usages concrets déjà possibles avec le produit.",
+    "subtitle": "",
     "demoVideoLabel": "Démonstration de l'édition d'une annonce en direct",
     "metrics": [
       {
@@ -383,8 +383,8 @@
       "ariaLabel": "Aller au formulaire pour s’inscrire"
     },
     "form": {
-      "title": "<strong>Rejoindre la file d'attente</strong>",
-      "description": "Nous détestons le spam autant que vous : <strong>nous vous enverrons juste un e-mail</strong> pour vous tenir informé.e — et, si vous le souhaitez, vous pouvez aussi <a href='/donation'>faire un don pour soutenir le projet</a>.",
+      "title": "<strong>Besoin d'aide ? Posez-nous une question</strong>",
+      "description": "Nous détestons le spam autant que vous : <strong>nous vous enverrons juste un e-mail</strong> pour vous tenir informé.e.",
       "variant": "NewsletterForm",
       "fields": [
         {
