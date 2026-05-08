@@ -248,7 +248,29 @@
       &.glow-top-left {
         left: 0;
       }
+    }
+  }
+}
 
+#landing-page.is-light-theme {
+  .feature > div {
+    h2 {
+      color: $secondary !important;
+    }
+
+    p {
+      color: $secondary !important;
+    }
+
+    .media.vtc video,
+    .media.vtc img {
+      border-color: rgba($secondary, 0.12) !important;
+      box-shadow: 0 8px 40px rgba($secondary, 0.08) !important;
+    }
+
+    .media.hzt video,
+    .media.hzt img {
+      box-shadow: 0 8px 32px rgba($secondary, 0.08) !important;
     }
   }
 }

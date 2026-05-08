@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Find /f:/Dev/IndieHost/Indie-Host-Frontend/frontend -type f \\\\\\( -name \"*.vue\" -o -name \"*.ts\" -o -name \"*.js\" \\\\\\) -exec grep -l \"play\\\\\\(\\\\\\)\" {} \\\\;)",
+      "Bash(powershell -Command \"Get-ChildItem -Path src -Recurse -Include '*.ts','*.vue','*.js' | Select-String -Pattern '\\(Audio|HTMLAudio|new Audio|\\\\.play\\\\\\(\\\\\\)|\\\\.muted|autoplay|soundEffect|playSound\\)' -List | Select-Object Path\")"
+    ]
+  }
+}

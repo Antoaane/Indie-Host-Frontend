@@ -7,6 +7,29 @@
   padding-top: calc(((var(--layout-gap-md) * 2) + 60px) + 5vh);
   display: flex;
   position: relative;
+  isolation: isolate;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image: url('/assets/media/images/illustration_bg.svg');
+    background-repeat: no-repeat;
+    background-position: 56% 40%;
+    background-size: 112% auto;
+    opacity: 0.18;
+    transform-origin: center center;
+    will-change: transform, opacity;
+    animation: hero-bg-drift 34s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::before {
+      animation: none;
+    }
+  }
 
   /* Mobile : marge nav→h1, h1 bien lisible, p plus discret, image de couverture corrigée */
   @media (max-width: 1024px) {
@@ -135,6 +158,14 @@
 
           @include min-width(lg) {
             text-align: left;
+          }
+
+          strong {
+            background: linear-gradient(87deg, $primary_gradiant_second 0%, $primary_gradiant_third 100%);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            -webkit-text-fill-color: transparent;
           }
 
           // Conteneur du compteur animé : largeur fixe = valeur la plus large ("20%")
@@ -312,7 +343,7 @@
             }
 
             .hero-secondary-cta-label {
-              color: $accent;
+              color: $accent !important;
             }
           }
 
@@ -349,23 +380,31 @@
         height: max-content;
         position: relative;
 
+        &.hero-mockup-shell {
+          @include min-width(lg) {
+            transform: translate3d(var(--hero-mouse-x, 0px), var(--hero-mouse-y, 0px), 0);
+            transition: transform 700ms cubic-bezier(0.23, 1, 0.32, 1);
+            will-change: transform;
+          }
+        }
+
         @include min-width(lg) {
           width: 100%;
           display: block;
-          padding: 5% 0 0 0;
+          padding: 1% 0 0 0;
         }
 
         .hero-image {
           will-change: transform, opacity;
           width: auto;
-          height: 60vh;
+          height: 68vh;
           margin-inline: auto;
 
           @media (max-width: 1024px) {
             display: block;
             max-width: 100%;
             height: auto;
-            max-height: 60vh;
+            max-height: 70vh;
             object-fit: contain;
             object-position: center center;
 
@@ -375,8 +414,8 @@
           }
 
           @include min-width(lg) {
-            height: 80vh;
-            max-height: 960px;
+            height: 90vh;
+            max-height: 1100px;
           }
         }
 
@@ -441,6 +480,59 @@
     }
   }
 
+  #landing-page.is-light-theme & {
+    &::before {
+      display: block;
+    }
+
+    .hero-form .cta {
+      .cta-secondary {
+        button {
+          color: $secondary !important;
+        }
+
+        svg {
+          color: $secondary !important;
+          stroke: $secondary !important;
+        }
+
+        .hero-secondary-cta-label {
+          color: $secondary !important;
+        }
+      }
+    }
+
+    p.hero-desc {
+      color: $secondary !important;
+
+      &>u, &>b {
+        color: $secondary !important;
+      }
+    }
+
+    .illustration {
+      .hero-mockup-shell {
+        transform-origin: center bottom;
+        transform:
+          translate3d(var(--hero-mouse-x, 0px), var(--hero-mouse-y, 0px), 0)
+          perspective(1100px)
+          rotateX(calc(7deg - (var(--light-hero-open, 0) * 6deg)))
+          scale(calc(0.965 + (var(--light-hero-open, 0) * 0.075)));
+        transition: transform 140ms linear;
+
+        > span {
+          display: none;
+        }
+      }
+    }
+  }
+
+  #landing-page:not(.is-light-theme) & {
+    &::before {
+      display: none;
+    }
+  }
+
   .shapes-bg {
     /* Masqué sur mobile : le filtre feTurbulence est calculé sur le CPU d'iOS
        et bloque le rendu même à faible opacité. Invisible sur petit écran de toute façon. */
@@ -466,5 +558,32 @@
   .wrapper {
     position: relative;
     z-index: 1;
+  }
+}
+
+@keyframes hero-bg-drift {
+  0% {
+    opacity: 0.15;
+    transform: translate3d(-1.8%, -1.2%, 0) scale(1.02) rotate(-0.35deg);
+  }
+
+  24% {
+    opacity: 0.21;
+    transform: translate3d(1.2%, -0.6%, 0) scale(1.05) rotate(0.15deg);
+  }
+
+  52% {
+    opacity: 0.18;
+    transform: translate3d(2.1%, 1.1%, 0) scale(1.08) rotate(0.38deg);
+  }
+
+  76% {
+    opacity: 0.22;
+    transform: translate3d(-0.7%, 1.4%, 0) scale(1.06) rotate(-0.08deg);
+  }
+
+  100% {
+    opacity: 0.16;
+    transform: translate3d(-1.4%, 0.4%, 0) scale(1.03) rotate(-0.28deg);
   }
 }

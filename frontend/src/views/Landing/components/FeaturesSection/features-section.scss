@@ -4,6 +4,67 @@
 @use '@/styles/variables/borders' as borders;
 
 #features-section {
+  position: relative;
+  isolation: isolate;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: url('/assets/media/images/illustration_bg_2.svg');
+    background-repeat: no-repeat;
+    background-position: 44% 62%;
+    background-size: 130% auto;
+    opacity: 0.20;
+    transform-origin: center center;
+    will-change: transform, opacity;
+    animation: features-bg-drift 42s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+    display: none;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image:
+      url('/assets/media/images/illustration_bg_3.svg'),
+      url('/assets/media/images/illustration_bg_4.svg');
+    background-repeat: no-repeat, no-repeat;
+    background-position: 68% 15%, 40% 94%;
+    background-size: 105% auto, 86% auto;
+    opacity: 0.17;
+    transform-origin: 65% 40%;
+    will-change: transform, opacity;
+    animation: features-bg-drift-3 38s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+    animation-delay: -14s;
+    display: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::before,
+    &::after {
+      animation: none;
+    }
+  }
+
+  #landing-page.is-light-theme & {
+    &::before {
+      display: block;
+    }
+
+    &::after {
+      display: block;
+    }
+
+    .decorative {
+      display: none;
+    }
+  }
+
   @include min-width(lg) {
     padding-top: calc(0vh + (var(--layout-gap))) !important;
     padding-bottom: 0 !important;
@@ -209,5 +270,59 @@
         display: block;
       }
     }
+  }
+}
+
+@keyframes features-bg-drift {
+  0% {
+    opacity: 0.13;
+    transform: translate3d(2.2%, -0.8%, 0) scale(1.02) rotate(0.45deg);
+  }
+
+  22% {
+    opacity: 0.19;
+    transform: translate3d(-1.2%, 1.8%, 0) scale(1.07) rotate(-0.2deg);
+  }
+
+  48% {
+    opacity: 0.15;
+    transform: translate3d(-2.5%, 0.5%, 0) scale(1.11) rotate(0.55deg);
+  }
+
+  74% {
+    opacity: 0.21;
+    transform: translate3d(0.6%, -1.8%, 0) scale(1.06) rotate(-0.35deg);
+  }
+
+  100% {
+    opacity: 0.13;
+    transform: translate3d(2.2%, -0.8%, 0) scale(1.02) rotate(0.45deg);
+  }
+}
+
+@keyframes features-bg-drift-3 {
+  0% {
+    opacity: 0.10;
+    transform: translate3d(-1.8%, 1.2%, 0) scale(1.04) rotate(-0.5deg);
+  }
+
+  30% {
+    opacity: 0.16;
+    transform: translate3d(1.5%, -1.6%, 0) scale(1.08) rotate(0.28deg);
+  }
+
+  56% {
+    opacity: 0.12;
+    transform: translate3d(2.4%, 0.9%, 0) scale(1.12) rotate(-0.42deg);
+  }
+
+  80% {
+    opacity: 0.18;
+    transform: translate3d(-0.6%, 2.1%, 0) scale(1.06) rotate(0.35deg);
+  }
+
+  100% {
+    opacity: 0.10;
+    transform: translate3d(-1.8%, 1.2%, 0) scale(1.04) rotate(-0.5deg);
   }
 }

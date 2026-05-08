@@ -30,6 +30,7 @@ const SCRAMBLE_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789:/._-?=&'
 const animatedInputPlaceholder = ref(props.content.inputPlaceholder)
 let placeholderRotationTimer: ReturnType<typeof setTimeout> | null = null
 let placeholderScrambleTween: gsap.core.Tween | null = null
+let heroFloatTimeline: gsap.core.Timeline | null = null
 let placeholderIndex = 0
 
 const heroInputPlaceholders = computed(() => {
@@ -42,6 +43,39 @@ const heroInputPlaceholders = computed(() => {
   return fallback ? [fallback] : []
 })
 const heroSecondaryCtaIconSize = 18
+const heroMockupMouseStyle = ref({
+  '--hero-mouse-x': '0px',
+  '--hero-mouse-y': '0px',
+})
+const HERO_MOUSE_MAX_X_PX = 8
+const HERO_MOUSE_MAX_Y_PX = 6
+
+function setHeroMockupMouseOffset(x: number, y: number) {
+  heroMockupMouseStyle.value = {
+    '--hero-mouse-x': `${x.toFixed(2)}px`,
+    '--hero-mouse-y': `${y.toFixed(2)}px`,
+  }
+}
+
+function handleHeroMouseMove(event: MouseEvent) {
+  if (!vp.lg.value) return
+  const sectionEl = event.currentTarget as HTMLElement | null
+  if (!sectionEl) return
+  const rect = sectionEl.getBoundingClientRect()
+  if (rect.width <= 0 || rect.height <= 0) return
+
+  const relativeX = ((event.clientX - rect.left) / rect.width - 0.5) * 2
+  const relativeY = ((event.clientY - rect.top) / rect.height - 0.5) * 2
+
+  setHeroMockupMouseOffset(
+    relativeX * HERO_MOUSE_MAX_X_PX,
+    relativeY * HERO_MOUSE_MAX_Y_PX,
+  )
+}
+
+function handleHeroMouseLeave() {
+  setHeroMockupMouseOffset(0, 0)
+}
 
 function detectSafariBrowser(): boolean {
   if (typeof navigator === 'undefined') return false
@@ -227,6 +261,14 @@ onMounted(async () => {
     delay: 0.25,
     duration: 1,
     ease: 'power2.inOut',
+    clearProps: 'transform,opacity',
+    onComplete() {
+      heroFloatTimeline = gsap.timeline({ repeat: -1 })
+        .to(`#${sectionId} img`, { y: -11, duration: 3.0, ease: 'power1.inOut' })
+        .to(`#${sectionId} img`, { y: -6,  duration: 1.8, ease: 'power1.inOut' })
+        .to(`#${sectionId} img`, { y: -14, duration: 2.6, ease: 'power1.inOut' })
+        .to(`#${sectionId} img`, { y: 0,   duration: 2.8, ease: 'power1.out'   })
+    },
   })
 
   const cta = document.querySelector<HTMLElement>(`#${sectionId} .cta`)
@@ -257,11 +299,17 @@ watch(heroInputPlaceholders, () => {
 
 onBeforeUnmount(() => {
   clearPlaceholderAnimation()
+  handleHeroMouseLeave()
+  heroFloatTimeline?.kill()
 })
 </script>
 
 <template>
-  <section :id="sectionId">
+  <section
+    :id="sectionId"
+    @mousemove="handleHeroMouseMove"
+    @mouseleave="handleHeroMouseLeave"
+  >
     <ShapesBgCroped
       class="shapes-bg"
       title="Décoration du fond"
@@ -327,7 +375,10 @@ onBeforeUnmount(() => {
         </div>
       </div>
       <div class="illustration">
-        <div>
+        <div
+          class="hero-mockup-shell"
+          :style="heroMockupMouseStyle"
+        >
           <img
             fetchpriority="high"
             decoding="async"
