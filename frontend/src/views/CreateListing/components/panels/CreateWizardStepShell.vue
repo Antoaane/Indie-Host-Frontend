@@ -6,8 +6,10 @@ const props = withDefaults(defineProps<{
   hint?: string | null
   validationError?: string | null
   fitWidth?: boolean
+  centered?: boolean
 }>(), {
   fitWidth: false,
+  centered: false,
 })
 </script>
 
@@ -16,6 +18,7 @@ const props = withDefaults(defineProps<{
     class="create-wizard-step-shell"
     :class="{
       'is-fit-width': props.fitWidth,
+      'is-centered': props.centered,
     }"
   >
     <div class="header">
@@ -66,6 +69,17 @@ const props = withDefaults(defineProps<{
     padding-bottom: 0 !important;
   }
 
+  @media screen and (max-width: 768px) {
+    overflow: visible;
+    height: auto;
+
+    > .content {
+      overflow: visible;
+      height: auto;
+      flex: 0 0 auto;
+    }
+  }
+
   > .header {
     @extend %panel-header;
     margin-bottom: var(--layout-gap-sm);
@@ -85,6 +99,19 @@ const props = withDefaults(defineProps<{
   &.is-fit-width > .content {
     width: auto;
     max-width: 100%;
+  }
+
+  // Centrage vertical : géré par create-listing.scss via :has(>.is-centered)
+  // Le panel enfant prend sa taille naturelle, le slide se charge du centrage
+  &.is-centered {
+    > .content {
+      > [class*='create-'][class$='-panel'],
+      > [class*='editor-'][class$='-panel'] {
+        flex: 0 1 auto !important;
+        height: auto !important;
+        min-height: 0;
+      }
+    }
   }
 
   > .content {

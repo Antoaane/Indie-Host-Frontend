@@ -3,6 +3,7 @@
 <script setup lang="ts">
 // DEPS
 import { computed, ref, watch } from 'vue'
+import { ChevronDown, Plus, Trash2 } from 'lucide-vue-next'
 
 // UTILS
 import { resolveAmenityIconComponent, resolveLucideComponent } from '@/utils/amenitiesIcons'
@@ -39,7 +40,12 @@ const emit = defineEmits<{
   (e: 'patch', patch: DraftPatch): void
 }>()
 
-const amenities = computed<AmenityDraft[]>(() => sanitizeKnownAmenities((props.core?.amenities as AmenityDraft[] | undefined) ?? []))
+const amenities = computed<AmenityDraft[]>(() => {
+  const raw = (props.core?.amenities as AmenityDraft[] | undefined) ?? []
+  const known = raw.filter((a) => !String((a as any)?.id ?? '').startsWith('custom-'))
+  const custom = raw.filter((a) => String((a as any)?.id ?? '').startsWith('custom-'))
+  return [...(sanitizeKnownAmenities(known as any) as AmenityDraft[]), ...custom]
+})
 const catalog = computed<AmenityCatalogItem[]>(() => mockAmenitiesCatalog.amenities ?? [])
 const catalogSearch = ref('')
 const showSelectedOnly = ref(false)
@@ -205,12 +211,11 @@ const selectedCatalogItems = computed<CatalogAmenityItem[]>(() => {
       description,
       category,
       relevance: Number((amenity as any)?.relevance ?? catalogItem?.relevance ?? 0) || 0,
-      icon: resolveAmenityIcon({
-        id: normalizedId,
-        name,
-        description,
-        category,
-      } as AmenityCatalogItem),
+      icon: (() => {
+        const stored = (amenity as any)?.icon as string | undefined
+        if (stored) return resolveLucideComponent(stored)
+        return resolveAmenityIcon({ id: normalizedId, name, description, category } as AmenityCatalogItem)
+      })(),
       selected: true,
     })
   })
@@ -310,6 +315,114 @@ watch(
   },
   { immediate: true },
 )
+
+// ── Collapsible categories ──────────────────────────────────────────────────
+// Default: all collapsed. Set tracks which categories are explicitly expanded.
+const expandedCategories = ref(new Set<string>())
+
+function categoryKey(group: CatalogAmenityGroup): string {
+  return group.selectedGroup ? '__selected__' : group.category
+}
+
+function isCategoryCollapsed(group: CatalogAmenityGroup): boolean {
+  // Never collapse while searching — show all matches
+  if (catalogSearch.value.trim()) return false
+  return !expandedCategories.value.has(categoryKey(group))
+}
+
+function toggleCategory(group: CatalogAmenityGroup) {
+  const key = categoryKey(group)
+  const next = new Set(expandedCategories.value)
+  if (next.has(key)) next.delete(key)
+  else next.add(key)
+  expandedCategories.value = next
+}
+
+// ── Custom amenities ────────────────────────────────────────────────────────
+const customAmenityName = ref('')
+const CUSTOM_AMENITY_MAX_LENGTH = 60
+
+function addCustomAmenity() {
+  const name = customAmenityName.value.trim()
+  if (!name) return
+  const id = `custom-${Date.now()}`
+  setAmenities([
+    ...amenities.value,
+    { id, name, category: 'Autres', relevance: 0 } as AmenityDraft,
+  ])
+  customAmenityName.value = ''
+  // Expand selected group + open the icon strip for the new item
+  const nextExpanded = new Set(expandedCategories.value)
+  nextExpanded.add('__selected__')
+  expandedCategories.value = nextExpanded
+  const nextStrips = new Set(openIconStrips.value)
+  nextStrips.add(id)
+  openIconStrips.value = nextStrips
+}
+
+// ── Custom amenity icon picker ───────────────────────────────────────────────
+const CUSTOM_ICON_OPTIONS = [
+  'wifi', 'tv', 'coffee', 'utensils-crossed', 'refrigerator', 'microwave',
+  'waves', 'dumbbell', 'bike', 'car', 'tree-pine', 'sun',
+  'music', 'gamepad-2', 'book-open-text', 'baby', 'shield', 'heart-pulse',
+  'shower-head', 'flame', 'wind', 'thermometer-snowflake', 'bed-double', 'shirt',
+  'star', 'map-pin', 'key-round', 'lock', 'plug-zap', 'sofa',
+] as const
+
+function isCustomItem(item: CatalogAmenityItem): boolean {
+  return item.id.startsWith('custom-')
+}
+
+function getStoredIcon(item: CatalogAmenityItem): string | null {
+  const amenity = amenities.value.find((a) => resolveAmenityId(a) === item.id)
+  return (amenity as any)?.icon ?? null
+}
+
+function setCustomAmenityIcon(amenityId: string, iconName: string) {
+  setAmenities(
+    amenities.value.map((a) =>
+      resolveAmenityId(a) === amenityId ? ({ ...a, icon: iconName } as AmenityDraft) : a,
+    ),
+  )
+}
+
+function removeCustomAmenity(amenityId: string) {
+  setAmenities(amenities.value.filter((a) => resolveAmenityId(a) !== amenityId))
+  const next = new Set(openIconStrips.value)
+  next.delete(amenityId)
+  openIconStrips.value = next
+}
+
+// ── Icon strip open/close state ──────────────────────────────────────────────
+const openIconStrips = ref(new Set<string>())
+
+function isIconStripOpen(item: CatalogAmenityItem): boolean {
+  return openIconStrips.value.has(item.id)
+}
+
+function toggleIconStrip(itemId: string) {
+  const next = new Set(openIconStrips.value)
+  if (next.has(itemId)) next.delete(itemId)
+  else next.add(itemId)
+  openIconStrips.value = next
+}
+
+function handleCardClick(item: CatalogAmenityItem) {
+  if (!isCustomItem(item)) {
+    toggleAmenityFromCatalog(item)
+    return
+  }
+  if (item.selected) {
+    // Toggle strip — don't deselect
+    toggleIconStrip(item.id)
+  } else {
+    toggleAmenityFromCatalog(item)
+    // Open strip on first selection
+    const next = new Set(openIconStrips.value)
+    next.add(item.id)
+    openIconStrips.value = next
+  }
+}
 </script>
 
 <template>
@@ -351,54 +464,98 @@ watch(
           v-for="group in catalogGroups"
           :key="group.selectedGroup ? '__selected__' : group.category"
           class="category"
-          :class="{ 'is-selected-group': group.selectedGroup }"
+          :class="{ 'is-selected-group': group.selectedGroup, 'is-collapsed': isCategoryCollapsed(group) }"
         >
-          <h4>{{ group.category }}</h4>
-          <ul>
-            <li
-              v-for="item in group.items"
-              :key="item.id"
-              class="item"
-              :class="{ 'is-selected': item.selected }"
-            >
-              <button
-                type="button"
-                class="amenity-card"
-                :aria-pressed="item.selected"
-                @click="toggleAmenityFromCatalog(item)"
+          <button
+            type="button"
+            class="category-header"
+            @click="toggleCategory(group)"
+          >
+            <h4>{{ group.category }}</h4>
+            <span class="category-count">{{ group.items.length }}</span>
+            <ChevronDown class="chevron" :size="16" aria-hidden="true" />
+          </button>
+
+          <Transition name="amenity-collapse">
+            <ul v-show="!isCategoryCollapsed(group)">
+              <li
+                v-for="item in group.items"
+                :key="item.id"
+                class="item"
+                :class="{ 'is-selected': item.selected, 'is-custom': isCustomItem(item) }"
               >
-                <component
-                  v-if="item.icon"
-                  :is="item.icon"
-                  class="icon"
-                  aria-hidden="true"
-                />
-                <div class="texts">
-                  <p class="name">
-                    {{ item.name }}
-                  </p>
-                  <p
-                    v-if="item.description"
-                    class="description"
-                  >
-                    {{ item.description }}
-                  </p>
-                </div>
-                <span
-                  class="state"
-                  :class="{ 'is-hidden': !item.selected }"
-                  :aria-hidden="!item.selected"
+                <button
+                  type="button"
+                  class="amenity-card"
+                  :aria-pressed="item.selected"
+                  @click="handleCardClick(item)"
                 >
                   <component
-                    v-if="checkIcon"
-                    :is="checkIcon"
-                    class="check"
+                    v-if="item.icon"
+                    :is="item.icon"
+                    class="icon"
                     aria-hidden="true"
                   />
-                </span>
-              </button>
-            </li>
-          </ul>
+                  <div class="texts">
+                    <p class="name">
+                      {{ item.name }}
+                    </p>
+                    <p
+                      v-if="item.description"
+                      class="description"
+                    >
+                      {{ item.description }}
+                    </p>
+                  </div>
+                  <span
+                    class="state"
+                    :class="{ 'is-hidden': !item.selected }"
+                    :aria-hidden="!item.selected"
+                  >
+                    <component
+                      v-if="checkIcon"
+                      :is="checkIcon"
+                      class="check"
+                      aria-hidden="true"
+                    />
+                  </span>
+                </button>
+
+                <Transition name="amenity-collapse">
+                  <div
+                    v-if="isCustomItem(item) && isIconStripOpen(item)"
+                    class="icon-strip"
+                    @click.stop
+                  >
+                    <button
+                      v-for="iconName in CUSTOM_ICON_OPTIONS"
+                      :key="iconName"
+                      type="button"
+                      class="icon-option"
+                      :class="{ 'is-active': getStoredIcon(item) === iconName }"
+                      :aria-label="iconName"
+                      @click.stop="setCustomAmenityIcon(item.id, iconName)"
+                    >
+                      <component
+                        :is="resolveLucideComponent(iconName)"
+                        :size="14"
+                        aria-hidden="true"
+                      />
+                    </button>
+                    <span class="icon-strip-separator" aria-hidden="true" />
+                    <button
+                      type="button"
+                      class="icon-strip-remove"
+                      aria-label="Supprimer cet équipement"
+                      @click.stop="removeCustomAmenity(item.id)"
+                    >
+                      <Trash2 :size="13" aria-hidden="true" />
+                    </button>
+                  </div>
+                </Transition>
+              </li>
+            </ul>
+          </Transition>
         </div>
       </div>
 
@@ -408,6 +565,34 @@ watch(
       >
         {{ panelContent.overlay.empty }}
       </p>
+
+      <form
+        class="custom-amenity-section"
+        @submit.prevent="addCustomAmenity"
+      >
+        <div class="input action">
+          <input
+            v-model="customAmenityName"
+            type="text"
+            placeholder="Ajouter un équipement personnalisé..."
+            :maxlength="CUSTOM_AMENITY_MAX_LENGTH"
+            autocomplete="off"
+          />
+          <div class="action">
+            <button
+              type="submit"
+              :disabled="!customAmenityName.trim()"
+            >
+              <Plus
+                class="icon"
+                :size="14"
+                aria-hidden="true"
+              />
+              <span>Ajouter</span>
+            </button>
+          </div>
+        </div>
+      </form>
 
       <p
         v-if="showSearchCounter"

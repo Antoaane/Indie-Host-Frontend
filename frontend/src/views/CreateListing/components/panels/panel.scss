@@ -57,6 +57,13 @@
   }
 }
 
+@media screen and (max-width: 768px) {
+  .create-wizard-step-shell > .header > h2 {
+    font-size: 19px;
+    line-height: 24px;
+  }
+}
+
 %panel-body {
   display: flex;
   flex-direction: column;

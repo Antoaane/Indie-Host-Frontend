@@ -442,6 +442,112 @@ Dans Clerk Dashboard → Developers → Paths :
 
 ---
 
+## Conventions SCSS — design tokens obligatoires
+
+**Règle absolue : zéro valeur hardcodée dans les fichiers SCSS/style.** Tout doit provenir des fichiers de variables du design system.
+
+### Fichiers de variables
+
+| Fichier | Import | Contenu |
+|---------|--------|---------|
+| `_colors.scss` | `@use '@/styles/variables/globals' as *` | `$accent`, `$secondary`, `$secondary-text`, `$primary_gradiant_first/second/third`, `$airbnb`, `$bad`, `$good`, surfaces… |
+| `_borders.scss` | `@use '@/styles/variables/borders' as borders` | `borders.$rounded-xs/sm/md/lg/xl/xxl/rounded` |
+| `_texts.scss` | via globals | mixins `@include little-text()`, `@include base-text()`, `@include h1/h2/h3/h4-title()` |
+| `_layouts.scss` | via globals | CSS vars `--layout-gap`, `--layout-gap-sm/md/xl/2xl/4xl` |
+| `_animations.scss` | `@use '@/styles/variables/animations' as animations` | `@include animations.transition()` — **non forwardé par globals, import séparé requis** |
+| `_effects.scss` | via globals | `@include halo()`, `@include big-shadow()` |
+| `_buttons.scss` | `@use '@/styles/components/buttons' as buttons` | mixins `buttons.primary()`, `buttons.secondary()`, `buttons.low-btn()` |
+| `_inputs.scss` | `@use '@/styles/components/inputs' as inputs` | mixin `inputs.action()` |
+
+### Ce qui est interdit
+
+```scss
+// ❌ Couleurs hex brutes
+color: #111117;
+background: rgba(255, 82, 82, 0.1);
+border: 1px solid rgba(0, 99, 201, 0.18);
+
+// ❌ border-radius px/rem hardcodé
+border-radius: 8px;
+border-radius: 12px;
+border-radius: 9999px;
+
+// ❌ transition hardcodée
+transition: all 200ms ease;
+
+// ❌ font-size/font-weight bruts quand un mixin existe
+font-size: 0.875rem;
+font-weight: 700;
+```
+
+```scss
+// ✅ Toujours utiliser les tokens
+color: $secondary;
+background: rgba($airbnb, 0.1);       // $airbnb = rgb(255, 82, 82)
+border: 1px solid rgba($secondary, 0.08);
+
+border-radius: borders.$rounded-sm;   // 0.5rem
+border-radius: borders.$rounded-md;   // 0.75rem
+border-radius: borders.$rounded;      // 9999px (pill)
+
+@include animations.transition();     // import séparé requis
+
+@include little-text($thin: false);   // remplace font-size + line-height + weight
+```
+
+### Media queries — responsive légitime uniquement
+
+**Règle :** n'ajouter un `@media` que si le comportement diffère réellement entre mobile et desktop pour une raison fonctionnelle ou visuelle justifiée. Ne pas dupliquer des valeurs quasi-identiques juste pour "adapter au mobile".
+
+**Critères pour un `@media` légitime :**
+- Zone de tap trop petite sur mobile (boutons < 44px → agrandir)
+- Rupture de layout réelle (flex row → column, grille qui déborde)
+- Taille de police illisible sur petit écran (`clamp()` est souvent préférable au media query)
+- Comportement UX différent selon le contexte (ex : sticky nav, overflow scroll)
+
+**Ce qui est interdit :**
+```scss
+// ❌ Ajustement cosmétique marginal sans raison fonctionnelle
+@media (max-width: 768px) {
+  gap: var(--layout-gap-sm); // était --layout-gap, différence insignifiante
+  font-size: 0.9rem;         // utiliser clamp() à la place
+}
+
+// ❌ Répéter les mêmes valeurs dans desktop et mobile
+.element { padding: 1rem; }
+@media (max-width: 768px) { .element { padding: 0.9rem; } }
+```
+
+```scss
+// ✅ Rupture de layout réelle
+@media (max-width: 768px) {
+  .card { flex-direction: column; } // était row, déborde sur mobile
+}
+
+// ✅ Zone de tap (mobile-first UX)
+@media (max-width: 768px) {
+  .counter-btn { width: 60px; height: 60px; } // augmente la cible tactile
+}
+
+// ✅ clamp() plutôt qu'un media query pour la typographie
+font-size: clamp(1rem, 4vw, 1.5rem); // s'adapte sans media query
+```
+
+Si `clamp()`, `min()`, `max()`, ou un CSS Grid/Flex fluide peut résoudre le problème, **préférer ces approches** à un media query.
+
+### Logos OTA (Airbnb, Booking.com)
+
+Toujours utiliser les composants Vue existants — ils embarquent fond, couleur et accessibilité :
+
+```ts
+import AirbnbLogo from '@/components/svgs/icons/AirbnbLogo.vue'
+import BookingLogo from '@/components/svgs/icons/BookingLogo.vue'
+```
+
+Ne jamais recréer des badges texte colorés avec `$airbnb` ou des hex Booking.
+
+---
+
 ## Dernières modifications (mis à jour 2026-06-23)
 
 - `CLERK_SECRET_KEY` ajouté comme placeholder dans `.env` racine (à remplacer après rotation de clé)

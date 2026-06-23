@@ -4,12 +4,12 @@
     "description": "Dominio incluido. Reservas directas. Pagos online.",
     "descriptionDesktop": "Crea tu web de alquiler vacacional con dominio incluido. Acepta reservas directas y cobra online—sin comisiones de OTAs, nunca.",
     "primaryCta": {
-      "label": "Crear mi anuncio",
+      "label": "Crear mi sitio de reservas",
       "href": "/dashboard/editor/create",
       "target": "_self"
     },
     "secondaryCta": {
-      "label": "Configurar mi página",
+      "label": "Importar un anuncio existente",
       "href": "/dashboard/editor/create",
       "target": "_self"
     },

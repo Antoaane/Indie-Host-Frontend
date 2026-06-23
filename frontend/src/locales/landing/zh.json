@@ -4,12 +4,12 @@
     "description": "含独立域名。直订预订。在线收款。",
     "descriptionDesktop": "创建您的短租/民宿网站，域名包含在内。接受直订、在线收款，无需向OTA支付佣金。",
     "primaryCta": {
-      "label": "创建我的房源",
+      "label": "创建我的预订网站",
       "href": "/dashboard/editor/create",
       "target": "_self"
     },
     "secondaryCta": {
-      "label": "设置我的页面",
+      "label": "导入现有房源",
       "href": "/dashboard/editor/create",
       "target": "_self"
     },

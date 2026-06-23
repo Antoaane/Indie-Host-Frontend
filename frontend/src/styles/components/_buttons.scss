@@ -55,6 +55,18 @@ $button-themes: (
     hover-outline-opacity: 0.75,
     hover-outline-color: $accent,
   ),
+  secondary: (text-color: $accent,
+    bg-color: $secondary,
+    outline-opacity: 0.18,
+    outline-color: $secondary,
+    icon-color: $accent,
+
+    hover-icon-color: $secondary,
+    hover-text-color: $secondary,
+    hover-bg-color: $accent,
+    hover-outline-opacity: 0.35,
+    hover-outline-color: $secondary,
+  ),
 );
 
 // apply to `div > button`

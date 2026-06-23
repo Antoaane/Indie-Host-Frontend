@@ -6,4 +6,15 @@
   display: flex;
   flex-direction: column;
 
+  p strong,
+  p b {
+    color: $primary_gradiant_first !important;
+    -webkit-text-fill-color: $primary_gradiant_first !important;
+  }
+
+  &.is-light-theme p strong,
+  &.is-light-theme p b {
+    color: $secondary !important;
+    -webkit-text-fill-color: $secondary !important;
+  }
 }

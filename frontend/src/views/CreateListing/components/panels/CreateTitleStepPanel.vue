@@ -20,6 +20,7 @@ const emit = defineEmits<{
   <CreateWizardStepShell
     title="Créez un titre clair, attractif et facile à retenir"
     :validation-error="props.validationError"
+    centered
   >
     <TitlePanel
       :core="props.core"

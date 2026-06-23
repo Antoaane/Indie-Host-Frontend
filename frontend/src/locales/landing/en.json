@@ -4,12 +4,12 @@
     "description": "Domain included. Direct bookings. Online payments.",
     "descriptionDesktop": "Build your vacation rental website with a custom domain included. Accept direct bookings and get paid online—no OTA commissions, ever.",
     "primaryCta": {
-      "label": "Create my listing",
+      "label": "Create my booking site",
       "href": "/dashboard/editor/create",
       "target": "_self"
     },
     "secondaryCta": {
-      "label": "Set up my page",
+      "label": "Import an existing listing",
       "href": "/dashboard/editor/create",
       "target": "_self"
     },

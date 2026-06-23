@@ -5,14 +5,19 @@
 @use '@/styles/variables/effects' as effects;
 @use '@/styles/components/buttons' as buttons;
 
+// Rubber band iOS + zones safe-area notch/home indicator
+html:has(.create-listing#create-listing-page),
+body:has(.create-listing#create-listing-page) {
+  background-color: $accent;
+}
+
 .create-listing#create-listing-page {
   position: relative;
-  min-height: 100vh;
-  min-height: 100dvh;
-  padding-bottom: env(safe-area-inset-bottom);
-  overflow-x: hidden;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
 
-  background: $background;
+  background: $accent;
 
   >.create-listing-quit {
     position: absolute;
@@ -20,13 +25,6 @@
     left: var(--layout-gap-xs);
     z-index: 4;
     @include buttons.secondary;
-  }
-
-  @include min-width(lg) {
-    height: 100vh;
-    height: 100dvh;
-    padding-bottom: 0;
-    overflow: hidden;
   }
 
   // @include min-width(lg) {
@@ -41,20 +39,14 @@
   .container {
     max-width: none !important;
     width: 100%;
+    height: 100%;
     min-height: inherit;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    overflow: visible;
-
-    // border-radius: borders.$rounded-xl;
+    overflow: hidden;
     background-color: $accent;
-
-    @include min-width(lg) {
-      height: 100%;
-      overflow: hidden;
-    }
 
     >.create-listing-logo-link {
       flex: 0 0 auto;
@@ -243,6 +235,27 @@
             opacity: 0.5;
             cursor: not-allowed;
           }
+
+          &.is-compact {
+            padding: 0.4rem;
+            border-color: transparent;
+            background: transparent;
+
+            > span {
+              opacity: 0.38;
+              background: rgba($background, 0.06);
+            }
+
+            > small {
+              display: none;
+            }
+
+            &.is-done > span {
+              background: rgba($secondary, 0.16);
+              color: $secondary;
+              opacity: 0.55;
+            }
+          }
         }
       }
 
@@ -312,6 +325,17 @@
             }
           }
         }
+
+        // Centrage vertical pour les steps courts (.is-centered sur le shell)
+        >.slide:has(>.is-centered) {
+          align-items: center;
+          justify-content: center;
+
+          >.is-centered {
+            flex: 0 1 auto;
+            height: auto;
+          }
+        }
       }
 
       >.error {
@@ -324,6 +348,21 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
+
+        // Override hover pour éviter que les deux boutons semblent identiques
+        // (blanc ↔ noir sont les couleurs de repos respectives des deux boutons)
+        .btn-primary__white > *:not(:disabled):hover {
+          background-color: rgba($secondary, 0.08) !important;
+          color: $secondary-text !important;
+          outline: 3px solid rgba($secondary, 0.12) !important;
+          box-shadow: none !important;
+        }
+
+        .btn-primary__secondary > *:not(:disabled):hover {
+          background-color: rgba($secondary, 0.75) !important;
+          color: $accent !important;
+          outline: 3px solid rgba($secondary, 0.3) !important;
+        }
         gap: var(--layout-gap-sm);
         padding-bottom: calc(var(--layout-gap-xs) + env(safe-area-inset-bottom));
         background-color: #00000000 !important;

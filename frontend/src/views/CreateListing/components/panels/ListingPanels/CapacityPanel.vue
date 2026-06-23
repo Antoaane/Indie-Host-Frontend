@@ -2,6 +2,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { Minus, Plus } from 'lucide-vue-next'
 import StepperInput from '@/components/inputs/StepperInput.vue'
 import type { RawCore } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
@@ -26,12 +27,17 @@ const capacityHint = computed(() =>
 )
 const capacitySuffix = computed(() => (capacity.value > 1 ? 'voyageurs maximum' : 'voyageur maximum'))
 const panelContent = editorStatic.panels.listing.capacity
+const atMin = computed(() => capacity.value <= capacityValidation.min)
+const atMax = computed(() => capacity.value >= capacityValidation.max)
 
 function setCapacity(next: number) {
   const normalized = clampInteger(next, capacityValidation.min, capacityValidation.max, capacityValidation.min)
   if (normalized === capacity.value) return
   emit('patch', { core: { guest_capacity: normalized } })
 }
+
+function decrement() { setCapacity(capacity.value - 1) }
+function increment() { setCapacity(capacity.value + 1) }
 </script>
 
 <template>
@@ -42,15 +48,40 @@ function setCapacity(next: number) {
     </div>
 
     <div class="body">
-      <StepperInput
-        :value="capacity"
-        :min="capacityValidation.min"
-        :max="capacityValidation.max"
-        value-font-size="clamp(3.75rem, 22vw, 7rem)"
-        suffix-font-size="clamp(1.15rem, 5vw, 2.5rem)"
-        :suffix="capacitySuffix"
-        @input="setCapacity($event.number)"
-      />
+      <div class="counter-area">
+        <div class="capacity-counter">
+          <button
+            type="button"
+            class="counter-btn"
+            :disabled="atMin"
+            aria-label="Diminuer"
+            @click="decrement"
+          >
+            <Minus :size="24" />
+          </button>
+
+          <StepperInput
+            :value="capacity"
+            :min="capacityValidation.min"
+            :max="capacityValidation.max"
+            value-font-size="clamp(4.5rem, 26vw, 8.5rem)"
+            @input="setCapacity($event.number)"
+          />
+
+          <button
+            type="button"
+            class="counter-btn"
+            :disabled="atMax"
+            aria-label="Augmenter"
+            @click="increment"
+          >
+            <Plus :size="24" />
+          </button>
+        </div>
+
+        <p class="counter-label">{{ capacitySuffix }}</p>
+      </div>
+
       <p class="hint">{{ capacityHint }}</p>
     </div>
   </section>
@@ -60,6 +91,7 @@ function setCapacity(next: number) {
 /* File: src/views/CreateListing/components/panels/ListingPanels/capacity-panel.scss */
 
 @use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
 @use '@/views/CreateListing/components/panels/panel.scss' as *;
 
 .create-capacity-panel {
@@ -71,28 +103,90 @@ function setCapacity(next: number) {
 
   > .body {
     @extend %panel-body;
+    align-items: center;
+
+    > .counter-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--layout-gap-sm);
+
+      > .capacity-counter {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--layout-gap-md);
+
+        > .counter-btn {
+          flex-shrink: 0;
+          width: 54px;
+          height: 54px;
+          border-radius: borders.$rounded;
+          border: 1px solid rgba($secondary, 0.2);
+          background: transparent;
+          color: rgba($secondary-text, 0.65);
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 200ms cubic-bezier(0.6, 0, 0.3, 1);
+
+          &:hover:not(:disabled) {
+            background: rgba($secondary, 0.06);
+            border-color: rgba($secondary, 0.32);
+            color: $secondary-text;
+          }
+
+          &:active:not(:disabled) {
+            background: rgba($secondary, 0.11);
+            transform: scale(0.91);
+          }
+
+          &:disabled {
+            opacity: 0.25;
+            cursor: not-allowed;
+          }
+        }
+
+        // Centrage vertical du chiffre
+        .ui-stepper-input {
+          align-self: center;
+          padding-inline: 0;
+
+          > .value {
+            text-align: center;
+          }
+        }
+      }
+
+      > .counter-label {
+        margin: 0;
+        text-align: center;
+        @include base-text($thin: true);
+        font-size: clamp(0.95rem, 3.5vw, 1.25rem);
+        color: rgba($secondary-text, 0.48);
+        letter-spacing: 0.015em;
+      }
+    }
 
     > .hint {
       margin: 0;
+      text-align: center;
       @include little-text($thin: true);
-      color: rgba($secondary-text, 0.58);
+      color: rgba($secondary-text, 0.42);
     }
   }
 
   @media screen and (max-width: 768px) {
     > .body {
-      gap: var(--layout-gap-sm);
+      gap: var(--layout-gap-lg);
 
-      .ui-stepper-input {
-        align-self: stretch;
-        flex-wrap: wrap;
-        gap: 0.35rem 0.6rem;
-        padding-inline: 0;
+      > .counter-area > .capacity-counter {
+        gap: var(--layout-gap-sm);
 
-        > .suffix {
-          margin-left: 0;
-          white-space: normal;
-          line-height: 1.08;
+        > .counter-btn {
+          width: 60px;
+          height: 60px;
         }
       }
     }

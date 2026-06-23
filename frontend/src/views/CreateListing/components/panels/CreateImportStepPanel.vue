@@ -2,7 +2,9 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { Download, Loader2 } from 'lucide-vue-next'
+import { ArrowRight, Download, Loader2, PenLine } from 'lucide-vue-next'
+import AirbnbLogo from '@/components/svgs/icons/AirbnbLogo.vue'
+import BookingLogo from '@/components/svgs/icons/BookingLogo.vue'
 
 import ImportLoadingState from '@/components/feedback/ImportLoadingState.vue'
 import { ensurePublishedMediasStoredInImageKit } from '@/domain/api/imagekit'
@@ -139,7 +141,6 @@ async function handleImport() {
 }
 
 function handleCreateManually() {
-  // Pas d'import, on passe simplement à l'étape suivante
   importError.value = null
   emit('next')
 }
@@ -148,11 +149,28 @@ function handleCreateManually() {
 <template>
   <CreateWizardStepShell
     :title="panelContent.title"
-    :hint="panelContent.subtitle"
     :validation-error="importError"
+    centered
   >
     <div class="create-import-step-panel">
-      <div class="row input-row">
+
+      <!-- Card : importer -->
+      <div class="path-card import-card">
+        <div class="card-header">
+          <div class="card-icon import-icon">
+            <Download :size="16" />
+          </div>
+          <div class="card-text">
+            <strong>{{ panelContent.importCardTitle }}</strong>
+            <p>{{ panelContent.importCardDescription }}</p>
+          </div>
+        </div>
+
+        <div class="platform-logos">
+          <AirbnbLogo />
+          <BookingLogo />
+        </div>
+
         <div class="input action">
           <input
             v-model="url"
@@ -183,25 +201,44 @@ function handleCreateManually() {
             </button>
           </div>
         </div>
+
+        <ImportLoadingState
+          v-if="isImporting"
+          :label="progressLabel"
+          :progress="progressPercent"
+          :title="progressTitle"
+          :hint="progressHint"
+          :tip="progressTip"
+        />
       </div>
 
-      <ImportLoadingState
-        v-if="isImporting"
-        :label="progressLabel"
-        :progress="progressPercent"
-        :title="progressTitle"
-        :hint="progressHint"
-        :tip="progressTip"
-      />
+      <!-- Séparateur -->
+      <div class="paths-divider">
+        <span>{{ panelContent.divider }}</span>
+      </div>
 
-      <button
-        type="button"
-        class="create-manually"
-        @click="handleCreateManually"
-      >
-        {{ panelContent.createManually }}
-        <slot name="hint" />
-      </button>
+      <!-- Card : créer manuellement -->
+      <div class="path-card manual-card">
+        <div class="card-header">
+          <div class="card-icon manual-icon">
+            <PenLine :size="16" />
+          </div>
+          <div class="card-text">
+            <strong>{{ panelContent.manualCardTitle }}</strong>
+            <p>{{ panelContent.manualCardDescription }}</p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          class="manual-cta"
+          @click="handleCreateManually"
+        >
+          {{ panelContent.manualCta }}
+          <ArrowRight :size="14" />
+        </button>
+      </div>
+
     </div>
   </CreateWizardStepShell>
 </template>
@@ -214,9 +251,81 @@ function handleCreateManually() {
 .create-import-step-panel {
   display: flex;
   flex-direction: column;
-  gap: var(--layout-gap-sm);
+  gap: 0.75rem;
 
-  > .input-row {
+  .path-card {
+    border-radius: borders.$rounded-md;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+
+    &.import-card {
+      border: 1px solid rgba($primary_gradiant_first, 0.2);
+      background: rgba($primary_gradiant_first, 0.035);
+    }
+
+    &.manual-card {
+      border: 1px solid rgba($secondary, 0.08);
+      background: transparent;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+
+      .card-icon {
+        width: 2rem;
+        height: 2rem;
+        border-radius: borders.$rounded-sm;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+
+        &.import-icon {
+          background: rgba($primary_gradiant_first, 0.14);
+          color: $primary_gradiant_first;
+        }
+
+        &.manual-icon {
+          background: rgba($secondary, 0.07);
+          color: rgba($secondary, 0.55);
+        }
+      }
+
+      .card-text {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+
+        strong {
+          @include little-text($thin: false);
+          font-weight: 700;
+          color: $secondary-text;
+        }
+
+        p {
+          margin: 0;
+          @include little-text($thin: true);
+          color: rgba($secondary-text, 0.58);
+          line-height: 1.45;
+        }
+      }
+    }
+
+    .platform-logos {
+      display: flex;
+      gap: 0.4rem;
+
+      > svg {
+        width: 1.5rem;
+        height: 1.5rem;
+        flex: 0 0 1.5rem;
+      }
+    }
+
     > .input {
       @include inputs.action($theme: base, $action-theme: white);
 
@@ -247,18 +356,49 @@ function handleCreateManually() {
         }
       }
     }
+
+    .manual-cta {
+      align-self: flex-end;
+      background: transparent;
+      border: 1px solid rgba($secondary, 0.18);
+      border-radius: borders.$rounded;
+      color: rgba($secondary-text, 0.8);
+      padding: 0.5rem 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 200ms cubic-bezier(0.6, 0, 0.3, 1);
+
+      &:hover:not(:disabled) {
+        background: rgba($secondary, 0.05);
+        border-color: rgba($secondary, 0.28);
+        color: $secondary;
+      }
+    }
   }
 
-  > .create-manually {
-    margin: var(--layout-gap-sm) 0 0 0;
-    @include little-text($thin: false);
-    color: rgba($secondary-text, 0.65);
-    padding: 0;
-    border: none;
-    background: none;
-    text-align: left;
-    cursor: pointer;
-    text-decoration: underline;
+  .paths-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0 0.25rem;
+
+    &::before,
+    &::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: rgba($secondary, 0.08);
+    }
+
+    span {
+      @include little-text($thin: true);
+      color: rgba($secondary-text, 0.35);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
   }
 }
 

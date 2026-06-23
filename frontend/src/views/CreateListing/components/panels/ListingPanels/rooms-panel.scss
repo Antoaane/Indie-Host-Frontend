@@ -174,8 +174,18 @@
         flex: 0 0 auto;
         min-height: auto;
         grid-template-columns: minmax(0, 1fr);
+        grid-auto-rows: auto;
         overflow: visible;
         padding-bottom: calc(var(--layout-gap) * 2.75) !important;
+      }
+
+      .room-card {
+        min-height: 0;
+      }
+
+      .room-remove > button {
+        width: 44px;
+        height: 44px;
       }
 
       > .add-room {
@@ -223,6 +233,11 @@
     > h4 {
       margin: 0;
       @include h4-title();
+
+      @media screen and (max-width: 768px) {
+        font-size: 15px;
+        line-height: 20px;
+      }
     }
 
     > .overlay-close {
@@ -383,5 +398,18 @@
 
   .overlay-submit-done {
     @include buttons.primary($theme: black, $fullwidth: true);
+  }
+
+  @media screen and (max-width: 768px) {
+    align-items: flex-end !important;
+    justify-content: stretch !important;
+
+    > .rooms-bed-overlay-panel {
+      width: 100%;
+      min-width: 100%;
+      max-height: 82dvh;
+      border-radius: borders.$rounded-xl borders.$rounded-xl 0 0;
+      padding-bottom: calc(env(safe-area-inset-bottom) + var(--layout-gap));
+    }
   }
 }

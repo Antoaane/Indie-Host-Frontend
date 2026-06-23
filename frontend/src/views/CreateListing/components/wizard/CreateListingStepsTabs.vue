@@ -23,6 +23,11 @@ const swiperRef = ref<SwiperInstance | null>(null)
 
 const activeStepIndex = computed(() => props.items.findIndex((item) => item.isActive))
 
+function isCompact(index: number): boolean {
+  const active = activeStepIndex.value
+  return index !== active && index !== active - 1 && index !== active + 1
+}
+
 const sliderParams = computed(
   () =>
     ({
@@ -107,6 +112,7 @@ watch(
           :class="{
             'is-active': item.isActive,
             'is-done': item.isDone,
+            'is-compact': isCompact(item.index),
           }"
           type="button"
           :disabled="item.isDisabled"

@@ -4,12 +4,12 @@
     "description": "Domain inklusive. Direktbuchungen. Online-Zahlung.",
     "descriptionDesktop": "Erstellen Sie Ihre Ferienvermietungs-Website mit inkludierter Domain. Akzeptieren Sie Direktbuchungen und erhalten Sie Online-Zahlungen – ohne OTA-Provisionen.",
     "primaryCta": {
-      "label": "Inserat erstellen",
+      "label": "Meine Buchungsseite erstellen",
       "href": "/dashboard/editor/create",
       "target": "_self"
     },
     "secondaryCta": {
-      "label": "Seite einrichten",
+      "label": "Ein bestehendes Inserat importieren",
       "href": "/dashboard/editor/create",
       "target": "_self"
     },

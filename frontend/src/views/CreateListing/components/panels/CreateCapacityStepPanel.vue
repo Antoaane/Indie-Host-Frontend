@@ -20,6 +20,7 @@ const emit = defineEmits<{
   <CreateWizardStepShell
     title="Définissez le nombre maximum de voyageurs"
     :validation-error="props.validationError"
+    centered
   >
     <CapacityPanel
       :core="props.core"

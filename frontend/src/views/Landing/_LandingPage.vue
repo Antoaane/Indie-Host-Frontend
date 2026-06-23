@@ -306,7 +306,7 @@ onBeforeUnmount(() => {
     :class="{ 'is-light-theme': isLightTheme }"
     :style="landingDynamicStyle"
   >
-    <HeroSection :content="content.hero" />
+    <HeroSection :content="content.hero" :is-light-theme="isLightTheme" />
     <IntroSection :content="content.introSection" />
     <!-- Section Â« Tout est pour vous Â» dÃ©sactivÃ©e
     <BenefitsSection
@@ -397,6 +397,15 @@ onBeforeUnmount(() => {
   }
 }
 
+#landing-page h2 strong,
+#landing-page h3 strong {
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  -webkit-text-fill-color: $primary_gradiant_first;
+  color: $primary_gradiant_first;
+}
+
 #landing-page.is-light-theme {
   background: $accent !important;
 }
@@ -419,14 +428,21 @@ onBeforeUnmount(() => {
   color: $secondary !important;
 }
 
-#landing-page.is-light-theme .text-gradiant,
+#landing-page.is-light-theme .text-gradiant {
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+  -webkit-text-fill-color: $primary_gradiant_first !important;
+  color: $primary_gradiant_first !important;
+}
+
 #landing-page.is-light-theme h2 strong,
 #landing-page.is-light-theme h3 strong {
   background: none !important;
   -webkit-background-clip: initial !important;
   background-clip: initial !important;
-  -webkit-text-fill-color: currentColor !important;
-  color: $secondary !important;
+  -webkit-text-fill-color: $primary_gradiant_first !important;
+  color: $primary_gradiant_first !important;
 }
 
 #landing-page.is-light-theme #hero-section h1 strong,

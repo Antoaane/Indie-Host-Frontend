@@ -37,7 +37,7 @@ const emit = defineEmits<{
 
     <div
       v-if="!props.isLastStep"
-      class="btn-primary__black"
+      class="btn-primary__secondary"
     >
       <button
         type="button"
@@ -50,7 +50,7 @@ const emit = defineEmits<{
 
     <div
       v-else
-      class="btn-primary__black"
+      class="btn-primary__secondary"
     >
       <button
         type="button"

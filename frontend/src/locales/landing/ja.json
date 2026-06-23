@@ -4,12 +4,12 @@
     "description": "ドメイン付き。直接予約。オンライン決済。",
     "descriptionDesktop": "ドメイン込みで民泊・宿泊の予約サイトを作成。直接予約を受け付け、オンラインで收款。OTA手数料なし。",
     "primaryCta": {
-      "label": "リスティングを作成",
+      "label": "予約サイトを作成する",
       "href": "/dashboard/editor/create",
       "target": "_self"
     },
     "secondaryCta": {
-      "label": "ページを設定",
+      "label": "既存のリスティングをインポート",
       "href": "/dashboard/editor/create",
       "target": "_self"
     },

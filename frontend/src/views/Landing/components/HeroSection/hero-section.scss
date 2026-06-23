@@ -312,12 +312,12 @@
             align-items: flex-start;
           }
 
-          .cta-primary-mobile {
+          .cta-primary {
             width: 100%;
             @include buttons.primary($cta: true, $theme: light, $fullwidth: true);
 
             @include min-width(lg) {
-              display: none;
+              width: max-content;
             }
           }
 
@@ -347,7 +347,7 @@
             }
           }
 
-          .cta-primary-mobile {
+          .cta-primary {
             & > * {
               box-shadow: none !important;
 

@@ -109,6 +109,11 @@
         p {
           margin: 0;
           @include base-text($accent, $bigger: true);
+
+          strong, b {
+            color: $primary_gradiant_first;
+            -webkit-text-fill-color: $primary_gradiant_first;
+          }
         }
       }
     }
@@ -260,6 +265,11 @@
 
     p {
       color: $secondary !important;
+
+      strong, b {
+        color: $secondary;
+        -webkit-text-fill-color: $secondary;
+      }
     }
 
     .media.vtc video,

@@ -7,7 +7,9 @@
       "Bash(claude mcp *)",
       "Skill(update-config)",
       "Skill(update-config:*)",
-      "Bash(grep -E \"\\\\.\\(ps1|sh|yml\\)$\")"
+      "Bash(grep -E \"\\\\.\\(ps1|sh|yml\\)$\")",
+      "Bash(python3 -c ' *)",
+      "Bash(npx tsc *)"
     ]
   }
 }
