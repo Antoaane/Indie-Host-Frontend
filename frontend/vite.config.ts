@@ -1,4 +1,6 @@
 import { fileURLToPath, URL } from 'node:url'
+import { existsSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { defineConfig, loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 // Désactivé temporairement : provoque "localStorage.getItem is not a function" au chargement de la config (Node.js)
@@ -77,9 +79,20 @@ function inferApiTargetBasePath({
   return normalizedApiBasePath
 }
 
+// Cherche .env dans frontend/ d'abord, sinon remonte à la racine du monorepo.
+// Permet de lancer `npm run dev` depuis frontend/ sans créer de .env local.
+function resolveEnvDir(): string {
+  const localEnv = resolve(process.cwd(), '.env')
+  if (existsSync(localEnv)) return process.cwd()
+  const rootEnv = resolve(process.cwd(), '..', '.env')
+  if (existsSync(rootEnv)) return resolve(process.cwd(), '..')
+  return process.cwd()
+}
+
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '')
+  const envDir = resolveEnvDir()
+  const env = loadEnv(mode, envDir, '')
   const rawApiBaseUrl = (env.VITE_API_BASE_URL ?? '').trim()
   const rawApiProxyTarget = (env.VITE_API_PROXY_TARGET ?? '').trim()
   const rawScrapingBaseUrl = (env.VITE_SCRAPING_API_URL ?? '/scraping').trim()
@@ -158,6 +171,7 @@ export default defineConfig(({ mode }) => {
   }
 
   return {
+    envDir,
     plugins: [
       fileCommentInjector(),
       svgToVuePlugin(),

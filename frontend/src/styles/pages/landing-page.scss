@@ -1,6 +1,9 @@
 /* File: src/styles/pages/landing-page.scss */
 
+@use '@/styles/variables/globals' as *;
+
 #landing-page {
   display: flex;
   flex-direction: column;
+
 }
