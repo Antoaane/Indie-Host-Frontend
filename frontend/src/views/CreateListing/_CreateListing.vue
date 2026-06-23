@@ -1,7 +1,7 @@
 <!-- File: src/views/CreateListing/_CreateListing.vue -->
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import type { EditorMode, EditorSource } from '@/views/Editor/types/editor'
 import CreateListingFooterNavigation from '@/views/CreateListing/components/wizard/CreateListingFooterNavigation.vue'
@@ -80,6 +80,18 @@ function handleNext() {
 
   goToNextStep()
 }
+
+function handleKeydown(e: KeyboardEvent) {
+  if (e.key !== 'Enter') return
+  const tag = (document.activeElement?.tagName ?? '').toLowerCase()
+  if (['input', 'textarea', 'select', 'button'].includes(tag)) return
+  if ((document.activeElement as HTMLElement)?.isContentEditable) return
+  e.preventDefault()
+  handleNext()
+}
+
+onMounted(() => window.addEventListener('keydown', handleKeydown))
+onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
 </script>
 
 <template>

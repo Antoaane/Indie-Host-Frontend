@@ -9,7 +9,23 @@
       "Skill(update-config:*)",
       "Bash(grep -E \"\\\\.\\(ps1|sh|yml\\)$\")",
       "Bash(python3 -c ' *)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "PowerShell(docker compose down)",
+      "Bash(docker compose *)",
+      "PowerShell(docker compose -f docker-compose.yml -f docker-compose.dev.yml down)",
+      "PowerShell(.\\\\start-indiehost-dev.ps1)",
+      "PowerShell(netsh advfirewall firewall show rule name=\"IndieHost HTTP\" 2>$null)",
+      "PowerShell(Test-NetConnection -ComputerName 192.168.1.80 -Port 80)",
+      "PowerShell(New-NetFirewallRule -DisplayName \"IndieHost Dev HTTP\" -Direction Inbound -Protocol TCP -LocalPort 80 -Action Allow -Profile Private)",
+      "PowerShell(netstat -ano)",
+      "PowerShell(Get-NetConnectionProfile)",
+      "PowerShell(Get-Process -Id 34224)",
+      "PowerShell(Test-NetConnection -ComputerName 192.168.1.80 -Port 80 -InformationLevel Detailed)",
+      "PowerShell(Get-Command ngrok -ErrorAction SilentlyContinue)",
+      "PowerShell(winget list ngrok 2>$null)",
+      "PowerShell(winget install ngrok.ngrok)",
+      "PowerShell(& \"C:\\\\Users\\\\Music\\\\AppData\\\\Local\\\\Microsoft\\\\WinGet\\\\Packages\\\\Ngrok.Ngrok_Microsoft.Winget.Source_8wekyb3d8bbwe\\\\ngrok.exe\" http 80)",
+      "PowerShell(npx localtunnel --port 80)"
     ]
   }
 }

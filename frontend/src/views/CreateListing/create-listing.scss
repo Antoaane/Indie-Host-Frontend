@@ -188,9 +188,13 @@ body:has(.create-listing#create-listing-page) {
           align-items: center;
           gap: 0.5rem;
 
-          transition: 180ms ease;
+          transition: padding 280ms cubic-bezier(0.22, 1, 0.36, 1),
+                      background 220ms ease,
+                      border-color 220ms ease,
+                      opacity 220ms ease;
 
           >span {
+            flex: 0 0 auto;
             width: 1.2rem;
             height: 1.2rem;
             border-radius: borders.$rounded;
@@ -200,12 +204,22 @@ body:has(.create-listing#create-listing-page) {
             font-weight: 600;
             background: rgba($background, 0.08);
             color: rgba($secondary-text, 0.85);
+            transition: background 220ms ease,
+                        color 220ms ease,
+                        opacity 250ms ease;
           }
 
           >small {
             font-size: 0.8rem;
             font-weight: 500;
             color: rgba($secondary-text, 0.75);
+            white-space: nowrap;
+            overflow: hidden;
+            max-width: 10rem;
+            opacity: 1;
+            transition: max-width 320ms cubic-bezier(0.22, 1, 0.36, 1),
+                        opacity 200ms ease,
+                        color 220ms ease;
           }
 
           &.is-done {
@@ -247,7 +261,8 @@ body:has(.create-listing#create-listing-page) {
             }
 
             > small {
-              display: none;
+              max-width: 0;
+              opacity: 0;
             }
 
             &.is-done > span {
