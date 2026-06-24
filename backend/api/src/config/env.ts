@@ -64,6 +64,7 @@ const envSchema = z.object({
   ICAL_SYNC_THROTTLE_SECONDS: z.coerce.number().int().min(60).default(300),
   ICAL_SYNC_FETCH_TIMEOUT_MS: z.coerce.number().int().min(1000).default(15000),
   PUBLIC_LISTING_ROOT_DOMAIN: z.string().trim().min(1).default('indiehost.fr'),
+  GROQ_API_KEY: z.string().trim().optional().default(''),
 });
 
 const parsed = envSchema.safeParse(resolveEnvWithSecretFallback());

@@ -4,6 +4,7 @@ import Fastify from 'fastify';
 import { ZodError } from 'zod';
 
 import { env } from './config/env.js';
+import { aiPlugin } from './domains/ai/ai.plugin.js';
 import { arrivalPlugin } from './domains/arrival/arrival.plugin.js';
 import { bookingsPlugin } from './domains/bookings/bookings.plugin.js';
 import { calendarPlugin } from './domains/calendar/calendar.plugin.js';
@@ -89,6 +90,7 @@ export async function buildApp() {
   }));
 
   await app.register(async (v1) => {
+    await v1.register(aiPlugin);
     await v1.register(usersPlugin);
     await v1.register(listingsPlugin);
     await v1.register(bookingsPlugin);

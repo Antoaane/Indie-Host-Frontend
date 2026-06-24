@@ -2,13 +2,15 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
-import { Maximize2, X } from 'lucide-vue-next'
+import { Loader2, Maximize2, Sparkles, X } from 'lucide-vue-next'
+import { useAuth } from '@clerk/vue'
 import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'
 import type { RawCore } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 import { formatValidationMessage, plainTextLengthFromHtml } from '@/utils/inputValidation'
 import { applyQuillToolbarTitles } from '@/utils/quillToolbarA11y'
+import { generateAiDescription } from '@/domain/api/aiDescription'
 
 import { QuillyEditor } from 'vue-quilly'
 import type { QuillOptions } from 'quill/core'
@@ -123,6 +125,26 @@ const toolbarLabels = computed(() => ({
   '--editor-ql-title': `'${panelContent.toolbar.title}'`,
 }))
 
+const { getToken } = useAuth()
+const isGenerating = ref(false)
+const generateError = ref<string | null>(null)
+const descriptionLength = ref(2)
+
+async function handleGenerateDescription() {
+  if (isGenerating.value || !props.core) return
+  isGenerating.value = true
+  generateError.value = null
+  try {
+    const html = await generateAiDescription(props.core, descriptionLength.value, getToken.value)
+    content.value = html
+  } catch (err) {
+    const msg = (err as { response?: { data?: { message?: string }; status?: number }; message?: string })
+    generateError.value = msg?.response?.data?.message ?? msg?.message ?? 'Erreur inconnue'
+  } finally {
+    isGenerating.value = false
+  }
+}
+
 function initializeEditor() {
   const currentEditor = isFullscreenOpen.value ? overlayEditor.value : inlineEditor.value
   const instance = currentEditor?.initialize(Quill)
@@ -163,17 +185,59 @@ onMounted(async () => {
         <p>{{ panelContent.subtitle }}</p>
       </div>
 
-      <div class="actions">
+      <div class="header-actions">
+        <div class="length-control">
+          <span class="length-label">Courte</span>
+          <input
+            type="range"
+            min="1"
+            max="3"
+            step="1"
+            v-model.number="descriptionLength"
+            class="length-slider"
+            aria-label="Longueur de la description"
+          />
+          <span class="length-label">Longue</span>
+        </div>
+
         <button
+          class="ai-btn"
           type="button"
-          :aria-label="fullscreenOpenAriaLabel"
-          :title="fullscreenOpenAriaLabel"
-          @click="openFullscreen"
+          aria-label="Générer la description avec l'IA"
+          title="Générer avec l'IA"
+          :disabled="isGenerating"
+          @click="handleGenerateDescription"
         >
-          <Maximize2 :size="17" />
+          <Loader2
+            v-if="isGenerating"
+            :size="15"
+            class="spin"
+          />
+          <Sparkles
+            v-else
+            :size="15"
+          />
         </button>
+
+        <div class="actions">
+          <button
+            type="button"
+            :aria-label="fullscreenOpenAriaLabel"
+            :title="fullscreenOpenAriaLabel"
+            @click="openFullscreen"
+          >
+            <Maximize2 :size="17" />
+          </button>
+        </div>
       </div>
     </div>
+
+    <p
+      v-if="generateError"
+      class="generate-error"
+    >
+      {{ generateError }}
+    </p>
 
     <div
       v-if="!isFullscreenOpen"
@@ -297,15 +361,100 @@ onMounted(async () => {
       }
     }
 
-    > .actions {
-      @include buttons.primary($theme: white, $icon-only: true, $deep: true);
-      flex: 0 0 auto;
+    > .header-actions {
+      flex: 1 1 auto;
+      display: flex;
+      align-items: center;
+      gap: var(--layout-gap-sm);
+      min-width: 0;
 
-      > * {
+      > .length-control {
+        display: flex;
+        align-items: center;
+        gap: var(--layout-gap-sm);
+        flex: 1 1 auto;
+        min-width: 0;
+
+        > .length-label {
+          @include little-text($thin: true);
+          color: rgba($secondary-text, 0.6);
+          white-space: nowrap;
+          flex-shrink: 0;
+        }
+
+        > .length-slider {
+          flex: 1 1 auto;
+          min-width: 0;
+          height: 4px;
+          appearance: none;
+          background: rgba($secondary, 0.15);
+          border-radius: borders.$rounded;
+          outline: none;
+          cursor: pointer;
+          @include animations.transition();
+
+          &::-webkit-slider-thumb {
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: borders.$rounded;
+            background: $secondary;
+            cursor: pointer;
+            @include animations.transition();
+          }
+
+          &::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            border: none;
+            border-radius: borders.$rounded;
+            background: $secondary;
+            cursor: pointer;
+          }
+
+          &:hover::-webkit-slider-thumb {
+            background: rgba($secondary, 0.75);
+          }
+        }
+      }
+
+      > .ai-btn {
         width: 2.5rem;
         height: 2.5rem;
+        display: grid;
+        place-items: center;
+        border: 1px solid rgba($secondary, 0.15);
+        border-radius: borders.$rounded-md;
+        background: $accent;
+        cursor: pointer;
+        color: $secondary;
+        @include animations.transition();
+
+        &:hover {
+          background: $accent-surface-3;
+        }
+
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+      }
+
+      > .actions {
+        @include buttons.primary($theme: white, $icon-only: true, $deep: true);
+
+        > * {
+          width: 2.5rem;
+          height: 2.5rem;
+        }
       }
     }
+  }
+
+  > .generate-error {
+    margin: 0 0 var(--layout-gap-sm);
+    @include little-text($thin: false);
+    color: $bad;
   }
 
   > .body {
@@ -500,5 +649,13 @@ onMounted(async () => {
   //     padding: var(--layout-gap-sm);
   //   }
   // }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 0.8s linear infinite;
 }
 </style>

@@ -25,7 +25,11 @@
       "PowerShell(winget list ngrok 2>$null)",
       "PowerShell(winget install ngrok.ngrok)",
       "PowerShell(& \"C:\\\\Users\\\\Music\\\\AppData\\\\Local\\\\Microsoft\\\\WinGet\\\\Packages\\\\Ngrok.Ngrok_Microsoft.Winget.Source_8wekyb3d8bbwe\\\\ngrok.exe\" http 80)",
-      "PowerShell(npx localtunnel --port 80)"
+      "PowerShell(npx localtunnel --port 80)",
+      "PowerShell(docker compose -f docker-compose.yml -f docker-compose.dev.yml restart frontend)",
+      "PowerShell(docker compose -f docker-compose.yml -f docker-compose.dev.yml restart frontend 2>&1)",
+      "PowerShell(docker restart indie-host-frontend-frontend-1 2>&1)",
+      "PowerShell(docker restart indie-host-frontend-api-1 2>&1)"
     ]
   }
 }
