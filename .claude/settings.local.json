@@ -29,7 +29,10 @@
       "PowerShell(docker compose -f docker-compose.yml -f docker-compose.dev.yml restart frontend)",
       "PowerShell(docker compose -f docker-compose.yml -f docker-compose.dev.yml restart frontend 2>&1)",
       "PowerShell(docker restart indie-host-frontend-frontend-1 2>&1)",
-      "PowerShell(docker restart indie-host-frontend-api-1 2>&1)"
+      "PowerShell(docker restart indie-host-frontend-api-1 2>&1)",
+      "Bash(cd \"f:/Dev/IndieHost\" && docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build 2>&1 | head -5)",
+      "Read(//f/Dev/IndieHost/**)",
+      "Bash(docker info *)"
     ]
   }
 }
