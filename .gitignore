@@ -65,3 +65,6 @@ backend/api/.env
 /.env
 /.env.*
 !/.env.example
+
+# Secrets prod (copies vers le VPS, jamais commites)
+/secrets.production

@@ -92,6 +92,7 @@
       "listing": {
         "import": {
           "title": "Comment souhaitez-vous créer votre annonce ?",
+          "subtitle": "Collez le lien de votre annonce Airbnb ou Booking pour récupérer automatiquement son contenu.",
           "importCardTitle": "Importer depuis Airbnb ou Booking",
           "importCardDescription": "Récupérez automatiquement le titre, les photos, la description et les équipements de votre annonce existante.",
           "manualCardTitle": "Créer de zéro",
