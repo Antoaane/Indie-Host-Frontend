@@ -548,8 +548,52 @@ Ne jamais recréer des badges texte colorés avec `$airbnb` ou des hex Booking.
 
 ---
 
-## Dernières modifications (mis à jour 2026-06-23)
+## Déploiement production (indiehost.fr)
 
+Mis en ligne le 2026-10-20. La prod tourne sur un **VPS Hostinger** (KVM 2, Ubuntu 26.04, Docker + Compose préinstallés), derrière le proxy Cloudflare.
+
+| Élément | Valeur |
+|---------|--------|
+| VPS Hostinger | id `2079568` — IPv4 `45.93.139.219`, IPv6 `2a02:4780:c:128f::1` |
+| Firewall Hostinger | groupe `indiehost-web` : TCP 22/80/443 uniquement |
+| Code sur le serveur | `/opt/indiehost` (clone de `develop`), démarré par `./start-indiehost.sh` |
+| Accès | `ssh root@45.93.139.219` (clé SSH, pas de mot de passe) |
+| Cloudflare | zone `indiehost.fr` : `@` et `*` en A/AAAA proxied vers le VPS · SSL **Full (strict)** · Always HTTPS · TLS min 1.2 |
+| Certificat | Let's Encrypt wildcard via certbot DNS-01 Cloudflare → `certbot/conf/live/indiehost.fr/` (renouvellement auto) |
+| Clerk | instance **Production** (`clerk.indiehost.fr`), paths `/`, `/sign-in`, `/sign-up` |
+| Stripe | compte live IndieHost SAS — aucun webhook utilisé par le backend |
+
+### Secrets de prod
+
+Préparés en local dans deux fichiers **gitignorés** puis copiés sur le VPS (`scp`, pas `rsync --chmod` qui n'existe pas sur macOS) :
+- `.env.production` → `/opt/indiehost/.env`
+- `secrets.production/*` → `/opt/indiehost/secrets/`
+
+Aucun MCP ne peut lire les clés secrètes (Stripe `sk_live`, Clerk `sk_live`, ImageKit, token Cloudflare) : elles viennent toujours de l'utilisateur.
+
+### Redéployer
+
+```bash
+ssh root@45.93.139.219
+cd /opt/indiehost && git pull && docker compose up -d --build --wait
+```
+
+Après un changement de secret : recopier le fichier concerné, puis la même commande.
+
+### Pièges connus
+
+- `frontend` : `npm run build` lance `vue-tsc --build` en parallèle de `vite build` → **toute erreur TS fait échouer l'image Docker**. Lancer `cd frontend && npm run type-check` avant de déployer.
+- Le build de l'image `scraping` (Playwright + Chromium, ~2 Go) prend ~15 min sur le VPS ; les autres rebuilds sont rapides grâce au cache.
+- Vérifications post-déploiement : `https://indiehost.fr`, `/api/health`, `/scraping/health`, un sous-domaine `*.indiehost.fr`, `http://` → 301 ; `docker compose logs migrate` doit afficher « All migrations have been successfully applied ».
+
+---
+
+## Dernières modifications (mis à jour 2026-10-20)
+
+- **Mise en production** sur VPS Hostinger + Cloudflare (voir section « Déploiement production »)
+- `frontend/vite.config.ts` : `server.allowedHosts: true` (Vite 6.4 n'accepte plus `'all'`, cassait le type-check donc le build)
+- `frontend/src/locales/editor/fr.json` : ajout du `subtitle` du panneau import de l'éditeur
+- `.gitignore` : `/secrets.production` ignoré
 - `CLERK_SECRET_KEY` ajouté comme placeholder dans `.env` racine (à remplacer après rotation de clé)
 - Commentaire CORS ajouté dans `.env` pour accès réseau via IP
 - MCP Clerk (`https://mcp.clerk.com/mcp`) ajouté dans `~/.claude/settings.json`
