@@ -259,20 +259,24 @@ export class UsersService {
 
     const totalByOwner = new Map(listingCounts.map((row) => [row.ownerId ?? '', row._count._all]));
     const activeByOwner = new Map(activeCounts.map((row) => [row.ownerId ?? '', row._count._all]));
+    const clerkById = new Map(clerkUsers.map((clerkUser) => [clerkUser.id, clerkUser]));
 
     const items: AdminUserOverviewItem[] = users.map((user) => {
       const profile = asObject(user.stripeConnectProfile);
       const billing = asObject(profile.billing);
+      // Le JWT ne porte pas toujours l'email ni le nom : on complète avec le profil Clerk.
+      const clerkUser = user.clerkUserId ? clerkById.get(user.clerkUserId) ?? null : null;
+      const storedDisplayName = user.displayName && !isDeprecatedHostIdentity(user.displayName)
+        ? user.displayName
+        : readPreferredUsername(user.hostProfile);
       return {
         id: user.id,
         clerkUserId: user.clerkUserId ?? null,
-        email: user.email ?? null,
-        firstName: user.firstName ?? null,
-        lastName: user.lastName ?? null,
-        displayName: user.displayName && !isDeprecatedHostIdentity(user.displayName)
-          ? user.displayName
-          : readPreferredUsername(user.hostProfile),
-        avatarUrl: user.avatarUrl ?? null,
+        email: user.email ?? clerkUser?.email ?? null,
+        firstName: user.firstName ?? clerkUser?.firstName ?? null,
+        lastName: user.lastName ?? clerkUser?.lastName ?? null,
+        displayName: storedDisplayName ?? clerkUser?.displayName ?? null,
+        avatarUrl: user.avatarUrl ?? clerkUser?.avatarUrl ?? null,
         createdAtISO: user.createdAt.toISOString(),
         billing: {
           planCode: normalizePlanCode(billing.planCode),

@@ -9,19 +9,27 @@
 // Fenêtre d'administration : liste des clients à gauche, fiche du client sélectionné à droite.
 .admin-panel {
   width: min(1180px, 100%);
-  margin: var(--layout-gap-4xl) auto var(--layout-gap-2xl);
+  // La barre de navigation est fixe : la page commence juste en dessous.
+  margin: 0 auto var(--layout-gap-2xl);
+  padding-top: calc(#{$nav-height} + var(--layout-gap));
   display: flex;
   flex-direction: column;
   gap: var(--layout-gap);
 
   .admin-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-xs);
+
     > h1 {
       @include h1-title();
+      margin-bottom: 0;
     }
 
     > p {
       @include base-text($thin: false);
       color: rgba($secondary, 0.72);
+      max-width: 70ch;
     }
   }
 
