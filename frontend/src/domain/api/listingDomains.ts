@@ -372,7 +372,7 @@ export async function saveListingCustomDomain(listingId: string, domain: string)
 export async function verifyListingCustomDomain(listingId: string): Promise<ListingCustomDomainVerificationResult> {
   const axios = await getAxios()
   const url = resolveUrl(buildListingCustomDomainUrl(listingId, '/verify'))
-  const data = await requestWithAuth<Record<string, unknown>>((headers) => axios.post(url, null, {
+  const data = await requestWithAuth<Record<string, unknown>>((headers) => axios.post(url, {}, {
     withCredentials: false,
     timeout: API_REQUEST_TIMEOUT_MS,
     headers,
