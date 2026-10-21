@@ -43,7 +43,8 @@ export type ListingCustomDomainVerificationResult = {
 const RAW_BASE_API_URL = (import.meta.env.VITE_API_BASE_URL ?? '').trim()
 const BASE_API_URL = normalizeApiBaseUrl(RAW_BASE_API_URL)
 const API_REQUEST_TIMEOUT_MS = resolveRequestTimeoutMs(import.meta.env.VITE_API_REQUEST_TIMEOUT_MS, 20000)
-const AUTH_TOKEN_MIN_VALIDITY_MS = 60_000
+// Les jetons de session Clerk vivent 60 s : exiger 60 s de validité restante rejetait tous les jetons.
+const AUTH_TOKEN_MIN_VALIDITY_MS = 10_000
 
 type AuthHeaders = {
   Authorization: string
@@ -150,9 +151,9 @@ async function readFreshTokenFromClerkRuntime(options?: { skipCache?: boolean })
   try {
     const token = (await getSessionToken(options?.skipCache ? { skipCache: true } : undefined))?.trim() ?? ''
     if (!token) return null
-    if (!hasValidLifetime(token)) {
-      if (!options?.skipCache) return readFreshTokenFromClerkRuntime({ skipCache: true })
-      return null
+    // Un jeton que Clerk vient d'émettre (skipCache) est le meilleur disponible : on le garde même s'il est court.
+    if (!hasValidLifetime(token) && !options?.skipCache) {
+      return readFreshTokenFromClerkRuntime({ skipCache: true })
     }
     clerkToken.value = token
     return token
