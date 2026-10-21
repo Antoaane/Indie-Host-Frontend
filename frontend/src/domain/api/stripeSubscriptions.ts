@@ -242,9 +242,33 @@ async function getAxios() {
   return axios
 }
 
+// Jeton frais depuis le runtime Clerk (quand le store n'a pas encore été alimenté par la navigation).
+async function readFreshTokenFromClerkRuntime(): Promise<string | null> {
+  if (typeof window === 'undefined') return null
+
+  const clerk = (window as Window & {
+    Clerk?: { session?: { getToken?: () => Promise<string | null> } }
+  }).Clerk
+  const getSessionToken = clerk?.session?.getToken
+  if (typeof getSessionToken !== 'function') return null
+
+  try {
+    const token = (await getSessionToken())?.trim() ?? ''
+    if (!token) return null
+    clerkToken.value = token
+    return token
+  } catch {
+    return null
+  }
+}
+
 async function getAuthToken(): Promise<string | null> {
   const token = (clerkToken.value ?? '').trim()
   if (token) return token
+
+  const fresh = await readFreshTokenFromClerkRuntime()
+  if (fresh) return fresh
+
   return waitForClerkToken({ timeoutMs: 2500, pollEveryMs: 60 })
 }
 
