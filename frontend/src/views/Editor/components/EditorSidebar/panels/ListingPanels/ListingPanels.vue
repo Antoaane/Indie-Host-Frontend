@@ -54,7 +54,6 @@ const isHub = computed(() => props.draft.core?.kind === 'hub')
       @updated="emit('domain-updated', $event)"
     />
     <CustomDomainPanel
-      v-if="isHub"
       :listing-id="props.listingId"
       :isAdmin="props.isAdmin"
       @updated="emit('domain-updated', $event)"

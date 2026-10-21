@@ -224,8 +224,8 @@ onMounted(() => {
 <template>
   <section class="editor-domain-panel">
     <div class="header">
-      <h3>Sous-domaine IndieHost</h3>
-      <p>Réservez gratuitement un sous-domaine `*.{{ rootDomain }}` pour cette annonce.</p>
+      <h3>Adresse IndieHost (sous-domaine)</h3>
+      <p>Votre annonce a deux adresses possibles. Celle-ci est <strong>gratuite et immédiate</strong> : choisissez un nom, elle est en ligne sur {{ rootDomain }} sans aucun réglage. Le panneau suivant permet en plus d’utiliser <strong>votre propre nom de domaine</strong> ; les deux adresses mènent à cette annonce.</p>
     </div>
 
     <div class="body">

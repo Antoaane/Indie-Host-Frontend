@@ -342,7 +342,7 @@ onMounted(() => {
     <div class="header">
       <div class="main">
         <h3>Votre propre nom de domaine</h3>
-        <p>Rattachez un domaine que vous possédez déjà (ex. www.gite-belair.fr) : votre annonce y sera servie en HTTPS, en plus de son adresse {{ rootDomain }}.</p>
+        <p>À la différence de l’adresse IndieHost, ce domaine vous appartient : vous l’avez acheté chez un registrar (OVH, Gandi, IONOS…), ex. www.gite-belair.fr. Il demande un réglage DNS — guidé pas à pas via le bouton d’aide — puis fonctionne en HTTPS, en parallèle de l’adresse {{ rootDomain }}.</p>
       </div>
 
       <div class="header-actions">
