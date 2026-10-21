@@ -580,6 +580,21 @@ cd /opt/indiehost && git pull && docker compose up -d --build --wait
 
 Après un changement de secret : recopier le fichier concerné, puis la même commande.
 
+### Domaines personnalisés des hôtes (ex. `www.gite-belair.fr`)
+
+Un hôte peut rattacher un domaine qu'il possède déjà depuis `/dashboard/domains` (panneau `CustomDomainPanel.vue`, guide intégré ouvert automatiquement les 3 premières fois puis via le bouton ⓘ).
+
+| Étape | Mécanisme |
+|-------|-----------|
+| Rattachement | `PUT /api/v1/listings/:id/custom-domain { domain }` → `Listing.customDomain` (unique) ; plan requis, propriétaire uniquement ; `www.x.fr` et `x.fr` ne peuvent pas être rattachés à deux annonces différentes |
+| Instructions DNS | sous-domaine (`www`) → **CNAME** `CUSTOM_DOMAIN_CNAME_TARGET` (`custom.indiehost.fr`, enregistrement A **DNS only** côté Cloudflare — jamais proxifié) ; domaine nu → **A** `CUSTOM_DOMAIN_TARGET_IPV4` (`45.93.139.219`) |
+| Vérification | `POST …/custom-domain/verify` → `dns.resolve4(domain)` doit contenir l'IP du VPS → `customDomainVerifiedAt` |
+| Certificat | l'API écrit les domaines vérifiés dans `certbot/custom-domains/domains.txt` (volume partagé) ; le conteneur `certbot` émet un certificat Let's Encrypt **HTTP-01 webroot** toutes les 2 min pour chaque domaine sans certificat, et renouvelle tout en `certbot renew` toutes les 12 h |
+| Service | nginx `default_server` 443 : certificat choisi par SNI (`$ssl_server_name` filtré par un `map`), `location` communes dans `nginx/proxy-locations.conf` |
+| Routage front | `publicDomain.ts` → `isListingHostname()` (sous-domaine géré **ou** domaine personnalisé) ; l'API résout le hostname via `GET /listings/domains/resolve` |
+
+Les domaines personnalisés pointent **directement** sur le VPS (pas via Cloudflare) : pas de session Clerk sur ces hôtes (consultation + réservation uniquement, réservation en auth optionnelle).
+
 ### Pièges connus
 
 - `frontend` : `npm run build` lance `vue-tsc --build` en parallèle de `vite build` → **toute erreur TS fait échouer l'image Docker**. Lancer `cd frontend && npm run type-check` avant de déployer.
