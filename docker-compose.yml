@@ -195,8 +195,7 @@ services:
           if [ -s /custom-domains/domains.txt ]; then
             while IFS= read -r domain; do
               [ -n "$$domain" ] || continue
-              [ -s "/etc/letsencrypt/live/$$domain/fullchain.pem" ] && continue
-              certbot certonly \
+              [ -s "/etc/letsencrypt/live/$$domain/fullchain.pem" ] || certbot certonly \
                 --non-interactive \
                 --quiet \
                 --agree-tos \
@@ -204,7 +203,14 @@ services:
                 --email "${SSL_EMAIL}" \
                 --webroot -w /var/www/certbot \
                 -d "$$domain" || true
+              # Un certificat choisi par SNI est ouvert par le worker nginx (uid/gid 101), pas par
+              # le maître root : certbot crée live/ et archive/ en 0700 et privkey en 0600.
+              if [ -d "/etc/letsencrypt/archive/$$domain" ]; then
+                chown root:101 /etc/letsencrypt/archive/$$domain/privkey*.pem 2>/dev/null || true
+                chmod 640 /etc/letsencrypt/archive/$$domain/privkey*.pem 2>/dev/null || true
+              fi
             done < /custom-domains/domains.txt
+            chmod 711 /etc/letsencrypt/live /etc/letsencrypt/archive 2>/dev/null || true
           fi
           tick=$$((tick + 1))
           sleep 2m
