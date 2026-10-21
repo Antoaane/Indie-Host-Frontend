@@ -3,12 +3,14 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Check, Copy, Link2, Mail, Minus, Plus, RefreshCw, Search, UserPlus } from 'lucide-vue-next'
+import { Check, Copy, Gift, Link2, Mail, Minus, Plus, RefreshCw, Search, UserPlus } from 'lucide-vue-next'
 
 import { useAdminAccess } from '@/composables/useAdminAccess'
 import {
   createAdminSubscriptionLink,
   fetchAdminUserSubscriptionState,
+  grantAdminComplimentaryPlan,
+  revokeAdminComplimentaryPlan,
   updateAdminUserExtraListings,
   type StripeSubscriptionState,
   type SubscriptionPlanCode,
@@ -63,6 +65,27 @@ const extraDraft = ref(0)
 const isSavingExtra = ref(false)
 const extraMessage = ref<string | null>(null)
 const extraError = ref<string | null>(null)
+
+// --- Plan offert (sans Stripe) ---------------------------------------------
+const giftPlanCode = ref<SubscriptionPlanCode>('indiehost')
+const giftExtraListings = ref(0)
+const giftEndsAt = ref('')
+const isGranting = ref(false)
+const giftError = ref<string | null>(null)
+const giftMessage = ref<string | null>(null)
+const isRevoking = ref(false)
+const isRevokeArmed = ref(false)
+
+const isComplimentary = computed(() => Boolean(subscriptionState.value?.subscription?.complimentary))
+const subscriptionStatusLabel = computed(() => {
+  const snapshot = subscriptionState.value?.subscription ?? null
+  if (snapshot?.complimentary) {
+    return snapshot.complimentaryEndsAtISO
+      ? `Offert jusqu’au ${formatDate(snapshot.complimentaryEndsAtISO)}`
+      : 'Offert par IndieHost'
+  }
+  return statusLabel(snapshot?.status ?? null, subscriptionState.value?.currentPlanCode ?? null)
+})
 
 // --- Lien d'abonnement -----------------------------------------------------
 const linkPlanCode = ref<SubscriptionPlanCode>('indiehost')
@@ -318,6 +341,73 @@ async function copyLink() {
   }
 }
 
+async function grantGift() {
+  const userId = selectedUserId.value
+  if (!userId || isGranting.value) return
+  giftError.value = null
+  giftMessage.value = null
+
+  let endsAtISO: string | null = null
+  if (giftEndsAt.value) {
+    const endsAt = new Date(`${giftEndsAt.value}T23:59:59`)
+    if (Number.isNaN(endsAt.getTime()) || endsAt.getTime() <= Date.now()) {
+      giftError.value = 'La date de fin doit être dans le futur.'
+      return
+    }
+    endsAtISO = endsAt.toISOString()
+  }
+
+  isGranting.value = true
+  try {
+    const result = await grantAdminComplimentaryPlan(userId, {
+      planCode: giftPlanCode.value,
+      extraListings: giftExtraListings.value,
+      endsAtISO,
+    })
+    if (result.state !== 'granted') {
+      giftError.value = result.message ?? 'Impossible d’offrir ce plan.'
+      return
+    }
+    subscriptionState.value = result.subscriptionState
+    extraDraft.value = result.subscriptionState.listingAllowance.extraListings
+    giftMessage.value = `Plan ${getMarketingPricingPlan(giftPlanCode.value).name} offert${endsAtISO ? ` jusqu’au ${formatDate(endsAtISO)}` : ', sans limite de durée'}. Vous pouvez créer et publier ses annonces depuis « Ses annonces ».`
+    void loadUsers()
+  } catch (error) {
+    giftError.value = resolveErrorMessage(error, 'Impossible d’offrir ce plan.')
+  } finally {
+    isGranting.value = false
+  }
+}
+
+async function revokeGift() {
+  const userId = selectedUserId.value
+  if (!userId || isRevoking.value) return
+  if (!isRevokeArmed.value) {
+    isRevokeArmed.value = true
+    return
+  }
+
+  giftError.value = null
+  giftMessage.value = null
+  isRevoking.value = true
+  try {
+    const result = await revokeAdminComplimentaryPlan(userId)
+    subscriptionState.value = result.subscriptionState
+    extraDraft.value = result.subscriptionState.listingAllowance.extraListings
+    giftMessage.value = 'Plan offert retiré : ses annonces en ligne sont gelées jusqu’à un nouvel abonnement.'
+    void loadUsers()
+  } catch (error) {
+    giftError.value = resolveErrorMessage(error, 'Impossible de retirer le plan offert.')
+  } finally {
+    isRevoking.value = false
+    isRevokeArmed.value = false
+  }
+}
+
+function adjustGiftExtra(delta: number) {
+  giftExtraListings.value = Math.max(0, Math.min(50, giftExtraListings.value + delta))
+}
+
 function adjustExtraDraft(delta: number) {
   extraDraft.value = Math.max(0, Math.min(50, extraDraft.value + delta))
 }
@@ -329,6 +419,9 @@ function adjustLinkExtra(delta: number) {
 watch(selectedUserId, (userId) => {
   subscriptionState.value = null
   subscriptionError.value = null
+  giftError.value = null
+  giftMessage.value = null
+  isRevokeArmed.value = false
   if (userId) void loadSubscription(userId)
 })
 
@@ -503,7 +596,7 @@ onMounted(() => {
                     class="badge"
                     :class="`is-${statusTone(user.billing.status)}`"
                   >
-                    {{ user.billing.planCode ? planLabel(user.billing.planCode) : 'Sans plan' }}
+                    {{ user.billing.planCode ? planLabel(user.billing.planCode) : 'Sans plan' }}{{ user.billing.complimentary ? ' · offert' : '' }}
                   </span>
                   <small>{{ user.listings.active }} en ligne · {{ user.listings.total }} au total</small>
                 </span>
@@ -607,7 +700,7 @@ onMounted(() => {
                       class="badge"
                       :class="`is-${statusTone(subscriptionState.subscription?.status ?? null)}`"
                     >
-                      {{ statusLabel(subscriptionState.subscription?.status ?? null, subscriptionState.currentPlanCode) }}
+                      {{ subscriptionStatusLabel }}
                     </span>
                   </dd>
                 </div>
@@ -624,13 +717,125 @@ onMounted(() => {
                 </div>
               </dl>
 
+              <div
+                v-if="isComplimentary"
+                class="gift"
+              >
+                <h3><Gift
+                  :size="16"
+                  aria-hidden="true"
+                /> Plan offert par IndieHost</h3>
+                <p class="meta">
+                  Aucun paiement demandé à ce client. Retirer le plan gèle ses annonces en ligne.
+                </p>
+                <div class="action ghost">
+                  <button
+                    type="button"
+                    :disabled="isRevoking"
+                    @click="revokeGift"
+                  >
+                    {{ isRevoking ? 'Retrait...' : (isRevokeArmed ? 'Confirmer le retrait' : 'Retirer le plan offert') }}
+                  </button>
+                </div>
+              </div>
+
+              <div
+                v-else-if="!isSubscriptionActive"
+                class="gift"
+              >
+                <h3><Gift
+                  :size="16"
+                  aria-hidden="true"
+                /> Offrir un plan</h3>
+                <p class="meta">
+                  Active le compte sans paiement : vous pouvez ensuite créer et publier ses annonces à sa place. Il devra tout de même connecter Stripe pour encaisser ses voyageurs.
+                </p>
+
+                <fieldset class="plan-choice">
+                  <legend>Plan</legend>
+                  <label
+                    v-for="code in PLAN_CODES"
+                    :key="`gift-${code}`"
+                    :class="{ 'is-selected': giftPlanCode === code }"
+                  >
+                    <input
+                      v-model="giftPlanCode"
+                      type="radio"
+                      name="admin-gift-plan"
+                      :value="code"
+                    />
+                    <span class="plan-name">{{ getMarketingPricingPlan(code).name }}</span>
+                    <span class="plan-price">{{ getMarketingPricingPlan(code).includes[0] }}</span>
+                  </label>
+                </fieldset>
+
+                <div class="stepper-row">
+                  <span class="stepper-label">Logements supplémentaires</span>
+                  <div class="stepper">
+                    <button
+                      type="button"
+                      aria-label="Retirer"
+                      :disabled="giftExtraListings <= 0"
+                      @click="adjustGiftExtra(-1)"
+                    >
+                      <Minus :size="16" />
+                    </button>
+                    <output aria-live="polite">{{ giftExtraListings }}</output>
+                    <button
+                      type="button"
+                      aria-label="Ajouter"
+                      :disabled="giftExtraListings >= 50"
+                      @click="adjustGiftExtra(1)"
+                    >
+                      <Plus :size="16" />
+                    </button>
+                  </div>
+                </div>
+
+                <div class="gift-until">
+                  <label for="admin-gift-ends-at">Jusqu’au (laisser vide = sans limite)</label>
+                  <div class="input">
+                    <input
+                      id="admin-gift-ends-at"
+                      v-model="giftEndsAt"
+                      type="date"
+                    />
+                  </div>
+                </div>
+
+                <div class="action">
+                  <button
+                    type="button"
+                    :disabled="isGranting"
+                    @click="grantGift"
+                  >
+                    <Gift :size="16" />
+                    {{ isGranting ? 'Activation...' : 'Offrir ce plan' }}
+                  </button>
+                </div>
+              </div>
+
+              <p
+                v-if="giftMessage"
+                class="meta is-success"
+              >
+                {{ giftMessage }}
+              </p>
+              <p
+                v-if="giftError"
+                class="meta is-error"
+                role="alert"
+              >
+                {{ giftError }}
+              </p>
+
               <div class="extra">
-                <h3>Logements supplémentaires <small>{{ extraListingPrice }} / mois chacun</small></h3>
+                <h3>Logements supplémentaires <small>{{ isComplimentary ? 'offerts' : `${extraListingPrice} / mois chacun` }}</small></h3>
                 <p
                   v-if="!isSubscriptionActive"
                   class="meta"
                 >
-                  Activez d’abord un plan (lien d’abonnement ci-dessous) pour ajouter des logements supplémentaires.
+                  Offrez un plan ci-dessus ou envoyez un lien d’abonnement pour pouvoir ajouter des logements supplémentaires.
                 </p>
                 <div
                   v-else

@@ -57,6 +57,7 @@ export type AdminUserOverviewItem = {
     includedListings: number;
     extraListings: number;
     hasStripeCustomer: boolean;
+    complimentary: boolean;
   };
   listings: {
     total: number;
@@ -285,6 +286,7 @@ export class UsersService {
           includedListings: resolveIncludedListingsFromBilling(billing),
           extraListings: readExtraListingsFromBilling(billing),
           hasStripeCustomer: Boolean(readOptionalString(billing.customerId)),
+          complimentary: billing.complimentary === true,
         },
         listings: {
           total: totalByOwner.get(user.id) ?? 0,
@@ -314,6 +316,7 @@ export class UsersService {
           includedListings: 0,
           extraListings: 0,
           hasStripeCustomer: false,
+          complimentary: false,
         },
         listings: { total: 0, active: 0 },
       });

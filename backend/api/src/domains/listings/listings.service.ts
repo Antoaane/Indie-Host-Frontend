@@ -905,8 +905,30 @@ export class ListingsService {
     };
   }
 
+  /**
+   * Propriétaire d'une annonce en création : l'utilisateur authentifié, sauf si un admin
+   * crée l'annonce au nom d'un client (`ownerId`), auquel cas elle lui appartient directement.
+   */
+  private async resolveListingOwnerForCreation(
+    actor: User | null,
+    requestedOwnerId: string | undefined,
+    auth: RequestAuth | null,
+  ): Promise<User | null> {
+    const ownerId = requestedOwnerId?.trim();
+    if (!ownerId || !hasAdminAccess(auth) || ownerId === actor?.id || ownerId === actor?.clerkUserId) return actor;
+
+    const existing = await resolveUserByIdentifier(this.prisma, ownerId);
+    if (existing) return existing;
+
+    // Client Clerk jamais connecté au dashboard : on crée sa fiche à partir de son profil.
+    const clerkUser = await fetchClerkUserById(ownerId);
+    if (!clerkUser) return actor;
+    return (await upsertUserFromAuth(this.prisma, buildRequestAuthFromClerkUser(clerkUser))) ?? actor;
+  }
+
   async createListing(payload: CreateListingInput, auth: RequestAuth | null) {
-    const owner = await upsertUserFromAuth(this.prisma, auth);
+    const actor = await upsertUserFromAuth(this.prisma, auth);
+    const owner = await this.resolveListingOwnerForCreation(actor, payload.ownerId, auth);
     const requestedId = typeof payload.core?.id === 'string' ? payload.core.id : '';
 
     const baseId = buildListingId(requestedId);

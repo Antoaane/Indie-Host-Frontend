@@ -41,6 +41,8 @@ export const resolveListingSlugSchema = z.object({
 });
 
 export const createListingSchema = z.object({
+  // Admin uniquement : crée l'annonce directement au nom de ce client (id interne ou id Clerk).
+  ownerId: z.string().trim().min(1).optional(),
   core: nullableRawJsonSchema.optional(),
   bookings: nullableRawJsonSchema.optional(),
   medias: nullableRawJsonSchema.optional(),

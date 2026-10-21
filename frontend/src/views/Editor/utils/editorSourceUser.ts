@@ -34,7 +34,8 @@ export function createUserEditorSource(userId: string, options?: UserEditorSourc
     },
     createListing: async (payload) => {
       console.log('[Editor][source][user] createListing', { userId, payload })
-      return controller.createListing(payload)
+      // Depuis /dashboard/editor/:userId, un admin crée l'annonce directement pour ce client.
+      return controller.createListing(payload, { ownerId: userId })
     },
   }
 }

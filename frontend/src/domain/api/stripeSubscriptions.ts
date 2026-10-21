@@ -49,6 +49,9 @@ export type StripeSubscriptionSnapshot = {
   pendingCheckoutSessionId: string | null
   includedListings: number | null
   extraListings: number
+  /** Plan offert par IndieHost : actif sans abonnement Stripe. */
+  complimentary: boolean
+  complimentaryEndsAtISO: string | null
 }
 
 export type UpdateExtraListingsResponse = {
@@ -388,6 +391,61 @@ export async function updateAdminUserExtraListings(userId: string, quantity: num
     return data
   } catch (error) {
     throw new Error(toApiErrorMessage(error, 'Impossible de modifier les logements supplémentaires de ce client.'))
+  }
+}
+
+export type AdminComplimentaryPlanResponse = {
+  state: 'granted' | 'revoked' | 'subscription_exists' | 'plan_unavailable'
+  subscriptionState: StripeSubscriptionState
+  message: string | null
+}
+
+/** Offre un plan à un client (actif sans Stripe, illimité ou jusqu'à une date). */
+export async function grantAdminComplimentaryPlan(userId: string, input: {
+  planCode: SubscriptionPlanCode
+  extraListings?: number
+  endsAtISO?: string | null
+}): Promise<AdminComplimentaryPlanResponse> {
+  const axios = await getAxios()
+  const headers = await getHeaders({ requiresAuth: true })
+
+  try {
+    const { data } = await axios.post<AdminComplimentaryPlanResponse>(
+      resolveUrl(buildApiUrl(`/payments/stripe/admin/users/${encodeURIComponent(userId.trim())}/complimentary-plan`)),
+      {
+        planCode: input.planCode,
+        extraListings: Math.max(0, Math.trunc(input.extraListings ?? 0)),
+        ...(input.endsAtISO ? { endsAtISO: input.endsAtISO } : {}),
+      },
+      {
+        withCredentials: false,
+        headers,
+      },
+    )
+
+    return data
+  } catch (error) {
+    throw new Error(toApiErrorMessage(error, 'Impossible d’offrir ce plan.'))
+  }
+}
+
+/** Retire le plan offert d'un client (ses annonces en ligne sont gelées). */
+export async function revokeAdminComplimentaryPlan(userId: string): Promise<AdminComplimentaryPlanResponse> {
+  const axios = await getAxios()
+  const headers = await getHeaders({ requiresAuth: true })
+
+  try {
+    const { data } = await axios.delete<AdminComplimentaryPlanResponse>(
+      resolveUrl(buildApiUrl(`/payments/stripe/admin/users/${encodeURIComponent(userId.trim())}/complimentary-plan`)),
+      {
+        withCredentials: false,
+        headers,
+      },
+    )
+
+    return data
+  } catch (error) {
+    throw new Error(toApiErrorMessage(error, 'Impossible de retirer le plan offert.'))
   }
 }
 

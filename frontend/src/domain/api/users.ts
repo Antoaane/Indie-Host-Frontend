@@ -49,6 +49,7 @@ export type AdminUserOverview = {
     includedListings: number
     extraListings: number
     hasStripeCustomer: boolean
+    complimentary: boolean
   }
   listings: {
     total: number
@@ -438,6 +439,7 @@ function normalizeAdminUserOverview(data: Record<string, unknown> | null | undef
       includedListings: toNonNegativeInteger(billing.includedListings),
       extraListings: toNonNegativeInteger(billing.extraListings),
       hasStripeCustomer: Boolean(billing.hasStripeCustomer),
+      complimentary: Boolean(billing.complimentary),
     },
     listings: {
       total: toNonNegativeInteger(listings.total),

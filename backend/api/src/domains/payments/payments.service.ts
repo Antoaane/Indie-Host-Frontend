@@ -123,6 +123,16 @@ export type AdminSubscriptionLinkResult = {
   message: string | null;
 };
 
+type ComplimentaryPlanInput = {
+  planCode: SubscriptionPlanCode;
+  extraListings: number;
+  endsAtISO: string | null;
+};
+
+export type ComplimentaryPlanResult =
+  | { state: 'granted' | 'revoked'; subscriptionState: MySubscriptionStateResult; message: string | null }
+  | { state: 'subscription_exists' | 'plan_unavailable'; subscriptionState: MySubscriptionStateResult; message: string };
+
 type ActivateSubscriptionInput = {
   planCode: SubscriptionPlanCode;
   successUrl: string;
@@ -171,6 +181,11 @@ type BillingSnapshot = {
   extraListings: number;
   planItemId: string | null;
   extraListingItemId: string | null;
+  // Plan offert par l'admin : actif sans abonnement Stripe, illimité ou jusqu'à une date.
+  complimentary: boolean;
+  complimentaryEndsAtISO: string | null;
+  complimentaryGrantedByUserId: string | null;
+  complimentaryGrantedAtISO: string | null;
   giftedTrialSource?: string | null;
   giftedTrialListingId?: string | null;
   giftedTrialGrantedByUserId?: string | null;
@@ -190,6 +205,8 @@ type PublicBillingSnapshot = {
   pendingCheckoutSessionId: string | null;
   includedListings: number | null;
   extraListings: number;
+  complimentary: boolean;
+  complimentaryEndsAtISO: string | null;
 };
 
 export type SubscriptionActivationResult = {
@@ -960,6 +977,10 @@ export class PaymentsService {
       extraListings: readExtraListingsFromBilling(billing),
       planItemId: readString(billing.planItemId),
       extraListingItemId: readString(billing.extraListingItemId),
+      complimentary: readBoolean(billing.complimentary, false),
+      complimentaryEndsAtISO: readString(billing.complimentaryEndsAtISO),
+      complimentaryGrantedByUserId: readString(billing.complimentaryGrantedByUserId),
+      complimentaryGrantedAtISO: readString(billing.complimentaryGrantedAtISO),
       giftedTrialSource: readString(billing.giftedTrialSource),
       giftedTrialListingId: readString(billing.giftedTrialListingId),
       giftedTrialGrantedByUserId: readString(billing.giftedTrialGrantedByUserId),
@@ -1182,7 +1203,30 @@ export class PaymentsService {
       pendingCheckoutSessionId: billing.pendingCheckoutSessionId,
       includedListings: billing.includedListings,
       extraListings: billing.extraListings,
+      complimentary: billing.complimentary,
+      complimentaryEndsAtISO: billing.complimentaryEndsAtISO,
     };
+  }
+
+  /** Un plan offert avec date de fin expire comme un abonnement : annonces gelées, statut résilié. */
+  private async enforceComplimentaryPlanExpiration(user: User): Promise<User> {
+    const billing = this.readBillingSnapshot(user);
+    if (!billing.complimentary) return user;
+
+    const endsAt = this.parseIsoDate(billing.complimentaryEndsAtISO);
+    if (!endsAt || Date.now() < endsAt.getTime()) return user;
+
+    await this.blockPublishedListingsForOwner(user.id);
+
+    return this.updateUserStripeState({
+      user,
+      billingPatch: {
+        status: 'canceled',
+        complimentary: false,
+        currentPeriodEndISO: billing.complimentaryEndsAtISO,
+        updatedAtISO: nowIso(),
+      },
+    });
   }
 
   private async countActiveListingsForOwner(ownerId: string): Promise<number> {
@@ -1257,6 +1301,10 @@ export class PaymentsService {
       extraListings: billingPatch?.extraListings,
       planItemId: billingPatch?.planItemId,
       extraListingItemId: billingPatch?.extraListingItemId,
+      complimentary: billingPatch?.complimentary,
+      complimentaryEndsAtISO: billingPatch?.complimentaryEndsAtISO,
+      complimentaryGrantedByUserId: billingPatch?.complimentaryGrantedByUserId,
+      complimentaryGrantedAtISO: billingPatch?.complimentaryGrantedAtISO,
       giftedTrialSource: billingPatch?.giftedTrialSource,
       giftedTrialListingId: billingPatch?.giftedTrialListingId,
       giftedTrialGrantedByUserId: billingPatch?.giftedTrialGrantedByUserId,
@@ -1521,6 +1569,11 @@ export class PaymentsService {
       extraListings: extraItem ? Math.max(0, Math.trunc(extraItem.quantity ?? 0)) : 0,
       planItemId: planItem?.id ?? null,
       extraListingItemId: extraItem?.id ?? null,
+      // Un abonnement Stripe réel remplace un éventuel plan offert.
+      complimentary: false,
+      complimentaryEndsAtISO: null,
+      complimentaryGrantedByUserId: null,
+      complimentaryGrantedAtISO: null,
     };
   }
 
@@ -1815,6 +1868,104 @@ export class PaymentsService {
   }
 
   /**
+   * Plan offert par l'admin (ex. un proche, un partenaire) : le compte est actif sans abonnement
+   * Stripe, avec les logements du plan + supplémentaires, sans limite de durée ou jusqu'à une date.
+   */
+  async grantComplimentaryPlanForUserAsAdmin(
+    auth: RequestAuth | null,
+    targetUserId: string,
+    input: ComplimentaryPlanInput,
+  ): Promise<ComplimentaryPlanResult | 'forbidden' | null> {
+    if (!hasAdminAccess(auth)) return 'forbidden';
+
+    const admin = await upsertUserFromAuth(this.prisma, auth);
+    let user = await resolveUserByIdentifier(this.prisma, targetUserId);
+    if (!user) return null;
+
+    const catalog = await this.resolveCatalog();
+    const plan = catalog.plans.find((candidate) => candidate.code === input.planCode) ?? null;
+    if (!plan) {
+      return {
+        state: 'plan_unavailable',
+        subscriptionState: await this.buildSubscriptionStateForUser(user, { allowAdmin: false, sync: false }),
+        message: 'Plan inconnu.',
+      };
+    }
+
+    const billing = this.readBillingSnapshot(user);
+    if (!billing.complimentary && billing.subscriptionId && isSubscriptionOngoing(billing.status)) {
+      return {
+        state: 'subscription_exists',
+        subscriptionState: await this.buildSubscriptionStateForUser(user, { allowAdmin: false, sync: false }),
+        message: 'Ce client a déjà un abonnement Stripe en cours : résiliez-le avant d’offrir un plan.',
+      };
+    }
+
+    const endsAtISO = this.parseIsoDate(input.endsAtISO)?.toISOString() ?? null;
+    user = await this.updateUserStripeState({
+      user,
+      billingPatch: {
+        subscriptionId: null,
+        planCode: plan.code,
+        status: 'active',
+        currentPeriodEndISO: endsAtISO,
+        cancelAtPeriodEnd: false,
+        updatedAtISO: nowIso(),
+        pendingPlanCode: null,
+        pendingCheckoutSessionId: null,
+        includedListings: plan.maxActiveListings,
+        extraListings: Math.max(0, Math.min(EXTRA_LISTINGS_MAX, Math.trunc(input.extraListings))),
+        planItemId: null,
+        extraListingItemId: null,
+        complimentary: true,
+        complimentaryEndsAtISO: endsAtISO,
+        complimentaryGrantedByUserId: admin?.id ?? null,
+        complimentaryGrantedAtISO: nowIso(),
+      },
+    });
+
+    return {
+      state: 'granted',
+      subscriptionState: await this.buildSubscriptionStateForUser(user, { allowAdmin: false, sync: false }),
+      message: null,
+    };
+  }
+
+  async revokeComplimentaryPlanForUserAsAdmin(
+    auth: RequestAuth | null,
+    targetUserId: string,
+  ): Promise<ComplimentaryPlanResult | 'forbidden' | null> {
+    if (!hasAdminAccess(auth)) return 'forbidden';
+
+    let user = await resolveUserByIdentifier(this.prisma, targetUserId);
+    if (!user) return null;
+
+    const billing = this.readBillingSnapshot(user);
+    if (billing.complimentary) {
+      await this.blockPublishedListingsForOwner(user.id);
+      user = await this.updateUserStripeState({
+        user,
+        billingPatch: {
+          planCode: null,
+          status: 'canceled',
+          currentPeriodEndISO: nowIso(),
+          updatedAtISO: nowIso(),
+          includedListings: null,
+          extraListings: 0,
+          complimentary: false,
+          complimentaryEndsAtISO: null,
+        },
+      });
+    }
+
+    return {
+      state: 'revoked',
+      subscriptionState: await this.buildSubscriptionStateForUser(user, { allowAdmin: false, sync: false }),
+      message: null,
+    };
+  }
+
+  /**
    * Lien de paiement Stripe (Checkout, mode abonnement) généré par l'admin pour un client :
    * plan + logements supplémentaires éventuels, essai gratuit identique au parcours self-service.
    * Le lien expire après 24 h ; une fois payé, le client voit son plan dès sa prochaine connexion
@@ -1947,6 +2098,7 @@ export class PaymentsService {
   ): Promise<UpdateExtraListingsResult> {
     const allowAdmin = options.allowAdmin;
     let user = await this.enforceAdminListingTransferTrialExpiration(initialUser);
+    user = await this.enforceComplimentaryPlanExpiration(user);
 
     const mode = this.getSubscriptionExecutionMode();
     const catalog = await this.resolveCatalog();
@@ -1980,7 +2132,8 @@ export class PaymentsService {
       );
     }
 
-    if (mode === 'mock' || !this.stripe) {
+    // Plan offert ou mode simulation : pas d'item Stripe, la quantité est portée par le profil.
+    if (billing.complimentary || mode === 'mock' || !this.stripe) {
       const next = await this.updateUserStripeState({
         user,
         billingPatch: { extraListings: quantity, updatedAtISO: nowIso() },
@@ -2058,6 +2211,7 @@ export class PaymentsService {
   ): Promise<MySubscriptionStateResult> {
     const allowAdmin = options.allowAdmin;
     let user = await this.enforceAdminListingTransferTrialExpiration(initialUser);
+    user = await this.enforceComplimentaryPlanExpiration(user);
 
     const catalog = await this.resolveCatalog();
     const plans = catalog.plans;

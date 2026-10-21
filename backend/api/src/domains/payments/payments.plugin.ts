@@ -7,6 +7,7 @@ import {
   confirmCheckoutSessionSchema,
   createConnectOnboardingLinkSchema,
   createPaymentIntentSchema,
+  adminComplimentaryPlanSchema,
   adminSubscriptionLinkSchema,
   adminUserParamsSchema,
   getMySubscriptionQuerySchema,
@@ -137,6 +138,54 @@ export const paymentsPlugin = fp(async (fastify) => {
 
     if (result.state !== 'updated') {
       reply.code(409).send({ message: result.message, details: result });
+      return;
+    }
+
+    reply.send(result);
+  });
+
+  fastify.post('/payments/stripe/admin/users/:userId/complimentary-plan', {
+    preHandler: fastify.authenticate,
+  }, async (request, reply) => {
+    const params = adminUserParamsSchema.parse(request.params);
+    const payload = adminComplimentaryPlanSchema.parse(asObject(request.body));
+    const result = await service.grantComplimentaryPlanForUserAsAdmin(request.auth, params.userId, {
+      planCode: payload.planCode,
+      extraListings: payload.extraListings,
+      endsAtISO: payload.endsAtISO ?? null,
+    });
+
+    if (result === 'forbidden') {
+      reply.code(403).send({ message: 'Admin access required.' });
+      return;
+    }
+
+    if (!result) {
+      reply.code(404).send({ message: 'User not found.' });
+      return;
+    }
+
+    if (result.state !== 'granted') {
+      reply.code(409).send({ message: result.message, details: result });
+      return;
+    }
+
+    reply.send(result);
+  });
+
+  fastify.delete('/payments/stripe/admin/users/:userId/complimentary-plan', {
+    preHandler: fastify.authenticate,
+  }, async (request, reply) => {
+    const params = adminUserParamsSchema.parse(request.params);
+    const result = await service.revokeComplimentaryPlanForUserAsAdmin(request.auth, params.userId);
+
+    if (result === 'forbidden') {
+      reply.code(403).send({ message: 'Admin access required.' });
+      return;
+    }
+
+    if (!result) {
+      reply.code(404).send({ message: 'User not found.' });
       return;
     }
 

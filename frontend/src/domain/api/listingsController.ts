@@ -576,12 +576,14 @@ export function createApiListingsController(): ListingsController {
         await Promise.all(requests)
       }
     },
-    createListing: async (payload?: Partial<RawListingBundle>): Promise<{ listingId: string }> => {
-      console.log('[Domain][api] createListing', { payload })
+    createListing: async (payload?: Partial<RawListingBundle>, options?: { ownerId?: string | null }): Promise<{ listingId: string }> => {
+      console.log('[Domain][api] createListing', { payload, ownerId: options?.ownerId ?? null })
       assertApiEnabled('creer une annonce')
 
       const url = resolveUrl(buildCreateListingUrl())
-      return postRemote<{ listingId: string }>(url, payload ?? {})
+      // ownerId : un admin crée l'annonce au nom d'un client ; ignoré par l'API pour les autres rôles.
+      const ownerId = options?.ownerId?.trim()
+      return postRemote<{ listingId: string }>(url, ownerId ? { ...(payload ?? {}), ownerId } : (payload ?? {}))
     },
   }
 }

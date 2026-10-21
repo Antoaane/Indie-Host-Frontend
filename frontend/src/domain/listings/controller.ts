@@ -28,7 +28,7 @@ export type ListingsController = {
   syncListingAvailability: (listingId: string) => Promise<ListingAvailabilitySyncResult>
   patchListingDraft: (listingId: string, patch: DraftPatch) => Promise<void>
   publishListingDraft: (listingId: string, draft: RawListingBundle) => Promise<void>
-  createListing: (payload?: Partial<RawListingBundle>) => Promise<{ listingId: string }>
+  createListing: (payload?: Partial<RawListingBundle>, options?: { ownerId?: string | null }) => Promise<{ listingId: string }>
 }
 
 let cachedController: ListingsController | null = null

@@ -74,6 +74,12 @@ export const adminUserParamsSchema = z.object({
   userId: z.string().trim().min(1),
 });
 
+export const adminComplimentaryPlanSchema = z.object({
+  planCode: subscriptionPlanCodeSchema,
+  extraListings: z.coerce.number().int().min(0).max(50).optional().default(0),
+  endsAtISO: z.string().datetime({ offset: true }).optional(),
+});
+
 export const adminSubscriptionLinkSchema = z.object({
   userId: z.string().trim().min(1),
   planCode: subscriptionPlanCodeSchema,

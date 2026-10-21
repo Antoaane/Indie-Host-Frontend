@@ -607,6 +607,7 @@ Après un changement de secret : recopier le fichier concerné, puis la même co
 | **IndieHost** — 19 € TTC/mois | 2 logements en ligne inclus |
 | **SuperHost** — 49 € TTC/mois | 6 logements en ligne inclus |
 | **Logement supplémentaire** — 12 € TTC/mois/logement | Item add-on sur l'abonnement Stripe (quantité), ajouté/retiré depuis le dashboard (`POST /payments/stripe/subscriptions/extra-listings`) |
+| **Plan offert** (admin) | `POST/DELETE /payments/stripe/admin/users/:userId/complimentary-plan` : compte actif sans Stripe (`billing.complimentary`), illimité ou jusqu'à une date, logements supplémentaires sans facturation. Un abonnement Stripe réel le remplace. L'admin crée les annonces du client directement à son nom depuis `/dashboard/editor/:userId` (`ownerId` à la création). |
 
 - Source de vérité : le catalogue Stripe live, produits avec métadonnées `indiehost_plan_code` (`indiehost` / `superhost` / `extra_listing`) et `indiehost_max_active_listings`. La résolution est **stricte** (métadonnée ou nom exact, produits/prix archivés ignorés) — plus jamais de correspondance par préfixe de nom. Valeurs de secours dans `backend/api/src/domains/payments/plans.catalog.ts`.
 - Limite « logements en gestion » = inclus + supplémentaires, **appliquée côté API** à la publication (`assertCanPublishListing`, statuts comptés : `published`, `paused`, `blocked` ; brouillons illimités). Erreur 403 `LISTING_PUBLICATION_REQUIREMENTS_NOT_MET` avec `listing_limit_reached`. Le front lit `listingAllowance` dans `GET /payments/stripe/subscriptions/me`.
