@@ -77,3 +77,14 @@ backend/api/.env
 /certbot/conf/csr
 /certbot/conf/keys
 /certbot/www
+
+############################
+# Skills Claude Code (.claude/skills)
+############################
+
+# Binaire moteur impeccable : ~16 Mo, specifique a l'OS/arch, retelecharge
+# automatiquement par le launcher au premier `impeccable context`
+/.claude/skills/impeccable/scripts/bin/
+
+# Etat local impeccable propre a chaque developpeur
+/.impeccable/config.local.json
