@@ -600,6 +600,8 @@ cd /opt/indiehost && git pull && docker compose up -d --build --wait
 
 Après un changement de secret : recopier le fichier concerné, puis la même commande.
 
+Après un changement de `nginx/nginx.conf.template` ou `nginx/proxy-locations.conf` : ces fichiers sont montés **fichier par fichier** (bind mount) et `git pull` remplace l'inode → le conteneur en cours (et `nginx -s reload`) garde l'ancienne version. Il faut recréer le conteneur : `docker compose up -d --force-recreate --wait nginx`, puis vérifier avec `docker compose exec -T nginx grep <directive> /etc/nginx/snippets/proxy-locations.conf`.
+
 ### Rôles et plans (offre 2026-10)
 
 | Compte | Droits |
