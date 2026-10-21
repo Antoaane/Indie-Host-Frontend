@@ -1,7 +1,8 @@
 <!-- File: src/views/Editor/components/EditorSidebar/panels/ListingPanels/CustomDomainPanel.vue -->
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, useId, watch, type Component } from 'vue'
+import { Globe, Info, Link2, Settings2, ShieldCheck } from 'lucide-vue-next'
 
 import {
   fetchListingDomain,
@@ -28,6 +29,51 @@ type DnsRecord = {
   value: string
 }
 
+type GuideStep = {
+  key: string
+  icon: Component
+  title: string
+  description: string
+}
+
+type GuideStepState = 'done' | 'active' | 'todo'
+
+// Le guide s'ouvre seul les premières fois (tant qu'aucun domaine n'est rattaché), puis via le bouton d'aide.
+const GUIDE_AUTO_OPEN_LIMIT = 3
+const GUIDE_AUTO_OPEN_STORAGE_KEY = 'indiehost:custom-domain-guide:auto-opens'
+let hasAutoOpenedGuideThisSession = false
+
+const guideSteps: GuideStep[] = [
+  {
+    key: 'own',
+    icon: Globe,
+    title: 'Choisissez le domaine à utiliser',
+    description: 'Vous l’avez acheté chez un registrar (OVH, Gandi, IONOS, GoDaddy…). Préférez l’adresse avec www, par exemple www.gite-belair.fr : c’est la plus simple à configurer.',
+  },
+  {
+    key: 'attach',
+    icon: Link2,
+    title: 'Rattachez-le à cette annonce',
+    description: 'Saisissez-le ci-dessous puis cliquez sur « Rattacher ce domaine ». IndieHost vous indique alors l’enregistrement DNS exact à créer.',
+  },
+  {
+    key: 'dns',
+    icon: Settings2,
+    title: 'Créez l’enregistrement DNS chez votre registrar',
+    description: 'Dans votre espace client, ouvrez la zone DNS du domaine et ajoutez l’enregistrement affiché (type, nom, valeur). La propagation prend de quelques minutes à 24 h.',
+  },
+  {
+    key: 'verify',
+    icon: ShieldCheck,
+    title: 'Vérifiez : votre annonce est en ligne',
+    description: 'Cliquez sur « Vérifier la configuration DNS ». Une fois validé, le certificat HTTPS est généré automatiquement et votre annonce répond sur votre domaine.',
+  },
+]
+
+const guideId = useId()
+const guideToggleRef = ref<HTMLButtonElement | null>(null)
+const isGuideOpen = ref(false)
+
 const domainInput = ref('')
 const currentDomain = ref<ListingDomainRecord | null>(null)
 const isLoadingCurrent = ref(false)
@@ -49,10 +95,19 @@ const targets = computed(() => currentDomain.value?.customDomainTargets ?? { ipv
 const isDirty = computed(() => Boolean(normalizedDomain.value) && normalizedDomain.value !== attachedDomain.value)
 const canSave = computed(() => canManageDomain.value && isValidDomain(normalizedDomain.value) && isDirty.value)
 
+const guideToggleLabel = computed(() => (isGuideOpen.value ? 'Masquer le guide' : 'Comment rattacher mon domaine ?'))
+
 const statusLabel = computed(() => {
   if (status.value === 'verified') return 'Actif'
   if (status.value === 'pending') return 'En attente de la configuration DNS'
   return 'Aucun domaine rattaché'
+})
+
+// L'étape mise en avant suit l'état réel : rien → 1, domaine saisi → 2, en attente DNS → 3, vérifié → tout est fait.
+const activeGuideStepIndex = computed(() => {
+  if (status.value === 'verified') return guideSteps.length
+  if (status.value === 'pending') return 2
+  return normalizedDomain.value ? 1 : 0
 })
 
 // Enregistrement à créer chez le registrar : CNAME pour un sous-domaine (www…), A pour un domaine nu.
@@ -71,6 +126,50 @@ const dnsRecords = computed<DnsRecord[]>(() => {
   }
   return []
 })
+
+function guideStepState(index: number): GuideStepState {
+  if (index < activeGuideStepIndex.value) return 'done'
+  if (index === activeGuideStepIndex.value) return 'active'
+  return 'todo'
+}
+
+function readGuideAutoOpenCount(): number {
+  try {
+    const parsed = Number.parseInt(window.localStorage.getItem(GUIDE_AUTO_OPEN_STORAGE_KEY) ?? '0', 10)
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : 0
+  } catch {
+    return 0
+  }
+}
+
+function writeGuideAutoOpenCount(count: number) {
+  try {
+    window.localStorage.setItem(GUIDE_AUTO_OPEN_STORAGE_KEY, String(count))
+  } catch {
+    // Stockage indisponible (navigation privée) : le guide s'ouvre quand même, sans mémoire.
+  }
+}
+
+function maybeAutoOpenGuide() {
+  if (hasAutoOpenedGuideThisSession || typeof window === 'undefined') return
+  if (attachedDomain.value) return
+
+  const count = readGuideAutoOpenCount()
+  if (count >= GUIDE_AUTO_OPEN_LIMIT) return
+
+  hasAutoOpenedGuideThisSession = true
+  writeGuideAutoOpenCount(count + 1)
+  isGuideOpen.value = true
+}
+
+function toggleGuide() {
+  isGuideOpen.value = !isGuideOpen.value
+}
+
+function closeGuide() {
+  isGuideOpen.value = false
+  guideToggleRef.value?.focus()
+}
 
 function normalizeDomainInput(value: string): string {
   return value
@@ -125,6 +224,7 @@ async function loadCurrentDomain() {
     errorMessage.value = resolveErrorMessage(error, 'Impossible de charger le domaine actuel.')
   } finally {
     isLoadingCurrent.value = false
+    maybeAutoOpenGuide()
   }
 }
 
@@ -240,8 +340,76 @@ onMounted(() => {
 <template>
   <section class="editor-custom-domain-panel">
     <div class="header">
-      <h3>Votre propre nom de domaine</h3>
-      <p>Rattachez un domaine que vous possédez déjà (ex. www.gite-belair.fr) : votre annonce y sera servie en HTTPS, en plus de son adresse {{ rootDomain }}.</p>
+      <div class="main">
+        <h3>Votre propre nom de domaine</h3>
+        <p>Rattachez un domaine que vous possédez déjà (ex. www.gite-belair.fr) : votre annonce y sera servie en HTTPS, en plus de son adresse {{ rootDomain }}.</p>
+      </div>
+
+      <div class="header-actions">
+        <div class="guide-toggle">
+          <button
+            ref="guideToggleRef"
+            type="button"
+            :aria-expanded="isGuideOpen"
+            :aria-controls="guideId"
+            :aria-label="guideToggleLabel"
+            :title="guideToggleLabel"
+            @click="toggleGuide"
+          >
+            <Info :size="17" />
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      :id="guideId"
+      class="guide"
+      :class="{ 'is-open': isGuideOpen }"
+      role="region"
+      aria-label="Comment rattacher votre nom de domaine"
+      :inert="!isGuideOpen"
+    >
+      <div class="guide-inner">
+        <div class="guide-card">
+          <p class="guide-intro">Quatre étapes, une dizaine de minutes chez votre registrar.</p>
+
+          <ol class="guide-steps">
+            <li
+              v-for="(step, index) in guideSteps"
+              :key="step.key"
+              class="guide-step"
+              :class="`is-${guideStepState(index)}`"
+            >
+              <span
+                class="marker"
+                aria-hidden="true"
+              >
+                <component
+                  :is="step.icon"
+                  :size="16"
+                />
+              </span>
+              <div class="content">
+                <h4>{{ step.title }}</h4>
+                <p>{{ step.description }}</p>
+              </div>
+            </li>
+          </ol>
+
+          <div class="guide-footer">
+            <div class="close">
+              <button
+                type="button"
+                @click="closeGuide"
+              >
+                Fermer le guide
+              </button>
+            </div>
+            <p>Il reste disponible à tout moment via le bouton d’aide.</p>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="body">
@@ -382,6 +550,7 @@ onMounted(() => {
 <style lang="scss">
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
 @use '@/styles/components/buttons' as buttons;
 @use '@/styles/components/inputs' as inputs;
 @use '@/views/Editor/components/EditorSidebar/panels/panel.scss' as *;
@@ -390,7 +559,199 @@ onMounted(() => {
   @extend %panel;
 
   > .header {
-    @extend %panel-header;
+    margin-bottom: var(--layout-gap);
+
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--layout-gap-sm);
+
+    > .main {
+      min-width: 0;
+      flex: 1 1 auto;
+
+      > h3 {
+        @extend %panel-title;
+      }
+
+      > p {
+        @extend %panel-subtitle;
+      }
+    }
+
+    > .header-actions {
+      flex: 0 0 auto;
+
+      > .guide-toggle {
+        @include buttons.primary($theme: white, $icon-only: true, $deep: true);
+
+        > * {
+          width: 2.5rem;
+          height: 2.5rem;
+        }
+
+        // Bouton d'aide « enfoncé » tant que le guide est ouvert : même rendu que le survol.
+        > [aria-expanded='true'] {
+          color: $accent;
+          background-color: $secondary-button-reference;
+
+          * {
+            color: $accent;
+            stroke: $accent;
+          }
+        }
+      }
+    }
+  }
+
+  // Dépliage du guide : une seule animation, hauteur par grille (pas de mesure JS) + opacité.
+  > .guide {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    @include animations.transition($duration: 320ms);
+
+    &.is-open {
+      grid-template-rows: 1fr;
+      opacity: 1;
+      margin-bottom: var(--layout-gap);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+
+    > .guide-inner {
+      min-height: 0;
+      overflow: hidden;
+
+      > .guide-card {
+        display: flex;
+        flex-direction: column;
+        gap: var(--layout-gap);
+        padding: var(--layout-gap);
+        border-radius: borders.$rounded-sm;
+        border: 1px solid rgba($secondary, 0.08);
+        background: rgba($secondary, 0.02);
+
+        > .guide-intro {
+          @include little-text($thin: false);
+          color: rgba($secondary, 0.72);
+        }
+
+        > .guide-steps {
+          margin: 0;
+          padding: 0;
+          list-style: none;
+
+          display: flex;
+          flex-direction: column;
+          gap: var(--layout-gap);
+
+          > .guide-step {
+            position: relative;
+            display: flex;
+            align-items: flex-start;
+            gap: var(--layout-gap-sm);
+
+            // Fil reliant les marqueurs : la séquence se lit d'un coup d'œil.
+            &:not(:last-child)::before {
+              content: '';
+              position: absolute;
+              top: 2rem;
+              bottom: calc(-1 * var(--layout-gap));
+              left: calc(1rem - 0.5px);
+              width: 1px;
+              background: rgba($secondary, 0.12);
+            }
+
+            > .marker {
+              position: relative;
+              z-index: 1;
+              flex: 0 0 auto;
+              width: 2rem;
+              height: 2rem;
+
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+
+              border-radius: borders.$rounded;
+              border: 1px solid rgba($secondary, 0.12);
+              background: $accent;
+              @include animations.transition();
+
+              > svg {
+                stroke: rgba($secondary, 0.7);
+                @include animations.transition();
+              }
+            }
+
+            > .content {
+              min-width: 0;
+              flex: 1 1 auto;
+
+              display: flex;
+              flex-direction: column;
+              gap: var(--layout-gap-2xs);
+
+              > h4 {
+                margin: 0;
+                font-weight: 600 !important;
+                text-wrap: balance;
+                @include h4-title();
+              }
+
+              > p {
+                @include little-text($thin: false);
+                color: rgba($secondary, 0.72);
+              }
+            }
+
+            &.is-active > .marker {
+              border-color: $secondary;
+              background: $secondary;
+
+              > svg {
+                stroke: $accent;
+              }
+            }
+
+            &.is-done {
+              > .marker {
+                border-color: rgba($good, 0.5);
+                background: rgba($good, 0.2);
+
+                > svg {
+                  stroke: $secondary;
+                }
+              }
+
+              > .content > h4 {
+                color: rgba($secondary, 0.6);
+              }
+            }
+          }
+        }
+
+        > .guide-footer {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          justify-content: space-between;
+          gap: var(--layout-gap-sm);
+
+          > .close {
+            @include buttons.secondary($theme: white, $padding: false);
+          }
+
+          > p {
+            @include little-text($thin: false);
+            color: rgba($secondary, 0.6);
+          }
+        }
+      }
+    }
   }
 
   > .body {
