@@ -55,51 +55,6 @@
 
       @include responsive-grid-columns(var(--editor-listing-card-min-width), auto-fill);
 
-      > .new-card {
-        width: 100%;
-        min-width: 0;
-        aspect-ratio: 9 / 13;
-        display: flex;
-
-        > * {
-          width: 100%;
-          text-decoration: none;
-          padding: var(--layout-gap-md);
-          border-radius: borders.$rounded-xl;
-          border: 2px dashed rgba($secondary, 0.2);
-          background: $accent-surface-1;
-          box-shadow: none;
-          outline-color: rgba($secondary, 0.08);
-
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
-          > .content {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: var(--layout-gap-xs);
-
-            color: rgba($secondary-text, 0.75);
-
-            > small {
-              font-size: 0.85rem;
-              font-weight: 300;
-            }
-
-            > small.remaining {
-              &.is-limit-reached {
-                color: rgba($bad, 1);
-                font-weight: 700;
-              }
-            }
-          }
-        }
-      }
-
       > .card {
         min-width: 0;
         aspect-ratio: 9 / 13;

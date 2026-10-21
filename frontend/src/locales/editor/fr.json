@@ -50,14 +50,19 @@
       "ratingTitle": "{rating} / 5",
       "ratingAria": "{rating} sur 5",
       "newListing": {
-        "title": "+ Nouvelle annonce",
-        "activeUsage": "{count} / {max} en ligne",
-        "remaining": "{count} restantes",
-        "remainingAlertSuffix": "!",
+        "title": "Nouvelle annonce",
+        "usageLabel": "Logements en ligne",
+        "remaining": "{count, plural, one {# logement disponible sur votre plan} other {# logements disponibles sur votre plan}}",
+        "unlimited": "Aucune limite de logements",
+        "limitReached": "Limite atteinte : vos nouvelles annonces resteront en brouillon.",
         "choosePlan": "Choisir un plan",
         "addExtraListing": "Ajouter un logement (+{price} / mois)",
-        "addExtraListingBusy": "Ajout en cours...",
-        "createHub": "Créer une page principale (présente vos logements sous un même domaine)"
+        "addExtraListingBusy": "Ajout en cours…",
+        "hub": {
+          "title": "Page principale",
+          "description": "Présentez plusieurs logements sous un même domaine.",
+          "busy": "Création en cours…"
+        }
       }
     },
     "sidebar": {

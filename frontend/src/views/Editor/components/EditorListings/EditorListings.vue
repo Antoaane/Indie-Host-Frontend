@@ -13,6 +13,7 @@ import { normalizeListingStatus } from '@/domain/listings/status'
 import { formatExtraListingPrice } from '@/domain/payments/pricingPlanCatalog'
 import { getUserMaxActiveListings } from '@/domain/user/subscription'
 import { readActiveUserId } from '@/router/backOfficeUser'
+import { formatICUMessage } from '@/utils/i18n'
 import { normalizeSearchText } from '@/utils/search'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 import type { UserListingCard } from '@/views/Editor/utils/listingApi'
@@ -117,15 +118,13 @@ const maxActiveListings = computed(() => (
 ))
 // Les pages principales (annonces mères) ne consomment pas de logement du plan.
 const activeListingsCount = computed(() => props.listings.reduce((count, listing) => count + (isActiveListingStatus(listing.status) && listing.kind !== 'hub' ? 1 : 0), 0))
-const maxActiveListingsDisplay = computed(() => (Number.isFinite(maxActiveListings.value) ? String(maxActiveListings.value) : '∞'))
 const remainingActiveListings = computed(() => (isAdminUser.value ? Number.POSITIVE_INFINITY : Math.max(0, maxActiveListings.value - activeListingsCount.value)))
-const remainingActiveListingsDisplay = computed(() => (Number.isFinite(remainingActiveListings.value) ? String(remainingActiveListings.value) : '∞'))
 const isActiveListingsLimitReached = computed(() => !isAdminUser.value && remainingActiveListings.value <= 0)
-const newListingActiveUsage = computed(() => listingContent.newListing.activeUsage
-  .replace('{count}', String(activeListingsCount.value))
-  .replace('{max}', maxActiveListingsDisplay.value))
-const newListingRemaining = computed(() => listingContent.newListing.remaining.replace('{count}', remainingActiveListingsDisplay.value))
-const newListingRemainingDisplay = computed(() => (isActiveListingsLimitReached.value ? `${newListingRemaining.value} ${listingContent.newListing.remainingAlertSuffix}` : newListingRemaining.value))
+const newListingFootnote = computed(() => {
+  if (!Number.isFinite(remainingActiveListings.value)) return listingContent.newListing.unlimited
+  if (isActiveListingsLimitReached.value) return listingContent.newListing.limitReached
+  return formatICUMessage(listingContent.newListing.remaining, { count: remainingActiveListings.value })
+})
 const activeUserId = computed(() => readActiveUserId(route.params.userId))
 
 const createListingRoute = computed(() => {
@@ -614,16 +613,20 @@ onBeforeUnmount(() => {
         <EditorListingsCreateCard
           :to="createListingRoute"
           :title="listingContent.newListing.title"
-          :activeUsage="newListingActiveUsage"
-          :remainingDisplay="newListingRemainingDisplay"
+          :usageLabel="listingContent.newListing.usageLabel"
+          :activeCount="activeListingsCount"
+          :maxActive="maxActiveListings"
+          :footnote="newListingFootnote"
           :isLimitReached="isActiveListingsLimitReached"
           :limitCtaLabel="isAdminUser ? null : limitCtaLabel"
           :isLimitCtaBusy="isExtraListingBusy"
           :limitCtaError="extraListingError"
-          :secondaryLabel="listingContent.newListing.createHub"
-          :isSecondaryBusy="props.isCreatingHub"
+          :hubTitle="listingContent.newListing.hub.title"
+          :hubDescription="listingContent.newListing.hub.description"
+          :hubBusyLabel="listingContent.newListing.hub.busy"
+          :isHubBusy="props.isCreatingHub"
           @limit-cta="handleLimitCta"
-          @secondary="emit('create-hub')"
+          @create-hub="emit('create-hub')"
         />
       </div>
     </div>
