@@ -33,6 +33,36 @@ export type AdminPlatformUser = {
   avatarUrl: string | null
 }
 
+export type AdminUserOverview = {
+  id: string | null
+  clerkUserId: string | null
+  email: string | null
+  firstName: string | null
+  lastName: string | null
+  displayName: string | null
+  avatarUrl: string | null
+  createdAtISO: string | null
+  billing: {
+    planCode: 'indiehost' | 'superhost' | null
+    status: string | null
+    currentPeriodEndISO: string | null
+    includedListings: number
+    extraListings: number
+    hasStripeCustomer: boolean
+  }
+  listings: {
+    total: number
+    active: number
+  }
+}
+
+export type AdminInvitation = {
+  id: string
+  emailAddress: string
+  status: string
+  url: string | null
+}
+
 export type TransferListingOwnershipPayload = {
   targetUserId: string
   trialDays?: number
@@ -378,5 +408,100 @@ export async function transferListingOwnershipAsAdmin(
     return data
   } catch (error) {
     throw new Error(toApiErrorMessage(error, 'Impossible de transférer cette annonce.'))
+  }
+}
+
+function toNonNegativeInteger(value: unknown): number {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) && parsed > 0 ? Math.trunc(parsed) : 0
+}
+
+function normalizeAdminUserOverview(data: Record<string, unknown> | null | undefined): AdminUserOverview {
+  const payload = data ?? {}
+  const billing = (payload.billing && typeof payload.billing === 'object' ? payload.billing : {}) as Record<string, unknown>
+  const listings = (payload.listings && typeof payload.listings === 'object' ? payload.listings : {}) as Record<string, unknown>
+  const planCode = normalizeOptionalText(billing.planCode)
+
+  return {
+    id: normalizeOptionalText(payload.id),
+    clerkUserId: normalizeOptionalText(payload.clerkUserId),
+    email: normalizeOptionalText(payload.email),
+    firstName: normalizeOptionalText(payload.firstName),
+    lastName: normalizeOptionalText(payload.lastName),
+    displayName: normalizeOptionalText(payload.displayName),
+    avatarUrl: normalizeOptionalText(payload.avatarUrl),
+    createdAtISO: normalizeOptionalText(payload.createdAtISO),
+    billing: {
+      planCode: planCode === 'indiehost' || planCode === 'superhost' ? planCode : null,
+      status: normalizeOptionalText(billing.status),
+      currentPeriodEndISO: normalizeOptionalText(billing.currentPeriodEndISO),
+      includedListings: toNonNegativeInteger(billing.includedListings),
+      extraListings: toNonNegativeInteger(billing.extraListings),
+      hasStripeCustomer: Boolean(billing.hasStripeCustomer),
+    },
+    listings: {
+      total: toNonNegativeInteger(listings.total),
+      active: toNonNegativeInteger(listings.active),
+    },
+  }
+}
+
+/** Vue d'ensemble des clients (fenêtre admin) : comptes API + comptes Clerk jamais connectés au dashboard. */
+export async function fetchAdminUsersOverview(input?: { query?: string; limit?: number }): Promise<AdminUserOverview[]> {
+  const axios = await getAxios()
+  const url = resolveUrl(`${BASE_API_URL}/users/admin/overview`)
+  const headers = await buildRequiredAuthHeaders()
+
+  try {
+    const { data } = await axios.get<{ users?: Array<Record<string, unknown>> }>(url, {
+      withCredentials: false,
+      headers,
+      params: {
+        query: toTrimmedString(input?.query),
+        limit: input?.limit ?? 2000,
+      },
+    })
+
+    const users = Array.isArray(data?.users) ? data.users : []
+    return users.map((user) => normalizeAdminUserOverview(user))
+  } catch (error) {
+    throw new Error(toApiErrorMessage(error, 'Impossible de charger la liste des clients.'))
+  }
+}
+
+/** Invitation Clerk : le client reçoit un email pour créer son compte. */
+export async function createAdminInvitation(input: {
+  email: string
+  firstName?: string
+  lastName?: string
+  redirectUrl?: string
+}): Promise<AdminInvitation> {
+  const axios = await getAxios()
+  const url = resolveUrl(`${BASE_API_URL}/users/admin/invitations`)
+  const headers = await buildRequiredAuthHeaders()
+
+  try {
+    const { data } = await axios.post<Record<string, unknown>>(
+      url,
+      {
+        email: input.email.trim().toLowerCase(),
+        ...(input.firstName?.trim() ? { firstName: input.firstName.trim() } : {}),
+        ...(input.lastName?.trim() ? { lastName: input.lastName.trim() } : {}),
+        ...(input.redirectUrl ? { redirectUrl: input.redirectUrl } : {}),
+      },
+      {
+        withCredentials: false,
+        headers,
+      },
+    )
+
+    return {
+      id: toTrimmedString(data?.id),
+      emailAddress: toTrimmedString(data?.emailAddress) || input.email.trim().toLowerCase(),
+      status: toTrimmedString(data?.status) || 'pending',
+      url: normalizeOptionalText(data?.url),
+    }
+  } catch (error) {
+    throw new Error(toApiErrorMessage(error, 'Impossible d’envoyer l’invitation.'))
   }
 }

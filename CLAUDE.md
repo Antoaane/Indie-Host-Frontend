@@ -194,6 +194,7 @@ secrets/cloudflare.ini           → Credentials Cloudflare DNS-01
 | `/dashboard/management` | ManagementRoute |
 | `/dashboard/messages` | MessagingRoute |
 | `/dashboard/domains` | DomainsRoute |
+| `/dashboard/admin` | AdminRoute (super admin uniquement : clients, invitations Clerk, abonnement/logements supplémentaires d'un client, lien de paiement Stripe à lui envoyer) |
 
 **Guards :** Les routes `/dashboard/*` sans `userId` attendent Clerk (2500ms max) puis redirigent vers variante `*-user` avec l'userId, ou vers `sign-in`.
 

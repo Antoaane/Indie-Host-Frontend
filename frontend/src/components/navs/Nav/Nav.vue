@@ -17,6 +17,7 @@ import type { NavItem, NavVariant } from '@/components/navs/Nav/navTypes'
 import { closeMobileMenu, isMobileMenuOpen, isNavForcedHidden } from '@/components/navs/navUtils'
 import { createMyStripeConnectDashboardLink, fetchMyStripeSubscriptionState } from '@/domain/api/stripeSubscriptions'
 import { isManagedListingHostname } from '@/domain/listings/publicDomain'
+import { useAdminAccess } from '@/composables/useAdminAccess'
 import { readActiveUserId } from '@/router/backOfficeUser'
 import { vp } from '@/utils/viewport'
 import clerkToken from '@/utils/clerkToken'
@@ -83,6 +84,7 @@ const isNavVisible = computed(() => !isNavHidden.value)
 const isNavActuallyHidden = computed(() => isNavForcedHidden.value || isNavHiddenByScroll.value)
 const isHost = computed(() => navVariant.value === 'host')
 const isBackOfficeDockMode = computed(() => isHost.value && !vp.lg.value)
+const { isAdminUser } = useAdminAccess()
 
 type BackOfficeRouteName = 'editor' | 'create-listing' | 'management' | 'messaging'
 type BackOfficeUserRouteName = 'editor-user' | 'create-listing-user' | 'management-user' | 'messaging-user'
@@ -350,6 +352,11 @@ const hostNavItems = computed<NavItem[]>(() => {
     { id: 'reservations', name: 'Réservations', link: resolveBackOfficeRouteLink('management', '/dashboard/management') },
     { id: 'messagery', name: 'Messagerie', link: resolveBackOfficeRouteLink('messaging', '/dashboard/messages') },
   ]
+
+  // Fenêtre d'administration : visible uniquement pour le super admin.
+  if (isAdminUser.value) {
+    items.push({ id: 'admin', name: 'Admin', link: '/dashboard/admin' })
+  }
 
   if (canOpenStripeConnectDashboard.value) {
     items.push({

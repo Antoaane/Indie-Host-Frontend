@@ -17,7 +17,7 @@ import { asObject, toNumber } from '../../lib/json.js';
 import { toPrismaJson } from '../../lib/prisma.js';
 import { hasAdminAccess } from '../../lib/authRole.js';
 import type { RequestAuth } from '../../types/auth.js';
-import { upsertUserFromAuth } from '../users/users.repository.js';
+import { resolveUserByIdentifier, upsertUserFromAuth } from '../users/users.repository.js';
 
 type CheckoutPaymentChoice = 'full' | 'split' | 'cash';
 type CheckoutDeferredMode = 'none' | 'online' | 'cash';
@@ -102,6 +102,24 @@ export type UpdateExtraListingsResult = {
   mode: 'live' | 'mock';
   subscription: PublicBillingSnapshot | null;
   listingAllowance: ListingAllowance;
+  message: string | null;
+};
+
+type AdminSubscriptionLinkInput = {
+  userId: string;
+  planCode: SubscriptionPlanCode;
+  extraListings: number;
+  successUrl: string;
+  cancelUrl: string;
+};
+
+export type AdminSubscriptionLinkResult = {
+  state: 'created' | 'plan_unavailable';
+  mode: 'live' | 'mock';
+  plan: SubscriptionPlan | null;
+  url: string | null;
+  sessionId: string | null;
+  expiresAtISO: string | null;
   message: string | null;
 };
 
@@ -1796,6 +1814,106 @@ export class PaymentsService {
     return this.resolveCatalog();
   }
 
+  /**
+   * Lien de paiement Stripe (Checkout, mode abonnement) généré par l'admin pour un client :
+   * plan + logements supplémentaires éventuels, essai gratuit identique au parcours self-service.
+   * Le lien expire après 24 h ; une fois payé, le client voit son plan dès sa prochaine connexion
+   * (synchronisation par client Stripe, pas besoin de webhook).
+   */
+  async createSubscriptionLinkForUserAsAdmin(
+    auth: RequestAuth | null,
+    input: AdminSubscriptionLinkInput,
+  ): Promise<AdminSubscriptionLinkResult | 'forbidden' | null> {
+    if (!hasAdminAccess(auth)) return 'forbidden';
+
+    let user = await resolveUserByIdentifier(this.prisma, input.userId);
+    if (!user) return null;
+
+    const mode = this.getSubscriptionExecutionMode();
+    const catalog = await this.resolveCatalog();
+    const plan = catalog.plans.find((candidate) => candidate.code === input.planCode) ?? null;
+
+    if (!plan || !plan.available) {
+      return {
+        state: 'plan_unavailable',
+        mode,
+        plan,
+        url: null,
+        sessionId: null,
+        expiresAtISO: null,
+        message: plan?.unavailableReason ?? 'Plan indisponible.',
+      };
+    }
+
+    const extraQuantity = Math.max(0, Math.min(EXTRA_LISTINGS_MAX, Math.trunc(input.extraListings)));
+
+    if (mode === 'mock' || !this.stripe || !plan.stripePriceId) {
+      const sessionId = generateMockId('cs_mock_');
+      await this.updateUserStripeState({
+        user,
+        billingPatch: { pendingPlanCode: plan.code, pendingCheckoutSessionId: sessionId, updatedAtISO: nowIso() },
+      });
+      return {
+        state: 'created',
+        mode: 'mock',
+        plan,
+        url: addQueryParam(input.successUrl, 'session_id', sessionId),
+        sessionId,
+        expiresAtISO: null,
+        message: 'Mode simulation : ce lien confirme le plan sans paiement réel.',
+      };
+    }
+
+    const ensuredCustomer = await this.ensureStripeCustomer(user);
+    user = ensuredCustomer.user;
+
+    const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = [{ price: plan.stripePriceId, quantity: 1 }];
+    if (extraQuantity > 0 && catalog.extraListing?.available && catalog.extraListing.stripePriceId) {
+      lineItems.push({ price: catalog.extraListing.stripePriceId, quantity: extraQuantity });
+    }
+
+    const checkoutMetadata = {
+      ...this.buildSubscriptionCheckoutMetadata(user, plan.code),
+      createdByAdmin: 'true',
+      extraListings: String(extraQuantity),
+    };
+
+    const session = await this.stripe.checkout.sessions.create({
+      mode: 'subscription',
+      customer: ensuredCustomer.customerId,
+      client_reference_id: user.id,
+      success_url: addRawQueryParam(input.successUrl, 'session_id', '{CHECKOUT_SESSION_ID}'),
+      cancel_url: input.cancelUrl,
+      line_items: lineItems,
+      allow_promotion_codes: true,
+      metadata: checkoutMetadata,
+      subscription_data: this.buildSubscriptionCheckoutData(plan.code, checkoutMetadata),
+    });
+
+    if (!session.url) {
+      throw new Error('Stripe checkout session URL is missing.');
+    }
+
+    await this.updateUserStripeState({
+      user,
+      billingPatch: {
+        pendingPlanCode: plan.code,
+        pendingCheckoutSessionId: session.id,
+        updatedAtISO: nowIso(),
+      },
+    });
+
+    return {
+      state: 'created',
+      mode,
+      plan,
+      url: session.url,
+      sessionId: session.id,
+      expiresAtISO: toIsoFromUnixSeconds(session.expires_at),
+      message: null,
+    };
+  }
+
   async listSubscriptionPlans(): Promise<SubscriptionPlan[]> {
     return this.resolvePlanCatalog();
   }
@@ -1805,14 +1923,34 @@ export class PaymentsService {
    * (item add-on créé, mis à jour ou retiré, prorata immédiat côté Stripe).
    */
   async updateExtraListings(input: UpdateExtraListingsInput, auth: RequestAuth | null): Promise<UpdateExtraListingsResult | null> {
-    const allowAdmin = hasAdminAccess(auth);
-    let user = await upsertUserFromAuth(this.prisma, auth);
+    const user = await upsertUserFromAuth(this.prisma, auth);
     if (!user) return null;
-    user = await this.enforceAdminListingTransferTrialExpiration(user);
+    return this.updateExtraListingsForUser(user, input.quantity, { allowAdmin: hasAdminAccess(auth) });
+  }
+
+  async updateExtraListingsForUserAsAdmin(
+    auth: RequestAuth | null,
+    targetUserId: string,
+    quantity: number,
+  ): Promise<UpdateExtraListingsResult | 'forbidden' | null> {
+    if (!hasAdminAccess(auth)) return 'forbidden';
+    const user = await resolveUserByIdentifier(this.prisma, targetUserId);
+    if (!user) return null;
+    // Le client reste soumis à ses propres limites : l'admin ajuste la quantité, pas les règles.
+    return this.updateExtraListingsForUser(user, quantity, { allowAdmin: false });
+  }
+
+  private async updateExtraListingsForUser(
+    initialUser: User,
+    quantityInput: number,
+    options: { allowAdmin: boolean },
+  ): Promise<UpdateExtraListingsResult> {
+    const allowAdmin = options.allowAdmin;
+    let user = await this.enforceAdminListingTransferTrialExpiration(initialUser);
 
     const mode = this.getSubscriptionExecutionMode();
     const catalog = await this.resolveCatalog();
-    const quantity = Math.max(0, Math.min(EXTRA_LISTINGS_MAX, Math.trunc(input.quantity)));
+    const quantity = Math.max(0, Math.min(EXTRA_LISTINGS_MAX, Math.trunc(quantityInput)));
     const billing = this.readBillingSnapshot(user);
 
     const respond = async (
@@ -1897,10 +2035,29 @@ export class PaymentsService {
   }
 
   async getMySubscriptionState(auth: RequestAuth | null, options?: { sync?: boolean }): Promise<MySubscriptionStateResult | null> {
-    const allowAdmin = hasAdminAccess(auth);
-    let user = await upsertUserFromAuth(this.prisma, auth);
+    const user = await upsertUserFromAuth(this.prisma, auth);
     if (!user) return null;
-    user = await this.enforceAdminListingTransferTrialExpiration(user);
+    return this.buildSubscriptionStateForUser(user, { allowAdmin: hasAdminAccess(auth), sync: Boolean(options?.sync) });
+  }
+
+  /** État d'abonnement d'un client, vu comme lui-même (limites réelles), pour la fenêtre admin. */
+  async getSubscriptionStateForUserAsAdmin(
+    auth: RequestAuth | null,
+    targetUserId: string,
+    options?: { sync?: boolean },
+  ): Promise<MySubscriptionStateResult | 'forbidden' | null> {
+    if (!hasAdminAccess(auth)) return 'forbidden';
+    const user = await resolveUserByIdentifier(this.prisma, targetUserId);
+    if (!user) return null;
+    return this.buildSubscriptionStateForUser(user, { allowAdmin: false, sync: Boolean(options?.sync) });
+  }
+
+  private async buildSubscriptionStateForUser(
+    initialUser: User,
+    options: { allowAdmin: boolean; sync: boolean },
+  ): Promise<MySubscriptionStateResult> {
+    const allowAdmin = options.allowAdmin;
+    let user = await this.enforceAdminListingTransferTrialExpiration(initialUser);
 
     const catalog = await this.resolveCatalog();
     const plans = catalog.plans;

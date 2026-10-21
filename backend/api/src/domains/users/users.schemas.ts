@@ -9,6 +9,13 @@ export const adminUserSearchQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(2000).optional().default(2000),
 });
 
+export const adminInvitationSchema = z.object({
+  email: z.string().trim().email(),
+  firstName: z.string().trim().max(120).optional(),
+  lastName: z.string().trim().max(120).optional(),
+  redirectUrl: z.string().url().optional(),
+});
+
 export const updateMeSchema = z.object({
   email: z.string().email().optional(),
   firstName: z.string().trim().min(1).max(120).optional(),

@@ -159,6 +159,78 @@ async function fetchClerkJson(pathname: string, query?: URLSearchParams): Promis
   }
 }
 
+export type ClerkInvitation = {
+  id: string;
+  emailAddress: string;
+  status: string;
+  url: string | null;
+};
+
+export type CreateClerkInvitationInput = {
+  emailAddress: string;
+  redirectUrl?: string | null;
+  publicMetadata?: Record<string, unknown>;
+};
+
+export class ClerkApiError extends Error {
+  readonly statusCode: number;
+
+  constructor(statusCode: number, message: string) {
+    super(message);
+    this.statusCode = statusCode;
+  }
+}
+
+function readClerkErrorMessage(payload: unknown, fallback: string): string {
+  const record = asRecord(payload);
+  const errors = Array.isArray(record?.errors) ? record?.errors : [];
+  for (const entry of errors) {
+    const error = asRecord(entry);
+    const message = readOptionalString(error?.long_message) ?? readOptionalString(error?.message);
+    if (message) return message;
+  }
+  return fallback;
+}
+
+/**
+ * Invitation Clerk : l'invité reçoit un email et crée son compte sur l'instance (prod : indiehost.fr).
+ * Lève ClerkApiError (ex. 400 si une invitation est déjà en attente pour cet email).
+ */
+export async function createClerkInvitation(input: CreateClerkInvitationInput): Promise<ClerkInvitation> {
+  const secret = env.CLERK_SECRET_KEY.trim();
+  if (!secret) {
+    throw new ClerkApiError(503, 'Clerk n’est pas configuré sur ce serveur (CLERK_SECRET_KEY).');
+  }
+
+  const response = await fetch(`${CLERK_API_BASE_URL}/invitations`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${secret}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      email_address: input.emailAddress,
+      ...(input.redirectUrl ? { redirect_url: input.redirectUrl } : {}),
+      ...(input.publicMetadata ? { public_metadata: input.publicMetadata } : {}),
+      notify: true,
+      ignore_existing: true,
+    }),
+  });
+
+  const payload: unknown = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new ClerkApiError(response.status, readClerkErrorMessage(payload, 'Clerk a refusé l’invitation.'));
+  }
+
+  const record = asRecord(payload) ?? {};
+  return {
+    id: readOptionalString(record.id) ?? '',
+    emailAddress: readOptionalString(record.email_address) ?? input.emailAddress,
+    status: readOptionalString(record.status) ?? 'pending',
+    url: readOptionalString(record.url),
+  };
+}
+
 export async function fetchClerkUserById(userId: string): Promise<ClerkUserProfile | null> {
   const normalizedId = readOptionalString(userId);
   if (!normalizedId) return null;

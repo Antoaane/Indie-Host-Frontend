@@ -7,6 +7,8 @@ import {
   confirmCheckoutSessionSchema,
   createConnectOnboardingLinkSchema,
   createPaymentIntentSchema,
+  adminSubscriptionLinkSchema,
+  adminUserParamsSchema,
   getMySubscriptionQuerySchema,
   syncConnectStateSchema,
   updateExtraListingsSchema,
@@ -93,6 +95,76 @@ export const paymentsPlugin = fp(async (fastify) => {
   // Catalogue public : plans + offre « logement supplémentaire » (landing et page Tarifs).
   fastify.get('/payments/stripe/subscriptions/catalog', async (_request, reply) => {
     reply.send(await service.getSubscriptionCatalog());
+  });
+
+  // Fenêtre admin : abonnement d'un client, ses logements supplémentaires, lien de paiement à lui envoyer.
+  fastify.get('/payments/stripe/admin/users/:userId/subscription', {
+    preHandler: fastify.authenticate,
+  }, async (request, reply) => {
+    const params = adminUserParamsSchema.parse(request.params);
+    const query = getMySubscriptionQuerySchema.parse(asObject(request.query));
+    const result = await service.getSubscriptionStateForUserAsAdmin(request.auth, params.userId, query);
+
+    if (result === 'forbidden') {
+      reply.code(403).send({ message: 'Admin access required.' });
+      return;
+    }
+
+    if (!result) {
+      reply.code(404).send({ message: 'User not found.' });
+      return;
+    }
+
+    reply.send(result);
+  });
+
+  fastify.post('/payments/stripe/admin/users/:userId/extra-listings', {
+    preHandler: fastify.authenticate,
+  }, async (request, reply) => {
+    const params = adminUserParamsSchema.parse(request.params);
+    const payload = updateExtraListingsSchema.parse(asObject(request.body));
+    const result = await service.updateExtraListingsForUserAsAdmin(request.auth, params.userId, payload.quantity);
+
+    if (result === 'forbidden') {
+      reply.code(403).send({ message: 'Admin access required.' });
+      return;
+    }
+
+    if (!result) {
+      reply.code(404).send({ message: 'User not found.' });
+      return;
+    }
+
+    if (result.state !== 'updated') {
+      reply.code(409).send({ message: result.message, details: result });
+      return;
+    }
+
+    reply.send(result);
+  });
+
+  fastify.post('/payments/stripe/admin/subscription-links', {
+    preHandler: fastify.authenticate,
+  }, async (request, reply) => {
+    const payload = adminSubscriptionLinkSchema.parse(asObject(request.body));
+    const result = await service.createSubscriptionLinkForUserAsAdmin(request.auth, payload);
+
+    if (result === 'forbidden') {
+      reply.code(403).send({ message: 'Admin access required.' });
+      return;
+    }
+
+    if (!result) {
+      reply.code(404).send({ message: 'User not found.' });
+      return;
+    }
+
+    if (result.state === 'plan_unavailable') {
+      reply.code(400).send({ message: result.message, details: result });
+      return;
+    }
+
+    reply.code(201).send(result);
   });
 
   fastify.get('/payments/stripe/subscriptions/me', {

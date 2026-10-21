@@ -70,6 +70,18 @@ export const updateExtraListingsSchema = z.object({
   quantity: z.coerce.number().int().min(0).max(50),
 });
 
+export const adminUserParamsSchema = z.object({
+  userId: z.string().trim().min(1),
+});
+
+export const adminSubscriptionLinkSchema = z.object({
+  userId: z.string().trim().min(1),
+  planCode: subscriptionPlanCodeSchema,
+  extraListings: z.coerce.number().int().min(0).max(50).optional().default(0),
+  successUrl: z.string().url(),
+  cancelUrl: z.string().url(),
+});
+
 export const activateSubscriptionSchema = z.object({
   planCode: subscriptionPlanCodeSchema,
   successUrl: z.string().url(),

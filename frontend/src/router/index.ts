@@ -23,11 +23,13 @@ const CreateListingPublicRoute = () => import('@/views/CreateListing/CreateListi
 const MessagingRoute = () => import('@/views/Messaging/MessagingRoute.vue')
 const ManagementRoute = () => import('@/views/Management/ManagementRoute.vue')
 const DomainsRoute = () => import('@/views/Domains/DomainsRoute.vue')
+const AdminRoute = () => import('@/views/Admin/AdminRoute.vue')
 
 const BACK_OFFICE_USER_ROUTE_BY_ENTRY_NAME = {
   editor: 'editor-user',
   management: 'management-user',
   domains: 'domains-user',
+  admin: 'admin-user',
   messaging: 'messaging-user',
 } as const
 
@@ -226,6 +228,19 @@ const router = createRouter({
       path: '/dashboard/domains/:userId',
       name: 'domains-user',
       component: DomainsRoute,
+      meta: { navVariant: 'host' },
+    },
+    {
+      path: '/dashboard/admin',
+      name: 'admin',
+      component: AdminRoute,
+      meta: { navVariant: 'host' },
+      beforeEnter: resolveBackOfficeAccess,
+    },
+    {
+      path: '/dashboard/admin/:userId',
+      name: 'admin-user',
+      component: AdminRoute,
       meta: { navVariant: 'host' },
     },
     {

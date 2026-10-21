@@ -1,0 +1,481 @@
+/* File: src/views/Admin/admin.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
+@use '@/styles/components/buttons' as buttons;
+@use '@/styles/components/inputs' as inputs;
+
+// Fenêtre d'administration : liste des clients à gauche, fiche du client sélectionné à droite.
+.admin-panel {
+  width: min(1180px, 100%);
+  margin: var(--layout-gap-4xl) auto var(--layout-gap-2xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--layout-gap);
+
+  .admin-header {
+    > h1 {
+      @include h1-title();
+    }
+
+    > p {
+      @include base-text($thin: false);
+      color: rgba($secondary, 0.72);
+    }
+  }
+
+  .admin-denied {
+    @include base-text($thin: false);
+    padding: var(--layout-gap);
+    border-radius: borders.$rounded-md;
+    border: 1px solid rgba($bad, 0.35);
+    background: rgba($bad, 0.06);
+  }
+
+  .admin-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--layout-gap);
+    align-items: start;
+
+    // Deux colonnes dès qu'il y a la place : la liste reste lisible, la fiche garde sa largeur.
+    @include min-width(lg) {
+      grid-template-columns: minmax(300px, 2fr) minmax(0, 3fr);
+    }
+  }
+
+  .admin-clients,
+  .admin-detail {
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap);
+    min-width: 0;
+  }
+
+  .admin-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-sm);
+    padding: var(--layout-gap-xl) var(--layout-gap);
+    border-radius: borders.$rounded-md;
+    background: $accent;
+    border: 1px solid rgba($secondary, 0.06);
+
+    > h2,
+    .card-head > h2,
+    .list-head > h2 {
+      margin: 0;
+      @include h3-title();
+
+      > .count {
+        @include little-text($thin: false);
+        margin-left: var(--layout-gap-xs);
+        color: rgba($secondary, 0.55);
+      }
+    }
+
+    h3 {
+      margin: 0;
+      font-weight: 600 !important;
+      @include h4-title();
+
+      > small {
+        @include little-text($thin: false);
+        margin-left: var(--layout-gap-xs);
+        color: rgba($secondary, 0.6);
+      }
+    }
+  }
+
+  .hint {
+    @include little-text($thin: false);
+    color: rgba($secondary, 0.72);
+  }
+
+  .meta {
+    @include little-text($thin: false);
+    color: rgba($secondary, 0.7);
+
+    &.is-success {
+      color: rgba($good, 0.95);
+    }
+
+    &.is-error {
+      color: rgba($bad, 0.95);
+    }
+  }
+
+  .input {
+    @include inputs.field($theme: base);
+
+    &.search {
+      display: flex;
+      align-items: center;
+      gap: var(--layout-gap-xs);
+
+      > svg {
+        flex: 0 0 auto;
+        margin-left: var(--layout-gap-xs);
+        stroke: rgba($secondary, 0.55);
+      }
+    }
+  }
+
+  .action {
+    @include buttons.primary($theme: dark, $little: true);
+
+    &.ghost {
+      @include buttons.primary($theme: white, $little: true);
+    }
+
+    > * {
+      gap: var(--layout-gap-xs);
+    }
+  }
+
+  .refresh {
+    @include buttons.primary($theme: white, $icon-only: true, $little: true, $deep: true);
+  }
+
+  .card-head,
+  .list-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--layout-gap-sm);
+  }
+
+  // --- Invitation -----------------------------------------------------------
+  .invite-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-sm);
+
+    > .invite-names {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+      gap: var(--layout-gap-sm);
+    }
+  }
+
+  // --- Liste des clients ----------------------------------------------------
+  .client-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-xs);
+    max-height: 60vh;
+    overflow-y: auto;
+
+    .client {
+      width: 100%;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: var(--layout-gap-sm);
+      padding: var(--layout-gap-sm);
+      border: 1px solid rgba($secondary, 0.08);
+      border-radius: borders.$rounded-sm;
+      background: $accent;
+      text-align: left;
+      cursor: pointer;
+      @include animations.transition();
+
+      &:hover,
+      &:focus-visible {
+        border-color: rgba($secondary, 0.3);
+        background: rgba($secondary, 0.02);
+      }
+
+      &.is-selected {
+        border-color: $secondary;
+        background: rgba($secondary, 0.04);
+      }
+
+      > .avatar {
+        width: 2.5rem;
+        height: 2.5rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        border-radius: borders.$rounded;
+        background: rgba($secondary, 0.08);
+        @include little-text($bold: true);
+
+        > img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+      }
+
+      > .identity {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+
+        > strong {
+          @include base-text($thin: false);
+          font-weight: 500;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        > small {
+          @include little-text($thin: false);
+          color: rgba($secondary, 0.6);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+      }
+
+      > .facts {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: calc(var(--layout-gap-xs) / 2);
+
+        > small {
+          @include little-text($thin: false);
+          color: rgba($secondary, 0.6);
+          white-space: nowrap;
+        }
+      }
+    }
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    padding: calc(var(--layout-gap-xs) / 2) var(--layout-gap-xs);
+    border-radius: borders.$rounded;
+    @include little-text($thin: false);
+    white-space: nowrap;
+
+    &.is-good {
+      background: rgba($good, 0.18);
+    }
+
+    &.is-warn {
+      background: rgba($progressing, 0.3);
+    }
+
+    &.is-bad {
+      background: rgba($bad, 0.14);
+    }
+
+    &.is-muted {
+      background: rgba($secondary, 0.06);
+      color: rgba($secondary, 0.7);
+    }
+  }
+
+  // --- Fiche client ---------------------------------------------------------
+  .detail-head {
+    .ids {
+      margin: 0;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+      gap: var(--layout-gap-sm);
+
+      dt {
+        @include little-text($thin: false);
+        color: rgba($secondary, 0.55);
+      }
+
+      dd {
+        margin: 0;
+        @include little-text($thin: false);
+        word-break: break-all;
+
+        > code {
+          font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        }
+      }
+    }
+
+    .quick-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--layout-gap-xs);
+
+      > .link {
+        @include buttons.primary($theme: white, $little: true);
+      }
+    }
+  }
+
+  .facts-grid {
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+    gap: var(--layout-gap-sm);
+
+    dt {
+      @include little-text($thin: false);
+      color: rgba($secondary, 0.55);
+    }
+
+    dd {
+      margin: 0;
+      @include base-text($thin: false);
+
+      > small {
+        display: block;
+        @include little-text($thin: false);
+        color: rgba($secondary, 0.6);
+      }
+    }
+  }
+
+  .extra {
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-sm);
+    padding-top: var(--layout-gap-sm);
+    border-top: 1px solid rgba($secondary, 0.08);
+  }
+
+  .stepper-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--layout-gap-sm);
+
+    > .stepper-label {
+      @include little-text($thin: false);
+    }
+  }
+
+  .stepper {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--layout-gap-xs);
+    padding: calc(var(--layout-gap-xs) / 2);
+    border: 1px solid rgba($secondary, 0.12);
+    border-radius: borders.$rounded;
+
+    > button {
+      width: 2.25rem;
+      height: 2.25rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      border-radius: borders.$rounded;
+      background: $translucent;
+      cursor: pointer;
+      @include animations.transition();
+
+      > svg {
+        stroke: $secondary;
+      }
+
+      &:hover:not(:disabled) {
+        background: rgba($secondary, 0.08);
+      }
+
+      &:disabled {
+        cursor: not-allowed;
+        opacity: 0.4;
+      }
+    }
+
+    > output {
+      min-width: 2rem;
+      text-align: center;
+      @include base-text($bold: true);
+    }
+  }
+
+  // --- Lien d'abonnement ----------------------------------------------------
+  .link-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-sm);
+  }
+
+  .plan-choice {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+    gap: var(--layout-gap-sm);
+
+    > legend {
+      @include little-text($thin: false);
+      color: rgba($secondary, 0.55);
+      margin-bottom: var(--layout-gap-xs);
+    }
+
+    > label {
+      display: flex;
+      flex-direction: column;
+      gap: calc(var(--layout-gap-xs) / 2);
+      padding: var(--layout-gap-sm);
+      border: 1px solid rgba($secondary, 0.12);
+      border-radius: borders.$rounded-sm;
+      cursor: pointer;
+      @include animations.transition();
+
+      &:has(input:focus-visible) {
+        outline: 2px solid $secondary;
+        outline-offset: 2px;
+      }
+
+      &.is-selected {
+        border-color: $secondary;
+        background: rgba($secondary, 0.04);
+      }
+
+      > input {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      > .plan-name {
+        @include base-text($bold: true);
+      }
+
+      > .plan-price {
+        @include little-text($thin: false);
+        color: rgba($secondary, 0.65);
+      }
+    }
+  }
+
+  .link-result {
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-sm);
+    padding: var(--layout-gap-sm);
+    border-radius: borders.$rounded-sm;
+    border: 1px solid rgba($secondary, 0.1);
+    background: rgba($secondary, 0.02);
+
+    > .link-url {
+      @include little-text($thin: false);
+      word-break: break-all;
+
+      > a {
+        color: $secondary;
+      }
+    }
+
+    > .link-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--layout-gap-xs);
+    }
+  }
+}

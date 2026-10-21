@@ -3,9 +3,16 @@ import type { PrismaClient, User } from '@prisma/client';
 import { asObject } from '../../lib/json.js';
 import { toPrismaJson } from '../../lib/prisma.js';
 import { hasAdminAccess } from '../../lib/authRole.js';
-import { listClerkUsers } from '../../lib/clerkUsers.js';
+import { createClerkInvitation, listClerkUsers, type ClerkInvitation } from '../../lib/clerkUsers.js';
 import type { RequestAuth } from '../../types/auth.js';
 import { ListingsService } from '../listings/listings.service.js';
+import {
+  LISTING_LIMIT_COUNTED_STATUSES,
+  normalizePlanCode,
+  readExtraListingsFromBilling,
+  resolveIncludedListingsFromBilling,
+  type SubscriptionPlanCode,
+} from '../payments/plans.catalog.js';
 import { buildHostProfileFromUser, isDeprecatedHostIdentity, resolveUserByIdentifier, upsertUserFromAuth } from './users.repository.js';
 
 type UpdateMeInput = {
@@ -31,6 +38,37 @@ export type AdminUserSearchItem = {
   displayName: string | null;
   username: string | null;
   avatarUrl: string | null;
+};
+
+export type AdminUserOverviewItem = {
+  /** Identifiant interne (null tant que l'utilisateur Clerk n'a jamais ouvert le dashboard). */
+  id: string | null;
+  clerkUserId: string | null;
+  email: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  displayName: string | null;
+  avatarUrl: string | null;
+  createdAtISO: string | null;
+  billing: {
+    planCode: SubscriptionPlanCode | null;
+    status: string | null;
+    currentPeriodEndISO: string | null;
+    includedListings: number;
+    extraListings: number;
+    hasStripeCustomer: boolean;
+  };
+  listings: {
+    total: number;
+    active: number;
+  };
+};
+
+type CreateInvitationInput = {
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  redirectUrl?: string;
 };
 
 function normalizeSearchValue(value: string): string {
@@ -177,6 +215,137 @@ export class UsersService {
     });
 
     return await this.listingsService.listUserCards(listings);
+  }
+
+  /**
+   * Vue d'ensemble des clients pour la fenêtre admin : utilisateurs connus de l'API (plan, logements)
+   * fusionnés avec les comptes Clerk qui n'ont encore jamais ouvert le dashboard.
+   */
+  async listUsersOverviewForAdmin(input: SearchUsersInput, auth: RequestAuth | null) {
+    if (!hasAdminAccess(auth)) return 'forbidden' as const;
+
+    const normalizedQuery = normalizeSearchValue(input.query);
+    const queryTokens = normalizedQuery.split(/\s+/).filter(Boolean);
+    const safeLimit = Math.max(1, Math.min(2000, Math.trunc(input.limit)));
+
+    const [users, listingCounts, activeCounts, clerkUsers] = await Promise.all([
+      this.prisma.user.findMany({
+        select: {
+          id: true,
+          clerkUserId: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          displayName: true,
+          avatarUrl: true,
+          hostProfile: true,
+          stripeConnectProfile: true,
+          createdAt: true,
+        },
+        orderBy: [{ updatedAt: 'desc' }, { createdAt: 'desc' }],
+      }),
+      this.prisma.listing.groupBy({
+        by: ['ownerId'],
+        where: { ownerId: { not: null }, status: { not: 'deleted' } },
+        _count: { _all: true },
+      }),
+      this.prisma.listing.groupBy({
+        by: ['ownerId'],
+        where: { ownerId: { not: null }, status: { in: [...LISTING_LIMIT_COUNTED_STATUSES] } },
+        _count: { _all: true },
+      }),
+      listClerkUsers(2000).catch(() => []),
+    ]);
+
+    const totalByOwner = new Map(listingCounts.map((row) => [row.ownerId ?? '', row._count._all]));
+    const activeByOwner = new Map(activeCounts.map((row) => [row.ownerId ?? '', row._count._all]));
+
+    const items: AdminUserOverviewItem[] = users.map((user) => {
+      const profile = asObject(user.stripeConnectProfile);
+      const billing = asObject(profile.billing);
+      return {
+        id: user.id,
+        clerkUserId: user.clerkUserId ?? null,
+        email: user.email ?? null,
+        firstName: user.firstName ?? null,
+        lastName: user.lastName ?? null,
+        displayName: user.displayName && !isDeprecatedHostIdentity(user.displayName)
+          ? user.displayName
+          : readPreferredUsername(user.hostProfile),
+        avatarUrl: user.avatarUrl ?? null,
+        createdAtISO: user.createdAt.toISOString(),
+        billing: {
+          planCode: normalizePlanCode(billing.planCode),
+          status: readOptionalString(billing.status),
+          currentPeriodEndISO: readOptionalString(billing.currentPeriodEndISO),
+          includedListings: resolveIncludedListingsFromBilling(billing),
+          extraListings: readExtraListingsFromBilling(billing),
+          hasStripeCustomer: Boolean(readOptionalString(billing.customerId)),
+        },
+        listings: {
+          total: totalByOwner.get(user.id) ?? 0,
+          active: activeByOwner.get(user.id) ?? 0,
+        },
+      };
+    });
+
+    const knownClerkIds = new Set(items.map((item) => item.clerkUserId).filter(Boolean));
+    const knownEmails = new Set(items.map((item) => item.email?.toLowerCase()).filter(Boolean));
+    for (const clerkUser of clerkUsers) {
+      if (knownClerkIds.has(clerkUser.id)) continue;
+      if (clerkUser.email && knownEmails.has(clerkUser.email.toLowerCase())) continue;
+      items.push({
+        id: null,
+        clerkUserId: clerkUser.id,
+        email: clerkUser.email,
+        firstName: clerkUser.firstName,
+        lastName: clerkUser.lastName,
+        displayName: clerkUser.displayName,
+        avatarUrl: clerkUser.avatarUrl,
+        createdAtISO: null,
+        billing: {
+          planCode: null,
+          status: null,
+          currentPeriodEndISO: null,
+          includedListings: 0,
+          extraListings: 0,
+          hasStripeCustomer: false,
+        },
+        listings: { total: 0, active: 0 },
+      });
+    }
+
+    const filtered = normalizedQuery
+      ? items.filter((item) => {
+          const searchableText = normalizeSearchValue([
+            item.firstName ?? '',
+            item.lastName ?? '',
+            item.displayName ?? '',
+            item.email ?? '',
+            item.clerkUserId ?? '',
+            item.id ?? '',
+          ].join(' '));
+          if (!searchableText) return false;
+          if (searchableText.includes(normalizedQuery)) return true;
+          return queryTokens.every((token) => searchableText.includes(token));
+        })
+      : items;
+
+    return filtered.slice(0, safeLimit);
+  }
+
+  async createInvitationForAdmin(input: CreateInvitationInput, auth: RequestAuth | null): Promise<ClerkInvitation | 'forbidden'> {
+    if (!hasAdminAccess(auth)) return 'forbidden' as const;
+
+    const publicMetadata: Record<string, unknown> = { invitedByAdmin: true };
+    if (input.firstName) publicMetadata.firstName = input.firstName;
+    if (input.lastName) publicMetadata.lastName = input.lastName;
+
+    return createClerkInvitation({
+      emailAddress: input.email.toLowerCase(),
+      redirectUrl: input.redirectUrl ?? null,
+      publicMetadata,
+    });
   }
 
   async listAllListingsForAdmin(auth: RequestAuth | null) {

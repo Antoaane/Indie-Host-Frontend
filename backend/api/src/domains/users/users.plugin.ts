@@ -4,7 +4,8 @@ import { env } from '../../config/env.js';
 import { hasAdminAccess, readRoleFromAuthPayload } from '../../lib/authRole.js';
 import { asObject } from '../../lib/json.js';
 import type { RequestAuth } from '../../types/auth.js';
-import { adminUserSearchQuerySchema, userIdParamsSchema, updateMeSchema } from './users.schemas.js';
+import { ClerkApiError } from '../../lib/clerkUsers.js';
+import { adminInvitationSchema, adminUserSearchQuerySchema, userIdParamsSchema, updateMeSchema } from './users.schemas.js';
 import { UsersService } from './users.service.js';
 
 function decodeBearerPayload(authorizationHeader: string | string[] | undefined): Record<string, unknown> | null {
@@ -133,6 +134,51 @@ export const usersPlugin = fp(async (fastify) => {
     }
 
     reply.send({ users });
+  });
+
+  fastify.get('/users/admin/overview', {
+    preHandler: fastify.authenticateOptional,
+  }, async (request, reply) => {
+    const auth = resolveAuth(request.auth, request.headers.authorization);
+    if (!auth) {
+      reply.code(401).send({ message: 'Authentication required.' });
+      return;
+    }
+
+    const query = adminUserSearchQuerySchema.parse(request.query);
+    const users = await service.listUsersOverviewForAdmin(query, auth);
+    if (users === 'forbidden') {
+      reply.code(403).send({ message: 'Admin access required.' });
+      return;
+    }
+
+    reply.send({ users });
+  });
+
+  fastify.post('/users/admin/invitations', {
+    preHandler: fastify.authenticateOptional,
+  }, async (request, reply) => {
+    const auth = resolveAuth(request.auth, request.headers.authorization);
+    if (!auth) {
+      reply.code(401).send({ message: 'Authentication required.' });
+      return;
+    }
+
+    const payload = adminInvitationSchema.parse(asObject(request.body));
+    try {
+      const invitation = await service.createInvitationForAdmin(payload, auth);
+      if (invitation === 'forbidden') {
+        reply.code(403).send({ message: 'Admin access required.' });
+        return;
+      }
+      reply.code(201).send(invitation);
+    } catch (error) {
+      if (error instanceof ClerkApiError) {
+        reply.code(error.statusCode >= 500 ? 502 : error.statusCode).send({ message: error.message });
+        return;
+      }
+      throw error;
+    }
   });
 
   fastify.get('/users/admin/listings', {

@@ -339,6 +339,91 @@ export async function updateMyExtraListings(quantity: number): Promise<UpdateExt
   }
 }
 
+export type AdminSubscriptionLinkResponse = {
+  state: 'created' | 'plan_unavailable'
+  mode: 'live' | 'mock'
+  plan: StripeSubscriptionPlan | null
+  url: string | null
+  sessionId: string | null
+  expiresAtISO: string | null
+  message: string | null
+}
+
+/** État d'abonnement d'un client, pour la fenêtre admin. */
+export async function fetchAdminUserSubscriptionState(userId: string, { sync = false }: { sync?: boolean } = {}): Promise<StripeSubscriptionState> {
+  const axios = await getAxios()
+  const headers = await getHeaders({ requiresAuth: true })
+
+  try {
+    const { data } = await axios.get<StripeSubscriptionState>(
+      resolveUrl(buildApiUrl(`/payments/stripe/admin/users/${encodeURIComponent(userId.trim())}/subscription`)),
+      {
+        withCredentials: false,
+        headers,
+        params: { sync: sync ? '1' : '0' },
+      },
+    )
+
+    return data
+  } catch (error) {
+    throw new Error(toApiErrorMessage(error, 'Impossible de charger l’abonnement de ce client.'))
+  }
+}
+
+/** Ajuste les logements supplémentaires d'un client (admin). */
+export async function updateAdminUserExtraListings(userId: string, quantity: number): Promise<UpdateExtraListingsResponse> {
+  const axios = await getAxios()
+  const headers = await getHeaders({ requiresAuth: true })
+
+  try {
+    const { data } = await axios.post<UpdateExtraListingsResponse>(
+      resolveUrl(buildApiUrl(`/payments/stripe/admin/users/${encodeURIComponent(userId.trim())}/extra-listings`)),
+      { quantity: Math.max(0, Math.trunc(quantity)) },
+      {
+        withCredentials: false,
+        headers,
+      },
+    )
+
+    return data
+  } catch (error) {
+    throw new Error(toApiErrorMessage(error, 'Impossible de modifier les logements supplémentaires de ce client.'))
+  }
+}
+
+/** Génère un lien de paiement Stripe (abonnement) à envoyer à un client. */
+export async function createAdminSubscriptionLink(input: {
+  userId: string
+  planCode: SubscriptionPlanCode
+  extraListings?: number
+  successUrl: string
+  cancelUrl: string
+}): Promise<AdminSubscriptionLinkResponse> {
+  const axios = await getAxios()
+  const headers = await getHeaders({ requiresAuth: true })
+
+  try {
+    const { data } = await axios.post<AdminSubscriptionLinkResponse>(
+      resolveUrl(buildApiUrl('/payments/stripe/admin/subscription-links')),
+      {
+        userId: input.userId.trim(),
+        planCode: input.planCode,
+        extraListings: Math.max(0, Math.trunc(input.extraListings ?? 0)),
+        successUrl: input.successUrl,
+        cancelUrl: input.cancelUrl,
+      },
+      {
+        withCredentials: false,
+        headers,
+      },
+    )
+
+    return data
+  } catch (error) {
+    throw new Error(toApiErrorMessage(error, 'Impossible de générer le lien d’abonnement.'))
+  }
+}
+
 export async function activateStripeSubscriptionPlan(input: {
   planCode: SubscriptionPlanCode
   successUrl: string
