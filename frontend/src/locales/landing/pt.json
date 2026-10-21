@@ -331,8 +331,8 @@
   },
   "pricingSection": {
     "eyebrow": "Preços",
-    "title": "Grátis, SuperHost ou MegaHost: <strong>escolha o seu plano</strong>",
-    "subtitle": "Um plano gratuito para começar e planos pagos com mais páginas, ferramentas e reservas.",
+    "title": "IndieHost ou SuperHost: <strong>escolha o seu plano</strong>",
+    "subtitle": "Dois planos com 30 dias de teste gratuito: IndieHost para colocar online até 2 alojamentos, SuperHost para gerir até 6. Além disso, 12 €/mês por alojamento adicional.",
     "toggleExpandLabel": "Ver detalhe das funcionalidades",
     "toggleCollapseLabel": "Ocultar detalhe",
     "accountPrefix": "Já é cliente?",
@@ -509,12 +509,12 @@
           {
             "id": "q-3",
             "question": "Se não cobram comissão, como ganham dinheiro?",
-            "answer": "O modelo é transparente. Oferecemos um plano IndieHost 100% grátis (pagamento, calendário, 2 anúncios). Ganhamos com subscrições opcionais (SuperHost, MegaHost) e opções à la carte (Google Travel, KYC)."
+            "answer": "O nosso modelo é simples e transparente: uma subscrição mensal sem fidelização e zero comissão sobre as suas reservas. O IndieHost custa 19 €/mês com IVA por 2 alojamentos online, o SuperHost 49 €/mês por 6 alojamentos. A partir daí, cada alojamento adicional é faturado a 12 €/mês."
           },
           {
             "id": "q-4",
             "question": "Para que tipo de anfitrião é a IndieHost?",
-            "answer": "Para todos: particulares (plano grátis), semi-profissionais (SuperHost), profissionais (MegaHost). Cada plano adapta-se ao seu nível de atividade."
+            "answer": "A todos os anfitriões que querem recuperar o controlo das suas reservas:<br /><br />IndieHost (19 €/mês): particulares e anfitriões que gerem 1 ou 2 alojamentos.<br /><br />SuperHost (49 €/mês): anfitriões com vários alojamentos, até 6.<br /><br />Em ambos os planos, cada alojamento adicional custa 12 €/mês."
           },
           {
             "id": "q-5",
@@ -529,18 +529,18 @@
         "children": [
           {
             "id": "q-7",
-            "question": "O plano IndieHost é mesmo grátis? Há taxas escondidas?",
-            "answer": "Sim, 0 €/mês, sem taxas escondidas da nossa parte. Inclui 2 anúncios, pagamento online (Stripe), faturação, iCal, mensagens e painel. Apenas as taxas de transação normais do Stripe se aplicam."
+            "question": "Existe um período de teste gratuito? Custos escondidos?",
+            "answer": "Cada plano começa com 30 dias de teste gratuito, sem compromisso. Depois, 19 € ou 49 € por mês com IVA, e nada mais: nenhuma comissão sobre as suas reservas nem custos escondidos da nossa parte. Apenas as taxas de transação da Stripe se aplicam aos pagamentos por cartão, como em qualquer pagamento online."
           },
           {
             "id": "q-8",
-            "question": "Posso cancelar a subscrição paga (SuperHost/MegaHost) quando quiser?",
-            "answer": "Sim. As subscrições são sem compromisso e podem ser canceladas a qualquer momento no painel. O plano mantém-se até ao fim do período de faturação em curso."
+            "question": "Posso cancelar a minha subscrição a qualquer momento?",
+            "answer": "Sim. As nossas subscrições não têm fidelização e cancelam-se em poucos cliques a partir do seu painel, sem custos. A subscrição mantém-se ativa até ao fim do período já pago."
           },
           {
             "id": "q-9",
-            "question": "Posso adicionar opções sem mudar de plano?",
-            "answer": "Sim. No plano grátis pode subscrever opções como integração Google Travel, domínio próprio ou aceitar entradas, sem passar ao SuperHost."
+            "question": "O que acontece se tiver mais alojamentos do que o meu plano permite?",
+            "answer": "Adiciona alojamentos adicionais com um clique a partir do seu painel: 12 €/mês com IVA por alojamento, calculado pro rata e removível a qualquer momento. A partir de 5 alojamentos, passar para o SuperHost torna-se mais vantajoso."
           },
           {
             "id": "q-10",
@@ -566,7 +566,7 @@
           {
             "id": "q-14",
             "question": "Posso pedir entrada em vez de pagamento total?",
-            "answer": "Sim. Pode configurar as suas regras. A opção de aceitar entradas é paga (5 €/mês) no plano grátis e está incluída no SuperHost e MegaHost."
+            "answer": "Sim. Define as suas próprias regras de pagamento: pagamento integral na reserva ou um sinal com o restante pago antes ou à chegada. Os sinais estão incluídos em todos os planos."
           },
           {
             "id": "q-15",
@@ -592,7 +592,7 @@
           {
             "id": "q-18",
             "question": "Quantos anúncios posso criar?",
-            "answer": "No plano grátis até 2; no SuperHost, 5; no MegaHost, até 15 (extensível sob pedido)."
+            "answer": "O IndieHost permite 2 alojamentos online e o SuperHost 6. Os rascunhos são ilimitados: um alojamento só conta quando está online. Cada alojamento adicional custa 12 €/mês com IVA, em qualquer dos planos."
           },
           {
             "id": "q-19",
@@ -618,7 +618,7 @@
           {
             "id": "q-22",
             "question": "Posso adicionar manualmente uma reserva feita por telefone?",
-            "answer": "Sim, nos planos SuperHost e MegaHost. Pode adicionar ou alterar reservas manualmente no calendário IndieHost para bloquear datas."
+            "answer": "Sim, está incluído no plano SuperHost. Adiciona ou altera manualmente uma reserva (por exemplo, um cliente habitual que reserva por telefone) para bloquear as datas no seu calendário IndieHost."
           },
           {
             "id": "q-23",
@@ -633,7 +633,7 @@
           {
             "id": "q-25",
             "question": "Posso automatizar a comunicação (SMS, notificações)?",
-            "answer": "Sim. Os planos SuperHost e MegaHost incluem mensagens automatizadas. Pode agendar SMS e notificações em momentos-chave (confirmação, J-7, instruções de chegada, etc.)."
+            "answer": "Sim. O plano SuperHost inclui mensagens automatizadas: agenda o envio de SMS e notificações nos momentos-chave (confirmação, véspera da chegada, partida) para poupar tempo e profissionalizar o acolhimento."
           }
         ]
       },
@@ -649,7 +649,7 @@
           {
             "id": "q-29",
             "question": "O que é a integração Google Travel?",
-            "answer": "Opção (paga no grátis/SuperHost, incluída no MegaHost) que coloca o seu anúncio nos resultados do Google Travel / Google Hotels."
+            "answer": "É uma opção paga, disponível em qualquer plano, que coloca o seu alojamento diretamente nos resultados do Google Travel / Google Hotels: um canal poderoso de aquisição direta, sem intermediários."
           },
           {
             "id": "q-30",
@@ -664,7 +664,7 @@
           {
             "id": "q-32",
             "question": "Ajudam a fidelizar clientes e a criar relação direta?",
-            "answer": "Sim. O livretto de acolhimento com QR code dá um canal de comunicação direto com o hóspede. Nos planos MegaHost há também campanhas de e-mail para recontactar clientes."
+            "answer": "Sim. O livretto de acolhimento com QR code dá um canal de comunicação direto com o hóspede. No plano SuperHost há também campanhas de e-mail para recontactar clientes."
           }
         ]
       },
@@ -675,7 +675,7 @@
           {
             "id": "q-38",
             "question": "Posso usar o meu próprio domínio?",
-            "answer": "Sim. Pode comprar ou ligar um domínio à sua conta/anúncio. Incluído no MegaHost e disponível como opção no SuperHost."
+            "answer": "Sem dúvida. Liga um nome de domínio que já possui (ex.: www.minha-casa.pt) ao seu alojamento a partir da página Domínios: a configuração DNS é guiada passo a passo e o certificado HTTPS é automático. Está incluído em ambos os planos; cada alojamento dispõe também de um subdomínio IndieHost gratuito."
           },
           {
             "id": "q-39",
@@ -706,7 +706,7 @@
           {
             "id": "q-43",
             "question": "A verificação KYC é obrigatória?",
-            "answer": "Está incluída e recomendada no SuperHost e MegaHost. No plano grátis é opção paga. O KYC dá um selo 'Verificado' no anúncio e aumenta a confiança e a conversão."
+            "answer": "Está incluída e recomendada no plano SuperHost, e disponível como opção no IndieHost. Passar o KYC atribui ao seu alojamento um selo «Verificado», um sinal de confiança para os viajantes."
           },
           {
             "id": "q-44",
@@ -727,7 +727,7 @@
           {
             "id": "q-43",
             "question": "A IndieHost é compatível com o meu Channel Manager (PMS) ou RMS?",
-            "answer": "Sim. A integração de ferramentas de gestão externas está incluída nos planos SuperHost e MegaHost. Pode sincronizar anúncios, preços, disponibilidade e reservas a partir do seu sistema."
+            "answer": "Sim. A integração de ferramentas de gestão externas (PMS como o SuperHote ou RMS de preços dinâmicos) está incluída no plano SuperHost: alojamentos, preços, disponibilidades e reservas sincronizam-se a partir do seu sistema central."
           }
         ]
       }

@@ -64,8 +64,11 @@ export const syncConnectStateSchema = z.object({
 export const subscriptionPlanCodeSchema = z.enum([
   'indiehost',
   'superhost',
-  'megahost',
 ]);
+
+export const updateExtraListingsSchema = z.object({
+  quantity: z.coerce.number().int().min(0).max(50),
+});
 
 export const activateSubscriptionSchema = z.object({
   planCode: subscriptionPlanCodeSchema,

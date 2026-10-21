@@ -331,8 +331,8 @@
   },
   "pricingSection": {
     "eyebrow": "Preise",
-    "title": "Kostenlos, SuperHost oder MegaHost: <strong>wählen Sie Ihren Tarif</strong>",
-    "subtitle": "Ein kostenloser Tarif zum Start, danach Abos mit mehr Seiten, Tools und Buchungen.",
+    "title": "IndieHost oder SuperHost: <strong>wählen Sie Ihren Tarif</strong>",
+    "subtitle": "Zwei Tarife mit 30 Tagen kostenlosem Test: IndieHost für bis zu 2 Unterkünfte online, SuperHost für bis zu 6. Darüber hinaus 12 €/Monat pro zusätzlicher Unterkunft.",
     "toggleExpandLabel": "Details zu den Funktionen anzeigen",
     "toggleCollapseLabel": "Details ausblenden",
     "accountPrefix": "Bereits Kunde?",
@@ -509,12 +509,12 @@
           {
             "id": "q-3",
             "question": "Wenn ihr keine Provision nehmt, wie verdient ihr Geld?",
-            "answer": "Unser Modell ist transparent. Wir bieten einen 100 % kostenlosen „IndieHost“-Plan für alle Grundbedürfnisse (Zahlung, Kalender, 2 Anzeigen). Umsatz entsteht durch optionale Monatsabos (SuperHost und MegaHost) für Eigentümer mit erweiterten Bedürfnissen (mehr Anzeigen, PMS-Anbindung, Anpassung) und durch Einzeloptionen (z. B. Google Travel oder KYC-Verifizierung)."
+            "answer": "Unser Modell ist einfach und transparent: ein monatliches Abo ohne Laufzeit und null Provision auf Ihre Buchungen. IndieHost kostet 19 €/Monat inkl. MwSt. für 2 Unterkünfte online, SuperHost 49 €/Monat für 6 Unterkünfte. Darüber hinaus wird jede zusätzliche Unterkunft mit 12 €/Monat berechnet."
           },
           {
             "id": "q-4",
             "question": "Für welchen Gastgeber-Typ ist IndieHost?",
-            "answer": "IndieHost ist für alle Gastgeber-Typen gedacht:<br /><br />Privatpersonen (Kostenloser Plan): Gelegentliche Vermieter der eigenen Wohnung.<br /><br />Semi-Profis (SuperHost-Plan): Eigentümer von Ferienhäusern, Pensionen oder ungewöhnlichen Objekten mit wenigen Einheiten.<br /><br />Profis (MegaHost-Plan): Betreiber von Pensionen, kleinen Hotels oder Concierge-Services mit vollem Management-Bedarf.<br /><br />Jeder Plan passt sich Ihrem Aktivitäts- und Professionalisierungsgrad an."
+            "answer": "An alle Gastgeber, die die Kontrolle über ihre Buchungen zurückgewinnen möchten:<br /><br />IndieHost (19 €/Monat): Privatpersonen und Gastgeber mit 1 oder 2 Unterkünften.<br /><br />SuperHost (49 €/Monat): Gastgeber mit mehreren Objekten, bis zu 6 Unterkünfte.<br /><br />In beiden Tarifen kostet jede zusätzliche Unterkunft 12 €/Monat."
           },
           {
             "id": "q-5",
@@ -529,18 +529,18 @@
         "children": [
           {
             "id": "q-7",
-            "question": "Ist der „IndieHost“-Plan wirklich kostenlos? Gibt es versteckte Gebühren?",
-            "answer": "Ja, der „IndieHost“-Plan kostet 0 €/Monat, ohne versteckte Gebühren unsererseits. Enthalten: 2 Anzeigen, Online-Zahlung (via Stripe), Rechnungen, iCal-Sync, Messaging und Dashboard. Es gelten nur die üblichen Transaktionsgebühren unseres Zahlungspartners Stripe (wie bei jeder Online-Transaktion), auf die wir keine Marge nehmen."
+            "question": "Gibt es eine kostenlose Testphase? Versteckte Kosten?",
+            "answer": "Jeder Tarif beginnt mit 30 Tagen kostenlosem Test, ohne Verpflichtung. Danach 19 € oder 49 € pro Monat inkl. MwSt., mehr nicht: keine Provision auf Ihre Buchungen und keine versteckten Gebühren unsererseits. Nur die Transaktionsgebühren von Stripe fallen bei Kartenzahlungen an, wie bei jeder Online-Zahlung."
           },
           {
             "id": "q-8",
-            "question": "Kann ich mein kostenpflichtiges Abo (SuperHost/MegaHost) jederzeit kündigen?",
-            "answer": "Unsere kostenpflichtigen Abos sind unverbindlich und jederzeit kündbar, ohne Kündigungsgebühren. Die Kündigung erfolgt einfach im Dashboard. Ihr Abo bleibt bis zum Ende des laufenden Abrechnungszeitraums (monatlich oder jährlich) aktiv, für den Folgenden werden Sie nicht belastet."
+            "question": "Kann ich mein Abo jederzeit kündigen?",
+            "answer": "Ja. Unsere Abos haben keine Mindestlaufzeit und lassen sich mit wenigen Klicks kostenlos über Ihr Dashboard kündigen. Ihr Abo bleibt bis zum Ende des bereits bezahlten Zeitraums aktiv."
           },
           {
             "id": "q-9",
-            "question": "Kann ich Zusatzoptionen ohne Planwechsel buchen?",
-            "answer": "Ja. Z. B. können Sie im Kostenlosen Plan bestimmte kostenpflichtige Optionen ohne Wechsel zu SuperHost buchen: Google-Travel-Integration, eigene Domain kaufen oder verknüpfen, Anzahlungen akzeptieren."
+            "question": "Was passiert, wenn ich mehr Unterkünfte habe, als mein Tarif erlaubt?",
+            "answer": "Sie fügen zusätzliche Unterkünfte mit einem Klick über Ihr Dashboard hinzu: 12 €/Monat inkl. MwSt. pro Unterkunft, anteilig berechnet und jederzeit wieder entfernbar. Ab 5 Unterkünften lohnt sich der Wechsel zu SuperHost."
           },
           {
             "id": "q-10",
@@ -566,7 +566,7 @@
           {
             "id": "q-14",
             "question": "Kann ich eine Anzahlung statt Vollzahlung verlangen?",
-            "answer": "Ja. Sie legen Ihre eigenen Zahlungsregeln fest. Die Option „Anzahlung“ (statt 100 % bei Buchung) ist beim Kostenlosen Plan eine kostenpflichtige Option (5 €/Monat) und bei SuperHost und MegaHost standardmäßig enthalten."
+            "answer": "Ja. Sie legen Ihre eigenen Zahlungsregeln fest: vollständige Zahlung bei der Buchung oder Anzahlung mit Restbetrag vor oder bei der Ankunft. Anzahlungen sind in allen Tarifen enthalten."
           },
           {
             "id": "q-15",
@@ -592,7 +592,7 @@
           {
             "id": "q-18",
             "question": "Wie viele Anzeigen kann ich erstellen?",
-            "answer": "Im kostenlosen Plan bis zu zwei Objekte, im SuperHost-Plan fünf, im MegaHost-Plan bis zu fünfzehn (auf Anfrage erweiterbar)."
+            "answer": "IndieHost erlaubt 2 Unterkünfte online, SuperHost 6. Entwürfe sind unbegrenzt: Eine Unterkunft zählt erst, wenn sie online ist. Jede zusätzliche Unterkunft kostet 12 €/Monat inkl. MwSt., in beiden Tarifen."
           },
           {
             "id": "q-19",
@@ -618,7 +618,7 @@
           {
             "id": "q-22",
             "question": "Kann ich eine telefonische Buchung manuell eintragen?",
-            "answer": "Ja, diese Funktion ist in den Plänen SuperHost und MegaHost enthalten. Sie können Reservierungen manuell anlegen oder ändern (z. B. Stammgast mit Telefonbuchung) direkt im IndieHost-Kalender, um Daten zu blockieren."
+            "answer": "Ja, das ist im SuperHost-Tarif enthalten. Sie legen eine Reservierung manuell an oder ändern sie (zum Beispiel ein Stammgast, der telefonisch bucht), um die Daten in Ihrem IndieHost-Kalender zu blockieren."
           },
           {
             "id": "q-23",
@@ -633,7 +633,7 @@
           {
             "id": "q-25",
             "question": "Kann ich die Kommunikation mit Gästen automatisieren (SMS, Benachrichtigungen)?",
-            "answer": "Ja. Um Ihnen Zeit zu sparen und den Empfang zu professionalisieren, beinhalten die Pläne SuperHost und MegaHost ein automatisiertes Messaging. Sie können SMS und Benachrichtigungen zu Schlüsselmomenten planen (z. B. Buchungsbestätigung, Erinnerung 7 Tage vorher, Ankunftsinfos am Vorabend, Willkommensnachricht bei Ankunft, Abreisehinweise)."
+            "answer": "Ja. Der SuperHost-Tarif enthält automatisierte Nachrichten: Sie planen SMS und Benachrichtigungen zu Schlüsselmomenten (Bestätigung, Tag vor der Anreise, Abreise), sparen Zeit und professionalisieren den Empfang."
           }
         ]
       },
@@ -649,7 +649,7 @@
           {
             "id": "q-29",
             "question": "Was ist die Google-Travel-Integration?",
-            "answer": "Eine Option (kostenpflichtig für Kostenlos/SuperHost, bei MegaHost inklusive), die Ihre Anzeige direkt in den Suchergebnissen von Google Travel / Google Hotels listet – ein starkes Akquisekanal mit Millionen Reichweite."
+            "answer": "Es ist eine kostenpflichtige Option, in jedem Tarif verfügbar, die Ihre Unterkunft direkt in den Ergebnissen von Google Travel / Google Hotels listet: ein starker Kanal für Direktbuchungen ohne Zwischenhändler."
           },
           {
             "id": "q-30",
@@ -664,7 +664,7 @@
           {
             "id": "q-32",
             "question": "Helft ihr bei Gästebindung und direkter Beziehung?",
-            "answer": "Ja, das ist ein Kern von IndieHost. Bindung beginnt ab dem ersten Aufenthalt mit dem digitalen Willkommensheft.<br /><br />Direktkanal: Über einen QR-Code in der Unterkunft gelangt der Gast zu einem vollständigen digitalen Guide mit integrierter Messaging-Funktion – ein direkter, professioneller Kanal, der Ihnen gehört, anders als OTA-Messenger.<br /><br />Premium-Erlebnis: Das Heft bündelt alle Infos für einen reibungslosen Aufenthalt. Das verbessert die Gästeerfahrung, fördert gute Bewertungen und Direktbuchungen.<br /><br />Re-Marketing: Bei MegaHost haben Sie zusätzlich E-Mail-Kampagnen, um frühere Gäste mit Angeboten erneut anzusprechen."
+            "answer": "Ja, das ist ein Kern von IndieHost. Bindung beginnt ab dem ersten Aufenthalt mit dem digitalen Willkommensheft.<br /><br />Direktkanal: Über einen QR-Code in der Unterkunft gelangt der Gast zu einem vollständigen digitalen Guide mit integrierter Messaging-Funktion – ein direkter, professioneller Kanal, der Ihnen gehört, anders als OTA-Messenger.<br /><br />Premium-Erlebnis: Das Heft bündelt alle Infos für einen reibungslosen Aufenthalt. Das verbessert die Gästeerfahrung, fördert gute Bewertungen und Direktbuchungen.<br /><br />Re-Marketing: Bei SuperHost haben Sie zusätzlich E-Mail-Kampagnen, um frühere Gäste mit Angeboten erneut anzusprechen."
           }
         ]
       },
@@ -675,7 +675,7 @@
           {
             "id": "q-38",
             "question": "Kann ich meine eigene Domain nutzen (z. B. www.meine-ferienwohnung.de)?",
-            "answer": "Ja. Das ist ein wichtiger Baustein für Ihre Unabhängigkeit. Sie können eine Domain kaufen oder eine bestehende mit Ihrem IndieHost-Konto bzw. Ihrer Anzeige verknüpfen. Diese Funktion ist im MegaHost-Plan enthalten und beim SuperHost-Plan gegen Aufpreis verfügbar."
+            "answer": "Absolut. Sie verbinden eine Domain, die Sie bereits besitzen (z. B. www.meine-ferienwohnung.de), über die Seite „Domains“ mit Ihrer Unterkunft: Die DNS-Einrichtung wird Schritt für Schritt erklärt und das HTTPS-Zertifikat ist automatisch. Das ist in beiden Tarifen enthalten; jede Unterkunft erhält außerdem eine kostenlose IndieHost-Subdomain."
           },
           {
             "id": "q-39",
@@ -706,7 +706,7 @@
           {
             "id": "q-43",
             "question": "Ist die KYC-Verifizierung Pflicht?",
-            "answer": "Sie ist bei SuperHost und MegaHost enthalten und empfohlen. Beim Kostenlosen Plan ist sie eine kostenpflichtige Option. Bestandenes KYC bringt ein „Verifiziert“-Badge auf Ihrer Anzeige und erhöht das Gästevertrauen und Ihre Conversion."
+            "answer": "Sie ist im SuperHost-Tarif enthalten und empfohlen und bei IndieHost als Option erhältlich. Mit bestandenem KYC erhält Ihre Unterkunft das Abzeichen „Verifiziert“ – ein Vertrauenssignal für Reisende."
           },
           {
             "id": "q-44",
@@ -727,7 +727,7 @@
           {
             "id": "q-43",
             "question": "Ist IndieHost mit meinem Channel Manager (PMS) oder RMS kompatibel?",
-            "answer": "Ja. Wir wissen, dass SuperHosts und Profis Tools wie SuperHote (PMS) oder RMS (dynamische Preisbildung) nutzen. Die Anbindung externer Management-Tools ist in den Plänen SuperHost und MegaHost enthalten. So synchronisieren Sie IndieHost-Anzeigen, Preise, Verfügbarkeit und Buchungen direkt aus Ihrem zentralen Tool."
+            "answer": "Ja. Die Integration externer Verwaltungstools (PMS wie SuperHote oder RMS für dynamische Preise) ist im SuperHost-Tarif enthalten: Unterkünfte, Preise, Verfügbarkeiten und Buchungen werden aus Ihrem zentralen System synchronisiert."
           }
         ]
       }

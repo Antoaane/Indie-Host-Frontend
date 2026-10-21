@@ -21,7 +21,8 @@ const props = defineProps<{
 const route = useRoute()
 const router = useRouter()
 const { isAdminUser } = useAdminAccess()
-const canPublishListings = computed(() => !isAdminUser.value)
+// Le super admin publie à la place d'un client ; l'API lève les conditions de facturation pour lui.
+const canPublishListings = computed(() => true)
 
 const {
   applyDraftPatch,

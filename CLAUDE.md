@@ -413,6 +413,24 @@ Dans Clerk Dashboard → Developers → Paths :
 
 ---
 
+## Skills UI/UX (Claude Code — `.claude/skills/`)
+
+Installés le 2026-10-21 et versionnés dans le repo. Claude les charge selon la tâche ; ils s'invoquent aussi à la main.
+
+| Skill | Source | Usage |
+|-------|--------|-------|
+| **indiehost-ui** | maison | Règles du repo pour toute UI : tokens SCSS, mixins (`references/mixins.md`), copie FR vouvoyée, a11y, checklist avant livraison. À charger en premier pour tout travail dans `frontend/`. |
+| **frontend-design** | `anthropics/skills` | Direction visuelle pour une nouvelle surface ou une refonte (typo, palette, anti-« template »). Les tokens IndieHost priment sur ses interdits génériques. |
+| **impeccable** | `pbakaus/impeccable` (Apache-2.0) | `/impeccable shape\|critique\|audit\|polish\|harden\|animate\|clarify… <cible>`. Lit `PRODUCT.md` et `DESIGN.md` à la racine. Cibler un chemin dans `frontend/`. |
+| **web-design-guidelines** | `vercel-labs/agent-skills` | Audit a11y / UX / perf de fichiers contre les Web Interface Guidelines de Vercel (récupère les règles sur GitHub à chaque run). |
+
+- `PRODUCT.md` (contexte produit) et `DESIGN.md` (design system, format DESIGN.md spec) à la racine sont la source de vérité pour ces skills : les mettre à jour quand les tokens ou le produit changent.
+- `skills-lock.json` suit les versions. Mise à jour : `npx skills update` (frontend-design, web-design-guidelines) et `npx impeccable update` (impeccable).
+- Le binaire moteur impeccable (`.claude/skills/impeccable/scripts/bin/`, ~16 Mo) est gitignoré : le launcher le retélécharge au premier `impeccable context` sur chaque machine. Le hook automatique n'est pas installé (`--no-hooks`) ; pour l'activer : `npx impeccable install --providers=claude --scope=project --force`.
+- Sous-agents impeccable dans `.claude/agents/impeccable-*.md`. Détecteur manuel : `.claude/skills/impeccable/scripts/impeccable detect --json <fichiers>` (l'anti-pattern `gradient-text` est ignoré : signature de marque).
+
+---
+
 ## Scripts utilitaires
 
 | Script | Rôle |
@@ -580,6 +598,19 @@ cd /opt/indiehost && git pull && docker compose up -d --build --wait
 
 Après un changement de secret : recopier le fichier concerné, puis la même commande.
 
+### Rôles et plans (offre 2026-10)
+
+| Compte | Droits |
+|--------|--------|
+| **Super admin** (`SUPER_ADMIN_EMAILS=dev@indiehost.fr`, ou rôle `admin`/`super_admin` en métadonnée Clerk) | Voit toutes les annonces (`/users/admin/listings`), édite tout, publie à la place d'un client (aucune condition de facturation ni de limite), gèle (`blocked`), supprime (`deleted`), transfère la propriété. Résolu côté API par `plugins/auth.ts` (email principal Clerk) → `hasAdminAccess()`, exposé au front par `/users/me` → `isAdmin`. |
+| **IndieHost** — 19 € TTC/mois | 2 logements en ligne inclus |
+| **SuperHost** — 49 € TTC/mois | 6 logements en ligne inclus |
+| **Logement supplémentaire** — 12 € TTC/mois/logement | Item add-on sur l'abonnement Stripe (quantité), ajouté/retiré depuis le dashboard (`POST /payments/stripe/subscriptions/extra-listings`) |
+
+- Source de vérité : le catalogue Stripe live, produits avec métadonnées `indiehost_plan_code` (`indiehost` / `superhost` / `extra_listing`) et `indiehost_max_active_listings`. La résolution est **stricte** (métadonnée ou nom exact, produits/prix archivés ignorés) — plus jamais de correspondance par préfixe de nom. Valeurs de secours dans `backend/api/src/domains/payments/plans.catalog.ts`.
+- Limite « logements en gestion » = inclus + supplémentaires, **appliquée côté API** à la publication (`assertCanPublishListing`, statuts comptés : `published`, `paused`, `blocked` ; brouillons illimités). Erreur 403 `LISTING_PUBLICATION_REQUIREMENTS_NOT_MET` avec `listing_limit_reached`. Le front lit `listingAllowance` dans `GET /payments/stripe/subscriptions/me`.
+- Essai gratuit 30 jours sur les deux plans ; offres annuelles archivées ; MegaHost supprimé.
+
 ### Domaines personnalisés des hôtes (ex. `www.gite-belair.fr`)
 
 Un hôte peut rattacher un domaine qu'il possède déjà depuis `/dashboard/domains` (panneau `CustomDomainPanel.vue`, guide intégré ouvert automatiquement les 3 premières fois puis via le bouton ⓘ).
@@ -603,7 +634,9 @@ Les domaines personnalisés pointent **directement** sur le VPS (pas via Cloudfl
 
 ---
 
-## Dernières modifications (mis à jour 2026-10-20)
+## Dernières modifications (mis à jour 2026-10-21)
+
+- **Skills UI/UX** ajoutés dans `.claude/skills/` (indiehost-ui, frontend-design, impeccable, web-design-guidelines) + `PRODUCT.md` et `DESIGN.md` à la racine (voir section « Skills UI/UX »)
 
 - **Mise en production** sur VPS Hostinger + Cloudflare (voir section « Déploiement production »)
 - `frontend/vite.config.ts` : `server.allowedHosts: true` (Vite 6.4 n'accepte plus `'all'`, cassait le type-check donc le build)

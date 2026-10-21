@@ -331,8 +331,8 @@
   },
   "pricingSection": {
     "eyebrow": "Pricing",
-    "title": "Free, SuperHost or MegaHost: <strong>choose your plan</strong>",
-    "subtitle": "A free plan to get started, then paid plans for more pages, tools and bookings.",
+    "title": "IndieHost or SuperHost: <strong>choose your plan</strong>",
+    "subtitle": "Two plans with a 30-day free trial: IndieHost to put up to 2 listings online, SuperHost to manage up to 6. Beyond that, €12/month per extra listing.",
     "toggleExpandLabel": "View plan details",
     "toggleCollapseLabel": "Hide details",
     "accountPrefix": "Already a customer?",
@@ -509,12 +509,12 @@
           {
             "id": "q-3",
             "question": "If you don't take commissions, how do you make money?",
-            "answer": "Our model is transparent. We offer a 100% free 'IndieHost' Plan that covers all essential needs (payment, calendar, 2 listings). We generate revenue through optional monthly subscriptions (SuperHost and MegaHost) for owners who need more advanced features (more listings, PMS integration, advanced customization) and through à la carte options (such as Google Travel integration or KYC verification)."
+            "answer": "Our model is simple and transparent: a monthly subscription with no commitment, and zero commission on your bookings. IndieHost costs €19/month incl. VAT for 2 listings online, SuperHost €49/month for 6 listings. Beyond that, each extra listing is billed €12/month."
           },
           {
             "id": "q-4",
             "question": "What type of host is IndieHost for?",
-            "answer": "IndieHost is designed for all types of hosts:<br /><br />Individuals (Free Plan): Those who occasionally rent their primary residence.<br /><br />Semi-Pros (SuperHost Plan): Owners of vacation homes, guest houses, or unusual properties managing a few units.<br /><br />Professionals (MegaHost Plan): Guest house managers, small hotels, or concierge services needing full management tools.<br /><br />Each plan adapts to your level of activity and professionalization."
+            "answer": "Every host who wants to take back control of their bookings:<br /><br />IndieHost (€19/month): individuals and hosts managing 1 or 2 properties.<br /><br />SuperHost (€49/month): multi-property hosts, up to 6 listings.<br /><br />On both plans, each extra listing is €12/month."
           },
           {
             "id": "q-5",
@@ -529,18 +529,18 @@
         "children": [
           {
             "id": "q-7",
-            "question": "Is the 'IndieHost' plan really free? Are there hidden fees?",
-            "answer": "Yes, the 'IndieHost' plan is €0/month, with no hidden fees from us. It includes 2 listings, online payment (via Stripe), invoicing, iCal synchronization, messaging, and the dashboard. The only fees that apply are standard transaction fees charged by our payment partner, Stripe (as with any online transaction), on which we take no margin."
+            "question": "Is there a free trial? Any hidden fees?",
+            "answer": "Every plan starts with a 30-day free trial, no commitment. After that, €19 or €49 per month incl. VAT, and that’s it: no commission on your bookings and no hidden fees from us. Only Stripe’s transaction fees apply to card payments, as with any online payment."
           },
           {
             "id": "q-8",
-            "question": "Can I cancel my paid subscription (SuperHost/MegaHost) at any time?",
-            "answer": "Our paid subscriptions have no commitment and can be cancelled at any time, with no cancellation fees. Cancellation is done simply from your dashboard. Your subscription will remain active until the end of your current billing period (monthly or annual), and you won't be charged for the next period."
+            "question": "Can I cancel my subscription at any time?",
+            "answer": "Yes. Our subscriptions have no commitment and can be cancelled in a few clicks from your dashboard, free of charge. Your subscription stays active until the end of the period you already paid for."
           },
           {
             "id": "q-9",
-            "question": "Can I add specific options without changing plans?",
-            "answer": "Yes. For example, if you're on the Free plan, you can subscribe to specific paid options without upgrading to SuperHost, such as: Google Travel integration, purchasing or linking a custom domain name, the ability to accept deposits."
+            "question": "What if I have more properties than my plan allows?",
+            "answer": "You add extra listings in one click from your dashboard: €12/month incl. VAT per listing, prorated and removable at any time. From 5 properties, switching to SuperHost becomes the better deal."
           },
           {
             "id": "q-10",
@@ -566,7 +566,7 @@
           {
             "id": "q-14",
             "question": "Can I request a deposit instead of full payment?",
-            "answer": "Yes. You can configure your own payment rules. The ability to accept deposits (rather than 100% at booking) is a paid option at €5/month on the Free plan, and is included by default in the SuperHost and MegaHost plans."
+            "answer": "Yes. You set your own payment rules: full payment at booking, or a deposit with the balance paid before or on arrival. Deposits are included in every plan."
           },
           {
             "id": "q-15",
@@ -592,7 +592,7 @@
           {
             "id": "q-18",
             "question": "How many listings can I create?",
-            "answer": "With the free plan, you can create up to two properties; with the SuperHost plan, five; and with the MegaHost plan, up to fifteen (extensible on request)."
+            "answer": "IndieHost allows 2 listings online and SuperHost 6. Drafts are unlimited: a listing only counts once it is online. Each extra listing costs €12/month incl. VAT, on either plan."
           },
           {
             "id": "q-19",
@@ -618,7 +618,7 @@
           {
             "id": "q-22",
             "question": "Can I manually add a booking made by phone?",
-            "answer": "Yes, this feature is included in the SuperHost and MegaHost plans. It lets you add or modify reservations manually (for example, a regular who books by phone) directly in your IndieHost calendar to block dates."
+            "answer": "Yes, it is included in the SuperHost plan. You add or edit a booking manually (a regular guest booking by phone, for instance) to block the dates in your IndieHost calendar."
           },
           {
             "id": "q-23",
@@ -633,7 +633,7 @@
           {
             "id": "q-25",
             "question": "Can I automate communication with my guests (SMS, notifications)?",
-            "answer": "Yes. To save you time and professionalize the welcome, our advanced plans (SuperHost and MegaHost) include an automated messaging system. You can schedule SMS and notification sends at key moments in the guest journey (e.g., booking confirmation, D-7 reminder, arrival instructions the day before, welcome message on arrival, departure instructions)."
+            "answer": "Yes. The SuperHost plan includes automated messaging: schedule SMS and notifications at key moments (confirmation, the day before arrival, departure) to save time and professionalise your welcome."
           }
         ]
       },
@@ -649,7 +649,7 @@
           {
             "id": "q-29",
             "question": "What is Google Travel integration?",
-            "answer": "It's an option (paid for Free/SuperHost plans, included for MegaHost) that lists your listing directly in Google Travel / Google Hotels search results. It's an extremely powerful acquisition channel that reaches millions of travelers."
+            "answer": "It is a paid option, available on any plan, that lists your property directly in Google Travel / Google Hotels results: a powerful direct-acquisition channel with no middleman."
           },
           {
             "id": "q-30",
@@ -664,7 +664,7 @@
           {
             "id": "q-32",
             "question": "Do you help retain clients and build a direct relationship?",
-            "answer": "Yes, it's a pillar of the IndieHost offering. Retention starts from the first stay with the digital welcome booklet.<br /><br />Direct Communication Channel: Via a QR code placed in the property, the guest accesses a complete digital guide. This guide includes a dedicated instant messaging system, giving you a direct, professional communication channel with your guest (for all stay information) that belongs to you, unlike OTA messaging.<br /><br />Premium Experience: This booklet centralizes all the information needed for a smooth stay (guides, contacts, etc.). It improves the guest experience, which encourages good reviews (helping your future acquisition) and direct bookings (loyalty).<br /><br />Re-marketing Tools: For advanced plans (MegaHost), you also have email campaign tools to recontact your past clients with special offers and encourage them to book with you again."
+            "answer": "Yes, it's a pillar of the IndieHost offering. Retention starts from the first stay with the digital welcome booklet.<br /><br />Direct Communication Channel: Via a QR code placed in the property, the guest accesses a complete digital guide. This guide includes a dedicated instant messaging system, giving you a direct, professional communication channel with your guest (for all stay information) that belongs to you, unlike OTA messaging.<br /><br />Premium Experience: This booklet centralizes all the information needed for a smooth stay (guides, contacts, etc.). It improves the guest experience, which encourages good reviews (helping your future acquisition) and direct bookings (loyalty).<br /><br />Re-marketing Tools: With the SuperHost plan, you also have email campaign tools to recontact your past clients with special offers and encourage them to book with you again."
           }
         ]
       },
@@ -675,7 +675,7 @@
           {
             "id": "q-38",
             "question": "Can I use my own domain name (e.g., www.my-guesthouse.com)?",
-            "answer": "Absolutely. It's one of our major assets for your independence. You can purchase or link an existing domain name to your IndieHost account/listing. This feature is included in the MegaHost plan and available as a paid option for the SuperHost plan."
+            "answer": "Absolutely. You attach a domain name you already own (e.g. www.my-cottage.com) to your listing from the Domains page: DNS setup is guided step by step and the HTTPS certificate is automatic. It is included in both plans; every listing also gets a free IndieHost subdomain."
           },
           {
             "id": "q-39",
@@ -706,7 +706,7 @@
           {
             "id": "q-43",
             "question": "Is KYC verification mandatory?",
-            "answer": "It's included and recommended for the SuperHost and MegaHost plans. For the Free plan, it's a paid option. Passing KYC gives you a reassurance badge ('Verified') on your listing, which significantly increases guest trust and your conversion rate."
+            "answer": "It is included and recommended in the SuperHost plan, and offered as an option on IndieHost. Passing KYC gives your listing a “Verified” badge, a trust signal for travellers."
           },
           {
             "id": "q-44",
@@ -727,7 +727,7 @@
           {
             "id": "q-43",
             "question": "Is IndieHost compatible with my Channel Manager (PMS) or RMS (Revenue Management System)?",
-            "answer": "Yes. We know that SuperHosts and Pros use tools like SuperHote (PMS) or RMS (dynamic pricing software). Third-party management tool integration is included in the SuperHost and MegaHost plans. It lets you synchronize your IndieHost listings, rates, availability, and bookings directly from your centralized management tool for maximum efficiency."
+            "answer": "Yes. Integration with third-party management tools (PMS such as SuperHote, or dynamic-pricing RMS) is included in the SuperHost plan: your listings, prices, availability and bookings sync from your central system."
           }
         ]
       }

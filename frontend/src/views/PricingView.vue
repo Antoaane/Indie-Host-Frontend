@@ -25,7 +25,7 @@ import {
 import landingFr from '@/locales/landing/fr.json'
 import type { PricingSectionContent } from '@/views/Landing/types/content'
 
-const PLAN_ORDER: SubscriptionPlanCode[] = ['indiehost', 'superhost', 'megahost']
+const PLAN_ORDER: SubscriptionPlanCode[] = ['indiehost', 'superhost']
 const PREVIEW_INCLUDES_COUNT = 3
 
 const route = useRoute()
@@ -54,7 +54,7 @@ function readQueryValue(value: unknown): string | null {
 
 function parsePlanCode(value: unknown): SubscriptionPlanCode | null {
   const normalized = readQueryValue(value)
-  if (normalized === 'indiehost' || normalized === 'superhost' || normalized === 'megahost') return normalized
+  if (normalized === 'indiehost' || normalized === 'superhost') return normalized
   return null
 }
 

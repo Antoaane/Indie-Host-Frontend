@@ -331,8 +331,8 @@
   },
   "pricingSection": {
     "eyebrow": "价格",
-    "title": "免费、SuperHost 或 MegaHost：<strong>选择您的方案</strong>",
-    "subtitle": "免费方案入门，付费方案提供更多页面、工具与预订量。",
+    "title": "IndieHost 或 SuperHost：<strong>选择您的方案</strong>",
+    "subtitle": "两种方案，均含30天免费试用：IndieHost 最多上线2套房源，SuperHost 最多管理6套。超出部分每套房源每月12 €。",
     "toggleExpandLabel": "查看功能详情",
     "toggleCollapseLabel": "收起详情",
     "accountPrefix": "已是客户？",
@@ -509,12 +509,12 @@
           {
             "id": "q-3",
             "question": "不抽佣金怎么盈利？",
-            "answer": "模式透明。提供 100% 免费的 IndieHost 方案（支付、日历、2 套房源）。通过可选月付（SuperHost、MegaHost）及单卖项（如 Google Travel、KYC）获得收入。"
+            "answer": "我们的模式简单透明：按月订阅、无合约绑定，预订零佣金。IndieHost 每月 19 €（含税），可上线 2 套房源；SuperHost 每月 49 €，可上线 6 套。超出部分每套额外房源每月 12 €。"
           },
           {
             "id": "q-4",
             "question": "适合哪类房东？",
-            "answer": "个人（免费方案）、半职业（SuperHost）、职业（MegaHost）均可。各方案按您的体量与专业度适配。"
+            "answer": "面向所有想要掌控自己预订的房东：<br /><br />IndieHost（每月 19 €）：管理 1 到 2 套房源的个人和房东。<br /><br />SuperHost（每月 49 €）：多房源房东，最多 6 套。<br /><br />两种方案下，每套额外房源均为每月 12 €。"
           },
           {
             "id": "q-5",
@@ -529,18 +529,18 @@
         "children": [
           {
             "id": "q-7",
-            "question": "IndieHost 方案真的免费吗？有隐藏费用吗？",
-            "answer": "是，0 欧元/月，我们无隐藏费用。含 2 套房源、在线支付（Stripe）、发票、iCal、消息与仪表盘。仅 Stripe 标准交易费适用。"
+            "question": "有免费试用吗？有隐藏费用吗？",
+            "answer": "每个方案均从 30 天免费试用开始，无合约绑定。之后每月仅需 19 € 或 49 €（含税）：预订不收佣金，我们也没有任何隐藏费用。银行卡支付仅产生 Stripe 的交易手续费，与任何在线支付相同。"
           },
           {
             "id": "q-8",
-            "question": "付费订阅可随时取消吗？",
-            "answer": "可以。无绑定，随时在仪表盘取消，无取消费。当前计费周期内继续有效，下一周期不再扣费。"
+            "question": "我可以随时取消订阅吗？",
+            "answer": "可以。我们的订阅没有合约绑定，可在控制台几次点击即可免费取消。订阅将持续有效至已付费周期结束。"
           },
           {
             "id": "q-9",
-            "question": "能不换方案只加选项吗？",
-            "answer": "可以。例如免费方案可单独购买 Google Travel、自定义域名、接受定金等，无需升级 SuperHost。"
+            "question": "如果我的房源数量超过方案上限怎么办？",
+            "answer": "您可在控制台一键添加额外房源：每套每月 12 €（含税），按比例计费，随时可移除。从 5 套房源起，升级到 SuperHost 更划算。"
           },
           {
             "id": "q-10",
@@ -566,7 +566,7 @@
           {
             "id": "q-14",
             "question": "可以只收定金吗？",
-            "answer": "可以。您自定规则。接受定金在免费方案为付费选项（5 欧元/月），SuperHost/MegaHost 已含。"
+            "answer": "可以。您自定支付规则：预订时全额支付，或先付定金、余款在入住前或入住时支付。定金功能包含在所有方案中。"
           },
           {
             "id": "q-15",
@@ -592,7 +592,7 @@
           {
             "id": "q-18",
             "question": "能创建多少套房源？",
-            "answer": "免费 2 套，SuperHost 5 套，MegaHost 最多 15 套（可申请扩展）。"
+            "answer": "IndieHost 可上线 2 套房源，SuperHost 可上线 6 套。草稿不限数量：房源只有在上线后才计入。每套额外房源每月 12 €（含税），两种方案均适用。"
           },
           {
             "id": "q-19",
@@ -618,7 +618,7 @@
           {
             "id": "q-22",
             "question": "能手动加电话预订吗？",
-            "answer": "可以，SuperHost 与 MegaHost 含此功能，直接在 IndieHost 日历中添加或修改以锁定日期。"
+            "answer": "可以，此功能包含在 SuperHost 方案中。您可手动添加或修改预订（例如通过电话预订的老客户），以在 IndieHost 日历中锁定日期。"
           },
           {
             "id": "q-23",
@@ -633,7 +633,7 @@
           {
             "id": "q-25",
             "question": "能自动发短信/通知吗？",
-            "answer": "能。SuperHost 与 MegaHost 含自动消息：可预约在确认、入住前一日、退房等节点发送短信与通知。"
+            "answer": "可以。SuperHost 方案包含自动消息功能：在关键节点（确认、入住前一天、退房）定时发送短信和通知，节省时间并提升接待的专业度。"
           }
         ]
       },
@@ -649,7 +649,7 @@
           {
             "id": "q-29",
             "question": "Google Travel 整合是什么？",
-            "answer": "在 Google Travel/Google 酒店搜索结果中展示您的房源。免费/SuperHost 为付费选项，MegaHost 已含。"
+            "answer": "这是一项付费选项，任何方案均可开通，可将您的房源直接展示在 Google Travel / Google 酒店的搜索结果中：无需中介的强大直接获客渠道。"
           },
           {
             "id": "q-30",
@@ -664,7 +664,7 @@
           {
             "id": "q-32",
             "question": "能帮复购和建立直连关系吗？",
-            "answer": "能。入住指南与二维码提供直连沟通渠道；MegaHost 另有邮件营销工具，可再触达老房客。"
+            "answer": "能。入住指南与二维码提供直连沟通渠道；SuperHost 另有邮件营销工具，可再触达老房客。"
           }
         ]
       },
@@ -675,7 +675,7 @@
           {
             "id": "q-38",
             "question": "能用自己域名吗？",
-            "answer": "能。可购买或绑定已有域名到账户/房源。MegaHost 已含，SuperHost 可付费开通。"
+            "answer": "当然可以。您可在「域名」页面将已拥有的域名（如 www.my-home.com）绑定到房源：DNS 配置有逐步引导，HTTPS 证书自动签发。此功能包含在两种方案中；每套房源还可获得免费的 IndieHost 子域名。"
           },
           {
             "id": "q-39",
@@ -706,7 +706,7 @@
           {
             "id": "q-43",
             "question": "KYC 必须做吗？",
-            "answer": "SuperHost/MegaHost 含并推荐。免费方案为付费选项。通过后房源显示「已验证」标识，提升信任与转化。"
+            "answer": "SuperHost 方案已包含并推荐使用，IndieHost 方案可作为选项开通。通过 KYC 后，您的房源将获得「已验证」标识，增强旅客信任。"
           },
           {
             "id": "q-44",
@@ -727,7 +727,7 @@
           {
             "id": "q-43",
             "question": "IndieHost 兼容我的渠道管理/PMS 或收益管理系统吗？",
-            "answer": "兼容。SuperHost 与 MegaHost 含第三方管理工具整合，可从中央系统同步房源、价格、房态与预订。"
+            "answer": "可以。第三方管理工具整合（如 SuperHote 等 PMS，或动态定价 RMS）包含在 SuperHost 方案中：房源、价格、房态与预订可从您的中央系统同步。"
           }
         ]
       }

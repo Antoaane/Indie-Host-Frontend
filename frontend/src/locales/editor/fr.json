@@ -51,9 +51,12 @@
       "ratingAria": "{rating} sur 5",
       "newListing": {
         "title": "+ Nouvelle annonce",
-        "activeUsage": "{count} / {max} actives",
+        "activeUsage": "{count} / {max} en ligne",
         "remaining": "{count} restantes",
-        "remainingAlertSuffix": "!"
+        "remainingAlertSuffix": "!",
+        "choosePlan": "Choisir un plan",
+        "addExtraListing": "Ajouter un logement (+{price} / mois)",
+        "addExtraListingBusy": "Ajout en cours..."
       }
     },
     "sidebar": {

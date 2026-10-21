@@ -2,6 +2,17 @@ import type { PrismaClient, User } from '@prisma/client';
 import Stripe from 'stripe';
 
 import { env } from '../../config/env.js';
+import {
+  EXTRA_LISTING_TEMPLATE,
+  EXTRA_LISTINGS_MAX,
+  LISTING_LIMIT_COUNTED_STATUSES,
+  PLAN_CODES,
+  PLAN_TEMPLATES,
+  normalizeAddonCode,
+  normalizePlanCode,
+  readExtraListingsFromBilling,
+  type SubscriptionPlanCode,
+} from './plans.catalog.js';
 import { asObject, toNumber } from '../../lib/json.js';
 import { toPrismaJson } from '../../lib/prisma.js';
 import { hasAdminAccess } from '../../lib/authRole.js';
@@ -42,7 +53,7 @@ type SyncConnectStateInput = {
   accountId?: string;
 };
 
-export type SubscriptionPlanCode = 'indiehost' | 'superhost' | 'megahost';
+export type { SubscriptionPlanCode };
 
 export type SubscriptionPlan = {
   code: SubscriptionPlanCode;
@@ -55,6 +66,43 @@ export type SubscriptionPlan = {
   stripePriceId: string | null;
   available: boolean;
   unavailableReason: string | null;
+};
+
+export type ExtraListingOffer = {
+  code: 'extra_listing';
+  name: string;
+  description: string;
+  currency: string;
+  monthlyPriceMinor: number;
+  billingInterval: string;
+  stripePriceId: string | null;
+  available: boolean;
+  unavailableReason: string | null;
+};
+
+export type SubscriptionCatalog = {
+  plans: SubscriptionPlan[];
+  extraListing: ExtraListingOffer | null;
+};
+
+export type ListingAllowance = {
+  includedListings: number;
+  extraListings: number;
+  maxActiveListings: number | null;
+  activeListings: number;
+  remaining: number | null;
+};
+
+type UpdateExtraListingsInput = {
+  quantity: number;
+};
+
+export type UpdateExtraListingsResult = {
+  state: 'updated' | 'subscription_required' | 'offer_unavailable' | 'quantity_in_use';
+  mode: 'live' | 'mock';
+  subscription: PublicBillingSnapshot | null;
+  listingAllowance: ListingAllowance;
+  message: string | null;
 };
 
 type ActivateSubscriptionInput = {
@@ -100,6 +148,11 @@ type BillingSnapshot = {
   updatedAtISO: string | null;
   pendingPlanCode: SubscriptionPlanCode | null;
   pendingCheckoutSessionId: string | null;
+  // Logements inclus par le plan (figés à la synchro Stripe) et supplémentaires (quantité de l'item add-on).
+  includedListings: number | null;
+  extraListings: number;
+  planItemId: string | null;
+  extraListingItemId: string | null;
   giftedTrialSource?: string | null;
   giftedTrialListingId?: string | null;
   giftedTrialGrantedByUserId?: string | null;
@@ -117,6 +170,8 @@ type PublicBillingSnapshot = {
   updatedAtISO: string | null;
   pendingPlanCode: SubscriptionPlanCode | null;
   pendingCheckoutSessionId: string | null;
+  includedListings: number | null;
+  extraListings: number;
 };
 
 export type SubscriptionActivationResult = {
@@ -146,9 +201,11 @@ export type ConfirmSubscriptionCheckoutResult = {
 export type MySubscriptionStateResult = {
   mode: 'live' | 'mock';
   plans: SubscriptionPlan[];
+  extraListing: ExtraListingOffer | null;
   currentPlanCode: SubscriptionPlanCode | null;
   currentPlan: SubscriptionPlan | null;
   subscription: PublicBillingSnapshot | null;
+  listingAllowance: ListingAllowance;
   connect: PublicConnectSummary;
   publicationReadiness: PublicationReadiness;
 };
@@ -165,47 +222,9 @@ export type ConnectDashboardLinkResult = {
   url: string;
 };
 
-type PlanTemplate = {
-  name: string;
-  description: string;
-  maxActiveListings: number;
-  defaultCurrency: string;
-  defaultMonthlyPriceMinor: number;
-};
-
 type StripePlanCandidate = {
   product: Stripe.Product;
   price: Stripe.Price;
-};
-
-const PLAN_CODES: SubscriptionPlanCode[] = [
-  'indiehost',
-  'superhost',
-  'megahost',
-];
-
-const PLAN_TEMPLATES: Record<SubscriptionPlanCode, PlanTemplate> = {
-  indiehost: {
-    name: 'IndieHost',
-    description: 'Plan pour les hôtes qui lancent un premier logement.',
-    maxActiveListings: 1,
-    defaultCurrency: 'eur',
-    defaultMonthlyPriceMinor: 2900,
-  },
-  superhost: {
-    name: 'SuperHost',
-    description: 'Plan pour gerer jusqu\'a 3 logements avec plus d\'outils.',
-    maxActiveListings: 3,
-    defaultCurrency: 'eur',
-    defaultMonthlyPriceMinor: 3900,
-  },
-  megahost: {
-    name: 'MegaHost',
-    description: 'Plan avancé pour les portefeuilles professionnels.',
-    maxActiveListings: 15,
-    defaultCurrency: 'eur',
-    defaultMonthlyPriceMinor: 9900,
-  },
 };
 
 const SUBSCRIPTION_TRIAL_PERIOD_DAYS = 30;
@@ -321,11 +340,10 @@ function readBoolean(value: unknown, fallback = false): boolean {
   return fallback;
 }
 
-function normalizePlanCode(value: unknown): SubscriptionPlanCode | null {
-  const raw = readString(value);
-  if (!raw) return null;
-  if (raw === 'indiehost' || raw === 'superhost' || raw === 'megahost') return raw;
-  return null;
+function readNullableInteger(value: unknown): number | null {
+  const parsed = typeof value === 'number' ? value : Number.parseInt(String(value ?? ''), 10);
+  if (!Number.isFinite(parsed) || parsed < 0) return null;
+  return Math.trunc(parsed);
 }
 
 function toIsoFromUnixSeconds(value: number | null | undefined): string | null {
@@ -920,6 +938,10 @@ export class PaymentsService {
       updatedAtISO: readString(billing.updatedAtISO),
       pendingPlanCode: normalizePlanCode(billing.pendingPlanCode),
       pendingCheckoutSessionId: readString(billing.pendingCheckoutSessionId),
+      includedListings: readNullableInteger(billing.includedListings),
+      extraListings: readExtraListingsFromBilling(billing),
+      planItemId: readString(billing.planItemId),
+      extraListingItemId: readString(billing.extraListingItemId),
       giftedTrialSource: readString(billing.giftedTrialSource),
       giftedTrialListingId: readString(billing.giftedTrialListingId),
       giftedTrialGrantedByUserId: readString(billing.giftedTrialGrantedByUserId),
@@ -1089,15 +1111,16 @@ export class PaymentsService {
     user: User,
     options?: { allowAdmin?: boolean },
   ): PublicationReadiness {
+    // Le super admin configure et publie à la place d'un client : aucune condition de facturation.
     if (options?.allowAdmin) {
       return {
-        canPublish: false,
+        canPublish: true,
         hasActiveSubscription: true,
         hasConnectAccount: true,
         connectOnboardingCompleted: true,
         chargesEnabled: true,
         payoutsEnabled: true,
-        missingRequirements: ['admin_publish_forbidden'],
+        missingRequirements: [],
       };
     }
 
@@ -1139,6 +1162,52 @@ export class PaymentsService {
       updatedAtISO: billing.updatedAtISO,
       pendingPlanCode: billing.pendingPlanCode,
       pendingCheckoutSessionId: billing.pendingCheckoutSessionId,
+      includedListings: billing.includedListings,
+      extraListings: billing.extraListings,
+    };
+  }
+
+  private async countActiveListingsForOwner(ownerId: string): Promise<number> {
+    return this.prisma.listing.count({
+      where: {
+        ownerId,
+        status: { in: [...LISTING_LIMIT_COUNTED_STATUSES] },
+      },
+    });
+  }
+
+  private async computeListingAllowance(
+    user: User,
+    plans: SubscriptionPlan[],
+    options?: { allowAdmin?: boolean },
+  ): Promise<ListingAllowance> {
+    const activeListings = await this.countActiveListingsForOwner(user.id);
+    const billing = this.readBillingSnapshot(user);
+
+    if (options?.allowAdmin) {
+      return {
+        includedListings: 0,
+        extraListings: 0,
+        maxActiveListings: null,
+        activeListings,
+        remaining: null,
+      };
+    }
+
+    const currentPlan = plans.find((plan) => plan.code === billing.planCode) ?? null;
+    const hasEligibleSubscription = this.hasPublicationEligibleSubscription(billing.status);
+    const includedListings = hasEligibleSubscription
+      ? (billing.includedListings ?? currentPlan?.maxActiveListings ?? 0)
+      : 0;
+    const extraListings = hasEligibleSubscription ? billing.extraListings : 0;
+    const maxActiveListings = includedListings + extraListings;
+
+    return {
+      includedListings,
+      extraListings,
+      maxActiveListings,
+      activeListings,
+      remaining: Math.max(0, maxActiveListings - activeListings),
     };
   }
 
@@ -1166,6 +1235,10 @@ export class PaymentsService {
       updatedAtISO: billingPatch?.updatedAtISO,
       pendingPlanCode: billingPatch?.pendingPlanCode,
       pendingCheckoutSessionId: billingPatch?.pendingCheckoutSessionId,
+      includedListings: billingPatch?.includedListings,
+      extraListings: billingPatch?.extraListings,
+      planItemId: billingPatch?.planItemId,
+      extraListingItemId: billingPatch?.extraListingItemId,
       giftedTrialSource: billingPatch?.giftedTrialSource,
       giftedTrialListingId: billingPatch?.giftedTrialListingId,
       giftedTrialGrantedByUserId: billingPatch?.giftedTrialGrantedByUserId,
@@ -1374,13 +1447,47 @@ export class PaymentsService {
     return this.parseIsoDate(billing.updatedAtISO);
   }
 
+  private isExtraListingPrice(price: Stripe.Price | null | undefined): boolean {
+    if (!price) return false;
+    if (normalizeAddonCode(price.metadata?.indiehost_plan_code) === 'extra_listing') return true;
+    const product = price.product;
+    if (product && typeof product === 'object' && !('deleted' in product && product.deleted)) {
+      return normalizeAddonCode((product as Stripe.Product).metadata?.indiehost_plan_code) === 'extra_listing';
+    }
+    return false;
+  }
+
+  // L'abonnement porte deux items au plus : le plan et l'add-on « logement supplémentaire ».
+  private findPlanSubscriptionItem(subscription: Stripe.Subscription, plans: SubscriptionPlan[]): Stripe.SubscriptionItem | null {
+    const items = subscription.items.data;
+    const byPlanPrice = items.find((item) => this.resolvePlanByPriceId(plans, item.price?.id ?? null));
+    if (byPlanPrice) return byPlanPrice;
+    return items.find((item) => !this.isExtraListingPrice(item.price)) ?? null;
+  }
+
+  private findExtraListingSubscriptionItem(
+    subscription: Stripe.Subscription,
+    plans: SubscriptionPlan[],
+    extraListingPriceId: string | null,
+  ): Stripe.SubscriptionItem | null {
+    const items = subscription.items.data;
+    const byKnownPrice = extraListingPriceId ? items.find((item) => item.price?.id === extraListingPriceId) : null;
+    if (byKnownPrice) return byKnownPrice;
+    return items.find((item) => this.isExtraListingPrice(item.price)
+      || (!this.resolvePlanByPriceId(plans, item.price?.id ?? null) && items.length > 1 && item.id !== this.findPlanSubscriptionItem(subscription, plans)?.id)) ?? null;
+  }
+
   private serializeStripeSubscription(
     subscription: Stripe.Subscription,
     plans: SubscriptionPlan[],
     fallbackPlanCode?: SubscriptionPlanCode | null,
+    extraListingPriceId: string | null = null,
   ): BillingSnapshot {
-    const priceId = subscription.items.data[0]?.price?.id ?? null;
+    const planItem = this.findPlanSubscriptionItem(subscription, plans);
+    const priceId = planItem?.price?.id ?? null;
     const planCode = this.resolvePlanByPriceId(plans, priceId) ?? fallbackPlanCode ?? null;
+    const currentPlan = plans.find((plan) => plan.code === planCode) ?? null;
+    const extraItem = this.findExtraListingSubscriptionItem(subscription, plans, extraListingPriceId);
 
     return {
       customerId: typeof subscription.customer === 'string' ? subscription.customer : subscription.customer?.id ?? null,
@@ -1392,6 +1499,10 @@ export class PaymentsService {
       updatedAtISO: nowIso(),
       pendingPlanCode: null,
       pendingCheckoutSessionId: null,
+      includedListings: currentPlan?.maxActiveListings ?? null,
+      extraListings: extraItem ? Math.max(0, Math.trunc(extraItem.quantity ?? 0)) : 0,
+      planItemId: planItem?.id ?? null,
+      extraListingItemId: extraItem?.id ?? null,
     };
   }
 
@@ -1443,22 +1554,68 @@ export class PaymentsService {
     });
   }
 
+  // Résolution stricte : métadonnée `indiehost_plan_code` (prix puis produit) ou nom exactement égal au plan.
+  // Pas de correspondance par préfixe : « SuperHost - Annuel » ne doit jamais passer pour le plan SuperHost.
   private resolvePlanCodeFromStripeCatalogEntry(price: Stripe.Price, product: Stripe.Product): SubscriptionPlanCode | null {
-    const fromPriceMetadata = normalizePlanCode(price.metadata?.indiehost_plan_code ?? price.metadata?.plan_code);
-    if (fromPriceMetadata) return fromPriceMetadata;
+    const priceCode = readString(price.metadata?.indiehost_plan_code ?? price.metadata?.plan_code);
+    if (priceCode) return normalizePlanCode(priceCode);
 
-    const fromProductMetadata = normalizePlanCode(product.metadata?.indiehost_plan_code ?? product.metadata?.plan_code);
-    if (fromProductMetadata) return fromProductMetadata;
+    const productCode = readString(product.metadata?.indiehost_plan_code ?? product.metadata?.plan_code);
+    if (productCode) return normalizePlanCode(productCode);
 
     const normalizedProductName = product.name.trim().toLowerCase();
     for (const code of PLAN_CODES) {
       if (PLAN_TEMPLATES[code].name.trim().toLowerCase() === normalizedProductName) return code;
     }
 
-    if (normalizedProductName.startsWith('indiehost')) return 'indiehost';
-    if (normalizedProductName.startsWith('superhost')) return 'superhost';
-    if (normalizedProductName.startsWith('megahost')) return 'megahost';
     return null;
+  }
+
+  private resolveAddonCodeFromStripeCatalogEntry(price: Stripe.Price, product: Stripe.Product): 'extra_listing' | null {
+    return normalizeAddonCode(price.metadata?.indiehost_plan_code)
+      ?? normalizeAddonCode(product.metadata?.indiehost_plan_code)
+      ?? (product.name.trim().toLowerCase() === EXTRA_LISTING_TEMPLATE.name.toLowerCase() ? 'extra_listing' : null);
+  }
+
+  private buildMockExtraListingOffer(): ExtraListingOffer {
+    return {
+      code: 'extra_listing',
+      name: EXTRA_LISTING_TEMPLATE.name,
+      description: EXTRA_LISTING_TEMPLATE.description,
+      currency: EXTRA_LISTING_TEMPLATE.defaultCurrency,
+      monthlyPriceMinor: EXTRA_LISTING_TEMPLATE.defaultMonthlyPriceMinor,
+      billingInterval: 'month',
+      stripePriceId: null,
+      available: true,
+      unavailableReason: null,
+    };
+  }
+
+  private buildExtraListingOffer(candidates: StripePlanCandidate[]): ExtraListingOffer {
+    const candidate = this.selectBestStripePlanCandidate(candidates);
+    if (!candidate) {
+      return {
+        ...this.buildMockExtraListingOffer(),
+        available: false,
+        unavailableReason: `Aucun produit/prix Stripe mensuel trouvé pour ${EXTRA_LISTING_TEMPLATE.name}.`,
+      };
+    }
+
+    const unitAmount = typeof candidate.price.unit_amount === 'number' && Number.isFinite(candidate.price.unit_amount)
+      ? Math.max(0, Math.trunc(candidate.price.unit_amount))
+      : EXTRA_LISTING_TEMPLATE.defaultMonthlyPriceMinor;
+
+    return {
+      code: 'extra_listing',
+      name: readString(candidate.product.name) ?? EXTRA_LISTING_TEMPLATE.name,
+      description: readString(candidate.product.description) ?? EXTRA_LISTING_TEMPLATE.description,
+      currency: (candidate.price.currency || EXTRA_LISTING_TEMPLATE.defaultCurrency).toLowerCase(),
+      monthlyPriceMinor: unitAmount,
+      billingInterval: candidate.price.recurring?.interval ?? 'month',
+      stripePriceId: candidate.price.id,
+      available: true,
+      unavailableReason: null,
+    };
   }
 
   private readMaxActiveListingsFromStripeProduct(product: Stripe.Product, fallback: number): number {
@@ -1517,15 +1674,17 @@ export class PaymentsService {
     return ranked[0] ?? null;
   }
 
-  private async resolvePlanCatalog(): Promise<SubscriptionPlan[]> {
+  private async resolveCatalog(): Promise<SubscriptionCatalog> {
     const mode = this.getSubscriptionExecutionMode();
-    if (mode === 'mock' || !this.stripe) return this.buildMockPlanCatalog();
+    if (mode === 'mock' || !this.stripe) {
+      return { plans: this.buildMockPlanCatalog(), extraListing: this.buildMockExtraListingOffer() };
+    }
 
     const candidatesByPlanCode: Record<SubscriptionPlanCode, StripePlanCandidate[]> = {
       indiehost: [],
       superhost: [],
-      megahost: [],
     };
+    const extraListingCandidates: StripePlanCandidate[] = [];
     const productCache = new Map<string, Stripe.Product>();
     let startingAfter: string | null = null;
 
@@ -1548,6 +1707,13 @@ export class PaymentsService {
 
           const product = await this.resolveStripeProductFromPrice(price, productCache);
           if (!product) continue;
+          // Les produits/prix archivés (anciennes offres, annuels retirés) ne sont jamais candidats.
+          if (!product.active || !price.active) continue;
+
+          if (this.resolveAddonCodeFromStripeCatalogEntry(price, product) === 'extra_listing') {
+            extraListingCandidates.push({ product, price });
+            continue;
+          }
 
           const planCode = this.resolvePlanCodeFromStripeCatalogEntry(price, product);
           if (!planCode) continue;
@@ -1561,7 +1727,7 @@ export class PaymentsService {
         if (!startingAfter) break;
       }
     } catch {
-      return PLAN_CODES.map((code): SubscriptionPlan => {
+      const unavailablePlans = PLAN_CODES.map((code): SubscriptionPlan => {
         const template = PLAN_TEMPLATES[code];
         return {
           code,
@@ -1576,9 +1742,10 @@ export class PaymentsService {
           unavailableReason: `Impossible de récupérer le catalogue Stripe pour ${template.name}.`,
         };
       });
+      return { plans: unavailablePlans, extraListing: null };
     }
 
-    return PLAN_CODES.map((code): SubscriptionPlan => {
+    const plans = PLAN_CODES.map((code): SubscriptionPlan => {
       const template = PLAN_TEMPLATES[code];
       const candidate = this.selectBestStripePlanCandidate(candidatesByPlanCode[code]);
       if (!candidate) {
@@ -1617,10 +1784,116 @@ export class PaymentsService {
         unavailableReason: available ? null : `Le produit/prix Stripe du plan ${planName} est inactif.`,
       };
     });
+
+    return { plans, extraListing: this.buildExtraListingOffer(extraListingCandidates) };
+  }
+
+  private async resolvePlanCatalog(): Promise<SubscriptionPlan[]> {
+    return (await this.resolveCatalog()).plans;
+  }
+
+  async getSubscriptionCatalog(): Promise<SubscriptionCatalog> {
+    return this.resolveCatalog();
   }
 
   async listSubscriptionPlans(): Promise<SubscriptionPlan[]> {
     return this.resolvePlanCatalog();
+  }
+
+  /**
+   * Ajuste la quantité de « logements supplémentaires » sur l'abonnement courant
+   * (item add-on créé, mis à jour ou retiré, prorata immédiat côté Stripe).
+   */
+  async updateExtraListings(input: UpdateExtraListingsInput, auth: RequestAuth | null): Promise<UpdateExtraListingsResult | null> {
+    const allowAdmin = hasAdminAccess(auth);
+    let user = await upsertUserFromAuth(this.prisma, auth);
+    if (!user) return null;
+    user = await this.enforceAdminListingTransferTrialExpiration(user);
+
+    const mode = this.getSubscriptionExecutionMode();
+    const catalog = await this.resolveCatalog();
+    const quantity = Math.max(0, Math.min(EXTRA_LISTINGS_MAX, Math.trunc(input.quantity)));
+    const billing = this.readBillingSnapshot(user);
+
+    const respond = async (
+      state: UpdateExtraListingsResult['state'],
+      current: User,
+      message: string | null,
+    ): Promise<UpdateExtraListingsResult> => ({
+      state,
+      mode,
+      subscription: this.toPublicBillingSnapshot(this.readBillingSnapshot(current)),
+      listingAllowance: await this.computeListingAllowance(current, catalog.plans, { allowAdmin }),
+      message,
+    });
+
+    if (!this.hasPublicationEligibleSubscription(billing.status) || !billing.planCode) {
+      return respond('subscription_required', user, 'Activez d’abord un plan IndieHost ou SuperHost pour ajouter des logements supplémentaires.');
+    }
+
+    // On ne peut pas retirer un logement supplémentaire encore occupé par une annonce en ligne.
+    const activeListings = await this.countActiveListingsForOwner(user.id);
+    const includedListings = billing.includedListings ?? catalog.plans.find((plan) => plan.code === billing.planCode)?.maxActiveListings ?? 0;
+    if (quantity < billing.extraListings && activeListings > includedListings + quantity) {
+      return respond(
+        'quantity_in_use',
+        user,
+        `Vous avez ${activeListings} logements en ligne : mettez-en en brouillon avant de réduire à ${includedListings + quantity} logements.`,
+      );
+    }
+
+    if (mode === 'mock' || !this.stripe) {
+      const next = await this.updateUserStripeState({
+        user,
+        billingPatch: { extraListings: quantity, updatedAtISO: nowIso() },
+      });
+      return respond('updated', next, null);
+    }
+
+    const offer = catalog.extraListing;
+    if (!offer?.available || !offer.stripePriceId) {
+      return respond('offer_unavailable', user, offer?.unavailableReason ?? 'L’option « logement supplémentaire » est indisponible pour le moment.');
+    }
+
+    if (!billing.customerId) {
+      return respond('subscription_required', user, 'Aucun client Stripe n’est associé à votre compte.');
+    }
+
+    const liveSubscription = await this.getCurrentStripeSubscription({
+      customerId: billing.customerId,
+      subscriptionId: billing.subscriptionId,
+    });
+    if (!liveSubscription) {
+      return respond('subscription_required', user, 'Aucun abonnement actif n’a été trouvé sur votre compte Stripe.');
+    }
+
+    const extraItem = this.findExtraListingSubscriptionItem(liveSubscription, catalog.plans, offer.stripePriceId);
+
+    if (quantity === 0) {
+      if (extraItem) {
+        await this.stripe.subscriptionItems.del(extraItem.id, { proration_behavior: 'create_prorations' });
+      }
+    } else if (extraItem) {
+      if ((extraItem.quantity ?? 0) !== quantity) {
+        await this.stripe.subscriptionItems.update(extraItem.id, {
+          quantity,
+          proration_behavior: 'create_prorations',
+        });
+      }
+    } else {
+      await this.stripe.subscriptionItems.create({
+        subscription: liveSubscription.id,
+        price: offer.stripePriceId,
+        quantity,
+        proration_behavior: 'create_prorations',
+      });
+    }
+
+    const refreshed = await this.stripe.subscriptions.retrieve(liveSubscription.id);
+    const snapshot = this.serializeStripeSubscription(refreshed, catalog.plans, billing.planCode, offer.stripePriceId);
+    const next = await this.updateUserStripeState({ user, billingPatch: snapshot });
+
+    return respond('updated', next, null);
   }
 
   async getMySubscriptionState(auth: RequestAuth | null, options?: { sync?: boolean }): Promise<MySubscriptionStateResult | null> {
@@ -1629,7 +1902,8 @@ export class PaymentsService {
     if (!user) return null;
     user = await this.enforceAdminListingTransferTrialExpiration(user);
 
-    const plans = await this.resolvePlanCatalog();
+    const catalog = await this.resolveCatalog();
+    const plans = catalog.plans;
     const subscriptionMode = this.getSubscriptionExecutionMode();
     const shouldSync = Boolean(options?.sync);
 
@@ -1642,7 +1916,7 @@ export class PaymentsService {
         });
 
         if (liveSubscription) {
-          const snapshot = this.serializeStripeSubscription(liveSubscription, plans, billing.planCode);
+          const snapshot = this.serializeStripeSubscription(liveSubscription, plans, billing.planCode, catalog.extraListing?.stripePriceId ?? null);
           user = await this.updateUserStripeState({
             user,
             billingPatch: snapshot,
@@ -1657,9 +1931,11 @@ export class PaymentsService {
     return {
       mode: subscriptionMode,
       plans,
+      extraListing: catalog.extraListing,
       currentPlanCode: currentBilling.planCode,
       currentPlan,
       subscription: this.toPublicBillingSnapshot(currentBilling),
+      listingAllowance: await this.computeListingAllowance(user, plans, { allowAdmin }),
       connect: this.readConnectState(user),
       publicationReadiness: this.toPublicationReadiness(user, { allowAdmin }),
     };
@@ -1763,7 +2039,8 @@ export class PaymentsService {
     });
 
     if (liveSubscription) {
-      const currentPriceId = liveSubscription.items.data[0]?.price?.id ?? null;
+      const planItem = this.findPlanSubscriptionItem(liveSubscription, plans);
+      const currentPriceId = planItem?.price?.id ?? null;
       const isAlreadyOnPlan = currentPriceId === selectedPlan.stripePriceId;
 
       if (isAlreadyOnPlan) {
@@ -1785,7 +2062,8 @@ export class PaymentsService {
         };
       }
 
-      const subscriptionItemId = liveSubscription.items.data[0]?.id;
+      // Seul l'item « plan » change ; l'item « logement supplémentaire » éventuel est conservé tel quel.
+      const subscriptionItemId = planItem?.id;
       if (!subscriptionItemId || !selectedPlan.stripePriceId) {
         throw new Error('Unable to update subscription: missing subscription item or price id.');
       }

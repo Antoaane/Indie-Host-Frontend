@@ -95,7 +95,7 @@ function readQueryValue(value: unknown): string | null {
 
 function parsePlanCode(value: unknown): SubscriptionPlanCode | null {
   const normalized = readQueryValue(value)
-  if (normalized === 'indiehost' || normalized === 'superhost' || normalized === 'megahost') return normalized
+  if (normalized === 'indiehost' || normalized === 'superhost') return normalized
   return null
 }
 

@@ -9,6 +9,7 @@ import {
   createPaymentIntentSchema,
   getMySubscriptionQuerySchema,
   syncConnectStateSchema,
+  updateExtraListingsSchema,
 } from './payments.schemas.js';
 import { PaymentsService } from './payments.service.js';
 
@@ -89,6 +90,11 @@ export const paymentsPlugin = fp(async (fastify) => {
     reply.send({ plans });
   });
 
+  // Catalogue public : plans + offre « logement supplémentaire » (landing et page Tarifs).
+  fastify.get('/payments/stripe/subscriptions/catalog', async (_request, reply) => {
+    reply.send(await service.getSubscriptionCatalog());
+  });
+
   fastify.get('/payments/stripe/subscriptions/me', {
     preHandler: fastify.authenticate,
   }, async (request, reply) => {
@@ -97,6 +103,25 @@ export const paymentsPlugin = fp(async (fastify) => {
 
     if (!result) {
       reply.code(401).send({ message: 'Authentication required.' });
+      return;
+    }
+
+    reply.send(result);
+  });
+
+  fastify.post('/payments/stripe/subscriptions/extra-listings', {
+    preHandler: fastify.authenticate,
+  }, async (request, reply) => {
+    const payload = updateExtraListingsSchema.parse(asObject(request.body));
+    const result = await service.updateExtraListings(payload, request.auth);
+
+    if (!result) {
+      reply.code(401).send({ message: 'Authentication required.' });
+      return;
+    }
+
+    if (result.state !== 'updated') {
+      reply.code(409).send({ message: result.message, details: result });
       return;
     }
 

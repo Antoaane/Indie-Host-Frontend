@@ -56,6 +56,8 @@ const envSchema = z.object({
   CLERK_ISSUER: z.string().trim().optional().default(''),
   CLERK_AUDIENCE: z.string().trim().optional().default(''),
   CLERK_SECRET_KEY: z.string().trim().optional().default(''),
+  // Emails (séparés par des virgules) qui obtiennent le rôle super_admin quelle que soit la métadonnée Clerk.
+  SUPER_ADMIN_EMAILS: z.string().trim().optional().default(''),
   STRIPE_SECRET_KEY: z.string().trim().optional().default(''),
   STRIPE_CONNECT_PLATFORM_FEE_BPS: z.coerce.number().int().min(0).max(10000).default(0),
   STRIPE_CONNECT_DEFAULT_APPLICATION_FEE_BPS: z.coerce.number().int().min(0).max(10000).default(0),

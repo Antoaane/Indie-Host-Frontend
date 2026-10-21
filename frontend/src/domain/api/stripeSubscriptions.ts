@@ -2,7 +2,7 @@
 
 import clerkToken from '@/utils/clerkToken'
 
-export type SubscriptionPlanCode = 'indiehost' | 'superhost' | 'megahost'
+export type SubscriptionPlanCode = 'indiehost' | 'superhost'
 
 export type StripeSubscriptionPlan = {
   code: SubscriptionPlanCode
@@ -17,6 +17,27 @@ export type StripeSubscriptionPlan = {
   unavailableReason: string | null
 }
 
+export type StripeExtraListingOffer = {
+  code: 'extra_listing'
+  name: string
+  description: string
+  currency: string
+  monthlyPriceMinor: number
+  billingInterval: string
+  stripePriceId: string | null
+  available: boolean
+  unavailableReason: string | null
+}
+
+export type StripeListingAllowance = {
+  includedListings: number
+  extraListings: number
+  /** null = illimité (super admin). */
+  maxActiveListings: number | null
+  activeListings: number
+  remaining: number | null
+}
+
 export type StripeSubscriptionSnapshot = {
   subscriptionId: string | null
   planCode: SubscriptionPlanCode | null
@@ -26,6 +47,16 @@ export type StripeSubscriptionSnapshot = {
   updatedAtISO: string | null
   pendingPlanCode: SubscriptionPlanCode | null
   pendingCheckoutSessionId: string | null
+  includedListings: number | null
+  extraListings: number
+}
+
+export type UpdateExtraListingsResponse = {
+  state: 'updated' | 'subscription_required' | 'offer_unavailable' | 'quantity_in_use'
+  mode: 'live' | 'mock'
+  subscription: StripeSubscriptionSnapshot | null
+  listingAllowance: StripeListingAllowance
+  message: string | null
 }
 
 export type StripeConnectSummary = {
@@ -51,11 +82,18 @@ export type StripePublicationReadiness = {
 export type StripeSubscriptionState = {
   mode: 'live' | 'mock'
   plans: StripeSubscriptionPlan[]
+  extraListing: StripeExtraListingOffer | null
   currentPlanCode: SubscriptionPlanCode | null
   currentPlan: StripeSubscriptionPlan | null
   subscription: StripeSubscriptionSnapshot | null
+  listingAllowance: StripeListingAllowance
   connect: StripeConnectSummary
   publicationReadiness: StripePublicationReadiness
+}
+
+export type StripeSubscriptionCatalog = {
+  plans: StripeSubscriptionPlan[]
+  extraListing: StripeExtraListingOffer | null
 }
 
 export type ActivateSubscriptionResponse = {
@@ -260,6 +298,44 @@ export async function fetchMyStripeSubscriptionState({ sync = false }: { sync?: 
     return data
   } catch (error) {
     throw new Error(toApiErrorMessage(error, 'Impossible de charger votre abonnement.'))
+  }
+}
+
+export async function fetchStripeSubscriptionCatalog(): Promise<StripeSubscriptionCatalog> {
+  const axios = await getAxios()
+
+  try {
+    const { data } = await axios.get<Partial<StripeSubscriptionCatalog>>(resolveUrl(buildApiUrl('/payments/stripe/subscriptions/catalog')), {
+      withCredentials: false,
+    })
+
+    return {
+      plans: Array.isArray(data?.plans) ? data.plans : [],
+      extraListing: data?.extraListing ?? null,
+    }
+  } catch (error) {
+    throw new Error(toApiErrorMessage(error, 'Impossible de charger le catalogue des offres.'))
+  }
+}
+
+/** Ajuste le nombre de logements supplémentaires (12 €/mois chacun) sur l'abonnement courant. */
+export async function updateMyExtraListings(quantity: number): Promise<UpdateExtraListingsResponse> {
+  const axios = await getAxios()
+  const headers = await getHeaders({ requiresAuth: true })
+
+  try {
+    const { data } = await axios.post<UpdateExtraListingsResponse>(
+      resolveUrl(buildApiUrl('/payments/stripe/subscriptions/extra-listings')),
+      { quantity: Math.max(0, Math.trunc(quantity)) },
+      {
+        withCredentials: false,
+        headers,
+      },
+    )
+
+    return data
+  } catch (error) {
+    throw new Error(toApiErrorMessage(error, 'Impossible de modifier vos logements supplémentaires.'))
   }
 }
 

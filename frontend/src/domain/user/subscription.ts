@@ -1,23 +1,17 @@
 // File: src/domain/user/subscription.ts
 
-const DEFAULT_MAX_ACTIVE_LISTINGS = 6
+import type { StripeListingAllowance } from '@/domain/api/stripeSubscriptions'
 
-function asPositiveInteger(value: unknown): number | null {
-  if (typeof value === 'number' && Number.isFinite(value)) {
-    const next = Math.trunc(value)
-    return next > 0 ? next : null
+// Valeur de secours tant que l'état d'abonnement n'est pas chargé : logements inclus dans le plan IndieHost.
+const DEFAULT_MAX_ACTIVE_LISTINGS = 2
+
+/**
+ * Nombre maximal de logements en ligne (publiés, en pause ou gelés) pour l'utilisateur :
+ * logements inclus dans le plan + logements supplémentaires achetés, calculés côté serveur.
+ */
+export function getUserMaxActiveListings(allowance?: StripeListingAllowance | null): number {
+  if (allowance && typeof allowance.maxActiveListings === 'number' && Number.isFinite(allowance.maxActiveListings)) {
+    return Math.max(0, Math.trunc(allowance.maxActiveListings))
   }
-
-  if (typeof value === 'string' && value.trim()) {
-    const parsed = Number(value)
-    if (!Number.isFinite(parsed)) return null
-    const next = Math.trunc(parsed)
-    return next > 0 ? next : null
-  }
-
-  return null
-}
-
-export function getUserMaxActiveListings(): number {
   return DEFAULT_MAX_ACTIVE_LISTINGS
 }

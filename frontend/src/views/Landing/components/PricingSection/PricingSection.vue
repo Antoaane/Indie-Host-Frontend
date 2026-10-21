@@ -147,7 +147,7 @@ onMounted(() => {
         >
           <div class="plan-topline"></div>
           <p
-            v-if="!plan.available && plan.code !== 'megahost'"
+            v-if="!plan.available"
             class="plan-watermark"
             aria-hidden="true"
           >

@@ -1,6 +1,6 @@
 // File: src/domain/payments/pricingPlanCatalog.ts
 
-import type { StripeSubscriptionPlan, SubscriptionPlanCode } from '@/domain/api/stripeSubscriptions'
+import type { StripeExtraListingOffer, StripeSubscriptionPlan, SubscriptionPlanCode } from '@/domain/api/stripeSubscriptions'
 
 export type PricingPlanTone = 'indigo' | 'gold' | 'red'
 
@@ -35,7 +35,15 @@ StripeSubscriptionPlan,
 'name' | 'description' | 'monthlyPriceMinor' | 'currency' | 'billingInterval'
 >
 
-const PLAN_ORDER: SubscriptionPlanCode[] = ['indiehost', 'superhost', 'megahost']
+const PLAN_ORDER: SubscriptionPlanCode[] = ['indiehost', 'superhost']
+
+/** Logement au-delà de ceux inclus dans le plan : valeur de secours, le prix Stripe fait foi. */
+export const EXTRA_LISTING_MARKETING = {
+  name: 'Logement supplémentaire',
+  displayPrice: '12 € / mois TTC par logement',
+  summary: 'Au-delà des logements inclus, chaque logement en ligne supplémentaire est facturé 12 € / mois TTC, ajustable à tout moment depuis votre tableau de bord.',
+  option: 'Logement supplémentaire : 12 € / mois TTC chacun',
+}
 
 const PLAN_CATALOG: Record<SubscriptionPlanCode, MarketingPricingPlan> = {
   indiehost: {
@@ -43,17 +51,22 @@ const PLAN_CATALOG: Record<SubscriptionPlanCode, MarketingPricingPlan> = {
     code: 'indiehost',
     tier: 'Offre 1',
     name: 'IndieHost',
-    displayPrice: '29 € / mois TTC',
-    summary: "L'offre essentielle pour gérer 1 logement en ligne et démarrer rapidement.",
+    displayPrice: '19 € / mois TTC',
+    summary: "L'essentiel pour mettre en ligne jusqu'à 2 logements et encaisser vos réservations sans commission.",
     includes: [
-      '1 logement en ligne',
-      'Synchronisation des réservations',
-      'Messagerie intégrée',
+      '2 logements en ligne',
+      'Page de réservation directe avec paiement Stripe',
+      'Votre propre nom de domaine (ex. www.gite-belair.fr)',
+      'Calendrier synchronisé Airbnb / Booking (iCal)',
+      'Messagerie voyageurs intégrée',
+      "Livret d'accueil numérique",
+      'Sous-domaine IndieHost gratuit',
     ],
-    positioning: 'Parfait pour poser des bases solides avec une expérience fluide dès le premier logement.',
+    options: [EXTRA_LISTING_MARKETING.option],
+    positioning: "Pensé pour l'hôte qui gère un ou deux logements et veut reprendre la main sur ses réservations.",
     cta: 'Essayer gratuitement',
     secondaryCta: "S'abonner",
-    helper: "Essai gratuit inclus avant activation de l'abonnement à 29 € / mois.",
+    helper: "30 jours d'essai gratuit, puis 19 € / mois TTC. Sans engagement.",
     tone: 'indigo',
   },
   superhost: {
@@ -61,46 +74,23 @@ const PLAN_CATALOG: Record<SubscriptionPlanCode, MarketingPricingPlan> = {
     code: 'superhost',
     tier: 'Offre 2',
     name: 'SuperHost',
-    displayPrice: '39 € / mois TTC',
-    summary: "Pensé pour franchir un cap avec jusqu'à 3 logements gérés depuis une seule interface.",
+    displayPrice: '49 € / mois TTC',
+    summary: "Pour les hôtes multi-logements : jusqu'à 6 logements en ligne et des outils de gestion avancés.",
     includes: [
-      '3 logements enregistrés',
-      'Page avec URL personnalisée',
-      'Ajout manuel de nouvelles réservations',
-      'Synchronisation des réservations',
-      'Messagerie intégrée',
+      '6 logements en ligne',
+      "Tout IndieHost inclus",
+      'Votre propre nom de domaine (ex. www.gite-belair.fr)',
+      'Ajout manuel de réservations',
       'Paiements et acomptes sécurisés',
+      'Synchronisation des calendriers externes',
     ],
-    positioning: 'Un palier naturel pour augmenter votre capacité et vos revenus sans complexifier votre quotidien.',
+    options: [EXTRA_LISTING_MARKETING.option],
+    positioning: "Plus avantageux qu'IndieHost dès 5 logements.",
     cta: 'Essayer gratuitement',
     secondaryCta: "S'abonner",
-    helper: "Essai gratuit inclus puis abonnement à 39 € / mois avec activation guidée via Stripe.",
+    helper: "30 jours d'essai gratuit, puis 49 € / mois TTC. Sans engagement.",
     tone: 'gold',
     highlight: 'La plus choisie',
-  },
-  megahost: {
-    id: 'megahost',
-    code: 'megahost',
-    tier: 'Offre 3',
-    name: 'MegaHost',
-    displayPrice: '99 € / mois TTC',
-    summary: "Pour les pros de l'hébergement : gîte, hôtel, conciergerie ou portefeuille multi-biens.",
-    includes: [
-      'Tout le plan SuperHost',
-      '15 pages de réservation personnalisées',
-      'URL personnalisée incluse',
-      'Google Travel intégration incluse',
-      "E-commerce intégré au livret d'accueil",
-      'Campagnes marketing email (promo, retour, anniversaire...)',
-      "Statistiques avancées (origine du trafic, CA/logement, taux d'occupation)",
-    ],
-    positioning: 'Pensé pour les structures qui veulent centraliser, scaler et piloter finement leur acquisition directe.',
-    cta: 'Bientôt disponible',
-    helper: 'Offre en cours de validation produit pour les professionnels de l’hôtellerie.',
-    tone: 'red',
-    available: false,
-    unavailableReason: 'Momentanément indisponible',
-    watermark: 'Momentanément indisponible',
   },
 }
 
@@ -120,6 +110,16 @@ function normalizeCurrencyCode(value: unknown): string {
   const normalized = toNonEmptyString(value)?.toUpperCase()
   if (normalized && /^[A-Z]{3}$/.test(normalized)) return normalized
   return 'EUR'
+}
+
+function formatMinorAmount(amountMinor: number, currency: unknown): string {
+  const amount = amountMinor / 100
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency: normalizeCurrencyCode(currency),
+    minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
+    maximumFractionDigits: Number.isInteger(amount) ? 0 : 2,
+  }).format(amount)
 }
 
 function resolveBillingIntervalLabel(value: unknown): string {
@@ -143,18 +143,9 @@ function resolveBillingIntervalLabel(value: unknown): string {
 function resolveDynamicDisplayPrice(stripePlan?: StripePlanPresentationSource | null): string | null {
   if (!stripePlan) return null
   if (typeof stripePlan.monthlyPriceMinor !== 'number' || !Number.isFinite(stripePlan.monthlyPriceMinor)) return null
-  const amount = stripePlan.monthlyPriceMinor / 100
-  if (!Number.isFinite(amount) || amount < 0) return null
+  if (stripePlan.monthlyPriceMinor < 0) return null
 
-  const currency = normalizeCurrencyCode(stripePlan.currency)
-  const formattedAmount = new Intl.NumberFormat('fr-FR', {
-    style: 'currency',
-    currency,
-    minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
-    maximumFractionDigits: Number.isInteger(amount) ? 0 : 2,
-  }).format(amount)
-
-  return `${formattedAmount} ${resolveBillingIntervalLabel(stripePlan.billingInterval)}`
+  return `${formatMinorAmount(stripePlan.monthlyPriceMinor, stripePlan.currency)} ${resolveBillingIntervalLabel(stripePlan.billingInterval)}`
 }
 
 export function resolvePricingPlanPresentation(
@@ -166,4 +157,12 @@ export function resolvePricingPlanPresentation(
     summary: toNonEmptyString(stripePlan?.description) ?? marketingPlan.summary,
     displayPrice: resolveDynamicDisplayPrice(stripePlan) ?? marketingPlan.displayPrice,
   }
+}
+
+/** Prix d'un logement supplémentaire, ex. « 12 € », d'après l'offre Stripe ou la valeur de secours. */
+export function formatExtraListingPrice(offer?: StripeExtraListingOffer | null): string {
+  if (offer && typeof offer.monthlyPriceMinor === 'number' && Number.isFinite(offer.monthlyPriceMinor) && offer.monthlyPriceMinor >= 0) {
+    return formatMinorAmount(offer.monthlyPriceMinor, offer.currency)
+  }
+  return '12 €'
 }

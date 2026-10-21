@@ -66,6 +66,35 @@ function mergeRoleIntoPayload(payload: Record<string, unknown>, role: string | n
   };
 }
 
+const SUPER_ADMIN_EMAILS = new Set(
+  env.SUPER_ADMIN_EMAILS
+    .split(',')
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean),
+);
+
+function isSuperAdminEmail(email: string | null): boolean {
+  return Boolean(email) && SUPER_ADMIN_EMAILS.has((email as string).toLowerCase());
+}
+
+function readClerkPrimaryEmail(data: unknown): string | null {
+  const record = asRecord(data);
+  if (!record) return null;
+
+  const addresses = Array.isArray(record.email_addresses) ? record.email_addresses : [];
+  const primaryId = typeof record.primary_email_address_id === 'string' ? record.primary_email_address_id : null;
+
+  for (const entry of addresses) {
+    const address = asRecord(entry);
+    if (!address) continue;
+    const email = typeof address.email_address === 'string' ? address.email_address.trim() : '';
+    if (!email) continue;
+    if (!primaryId || address.id === primaryId) return email;
+  }
+
+  return null;
+}
+
 async function fetchClerkRole(userId: string): Promise<string | null> {
   if (!env.CLERK_SECRET_KEY) return null;
 
@@ -80,6 +109,8 @@ async function fetchClerkRole(userId: string): Promise<string | null> {
 
     if (!response.ok) return null;
     const data = await response.json();
+    // Le compte plateforme (SUPER_ADMIN_EMAILS) est super admin même sans métadonnée Clerk.
+    if (isSuperAdminEmail(readClerkPrimaryEmail(data))) return 'super_admin';
     return readRoleFromAuthPayload(data);
   } catch {
     return null;

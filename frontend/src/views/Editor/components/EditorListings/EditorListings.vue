@@ -2,13 +2,15 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'
 import ConfirmationDialog from '@/components/overlays/ConfirmationDialog.vue'
 import NumberStepper from '@/components/inputs/NumberStepper.vue'
+import { fetchMyStripeSubscriptionState, updateMyExtraListings, type StripeSubscriptionState } from '@/domain/api/stripeSubscriptions'
 import { searchAdminPlatformUsers, transferListingOwnershipAsAdmin, type AdminPlatformUser } from '@/domain/api/users'
 import { normalizeListingStatus } from '@/domain/listings/status'
+import { formatExtraListingPrice } from '@/domain/payments/pricingPlanCatalog'
 import { getUserMaxActiveListings } from '@/domain/user/subscription'
 import { readActiveUserId } from '@/router/backOfficeUser'
 import { normalizeSearchText } from '@/utils/search'
@@ -38,10 +40,13 @@ const emit = defineEmits<{
 
 const query = ref('')
 const route = useRoute()
+const router = useRouter()
 const listingContent = editorStatic.listings
+// Annonces « en ligne » qui consomment un logement du plan (les brouillons sont libres).
 const ACTIVE_LISTING_STATUSES = new Set([
   'published',
   'blocked',
+  'paused',
 ])
 const STATUS_OPTIONS = [
   'published',
@@ -55,7 +60,59 @@ type OpenCardMenuState = {
 }
 
 const isAdminUser = computed(() => Boolean(props.isAdmin))
-const maxActiveListings = computed(() => (isAdminUser.value ? Number.POSITIVE_INFINITY : getUserMaxActiveListings()))
+
+// Limite réelle du plan (logements inclus + supplémentaires), calculée par l'API.
+const billingState = ref<StripeSubscriptionState | null>(null)
+const isExtraListingBusy = ref(false)
+const extraListingError = ref<string | null>(null)
+const isSubscriptionActive = computed(() => {
+  const status = (billingState.value?.subscription?.status ?? '').toLowerCase()
+  return status === 'active' || status === 'trialing'
+})
+const extraListingPriceLabel = computed(() => formatExtraListingPrice(billingState.value?.extraListing))
+const limitCtaLabel = computed(() => {
+  if (isExtraListingBusy.value) return listingContent.newListing.addExtraListingBusy
+  if (!isSubscriptionActive.value) return listingContent.newListing.choosePlan
+  return listingContent.newListing.addExtraListing.replace('{price}', extraListingPriceLabel.value)
+})
+
+async function loadBillingState() {
+  if (isAdminUser.value) return
+  try {
+    billingState.value = await fetchMyStripeSubscriptionState()
+  } catch (error) {
+    console.warn('[EditorListings] failed to load subscription state', error)
+  }
+}
+
+async function handleLimitCta() {
+  if (isExtraListingBusy.value) return
+  extraListingError.value = null
+
+  if (!isSubscriptionActive.value) {
+    await router.push('/pricing')
+    return
+  }
+
+  isExtraListingBusy.value = true
+  try {
+    const current = billingState.value?.listingAllowance.extraListings ?? 0
+    const result = await updateMyExtraListings(current + 1)
+    if (result.state !== 'updated') {
+      extraListingError.value = result.message ?? 'Impossible d’ajouter un logement supplémentaire.'
+      return
+    }
+    await loadBillingState()
+  } catch (error) {
+    extraListingError.value = toApiErrorMessage(error, 'Impossible d’ajouter un logement supplémentaire.')
+  } finally {
+    isExtraListingBusy.value = false
+  }
+}
+
+const maxActiveListings = computed(() => (
+  isAdminUser.value ? Number.POSITIVE_INFINITY : getUserMaxActiveListings(billingState.value?.listingAllowance ?? null)
+))
 const activeListingsCount = computed(() => props.listings.reduce((count, listing) => count + (isActiveListingStatus(listing.status) ? 1 : 0), 0))
 const maxActiveListingsDisplay = computed(() => (Number.isFinite(maxActiveListings.value) ? String(maxActiveListings.value) : '∞'))
 const remainingActiveListings = computed(() => (isAdminUser.value ? Number.POSITIVE_INFINITY : Math.max(0, maxActiveListings.value - activeListingsCount.value)))
@@ -159,9 +216,17 @@ function handlePreview(listingId: string) {
 
 function setListingStatus(payload: { listingId: string; status: string }) {
   closeCardMenus()
-  if (isAdminUser.value && normalizeListingStatus(payload.status) === 'published') return
   emit('status-change', payload)
 }
+
+// Toute mise en ligne / retrait change le nombre de logements consommés : on resynchronise la limite.
+watch(activeListingsCount, () => {
+  void loadBillingState()
+})
+
+onMounted(() => {
+  void loadBillingState()
+})
 
 function handleConfigureConnect(listingId: string) {
   closeCardMenus()
@@ -530,7 +595,6 @@ onBeforeUnmount(() => {
           :isStripeConnectPublishLocked="!isAdminUser && props.isStripeConnectPublishLocked"
           :canPreview="props.canPreview !== false"
           :canTransfer="isAdminUser"
-          :canPublishListing="!isAdminUser"
           @select="handleSelect"
           @preview="handlePreview"
           @toggle-status-menu="toggleStatusMenu"
@@ -547,6 +611,10 @@ onBeforeUnmount(() => {
           :activeUsage="newListingActiveUsage"
           :remainingDisplay="newListingRemainingDisplay"
           :isLimitReached="isActiveListingsLimitReached"
+          :limitCtaLabel="isAdminUser ? null : limitCtaLabel"
+          :isLimitCtaBusy="isExtraListingBusy"
+          :limitCtaError="extraListingError"
+          @limit-cta="handleLimitCta"
         />
       </div>
     </div>

@@ -17,6 +17,7 @@ import {
   resolveUserByIdentifier,
   upsertUserFromAuth,
 } from '../users/users.repository.js';
+import { LISTING_LIMIT_COUNTED_STATUSES, resolveMaxActiveListingsFromBilling } from '../payments/plans.catalog.js';
 import { buildDefaultResource, type ListingResourceKey } from './listings.constants.js';
 import type { CreateListingInput } from './listings.schemas.js';
 
@@ -128,6 +129,9 @@ type ListingPublicationReadiness = {
   chargesEnabled: boolean;
   payoutsEnabled: boolean;
   missingRequirements: string[];
+  // Limite de logements en gestion du plan (null = illimité, ex. super admin).
+  maxActiveListings: number | null;
+  activeListings: number | null;
 };
 
 export type TransferListingOwnershipResult = {
@@ -147,6 +151,7 @@ const PUBLICATION_ELIGIBLE_SUBSCRIPTION_STATUSES = new Set([
   'active',
   'trialing',
 ]);
+const LISTING_LIMIT_REQUIREMENT = 'listing_limit_reached';
 const ADMIN_LISTING_TRANSFER_TRIAL_SOURCE = 'admin_listing_transfer';
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -382,8 +387,8 @@ class ListingPublicationForbiddenError extends Error {
   readonly statusCode = 403;
   readonly code = 'LISTING_PUBLICATION_REQUIREMENTS_NOT_MET';
 
-  constructor(public readonly details: ListingPublicationReadiness) {
-    super('Publishing requires an active subscription and a fully configured Stripe Connect account.');
+  constructor(public readonly details: ListingPublicationReadiness, message?: string) {
+    super(message ?? 'Publishing requires an active subscription and a fully configured Stripe Connect account.');
   }
 }
 
@@ -423,16 +428,19 @@ export class ListingsService {
     user: User | null | undefined,
     options?: { allowAdmin?: boolean },
   ): ListingPublicationReadiness {
+    // Le super admin configure et publie à la place d'un client : aucune condition de facturation ni de limite.
     if (options?.allowAdmin) {
       return {
-        canPublish: false,
+        canPublish: true,
         hasAuthenticatedUser: true,
         hasActiveSubscription: true,
         hasConnectAccount: true,
         connectOnboardingCompleted: true,
         chargesEnabled: true,
         payoutsEnabled: true,
-        missingRequirements: ['admin_publish_forbidden'],
+        missingRequirements: [],
+        maxActiveListings: null,
+        activeListings: null,
       };
     }
 
@@ -470,16 +478,44 @@ export class ListingsService {
       chargesEnabled,
       payoutsEnabled,
       missingRequirements,
+      maxActiveListings: hasActiveSubscription ? resolveMaxActiveListingsFromBilling(billing) : 0,
+      activeListings: null,
     };
   }
 
-  private assertCanPublishListing(
+  /**
+   * Vérifie les prérequis de facturation puis la limite de logements du plan
+   * (annonces en ligne : publiées, en pause ou gelées ; `listingId` exclut l'annonce en cours).
+   */
+  private async assertCanPublishListing(
     user: User | null | undefined,
-    options?: { allowAdmin?: boolean },
-  ) {
+    options?: { allowAdmin?: boolean; listingId?: string | null },
+  ): Promise<void> {
     const readiness = this.buildPublicationReadiness(user, options);
     if (!readiness.canPublish) {
       throw new ListingPublicationForbiddenError(readiness);
+    }
+
+    if (options?.allowAdmin || !user || readiness.maxActiveListings === null) return;
+
+    const activeListings = await this.prisma.listing.count({
+      where: {
+        ownerId: user.id,
+        status: { in: [...LISTING_LIMIT_COUNTED_STATUSES] },
+        ...(options?.listingId ? { id: { not: options.listingId } } : {}),
+      },
+    });
+
+    if (activeListings >= readiness.maxActiveListings) {
+      throw new ListingPublicationForbiddenError(
+        {
+          ...readiness,
+          canPublish: false,
+          missingRequirements: [LISTING_LIMIT_REQUIREMENT],
+          activeListings,
+        },
+        `Votre plan permet ${readiness.maxActiveListings} logement${readiness.maxActiveListings > 1 ? 's' : ''} en ligne et vous en avez déjà ${activeListings}. Ajoutez un logement supplémentaire ou mettez une annonce en brouillon.`,
+      );
     }
   }
 
@@ -896,8 +932,9 @@ export class ListingsService {
     const listingStatus = this.extractStatus(core);
 
     if (listingStatus === 'published') {
-      this.assertCanPublishListing(owner, {
+      await this.assertCanPublishListing(owner, {
         allowAdmin: hasAdminAccess(auth),
+        listingId,
       });
     }
 
@@ -1534,7 +1571,7 @@ export class ListingsService {
       const currentStatus = this.extractStatus(currentValue);
       const nextStatus = this.extractStatus(normalizedMerged);
       if (nextStatus === 'published' && (!allowAdmin || currentStatus !== 'published')) {
-        this.assertCanPublishListing(actor, { allowAdmin });
+        await this.assertCanPublishListing(actor, { allowAdmin, listingId });
       }
       data.core = toJsonInput(normalizedMerged);
       data.status = nextStatus;
