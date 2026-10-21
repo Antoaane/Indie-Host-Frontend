@@ -47,6 +47,11 @@ model Listing {
   subdomainSlug     String?
   customDomain           String?   @unique
   customDomainVerifiedAt DateTime?
+  // "listing" (logement) ou "hub" (page principale qui présente les logements rattachés)
+  kind              String         @default("listing")
+  parentListingId   String?
+  parent            Listing?       @relation("ListingHubChildren", fields: [parentListingId], references: [id], onDelete: SetNull)
+  children          Listing[]      @relation("ListingHubChildren")
   ownerId           String?
   owner             User?          @relation("OwnerListings", fields: [ownerId], references: [id], onDelete: SetNull)
   status            String         @default("draft")
@@ -69,6 +74,8 @@ model Listing {
   calendarEvents    CalendarEvent[]
 
   @@index([subdomainSlug])
+  @@index([kind])
+  @@index([parentListingId])
   @@index([ownerId])
   @@index([status])
 }

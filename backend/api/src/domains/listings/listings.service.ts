@@ -79,8 +79,38 @@ const DOMAIN_RECORD_SELECT = {
   subdomainSlug: true,
   customDomain: true,
   customDomainVerifiedAt: true,
+  kind: true,
+  parentListingId: true,
   core: true,
 } satisfies Prisma.ListingSelect;
+
+export type ListingKind = 'listing' | 'hub';
+
+export type ListingHubSummary = {
+  listingId: string;
+  title: string;
+  status: string;
+  hostname: string | null;
+  publicUrl: string | null;
+};
+
+export type ListingHubChildCard = {
+  listingId: string;
+  slug: string;
+  title: string;
+  status: string;
+  city: string | null;
+  region: string | null;
+  coverSrc: string | null;
+  pricePerNight: number | null;
+  guestCapacity: number | null;
+  roomsCount: number | null;
+  publicPath: string;
+};
+
+function normalizeListingKind(value: unknown): ListingKind {
+  return typeof value === 'string' && value.trim().toLowerCase() === 'hub' ? 'hub' : 'listing';
+}
 
 export type ListingDomainAvailability = {
   slug: string;
@@ -501,6 +531,7 @@ export class ListingsService {
     const activeListings = await this.prisma.listing.count({
       where: {
         ownerId: user.id,
+        kind: 'listing',
         status: { in: [...LISTING_LIMIT_COUNTED_STATUSES] },
         ...(options?.listingId ? { id: { not: options.listingId } } : {}),
       },
@@ -965,6 +996,7 @@ export class ListingsService {
         id: listingId,
         ownerId: owner?.id ?? null,
         status: listingStatus,
+        kind: normalizeListingKind(core.kind),
         core: toJsonInput(core),
         bookings: toJsonInput(bookings),
         medias: toJsonInput(medias),
@@ -1173,6 +1205,188 @@ export class ListingsService {
     return this.toDomainRecord(updated);
   }
 
+  // --- Pages principales (annonces mères) -----------------------------------
+
+  private toHubSummary(hub: {
+    id: string;
+    status: string;
+    core: Prisma.JsonValue;
+    subdomainSlug: string | null;
+    customDomain: string | null;
+  }): ListingHubSummary {
+    const core = asObject(hub.core, buildDefaultResource('core', hub.id));
+    const hostname = readString(hub.customDomain)
+      ?? (hub.subdomainSlug ? this.buildListingHostname(hub.subdomainSlug) : null);
+    return {
+      listingId: hub.id,
+      title: readString(core.title) ?? 'Page principale',
+      status: this.getListingStatus(hub),
+      hostname,
+      publicUrl: hostname ? `https://${hostname}` : null,
+    };
+  }
+
+  private toHubChildCard(child: {
+    id: string;
+    status: string;
+    core: Prisma.JsonValue;
+    bookings: Prisma.JsonValue;
+    medias: Prisma.JsonValue;
+  }): ListingHubChildCard {
+    const core = asObject(child.core, buildDefaultResource('core', child.id));
+    const bookings = asObject(child.bookings, buildDefaultResource('bookings', child.id));
+    const medias = asObject(child.medias, buildDefaultResource('medias', child.id));
+    const images = Array.isArray(medias.images) ? medias.images : [];
+    const firstImage = asObject(images[0]);
+    const slug = buildListingSlugFromCore(core, child.id);
+    const rooms = Array.isArray(core.rooms) ? core.rooms.length : null;
+
+    return {
+      listingId: child.id,
+      slug,
+      title: readString(core.title) ?? 'Logement',
+      status: this.getListingStatus(child),
+      city: readString(core.city),
+      region: readString(core.region),
+      coverSrc: readString(firstImage.src),
+      pricePerNight: toNumber(bookings.price, 0) || null,
+      guestCapacity: toNumber(core.guest_capacity, 0) || null,
+      roomsCount: rooms,
+      publicPath: `/${slug}`,
+    };
+  }
+
+  /** Enfant d'une page principale désigné par son slug (URL `https://<hôte de la page>/<slug>`). */
+  private async findHubChildBySlug(hubId: string, slug: string): Promise<{ id: string } | null> {
+    const normalizedSlug = normalizePublicListingSlug(slug);
+    if (!normalizedSlug) return null;
+
+    const children = await this.prisma.listing.findMany({
+      where: { parentListingId: hubId, status: { not: 'deleted' } },
+      select: { id: true, core: true },
+    });
+
+    const matched = children.find((child) => {
+      const core = asObject(child.core, buildDefaultResource('core', child.id));
+      return buildListingSlugFromCore(core, child.id) === normalizedSlug;
+    });
+    return matched ? { id: matched.id } : null;
+  }
+
+  async listHubsForOwner(args: { auth: RequestAuth | null; ownerId?: string | null }): Promise<ListingHubSummary[]> {
+    const actor = await upsertUserFromAuth(this.prisma, args.auth);
+    const allowAdmin = hasAdminAccess(args.auth);
+
+    let ownerId = actor?.id ?? null;
+    const requestedOwnerId = args.ownerId?.trim();
+    if (requestedOwnerId && allowAdmin) {
+      const target = await resolveUserByIdentifier(this.prisma, requestedOwnerId);
+      ownerId = target?.id ?? null;
+    }
+    if (!ownerId) return [];
+
+    const hubs = await this.prisma.listing.findMany({
+      where: { ownerId, kind: 'hub', status: { not: 'deleted' } },
+      select: { id: true, status: true, core: true, subdomainSlug: true, customDomain: true },
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    return hubs.map((hub) => this.toHubSummary(hub));
+  }
+
+  async getListingParent(listingId: string, auth: RequestAuth | null) {
+    const access = await this.findOwnedListing(listingId, auth);
+    if (!access) return null;
+    if (access === 'forbidden') return 'forbidden' as const;
+
+    const parentId = access.listing.parentListingId;
+    if (!parentId) return { listingId, parentListingId: null, parent: null };
+
+    const parent = await this.prisma.listing.findUnique({
+      where: { id: parentId },
+      select: { id: true, status: true, core: true, subdomainSlug: true, customDomain: true },
+    });
+
+    return {
+      listingId,
+      parentListingId: parent ? parent.id : null,
+      parent: parent ? this.toHubSummary(parent) : null,
+    };
+  }
+
+  /** Rattache (ou détache) une annonce à une page principale du même propriétaire. */
+  async setListingParent(args: {
+    listingId: string;
+    parentListingId: string | null;
+    auth: RequestAuth | null;
+  }) {
+    const access = await this.findOwnedListing(args.listingId, args.auth);
+    if (!access) return null;
+    if (access === 'forbidden') return 'forbidden' as const;
+
+    if (access.listing.kind === 'hub') {
+      return { type: 'invalid' as const, reason: 'Une page principale ne peut pas être rattachée à une autre page.' };
+    }
+
+    let parent: { id: string; ownerId: string | null; status: string; core: Prisma.JsonValue; subdomainSlug: string | null; customDomain: string | null } | null = null;
+    if (args.parentListingId) {
+      const candidate = await this.prisma.listing.findUnique({
+        where: { id: args.parentListingId },
+        select: { id: true, ownerId: true, kind: true, status: true, core: true, subdomainSlug: true, customDomain: true },
+      });
+      if (!candidate || candidate.kind !== 'hub' || this.getListingStatus(candidate) === 'deleted') {
+        return { type: 'invalid' as const, reason: 'Page principale introuvable.' };
+      }
+      if (candidate.ownerId !== access.listing.ownerId) {
+        return { type: 'invalid' as const, reason: 'La page principale doit appartenir au même propriétaire que l’annonce.' };
+      }
+      parent = candidate;
+    }
+
+    const updated = await this.prisma.listing.update({
+      where: { id: args.listingId },
+      data: { parentListingId: parent?.id ?? null },
+      select: { id: true, parentListingId: true },
+    });
+
+    return {
+      listingId: updated.id,
+      parentListingId: updated.parentListingId,
+      parent: parent ? this.toHubSummary(parent) : null,
+    };
+  }
+
+  /**
+   * Logements rattachés à une page principale.
+   * `publicOnly` : uniquement les annonces en ligne (page publique) ; sinon toutes sauf supprimées (éditeur).
+   */
+  async listHubChildren(args: { hubId: string; auth: RequestAuth | null; publicOnly: boolean }) {
+    const hub = await this.prisma.listing.findUnique({
+      where: { id: args.hubId },
+      select: { id: true, ownerId: true, kind: true, status: true, core: true },
+    });
+    if (!hub || hub.kind !== 'hub') return null;
+    if (this.getListingStatus(hub) === 'deleted') return null;
+
+    if (!args.publicOnly) {
+      const actor = await upsertUserFromAuth(this.prisma, args.auth);
+      if (!this.isActorOwner(hub.ownerId, actor, { allowAdmin: hasAdminAccess(args.auth) })) return 'forbidden' as const;
+    }
+
+    const children = await this.prisma.listing.findMany({
+      where: {
+        parentListingId: hub.id,
+        status: args.publicOnly ? { in: ['published', 'blocked'] } : { not: 'deleted' },
+      },
+      select: { id: true, status: true, core: true, bookings: true, medias: true },
+      orderBy: { updatedAt: 'desc' },
+    });
+
+    return children
+      .map((child) => this.toHubChildCard(child))
+      .sort((left, right) => left.title.localeCompare(right.title, 'fr', { sensitivity: 'base' }));
+  }
+
   async upsertListingCustomDomain(args: {
     listingId: string;
     domain: string;
@@ -1362,7 +1576,7 @@ export class ListingsService {
     }
   }
 
-  private async resolveListingByCustomDomain(hostname: string): Promise<ListingHostnameResolution | null> {
+  private async resolveListingByCustomDomain(hostname: string, listingSlug?: string | null): Promise<ListingHostnameResolution | null> {
     const domain = normalizeCustomDomain(hostname);
     if (!isValidCustomDomain(domain)) return null;
 
@@ -1371,6 +1585,7 @@ export class ListingsService {
       select: {
         id: true,
         status: true,
+        kind: true,
         core: true,
         subdomainSlug: true,
         customDomain: true,
@@ -1381,17 +1596,27 @@ export class ListingsService {
     const matched = listings.find((listing) => this.getListingStatus(listing) !== 'deleted');
     if (!matched) return null;
 
-    return {
-      listingId: matched.id,
+    const resolution = {
       subdomainSlug: matched.subdomainSlug ? normalizeSlug(matched.subdomainSlug) : '',
       hostname: domain,
       publicUrl: `https://${matched.customDomain ?? domain}`,
     };
+
+    // `https://www.gite.fr/<slug>` : un logement rattaché à la page principale du domaine.
+    const normalizedListingSlug = normalizePublicListingSlug(listingSlug ?? '');
+    if (normalizedListingSlug) {
+      if (matched.kind !== 'hub') return null;
+      const child = await this.findHubChildBySlug(matched.id, normalizedListingSlug);
+      if (!child) return null;
+      return { listingId: child.id, ...resolution, publicUrl: `${resolution.publicUrl}/${normalizedListingSlug}` };
+    }
+
+    return { listingId: matched.id, ...resolution };
   }
 
   async resolveListingByHostname(input: ResolveListingByHostnameInput): Promise<ListingHostnameResolution | null> {
     const managedSubdomain = this.extractManagedSlug(input.hostname);
-    if (!managedSubdomain) return this.resolveListingByCustomDomain(input.hostname);
+    if (!managedSubdomain) return this.resolveListingByCustomDomain(input.hostname, input.listingSlug);
 
     const auth = input.auth ?? null;
     const actor = await upsertUserFromAuth(this.prisma, auth);
@@ -1402,6 +1627,7 @@ export class ListingsService {
         id: true,
         ownerId: true,
         status: true,
+        kind: true,
         core: true,
       },
       orderBy: {
@@ -1417,12 +1643,16 @@ export class ListingsService {
 
     if (!visibleListings.length) return null;
 
+    const hub = visibleListings.find((listing) => listing.kind === 'hub') ?? null;
+
     const normalizedListingSlug = normalizePublicListingSlug(input.listingSlug ?? '');
     if (normalizedListingSlug) {
-      const matched = visibleListings.find((listing) => {
+      const matchedBySlug = visibleListings.find((listing) => {
         const listingCore = asObject(listing.core, buildDefaultResource('core', listing.id));
         return buildListingSlugFromCore(listingCore, listing.id) === normalizedListingSlug;
       });
+      // Sinon, un logement rattaché à la page principale de ce sous-domaine.
+      const matched = matchedBySlug ?? (hub ? await this.findHubChildBySlug(hub.id, normalizedListingSlug) : null);
       if (!matched) return null;
 
       return {
@@ -1433,11 +1663,8 @@ export class ListingsService {
       };
     }
 
-    if (visibleListings.length !== 1) {
-      return null;
-    }
-
-    const matched = visibleListings[0];
+    // Plusieurs annonces sur le même sous-domaine : la page principale, s'il y en a une, répond à la racine.
+    const matched = visibleListings.length === 1 ? visibleListings[0] : hub;
     if (!matched) return null;
     return {
       listingId: matched.id,
@@ -1597,6 +1824,7 @@ export class ListingsService {
       }
       data.core = toJsonInput(normalizedMerged);
       data.status = nextStatus;
+      data.kind = normalizeListingKind(normalizedMerged.kind);
     }
     if (resource === 'bookings') data.bookings = toJsonInput(normalizedMerged);
     if (resource === 'medias') data.medias = toJsonInput(normalizedMerged);
@@ -1786,6 +2014,8 @@ export class ListingsService {
       return {
         listingId: listing.id,
         slug,
+        kind: normalizeListingKind(listing.kind),
+        parentListingId: listing.parentListingId ?? undefined,
         subdomainSlug: listing.subdomainSlug ?? undefined,
         publicUrl,
         ownerId: listing.ownerId ?? undefined,

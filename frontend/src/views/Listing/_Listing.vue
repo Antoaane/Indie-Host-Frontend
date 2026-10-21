@@ -6,6 +6,7 @@ import { useHead } from '@unhead/vue'
 import { useRoute, useRouter } from 'vue-router'
 // COMOOENENTS
 import ListingView from '@/views/ListingView/_ListingView.vue'
+import ListingHubView from '@/views/ListingHub/_ListingHub.vue'
 import ListingUnavailable from '@/views/Listing/ListingUnavailable.vue'
 import { loadBookings, loadComments, loadCore, loadHost, loadMedias, loadNotes, refreshListingAvailability } from '@/views/Listing/utils/fetchListingRaw'
 import type { RawListingBundle } from '@/domain/listings/types'
@@ -209,6 +210,11 @@ watch(
         :message="deletedMessage"
       />
     </template>
+    <ListingHubView
+      v-else-if="rawListing && rawListing.core?.kind === 'hub'"
+      :key="`hub-${rawListing.core?.id ?? 'hub'}`"
+      :rawListing="rawListing"
+    />
     <ListingView
       v-else-if="rawListing"
       :key="listingKey ?? rawListing.core?.id ?? 'listing'"

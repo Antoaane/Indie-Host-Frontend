@@ -247,12 +247,12 @@ export class UsersService {
       }),
       this.prisma.listing.groupBy({
         by: ['ownerId'],
-        where: { ownerId: { not: null }, status: { not: 'deleted' } },
+        where: { ownerId: { not: null }, kind: 'listing', status: { not: 'deleted' } },
         _count: { _all: true },
       }),
       this.prisma.listing.groupBy({
         by: ['ownerId'],
-        where: { ownerId: { not: null }, status: { in: [...LISTING_LIMIT_COUNTED_STATUSES] } },
+        where: { ownerId: { not: null }, kind: 'listing', status: { in: [...LISTING_LIMIT_COUNTED_STATUSES] } },
         _count: { _all: true },
       }),
       listClerkUsers(2000).catch(() => []),

@@ -13,10 +13,14 @@ const props = defineProps<{
   limitCtaLabel?: string | null
   isLimitCtaBusy?: boolean
   limitCtaError?: string | null
+  /** Action secondaire : créer une page principale (annonce mère) qui présente les logements. */
+  secondaryLabel?: string | null
+  isSecondaryBusy?: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'limit-cta'): void
+  (e: 'secondary'): void
 }>()
 </script>
 
@@ -54,6 +58,19 @@ const emit = defineEmits<{
         {{ props.limitCtaError }}
       </p>
     </div>
+
+    <div
+      v-if="props.secondaryLabel"
+      class="secondary-cta"
+    >
+      <button
+        type="button"
+        :disabled="props.isSecondaryBusy"
+        @click="emit('secondary')"
+      >
+        {{ props.secondaryLabel }}
+      </button>
+    </div>
   </div>
 </template>
 
@@ -73,6 +90,15 @@ const emit = defineEmits<{
     margin: 0;
     @include little-text($thin: false);
     color: rgba($bad, 0.95);
+  }
+}
+
+.new-card > .secondary-cta {
+  padding: 0 var(--layout-gap-sm) var(--layout-gap-sm);
+  @include buttons.secondary($theme: white, $padding: false);
+
+  > button {
+    @include little-text($thin: false);
   }
 }
 </style>

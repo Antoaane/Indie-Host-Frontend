@@ -33,6 +33,8 @@ export type RawRoom = Record<string, unknown> & {
   beds?: RawRoomBed[]
 }
 export type RawCore = Record<string, unknown> & {
+  /** 'hub' = page principale qui présente les logements rattachés (annonce mère). */
+  kind?: 'listing' | 'hub'
   id?: string
   slug?: string
   status?: string
@@ -367,6 +369,8 @@ export type ListingAvailabilitySyncResult = {
 }
 
 export type UserListingCard = {
+  kind?: 'listing' | 'hub'
+  parentListingId?: string | null
   listingId: string
   slug?: string
   subdomainSlug?: string

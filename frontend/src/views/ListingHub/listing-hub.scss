@@ -1,0 +1,179 @@
+/* File: src/views/ListingHub/listing-hub.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
+
+// Page principale publique : un bandeau d'accueil puis la grille des logements.
+.listing-hub {
+  @include container($max: xl);
+  margin-inline: auto;
+  padding: var(--layout-gap-2xl) var(--layout-gap) var(--layout-gap-4xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--layout-gap-3xl);
+
+  .hub-hero {
+    position: relative;
+    overflow: hidden;
+    border-radius: borders.$rounded-lg;
+    background: $accent-surface-1;
+    min-height: 16rem;
+    display: flex;
+    align-items: flex-end;
+
+    &.has-cover {
+      min-height: clamp(18rem, 48vh, 32rem);
+    }
+
+    > .hub-cover {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    > .hub-hero-content {
+      position: relative;
+      width: 100%;
+      padding: var(--layout-gap-2xl) var(--layout-gap-xl);
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-xs);
+
+      > h1 {
+        @include main-title($color: $secondary, $colorful: false);
+        margin: 0;
+        padding: 0;
+        max-width: 24ch;
+        text-wrap: balance;
+      }
+
+      > .hub-intro {
+        @include base-text($thin: false, $bigger: true);
+        max-width: 65ch;
+        color: rgba($secondary, 0.82);
+      }
+
+      > .hub-host {
+        @include little-text($thin: false);
+        color: rgba($secondary, 0.62);
+      }
+    }
+
+    // Sur une photo, le texte repose sur un voile clair qui monte depuis le bas.
+    &.has-cover > .hub-hero-content {
+      background: linear-gradient(to top, rgba($accent, 0.96) 0%, rgba($accent, 0.9) 60%, rgba($accent, 0) 100%);
+      padding-top: var(--layout-gap-4xl);
+    }
+  }
+
+  .hub-listings {
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap);
+
+    > h2 {
+      @include lp-h3-title($colorful: false);
+      margin: 0;
+    }
+
+    > .hub-state {
+      @include base-text($thin: false);
+      color: rgba($secondary, 0.7);
+    }
+  }
+
+  .hub-grid {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    @include responsive-grid-columns(16rem);
+    gap: var(--layout-gap);
+  }
+
+  .hub-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+    border-radius: borders.$rounded-md;
+    border: 1px solid rgba($secondary, 0.08);
+    background: $accent;
+    text-decoration: none;
+    color: inherit;
+    @include animations.transition();
+
+    &:hover,
+    &:focus-visible {
+      border-color: rgba($secondary, 0.4);
+      transform: translateY(-2px);
+      @include big-shadow();
+    }
+
+    &:focus-visible {
+      outline: 2px solid $secondary;
+      outline-offset: 2px;
+    }
+
+    > .hub-card-media {
+      display: block;
+      aspect-ratio: 4 / 3;
+      background: $accent-surface-2;
+
+      > img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+    }
+
+    > .hub-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-2xs);
+      padding: var(--layout-gap-sm) var(--layout-gap);
+
+      > .hub-card-title {
+        @include lp-h4-title();
+        margin: 0;
+      }
+
+      > .hub-card-meta {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--layout-gap-2xs);
+        @include little-text($thin: false);
+        color: rgba($secondary, 0.65);
+
+        > svg {
+          stroke: rgba($secondary, 0.55);
+        }
+      }
+
+      > .hub-card-price {
+        margin-top: var(--layout-gap-2xs);
+        @include base-text($bold: true);
+      }
+
+      > .hub-card-note {
+        @include little-text($thin: false);
+        color: rgba($secondary, 0.6);
+      }
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hub-card {
+      transition: none;
+
+      &:hover,
+      &:focus-visible {
+        transform: none;
+      }
+    }
+  }
+}

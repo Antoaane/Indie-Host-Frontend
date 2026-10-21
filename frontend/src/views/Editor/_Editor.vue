@@ -44,6 +44,7 @@ const {
   previewRawListing,
   publishAllPendingDrafts,
   publishSelectedDraft,
+  reloadListings,
   selectedListingId,
   selectedListingHasPendingChanges,
   showListings,
@@ -54,6 +55,25 @@ const {
   source: toRef(props, 'source'),
   canPublishListings,
 })
+
+const isCreatingHub = ref(false)
+
+// Page principale (annonce mère) : créée en brouillon puis ouverte directement dans l'éditeur.
+async function handleCreateHub() {
+  if (isCreatingHub.value) return
+  isCreatingHub.value = true
+  try {
+    const { listingId } = await props.source.createListing({
+      core: { kind: 'hub', title: 'Nos logements', status: 'draft' },
+    })
+    await reloadListings()
+    await handleSelectListing(listingId, { force: true })
+  } catch (error) {
+    window.alert(error instanceof Error ? error.message : 'Impossible de créer la page principale.')
+  } finally {
+    isCreatingHub.value = false
+  }
+}
 
 const isMobileSidebarOpen = ref(false)
 
@@ -142,6 +162,7 @@ watch(selectedListingId, (listingId) => {
             @patch="applyDraftPatch"
             @domain-updated="handleListingDomainUpdated"
             @mobile-back="handleMobileBackToListings"
+            @select-listing="handleListingSelect"
           />
         </div>
       </Transition>
@@ -158,11 +179,13 @@ watch(selectedListingId, (listingId) => {
               :isStripeConnectPublishLocked="isStripeConnectPublishLocked"
               :canPreview="isPreviewAvailable"
               :isAdmin="isAdminUser"
+              :isCreatingHub="isCreatingHub"
               @select="handleListingSelect"
               @preview="showPreview"
               @status-change="applyListingStatusPatch"
               @configure-connect="handleConfigureStripeConnect"
               @listing-transferred="handleListingTransferred"
+              @create-hub="handleCreateHub"
             />
           </Transition>
 

@@ -40,6 +40,14 @@ export const resolveListingSlugSchema = z.object({
   slug: z.string().trim().min(1),
 });
 
+export const setListingParentSchema = z.object({
+  parentListingId: z.string().trim().min(1).nullable(),
+});
+
+export const listHubsQuerySchema = z.object({
+  ownerId: z.string().trim().min(1).optional(),
+});
+
 export const createListingSchema = z.object({
   // Admin uniquement : crée l'annonce directement au nom de ce client (id interne ou id Clerk).
   ownerId: z.string().trim().min(1).optional(),

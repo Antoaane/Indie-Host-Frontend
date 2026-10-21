@@ -38,6 +38,8 @@ const textDefaults = editorStatic.validation.defaults.simpleText
 const imageAltMaxLength = resolveTextMaxLength(titleValidation.max, textDefaults)
 const fileInput = ref<HTMLInputElement | null>(null)
 const isUploading = ref(false)
+const isDraggingFiles = ref(false)
+const fileDragDepth = ref(0)
 const tileRefs = ref<HTMLElement[]>([])
 const galleryFeedback = ref('')
 const galleryFeedbackLevel = ref<'error' | 'success'>('error')
@@ -157,10 +159,33 @@ function openFilePicker() {
 }
 
 async function onFilePicked(event: Event) {
-  if (isUploading.value) return
   const input = event.target as HTMLInputElement | null
   const files = input?.files ? Array.from(input.files) : []
   if (input) input.value = ''
+  await addGalleryFiles(files)
+}
+
+// Glisser-déposer de fichiers : le compteur évite le clignotement quand le curseur passe sur les tuiles.
+function onFilesDragEnter(event: DragEvent) {
+  if (!event.dataTransfer?.types.includes('Files')) return
+  fileDragDepth.value += 1
+  isDraggingFiles.value = true
+}
+
+function onFilesDragLeave() {
+  fileDragDepth.value = Math.max(0, fileDragDepth.value - 1)
+  if (fileDragDepth.value === 0) isDraggingFiles.value = false
+}
+
+async function onFilesDropped(event: DragEvent) {
+  fileDragDepth.value = 0
+  isDraggingFiles.value = false
+  const files = Array.from(event.dataTransfer?.files ?? []).filter((file) => file.type.startsWith('image/'))
+  await addGalleryFiles(files)
+}
+
+async function addGalleryFiles(files: File[]) {
+  if (isUploading.value) return
   if (!files.length) return
   if (orderedImages.value.length >= galleryLimits.maxImages) {
     setGalleryFeedback(maxImagesErrorMessage())
@@ -540,7 +565,13 @@ onBeforeUnmount(() => {
     :class="{
       'is-dragging': isDragging,
       'is-drop-instant': disableDropAnimation,
+      'is-dragging-files': isDraggingFiles,
     }"
+    :data-drop-label="panelContent.dropHint"
+    @dragenter.prevent="onFilesDragEnter"
+    @dragover.prevent
+    @dragleave="onFilesDragLeave"
+    @drop.prevent="onFilesDropped"
   >
     <div class="body">
       <div class="gallery">
@@ -629,5 +660,35 @@ onBeforeUnmount(() => {
 </template>
 
 <style lang="scss">
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
 @use '@/views/CreateListing/components/panels/ListingPanels/gallery-panel.scss';
+
+// Zone de dépôt : tout le panneau accepte les fichiers, un voile indique où lâcher.
+.create-gallery-panel {
+  position: relative;
+
+  &::after {
+    content: attr(data-drop-label);
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--layout-gap);
+    text-align: center;
+    border-radius: borders.$rounded-md;
+    border: 2px dashed rgba($secondary, 0.5);
+    background: rgba($accent, 0.92);
+    @include base-text($bold: true);
+    opacity: 0;
+    pointer-events: none;
+    @include animations.transition();
+  }
+
+  &.is-dragging-files::after {
+    opacity: 1;
+  }
+}
 </style>

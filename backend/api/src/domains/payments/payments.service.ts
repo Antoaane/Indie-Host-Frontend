@@ -1233,6 +1233,7 @@ export class PaymentsService {
     return this.prisma.listing.count({
       where: {
         ownerId,
+        kind: 'listing',
         status: { in: [...LISTING_LIMIT_COUNTED_STATUSES] },
       },
     });

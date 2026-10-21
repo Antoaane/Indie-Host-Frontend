@@ -508,6 +508,12 @@ function goToImageLabel(index: number) {
             {{ props.listing.title || props.listingContent.untitled }}
           </p>
           <p
+            v-if="props.listing.kind === 'hub'"
+            class="meta"
+          >
+            Page principale — présente vos logements rattachés
+          </p>
+          <p
             v-if="showOwnerMeta"
             class="owner"
           >

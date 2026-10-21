@@ -504,6 +504,7 @@ export function useEditorController(options: EditorControllerOptions) {
     isPatchSyncPending: patchQueue.isPatchSyncPending,
     listings: listingState.listings,
     listingsStatus: listingState.listingsStatus,
+    reloadListings: () => listingState.loadListings(),
     pendingListingsCount,
     previewRawListing: draftLifecycle.previewRawListing,
     publishAllPendingDrafts,

@@ -37,7 +37,10 @@ const emit = defineEmits<{
   (e: 'patch', patch: DraftPatch): void
   (e: 'domain-updated', domain: ListingDomainRecord): void
   (e: 'mobile-back'): void
+  (e: 'select-listing', listingId: string): void
 }>()
+
+const isHubListing = computed(() => props.draft.core?.kind === 'hub')
 
 const tab = ref<SidebarTab>('listing')
 
@@ -175,6 +178,7 @@ onBeforeUnmount(() => {
       <EditorSidebarNav
         v-model="tab"
         :showMobileBack="props.showMobileBack"
+        :hubMode="isHubListing"
         @mobile-back="emit('mobile-back')"
       />
     </template>
@@ -184,13 +188,14 @@ onBeforeUnmount(() => {
       mode="out-in"
     >
       <ListingPanels
-        v-if="tab === 'listing'"
+        v-if="tab === 'listing' || isHubListing"
         :listing-id="props.listingId"
         :draft="props.draft"
         :canPublishListing="props.canPublishListing"
         :isAdmin="props.isAdmin"
         @patch="handlePatch"
         @domain-updated="emit('domain-updated', $event)"
+        @select-listing="emit('select-listing', $event)"
       />
       <PricingPanels
         v-else-if="tab === 'pricing'"

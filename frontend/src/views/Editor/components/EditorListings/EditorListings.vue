@@ -28,6 +28,7 @@ const props = defineProps<{
   isStripeConnectPublishLocked?: boolean
   canPreview?: boolean
   isAdmin?: boolean
+  isCreatingHub?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -36,6 +37,7 @@ const emit = defineEmits<{
   (e: 'status-change', payload: { listingId: string; status: string }): void
   (e: 'configure-connect', listingId: string): void
   (e: 'listing-transferred', payload: { listingId: string }): void
+  (e: 'create-hub'): void
 }>()
 
 const query = ref('')
@@ -113,7 +115,8 @@ async function handleLimitCta() {
 const maxActiveListings = computed(() => (
   isAdminUser.value ? Number.POSITIVE_INFINITY : getUserMaxActiveListings(billingState.value?.listingAllowance ?? null)
 ))
-const activeListingsCount = computed(() => props.listings.reduce((count, listing) => count + (isActiveListingStatus(listing.status) ? 1 : 0), 0))
+// Les pages principales (annonces mères) ne consomment pas de logement du plan.
+const activeListingsCount = computed(() => props.listings.reduce((count, listing) => count + (isActiveListingStatus(listing.status) && listing.kind !== 'hub' ? 1 : 0), 0))
 const maxActiveListingsDisplay = computed(() => (Number.isFinite(maxActiveListings.value) ? String(maxActiveListings.value) : '∞'))
 const remainingActiveListings = computed(() => (isAdminUser.value ? Number.POSITIVE_INFINITY : Math.max(0, maxActiveListings.value - activeListingsCount.value)))
 const remainingActiveListingsDisplay = computed(() => (Number.isFinite(remainingActiveListings.value) ? String(remainingActiveListings.value) : '∞'))
@@ -128,8 +131,11 @@ const activeUserId = computed(() => readActiveUserId(route.params.userId))
 const createListingRoute = computed(() => {
   const userId = activeUserId.value
   if (userId) {
+    // Route explicite avec l'utilisateur courant : un admin qui crée depuis l'éditeur d'un client
+    // crée l'annonce au nom de ce client (sinon la garde le renverrait vers son propre espace).
     return {
-      name: 'create-listing',
+      name: 'create-listing-user',
+      params: { userId },
     }
   }
 
@@ -614,7 +620,10 @@ onBeforeUnmount(() => {
           :limitCtaLabel="isAdminUser ? null : limitCtaLabel"
           :isLimitCtaBusy="isExtraListingBusy"
           :limitCtaError="extraListingError"
+          :secondaryLabel="listingContent.newListing.createHub"
+          :isSecondaryBusy="props.isCreatingHub"
           @limit-cta="handleLimitCta"
+          @secondary="emit('create-hub')"
         />
       </div>
     </div>

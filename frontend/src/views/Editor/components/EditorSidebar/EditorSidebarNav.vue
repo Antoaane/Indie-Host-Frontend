@@ -10,6 +10,8 @@ type SidebarTab = 'listing' | 'pricing' | 'arrival'
 const props = defineProps<{
   modelValue: SidebarTab
   showMobileBack?: boolean
+  /** Page principale (annonce mère) : ni tarification ni arrivée, seul l'onglet Annonce reste. */
+  hubMode?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -71,6 +73,7 @@ const actionsContent = editorStatic.actions
         </button>
       </div>
       <div
+        v-if="!props.hubMode"
         class="tab"
         :class="{ 'is-active': props.modelValue === 'pricing' }"
       >
@@ -82,6 +85,7 @@ const actionsContent = editorStatic.actions
         </button>
       </div>
       <div
+        v-if="!props.hubMode"
         class="tab"
         :class="{ 'is-active': props.modelValue === 'arrival' }"
       >

@@ -5,9 +5,11 @@ import { ListingsService } from './listings.service.js';
 import {
   createListingSchema,
   listingDomainAvailabilitySchema,
+  listHubsQuerySchema,
   listingIdParamsSchema,
   listingResourceParamsSchema,
   patchListingResourceSchema,
+  setListingParentSchema,
   resolveListingHostnameSchema,
   resolveListingSlugSchema,
   transferListingOwnershipSchema,
@@ -163,6 +165,93 @@ export const listingsPlugin = fp(async (fastify) => {
     }
 
     reply.send(domain);
+  });
+
+  // Pages principales (annonces mères) : liste du propriétaire, rattachement, logements rattachés.
+  fastify.get('/listings/hubs', {
+    preHandler: fastify.authenticate,
+  }, async (request, reply) => {
+    const query = listHubsQuerySchema.parse(asObject(request.query));
+    reply.send({ hubs: await service.listHubsForOwner({ auth: request.auth, ownerId: query.ownerId ?? null }) });
+  });
+
+  fastify.get('/listings/:listingId/parent', {
+    preHandler: fastify.authenticate,
+  }, async (request, reply) => {
+    const params = listingIdParamsSchema.parse(request.params);
+    const result = await service.getListingParent(params.listingId, request.auth);
+
+    if (!result) {
+      reply.code(404).send({ message: 'Listing not found.' });
+      return;
+    }
+
+    if (result === 'forbidden') {
+      reply.code(403).send({ message: 'You cannot access this listing.' });
+      return;
+    }
+
+    reply.send(result);
+  });
+
+  fastify.put('/listings/:listingId/parent', {
+    preHandler: fastify.authenticate,
+  }, async (request, reply) => {
+    const params = listingIdParamsSchema.parse(request.params);
+    const payload = setListingParentSchema.parse(asObject(request.body));
+    const result = await service.setListingParent({
+      listingId: params.listingId,
+      parentListingId: payload.parentListingId,
+      auth: request.auth,
+    });
+
+    if (!result) {
+      reply.code(404).send({ message: 'Listing not found.' });
+      return;
+    }
+
+    if (result === 'forbidden') {
+      reply.code(403).send({ message: 'Vous ne pouvez pas modifier cette annonce.' });
+      return;
+    }
+
+    if ('type' in result) {
+      reply.code(400).send({ message: result.reason });
+      return;
+    }
+
+    reply.send(result);
+  });
+
+  fastify.get('/listings/:listingId/children', async (request, reply) => {
+    const params = listingIdParamsSchema.parse(request.params);
+    const children = await service.listHubChildren({ hubId: params.listingId, auth: null, publicOnly: true });
+
+    if (!children) {
+      reply.code(404).send({ message: 'Hub not found.' });
+      return;
+    }
+
+    reply.send({ children });
+  });
+
+  fastify.get('/listings/:listingId/children/manage', {
+    preHandler: fastify.authenticate,
+  }, async (request, reply) => {
+    const params = listingIdParamsSchema.parse(request.params);
+    const children = await service.listHubChildren({ hubId: params.listingId, auth: request.auth, publicOnly: false });
+
+    if (!children) {
+      reply.code(404).send({ message: 'Hub not found.' });
+      return;
+    }
+
+    if (children === 'forbidden') {
+      reply.code(403).send({ message: 'You cannot access this listing.' });
+      return;
+    }
+
+    reply.send({ children });
   });
 
   fastify.put('/listings/:listingId/custom-domain', {
