@@ -322,7 +322,8 @@ Le bundle listing est divisé en sections JSON stockées séparément :
 ```
 
 ### RawMedias, RawArrival, RawNotes, RawComments
-- **RawMedias** : `{ images: [{ src, alt, position }], videos: [{ src, type, poster }] }`
+- **RawMedias** : `{ images: [{ src, alt, position }], videos: [{ src, type, poster, alt }] }`
+  - Vidéos : max 3 par annonce, MP4/WebM/MOV ≤ 150 Mo (`validation.listing.videos` dans `locales/editor/fr.json`). Toujours hébergées sur ImageKit dès l'envoi (jamais en data URL) via `POST /api/v1/medias/imagekit/upload-video` (corps binaire `application/octet-stream` + en-têtes `X-File-Name`/`X-File-Type`/`X-Listing-Id`, client `uploadListingVideoToImageKit` avec progression). Poster = `<url>/ik-thumbnail.jpg`. Affichées sous la description sur l'annonce publique (`ListingView/components/Gallery/ListingVideos.vue`). nginx `/api/` : `client_max_body_size 160m` + timeouts 300 s.
 - **RawArrival** : Guide d'arrivée (intro, règles maison, accès, services, commerces)
 - **RawNotes/RawComments** : Avis multi-OTA (IndieHost, Airbnb, Booking)
 
@@ -646,6 +647,8 @@ Les domaines personnalisés pointent **directement** sur le VPS (pas via Cloudfl
 ---
 
 ## Dernières modifications (mis à jour 2026-10-21)
+
+- **Vidéos d'annonce** : upload binaire vers ImageKit (`POST /medias/imagekit/upload-video`), section « Vidéos » du panneau galerie de l'éditeur (progression, suppression, drag & drop), lecture sous la description de l'annonce publique (voir « RawMedias »)
 
 - **Skills UI/UX** ajoutés dans `.claude/skills/` (indiehost-ui, frontend-design, impeccable, web-design-guidelines) + `PRODUCT.md` et `DESIGN.md` à la racine (voir section « Skills UI/UX »)
 
