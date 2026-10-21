@@ -50,14 +50,19 @@
       "ratingTitle": "{rating} / 5",
       "ratingAria": "{rating} sur 5",
       "newListing": {
-        "title": "+ Nouvelle annonce",
-        "activeUsage": "{count} / {max} en ligne",
-        "remaining": "{count} restantes",
-        "remainingAlertSuffix": "!",
+        "title": "Nouvelle annonce",
+        "usageLabel": "Logements en ligne",
+        "remaining": "{count, plural, one {# logement disponible sur votre plan} other {# logements disponibles sur votre plan}}",
+        "unlimited": "Aucune limite de logements",
+        "limitReached": "Limite atteinte : vos nouvelles annonces resteront en brouillon.",
         "choosePlan": "Choisir un plan",
         "addExtraListing": "Ajouter un logement (+{price} / mois)",
-        "addExtraListingBusy": "Ajout en cours...",
-        "createHub": "Créer une page principale (présente vos logements sous un même domaine)"
+        "addExtraListingBusy": "Ajout en cours…",
+        "hub": {
+          "title": "Page principale",
+          "description": "Présentez plusieurs logements sous un même domaine.",
+          "busy": "Création en cours…"
+        }
       }
     },
     "sidebar": {
@@ -165,7 +170,20 @@
           "title": "Photos",
           "subtitle": "Montrez votre logement sous son meilleur jour",
           "addLabel": "Ajouter une photo",
-          "dropHint": "Déposez vos photos ici pour les ajouter"
+          "dropHint": "Déposez vos photos ou vidéos ici pour les ajouter",
+          "videos": {
+            "title": "Vidéos",
+            "subtitle": "Jusqu’à {maxVideos} vidéos (MP4, WebM ou MOV, {maxSizeMb} Mo max). Elles sont hébergées avec vos photos et affichées sous la galerie de votre annonce.",
+            "addLabel": "Ajouter une vidéo",
+            "uploading": "Envoi de « {name} » : {percent} %",
+            "remove": "Supprimer la vidéo",
+            "empty": "Aucune vidéo pour le moment.",
+            "maxVideos": "Maximum {maxVideos} vidéos par annonce.",
+            "invalidMime": "Format non supporté. Utilisez MP4, WebM ou MOV.",
+            "maxFileSize": "Vidéo trop lourde (max {maxSizeMb} Mo).",
+            "uploadError": "L’envoi de la vidéo a échoué. Réessayez.",
+            "unavailable": "L’envoi de vidéos est indisponible pour le moment."
+          }
         },
         "description": {
           "title": "Description",
@@ -718,6 +736,15 @@
             "unreadable": "Impossible de lire ce fichier image.",
             "processError": "Impossible de traiter ce fichier image."
           }
+        },
+        "videos": {
+          "maxVideos": 3,
+          "maxFileSizeBytes": 157286400,
+          "acceptedMimeTypes": [
+            "video/mp4",
+            "video/webm",
+            "video/quicktime"
+          ]
         },
         "amenities": {
           "searchMax": 255,

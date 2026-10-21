@@ -2,10 +2,10 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
-import { Plus, Trash2 } from 'lucide-vue-next'
-import type { RawMedias } from '@/domain/listings/types'
+import { Film, Plus, Trash2 } from 'lucide-vue-next'
+import type { RawMediaVideo, RawMedias } from '@/domain/listings/types'
 import { normalizeListingStatus } from '@/domain/listings/status'
-import { isApiImageStorageEnabled, uploadGalleryImageToImageKit } from '@/domain/api/imagekit'
+import { isApiImageStorageEnabled, uploadGalleryImageToImageKit, uploadListingVideoToImageKit } from '@/domain/api/imagekit'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 import {
@@ -80,6 +80,161 @@ function maxImagesErrorMessage(): string {
   return formatValidationMessage(galleryLimits.messages.maxImages, {
     maxImages: galleryLimits.maxImages,
   })
+}
+
+// Vidéos : toujours hébergées sur ImageKit dès l'envoi (jamais stockées en data URL dans le brouillon).
+const videoContent = panelContent.videos
+const videoLimits = editorStatic.validation.listing.videos
+const videoMaxSizeMb = Math.round(videoLimits.maxFileSizeBytes / (1024 * 1024))
+const acceptedVideoMimeTypes = videoLimits.acceptedMimeTypes.join(',')
+const videos = computed<RawMediaVideo[]>(() => (props.medias?.videos as RawMediaVideo[] | undefined) ?? [])
+const videoInput = ref<HTMLInputElement | null>(null)
+const isUploadingVideo = ref(false)
+const videoUploadName = ref('')
+const videoUploadProgress = ref(0)
+const videoFeedback = ref('')
+const videoFeedbackLevel = ref<'error' | 'success'>('error')
+const videoSubtitle = formatValidationMessage(videoContent.subtitle, {
+  maxVideos: videoLimits.maxVideos,
+  maxSizeMb: videoMaxSizeMb,
+})
+const videoUploadLabel = computed(() =>
+  formatValidationMessage(videoContent.uploading, {
+    name: videoUploadName.value,
+    percent: videoUploadProgress.value,
+  }),
+)
+const canAddVideo = computed(() => !isUploadingVideo.value && videos.value.length < videoLimits.maxVideos)
+
+function maxVideosErrorMessage(): string {
+  return formatValidationMessage(videoContent.maxVideos, { maxVideos: videoLimits.maxVideos })
+}
+
+function setVideos(next: RawMediaVideo[]) {
+  emit('patch', { medias: { videos: next } })
+}
+
+function setVideoFeedback(message: string, level: 'error' | 'success' = 'error') {
+  videoFeedback.value = message
+  videoFeedbackLevel.value = level
+}
+
+function clearVideoFeedback() {
+  videoFeedback.value = ''
+}
+
+function videoLabel(video: RawMediaVideo): string {
+  const alt = typeof video.alt === 'string' ? video.alt.trim() : ''
+  if (alt) return alt
+  try {
+    return decodeURIComponent(video.src.split('/').pop() ?? '') || videoContent.title
+  } catch {
+    return videoContent.title
+  }
+}
+
+function validateVideoFile(file: File): string | null {
+  const mimeType = (file.type || '').toLowerCase()
+  if (!videoLimits.acceptedMimeTypes.includes(mimeType)) return videoContent.invalidMime
+  if (file.size > videoLimits.maxFileSizeBytes) {
+    return formatValidationMessage(videoContent.maxFileSize, { maxSizeMb: videoMaxSizeMb })
+  }
+  return null
+}
+
+function openVideoPicker() {
+  if (isUploadingVideo.value) return
+  if (!apiImageStorageEnabled) {
+    setVideoFeedback(videoContent.unavailable)
+    return
+  }
+  if (videos.value.length >= videoLimits.maxVideos) {
+    setVideoFeedback(maxVideosErrorMessage())
+    return
+  }
+
+  const input = videoInput.value
+  if (!input) return
+  if (typeof input.showPicker === 'function') {
+    input.showPicker()
+  } else {
+    input.click()
+  }
+}
+
+async function onVideoPicked(event: Event) {
+  const input = event.target as HTMLInputElement | null
+  const files = input?.files ? Array.from(input.files) : []
+  if (input) input.value = ''
+  await addVideoFiles(files)
+}
+
+async function addVideoFiles(files: File[]) {
+  if (isUploadingVideo.value || !files.length) return
+  if (!apiImageStorageEnabled) {
+    setVideoFeedback(videoContent.unavailable)
+    return
+  }
+
+  const availableSlots = videoLimits.maxVideos - videos.value.length
+  if (availableSlots <= 0) {
+    setVideoFeedback(maxVideosErrorMessage())
+    return
+  }
+
+  const filesToAdd = files.slice(0, availableSlots)
+  for (const file of filesToAdd) {
+    const error = validateVideoFile(file)
+    if (error) {
+      setVideoFeedback(error)
+      return
+    }
+  }
+
+  try {
+    isUploadingVideo.value = true
+    let next = [...videos.value]
+    // Envois séquentiels : la progression affichée est celle du fichier en cours,
+    // et chaque vidéo est enregistrée dans le brouillon dès qu'elle est hébergée.
+    for (const file of filesToAdd) {
+      videoUploadName.value = file.name
+      videoUploadProgress.value = 0
+      const uploaded = await uploadListingVideoToImageKit(file, {
+        listingId: props.listingId,
+        onProgress: (percent) => {
+          videoUploadProgress.value = percent
+        },
+      })
+      next = [
+        ...next,
+        {
+          src: uploaded.url,
+          type: uploaded.mimeType,
+          poster: uploaded.posterUrl ?? undefined,
+          alt: normalizeTextInput(file.name.replace(/\.[^/.]+$/, ''), imageAltMaxLength),
+        },
+      ]
+      setVideos(next)
+    }
+    if (files.length > filesToAdd.length) {
+      setVideoFeedback(maxVideosErrorMessage())
+    } else {
+      clearVideoFeedback()
+    }
+  } catch (err) {
+    console.log('[Editor][Gallery] failed to upload video', err)
+    const message = err instanceof Error && err.message ? err.message : videoContent.uploadError
+    setVideoFeedback(message)
+  } finally {
+    isUploadingVideo.value = false
+    videoUploadName.value = ''
+    videoUploadProgress.value = 0
+  }
+}
+
+function removeVideo(index: number) {
+  setVideos(videos.value.filter((_, idx) => idx !== index))
+  clearVideoFeedback()
 }
 
 const orderedImages = computed(() => {
@@ -171,8 +326,9 @@ function onFilesDragLeave() {
 async function onFilesDropped(event: DragEvent) {
   fileDragDepth.value = 0
   isDraggingFiles.value = false
-  const files = Array.from(event.dataTransfer?.files ?? []).filter((file) => file.type.startsWith('image/'))
-  await addGalleryFiles(files)
+  const dropped = Array.from(event.dataTransfer?.files ?? [])
+  await addGalleryFiles(dropped.filter((file) => file.type.startsWith('image/')))
+  await addVideoFiles(dropped.filter((file) => file.type.startsWith('video/')))
 }
 
 async function addGalleryFiles(files: File[]) {
@@ -523,6 +679,100 @@ onBeforeUnmount(() => {
             :disabled="isUploading"
             multiple
             @change="onFilePicked"
+          />
+        </div>
+      </div>
+
+      <div class="videos">
+        <div class="videos-header">
+          <h4>{{ videoContent.title }}</h4>
+          <p>{{ videoSubtitle }}</p>
+        </div>
+        <p
+          v-if="videoFeedback"
+          class="feedback"
+          :class="{ 'is-error': videoFeedbackLevel === 'error' }"
+        >
+          {{ videoFeedback }}
+        </p>
+
+        <ul
+          v-if="videos.length"
+          class="video-list"
+        >
+          <li
+            v-for="(video, index) in videos"
+            :key="`${video.src}-${index}`"
+            class="video-item"
+          >
+            <div class="thumb">
+              <img
+                v-if="video.poster"
+                :src="video.poster"
+                alt=""
+                loading="lazy"
+              />
+              <Film
+                v-else
+                :size="20"
+              />
+            </div>
+            <span class="name">{{ videoLabel(video) }}</span>
+            <button
+              type="button"
+              :aria-label="videoContent.remove"
+              :title="videoContent.remove"
+              :disabled="isUploadingVideo"
+              @click="removeVideo(index)"
+            >
+              <Trash2 :size="16" />
+            </button>
+          </li>
+        </ul>
+        <p
+          v-else
+          class="empty"
+        >
+          {{ videoContent.empty }}
+        </p>
+
+        <div
+          v-if="isUploadingVideo"
+          class="progress"
+          role="progressbar"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          :aria-valuenow="videoUploadProgress"
+          :aria-label="videoUploadLabel"
+        >
+          <span class="track">
+            <span
+              class="bar"
+              :style="{ width: `${videoUploadProgress}%` }"
+            />
+          </span>
+          <span class="label">{{ videoUploadLabel }}</span>
+        </div>
+
+        <div class="add-video">
+          <div class="button">
+            <button
+              type="button"
+              :disabled="!canAddVideo"
+              @click="openVideoPicker"
+            >
+              <Plus :size="18" />
+              <span>{{ videoContent.addLabel }}</span>
+            </button>
+          </div>
+          <input
+            ref="videoInput"
+            class="file-input"
+            type="file"
+            :accept="acceptedVideoMimeTypes"
+            :disabled="isUploadingVideo"
+            multiple
+            @change="onVideoPicked"
           />
         </div>
       </div>

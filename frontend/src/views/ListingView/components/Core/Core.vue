@@ -15,6 +15,7 @@ import Title from '@/views/ListingView/components/Core/components/Title/Title.vu
 import Perks from '@/views/ListingView/components/Core/components/Perks/Perks.vue'
 import HostProfile from '@/views/ListingView/components/Core/components/HostProfile/HostProfile.vue'
 import Description from '@/views/ListingView/components/Core/components/Description/Description.vue'
+import ListingVideos from '@/views/ListingView/components/Gallery/ListingVideos.vue'
 import Amenities from '@/views/ListingView/components/Core/components/Amenities/Amenities.vue'
 import Rooms from '@/views/ListingView/components/Core/components/Rooms/Rooms.vue'
 import Availabilities from '@/views/ListingView/components/Core/components/Availabilities/Availabilities.vue'
@@ -114,6 +115,7 @@ const descriptionStatic = {
       :data="props.data.description"
       :staticContent="descriptionStatic"
     />
+    <ListingVideos :videos="props.data.medias.videos" />
     <HostProfile
       v-if="!props.previewOnly && props.data.hostProfile.name"
       :data="props.data.hostProfile"

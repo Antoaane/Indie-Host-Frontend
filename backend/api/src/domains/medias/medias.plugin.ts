@@ -1,7 +1,7 @@
 import fp from 'fastify-plugin';
 
 import { asObject } from '../../lib/json.js';
-import { ImageKitService } from './imagekit.service.js';
+import { ImageKitService, VIDEO_EXTENSION_BY_MIME, VIDEO_MAX_BYTES } from './imagekit.service.js';
 import {
   imagekitImportSchema,
   imagekitUploadSchema,
@@ -9,6 +9,14 @@ import {
   patchMediaSchema,
 } from './medias.schemas.js';
 import { MediasService } from './medias.service.js';
+
+// Marge pour les en-têtes : le corps binaire d'une vidéo ne dépasse pas VIDEO_MAX_BYTES.
+const VIDEO_BODY_LIMIT_BYTES = VIDEO_MAX_BYTES + 1024 * 1024;
+
+function readHeader(value: string | string[] | undefined): string {
+  const raw = Array.isArray(value) ? value[0] : value;
+  return typeof raw === 'string' ? raw.trim() : '';
+}
 
 export const mediasPlugin = fp(async (fastify) => {
   const service = new MediasService(fastify.prisma);
@@ -63,6 +71,55 @@ export const mediasPlugin = fp(async (fastify) => {
 
     reply.send({
       image: uploaded,
+      endpoint: imageKit.getEndpoint(),
+    });
+  });
+
+  // Vidéos : corps binaire brut (application/octet-stream) + en-têtes x-file-name / x-file-type / x-listing-id.
+  fastify.addContentTypeParser('application/octet-stream', { parseAs: 'buffer', bodyLimit: VIDEO_BODY_LIMIT_BYTES }, (_request, body, done) => {
+    done(null, body);
+  });
+
+  fastify.post('/medias/imagekit/upload-video', {
+    preHandler: fastify.authenticate,
+    bodyLimit: VIDEO_BODY_LIMIT_BYTES,
+  }, async (request, reply) => {
+    if (!imageKit.isConfigured()) {
+      reply.code(503).send({ message: 'ImageKit is not configured on API server.' });
+      return;
+    }
+
+    const body = request.body;
+    if (!Buffer.isBuffer(body) || !body.length) {
+      reply.code(400).send({ message: 'Fichier vidéo manquant.' });
+      return;
+    }
+
+    const mimeType = readHeader(request.headers['x-file-type']).toLowerCase();
+    if (!VIDEO_EXTENSION_BY_MIME[mimeType]) {
+      reply.code(415).send({ message: 'Format vidéo non supporté. Utilisez MP4, WebM ou MOV.' });
+      return;
+    }
+
+    if (body.length > VIDEO_MAX_BYTES) {
+      reply.code(413).send({ message: `Vidéo trop lourde (max ${Math.round(VIDEO_MAX_BYTES / (1024 * 1024))} Mo).` });
+      return;
+    }
+
+    const fileName = decodeURIComponent(readHeader(request.headers['x-file-name'])) || `video-${Date.now()}`;
+    const listingId = readHeader(request.headers['x-listing-id']).replace(/[^a-zA-Z0-9._-]+/g, '-');
+    const folder = listingId ? `${imageKit.resolveFolder()}/${listingId}/videos` : `${imageKit.resolveFolder()}/videos`;
+
+    const uploaded = await imageKit.uploadVideoBuffer({
+      buffer: body,
+      fileName,
+      mimeType,
+      folder,
+      tags: ['indiehost', 'upload', 'editor', 'video'],
+    });
+
+    reply.send({
+      video: uploaded,
       endpoint: imageKit.getEndpoint(),
     });
   });

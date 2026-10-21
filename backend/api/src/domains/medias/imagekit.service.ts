@@ -5,6 +5,13 @@ import { env } from '../../config/env.js';
 const IMAGEKIT_UPLOAD_API_URL = 'https://upload.imagekit.io/api/v1/files/upload';
 const DEFAULT_FALLBACK_EXTENSION = 'webp';
 
+export const VIDEO_MAX_BYTES = 150 * 1024 * 1024;
+export const VIDEO_EXTENSION_BY_MIME: Record<string, string> = {
+  'video/mp4': 'mp4',
+  'video/webm': 'webm',
+  'video/quicktime': 'mov',
+};
+
 type UploadImageInput = {
   file: string;
   fileName: string;
@@ -253,6 +260,75 @@ export class ImageKitService {
       useUniqueFileName: input.useUniqueFileName,
       tags: input.tags,
     });
+  }
+
+  /**
+   * Vidéo envoyée en binaire par l'API (multipart vers ImageKit, sans passage par base64).
+   * Le poster est dérivé de l'URL ImageKit (`/ik-thumbnail.jpg`).
+   */
+  async uploadVideoBuffer(input: {
+    buffer: Buffer;
+    fileName: string;
+    mimeType: string;
+    folder?: string;
+    tags?: string[];
+  }): Promise<ImageKitUploadedImage & { posterUrl: string }> {
+    if (!this.isConfigured()) {
+      throw new Error('ImageKit is not configured on the API server.');
+    }
+
+    const extension = VIDEO_EXTENSION_BY_MIME[input.mimeType] ?? extractExtensionFromFileName(input.fileName) ?? 'mp4';
+    const baseName = normalizePathSegment(input.fileName.replace(/\.[a-z0-9]{2,8}$/i, '')) || `video-${randomUUID().slice(0, 8)}`;
+    const fileName = `${baseName}.${extension}`;
+
+    const form = new FormData();
+    form.append('file', new Blob([input.buffer], { type: input.mimeType }), fileName);
+    form.append('fileName', fileName);
+    form.append('folder', this.resolveFolder(input.folder));
+    form.append('useUniqueFileName', 'true');
+    const tags = Array.isArray(input.tags) ? input.tags.map((tag) => normalizeTrimmedString(tag)).filter(Boolean) : [];
+    if (tags.length) form.append('tags', tags.join(','));
+
+    const response = await fetch(IMAGEKIT_UPLOAD_API_URL, {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${this.privateKey}:`).toString('base64')}`,
+      },
+      body: form,
+    });
+
+    const rawText = await response.text();
+    let payload: Record<string, unknown> | null = null;
+    try {
+      payload = rawText ? JSON.parse(rawText) as Record<string, unknown> : null;
+    } catch {
+      payload = null;
+    }
+
+    if (!response.ok) {
+      const messageFromBody = normalizeTrimmedString(payload?.message)
+        || normalizeTrimmedString(payload?.error)
+        || normalizeTrimmedString(rawText);
+      throw new Error(messageFromBody || `ImageKit video upload failed with status ${response.status}.`);
+    }
+
+    const uploadedUrl = normalizeTrimmedString(payload?.url);
+    if (!uploadedUrl) {
+      throw new Error('ImageKit upload did not return a URL.');
+    }
+
+    return {
+      url: uploadedUrl,
+      posterUrl: `${uploadedUrl}/ik-thumbnail.jpg`,
+      fileId: normalizeTrimmedString(payload?.fileId) || null,
+      name: normalizeTrimmedString(payload?.name) || null,
+      filePath: normalizeTrimmedString(payload?.filePath) || null,
+      thumbnailUrl: normalizeTrimmedString(payload?.thumbnailUrl) || null,
+      width: toNumberOrNull(payload?.width),
+      height: toNumberOrNull(payload?.height),
+      size: toNumberOrNull(payload?.size),
+      fileType: normalizeTrimmedString(payload?.fileType) || null,
+    };
   }
 
   private async uploadImage(input: UploadImageInput): Promise<ImageKitUploadedImage> {

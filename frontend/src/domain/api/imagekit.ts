@@ -312,6 +312,67 @@ export function isApiImageStorageEnabled(): boolean {
   return Boolean(BASE_API_URL)
 }
 
+export type UploadedListingVideo = {
+  url: string
+  posterUrl: string | null
+  mimeType: string
+  fileId: string | null
+}
+
+/**
+ * Vidéo d'annonce : envoyée en binaire à l'API (qui la transmet à ImageKit), avec progression.
+ * Contrairement aux photos, une vidéo est toujours hébergée immédiatement (jamais en data URL).
+ */
+export async function uploadListingVideoToImageKit(
+  file: File,
+  options?: { listingId?: string | null; onProgress?: (percent: number) => void },
+): Promise<UploadedListingVideo> {
+  if (!isApiImageStorageEnabled()) {
+    throw new Error('ImageKit upload is disabled outside API mode.')
+  }
+
+  const token = await getAuthToken()
+  if (!token) {
+    throw new Error('Session expirée. Reconnectez-vous puis réessayez.')
+  }
+
+  const axios = await getAxios()
+  const mimeType = (file.type || 'video/mp4').toLowerCase()
+  const { data } = await axios.post<{ video?: Record<string, unknown> }>(
+    resolveUrl(buildApiUrl('/medias/imagekit/upload-video')),
+    file,
+    {
+      withCredentials: false,
+      timeout: 10 * 60 * 1000,
+      headers: {
+        ...buildAuthHeaders(token),
+        'Content-Type': 'application/octet-stream',
+        'X-File-Name': encodeURIComponent(file.name),
+        'X-File-Type': mimeType,
+        ...(options?.listingId ? { 'X-Listing-Id': options.listingId } : {}),
+      },
+      onUploadProgress: (event) => {
+        if (!options?.onProgress) return
+        const total = event.total ?? file.size
+        if (!total) return
+        options.onProgress(Math.min(100, Math.round((event.loaded / total) * 100)))
+      },
+    },
+  )
+
+  const url = normalizeImageKitUrl(data?.video?.url)
+  if (!url) {
+    throw new Error("ImageKit n'a pas renvoyé d'URL valide pour la vidéo.")
+  }
+
+  return {
+    url,
+    posterUrl: normalizeTrimmedString(data?.video?.posterUrl) || null,
+    mimeType,
+    fileId: normalizeTrimmedString(data?.video?.fileId) || null,
+  }
+}
+
 export function isImageKitHostedUrl(src: unknown): boolean {
   const value = normalizeTrimmedString(src)
   if (!value || !/^https?:\/\//i.test(value)) return false
