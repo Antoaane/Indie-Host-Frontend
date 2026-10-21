@@ -64,6 +64,10 @@ const envSchema = z.object({
   ICAL_SYNC_THROTTLE_SECONDS: z.coerce.number().int().min(60).default(300),
   ICAL_SYNC_FETCH_TIMEOUT_MS: z.coerce.number().int().min(1000).default(15000),
   PUBLIC_LISTING_ROOT_DOMAIN: z.string().trim().min(1).default('indiehost.fr'),
+  // Domaines personnalisés des hôtes : cible des enregistrements A / CNAME et fichier lu par certbot.
+  CUSTOM_DOMAIN_TARGET_IPV4: z.string().trim().optional().default(''),
+  CUSTOM_DOMAIN_CNAME_TARGET: z.string().trim().optional().default(''),
+  CUSTOM_DOMAINS_FILE: z.string().trim().optional().default(''),
   GROQ_API_KEY: z.string().trim().optional().default(''),
 });
 

@@ -8,6 +8,7 @@ import type { ListingDomainRecord } from '@/domain/api/listingDomains'
 import { getListingsController } from '@/domain/listings/controller'
 import type { UserListingCard } from '@/domain/listings/types'
 import { readActiveUserId } from '@/router/backOfficeUser'
+import ListingCustomDomainPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/CustomDomainPanel.vue'
 import ListingSubdomainPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/DomainPanel.vue'
 
 const route = useRoute()
@@ -80,8 +81,12 @@ function applyDomainToListing(domain: ListingDomainRecord) {
     delete next.subdomainSlug
   }
 
-  if (domain.publicUrl) {
-    next.publicUrl = domain.publicUrl
+  // Un domaine personnalisé actif devient l'adresse publique affichée sur la carte.
+  const publicUrl = domain.customDomainStatus === 'verified' && domain.customDomainUrl
+    ? domain.customDomainUrl
+    : domain.publicUrl
+  if (publicUrl) {
+    next.publicUrl = publicUrl
   } else {
     delete next.publicUrl
   }
@@ -156,8 +161,8 @@ onMounted(() => {
 <template>
   <section class="domain-panel">
     <div class="domain-panel__header">
-      <h1>Sous-domaine de l annonce</h1>
-      <p>La gestion des domaines est temporairement recentrée sur le sous-domaine IndieHost de chaque annonce.</p>
+      <h1>Domaines de l annonce</h1>
+      <p>Chaque annonce dispose d un sous-domaine IndieHost gratuit et peut aussi utiliser un nom de domaine que vous possedez deja.</p>
     </div>
 
     <section class="domain-panel__section">
@@ -217,10 +222,21 @@ onMounted(() => {
       </p>
     </section>
 
-    <section class="domain-panel__section domain-panel__legacy is-disabled">
+    <section class="domain-panel__section">
       <h2>Domaine personnalise</h2>
-      <p class="domain-panel__feedback">
-        L achat de domaines personnalises est retire du produit. La configuration disponible en production est le sous-domaine IndieHost.
+      <p class="domain-panel__hint">Vous possedez deja un nom de domaine (ex. www.gite-belair.fr) ? Rattachez-le a l annonce selectionnee.</p>
+
+      <ListingCustomDomainPanel
+        v-if="selectedListingId"
+        :listing-id="selectedListingId"
+        @updated="applyDomainToListing"
+      />
+
+      <p
+        v-else
+        class="domain-panel__feedback"
+      >
+        Selectionnez une annonce pour rattacher un nom de domaine.
       </p>
     </section>
   </section>

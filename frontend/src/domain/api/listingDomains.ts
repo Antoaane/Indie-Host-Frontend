@@ -10,11 +10,34 @@ export type ListingSubdomainAvailability = {
   reason: string | null
 }
 
+export type ListingCustomDomainStatus = 'none' | 'pending' | 'verified'
+
+export type ListingCustomDomainTargets = {
+  ipv4: string | null
+  cname: string | null
+}
+
 export type ListingDomainRecord = {
   listingId: string
   subdomainSlug: string | null
   hostname: string | null
   publicUrl: string | null
+  customDomain: string | null
+  customDomainStatus: ListingCustomDomainStatus
+  customDomainUrl: string | null
+  customDomainVerifiedAt: string | null
+  customDomainTargets: ListingCustomDomainTargets
+}
+
+export type ListingCustomDomainVerification = {
+  ok: boolean
+  resolvedAddresses: string[]
+  reason: string | null
+}
+
+export type ListingCustomDomainVerificationResult = {
+  record: ListingDomainRecord
+  verification: ListingCustomDomainVerification
 }
 
 const RAW_BASE_API_URL = (import.meta.env.VITE_API_BASE_URL ?? '').trim()
@@ -221,14 +244,45 @@ function toTrimmedString(value: unknown): string {
   return typeof value === 'string' ? value.trim() : ''
 }
 
+function buildListingCustomDomainUrl(listingId: string, suffix = '') {
+  return joinUrl(BASE_API_URL, `/listings/${listingId.trim()}/custom-domain${suffix}`)
+}
+
+function normalizeCustomDomainStatus(value: unknown): ListingCustomDomainStatus {
+  const status = toTrimmedString(value)
+  return status === 'verified' || status === 'pending' ? status : 'none'
+}
+
 function normalizeDomainRecord(data: Record<string, unknown> | null | undefined): ListingDomainRecord {
   const payload = data ?? {}
+  const targets = (payload.customDomainTargets && typeof payload.customDomainTargets === 'object'
+    ? payload.customDomainTargets
+    : {}) as Record<string, unknown>
 
   return {
     listingId: toTrimmedString(payload.listingId),
     subdomainSlug: toTrimmedString(payload.subdomainSlug) || null,
     hostname: toTrimmedString(payload.hostname) || null,
     publicUrl: toTrimmedString(payload.publicUrl) || null,
+    customDomain: toTrimmedString(payload.customDomain) || null,
+    customDomainStatus: normalizeCustomDomainStatus(payload.customDomainStatus),
+    customDomainUrl: toTrimmedString(payload.customDomainUrl) || null,
+    customDomainVerifiedAt: toTrimmedString(payload.customDomainVerifiedAt) || null,
+    customDomainTargets: {
+      ipv4: toTrimmedString(targets.ipv4) || null,
+      cname: toTrimmedString(targets.cname) || null,
+    },
+  }
+}
+
+function normalizeVerification(data: Record<string, unknown> | null | undefined): ListingCustomDomainVerification {
+  const payload = data ?? {}
+  const addresses = Array.isArray(payload.resolvedAddresses) ? payload.resolvedAddresses : []
+
+  return {
+    ok: Boolean(payload.ok),
+    resolvedAddresses: addresses.map((value) => toTrimmedString(value)).filter(Boolean),
+    reason: toTrimmedString(payload.reason) || null,
   }
 }
 
@@ -295,6 +349,52 @@ export async function removeListingDomain(listingId: string): Promise<ListingDom
     headers,
   }), {
     fallbackErrorMessage: 'Impossible de libérer ce sous-domaine.',
+    requiresAuth: true,
+  })
+  return normalizeDomainRecord(data)
+}
+
+export async function saveListingCustomDomain(listingId: string, domain: string): Promise<ListingDomainRecord> {
+  const axios = await getAxios()
+  const url = resolveUrl(buildListingCustomDomainUrl(listingId))
+  const data = await requestWithAuth<Record<string, unknown>>((headers) => axios.put(url, { domain: domain.trim().toLowerCase() }, {
+    withCredentials: false,
+    timeout: API_REQUEST_TIMEOUT_MS,
+    headers,
+  }), {
+    fallbackErrorMessage: 'Impossible de rattacher ce nom de domaine.',
+    requiresAuth: true,
+  })
+  return normalizeDomainRecord(data)
+}
+
+export async function verifyListingCustomDomain(listingId: string): Promise<ListingCustomDomainVerificationResult> {
+  const axios = await getAxios()
+  const url = resolveUrl(buildListingCustomDomainUrl(listingId, '/verify'))
+  const data = await requestWithAuth<Record<string, unknown>>((headers) => axios.post(url, null, {
+    withCredentials: false,
+    timeout: API_REQUEST_TIMEOUT_MS,
+    headers,
+  }), {
+    fallbackErrorMessage: 'Impossible de vérifier la configuration DNS.',
+    requiresAuth: true,
+  })
+  const payload = data ?? {}
+  return {
+    record: normalizeDomainRecord(payload.record as Record<string, unknown> | undefined),
+    verification: normalizeVerification(payload.verification as Record<string, unknown> | undefined),
+  }
+}
+
+export async function removeListingCustomDomain(listingId: string): Promise<ListingDomainRecord> {
+  const axios = await getAxios()
+  const url = resolveUrl(buildListingCustomDomainUrl(listingId))
+  const data = await requestWithAuth<Record<string, unknown>>((headers) => axios.delete(url, {
+    withCredentials: false,
+    timeout: API_REQUEST_TIMEOUT_MS,
+    headers,
+  }), {
+    fallbackErrorMessage: 'Impossible de détacher ce nom de domaine.',
     requiresAuth: true,
   })
   return normalizeDomainRecord(data)

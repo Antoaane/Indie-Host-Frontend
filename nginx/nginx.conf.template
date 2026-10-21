@@ -1,6 +1,14 @@
+# Le nom SNI sert à choisir le certificat d'un domaine personnalisé : on ne l'accepte
+# dans un chemin de fichier que s'il ne contient que des caractères de nom d'hôte.
+map $ssl_server_name $custom_domain_cert_name {
+    ~^[a-z0-9.-]+$    $ssl_server_name;
+    default           _invalid;
+}
+
+# HTTP : challenge ACME (certificats des domaines personnalisés) puis redirection HTTPS, quel que soit l'hôte.
 server {
-    listen 80;
-    server_name ${SSL_DOMAIN} *.${SSL_DOMAIN};
+    listen 80 default_server;
+    server_name _;
 
     client_max_body_size 50m;
 
@@ -25,37 +33,22 @@ server {
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_prefer_server_ciphers on;
 
-    location = /api {
-        return 301 /api/;
-    }
+    include /etc/nginx/snippets/proxy-locations.conf;
+}
 
-    location /api/ {
-        proxy_pass http://api:4000/;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
+# Domaines personnalisés des hôtes (ex. www.gite-belair.fr) : le certificat est chargé d'après
+# le SNI, les fichiers sont émis par le conteneur certbot (HTTP-01) pour chaque domaine vérifié.
+server {
+    listen 443 ssl default_server;
+    http2 on;
+    server_name _;
 
-    location = /scraping {
-        return 301 /scraping/;
-    }
+    client_max_body_size 50m;
 
-    location /scraping/ {
-        proxy_pass http://scraping:8000/;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
+    ssl_certificate /etc/letsencrypt/live/$custom_domain_cert_name/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/$custom_domain_cert_name/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers on;
 
-    location / {
-        proxy_pass http://frontend:80;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
+    include /etc/nginx/snippets/proxy-locations.conf;
 }

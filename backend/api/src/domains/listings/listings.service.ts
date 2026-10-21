@@ -1,3 +1,7 @@
+import { promises as dns } from 'node:dns';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+
 import type { Listing, Prisma, PrismaClient, User } from '@prisma/client';
 
 import { env } from '../../config/env.js';
@@ -43,12 +47,39 @@ type ListingSectionBundle = {
   host: Record<string, unknown>;
 };
 
+export type ListingCustomDomainStatus = 'none' | 'pending' | 'verified';
+
+export type ListingCustomDomainTargets = {
+  ipv4: string | null;
+  cname: string | null;
+};
+
 export type ListingDomainRecord = {
   listingId: string;
   subdomainSlug: string | null;
   hostname: string | null;
   publicUrl: string | null;
+  customDomain: string | null;
+  customDomainStatus: ListingCustomDomainStatus;
+  customDomainUrl: string | null;
+  customDomainVerifiedAt: string | null;
+  customDomainTargets: ListingCustomDomainTargets;
 };
+
+export type ListingCustomDomainVerification = {
+  ok: boolean;
+  resolvedAddresses: string[];
+  reason: string | null;
+};
+
+const DOMAIN_RECORD_SELECT = {
+  id: true,
+  ownerId: true,
+  subdomainSlug: true,
+  customDomain: true,
+  customDomainVerifiedAt: true,
+  core: true,
+} satisfies Prisma.ListingSelect;
 
 export type ListingDomainAvailability = {
   slug: string;
@@ -146,6 +177,30 @@ function readString(value: unknown): string | null {
   if (typeof value !== 'string') return null;
   const trimmed = value.trim();
   return trimmed || null;
+}
+
+const CUSTOM_DOMAIN_LABEL_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
+
+function normalizeCustomDomain(value: string): string {
+  return sanitizeHostname(value).replace(/\.$/, '');
+}
+
+function isIpAddress(value: string): boolean {
+  return /^\d{1,3}(?:\.\d{1,3}){3}$/.test(value) || value.includes(':');
+}
+
+function isValidCustomDomain(hostname: string): boolean {
+  if (!hostname || hostname.length > 253 || isIpAddress(hostname)) return false;
+  const labels = hostname.split('.');
+  if (labels.length < 2) return false;
+  if (!labels.every((label) => CUSTOM_DOMAIN_LABEL_PATTERN.test(label))) return false;
+  const tld = labels[labels.length - 1] ?? '';
+  return tld.length >= 2 && !/^\d+$/.test(tld);
+}
+
+// `www.gite.fr` et `gite.fr` désignent le même site : on refuse qu'ils soient rattachés à deux annonces.
+function buildCustomDomainTwin(hostname: string): string {
+  return hostname.startsWith('www.') ? hostname.slice(4) : `www.${hostname}`;
 }
 
 function readBoolean(value: unknown, fallback = false): boolean {
@@ -334,6 +389,10 @@ class ListingPublicationForbiddenError extends Error {
 
 export class ListingsService {
   private readonly rootDomain = normalizeRootDomain(env.PUBLIC_LISTING_ROOT_DOMAIN);
+  private readonly customDomainTargets: ListingCustomDomainTargets = {
+    ipv4: env.CUSTOM_DOMAIN_TARGET_IPV4 || null,
+    cname: normalizeRootDomain(env.CUSTOM_DOMAIN_CNAME_TARGET) || null,
+  };
   private readonly reservedSlugs = new Set([
     'www',
     'app',
@@ -671,15 +730,35 @@ export class ListingsService {
     return `https://${this.buildListingHostname(slug)}`;
   }
 
+  private buildCustomDomainFields(listing: {
+    customDomain: string | null;
+    customDomainVerifiedAt: Date | null;
+  }) {
+    const customDomain = readString(listing.customDomain)?.toLowerCase() ?? null;
+    const verifiedAt = customDomain ? listing.customDomainVerifiedAt : null;
+    const customDomainStatus: ListingCustomDomainStatus = !customDomain ? 'none' : verifiedAt ? 'verified' : 'pending';
+
+    return {
+      customDomain,
+      customDomainStatus,
+      customDomainUrl: customDomain ? `https://${customDomain}` : null,
+      customDomainVerifiedAt: verifiedAt ? verifiedAt.toISOString() : null,
+      customDomainTargets: this.customDomainTargets,
+    };
+  }
+
   private async toDomainRecord(listing: {
     id: string;
     ownerId: string | null;
     subdomainSlug: string | null;
+    customDomain: string | null;
+    customDomainVerifiedAt: Date | null;
     core: unknown;
   }): Promise<ListingDomainRecord> {
     const normalizedSubdomain = typeof listing.subdomainSlug === 'string' && listing.subdomainSlug.trim()
       ? normalizeSlug(listing.subdomainSlug)
       : null;
+    const customDomainFields = this.buildCustomDomainFields(listing);
 
     if (!normalizedSubdomain) {
       return {
@@ -687,6 +766,7 @@ export class ListingsService {
         subdomainSlug: null,
         hostname: null,
         publicUrl: null,
+        ...customDomainFields,
       };
     }
 
@@ -711,6 +791,7 @@ export class ListingsService {
       subdomainSlug: normalizedSubdomain,
       hostname: this.buildListingHostname(normalizedSubdomain),
       publicUrl,
+      ...customDomainFields,
     };
   }
 
@@ -728,12 +809,7 @@ export class ListingsService {
   private async findOwnedListing(listingId: string, auth: RequestAuth | null) {
     const listing = await this.prisma.listing.findUnique({
       where: { id: listingId },
-      select: {
-        id: true,
-        ownerId: true,
-        subdomainSlug: true,
-        core: true,
-      },
+      select: DOMAIN_RECORD_SELECT,
     });
 
     if (!listing) return null;
@@ -1013,12 +1089,7 @@ export class ListingsService {
               },
             }),
       },
-      select: {
-        id: true,
-        ownerId: true,
-        subdomainSlug: true,
-        core: true,
-      },
+      select: DOMAIN_RECORD_SELECT,
     });
 
     return this.toDomainRecord(updated);
@@ -1037,20 +1108,231 @@ export class ListingsService {
       data: {
         subdomainSlug: null,
       },
-      select: {
-        id: true,
-        ownerId: true,
-        subdomainSlug: true,
-        core: true,
-      },
+      select: DOMAIN_RECORD_SELECT,
     });
 
     return this.toDomainRecord(updated);
   }
 
+  async upsertListingCustomDomain(args: {
+    listingId: string;
+    domain: string;
+    auth: RequestAuth | null;
+  }) {
+    const access = await this.findOwnedListing(args.listingId, args.auth);
+    if (!access) return null;
+    if (access === 'forbidden') return 'forbidden' as const;
+    if (!this.hasSelectedSubscriptionPlan(access.actor, {
+      allowAdmin: hasAdminAccess(args.auth),
+    })) return 'subscription_required' as const;
+
+    const domain = normalizeCustomDomain(args.domain);
+    if (!isValidCustomDomain(domain)) {
+      return {
+        type: 'invalid' as const,
+        reason: 'Saisissez un nom de domaine valide, par exemple www.gite-belair.fr.',
+      };
+    }
+    if (this.rootDomain && (domain === this.rootDomain || domain.endsWith(`.${this.rootDomain}`))) {
+      return {
+        type: 'invalid' as const,
+        reason: `Les adresses *.${this.rootDomain} se configurent via le sous-domaine IndieHost.`,
+      };
+    }
+
+    const conflictReason = 'Ce nom de domaine est déjà rattaché à une autre annonce.';
+    const conflict = await this.prisma.listing.findFirst({
+      where: {
+        id: { not: args.listingId },
+        customDomain: { in: [domain, buildCustomDomainTwin(domain)] },
+      },
+      select: { id: true },
+    });
+    if (conflict) {
+      return { type: 'conflict' as const, reason: conflictReason };
+    }
+
+    const unchanged = access.listing.customDomain === domain;
+    let updated;
+    try {
+      updated = await this.prisma.listing.update({
+        where: { id: args.listingId },
+        data: {
+          customDomain: domain,
+          ...(unchanged ? {} : { customDomainVerifiedAt: null }),
+          ...(access.listing.ownerId || !access.actor
+            ? {}
+            : {
+                owner: {
+                  connect: { id: access.actor.id },
+                },
+              }),
+        },
+        select: DOMAIN_RECORD_SELECT,
+      });
+    } catch (error) {
+      // Course entre deux rattachements du même domaine : l'index unique tranche.
+      if ((error as { code?: unknown })?.code === 'P2002') {
+        return { type: 'conflict' as const, reason: conflictReason };
+      }
+      throw error;
+    }
+
+    // Vérification immédiate (best effort) : si le DNS est déjà en place, le domaine est actif tout de suite.
+    const verification = await this.verifyCustomDomainDns(domain);
+    if (verification.ok) {
+      return this.markCustomDomainVerified(args.listingId);
+    }
+
+    return this.toDomainRecord(updated);
+  }
+
+  async verifyListingCustomDomain(args: {
+    listingId: string;
+    auth: RequestAuth | null;
+  }) {
+    const access = await this.findOwnedListing(args.listingId, args.auth);
+    if (!access) return null;
+    if (access === 'forbidden') return 'forbidden' as const;
+
+    const domain = readString(access.listing.customDomain);
+    if (!domain) return 'no_custom_domain' as const;
+
+    const verification = await this.verifyCustomDomainDns(domain);
+    const record = verification.ok
+      ? await this.markCustomDomainVerified(args.listingId)
+      : await this.toDomainRecord(access.listing);
+
+    return { record, verification };
+  }
+
+  async deleteListingCustomDomain(args: {
+    listingId: string;
+    auth: RequestAuth | null;
+  }) {
+    const access = await this.findOwnedListing(args.listingId, args.auth);
+    if (!access) return null;
+    if (access === 'forbidden') return 'forbidden' as const;
+
+    const updated = await this.prisma.listing.update({
+      where: { id: args.listingId },
+      data: {
+        customDomain: null,
+        customDomainVerifiedAt: null,
+      },
+      select: DOMAIN_RECORD_SELECT,
+    });
+
+    void this.syncCustomDomainsFile();
+    return this.toDomainRecord(updated);
+  }
+
+  private async markCustomDomainVerified(listingId: string): Promise<ListingDomainRecord> {
+    const updated = await this.prisma.listing.update({
+      where: { id: listingId },
+      data: { customDomainVerifiedAt: new Date() },
+      select: DOMAIN_RECORD_SELECT,
+    });
+
+    void this.syncCustomDomainsFile();
+    return this.toDomainRecord(updated);
+  }
+
+  private async verifyCustomDomainDns(domain: string): Promise<ListingCustomDomainVerification> {
+    const targetIpv4 = this.customDomainTargets.ipv4;
+    if (!targetIpv4) {
+      return {
+        ok: false,
+        resolvedAddresses: [],
+        reason: 'La vérification DNS n’est pas configurée sur ce serveur (CUSTOM_DOMAIN_TARGET_IPV4).',
+      };
+    }
+
+    // resolve4 suit les CNAME : un CNAME vers la cible IndieHost aboutit aussi à l'IP attendue.
+    let resolvedAddresses: string[];
+    try {
+      resolvedAddresses = await dns.resolve4(domain);
+    } catch (error) {
+      const code = (error as { code?: unknown })?.code;
+      const reason = code === 'ENOTFOUND' || code === 'ENODATA'
+        ? `Aucun enregistrement DNS trouvé pour ${domain}. Créez l’enregistrement puis réessayez (la propagation peut prendre jusqu’à 24 h).`
+        : `Impossible de résoudre ${domain} pour le moment (${typeof code === 'string' ? code : 'erreur DNS'}).`;
+      return { ok: false, resolvedAddresses: [], reason };
+    }
+
+    if (resolvedAddresses.includes(targetIpv4)) {
+      return { ok: true, resolvedAddresses, reason: null };
+    }
+
+    return {
+      ok: false,
+      resolvedAddresses,
+      reason: `${domain} pointe vers ${resolvedAddresses.join(', ')} au lieu de ${targetIpv4}.`,
+    };
+  }
+
+  /**
+   * Liste des domaines vérifiés, lue par le conteneur certbot pour émettre les certificats HTTPS.
+   * Écriture atomique (tmp + rename) pour que certbot ne lise jamais un fichier partiel.
+   */
+  async syncCustomDomainsFile(): Promise<void> {
+    const filePath = env.CUSTOM_DOMAINS_FILE;
+    if (!filePath) return;
+
+    try {
+      const listings = await this.prisma.listing.findMany({
+        where: {
+          customDomain: { not: null },
+          customDomainVerifiedAt: { not: null },
+        },
+        select: { customDomain: true },
+        orderBy: { customDomain: 'asc' },
+      });
+
+      const domains = listings
+        .map((listing) => readString(listing.customDomain)?.toLowerCase() ?? '')
+        .filter((domain) => isValidCustomDomain(domain));
+      const content = domains.length ? `${domains.join('\n')}\n` : '';
+
+      await fs.mkdir(path.dirname(filePath), { recursive: true });
+      const tmpPath = `${filePath}.tmp`;
+      await fs.writeFile(tmpPath, content, 'utf-8');
+      await fs.rename(tmpPath, filePath);
+    } catch (error) {
+      console.error('[ListingsService] failed to sync custom domains file', error);
+    }
+  }
+
+  private async resolveListingByCustomDomain(hostname: string): Promise<ListingHostnameResolution | null> {
+    const domain = normalizeCustomDomain(hostname);
+    if (!isValidCustomDomain(domain)) return null;
+
+    const listings = await this.prisma.listing.findMany({
+      where: { customDomain: { in: [domain, buildCustomDomainTwin(domain)] } },
+      select: {
+        id: true,
+        status: true,
+        core: true,
+        subdomainSlug: true,
+        customDomain: true,
+      },
+      orderBy: { customDomainVerifiedAt: { sort: 'desc', nulls: 'last' } },
+    });
+
+    const matched = listings.find((listing) => this.getListingStatus(listing) !== 'deleted');
+    if (!matched) return null;
+
+    return {
+      listingId: matched.id,
+      subdomainSlug: matched.subdomainSlug ? normalizeSlug(matched.subdomainSlug) : '',
+      hostname: domain,
+      publicUrl: `https://${matched.customDomain ?? domain}`,
+    };
+  }
+
   async resolveListingByHostname(input: ResolveListingByHostnameInput): Promise<ListingHostnameResolution | null> {
     const managedSubdomain = this.extractManagedSlug(input.hostname);
-    if (!managedSubdomain) return null;
+    if (!managedSubdomain) return this.resolveListingByCustomDomain(input.hostname);
 
     const auth = input.auth ?? null;
     const actor = await upsertUserFromAuth(this.prisma, auth);

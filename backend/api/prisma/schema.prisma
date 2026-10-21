@@ -45,6 +45,8 @@ model User {
 model Listing {
   id                String         @id
   subdomainSlug     String?
+  customDomain           String?   @unique
+  customDomainVerifiedAt DateTime?
   ownerId           String?
   owner             User?          @relation("OwnerListings", fields: [ownerId], references: [id], onDelete: SetNull)
   status            String         @default("draft")

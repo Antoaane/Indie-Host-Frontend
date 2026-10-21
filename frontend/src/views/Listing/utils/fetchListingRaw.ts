@@ -1,7 +1,7 @@
 // File: src/views/Listing/utils/fetchListingRaw.ts
 
 import { getListingsController } from '@/domain/listings/controller'
-import { isManagedListingHostname } from '@/domain/listings/publicDomain'
+import { isListingHostname } from '@/domain/listings/publicDomain'
 import {
   isListingIdLike,
   normalizeListingSlug,
@@ -36,7 +36,8 @@ function canUseListingIdFallback(): boolean {
 }
 
 async function resolveListingId(explicitKey?: string): Promise<string> {
-  const managedHostname = typeof window !== 'undefined' && isManagedListingHostname(window.location.hostname)
+  // Sous-domaine géré ou domaine personnalisé : dans les deux cas l'API associe le hostname à l'annonce.
+  const managedHostname = typeof window !== 'undefined' && isListingHostname(window.location.hostname)
   const normalizedExplicitKey = typeof explicitKey === 'string' ? explicitKey.trim() : ''
   if (normalizedExplicitKey) {
     if (managedHostname) {

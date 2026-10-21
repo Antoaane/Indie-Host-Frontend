@@ -27,6 +27,10 @@ export const upsertListingDomainSchema = z.object({
   slug: subdomainSlugSchema,
 });
 
+export const upsertListingCustomDomainSchema = z.object({
+  domain: z.string().trim().min(3).max(253),
+});
+
 export const resolveListingHostnameSchema = z.object({
   hostname: z.string().trim().min(1),
   listingSlug: z.string().trim().min(1).optional(),

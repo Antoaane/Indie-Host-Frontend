@@ -11,6 +11,7 @@ import {
   resolveListingHostnameSchema,
   resolveListingSlugSchema,
   transferListingOwnershipSchema,
+  upsertListingCustomDomainSchema,
   upsertListingDomainSchema,
 } from './listings.schemas.js';
 
@@ -25,6 +26,9 @@ function escapeXml(value: string): string {
 
 export const listingsPlugin = fp(async (fastify) => {
   const service = new ListingsService(fastify.prisma);
+
+  // Recrée la liste des domaines personnalisés pour certbot au démarrage (volume vide après un redéploiement).
+  void service.syncCustomDomainsFile();
 
   fastify.get('/listings/domains/availability', {
     preHandler: fastify.authenticateOptional,
@@ -155,6 +159,89 @@ export const listingsPlugin = fp(async (fastify) => {
 
     if (domain === 'forbidden') {
       reply.code(403).send({ message: 'You cannot edit this listing domain.' });
+      return;
+    }
+
+    reply.send(domain);
+  });
+
+  fastify.put('/listings/:listingId/custom-domain', {
+    preHandler: fastify.authenticate,
+  }, async (request, reply) => {
+    const params = listingIdParamsSchema.parse(request.params);
+    const payload = upsertListingCustomDomainSchema.parse(asObject(request.body));
+    const result = await service.upsertListingCustomDomain({
+      listingId: params.listingId,
+      domain: payload.domain,
+      auth: request.auth,
+    });
+
+    if (!result) {
+      reply.code(404).send({ message: 'Listing not found.' });
+      return;
+    }
+
+    if (result === 'forbidden') {
+      reply.code(403).send({ message: 'Vous ne pouvez pas modifier le domaine de cette annonce.' });
+      return;
+    }
+
+    if (result === 'subscription_required') {
+      reply.code(403).send({ message: 'Un plan d abonnement est requis pour rattacher un nom de domaine.' });
+      return;
+    }
+
+    if ('type' in result) {
+      reply.code(result.type === 'conflict' ? 409 : 400).send({ message: result.reason });
+      return;
+    }
+
+    reply.send(result);
+  });
+
+  fastify.post('/listings/:listingId/custom-domain/verify', {
+    preHandler: fastify.authenticate,
+  }, async (request, reply) => {
+    const params = listingIdParamsSchema.parse(request.params);
+    const result = await service.verifyListingCustomDomain({
+      listingId: params.listingId,
+      auth: request.auth,
+    });
+
+    if (!result) {
+      reply.code(404).send({ message: 'Listing not found.' });
+      return;
+    }
+
+    if (result === 'forbidden') {
+      reply.code(403).send({ message: 'Vous ne pouvez pas modifier le domaine de cette annonce.' });
+      return;
+    }
+
+    if (result === 'no_custom_domain') {
+      reply.code(409).send({ message: 'Aucun nom de domaine n’est rattaché à cette annonce.' });
+      return;
+    }
+
+    reply.send(result);
+  });
+
+  fastify.delete('/listings/:listingId/custom-domain', {
+    preHandler: fastify.authenticate,
+  }, async (request, reply) => {
+    const params = listingIdParamsSchema.parse(request.params);
+    const domain = await service.deleteListingCustomDomain({
+      listingId: params.listingId,
+      auth: request.auth,
+    });
+
+    if (!domain) {
+      reply.code(404).send({ message: 'Listing not found.' });
+      return;
+    }
+
+    if (domain === 'forbidden') {
+      reply.code(403).send({ message: 'Vous ne pouvez pas modifier le domaine de cette annonce.' });
       return;
     }
 

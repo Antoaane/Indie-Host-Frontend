@@ -3,11 +3,11 @@
 import SignInView from '@/views/SignInView.vue'
 import SignUpView from '@/views/SignUpView.vue'
 import { createRouter, createWebHistory, type RouteLocationNormalized } from 'vue-router'
-import { isManagedListingHostname } from '@/domain/listings/publicDomain'
+import { isListingHostname } from '@/domain/listings/publicDomain'
 import { normalizeListingSlug } from '@/domain/listings/slug'
 import { resolveRuntimeUserId } from '@/router/backOfficeUser'
 const HomePage = () => {
-  if (typeof window !== 'undefined' && isManagedListingHostname(window.location.hostname)) {
+  if (typeof window !== 'undefined' && isListingHostname(window.location.hostname)) {
     return import('@/views/Listing/_Listing.vue')
   }
   return import('@/views/Landing/_LandingPage.vue')
@@ -355,7 +355,7 @@ const router = createRouter({
 
 router.beforeEach((to) => {
   if (typeof window === 'undefined') return true
-  if (!isManagedListingHostname(window.location.hostname)) return true
+  if (!isListingHostname(window.location.hostname)) return true
   if (to.name === 'home' || to.name === 'listing' || to.name === 'listing-guide' || to.name === 'booking-confirmation') return true
   return { name: 'home' }
 })

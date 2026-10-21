@@ -10,7 +10,7 @@ import ListingUnavailable from '@/views/Listing/ListingUnavailable.vue'
 import { loadBookings, loadComments, loadCore, loadHost, loadMedias, loadNotes, refreshListingAvailability } from '@/views/Listing/utils/fetchListingRaw'
 import type { RawListingBundle } from '@/domain/listings/types'
 import { getListingStatusFlags } from '@/domain/listings/status'
-import { isManagedListingHostname } from '@/domain/listings/publicDomain'
+import { isListingHostname } from '@/domain/listings/publicDomain'
 import { buildListingSlug, normalizeListingSlug } from '@/domain/listings/slug'
 
 const route = useRoute()
@@ -178,7 +178,7 @@ watch(
   [() => route.name, listingKey, canonicalSlug],
   ([routeName, currentListingKey, targetSlug]) => {
     if (routeName !== 'listing') return
-    if (typeof window !== 'undefined' && isManagedListingHostname(window.location.hostname)) return
+    if (typeof window !== 'undefined' && isListingHostname(window.location.hostname)) return
     const normalizedCurrent = normalizeListingSlug(currentListingKey)
     if (!targetSlug || normalizedCurrent === targetSlug) return
 

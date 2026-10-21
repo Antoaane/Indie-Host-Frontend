@@ -66,6 +66,10 @@ services:
       STRIPE_SECRET_KEY_FILE: /run/secrets/stripe_secret_key
       CLERK_SECRET_KEY_FILE: /run/secrets/clerk_secret_key
       IMAGEKIT_API_KEY_FILE: /run/secrets/imagekit_api_key
+      CUSTOM_DOMAINS_FILE: /app/custom-domains/domains.txt
+    volumes:
+      # Liste des domaines personnalisés vérifiés, lue par certbot pour émettre leurs certificats.
+      - ./certbot/custom-domains:/app/custom-domains
     expose:
       - "4000"
     healthcheck:
@@ -157,6 +161,7 @@ services:
         exec /docker-entrypoint.sh nginx -g "daemon off;"
     volumes:
       - ./nginx/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ./nginx/proxy-locations.conf:/etc/nginx/snippets/proxy-locations.conf:ro
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
     healthcheck:
@@ -172,20 +177,37 @@ services:
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
+      - ./certbot/custom-domains:/custom-domains:ro
       - ./secrets/cloudflare.ini:/run/secrets/cloudflare.ini:ro
     entrypoint:
       - /bin/sh
       - -ec
       - |
         trap exit TERM
+        tick=0
         while :; do
-          certbot renew \
-            --non-interactive \
-            --quiet \
-            --dns-cloudflare \
-            --dns-cloudflare-credentials /run/secrets/cloudflare.ini \
-            --dns-cloudflare-propagation-seconds ${CLOUDFLARE_DNS_PROPAGATION_SECONDS:-30} || true
-          sleep 12h
+          # Renouvellement toutes les 12 h : chaque certificat garde son authentificateur
+          # (DNS-01 Cloudflare pour le wildcard, webroot pour les domaines personnalisés).
+          if [ $$((tick % 360)) -eq 0 ]; then
+            certbot renew --non-interactive --quiet || true
+          fi
+          # Émission HTTP-01 pour les domaines personnalisés vérifiés par l'API (toutes les 2 min).
+          if [ -s /custom-domains/domains.txt ]; then
+            while IFS= read -r domain; do
+              [ -n "$$domain" ] || continue
+              [ -s "/etc/letsencrypt/live/$$domain/fullchain.pem" ] && continue
+              certbot certonly \
+                --non-interactive \
+                --quiet \
+                --agree-tos \
+                --no-eff-email \
+                --email "${SSL_EMAIL}" \
+                --webroot -w /var/www/certbot \
+                -d "$$domain" || true
+            done < /custom-domains/domains.txt
+          fi
+          tick=$$((tick + 1))
+          sleep 2m
         done
 
 volumes:
