@@ -613,6 +613,15 @@ Après un changement de secret : recopier le fichier concerné, puis la même co
 - Limite « logements en gestion » = inclus + supplémentaires, **appliquée côté API** à la publication (`assertCanPublishListing`, statuts comptés : `published`, `paused`, `blocked` ; brouillons illimités). Erreur 403 `LISTING_PUBLICATION_REQUIREMENTS_NOT_MET` avec `listing_limit_reached`. Le front lit `listingAllowance` dans `GET /payments/stripe/subscriptions/me`.
 - Essai gratuit 30 jours sur les deux plans ; offres annuelles archivées ; MegaHost supprimé.
 
+### Pages principales (annonces mères)
+
+Un hôte qui a plusieurs logements sous un même domaine crée une **page principale** (`Listing.kind = 'hub'`, bouton « Créer une page principale » dans Mes annonces) : elle répond à la racine de son sous-domaine / domaine personnalisé et présente les logements rattachés (`Listing.parentListingId`). Chaque logement reste accessible sous le même hôte via `https://<hôte>/<slug>`.
+
+- Éditeur : une page principale n'a que titre, domaine(s), photos, description, visibilité et le panneau « Logements présentés » ; une annonce classique a le panneau « Page principale » (`PUT /listings/:id/parent`).
+- Public : `_Listing.vue` rend `ListingHub/_ListingHub.vue` quand `core.kind === 'hub'` (enfants via `GET /listings/:id/children`, annonces `published`/`blocked` uniquement). Résolution par hôte : la page principale répond sans slug, un enfant répond avec son slug (sous-domaine géré ou domaine personnalisé).
+- Les pages principales ne comptent pas dans la limite de logements du plan.
+- Galerie (éditeur et assistant de création) : glisser-déposer de fichiers image sur tout le panneau.
+
 ### Domaines personnalisés des hôtes (ex. `www.gite-belair.fr`)
 
 Un hôte peut rattacher un domaine qu'il possède déjà depuis `/dashboard/domains` (panneau `CustomDomainPanel.vue`, guide intégré ouvert automatiquement les 3 premières fois puis via le bouton ⓘ).
