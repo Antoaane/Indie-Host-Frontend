@@ -251,26 +251,33 @@ watch(
       >
         <label class="field">
           <span class="field-label">Pseudo</span>
-          <input
-            v-model="form.pseudo"
-            type="text"
-            maxlength="120"
-            placeholder="Votre pseudo"
-            autocomplete="nickname"
-            :aria-invalid="showPseudoError"
-            :aria-describedby="showPseudoError ? 'host-profile-pseudo-error' : undefined"
-            @blur="pseudoTouched = true"
-          />
+          <span
+            class="control"
+            :class="{ 'is-invalid': showPseudoError }"
+          >
+            <input
+              v-model="form.pseudo"
+              type="text"
+              maxlength="120"
+              placeholder="Votre pseudo"
+              autocomplete="nickname"
+              :aria-invalid="showPseudoError"
+              :aria-describedby="showPseudoError ? 'host-profile-pseudo-error' : undefined"
+              @blur="pseudoTouched = true"
+            />
+          </span>
         </label>
 
-        <label class="field bio-field">
+        <label class="field">
           <span class="field-label">Bio</span>
-          <textarea
-            v-model="form.bio"
-            rows="4"
-            maxlength="1000"
-            placeholder="Décrivez-vous en quelques lignes"
-          />
+          <span class="control is-textarea">
+            <textarea
+              v-model="form.bio"
+              rows="4"
+              maxlength="1000"
+              placeholder="Décrivez-vous en quelques lignes"
+            />
+          </span>
         </label>
 
         <p
@@ -453,21 +460,23 @@ watch(
       > .field {
         display: flex;
         flex-direction: column;
-        gap: 0.42rem;
+        gap: var(--layout-gap-xs);
 
         > .field-label {
           @include little-text($secondary, $bold: true);
         }
 
-        @include inputs.field($theme: accent, $compact: true);
+        > .control:not(.is-textarea) {
+          @include inputs.field($theme: accent, $compact: true);
+        }
 
-        > input[aria-invalid="true"] {
+        > .control.is-textarea {
+          @include inputs.textarea($theme: accent, $compact: true);
+        }
+
+        > .control.is-invalid {
           border-color: rgba($bad-ink, 0.5);
         }
-      }
-
-      > .bio-field {
-        @include inputs.textarea($theme: accent, $compact: true);
       }
 
       > .status {

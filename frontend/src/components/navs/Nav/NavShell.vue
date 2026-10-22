@@ -52,6 +52,9 @@ const myProfileDialogOpen = ref(false)
 
 let authMenuCloseTimeout: number | null = null
 let profileMenuCloseTimeout: number | null = null
+// Menu ouvert par le survol : le clic qui suit le garde ouvert au lieu de le refermer.
+let authMenuOpenedByHover = false
+let profileMenuOpenedByHover = false
 
 const redirectUrl = computed(() => encodeURIComponent(route.fullPath || '/'))
 const signInHref = computed(() => `/sign-in?redirect_url=${redirectUrl.value}`)
@@ -93,12 +96,28 @@ function openAuthMenu() {
 function closeAuthMenu() {
   clearAuthMenuCloseTimeout()
   authMenuOpen.value = false
+  authMenuOpenedByHover = false
+}
+
+function openAuthMenuOnHover() {
+  if (!authMenuOpen.value) authMenuOpenedByHover = true
+  openAuthMenu()
+}
+
+function handleAuthAvatarClick() {
+  if (authMenuOpen.value && authMenuOpenedByHover) {
+    authMenuOpenedByHover = false
+    return
+  }
+  if (authMenuOpen.value) closeAuthMenu()
+  else openAuthMenu()
 }
 
 function scheduleAuthMenuClose(delayMs = 110) {
   clearAuthMenuCloseTimeout()
   authMenuCloseTimeout = window.setTimeout(() => {
     authMenuOpen.value = false
+    authMenuOpenedByHover = false
     authMenuCloseTimeout = null
   }, delayMs)
 }
@@ -138,6 +157,8 @@ function clearProfileMenuCloseTimeout() {
 }
 
 function openProfileMenu() {
+  // « Mon profil » ouvert par-dessus : le retour du focus ou du survol ne rouvre pas le menu.
+  if (myProfileDialogOpen.value) return
   clearProfileMenuCloseTimeout()
   profileMenuOpen.value = true
 }
@@ -145,12 +166,28 @@ function openProfileMenu() {
 function closeProfileMenu() {
   clearProfileMenuCloseTimeout()
   profileMenuOpen.value = false
+  profileMenuOpenedByHover = false
+}
+
+function openProfileMenuOnHover() {
+  if (!profileMenuOpen.value) profileMenuOpenedByHover = true
+  openProfileMenu()
+}
+
+function handleProfileAvatarClick() {
+  if (profileMenuOpen.value && profileMenuOpenedByHover) {
+    profileMenuOpenedByHover = false
+    return
+  }
+  if (profileMenuOpen.value) closeProfileMenu()
+  else openProfileMenu()
 }
 
 function scheduleProfileMenuClose(delayMs = 110) {
   clearProfileMenuCloseTimeout()
   profileMenuCloseTimeout = window.setTimeout(() => {
     profileMenuOpen.value = false
+    profileMenuOpenedByHover = false
     profileMenuCloseTimeout = null
   }, delayMs)
 }
@@ -324,9 +361,8 @@ onBeforeUnmount(() => {
         <div
           ref="signedOutAnchor"
           class="auth-menu-anchor"
-          @mouseenter="openAuthMenu"
+          @mouseenter="openAuthMenuOnHover"
           @mouseleave="scheduleAuthMenuClose()"
-          @focusin="openAuthMenu"
           @focusout="handleAuthFocusOut"
         >
           <button
@@ -335,7 +371,7 @@ onBeforeUnmount(() => {
             aria-label="Ouvrir les options d'authentification"
             aria-haspopup="menu"
             :aria-expanded="authMenuOpen"
-            @click="authMenuOpen ? closeAuthMenu() : openAuthMenu()"
+            @click="handleAuthAvatarClick"
             @keydown="handleAuthKeydown"
           >
             <UserRound :size="18" />
@@ -384,9 +420,8 @@ onBeforeUnmount(() => {
         <div
           ref="signedInAnchor"
           class="auth-menu-anchor"
-          @mouseenter="openProfileMenu"
+          @mouseenter="openProfileMenuOnHover"
           @mouseleave="scheduleProfileMenuClose()"
-          @focusin="openProfileMenu"
           @focusout="handleProfileFocusOut"
         >
           <button
@@ -396,7 +431,7 @@ onBeforeUnmount(() => {
             aria-label="Ouvrir les options du profil"
             aria-haspopup="menu"
             :aria-expanded="profileMenuOpen"
-            @click="profileMenuOpen ? closeProfileMenu() : openProfileMenu()"
+            @click="handleProfileAvatarClick"
             @keydown="handleProfileKeydown"
           >
             <img
@@ -528,9 +563,8 @@ onBeforeUnmount(() => {
             <div
               ref="signedOutAnchor"
               class="auth-menu-anchor"
-              @mouseenter="openAuthMenu"
+              @mouseenter="openAuthMenuOnHover"
               @mouseleave="scheduleAuthMenuClose()"
-              @focusin="openAuthMenu"
               @focusout="handleAuthFocusOut"
             >
               <button
@@ -539,7 +573,7 @@ onBeforeUnmount(() => {
                 aria-label="Ouvrir les options d'authentification"
                 aria-haspopup="menu"
                 :aria-expanded="authMenuOpen"
-                @click="authMenuOpen ? closeAuthMenu() : openAuthMenu()"
+                @click="handleAuthAvatarClick"
                 @keydown="handleAuthKeydown"
               >
                 <UserRound :size="18" />
@@ -588,9 +622,8 @@ onBeforeUnmount(() => {
             <div
               ref="signedInAnchor"
               class="auth-menu-anchor"
-              @mouseenter="openProfileMenu"
+              @mouseenter="openProfileMenuOnHover"
               @mouseleave="scheduleProfileMenuClose()"
-              @focusin="openProfileMenu"
               @focusout="handleProfileFocusOut"
             >
               <button
@@ -600,7 +633,7 @@ onBeforeUnmount(() => {
                 aria-label="Ouvrir les options du profil"
                 aria-haspopup="menu"
                 :aria-expanded="profileMenuOpen"
-                @click="profileMenuOpen ? closeProfileMenu() : openProfileMenu()"
+                @click="handleProfileAvatarClick"
                 @keydown="handleProfileKeydown"
               >
                 <img

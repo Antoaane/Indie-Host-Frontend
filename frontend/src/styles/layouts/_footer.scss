@@ -58,7 +58,3 @@
     @include little-text($secondary-text);
   }
 }
-
-footer {
-  @extend .layout-footer;
-}
