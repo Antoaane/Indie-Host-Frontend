@@ -12,7 +12,7 @@ import DomainPanel from '@/views/Domains/DomainPanel.vue'
 
 <style lang="scss">
 .domains-route {
-  min-height: calc(100vh - 5rem);
+  min-height: calc(100dvh - 5rem);
   padding-inline: 1rem;
 }
 </style>

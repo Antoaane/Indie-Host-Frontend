@@ -233,6 +233,7 @@ watch([measurementText, () => props.autoWidth], () => {
 <style lang="scss">
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
 
 .ui-stepper-input {
   --ui-stepper-input-text: #{$secondary-text};
@@ -255,9 +256,9 @@ watch([measurementText, () => props.autoWidth], () => {
   padding-inline: calc(var(--ui-stepper-input-suffix-font-size) * 0.75);
   border-radius: borders.$rounded-md;
   background-color: transparent;
-  transition: all 200ms cubic-bezier(0.6, 0, 0.3, 1);
+  @include animations.transition(animations.$duration-fast);
 
-  &:hover {
+  @include on-hover {
     background-color: var(--ui-stepper-input-hover-bg);
   }
 
@@ -275,7 +276,7 @@ watch([measurementText, () => props.autoWidth], () => {
     padding-inline: calc(var(--ui-stepper-input-suffix-font-size) * 0.75);
     border-radius: borders.$rounded-md;
     background-color: transparent;
-    transition: all 200ms cubic-bezier(0.6, 0, 0.3, 1);
+    @include animations.transition(animations.$duration-fast);
   }
 
   > .value,
@@ -344,7 +345,7 @@ watch([measurementText, () => props.autoWidth], () => {
   padding-inline: 0;
   background-color: transparent;
 
-  &:hover {
+  @include on-hover {
     background-color: transparent;
   }
 
@@ -352,8 +353,10 @@ watch([measurementText, () => props.autoWidth], () => {
     background-color: transparent;
   }
 
-  > .field:hover {
-    background-color: var(--ui-stepper-input-hover-bg);
+  > .field {
+    @include on-hover {
+      background-color: var(--ui-stepper-input-hover-bg);
+    }
   }
 
   &:focus-within > .field {
@@ -387,5 +390,12 @@ watch([measurementText, () => props.autoWidth], () => {
 
 .ui-stepper-input--theme-accent.ui-stepper-input--compact {
   --ui-stepper-input-min-height: 2.4rem;
+}
+
+// Cible tactile de 44 px même en variante compacte.
+@media (pointer: coarse) {
+  .ui-stepper-input.ui-stepper-input--compact {
+    --ui-stepper-input-min-height: 44px;
+  }
 }
 </style>

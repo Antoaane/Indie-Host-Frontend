@@ -662,6 +662,7 @@ function stepCustomBookingPercent(threshold: number, delta: number) {
 /* File: src/views/CreateListing/components/panels/PricingPanels/pricing-discounts-panel.scss */
 
 @use '@/styles/variables/globals' as *;
+@use '@/styles/variables/animations' as animations;
 @use '@/styles/components/buttons' as buttons;
 @use '@/views/CreateListing/components/panels/panel.scss' as *;
 
@@ -734,6 +735,12 @@ function stepCustomBookingPercent(threshold: number, delta: number) {
         color: $secondary;
         text-decoration: underline;
         text-underline-offset: 0.2rem;
+        @include animations.transition(animations.$duration-fast);
+        @include animations.press();
+
+        @media (pointer: coarse) {
+          min-height: 2.75rem;
+        }
       }
     }
 
@@ -757,6 +764,13 @@ function stepCustomBookingPercent(threshold: number, delta: number) {
         font-weight: 600;
         color: rgba($secondary, 0.7);
         line-height: 1;
+        @include animations.transition(animations.$duration-fast);
+        @include animations.press();
+
+        @media (pointer: coarse) {
+          min-width: 2.75rem;
+          min-height: 2.75rem;
+        }
       }
     }
 

@@ -371,6 +371,7 @@ function stepDurationDiscount(index: number, delta: number) {
 /* File: src/views/Editor/components/EditorSidebar/panels/PricingPanels/stay-duration-panel.scss */
 
 @use '@/styles/variables/globals' as *;
+@use '@/styles/variables/animations' as animations;
 @use '@/views/Editor/components/EditorSidebar/panels/panel.scss' as *;
 
 .editor-stay-duration-panel {
@@ -430,6 +431,8 @@ function stepDurationDiscount(index: number, delta: number) {
           color: $secondary;
           text-decoration: underline;
           text-underline-offset: 0.2rem;
+          @include animations.transition(animations.$duration-fast);
+          @include animations.press();
         }
       }
     }
@@ -446,6 +449,21 @@ function stepDurationDiscount(index: number, delta: number) {
       gap: var(--layout-gap-xs);
       align-items: center;
 
+      // Au doigt, les steppers passent en ligne (boutons de 44 px) : deux côte à côte
+      // débordent, on les empile à gauche du bouton de suppression.
+      @media (pointer: coarse) {
+        grid-template-columns: minmax(0, 1fr) auto;
+
+        > .ui-number-stepper {
+          grid-column: 1;
+        }
+
+        > .remove {
+          grid-column: 2;
+          grid-row: 1 / span 2;
+        }
+      }
+
       > .remove {
         > button {
           border: none;
@@ -456,6 +474,13 @@ function stepDurationDiscount(index: number, delta: number) {
           font-weight: 600;
           color: rgba($secondary, 0.7);
           line-height: 1;
+          @include animations.transition(animations.$duration-fast);
+          @include animations.press();
+
+          @media (pointer: coarse) {
+            min-width: 2.75rem;
+            min-height: 2.75rem;
+          }
         }
       }
     }

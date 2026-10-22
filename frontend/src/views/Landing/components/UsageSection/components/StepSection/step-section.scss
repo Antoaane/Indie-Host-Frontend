@@ -28,7 +28,7 @@ div:has(> .step-section) {
       padding-right: var(--layout-gap-4xl);
 
       @include min-width(lg) {
-        height: 100vh;
+        height: 100svh;
         padding-left: 5rem;
 
         flex-direction: row;
@@ -147,7 +147,7 @@ div:has(> .step-section) {
 
           @include min-width(lg) {
             width: auto;
-            height: 70vh;
+            height: 70svh;
 
             position: absolute;
             top: 50%;
@@ -172,7 +172,7 @@ div:has(> .step-section) {
 
           @include min-width(lg) {
             width: auto;
-            height: 100vh;
+            height: 100svh;
           }
         }
 

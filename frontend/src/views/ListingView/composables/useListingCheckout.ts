@@ -357,7 +357,7 @@ export function useListingCheckout(options: UseListingCheckoutOptions) {
     })
 
     if (!validation.range || validation.errors.length > 0) {
-      checkoutStatus.error = validation.errors[0] ?? 'Selection de reservation invalide.'
+      checkoutStatus.error = validation.errors[0] ?? 'Sélection de réservation invalide.'
       return
     }
 
@@ -455,7 +455,7 @@ export function useListingCheckout(options: UseListingCheckoutOptions) {
       })
 
       if (!reservationValidation.range || reservationValidation.errors.length > 0) {
-        checkoutStatus.error = reservationValidation.errors[0] ?? 'Reservation invalide.'
+        checkoutStatus.error = reservationValidation.errors[0] ?? 'Réservation invalide.'
         return
       }
 

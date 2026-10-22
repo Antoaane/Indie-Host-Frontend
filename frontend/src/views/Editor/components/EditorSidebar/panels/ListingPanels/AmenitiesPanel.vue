@@ -514,6 +514,7 @@ watch(
                 :placeholder="panelContent.overlay.searchPlaceholder"
                 :maxlength="searchLimit"
                 inputmode="search"
+                enterkeyhint="search"
                 autocomplete="off"
               />
             </div>

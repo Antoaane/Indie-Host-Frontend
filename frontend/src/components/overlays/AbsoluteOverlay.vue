@@ -210,6 +210,7 @@ onBeforeUnmount(() => {
 
 <style lang="scss">
 @use '@/styles/variables/globals' as *;
+@use '@/styles/variables/animations' as animations;
 
 .absolute-overlay {
   position: fixed;
@@ -221,6 +222,7 @@ onBeforeUnmount(() => {
 
   display: flex;
   background-color: rgba($dark, 0.2);
+  overscroll-behavior: contain;
 
   @include min-width(lg) {
     backdrop-filter: blur(1px);
@@ -228,7 +230,7 @@ onBeforeUnmount(() => {
 }
 
 .absolute-overlay--centered {
-  padding-top: var(--layout-gap);
+  padding-top: max(var(--layout-gap), var(--safe-area-top));
   padding-left: var(--layout-gap-sm);
   padding-right: var(--layout-gap-sm);
 
@@ -259,15 +261,25 @@ onBeforeUnmount(() => {
   max-width: 100%;
 }
 
-.absolute-overlay-enter-active,
-.absolute-overlay-leave-active {
-  transition: opacity 0.25s ease;
+// Le fond ne fait que fondre ; le panneau glisse (sheet mobile, panneau
+// latéral) ou grandit légèrement (modale desktop). Sortie plus courte.
+.absolute-overlay-enter-active {
+  @include animations.transition(animations.$duration-overlay, animations.$ease-out, opacity);
   will-change: opacity;
 }
 
-.absolute-overlay-enter-active > *,
+.absolute-overlay-leave-active {
+  @include animations.transition(animations.$duration-exit, animations.$ease-out, opacity);
+  will-change: opacity;
+}
+
+.absolute-overlay-enter-active > * {
+  @include animations.transition(animations.$duration-overlay, animations.$ease-drawer, transform);
+  will-change: transform;
+}
+
 .absolute-overlay-leave-active > * {
-  transition: transform 0.25s ease;
+  @include animations.transition(animations.$duration-exit, animations.$ease-drawer, transform);
   will-change: transform;
 }
 
@@ -281,23 +293,42 @@ onBeforeUnmount(() => {
   opacity: 1;
 }
 
+.absolute-overlay.absolute-overlay--centered.absolute-overlay-enter-active > *,
+.absolute-overlay.absolute-overlay--centered.absolute-overlay-leave-active > * {
+  @include min-width(lg) {
+    transition-timing-function: animations.$ease-out;
+  }
+}
+
 .absolute-overlay.absolute-overlay--centered.absolute-overlay-enter-from > *,
 .absolute-overlay.absolute-overlay--centered.absolute-overlay-leave-to > * {
-  transform: translateY(24px);
+  transform: translateY(100%);
+
+  @include min-width(lg) {
+    transform: scale(0.96);
+  }
+
+  @include animations.reduced-motion {
+    transform: none;
+  }
 }
 
 .absolute-overlay.absolute-overlay--centered.absolute-overlay-enter-to > *,
 .absolute-overlay.absolute-overlay--centered.absolute-overlay-leave-from > * {
-  transform: translateY(0);
+  transform: none;
 }
 
 .absolute-overlay.absolute-overlay--side-panel.absolute-overlay-enter-from > *,
 .absolute-overlay.absolute-overlay--side-panel.absolute-overlay-leave-to > * {
   transform: translateX(100%);
+
+  @include animations.reduced-motion {
+    transform: none;
+  }
 }
 
 .absolute-overlay.absolute-overlay--side-panel.absolute-overlay-enter-to > *,
 .absolute-overlay.absolute-overlay--side-panel.absolute-overlay-leave-from > * {
-  transform: translateX(0);
+  transform: none;
 }
 </style>

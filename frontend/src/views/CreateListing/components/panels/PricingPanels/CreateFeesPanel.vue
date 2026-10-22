@@ -157,6 +157,7 @@ function parseOptionalAmount(raw: string): number | null {
 /* File: src/views/CreateListing/components/panels/PricingPanels/create-fees-panel.scss */
 
 @use '@/styles/variables/globals' as *;
+@use '@/styles/variables/animations' as animations;
 @use '@/styles/components/inputs' as inputs;
 @use '@/views/CreateListing/components/panels/panel.scss' as *;
 
@@ -187,6 +188,12 @@ function parseOptionalAmount(raw: string): number | null {
         color: $secondary;
         text-decoration: underline;
         text-underline-offset: 0.2rem;
+        @include animations.transition(animations.$duration-fast);
+        @include animations.press();
+
+        @media (pointer: coarse) {
+          min-height: 2.75rem;
+        }
       }
     }
 
@@ -233,6 +240,13 @@ function parseOptionalAmount(raw: string): number | null {
           font-weight: 600;
           color: rgba($secondary, 0.7);
           line-height: 1;
+          @include animations.transition(animations.$duration-fast);
+          @include animations.press();
+
+          @media (pointer: coarse) {
+            min-width: 2.75rem;
+            min-height: 2.75rem;
+          }
         }
       }
     }

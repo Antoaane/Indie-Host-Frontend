@@ -28,8 +28,10 @@
 
     >.body {
       >.gallery {
+        // Les vignettes voisines glissent vers leur nouvelle place : court
+        // pour suivre le doigt sans traîner.
         >.tile {
-          transition: transform 80ms cubic-bezier(0.2, 0.7, 0.2, 1);
+          @include animations.transition(animations.$duration-press, animations.$ease-out, transform);
         }
 
         >.tile.is-dragging {
@@ -75,7 +77,11 @@
         aspect-ratio: 1 / 1;
         overflow: hidden;
         cursor: grab;
-        transition: transform 120ms cubic-bezier(0.2, 0.7, 0.2, 1);
+        // Poignée de tri : pas de sélection ni de menu « Enregistrer l'image » à l'appui long.
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+        @include animations.transition(animations.$duration-fast, animations.$ease-out, (transform, box-shadow));
         will-change: transform;
 
         &::after {
@@ -85,7 +91,7 @@
           background: rgba($dark, 0.35);
           opacity: 0;
           pointer-events: none;
-          @include animations.transition(200ms);
+          @include animations.transition(animations.$duration-fast);
         }
 
         >img,
@@ -104,12 +110,19 @@
           display: block;
         }
 
-        &:hover {
+        @include on-hover {
           transform: translateY(-1px);
           @include effects.soft-shadow(rgba(0, 0, 0, 0.2));
+
+          @include animations.reduced-motion {
+            transform: none;
+          }
         }
 
-        &:hover::after,
+        @include on-hover('::after') {
+          opacity: 1;
+        }
+
         &:focus-within::after {
           opacity: 1;
         }
@@ -157,14 +170,26 @@
             place-items: center;
             background: rgba($dark, 0.72);
             cursor: pointer;
-            @include animations.transition(160ms);
+            @include animations.transition(animations.$duration-fast);
+            @include animations.press();
 
             * {
               stroke: rgba($accent, 0.95);
             }
 
-            &:hover {
+            @include on-hover {
               background: rgba($bad, 0.9);
+            }
+
+            // Zone tactile élargie sans grossir le bouton dans la vignette.
+            @media (pointer: coarse) {
+              position: relative;
+
+              &::before {
+                content: '';
+                position: absolute;
+                inset: -0.4rem;
+              }
             }
           }
         }
@@ -315,14 +340,20 @@
             place-items: center;
             background: rgba($dark, 0.72);
             cursor: pointer;
-            @include animations.transition(160ms);
+            @include animations.transition(animations.$duration-fast);
+            @include animations.press();
 
             * {
               stroke: rgba($accent, 0.95);
             }
 
-            &:hover:not(:disabled) {
+            @include on-hover(':not(:disabled)') {
               background: rgba($bad, 0.9);
+            }
+
+            @media (pointer: coarse) {
+              width: 2.75rem;
+              height: 2.75rem;
             }
 
             &:disabled {
@@ -350,7 +381,8 @@
             height: 100%;
             border-radius: inherit;
             background: $secondary;
-            @include animations.transition(200ms);
+            // Barre de progression : largeur animée explicitement, vitesse constante.
+            @include animations.transition(animations.$duration-base, linear, width);
           }
         }
 

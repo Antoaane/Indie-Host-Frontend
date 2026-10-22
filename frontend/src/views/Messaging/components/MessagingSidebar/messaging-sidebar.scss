@@ -3,6 +3,7 @@
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
 @use '@/styles/variables/effects' as effects;
+@use '@/styles/variables/animations' as animations;
 @use '@/styles/components/inputs' as inputs;
 
 .messaging-sidebar {
@@ -20,6 +21,7 @@
       min-height: 0;
       overflow: hidden;
       overflow-y: auto;
+      overscroll-behavior: contain;
 
       >.toolbar {
         padding: var(--layout-gap-sm);
@@ -70,14 +72,11 @@
             cursor: pointer;
             outline: 2px solid transparent;
             outline-offset: 2px;
-            transition:
-              transform 160ms ease,
-              border-color 160ms ease,
-              background-color 160ms ease,
-              box-shadow 160ms ease;
+            @include animations.transition(animations.$duration-fast);
+            @include animations.press(0.98);
             @include effects.big-shadow;
 
-            &:hover {
+            @include on-hover {
               transform: translateY(-1px);
               border-color: rgba($secondary, 0.18);
             }

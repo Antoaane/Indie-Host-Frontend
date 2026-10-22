@@ -177,6 +177,7 @@
     gap: var(--layout-gap-xs);
     max-height: 60vh;
     overflow-y: auto;
+    overscroll-behavior: contain;
 
     .client {
       width: 100%;
@@ -190,9 +191,14 @@
       background: $accent;
       text-align: left;
       cursor: pointer;
-      @include animations.transition();
+      @include animations.transition(animations.$duration-fast);
+      @include animations.press(0.99);
 
-      &:hover,
+      @include on-hover {
+        border-color: rgba($secondary, 0.3);
+        background: rgba($secondary, 0.02);
+      }
+
       &:focus-visible {
         border-color: rgba($secondary, 0.3);
         background: rgba($secondary, 0.02);
@@ -398,14 +404,21 @@
       border-radius: borders.$rounded;
       background: $translucent;
       cursor: pointer;
-      @include animations.transition();
+      @include animations.transition(animations.$duration-fast);
+      @include animations.press();
 
       > svg {
         stroke: $secondary;
       }
 
-      &:hover:not(:disabled) {
+      @include on-hover(':not(:disabled)') {
         background: rgba($secondary, 0.08);
+      }
+
+      // Cible tactile de 44 px.
+      @media (pointer: coarse) {
+        width: 2.75rem;
+        height: 2.75rem;
       }
 
       &:disabled {
@@ -450,7 +463,10 @@
       border: 1px solid rgba($secondary, 0.12);
       border-radius: borders.$rounded-sm;
       cursor: pointer;
-      @include animations.transition();
+      user-select: none;
+      -webkit-user-select: none;
+      @include animations.transition(animations.$duration-fast);
+      @include animations.press(0.98);
 
       &:has(input:focus-visible) {
         outline: 2px solid $secondary;

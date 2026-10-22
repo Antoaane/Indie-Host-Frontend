@@ -75,6 +75,7 @@ withDefaults(
   &.is-body-scrollable {
     > .base-sidebar__body {
       overflow: scroll;
+      overscroll-behavior: contain;
       scrollbar-width: none;
 
       &::-webkit-scrollbar {

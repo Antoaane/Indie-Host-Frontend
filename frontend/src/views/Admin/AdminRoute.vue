@@ -12,7 +12,7 @@ import AdminPanel from '@/views/Admin/_Admin.vue'
 
 <style lang="scss">
 .admin-route {
-  min-height: calc(100vh - 5rem);
+  min-height: calc(100dvh - 5rem);
   padding-inline: var(--layout-gap);
 }
 </style>

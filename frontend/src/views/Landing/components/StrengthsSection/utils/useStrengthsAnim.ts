@@ -10,9 +10,8 @@ export function useStrengthsAnim() {
   const section = document.querySelector<HTMLElement>('#strengths-section')
   if (!section) return
 
-  const strengths = ['#strength_1', '#strength_2', '#strength_3']
-    .map((selector) => document.querySelector<HTMLElement>(selector))
-    .filter((element): element is HTMLElement => Boolean(element))
+  // Les ids suivent `pillar.id` (`strength_pillar1`…) : on cible les cartes par classe.
+  const strengths = Array.from(section.querySelectorAll<HTMLElement>('.strength'))
   if (!strengths.length) return
 
   const stagger = 0.1
@@ -29,10 +28,10 @@ export function useStrengthsAnim() {
     const backgroundTarget = el.querySelector(':scope > div')
     const labelTarget = el.querySelector(':scope > span')
     if (backgroundTarget) {
-      tl.to(backgroundTarget, { background: bgStart, ease: 'power2.inOut', duration }, offset)
+      tl.to(backgroundTarget, { background: bgStart, ease: 'power3.out', duration }, offset)
     }
     if (labelTarget) {
-      tl.to(labelTarget, { opacity: 1, ease: 'power2.inOut', duration }, offset)
+      tl.to(labelTarget, { opacity: 1, ease: 'power3.out', duration }, offset)
     }
   })
 
@@ -46,10 +45,10 @@ export function useStrengthsAnim() {
     const backgroundTarget = el.querySelector(':scope > div')
     const labelTarget = el.querySelector(':scope > span')
     if (backgroundTarget) {
-      tl.to(backgroundTarget, { background: bgEnd, ease: 'power2.inOut', duration }, offset)
+      tl.to(backgroundTarget, { background: bgEnd, ease: 'power2.out', duration }, offset)
     }
     if (labelTarget) {
-      tl.to(labelTarget, { opacity: 0, ease: 'power2.inOut', duration }, offset)
+      tl.to(labelTarget, { opacity: 0, ease: 'power2.out', duration }, offset)
     }
   })
 

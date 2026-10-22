@@ -3,6 +3,7 @@
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
 @use '@/styles/variables/effects' as effects;
+@use '@/styles/variables/animations' as animations;
 @use '@/styles/components/inputs' as inputs;
 
 .management-sidebar {
@@ -18,6 +19,7 @@
     >.scroll-container {
       flex: 1 1 auto;
       overflow: auto;
+      overscroll-behavior: contain;
 
       >.toolbar {
         padding: var(--layout-gap-sm);
@@ -48,11 +50,12 @@
     gap: var(--layout-gap-sm);
     cursor: pointer;
     text-align: left;
-    transition: transform 180ms ease, box-shadow 180ms ease, outline 180ms ease;
+    @include animations.transition(animations.$duration-fast);
+    @include animations.press(0.98);
 
     @include effects.big-shadow(rgba(0, 0, 0, 0.08), 16px, -6px);
 
-    &:hover {
+    @include on-hover {
       transform: translateY(-1px);
     }
 

@@ -91,6 +91,10 @@
           @include lp-h4-title($accent);
           @include animations.transition(750ms);
 
+          @include animations.reduced-motion {
+            transform: none;
+          }
+
           @include min-width(lg) {
             text-align: left;
             @include lp-h3-title($accent, false, false);
@@ -123,6 +127,10 @@
           text-align: center;
           @include base-text($accent, $bigger: true);
           @include animations.transition(750ms);
+
+          @include animations.reduced-motion {
+            transform: none;
+          }
 
           @include min-width(lg) {
             text-align: left;

@@ -301,7 +301,8 @@ function resolveBackOfficeRouteLink(name: BackOfficeRouteName, fallbackPath: str
 
 function scrollToIntroOnDesktop() {
   if (vp.lg.value) {
-    document.querySelector('#intro-section')?.scrollIntoView({ behavior: 'smooth' })
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    document.querySelector('#intro-section')?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' })
     return
   }
 
@@ -478,6 +479,7 @@ function animateNavIn() {
   if (!navElement) return
   if (document.documentElement.classList.contains('is-ios') && !vp.lg.value) return
   if (document.documentElement.classList.contains('ios-landing-lite')) return
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
   const isDock = navElement.classList.contains('back-office-dock-nav')
 
@@ -486,9 +488,20 @@ function animateNavIn() {
   navElement.style.setProperty('transform', isDock ? 'translateY(100px)' : 'translateY(-100px)')
 
   window.setTimeout(() => {
-    navElement.style.setProperty('transition', 'all 1s cubic-bezier(0.75, 0, 0.25, 1)')
+    // Entrée unique : ease-out marqué ($ease-out), propriétés explicites, puis
+    // on rend la main aux transitions CSS de la barre.
+    navElement.style.setProperty(
+      'transition',
+      'opacity 700ms cubic-bezier(0.23, 1, 0.32, 1), transform 700ms cubic-bezier(0.23, 1, 0.32, 1)',
+    )
     navElement.style.removeProperty('opacity')
     navElement.style.removeProperty('transform')
+    const clearTransition = (event: TransitionEvent) => {
+      if (event.target !== navElement || event.propertyName !== 'transform') return
+      navElement.style.removeProperty('transition')
+      navElement.removeEventListener('transitionend', clearTransition)
+    }
+    navElement.addEventListener('transitionend', clearTransition)
   }, 650)
 }
 

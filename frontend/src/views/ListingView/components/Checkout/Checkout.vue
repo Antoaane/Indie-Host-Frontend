@@ -119,9 +119,9 @@ const currency = new Intl.NumberFormat('fr-FR', {
 })
 
 function formatDateLabel(iso?: string | null): string {
-  if (!iso) return "le jour d'arrivee"
+  if (!iso) return "le jour d'arrivée"
   const parsed = new Date(iso)
-  if (Number.isNaN(parsed.getTime())) return "le jour d'arrivee"
+  if (Number.isNaN(parsed.getTime())) return "le jour d'arrivée"
   return new Intl.DateTimeFormat('fr-FR', {
     day: 'numeric',
     month: 'long',
@@ -141,7 +141,7 @@ const allowedPaymentChoices = computed(() => paymentRules.value.allowedChoices)
 const paymentOptionError = computed(() =>
   allowedPaymentChoices.value.length
     ? null
-    : 'Aucune modalite de paiement valide n est configuree pour cette annonce.',
+    : 'Aucune modalité de paiement valide n’est configurée pour cette annonce.',
 )
 
 watch(
@@ -178,7 +178,7 @@ function isChoiceAllowed(choice: CheckoutPaymentChoice): boolean {
 }
 
 function resolveChoiceBlockedReason(choice: CheckoutPaymentChoice): string {
-  return paymentRules.value.blockedReasons[choice] ?? 'Option non autorisee pour cette annonce.'
+  return paymentRules.value.blockedReasons[choice] ?? 'Option non autorisée pour cette annonce.'
 }
 
 const totalLabel = computed(() => currency.format(props.reservation.total))
@@ -356,7 +356,7 @@ const canSubmit = computed(() =>
 )
 
 const submitLabel = computed(() => {
-  if (reservationError.value) return 'Reservation invalide'
+  if (reservationError.value) return 'Réservation invalide'
   if (paymentOptionError.value) return 'Paiement indisponible'
   if (props.isSubmitting) return 'Validation de la réservation...'
   if (isConfirmingPayment.value) return 'Confirmation du paiement...'
@@ -872,7 +872,7 @@ onBeforeUnmount(() => {
               v-if="isChoiceAllowed('cash')"
               class="subtitle"
             >
-              {{ cashNowLabel }} à payer aujourd'hui, {{ cashLaterLabel }} en especes le {{ cashDueDateLabel }}.
+              {{ cashNowLabel }} à payer aujourd'hui, {{ cashLaterLabel }} en espèces le {{ cashDueDateLabel }}.
             </p>
             <p
               v-else

@@ -53,6 +53,10 @@
       font-size: 0.95rem;
       background: #fff;
       color: #0b1220;
+
+      @media (pointer: coarse) {
+        font-size: max(1rem, 16px);
+      }
     }
   }
 

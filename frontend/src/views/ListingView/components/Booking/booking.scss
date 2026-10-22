@@ -48,9 +48,10 @@
         text-underline-offset: 0.2rem;
         cursor: pointer;
 
-        @include animations.transition(200ms);
+        @include animations.transition(animations.$duration-fast);
+        @include animations.press();
 
-        &:hover {
+        @include on-hover {
           color: rgba($secondary-text, 0.8);
         }
       }
@@ -110,7 +111,6 @@
               // border: none;
               // border-radius: borders.$rounded-md;
               // background: $tertiary;
-              @include animations.transition(200ms);
               // @include inputs.text($tertiary, borders.$rounded-md);
 
               // button {
@@ -165,7 +165,6 @@
             // border: none;
             // border-radius: borders.$rounded-md;
             // background: $tertiary;
-            @include animations.transition(200ms);
             // @include inputs.text($tertiary, borders.$rounded-md);
 
             // button {
@@ -347,6 +346,16 @@
       &.is-locked {
         opacity: 0.72;
       }
+
+      // Compteurs voyageurs : retour à l'appui, cible de 44 px au doigt.
+      >.counter>button {
+        @include animations.press();
+
+        @media (pointer: coarse) {
+          width: 44px;
+          height: 44px;
+        }
+      }
     }
   }
 
@@ -421,9 +430,12 @@
 
 
 
-.fade-enter-active,
+.fade-enter-active {
+  @include animations.transition(animations.$duration-fast, animations.$ease-out, (opacity, transform));
+}
+
 .fade-leave-active {
-  transition: opacity 150ms ease, transform 150ms ease;
+  @include animations.transition(animations.$duration-exit, animations.$ease-out, (opacity, transform));
 }
 
 .fade-enter-from,
@@ -432,9 +444,13 @@
   transform: translateY(4px);
 }
 
-.summary-toggle-enter-active,
+// Dépliage du récapitulatif : max-height voulu (accordéon), propriétés explicites.
+.summary-toggle-enter-active {
+  @include animations.transition(animations.$duration-menu, animations.$ease-out, (max-height, opacity));
+}
+
 .summary-toggle-leave-active {
-  transition: max-height 200ms ease, opacity 200ms ease;
+  @include animations.transition(animations.$duration-exit, animations.$ease-out, (max-height, opacity));
 }
 
 .summary-toggle-enter-from,
@@ -449,13 +465,25 @@
   opacity: 1;
 }
 
-.price-toggle-enter-active,
+.price-toggle-enter-active {
+  @include animations.transition(animations.$duration-fast, animations.$ease-out, (opacity, transform));
+}
+
 .price-toggle-leave-active {
-  transition: opacity 150ms ease, transform 150ms ease;
+  @include animations.transition(animations.$duration-exit, animations.$ease-out, (opacity, transform));
 }
 
 .price-toggle-enter-from,
 .price-toggle-leave-to {
   opacity: 0;
   transform: translateY(-4px);
+}
+
+@include animations.reduced-motion {
+  .fade-enter-from,
+  .fade-leave-to,
+  .price-toggle-enter-from,
+  .price-toggle-leave-to {
+    transform: none;
+  }
 }

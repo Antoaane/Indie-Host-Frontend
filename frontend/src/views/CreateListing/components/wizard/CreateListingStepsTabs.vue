@@ -17,7 +17,7 @@ const emit = defineEmits<{
   (e: 'select', index: number): void
 }>()
 
-const STEP_SCROLL_TRANSITION_MS = 320
+const STEP_SCROLL_TRANSITION_MS = 280
 
 const swiperRef = ref<SwiperInstance | null>(null)
 

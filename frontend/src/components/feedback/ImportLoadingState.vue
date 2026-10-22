@@ -46,7 +46,7 @@ const normalizedProgress = computed(() => Math.max(0, Math.min(100, Math.round(p
       aria-valuemax="100"
       :aria-valuenow="normalizedProgress"
     >
-      <span :style="{ width: `${normalizedProgress}%` }" />
+      <span :style="{ transform: `translateX(${normalizedProgress - 100}%)` }" />
     </div>
 
     <p class="title">{{ props.title }}</p>
@@ -68,6 +68,7 @@ const normalizedProgress = computed(() => Math.max(0, Math.min(100, Math.round(p
 <style lang="scss">
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
 
 .import-loading-state {
   display: flex;
@@ -138,12 +139,19 @@ const normalizedProgress = computed(() => Math.max(0, Math.min(100, Math.round(p
     border-radius: 999px;
     background: rgba($secondary, 0.08);
 
+    // Remplissage pleine largeur décalé vers la gauche (composité, sans
+    // relayout) ; le bord arrondi reste net, contrairement à un scaleX.
     > span {
       display: block;
+      width: 100%;
       height: 100%;
       border-radius: inherit;
       background: linear-gradient(90deg, rgba($secondary, 0.78) 0%, rgba($secondary, 0.98) 100%);
-      transition: width 320ms ease;
+      @include animations.transition(animations.$duration-overlay, linear, transform);
+
+      @include animations.reduced-motion {
+        transition-duration: 0ms;
+      }
     }
   }
 

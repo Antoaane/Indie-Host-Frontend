@@ -24,6 +24,7 @@ const { filteredData, suggestions, search, selectSuggestion } = useFaq(props.con
         <input
           v-model="search"
           type="search"
+          enterkeyhint="search"
           :placeholder="props.content.searchPlaceholder"
           :aria-label="props.content.searchLabel"
           autocomplete="off"

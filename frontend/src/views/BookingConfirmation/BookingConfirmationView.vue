@@ -861,6 +861,7 @@ async function cancelCurrentReservation() {
 
 <style scoped lang="scss">
 @use '@/styles/variables/globals' as *;
+@use '@/styles/variables/animations' as animations;
 
 .booking-confirmation-page {
   min-height: 100dvh;
@@ -1062,6 +1063,8 @@ async function cancelCurrentReservation() {
   line-height: 1.2;
 
   box-sizing: border-box;
+  @include animations.transition();
+  @include animations.press();
 
   &.primary {
     color: rgba($accent, 1);
@@ -1104,6 +1107,14 @@ async function cancelCurrentReservation() {
   &:disabled {
     opacity: 0.52;
     cursor: not-allowed;
+  }
+
+  // Cible tactile de 44 px au doigt (liens calendrier compris).
+  @media (pointer: coarse) {
+    &,
+    &.calendar {
+      min-height: 44px;
+    }
   }
 }
 

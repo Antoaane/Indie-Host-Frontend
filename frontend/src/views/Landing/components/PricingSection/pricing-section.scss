@@ -2,6 +2,7 @@
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
 
 .pricing-unified {
   position: relative;
@@ -44,7 +45,7 @@
   }
 
   &.app-pricing {
-    min-height: 100vh;
+    min-height: 100dvh;
     padding: 8.5rem 1rem 4rem;
     background: $secondary;
   }
@@ -148,7 +149,10 @@
     gap: 1rem;
 
     @include min-width(lg) {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      // Une colonne par plan (2 ou 3 selon le catalogue Stripe), centrées.
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(0, 24rem);
+      justify-content: center;
       gap: 1.25rem;
       align-items: start;
     }
@@ -426,11 +430,16 @@
       background: rgba($accent, 0.06);
       color: rgba($accent, 0.9);
       cursor: pointer;
-      transition: background 0.2s ease, border-color 0.2s ease;
+      @include animations.transition(animations.$duration-fast);
+      @include animations.press(0.98);
 
-      &:hover {
+      @include on-hover {
         background: rgba($accent, 0.1);
         border-color: rgba($accent, 0.3);
+      }
+
+      @media (pointer: coarse) {
+        min-height: 44px;
       }
 
       &:focus-visible {
@@ -445,7 +454,7 @@
 
     .plan-toggle-icon {
       display: inline-flex;
-      transition: transform 0.25s ease;
+      @include animations.transition(animations.$duration-menu);
 
       svg {
         display: block;
@@ -465,7 +474,12 @@
       max-height: 0;
       overflow: hidden;
       opacity: 0;
-      transition: max-height 0.35s ease, opacity 0.25s ease, padding 0.25s ease;
+      // Accordéon : hauteur + padding animés volontairement, opacité un peu plus courte
+      @include animations.transition(
+        (animations.$duration-overlay, animations.$duration-menu, animations.$duration-overlay),
+        animations.$ease-out,
+        (max-height, opacity, padding)
+      );
 
       @include min-width(lg) {
         padding: 0 1.5rem;
@@ -579,13 +593,18 @@
       color: $secondary-button-reference;
       background-color: $accent;
       cursor: pointer;
-      transition: transform 180ms ease, opacity 180ms ease, background-color 180ms ease, color 180ms ease, outline-color 180ms ease;
+      @include animations.transition(animations.$duration-fast);
+      @include animations.press();
 
-      &:hover:not(:disabled) {
+      @include on-hover(':not(:disabled)') {
         transform: translateY(-1px);
         color: $accent;
         background-color: $secondary-button-reference;
         outline-color: rgba($accent, 0.75);
+
+        @include animations.reduced-motion {
+          transform: none;
+        }
       }
 
       &.ghost {
@@ -595,7 +614,7 @@
         color: rgba($accent, 0.95);
         background: rgba($accent, 0.02);
 
-        &:hover:not(:disabled) {
+        @include on-hover(':not(:disabled)') {
           color: $accent;
           background: rgba($accent, 0.18);
         }
@@ -626,8 +645,9 @@
       color: $accent;
       text-decoration: underline;
       text-underline-offset: 0.18rem;
+      @include animations.transition(animations.$duration-fast);
 
-      &:hover {
+      @include on-hover {
         color: $primary_gradiant_second;
       }
     }

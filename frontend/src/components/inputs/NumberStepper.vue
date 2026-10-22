@@ -149,6 +149,7 @@ function onWheel(event: WheelEvent) {
 <style lang="scss">
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
 
 .ui-number-stepper {
   --ui-stepper-text: #{$secondary-text};
@@ -193,12 +194,13 @@ function onWheel(event: WheelEvent) {
       font-size: 0.95rem;
       font-weight: 700;
       line-height: 1;
-      transition: all 200ms cubic-bezier(0.6, 0, 0.3, 1);
+      @include animations.transition(animations.$duration-fast);
+      @include animations.press();
 
       > * {
         color: var(--ui-stepper-btn-text);
         stroke: var(--ui-stepper-btn-text);
-        transition: all 200ms cubic-bezier(0.6, 0, 0.3, 1);
+        @include animations.transition(animations.$duration-fast);
       }
 
       &:disabled,
@@ -207,7 +209,7 @@ function onWheel(event: WheelEvent) {
         opacity: 0.55;
       }
 
-      &:hover:not(:disabled):not([aria-disabled='true']) {
+      @include on-hover(':not(:disabled):not([aria-disabled="true"])') {
         background: var(--ui-stepper-btn-bg-hover);
         color: var(--ui-stepper-btn-text-hover);
         box-shadow: 0px 10px 20px -5px rgba(0, 0, 0, 0.15);
@@ -286,5 +288,39 @@ function onWheel(event: WheelEvent) {
   --ui-stepper-btn-size: 32px;
   --ui-stepper-btn-min-height: 16px;
   --ui-stepper-value-min-height: 32px;
+}
+
+// Au doigt, deux demi-boutons empilés de 16 à 18 px sont inatteignables :
+// on passe en ligne (− valeur +) avec des cibles de 44 px.
+@media (pointer: coarse) {
+  .ui-number-stepper {
+    grid-template-rows: auto;
+
+    > .btn > button {
+      width: 44px;
+      min-height: 44px;
+    }
+
+    > .btn:first-of-type {
+      grid-row: 1;
+      grid-column: 1;
+    }
+
+    > .value {
+      grid-row: 1;
+      grid-column: 2;
+      min-height: 44px;
+    }
+
+    > .btn:last-of-type {
+      grid-row: 1;
+      grid-column: 3;
+    }
+
+    > .suffix {
+      grid-row: 1;
+      grid-column: 4;
+    }
+  }
 }
 </style>

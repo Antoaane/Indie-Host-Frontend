@@ -1,6 +1,7 @@
 /* File: src/views/Landing/components/HabitsSection/components/Carousel/carousel.scss */
 
 @use '@/styles/variables/globals' as *;
+@use '@/styles/variables/animations' as animations;
 
 #habits-section,
 #join-section {
@@ -176,7 +177,7 @@
             }
 
             &.aswiper-slide-ctive {
-              transition: transform-origin 0.3s ease-in-out;
+              @include animations.transition(animations.$duration-base, animations.$ease-out, transform-origin);
             }
           }
         }

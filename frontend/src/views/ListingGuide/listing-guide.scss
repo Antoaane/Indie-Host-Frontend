@@ -3,9 +3,10 @@
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
 @use '@/styles/variables/effects' as effects;
+@use '@/styles/variables/animations' as animations;
 
 .listing-guide {
-  min-height: 100vh;
+  min-height: 100dvh;
   background: $accent;
   color: $secondary-text;
   display: flex;
@@ -13,7 +14,7 @@
   position: relative;
 
   > .guide-desktop {
-    min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -32,7 +33,7 @@
   }
 
   > .guide-locked {
-    min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -51,7 +52,7 @@
   }
 
   > .guide-hero {
-    height: 35vh;
+    height: 35svh;
     background: $secondary;
     color: $accent;
     position: relative;
@@ -398,6 +399,11 @@
       background: rgba($accent, 0.04);
       color: $accent;
 
+      // iOS zoome sur un champ sous 16 px.
+      @media (pointer: coarse) {
+        font-size: max(1rem, 16px);
+      }
+
       &:focus {
         outline: none;
         border-color: rgba($secondary, 0.45);
@@ -420,13 +426,8 @@
     background: $secondary;
     color: $secondary-text;
     cursor: pointer;
-    transition:
-      transform 140ms ease,
-      opacity 140ms ease;
-
-    &:active {
-      transform: translateY(1px);
-    }
+    @include animations.transition(animations.$duration-press);
+    @include animations.press();
 
     &:disabled {
       cursor: not-allowed;
@@ -450,7 +451,7 @@
 
   .guide-loading {
     position: fixed;
-    bottom: var(--layout-gap-sm);
+    bottom: calc(var(--layout-gap-sm) + var(--safe-area-bottom));
     left: 50%;
     transform: translateX(-50%);
     background: rgba($background, 0.85);

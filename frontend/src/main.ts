@@ -56,12 +56,22 @@ void detectOS()
     document.body.classList.remove('is-ios')
   })
 
+// iOS Safari n'applique :active (retour de pression) que si un écouteur touchstart existe.
+document.addEventListener('touchstart', () => {}, { passive: true })
+
 const app = createApp(App)
 
 app.use(ui)
 app.use(clerkPlugin, {
   publishableKey: PUBLISHABLE_KEY,
   localization: clerkLocalization,
+  // Champs Clerk à 13 px par défaut : iOS zoome au focus et ne dézoome pas.
+  appearance: {
+    elements: {
+      formFieldInput: { '@media (pointer: coarse)': { fontSize: '16px' } },
+      otpCodeFieldInput: { '@media (pointer: coarse)': { fontSize: '16px' } },
+    },
+  },
 })
 // app.use(LenisVue)
 app.use(createPinia())

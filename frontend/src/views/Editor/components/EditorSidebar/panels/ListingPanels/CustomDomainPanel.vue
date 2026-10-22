@@ -419,7 +419,10 @@ onMounted(() => {
           type="text"
           placeholder="ex: www.gite-belair.fr"
           autocomplete="off"
+          autocapitalize="none"
           spellcheck="false"
+          inputmode="url"
+          enterkeyhint="done"
           :disabled="isLoadingCurrent || (!props.isAdmin && isLoadingSubscription) || !canManageDomain"
           @keydown.enter.prevent="saveDomain"
         />
@@ -588,6 +591,11 @@ onMounted(() => {
         > * {
           width: 2.5rem;
           height: 2.5rem;
+
+          @media (pointer: coarse) {
+            width: 2.75rem;
+            height: 2.75rem;
+          }
         }
 
         // Bouton d'aide « enfoncé » tant que le guide est ouvert : même rendu que le survol.
@@ -605,16 +613,18 @@ onMounted(() => {
   }
 
   // Dépliage du guide : une seule animation, hauteur par grille (pas de mesure JS) + opacité.
+  // Propriétés de mise en page passées explicitement ; la fermeture est plus rapide.
   > .guide {
     display: grid;
     grid-template-rows: 0fr;
     opacity: 0;
-    @include animations.transition($duration: 320ms);
+    @include animations.transition(animations.$duration-exit, animations.$ease-out, (grid-template-rows, opacity, margin-bottom));
 
     &.is-open {
       grid-template-rows: 1fr;
       opacity: 1;
       margin-bottom: var(--layout-gap);
+      transition-duration: animations.$duration-overlay;
     }
 
     @media (prefers-reduced-motion: reduce) {

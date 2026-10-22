@@ -466,6 +466,7 @@ onBeforeUnmount(() => {
     >
       <input
         type="search"
+        enterkeyhint="search"
         placeholder="Rechercher…"
         aria-label="Rechercher"
       />
@@ -719,6 +720,7 @@ onBeforeUnmount(() => {
           >
             <input
               type="search"
+              enterkeyhint="search"
               placeholder="Rechercher…"
               aria-label="Rechercher"
             />

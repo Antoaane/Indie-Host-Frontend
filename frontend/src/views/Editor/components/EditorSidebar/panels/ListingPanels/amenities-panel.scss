@@ -2,6 +2,7 @@
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
 @use '@/styles/components/buttons' as buttons;
 @use '@/styles/components/inputs' as inputs;
 @use '@/views/Editor/components/EditorSidebar/panels/panel.scss' as *;
@@ -91,7 +92,7 @@
   > .overlay-panel {
     width: min(100%, calc(100vw - var(--layout-gap)));
     min-width: 0;
-    max-height: min(96vh, 54rem);
+    max-height: min(96dvh, 54rem);
 
     display: flex;
     flex-direction: column;
@@ -108,7 +109,7 @@
     > .overlay-panel {
       width: min(66rem, 100%);
       min-width: min(38rem, calc(100vw - var(--layout-gap)));
-      max-height: min(94vh, 56rem);
+      max-height: min(94dvh, 56rem);
     }
   }
 
@@ -129,6 +130,11 @@
       > * {
         width: 36px;
         height: 36px;
+
+        @media (pointer: coarse) {
+          width: 2.75rem;
+          height: 2.75rem;
+        }
       }
     }
   }
@@ -171,15 +177,16 @@
       cursor: pointer;
       font: inherit;
       @include little-text($thin: false);
+      @include animations.transition(animations.$duration-fast);
+      @include animations.press();
 
-      transition:
-        background-color 160ms ease,
-        border-color 160ms ease,
-        color 160ms ease;
-
-      &:hover {
+      @include on-hover {
         border-color: rgba($secondary, 0.24);
         background: rgba($secondary, 0.08);
+      }
+
+      @media (pointer: coarse) {
+        min-height: 2.75rem;
       }
 
       &:focus-visible {
@@ -197,8 +204,9 @@
 
   .catalog {
     min-height: 0;
-    max-height: min(82vh, 42rem);
+    max-height: min(82dvh, 42rem);
     overflow-y: auto;
+    overscroll-behavior: contain;
     padding-right: var(--layout-gap-2xs);
 
     display: flex;
@@ -262,11 +270,8 @@
           cursor: pointer;
           text-align: left;
           font: inherit;
-
-          transition:
-            border-color 180ms ease,
-            background-color 180ms ease,
-            box-shadow 180ms ease;
+          @include animations.transition(animations.$duration-fast);
+          @include animations.press(0.98);
 
           > .icon {
             height: 1.45rem;
@@ -328,7 +333,7 @@
             outline-offset: 2px;
           }
 
-          &:hover {
+          @include on-hover {
             border-color: rgba($secondary, 0.24);
             background-color: rgba($accent, 0.9);
           }
@@ -354,12 +359,8 @@
 
           opacity: 0;
           pointer-events: none;
-
-          transition:
-            opacity 140ms ease,
-            border-color 140ms ease,
-            color 140ms ease,
-            background-color 140ms ease;
+          @include animations.transition(animations.$duration-fast);
+          @include animations.press();
 
           > .pin-icon {
             width: 0.98rem;
@@ -380,7 +381,7 @@
             color: currentColor;
           }
 
-          &:hover {
+          @include on-hover {
             border-color: $secondary;
             background: $accent;
             color: $secondary;
@@ -406,7 +407,7 @@
                 stroke: $accent;
               }
 
-            &:hover {
+            @include on-hover {
               border-color: rgba($secondary, 0);
               background: $bad;
               color: $accent;
@@ -444,8 +445,22 @@
             }
           }
 
-          &:hover,
           &:focus-within {
+            > .pin-toggle {
+              opacity: 1;
+              pointer-events: auto;
+            }
+          }
+
+          @include on-hover {
+            > .pin-toggle {
+              opacity: 1;
+              pointer-events: auto;
+            }
+          }
+
+          // Sans survol (tactile), l'épingle d'un équipement sélectionné reste visible.
+          @media (hover: none), (pointer: coarse) {
             > .pin-toggle {
               opacity: 1;
               pointer-events: auto;
@@ -470,7 +485,7 @@
               stroke: $accent;
             }
 
-            &:hover {
+            @include on-hover {
               border-color: rgba($secondary, 0);
               background: $bad;
               color: $accent;

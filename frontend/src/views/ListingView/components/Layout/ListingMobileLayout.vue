@@ -186,7 +186,22 @@ function onConfirmCheckout(payload: CheckoutConfirmationPayload) {
       :booked-days="props.listingData.bookings.bookedDays"
       :disabled="props.isBookingDisabled"
       :disabled-label="props.bookingDisabledLabel"
-    />
+    >
+      <!-- La sheet reprend le module de réservation desktop ; « Réserver » bascule
+           vers le checkout, qui démonte la barre et donc la sheet. -->
+      <Booking
+        v-model:model-value="selection"
+        :price-per-night="props.listingData.bookings.price"
+        :weekend-pricing="props.listingData.bookings.weekend"
+        :fees="props.listingData.bookings.fees"
+        :booked-days="props.listingData.bookings.bookedDays"
+        :rules="props.listingData.bookings.rules"
+        :disabled="props.isBookingDisabled"
+        :disabled-label="props.bookingDisabledLabel"
+        :disabled-hint="props.bookingDisabledHint"
+        @reserve="onReserve"
+      />
+    </BookingMin>
     <template v-else>
       <div class="skeleton">Chargement…</div>
     </template>

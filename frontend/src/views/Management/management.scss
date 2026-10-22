@@ -4,6 +4,7 @@
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
 @use '@/styles/variables/effects' as effects;
+@use '@/styles/variables/animations' as animations;
 @use '@/styles/components/buttons' as buttons;
 
 .management#management-page {
@@ -11,8 +12,10 @@
 
   padding-top: var(--layout-gap-sm);
   padding-bottom: calc(var(--editor-mobile-dock-height) + env(safe-area-inset-bottom));
-  min-height: 100vh;
-  min-height: 100dvh;
+  // Hauteur bornée sur mobile : la liste défile dans son conteneur et le détail
+  // ouvert (absolu, inset 0) reste dans l'écran au lieu de suivre la liste.
+  height: 100vh;
+  height: 100dvh;
   padding-inline: var(--layout-gap-sm);
   display: flex;
   flex-direction: column;
@@ -69,7 +72,13 @@
       opacity: 0;
       pointer-events: none;
       transform: translateX(105%);
-      transition: transform 240ms ease, opacity 200ms ease;
+      // Retour à la liste : sortie plus rapide que l'entrée.
+      @include animations.transition(animations.$duration-exit, animations.$ease-drawer, (transform, opacity));
+
+      @include animations.reduced-motion {
+        transform: none;
+        transition-property: opacity;
+      }
 
       @include min-width(lg) {
         background: $translucent;
@@ -86,6 +95,7 @@
         opacity: 1;
         pointer-events: auto;
         transform: translateX(0);
+        @include animations.transition(animations.$duration-overlay, animations.$ease-drawer, (transform, opacity));
       }
     }
 
@@ -166,6 +176,18 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        @include animations.transition(animations.$duration-fast);
+        @include animations.press();
+      }
+
+      // Cible tactile de 44 px.
+      @media (pointer: coarse) {
+        width: 2.75rem;
+        min-width: 2.75rem;
+
+        >button {
+          height: 2.75rem;
+        }
       }
 
       @include min-width(lg) {
@@ -208,6 +230,7 @@
   .reservation-panel {
     height: 100%;
     overflow: auto;
+    overscroll-behavior: contain;
     padding: var(--layout-gap);
     display: flex;
     flex-direction: column;
@@ -288,6 +311,8 @@
         color: rgba($secondary-text, 0.8);
         font-weight: 600;
         cursor: pointer;
+        @include animations.transition(animations.$duration-fast);
+        @include animations.press();
       }
     }
 
@@ -342,9 +367,11 @@
       font-family: inherit;
       font-size: 0.95rem;
       line-height: 1.45;
-      transition:
-        border-color 0.2s ease,
-        box-shadow 0.2s ease;
+      @include animations.transition(animations.$duration-fast);
+
+      @media (pointer: coarse) {
+        font-size: max(1rem, 16px);
+      }
 
       &:focus {
         outline: none;
@@ -514,7 +541,8 @@
         display: block;
         height: 100%;
         border-radius: inherit;
-        transition: width 220ms ease;
+        // Remplissage voulu : la largeur reste animée explicitement.
+        @include animations.transition(animations.$duration-menu, animations.$ease-out, (width, background-color));
         background: rgba($progressing, 0.95);
 
         &.is-complete {
@@ -617,11 +645,22 @@
             font-weight: 600;
             padding: 0.28rem 0.55rem;
             cursor: pointer;
-            transition: 120ms ease;
+            position: relative;
+            @include animations.transition(animations.$duration-fast);
+            @include animations.press();
 
-            &:hover:not(:disabled) {
+            @include on-hover(':not(:disabled)') {
               border-color: rgba($bad, 0.5);
               color: rgba($bad, 0.95);
+            }
+
+            // Zone tactile élargie à 44 px sans grossir la puce.
+            @media (pointer: coarse) {
+              &::after {
+                content: '';
+                position: absolute;
+                inset: -0.6rem -0.25rem;
+              }
             }
 
             &:disabled {
@@ -754,6 +793,10 @@
             background: $accent-surface-0;
             color: rgba($secondary-text, 0.92);
 
+            @media (pointer: coarse) {
+              font-size: max(1rem, 16px);
+            }
+
             &:focus {
               outline: 2px solid rgba($secondary, 0.2);
               border-color: rgba($secondary, 0.45);
@@ -776,11 +819,16 @@
           font-weight: 600;
           padding: 0.5rem 0.7rem;
           cursor: pointer;
-          transition: 120ms ease;
+          @include animations.transition(animations.$duration-fast);
+          @include animations.press();
 
-          &:hover:not(:disabled) {
+          @include on-hover(':not(:disabled)') {
             background: rgba($secondary, 0.08);
             border-color: rgba($secondary, 0.36);
+          }
+
+          @media (pointer: coarse) {
+            min-height: 2.75rem;
           }
 
           &:disabled {
@@ -826,7 +874,7 @@
     > .danger {
       @include buttons.primary($theme: dark, $fullwidth: true);
 
-      &:hover {
+      @include on-hover {
         & > * {
           color: $accent !important;
           background-color: $bad !important;

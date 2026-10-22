@@ -122,6 +122,7 @@ async function handleImport() {
             v-model="url"
             :placeholder="placeholder"
             type="url"
+            enterkeyhint="go"
             :disabled="isImporting"
             @keydown.enter.prevent="handleImport"
           />

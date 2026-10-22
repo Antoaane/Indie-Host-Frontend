@@ -1222,7 +1222,7 @@ const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !nor
                           class="internal-note-input"
                           rows="4"
                           :disabled="noteEditor.isSaving"
-                          placeholder="Ajoutez une note interne sur ce voyageur (preferences, rappels, points de vigilance)."
+                          placeholder="Ajoutez une note interne sur ce voyageur (préférences, rappels, points de vigilance)."
                           @input="handleInternalNoteInput"
                           @blur="handleInternalNoteBlur"
                         />

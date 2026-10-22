@@ -487,7 +487,7 @@ export function createApiListingsController(): ListingsController {
     },
     fetchVolatileListingBundle: async (listingId: string): Promise<VolatileBundle> => {
       console.log('[Domain][api] fetchVolatileListingBundle', { listingId })
-      assertApiEnabled('charger les donnees de reservation')
+      assertApiEnabled('charger les données de réservation')
 
       const [bookings, notes, comments, host] = await Promise.all([
         fetchRemote<RawBookings>(resolveUrl(buildListingUrl('bookings', listingId))),
@@ -579,7 +579,7 @@ export function createApiListingsController(): ListingsController {
     },
     createListing: async (payload?: Partial<RawListingBundle>, options?: { ownerId?: string | null }): Promise<{ listingId: string }> => {
       console.log('[Domain][api] createListing', { payload, ownerId: options?.ownerId ?? null })
-      assertApiEnabled('creer une annonce')
+      assertApiEnabled('créer une annonce')
 
       const url = resolveUrl(buildCreateListingUrl())
       // ownerId : un admin crée l'annonce au nom d'un client ; ignoré par l'API pour les autres rôles.

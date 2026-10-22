@@ -290,6 +290,11 @@ function removeCustomFee(index: number) {
       gap: var(--layout-gap-xs);
       align-items: center;
 
+      // Au doigt, le stepper passe en ligne avec des boutons de 44 px : sa colonne suit son contenu.
+      @media (pointer: coarse) {
+        grid-template-columns: minmax(0, 1fr) auto 2.75rem;
+      }
+
       > .input {
         @include inputs.field($theme: base);
       }
@@ -298,6 +303,11 @@ function removeCustomFee(index: number) {
         @include buttons.primary($theme: light, $padding: false);
         width: 40px;
         height: 40px;
+
+        @media (pointer: coarse) {
+          width: 2.75rem;
+          height: 2.75rem;
+        }
 
         > * {
           height: 100%;

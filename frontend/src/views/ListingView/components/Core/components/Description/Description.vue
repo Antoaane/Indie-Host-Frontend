@@ -167,7 +167,8 @@ function closePopup() {
     width: 100%;
     height: auto;
     max-height: min(78dvh, calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - (var(--layout-gap) * 2)));
-    padding: var(--layout-gap-xl) var(--layout-gap) calc(var(--layout-gap) + env(safe-area-inset-bottom));
+    // L'overlay garde déjà la sheet au-dessus de l'indicateur d'accueil : pas de second inset ici.
+    padding: var(--layout-gap-xl) var(--layout-gap) var(--layout-gap);
     min-height: 0;
     overflow: hidden;
 
@@ -188,7 +189,7 @@ function closePopup() {
       flex: 1 1 auto;
       min-height: 0;
       margin-bottom: 0;
-      padding-bottom: calc(var(--layout-gap-sm) + env(safe-area-inset-bottom));
+      padding-bottom: var(--layout-gap-sm);
       overflow-y: auto;
       overscroll-behavior: contain;
       -webkit-overflow-scrolling: touch;
@@ -234,6 +235,13 @@ function closePopup() {
 
       > .button {
         @include buttons.primary($padding: false, $theme: white);
+
+        > button {
+          @media (pointer: coarse) {
+            min-width: 44px;
+            min-height: 44px;
+          }
+        }
       }
     }
   }

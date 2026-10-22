@@ -235,6 +235,9 @@ onMounted(() => {
           type="text"
           placeholder="ex: mon-logement"
           autocomplete="off"
+          autocapitalize="none"
+          spellcheck="false"
+          enterkeyhint="search"
           :disabled="isLoadingCurrent || (!props.isAdmin && isLoadingSubscription) || !canManageSubdomain"
           @keydown.enter.prevent="checkAvailability"
         />

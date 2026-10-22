@@ -301,6 +301,7 @@ function parseOptionalNumber(raw: string): number | null {
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
 @use '@/styles/components/inputs' as inputs;
 @use '@/views/Editor/components/EditorSidebar/panels/panel.scss' as *;
 
@@ -343,9 +344,7 @@ function parseOptionalNumber(raw: string): number | null {
       border-radius: borders.$rounded-md;
       border: 1px solid rgba($secondary, 0.12);
       background: rgba($secondary, 0.015);
-      transition:
-        border-color 0.2s ease,
-        background-color 0.2s ease;
+      @include animations.transition(animations.$duration-base, animations.$ease-out, (border-color, background-color));
 
       &.is-active {
         border-color: rgba($accent, 0.55);

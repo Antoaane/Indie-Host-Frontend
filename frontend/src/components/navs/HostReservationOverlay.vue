@@ -108,7 +108,7 @@ const nights = computed(() => {
 })
 
 const MIN_NIGHTS = 2
-const MIN_NIGHTS_ERROR = `Le sejour doit etre d'au moins ${MIN_NIGHTS} nuits.`
+const MIN_NIGHTS_ERROR = `Le séjour doit être d'au moins ${MIN_NIGHTS} nuits.`
 
 const canSubmit = computed(() => {
   if (submitStatus.isSaving) return false
@@ -375,7 +375,7 @@ async function submit() {
   submitStatus.error = null
 
   if (!listingId) {
-    submitStatus.error = 'Selectionnez une annonce.'
+    submitStatus.error = 'Sélectionnez une annonce.'
     return
   }
 
@@ -390,7 +390,7 @@ async function submit() {
   }
 
   if (!isSelectedRangeValid(normalizedSelection, nights.value, isDateDisabled.value)) {
-    submitStatus.error = 'Cette periode est deja indisponible.'
+    submitStatus.error = 'Cette période est déjà indisponible.'
     return
   }
 
@@ -407,7 +407,7 @@ async function submit() {
     if (!isSelectedRangeValid(normalizedSelection, nights.value, isDateDisabledFresh)) {
       bookingsByListingId[listingId] = currentBookedDays
       setSelection(findNextRange(MIN_NIGHTS, isDateDisabledFresh))
-      submitStatus.error = 'Cette periode vient d etre reservee.'
+      submitStatus.error = 'Cette période vient d’être réservée.'
       return
     }
 
@@ -446,7 +446,7 @@ async function submit() {
     emit('close')
   } catch (error) {
     console.error('[HostReservationOverlay] create reservation failed', error)
-    submitStatus.error = 'Impossible de creer la reservation.'
+    submitStatus.error = 'Impossible de créer la réservation.'
   } finally {
     submitStatus.isSaving = false
   }

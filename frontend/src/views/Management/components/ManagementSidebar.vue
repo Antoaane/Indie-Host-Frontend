@@ -103,6 +103,7 @@ function handleSelect(listingId: string) {
           <input
             v-model="query"
             type="search"
+            enterkeyhint="search"
             placeholder="Recherchez une annonce"
           />
         </div>

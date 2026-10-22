@@ -20,6 +20,8 @@
   padding-left: var(--layout-gap-4xl);
   padding-right: var(--layout-gap-4xl);
   padding-top: var(--layout-gap-4xl);
+  // Sheet collée au bas de l'écran sur mobile : le contenu évite l'indicateur d'accueil.
+  padding-bottom: var(--safe-area-bottom);
 
   @include min-width(lg) {
     border-radius: borders.$rounded-lg;

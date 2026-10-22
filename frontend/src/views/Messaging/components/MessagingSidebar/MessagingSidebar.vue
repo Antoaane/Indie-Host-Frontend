@@ -62,6 +62,7 @@ const showSearchEmpty = computed(() => !props.isLoading && !props.error && hasCo
           <input
             v-model="query"
             type="search"
+            enterkeyhint="search"
             :placeholder="props.searchPlaceholder"
             aria-label="Rechercher une conversation"
           />

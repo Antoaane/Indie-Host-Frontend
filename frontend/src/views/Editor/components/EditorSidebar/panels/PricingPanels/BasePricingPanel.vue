@@ -330,6 +330,11 @@ function deriveWeekendPercent(basePrice: number, weekendNightPrice: number): num
       gap: var(--layout-gap-xs);
       align-items: center;
 
+      // Au doigt, le stepper passe en ligne (boutons de 44 px) : sa colonne suit son contenu.
+      @media (pointer: coarse) {
+        grid-template-columns: auto minmax(0, 1fr);
+      }
+
       > .input {
         @include inputs.field($theme: base);
       }
@@ -340,6 +345,12 @@ function deriveWeekendPercent(basePrice: number, weekendNightPrice: number): num
       grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       gap: var(--layout-gap-xs);
       align-items: start;
+
+      // Au doigt, les steppers passent en ligne (boutons de 44 px) : on les empile
+      // quand deux ne tiennent plus côte à côte.
+      @media (pointer: coarse) {
+        @include responsive-grid-columns(10rem);
+      }
     }
 
     .weekend-block {

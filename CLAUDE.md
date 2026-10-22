@@ -475,7 +475,8 @@ Installés le 2026-10-21 et versionnés dans le repo. Claude les charge selon la
 | `_borders.scss` | `@use '@/styles/variables/borders' as borders` | `borders.$rounded-xs/sm/md/lg/xl/xxl/rounded` |
 | `_texts.scss` | via globals | mixins `@include little-text()`, `@include base-text()`, `@include h1/h2/h3/h4-title()` |
 | `_layouts.scss` | via globals | CSS vars `--layout-gap`, `--layout-gap-sm/md/xl/2xl/4xl` |
-| `_animations.scss` | `@use '@/styles/variables/animations' as animations` | `@include animations.transition()` — **non forwardé par globals, import séparé requis** |
+| `_animations.scss` | `@use '@/styles/variables/animations' as animations` | `@include animations.transition($duration, $timing, $properties)` (jamais `all`), `animations.press()`, `animations.reduced-motion {}`, courbes `$ease-out/$ease-in-out/$ease-drawer`, durées `$duration-press/fast/base/menu/overlay/exit` — **non forwardé par globals, import séparé requis** |
+| `_layouts.scss` (survol) | via globals | `@include on-hover { }` / `@include can-hover { }` : tout `:hover` derrière `(hover: hover) and (pointer: fine)` |
 | `_effects.scss` | via globals | `@include halo()`, `@include big-shadow()` |
 | `_buttons.scss` | `@use '@/styles/components/buttons' as buttons` | mixins `buttons.primary()`, `buttons.secondary()`, `buttons.low-btn()` |
 | `_inputs.scss` | `@use '@/styles/components/inputs' as inputs` | mixin `inputs.action()` |
@@ -512,6 +513,9 @@ border-radius: borders.$rounded-md;   // 0.75rem
 border-radius: borders.$rounded;      // 9999px (pill)
 
 @include animations.transition();     // import séparé requis
+@include animations.transition(animations.$duration-menu, animations.$ease-out, (grid-template-rows, opacity)); // hauteur animée explicitement
+@include animations.press();          // scale(0.97) à l'appui, déjà dans buttons.*
+@include on-hover { color: $accent; } // jamais de &:hover nu (reste collé au tap)
 
 @include little-text($thin: false);   // remplace font-size + line-height + weight
 ```
@@ -649,7 +653,9 @@ Les domaines personnalisés pointent **directement** sur le VPS (pas via Cloudfl
 
 ---
 
-## Dernières modifications (mis à jour 2026-10-21)
+## Dernières modifications (mis à jour 2026-10-22)
+
+- **Passe Emil Kowalski sur tout le front (mobile + desktop)** : `_animations.scss` réécrit (courbes `$ease-out/$ease-in-out/$ease-drawer`, durées `$duration-*`, `transition()` sans `all`, `press()`, `reduced-motion`) ; survol derrière `on-hover`/`can-hover` ; `scale(0.97)` à l'appui dans `buttons.*` et sur les contrôles maison ; overlays en sheet `translateY(100%)` sous lg et modale `scale(0.96)` au-delà, popovers ancrés au déclencheur ; base mobile globale (tap highlight, `touch-action`, champs 16 px, safe areas toujours actives, `touchstart` passif pour `:active` sur iOS) ; `100vh` → `dvh`/`svh` ; `sr()` en `power3.out` 0.6 s sans délai. Règles reportées dans `DESIGN.md` (Motion) et le skill `indiehost-ui`.
 
 - **Vidéos d'annonce** : upload binaire vers ImageKit (`POST /medias/imagekit/upload-video`), section « Vidéos » du panneau galerie de l'éditeur (progression, suppression, drag & drop), lecture sous la description de l'annonce publique (voir « RawMedias »)
 

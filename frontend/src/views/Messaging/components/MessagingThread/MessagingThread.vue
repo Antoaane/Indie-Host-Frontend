@@ -294,6 +294,7 @@ watch(
             <textarea
               v-model="composerDraft"
               rows="1"
+              enterkeyhint="send"
               :placeholder="props.composer.placeholder"
               :disabled="props.isActionPending"
               @keydown="handleComposerKeydown"

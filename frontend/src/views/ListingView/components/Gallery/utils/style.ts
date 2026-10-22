@@ -20,7 +20,7 @@ export function tileStyle(rect?: Rect, gapPx = 5): Record<string, string> {
       top: '50%',
       width: '0px',
       height: '0px',
-      transform: 'translateZ(0) scale(0)',
+      transform: 'translateZ(0) scale(0.9)',
       opacity: '0',
       pointerEvents: 'none',
       zIndex: '0',
@@ -47,14 +47,16 @@ export function tileStyle(rect?: Rect, gapPx = 5): Record<string, string> {
 
   // Échelle/opacité selon la plus petite dimension :
   //  - minSide >= 20% -> scale=1, opacity=1
-  //  - minSide -> 0   -> scale -> 0, opacity -> 0
+  //  - minSide -> 0   -> scale -> 0.9, opacity -> 0 (jamais depuis scale(0) :
+  //    le rect se réduit déjà, l'échelle ne fait qu'accompagner)
   const minSide = Math.max(0, Math.min(w, h))
-  const scale = Math.max(0, Math.min(1, minSide / 20))
-  const opacity = scale
+  const visibility = Math.max(0, Math.min(1, minSide / 20))
+  const scale = 0.9 + visibility * 0.1
+  const opacity = visibility
 
   const transform = `translateZ(0) scale(${scale})`
-  const pointerEvents = scale < 0.1 ? 'none' : 'auto'
-  const zIndex = String(10 + Math.round(scale * 90))
+  const pointerEvents = visibility < 0.1 ? 'none' : 'auto'
+  const zIndex = String(10 + Math.round(visibility * 90))
 
   return { left, top, width, height, transform, opacity: String(opacity), pointerEvents, zIndex }
 }

@@ -40,6 +40,7 @@
     overflow-x: hidden;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
 
     > .grid {
       height: max-content;
@@ -76,9 +77,20 @@
           background-color: $accent;
 
           @include effects.big-shadow;
+          @include animations.transition(animations.$duration-fast);
 
-          &:hover {
+          @include on-hover {
             transform: translateY(-1px);
+
+            @include animations.reduced-motion {
+              transform: none;
+            }
+          }
+
+          // Appui sur la carte entière ; pas quand le doigt est sur le carrousel,
+          // un menu ou un bouton de la carte (ils ont leur propre retour).
+          &:not(:has(.media:active, button:active)) {
+            @include animations.press(0.99);
           }
 
           > .media {
@@ -155,7 +167,7 @@
               > img,
               > .placeholder {
                 opacity: 0.62;
-                @include animations.transition(180ms);
+                @include animations.transition(animations.$duration-base);
               }
             }
 
@@ -206,6 +218,8 @@
                 }
 
                 cursor: pointer;
+                @include animations.transition(animations.$duration-fast);
+                @include animations.press();
 
                 &.is-connect-locked {
                   opacity: 0.72;
@@ -327,7 +341,12 @@
                 transform: translateY(-4px);
                 transform-origin: top left;
                 pointer-events: none;
-                @include animations.transition(160ms);
+                overscroll-behavior: contain;
+                @include animations.transition(animations.$duration-fast);
+
+                @include animations.reduced-motion {
+                  transform: none;
+                }
 
                 > .status-option {
                   width: 100%;
@@ -340,7 +359,7 @@
                   @include little-text($thin: false);
                   cursor: pointer;
 
-                  &:hover {
+                  @include on-hover {
                     background: rgba($background, 0.08);
                   }
 
@@ -356,8 +375,16 @@
                 }
               }
 
-              &:hover,
               &:focus-within {
+                > .status-options {
+                  opacity: 1;
+                  visibility: visible;
+                  transform: translateY(0);
+                  pointer-events: auto;
+                }
+              }
+
+              @include on-hover {
                 > .status-options {
                   opacity: 1;
                   visibility: visible;
@@ -446,7 +473,7 @@
                 color: rgba($accent, 0.95);
 
                 opacity: 0.85;
-                @include animations.transition(200ms);
+                @include animations.transition(animations.$duration-fast);
                 pointer-events: auto;
                 padding: 0;
                 cursor: pointer;
@@ -470,8 +497,12 @@
                   background: linear-gradient(270deg, rgba($dark, 0.42) 0%, rgba($dark, 0) 100%);
                 }
 
-                &:hover,
                 &:focus-visible {
+                  opacity: 1;
+                  color: rgba($accent, 1);
+                }
+
+                @include on-hover {
                   opacity: 1;
                   color: rgba($accent, 1);
                 }
@@ -676,7 +707,12 @@
                     transform: translateY(4px);
                     transform-origin: bottom right;
                     pointer-events: none;
-                    @include animations.transition(160ms);
+                    overscroll-behavior: contain;
+                    @include animations.transition(animations.$duration-fast);
+
+                    @include animations.reduced-motion {
+                      transform: none;
+                    }
 
                     > .status-option {
                       width: 100%;
@@ -689,7 +725,7 @@
                       @include little-text($thin: false);
                       cursor: pointer;
 
-                      &:hover {
+                      @include on-hover {
                         background: rgba($background, 0.08);
                       }
 
@@ -709,8 +745,16 @@
                     }
                   }
 
-                  &:hover,
                   &:focus-within {
+                    > .status-options {
+                      opacity: 1;
+                      visibility: visible;
+                      transform: translateY(0);
+                      pointer-events: auto;
+                    }
+                  }
+
+                  @include on-hover {
                     > .status-options {
                       opacity: 1;
                       visibility: visible;
@@ -760,7 +804,7 @@
   > .editor-transfer-panel {
     @extend %overlay-panel;
     width: min(52rem, 94vw);
-    max-height: min(86vh, 52rem);
+    max-height: min(86dvh, 52rem);
     display: flex;
     flex-direction: column;
     gap: var(--layout-gap-sm);
@@ -900,8 +944,10 @@
             padding: 0.28rem 0.5rem;
             cursor: pointer;
             @include little-text($thin: false);
+            @include animations.transition(animations.$duration-fast);
+            @include animations.press();
 
-            &:hover {
+            @include on-hover {
               background: rgba($background, 0.08);
             }
 
@@ -938,6 +984,7 @@
         min-height: 14rem;
         max-height: 19rem;
         overflow: auto;
+        overscroll-behavior: contain;
         display: flex;
         flex-direction: column;
         gap: 0.2rem;
@@ -967,6 +1014,8 @@
           grid-template-columns: auto 1fr;
           align-items: center;
           column-gap: 0.6rem;
+          @include animations.transition(animations.$duration-fast);
+          @include animations.press(0.99);
 
           > .avatar {
             width: 2.1rem;
@@ -1025,7 +1074,7 @@
             }
           }
 
-          &:hover {
+          @include on-hover {
             background: rgba($background, 0.08);
           }
 
@@ -1059,7 +1108,7 @@
   }
 }
 
-@media (hover: hover) and (pointer: fine) {
+@include can-hover {
   .editor-listings {
     > .scroll-container {
       > .grid {

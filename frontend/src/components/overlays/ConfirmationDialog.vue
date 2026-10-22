@@ -158,6 +158,8 @@ function handleCancel() {
               v-model="typedValue"
               type="text"
               autocomplete="off"
+              autocapitalize="none"
+              enterkeyhint="done"
               :placeholder="resolvedTypingPlaceholder"
             />
           </label>
@@ -195,13 +197,22 @@ function handleCancel() {
 @use '@/styles/components/inputs' as inputs;
 @use '@/styles/components/overlays' as overlays;
 
+// Sheet posée en bas sur mobile (coins hauts arrondis), modale centrée dès lg.
+.absolute-overlay.confirmation-dialog-overlay {
+  align-items: flex-end;
+
+  @include min-width(lg) {
+    align-items: center;
+  }
+}
+
 .confirmation-dialog-overlay {
   > .panel {
     @extend %overlay-panel;
     max-height: max-content;
     gap: var(--layout-gap);
 
-    padding-bottom: var(--layout-gap-4xl);
+    padding-bottom: calc(var(--layout-gap-4xl) + var(--safe-area-bottom));
 
     > .header {
       display: flex;
@@ -270,7 +281,7 @@ function handleCancel() {
 
         button {
           &.is-danger {
-            &:hover:not(:disabled) {
+            @include on-hover(':not(:disabled)') {
               background-color: $bad !important;
               color: $accent !important;
               outline-color: rgba($bad, 0.35) !important;

@@ -25,9 +25,10 @@
     @include big-shadow($color: rgba($secondary, 0.3));
 
     cursor: pointer;
-    @include animations.transition(160ms);
+    @include animations.transition(animations.$duration-fast);
+    @include animations.press(0.98);
 
-    &:hover {
+    @include on-hover {
       transform: translateY(-1px);
       box-shadow: 0px 12px 32px -14px rgba($secondary, 0.5);
     }
@@ -43,7 +44,7 @@
       box-shadow: none;
       transform: none;
 
-      &:hover {
+      @include on-hover {
         transform: none;
         box-shadow: none;
       }
@@ -106,11 +107,41 @@
       font-size: 1.1rem;
       cursor: pointer;
       padding: 0.5rem;
+      @include animations.transition(animations.$duration-fast);
+      @include animations.press();
+
+      @media (pointer: coarse) {
+        min-width: 44px;
+        min-height: 44px;
+      }
     }
 
     >.content {
       margin-top: var(--layout-gap-xs);
       overflow-y: auto;
+      overscroll-behavior: contain;
+
+      // Le module de réservation est déjà dans la sheet : pas de carte dans la carte.
+      // Le padding bas compense le `top` relatif de la mention sous le bouton.
+      .listing-booking#booking > .card {
+        padding: 0 0 calc(var(--layout-gap-xs) * 2);
+        background: transparent;
+        box-shadow: none;
+      }
+    }
+  }
+
+  // Sheet ajustée à son contenu et posée en bas d'écran (modale centrée dès lg).
+  &.absolute-overlay--centered {
+    align-items: flex-end;
+  }
+
+  >.panel {
+    height: auto;
+    padding-bottom: calc(var(--layout-gap-xl) + var(--safe-area-bottom));
+
+    @include min-width(lg) {
+      align-self: center;
     }
 
     >.content>.placeholder {

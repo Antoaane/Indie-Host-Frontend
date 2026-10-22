@@ -3,6 +3,7 @@
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
 @use '@/styles/variables/effects' as effects;
+@use '@/styles/variables/animations' as animations;
 @use '@/styles/components/inputs' as inputs;
 @use '@/styles/components/buttons' as buttons;
 
@@ -42,6 +43,14 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        @include animations.transition(animations.$duration-fast);
+        @include animations.press();
+
+        // Cible tactile de 44 px.
+        @media (pointer: coarse) {
+          width: 2.75rem;
+          height: 2.75rem;
+        }
       }
     }
 
@@ -149,6 +158,7 @@
     flex-direction: column;
     padding: var(--layout-gap-md);
     overflow: auto;
+    overscroll-behavior: contain;
     background: $accent;
 
     > .message-list {
@@ -328,16 +338,20 @@
       padding: 0.85rem 0.95rem;
       font-size: 0.9rem;
       cursor: pointer;
-      transition:
-        background-color 140ms ease,
-        color 140ms ease;
+      @include animations.transition(animations.$duration-fast);
 
       &:last-child {
         border-bottom: 0;
       }
 
-      &:hover {
+      // Ligne de menu : retour par le fond (au survol comme à l'appui), pas d'échelle.
+      @include on-hover(':not([disabled])') {
         background: rgba($background, 0.06);
+      }
+
+      &:active:not([disabled]) {
+        background: rgba($background, 0.06);
+        transition-duration: animations.$duration-press;
       }
 
       &:focus-visible {

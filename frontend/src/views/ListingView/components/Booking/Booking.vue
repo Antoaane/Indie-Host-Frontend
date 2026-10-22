@@ -223,7 +223,7 @@ const guestRows = computed(() => [
     max: childrenDynamicMax.value,
     hint: occupancyRules.value.childrenMax > 0
       ? `Maximum ${occupancyRules.value.childrenMax}`
-      : 'Non autorise pour cette annonce',
+      : 'Non autorisé pour cette annonce',
   },
   {
     key: 'babies' as const,
@@ -234,7 +234,7 @@ const guestRows = computed(() => [
     max: occupancyRules.value.babiesMax,
     hint: occupancyRules.value.babiesMax > 0
       ? `Maximum ${occupancyRules.value.babiesMax}`
-      : 'Non autorise pour cette annonce',
+      : 'Non autorisé pour cette annonce',
   },
   {
     key: 'animals' as const,
@@ -245,7 +245,7 @@ const guestRows = computed(() => [
     max: occupancyRules.value.animalsMax,
     hint: occupancyRules.value.animalsMax > 0
       ? `Maximum ${occupancyRules.value.animalsMax}`
-      : 'Non autorise pour cette annonce',
+      : 'Non autorisé pour cette annonce',
   },
   {
     key: 'pmr' as const,
@@ -256,7 +256,7 @@ const guestRows = computed(() => [
     max: occupancyRules.value.pmrMax,
     hint: occupancyRules.value.pmrMax > 0
       ? `Maximum ${occupancyRules.value.pmrMax}`
-      : 'Non autorise pour cette annonce',
+      : 'Non autorisé pour cette annonce',
   },
 ])
 
@@ -302,13 +302,13 @@ const occupantLabel = computed(() => buildOccupantLabel(occupants, travelerCount
 const rangeLabel = computed(() => buildRangeLabel(selection.value, nights.value))
 
 const travelerHint = computed(() =>
-  `Capacite: ${occupancyRules.value.capacity} voyageurs max (adultes + enfants).`,
+  `Capacité : ${occupancyRules.value.capacity} voyageurs max (adultes + enfants).`,
 )
 
 const stayHint = computed(() =>
   stayRules.value.maxNights === null
-    ? `Sejour minimum: ${stayRules.value.minNights} nuit${stayRules.value.minNights > 1 ? 's' : ''}.`
-    : `Sejour: ${stayRules.value.minNights}-${stayRules.value.maxNights} nuits.`,
+    ? `Séjour minimum : ${stayRules.value.minNights} nuit${stayRules.value.minNights > 1 ? 's' : ''}.`
+    : `Séjour : ${stayRules.value.minNights}-${stayRules.value.maxNights} nuits.`,
 )
 
 const extraGuestHint = computed(() =>
@@ -456,7 +456,7 @@ function reserve() {
   >
     <div class="card">
       <div class="header">
-        <h2>Vous reservez</h2>
+        <h2>Vous réservez</h2>
         <transition name="price-toggle">
           <span
             v-if="!expanded"

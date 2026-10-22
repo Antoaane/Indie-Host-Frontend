@@ -2,6 +2,7 @@
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
 @use '@/styles/components/buttons' as buttons;
 @use '@/styles/components/inputs' as inputs;
 
@@ -22,6 +23,7 @@
     margin: 0;
 
     overflow-y: auto;
+    overscroll-behavior: contain;
 
     border-radius: 0 0 borders.$rounded-md borders.$rounded-md;
     background-color: rgba($accent, 0.1);
@@ -32,7 +34,16 @@
     li {
       padding: 0.5rem 0.75rem;
       cursor: pointer;
+      -webkit-user-select: none;
+      user-select: none;
+      touch-action: manipulation;
       @include little-text($accent);
+      @include animations.transition(animations.$duration-press);
+      @include animations.press(0.99);
+
+      @media (pointer: coarse) {
+        padding-block: 0.75rem;
+      }
     }
   }
 

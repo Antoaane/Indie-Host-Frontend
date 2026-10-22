@@ -294,7 +294,7 @@ onMounted(() => {
           cursor: pointer;
         }
 
-        &:hover::-webkit-slider-thumb {
+        @include on-hover('::-webkit-slider-thumb') {
           background: rgba($secondary, 0.75);
         }
       }
@@ -311,12 +311,17 @@ onMounted(() => {
       cursor: pointer;
       color: $secondary;
       @include little-text($thin: false);
-      @include animations.transition();
+      @include animations.transition(animations.$duration-fast);
+      @include animations.press();
       white-space: nowrap;
 
-      &:hover {
+      @include on-hover(':not(:disabled)') {
         background: $accent-surface-3;
         border-color: rgba($secondary, 0.3);
+      }
+
+      @media (pointer: coarse) {
+        min-height: 2.75rem;
       }
 
       &:disabled {
@@ -382,7 +387,7 @@ onMounted(() => {
           }
         }
 
-        &:hover {
+        @include on-hover {
           * {
             color: rgba($secondary, 0.8) !important;
           }
@@ -399,6 +404,7 @@ onMounted(() => {
         border-radius: borders.$rounded-md;
 
         @include animations.transition($duration: 150ms);
+        @include animations.press();
 
         svg {
           * {
@@ -408,7 +414,7 @@ onMounted(() => {
           }
         }
 
-        &:hover {
+        @include on-hover {
           background-color: $accent-surface-3;
         }
 
@@ -432,8 +438,8 @@ onMounted(() => {
 
       > .ql-editor {
         flex: 1 1 auto;
-        min-height: clamp(12rem, 36vh, 22rem);
-        max-height: min(58vh, 34rem);
+        min-height: clamp(12rem, 36svh, 22rem);
+        max-height: min(58svh, 34rem);
         overflow-y: auto;
       }
     }

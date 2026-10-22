@@ -176,6 +176,10 @@ function handleCreateManually() {
             v-model="url"
             :placeholder="placeholder"
             type="url"
+            inputmode="url"
+            enterkeyhint="go"
+            autocapitalize="none"
+            spellcheck="false"
             :disabled="isImporting"
             @keydown.enter.prevent="handleImport"
           />
@@ -246,6 +250,7 @@ function handleCreateManually() {
 <style lang="scss">
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
 @use '@/styles/components/inputs' as inputs;
 
 .create-import-step-panel {
@@ -369,12 +374,17 @@ function handleCreateManually() {
       display: inline-flex;
       align-items: center;
       gap: 0.4rem;
-      transition: all 200ms cubic-bezier(0.6, 0, 0.3, 1);
+      @include animations.transition(animations.$duration-fast);
+      @include animations.press();
 
-      &:hover:not(:disabled) {
+      @include on-hover(':not(:disabled)') {
         background: rgba($secondary, 0.05);
         border-color: rgba($secondary, 0.28);
         color: $secondary;
+      }
+
+      @media (pointer: coarse) {
+        min-height: 2.75rem;
       }
     }
   }

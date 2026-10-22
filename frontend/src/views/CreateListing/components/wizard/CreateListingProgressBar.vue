@@ -12,7 +12,7 @@ const props = defineProps<{
   <div class="progress">
     <div
       class="bar"
-      :style="{ width: `${props.progressPercent}%` }"
+      :style="{ transform: `translateX(${props.progressPercent - 100}%)` }"
     />
   </div>
 </template>

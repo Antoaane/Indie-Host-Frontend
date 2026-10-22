@@ -55,6 +55,25 @@ $breakpoints: (
   }
 }
 
+// Survol réservé aux pointeurs précis (souris, trackpad). Sur écran tactile,
+// le navigateur simule un :hover au tap et le laisse collé jusqu'au tap suivant.
+// Le retour tactile passe par :active (`animations.press()`).
+@mixin can-hover {
+  @media (hover: hover) and (pointer: fine) {
+    @content;
+  }
+}
+
+// Raccourci pour `&:hover` ; `$suffix` complète le sélecteur
+// (ex. `on-hover(':not(:disabled)')` → `&:hover:not(:disabled)`).
+@mixin on-hover($suffix: '') {
+  @include can-hover {
+    &:hover#{$suffix} {
+      @content;
+    }
+  }
+}
+
 @function responsive-grid-track($min-card-width) {
   @return minmax(min(100%, #{$min-card-width}), 1fr);
 }

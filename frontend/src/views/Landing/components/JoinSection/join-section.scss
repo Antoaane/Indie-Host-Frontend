@@ -186,7 +186,7 @@
 
   .slide-display {
     width: 100vw;
-    height: 100vh;
+    height: 100dvh;
 
     display: flex;
     justify-content: center;
@@ -208,14 +208,14 @@
 
     img {
       max-width: 95vw;
-      max-height: 95vh;
+      max-height: 95dvh;
 
       border-radius: borders.$rounded-xl;
       border: 1px solid rgba($accent, 1);
 
       @include min-width(lg) {
         max-width: 85vw;
-        max-height: 90vh;
+        max-height: 90dvh;
       }
 
       @include halo(lg);

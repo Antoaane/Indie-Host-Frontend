@@ -291,6 +291,7 @@ onMounted(() => {
             type="url"
             :placeholder="panelContent.import.urlPlaceholder"
             autocomplete="off"
+            enterkeyhint="done"
             @keydown.enter.prevent="addIcalSource"
           />
         </div>

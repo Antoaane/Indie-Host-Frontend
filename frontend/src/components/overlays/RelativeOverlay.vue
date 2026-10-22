@@ -63,7 +63,7 @@ const emit = defineEmits<{
 
 const attrs = useAttrs()
 const overlayRef = ref<HTMLElement | null>(null)
-const position = reactive({ top: 0, left: 0, width: null as number | null })
+const position = reactive({ top: 0, left: 0, width: null as number | null, origin: '' })
 
 const anchorEl = computed<HTMLElement | null>(() => {
   const anchor = props.anchor
@@ -80,6 +80,7 @@ const overlayStyle = computed(() => ({
   ...(position.width ? { width: `${position.width}px` } : {}),
   ...(props.minWidth ? { minWidth: `${props.minWidth}px` } : {}),
   ...(props.maxWidth ? { maxWidth: `${props.maxWidth}px` } : {}),
+  ...(position.origin ? { '--relative-overlay-origin': position.origin } : {}),
   '--relative-overlay-z-index': String(props.zIndex),
 }))
 
@@ -147,6 +148,11 @@ function updatePosition() {
   position.left = left
   position.top = top
   position.width = props.matchAnchorWidth ? rect.width : null
+
+  // L'animation part du côté du déclencheur (placement résolu, après bascule
+  // éventuelle haut/bas) : `bottom-end` → `top right`, `top-start` → `bottom left`.
+  const originX = horizontal === 'start' ? 'left' : horizontal === 'end' ? 'right' : 'center'
+  position.origin = `${vertical === 'top' ? 'bottom' : 'top'} ${originX}`
 }
 
 function getFocusableElements(): HTMLElement[] {
@@ -319,26 +325,37 @@ onBeforeUnmount(() => {
 </template>
 
 <style lang="scss">
+@use '@/styles/variables/animations' as animations;
+
 .relative-overlay {
   position: fixed;
   z-index: var(--relative-overlay-z-index, 10001);
+  transform-origin: var(--relative-overlay-origin, top left);
 }
 
-.relative-overlay-enter-active,
+.relative-overlay-enter-active {
+  @include animations.transition(animations.$duration-menu, animations.$ease-out, (opacity, transform));
+  will-change: opacity, transform;
+}
+
 .relative-overlay-leave-active {
-  transition: opacity 0.18s ease, transform 0.18s ease;
+  @include animations.transition(animations.$duration-exit, animations.$ease-out, (opacity, transform));
   will-change: opacity, transform;
 }
 
 .relative-overlay-enter-from,
 .relative-overlay-leave-to {
   opacity: 0;
-  transform: translateY(6px);
+  transform: scale(0.96);
+
+  @include animations.reduced-motion {
+    transform: none;
+  }
 }
 
 .relative-overlay-enter-to,
 .relative-overlay-leave-from {
   opacity: 1;
-  transform: translateY(0);
+  transform: none;
 }
 </style>

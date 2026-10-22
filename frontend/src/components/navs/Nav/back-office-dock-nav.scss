@@ -38,7 +38,8 @@
     gap: 0.2rem;
 
     padding: 0.1rem 0.2rem;
-    @include animations.transition(0.18s, ease);
+    @include animations.transition(animations.$duration-fast);
+    @include animations.press();
 
     > .icon {
       height: 1.25rem;
@@ -56,10 +57,6 @@
       text-overflow: ellipsis;
       font-size: 0.55rem;
       font-weight: 500;
-    }
-
-    &:active {
-      transform: translateY(-1px);
     }
 
     &.is-active {
@@ -118,6 +115,8 @@
     right: var(--layout-gap-xs);
     bottom: calc(100% + 0.5rem);
     z-index: 12;
+    // Ancré sur « Options », dernier élément du dock : il naît de ce coin.
+    transform-origin: bottom right;
 
     border-radius: borders.$rounded-lg;
     border: 1px solid rgba($secondary, 0.15);
@@ -135,15 +134,18 @@
       font-size: 0.82rem;
       padding: 0.75rem 0.9rem;
       cursor: pointer;
-      transition:
-        background-color 140ms ease,
-        color 140ms ease;
+      @include animations.transition(animations.$duration-fast);
 
       &:last-child {
         border-bottom: 0;
       }
 
-      &:hover:not(:disabled) {
+      // Ligne de menu : retour d'appui par la teinte, pas par l'échelle.
+      &:active:not(:disabled) {
+        background: rgba($background, 0.06);
+      }
+
+      @include on-hover(':not(:disabled)') {
         background: rgba($background, 0.06);
       }
 
@@ -159,15 +161,20 @@
   }
 }
 
-.dock-options-slide-enter-active,
+.dock-options-slide-enter-active {
+  @include animations.transition(animations.$duration-menu, animations.$ease-out, (opacity, transform));
+}
+
 .dock-options-slide-leave-active {
-  transition:
-    opacity 0.2s ease,
-    transform 0.2s ease;
+  @include animations.transition(animations.$duration-exit, animations.$ease-out, (opacity, transform));
 }
 
 .dock-options-slide-enter-from,
 .dock-options-slide-leave-to {
   opacity: 0;
-  transform: translateY(10px);
+  transform: translateY(0.5rem) scale(0.96);
+
+  @include animations.reduced-motion {
+    transform: none;
+  }
 }

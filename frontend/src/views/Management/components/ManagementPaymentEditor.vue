@@ -93,6 +93,7 @@ function handleDraftCommentInput(event: Event) {
           <input
             :value="draftAmount ?? ''"
             type="number"
+            inputmode="numeric"
             min="1"
             step="1"
             placeholder="Montant"

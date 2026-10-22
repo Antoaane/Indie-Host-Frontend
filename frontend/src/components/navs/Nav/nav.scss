@@ -52,6 +52,17 @@
       position: relative;
 
       cursor: pointer;
+      @include animations.transition();
+      @include animations.press();
+
+      // Zone tactile portée à 44 px sans changer le dessin.
+      @media (pointer: coarse) {
+        &::before {
+          content: '';
+          position: absolute;
+          inset: -0.5rem;
+        }
+      }
 
       >.line {
         width: 80%;
@@ -63,20 +74,17 @@
         background-color: $secondary;
         border-radius: borders.$rounded;
 
-        @include animations.transition;
+        // Morphing burger → croix : les barres glissent vers le centre.
+        @include animations.transition(animations.$duration-base, animations.$ease-out, (top, bottom, height, transform, background-color));
 
         &.is-top {
           top: 25%;
           transform: translate(-50%, 0%);
-
-          @include animations.transition;
         }
 
         &.is-bottom {
           bottom: 25%;
           transform: translate(-50%, 0%);
-
-          @include animations.transition;
         }
       }
 
@@ -157,14 +165,19 @@
       justify-content: center;
       cursor: pointer;
       outline: 2px solid rgba($secondary-button-reference, 0.14);
-      transition:
-        background-color 140ms ease,
-        color 140ms ease,
-        outline-color 140ms ease,
-        box-shadow 140ms ease,
-        transform 140ms ease;
+      position: relative;
+      @include animations.transition(animations.$duration-fast);
+      @include animations.press();
 
-      &:hover {
+      @media (pointer: coarse) {
+        &::after {
+          content: '';
+          position: absolute;
+          inset: -0.25rem;
+        }
+      }
+
+      @include on-hover {
         background: rgba($secondary-button-reference, 0.88);
         color: $accent;
         outline-color: rgba($accent, 0.45);
@@ -268,14 +281,19 @@
         justify-content: center;
         cursor: pointer;
         outline: 2px solid rgba($secondary-button-reference, 0.14);
-        transition:
-          background-color 140ms ease,
-          color 140ms ease,
-          outline-color 140ms ease,
-          box-shadow 140ms ease,
-          transform 140ms ease;
+        position: relative;
+        @include animations.transition(animations.$duration-fast);
+        @include animations.press();
 
-        &:hover {
+        @media (pointer: coarse) {
+          &::after {
+            content: '';
+            position: absolute;
+            inset: -0.25rem;
+          }
+        }
+
+        @include on-hover {
           background: rgba($secondary-button-reference, 0.88);
           color: $accent;
           outline-color: rgba($accent, 0.45);
@@ -390,15 +408,18 @@
       padding: 0.82rem 0.95rem;
       font-size: 0.9rem;
       cursor: pointer;
-      transition:
-        background-color 140ms ease,
-        color 140ms ease;
+      @include animations.transition(animations.$duration-fast);
 
       &:last-child {
         border-bottom: 0;
       }
 
-      &:hover {
+      // Ligne de menu : retour d'appui par la teinte, pas par l'échelle.
+      &:active {
+        background: rgba($background, 0.06);
+      }
+
+      @include on-hover {
         background: rgba($background, 0.06);
       }
 
@@ -413,22 +434,28 @@
   }
 }
 
+// Longhands en `!important` : ils doivent passer devant le mode allégé de la
+// landing mobile. Sortie plus courte que l'entrée.
 .fade-slide-enter-active,
-.fade-slide-leave-active {
-  transition:
-    opacity 0.3s ease,
-    transform 0.3s ease !important;
+html.mobile-landing-lite .layout-header .fade-slide-enter-active {
+  transition-property: opacity, transform !important;
+  transition-duration: animations.$duration-menu !important;
+  transition-timing-function: animations.$ease-out !important;
 }
 
-html.mobile-landing-lite .layout-header .fade-slide-enter-active,
+.fade-slide-leave-active,
 html.mobile-landing-lite .layout-header .fade-slide-leave-active {
-  transition:
-    opacity 0.3s ease,
-    transform 0.3s ease !important;
+  transition-property: opacity, transform !important;
+  transition-duration: animations.$duration-exit !important;
+  transition-timing-function: animations.$ease-out !important;
 }
 
 .fade-slide-enter-from,
 .fade-slide-leave-to {
   opacity: 0;
   transform: translateY(-10px);
+
+  @include animations.reduced-motion {
+    transform: none;
+  }
 }

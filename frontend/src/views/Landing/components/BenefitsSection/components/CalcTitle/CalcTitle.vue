@@ -23,6 +23,7 @@ defineProps<{
         <span class="value">{{ nights }}</span>
         <input
           type="number"
+          inputmode="numeric"
           v-model="nights"
         />
       </span>
@@ -31,6 +32,7 @@ defineProps<{
         <span class="value">{{ price }}</span>
         <input
           type="number"
+          inputmode="numeric"
           v-model="price"
         />
       </span>

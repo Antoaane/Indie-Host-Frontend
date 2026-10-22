@@ -336,7 +336,7 @@ onBeforeUnmount(() => {
     class="landing-theme-switch"
     :class="{ 'is-light': isLightTheme }"
     :aria-pressed="isLightTheme"
-    :aria-label="isLightTheme ? 'Activer le theme sombre' : 'Activer le theme clair'"
+    :aria-label="isLightTheme ? 'Activer le thème sombre' : 'Activer le thème clair'"
     @click="toggleLandingTheme"
   >
     {{ isLightTheme ? 'Sombre' : 'Clair' }}
@@ -356,15 +356,17 @@ onBeforeUnmount(() => {
 
 <style lang="scss">
 @use '@/styles/variables/globals' as *;
+@use '@/styles/variables/animations' as animations;
 
 #landing-page {
   background: $secondary !important;
 }
 
+// Boutons flottants : décalés des zones système (encoche, barre d'accueil).
 .landing-theme-switch {
   position: fixed;
-  left: clamp(0.9rem, 2.4vw, 1.4rem);
-  bottom: clamp(0.9rem, 2.8vw, 1.6rem);
+  left: calc(clamp(0.9rem, 2.4vw, 1.4rem) + var(--safe-area-left));
+  bottom: calc(clamp(0.9rem, 2.8vw, 1.6rem) + var(--safe-area-bottom));
   z-index: 70;
   border: 1px solid rgba($accent, 0.24);
   border-radius: 999px;
@@ -378,17 +380,22 @@ onBeforeUnmount(() => {
   -webkit-backdrop-filter: blur(8px);
   box-shadow: 0 8px 22px -16px rgba($dark, 0.9);
   cursor: pointer;
-  transition:
-    transform 160ms ease,
-    border-color 160ms ease,
-    background-color 160ms ease,
-    color 160ms ease;
+  @include animations.transition(animations.$duration-fast);
+  @include animations.press();
 
-  &:hover {
+  @include on-hover {
     transform: translateY(-2px);
     border-color: rgba($accent, 0.42);
     background: rgba($secondary, 0.9);
     color: $accent;
+
+    @include animations.reduced-motion {
+      transform: none;
+    }
+  }
+
+  @media (pointer: coarse) {
+    min-height: 44px;
   }
 
   &:focus-visible {
@@ -474,6 +481,26 @@ onBeforeUnmount(() => {
   background: rgba($secondary, 0.04) !important;
 }
 
+// Éléments dessinés pour le fond sombre (texte et bordure en $accent) :
+// sans ces variantes, ils sont blanc sur blanc en thème clair.
+#landing-page.is-light-theme .plan-cta.ghost,
+#landing-page.is-light-theme .plan-toggle,
+#landing-page.is-light-theme .plan-toggle-label,
+#landing-page.is-light-theme .account-link a,
+#landing-page.is-light-theme .teaser-badge,
+#landing-page.is-light-theme .teaser-sep,
+#landing-page.is-light-theme legend,
+#landing-page.is-light-theme label span {
+  color: $secondary !important;
+}
+
+#landing-page.is-light-theme .plan-cta.ghost,
+#landing-page.is-light-theme .plan-toggle,
+#landing-page.is-light-theme .teaser-badge {
+  border-color: rgba($secondary, 0.18) !important;
+  background: rgba($secondary, 0.04) !important;
+}
+
 #landing-page.is-light-theme #hero-section .hero-search {
   background: $accent !important;
 }
@@ -511,8 +538,8 @@ onBeforeUnmount(() => {
 
 .landing-back-to-top {
   position: fixed;
-  right: clamp(0.9rem, 2.4vw, 1.4rem);
-  bottom: clamp(0.9rem, 2.8vw, 1.6rem);
+  right: calc(clamp(0.9rem, 2.4vw, 1.4rem) + var(--safe-area-right));
+  bottom: calc(clamp(0.9rem, 2.8vw, 1.6rem) + var(--safe-area-bottom));
   z-index: 70;
   border: 1px solid rgba($accent, 0.24);
   border-radius: 999px;
@@ -526,17 +553,22 @@ onBeforeUnmount(() => {
   -webkit-backdrop-filter: blur(8px);
   box-shadow: 0 8px 22px -16px rgba($dark, 0.9);
   cursor: pointer;
-  transition:
-    transform 160ms ease,
-    border-color 160ms ease,
-    background-color 160ms ease,
-    color 160ms ease;
+  @include animations.transition(animations.$duration-fast);
+  @include animations.press();
 
-  &:hover {
+  @include on-hover {
     transform: translateY(-2px);
     border-color: rgba($accent, 0.42);
     background: rgba($secondary, 0.94);
     color: $accent;
+
+    @include animations.reduced-motion {
+      transform: none;
+    }
+  }
+
+  @media (pointer: coarse) {
+    min-height: 44px;
   }
 
   &:focus-visible {
@@ -572,6 +604,21 @@ body.safari-landing-surface #landing-page::before {
   background: $secondary;
   pointer-events: none;
   z-index: -1;
+}
+
+// Thème clair : les surfaces forcées en sombre (Safari, mobile allégé, iOS)
+// suivent le thème, sinon le texte sombre du thème clair disparaît.
+html:has(#landing-page.is-light-theme),
+html:has(#landing-page.is-light-theme) body,
+html:has(#landing-page.is-light-theme) #app,
+html:has(#landing-page.is-light-theme) main,
+html:has(#landing-page.is-light-theme) #landing-page,
+html.mobile-landing-lite:has(#landing-page.is-light-theme) #landing-page > * {
+  background-color: $accent !important;
+}
+
+html.safari-landing-surface #landing-page.is-light-theme::before {
+  background: $accent;
 }
 
 html.safari-landing-lite #landing-page .text-gradiant,
@@ -617,12 +664,19 @@ html.safari-landing-lite #landing-page *::after {
     background-color: $secondary !important;
   }
 
+  // Les animations décoratives (keyframes, GSAP, filtres) sont coupées ; les
+  // transitions d'interaction (pression, accordéons, menus) restent : elles ne
+  // jouent qu'au toucher et n'animent que couleur, opacité ou transform.
   html.mobile-landing-lite #landing-page,
   html.mobile-landing-lite #landing-page *,
   html.mobile-landing-lite .layout-header {
     animation: none !important;
-    transition: none !important;
     scroll-behavior: auto !important;
+  }
+
+  // Exception : un spinner figé laisse croire que l'import est bloqué.
+  html.mobile-landing-lite #landing-page .is-spinning {
+    animation: intro-import-spin 0.9s linear infinite !important;
   }
 
   html.mobile-landing-lite #landing-page [data-sr] {

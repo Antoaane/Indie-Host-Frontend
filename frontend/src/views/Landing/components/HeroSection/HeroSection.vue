@@ -24,8 +24,12 @@ const isIosMobile = ref(typeof document !== 'undefined' && document.documentElem
 let heroFloatTimeline: gsap.core.Timeline | null = null
 let heroEntryComplete = false
 
+function prefersReducedMotion() {
+  return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
 function startHeroFloat() {
-  if (!heroEntryComplete || heroFloatTimeline) return
+  if (!heroEntryComplete || heroFloatTimeline || prefersReducedMotion()) return
   heroFloatTimeline = gsap.timeline({ repeat: -1 })
     .to(`#${sectionId} img`, { y: -11, duration: 3.0, ease: 'power1.inOut' })
     .to(`#${sectionId} img`, { y: -6,  duration: 1.8, ease: 'power1.inOut' })
@@ -59,7 +63,7 @@ function setHeroMockupMouseOffset(x: number, y: number) {
 }
 
 function handleHeroMouseMove(event: MouseEvent) {
-  if (!vp.lg.value) return
+  if (!vp.lg.value || prefersReducedMotion()) return
   const sectionEl = event.currentTarget as HTMLElement | null
   if (!sectionEl) return
   const rect = sectionEl.getBoundingClientRect()
@@ -127,7 +131,8 @@ onMounted(async () => {
   const osInfo = await detectOS().catch(() => null)
   const normalizedOs = String(osInfo?.os ?? '').toLowerCase()
   isIosMobile.value = !vp.lg.value && (normalizedOs === 'ios' || normalizedOs === 'ipados')
-  if (!vp.lg.value || isSafari.value) {
+  // Mouvement réduit : contenu affiché d'emblée, comme sr()
+  if (!vp.lg.value || isSafari.value || prefersReducedMotion()) {
     counterValue.value = 0
     return
   }
@@ -137,7 +142,7 @@ onMounted(async () => {
     opacity: 0,
     delay: 0.25,
     duration: 1,
-    ease: 'power2.inOut',
+    ease: 'power3.out',
   })
 
   // Lancer le compteur après l'animation d'entrée du h1 — uniquement desktop (mobile = 0% fixe)
@@ -161,7 +166,7 @@ onMounted(async () => {
     opacity: 0,
     delay: 0.4,
     duration: 1,
-    ease: 'power2.inOut',
+    ease: 'power3.out',
   })
 
   gsap.from(`#${sectionId} img`, {
@@ -169,9 +174,10 @@ onMounted(async () => {
     opacity: 0,
     delay: 0.25,
     duration: 1,
-    ease: 'power2.inOut',
+    ease: 'power3.out',
     clearProps: 'transform,opacity',
     onComplete() {
+      heroEntryComplete = true
       const isLight = document.getElementById('landing-page')?.classList.contains('is-light-theme') ?? false
       if (isLight) startHeroFloat()
     },
@@ -188,14 +194,22 @@ onMounted(async () => {
   cta?.style.setProperty('opacity', '0')
   cta?.style.setProperty('transform', 'translateX(-20px)')
 
+  // Entrée en ease-out ($ease-out) sur opacité + transform uniquement ; la
+  // transition inline est retirée ensuite pour rendre à la nav ses propres transitions.
+  const entryTransition = 'opacity 1s cubic-bezier(0.23, 1, 0.32, 1), transform 1s cubic-bezier(0.23, 1, 0.32, 1)'
   setTimeout(() => {
-    cta?.style.setProperty('transition', 'all 1s cubic-bezier(0.75, 0, 0.25, 1)')
+    cta?.style.setProperty('transition', entryTransition)
     cta?.style.removeProperty('opacity')
     cta?.style.removeProperty('transform')
 
-    nav?.style.setProperty('transition', 'all 1s cubic-bezier(0.75, 0, 0.25, 1)')
+    nav?.style.setProperty('transition', entryTransition)
     nav?.style.removeProperty('opacity')
     nav?.style.removeProperty('transform')
+
+    setTimeout(() => {
+      cta?.style.removeProperty('transition')
+      nav?.style.removeProperty('transition')
+    }, 1050)
   }, 650)
 })
 

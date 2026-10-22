@@ -17,6 +17,7 @@
   padding: var(--layout-gap);
 
   overflow-y: auto;
+  overscroll-behavior-y: contain;
 
   >* {
     flex-shrink: 0;
@@ -51,15 +52,20 @@
       box-shadow: 0 6px 20px rgba($secondary, 0.08);
 
       cursor: pointer;
-      @include animations.transition(180ms);
+      @include animations.transition(animations.$duration-fast);
+      @include animations.press();
 
       >svg {
         stroke: currentColor;
       }
 
-      &:hover {
+      @include on-hover {
         transform: translateY(-1px);
         box-shadow: 0 10px 24px rgba($secondary, 0.14);
+      }
+
+      @media (pointer: coarse) {
+        min-height: 44px;
       }
     }
   }
@@ -240,6 +246,8 @@
       margin-bottom: 0 !important;
 
       @include h3-title($colorful: false);
+      @include animations.transition();
+      @include animations.press(0.98);
 
       &:disabled {
         cursor: not-allowed;
@@ -250,7 +258,7 @@
       margin-left: auto;
       color: rgba($secondary-text, 0.7);
       transform: rotate(0deg);
-      transition: transform 220ms ease, color 220ms ease;
+      @include animations.transition(animations.$duration-menu, animations.$ease-out, (transform, color));
 
       &.is-open {
         transform: rotate(180deg);
@@ -300,10 +308,15 @@
     }
   }
 
+  // Accordéon des étapes : max-height voulu, propriétés explicites ; la fermeture est plus rapide.
   .checkout-step-expand-enter-active,
   .checkout-step-expand-leave-active {
     overflow: hidden;
-    transition: max-height 280ms ease, opacity 220ms ease, transform 220ms ease;
+    @include animations.transition(animations.$duration-menu, animations.$ease-out, (max-height, opacity, transform));
+  }
+
+  .checkout-step-expand-leave-active {
+    transition-duration: animations.$duration-exit;
   }
 
   .checkout-step-expand-enter-from,
@@ -318,6 +331,13 @@
     max-height: 1200px;
     opacity: 1;
     transform: translateY(0);
+  }
+
+  @include animations.reduced-motion {
+    .checkout-step-expand-enter-from,
+    .checkout-step-expand-leave-to {
+      transform: none;
+    }
   }
 
   .preference-card {
@@ -342,7 +362,11 @@
 
     border-top: 1px solid rgba($secondary, 0.08);
     cursor: pointer;
-    @include animations.transition(180ms);
+    @include animations.transition(animations.$duration-fast);
+
+    &:not(.is-disabled) {
+      @include animations.press(0.99);
+    }
 
     &:first-child {
       border-top: none;
@@ -426,7 +450,7 @@
         background: $accent;
         opacity: 0;
         transform: scale(0.75);
-        transition: opacity 160ms ease, transform 160ms ease;
+        @include animations.transition(animations.$duration-fast, animations.$ease-out, (opacity, transform));
       }
     }
   }
@@ -546,6 +570,11 @@
         padding: 0.5rem 0.7rem;
         font: inherit;
 
+        // iOS zoome sur un champ sous 16 px : `font: inherit` écrase le plancher global.
+        @media (pointer: coarse) {
+          font-size: max(1rem, 16px);
+        }
+
         &:focus {
           outline: 2px solid rgba($secondary, 0.24);
           outline-offset: 1px;
@@ -605,6 +634,10 @@
       color: $secondary-text;
       padding: 0.5rem 0.7rem;
       font: inherit;
+
+      @media (pointer: coarse) {
+        font-size: max(1rem, 16px);
+      }
 
       &:focus {
         outline: 2px solid rgba($secondary, 0.25);
@@ -668,6 +701,10 @@
       line-height: 1.45;
       resize: vertical;
 
+      @media (pointer: coarse) {
+        font-size: max(1rem, 16px);
+      }
+
       &:focus {
         outline: 2px solid rgba($secondary, 0.25);
         outline-offset: 1px;
@@ -701,6 +738,10 @@
       color: $secondary-text;
       padding: 0.5rem 0.7rem;
       font: inherit;
+
+      @media (pointer: coarse) {
+        font-size: max(1rem, 16px);
+      }
 
       &:focus {
         outline: 2px solid rgba($secondary, 0.25);

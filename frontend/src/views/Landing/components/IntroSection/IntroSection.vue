@@ -131,9 +131,11 @@ watch(previewBundle, async (val) => {
     return
   }
 
-  gsap.set(els, { opacity: 0, y: 16 })
+  // Mouvement réduit : simple fondu, sans glissement
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  gsap.set(els, { opacity: 0, y: prefersReducedMotion ? 0 : 16 })
 
-  const tl = gsap.timeline({ defaults: { ease: 'power2.out' } })
+  const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
   // 1. Description / Core en premier
   if (core)    tl.to(core,    { opacity: 1, y: 0, duration: 1.1 })
   // 2. Photos
@@ -219,6 +221,7 @@ onBeforeUnmount(() => {
               type="url"
               :placeholder="content.inputPlaceholder"
               autocomplete="url"
+              enterkeyhint="go"
               :disabled="isPreviewLoading"
               @keydown.enter.prevent="runPreview"
             />

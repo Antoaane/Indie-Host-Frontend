@@ -98,6 +98,7 @@ const emit = defineEmits<{
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
 
 .create-guest-onboarding-step-panel {
   width: 100%;
@@ -160,6 +161,8 @@ const emit = defineEmits<{
       padding: 0.7rem 0.9rem;
       cursor: pointer;
       font-weight: 700;
+      @include animations.transition(animations.$duration-fast);
+      @include animations.press();
 
       &:disabled {
         opacity: 0.55;
@@ -191,6 +194,12 @@ const emit = defineEmits<{
     color: rgba($secondary-text, 0.68);
     text-decoration: underline;
     cursor: pointer;
+    @include animations.transition(animations.$duration-fast);
+    @include animations.press();
+
+    @media (pointer: coarse) {
+      min-height: 2.75rem;
+    }
   }
 }
 </style>

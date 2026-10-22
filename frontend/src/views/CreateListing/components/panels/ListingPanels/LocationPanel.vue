@@ -598,6 +598,7 @@ onBeforeUnmount(() => {
           box-shadow: 0 6px 20px rgba($secondary, 0.1), 0 1px 4px rgba($secondary, 0.06);
           max-height: 260px;
           overflow-y: auto;
+          overscroll-behavior: contain;
 
           > .suggestion-item {
             display: flex;
@@ -605,9 +606,14 @@ onBeforeUnmount(() => {
             gap: 0.5rem;
             padding: 0.6rem 0.75rem;
             cursor: pointer;
-            transition: background 120ms ease;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
 
-            &:hover, &.is-active { background: rgba($secondary, 0.05); }
+            // Pas de transition : la sélection suit les flèches du clavier.
+            &.is-active { background: rgba($secondary, 0.05); }
+
+            @include on-hover { background: rgba($secondary, 0.05); }
 
             > .suggestion-icon {
               flex-shrink: 0;

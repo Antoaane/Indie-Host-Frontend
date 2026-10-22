@@ -162,7 +162,7 @@ onMounted(() => {
   <section class="domain-panel">
     <div class="domain-panel__header">
       <h1>Domaines de l annonce</h1>
-      <p>Chaque annonce dispose d un sous-domaine IndieHost gratuit et peut aussi utiliser un nom de domaine que vous possedez deja.</p>
+      <p>Chaque annonce dispose d’un sous-domaine IndieHost gratuit et peut aussi utiliser un nom de domaine que vous possédez déjà.</p>
     </div>
 
     <section class="domain-panel__section">
@@ -218,13 +218,13 @@ onMounted(() => {
         v-else
         class="domain-panel__feedback"
       >
-        Aucune annonce n est disponible pour ce compte.
+        Aucune annonce n’est disponible pour ce compte.
       </p>
     </section>
 
     <section class="domain-panel__section">
       <h2>Domaine personnalise</h2>
-      <p class="domain-panel__hint">Vous possedez deja un nom de domaine (ex. www.gite-belair.fr) ? Rattachez-le a l annonce selectionnee.</p>
+      <p class="domain-panel__hint">Vous possédez déjà un nom de domaine (ex. www.gite-belair.fr) ? Rattachez-le à l’annonce sélectionnée.</p>
 
       <ListingCustomDomainPanel
         v-if="selectedListingId"

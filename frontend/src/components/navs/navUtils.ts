@@ -38,5 +38,6 @@ export function scrollToTarget(e: MouseEvent, isDropdown: boolean = true) {
   // const smoother = ScrollSmoother.get()
   // if (smoother) smoother.scrollTo(target, true)
   // else
-  target.scrollIntoView({ behavior: 'smooth' })
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' })
 }

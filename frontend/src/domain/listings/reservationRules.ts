@@ -341,28 +341,28 @@ function resolvePricingPaymentRules(pricing: RawPricingSettings): ListingPayment
     if (onlineEnabled) {
       allowedChoices.push('full')
     } else {
-      blockedReasons.full = 'Aucun paiement en ligne n est autorise par l hote.'
+      blockedReasons.full = 'Aucun paiement en ligne n’est autorisé par l’hôte.'
     }
 
-    blockedReasons.split = 'Cet hote exige un paiement integral a la reservation.'
+    blockedReasons.split = 'Cet hôte exige un paiement intégral à la réservation.'
     blockedReasons.cash = methods.cash
-      ? 'Le paiement differe en especes n est pas autorise pour cette annonce.'
-      : 'Le paiement en especes n est pas autorise par l hote.'
+      ? 'Le paiement différé en espèces n’est pas autorisé pour cette annonce.'
+      : 'Le paiement en espèces n’est pas autorisé par l’hôte.'
   } else {
-    blockedReasons.full = 'Cet hote exige un acompte puis un solde.'
+    blockedReasons.full = 'Cet hôte exige un acompte puis un solde.'
 
     if (onlineEnabled) {
       allowedChoices.push('split')
     } else {
-      blockedReasons.split = 'Aucun paiement en ligne n est autorise par l hote.'
+      blockedReasons.split = 'Aucun paiement en ligne n’est autorisé par l’hôte.'
     }
 
     if (!methods.cash) {
-      blockedReasons.cash = 'Le paiement en especes n est pas autorise par l hote.'
+      blockedReasons.cash = 'Le paiement en espèces n’est pas autorisé par l’hôte.'
     } else if (!onlineEnabled) {
-      blockedReasons.cash = 'Impossible de collecter l acompte en ligne pour cette annonce.'
+      blockedReasons.cash = 'Impossible de collecter l’acompte en ligne pour cette annonce.'
     } else if (balanceType !== 'arrival') {
-      blockedReasons.cash = 'Le solde est exige avant l arrivee, pas en especes le jour d arrivee.'
+      blockedReasons.cash = 'Le solde est exigé avant l’arrivée, pas en espèces le jour d’arrivée.'
     } else {
       allowedChoices.push('cash')
     }
@@ -480,7 +480,7 @@ export function getOccupantValidationErrors(
 
   const travelers = countTravelers(normalized)
   if (travelers > rules.capacity) {
-    errors.push(`Capacite maximale: ${rules.capacity} voyageur${rules.capacity > 1 ? 's' : ''} (adultes + enfants).`)
+    errors.push(`Capacité maximale : ${rules.capacity} voyageur${rules.capacity > 1 ? 's' : ''} (adultes + enfants).`)
   }
 
   return errors
@@ -494,10 +494,10 @@ export function getStayValidationErrors(nights: number, rules: ListingStayRules)
   }
 
   if (nights < rules.minNights) {
-    errors.push(`Sejour minimum: ${rules.minNights} nuit${rules.minNights > 1 ? 's' : ''}.`)
+    errors.push(`Séjour minimum : ${rules.minNights} nuit${rules.minNights > 1 ? 's' : ''}.`)
   }
   if (rules.maxNights !== null && nights > rules.maxNights) {
-    errors.push(`Sejour maximum: ${rules.maxNights} nuit${rules.maxNights > 1 ? 's' : ''}.`)
+    errors.push(`Séjour maximum : ${rules.maxNights} nuit${rules.maxNights > 1 ? 's' : ''}.`)
   }
 
   return errors

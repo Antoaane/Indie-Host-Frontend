@@ -69,7 +69,7 @@
 .amenities-overlay {
   >.panel {
     @extend %overlay-panel;
-    padding-bottom: var(--layout-gap-md) !important;
+    padding-bottom: calc(var(--layout-gap-md) + var(--safe-area-bottom)) !important;
     gap: var(--layout-gap);
 
     >.header {
@@ -86,11 +86,19 @@
 
       >.close {
         @include buttons.primary($theme: white, $icon-only: true);
+
+        >button {
+          @media (pointer: coarse) {
+            min-width: 44px;
+            min-height: 44px;
+          }
+        }
       }
     }
 
     >.body {
       overflow-y: auto;
+      overscroll-behavior: contain;
       display: flex;
       flex-direction: column;
       gap: var(--layout-gap);

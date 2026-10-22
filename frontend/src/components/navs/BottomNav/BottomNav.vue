@@ -71,7 +71,7 @@ const isActive = (id: string) => activeHash.value === `#${id}`
   bottom: 0;
   left: 0;
   width: 100%;
-  padding: 0.5rem 0.75rem calc(0.5rem + env(safe-area-inset-bottom));
+  padding: 0.5rem 0.75rem calc(0.5rem + var(--safe-area-bottom));
 
   display: flex;
   gap: 0.5rem;
@@ -100,11 +100,8 @@ const isActive = (id: string) => activeHash.value === `#${id}`
 
     border-radius: borders.$rounded-lg;
 
-    @include animations.transition(0.18s, ease);
-
-    &:active {
-      transform: translateY(-1px);
-    }
+    @include animations.transition(animations.$duration-fast);
+    @include animations.press();
 
     &.is-active {
       color: $secondary;

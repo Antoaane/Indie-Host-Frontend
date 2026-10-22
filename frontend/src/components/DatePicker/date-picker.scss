@@ -45,12 +45,19 @@
       outline: 3px solid rgb($secondary-button-reference, 0.1);
 
       cursor: pointer;
+      @include animations.transition(animations.$duration-fast);
+      @include animations.press();
+
+      @media (pointer: coarse) {
+        min-width: 44px;
+        min-height: 44px;
+      }
 
       path {
         stroke: $secondary-button-reference !important;
       }
 
-      &:not(:disabled):hover {
+      @include on-hover(':not(:disabled)') {
         color: $accent;
         stroke: $secondary-button-reference;
         background-color: $background;
@@ -112,9 +119,10 @@
 
             cursor: pointer;
 
-            @include animations.transition;
+            // Pas de transition sur la cellule : la plage suit le survol et la
+            // navigation clavier jour par jour, elle doit répondre sans délai.
 
-            &:hover {
+            @include on-hover {
               background-color: $translucent-surface-1;
               // border-radius: borders.$rounded-md;
 
@@ -177,6 +185,11 @@
 
               border: 0;
               border-radius: 0;
+
+              // Seul l'appui s'anime ; l'anneau de focus et la sélection sont
+              // instantanés (remplace la classe `transition` de Nuxt UI).
+              @include animations.transition(animations.$duration-press, animations.$ease-out, transform);
+              @include animations.press();
 
               &:is([data-selection-start="true"], [data-selection-start]) {
                 background-color: $secondary;

@@ -94,6 +94,9 @@ $button-themes: (
     width: 100%;
     box-sizing: border-box;
     cursor: pointer;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
     @include transition;
 
     @if $icon-only {
@@ -125,6 +128,7 @@ $button-themes: (
     color: map.get($colors, text-color);
     background-color: map.get($colors, bg-color);
     outline: 3px solid rgb(map.get($colors, outline-color), map.get($colors, outline-opacity));
+    @include press;
 
     &>* {
       color: map.get($colors, icon-color);
@@ -213,11 +217,7 @@ $button-themes: (
     }
   }
 
-  #text {
-    color: red;
-  }
-
-  &:hover {
+  @include on-hover {
 
     &>*:not(:disabled) {
 
@@ -289,6 +289,9 @@ $button-themes: (
   &>* {
     display: inline-block;
     cursor: pointer;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
 
     @if $padding {
       padding: 0.6rem 1rem 0.6rem 1rem;
@@ -309,6 +312,7 @@ $button-themes: (
     color: map.get($colors, text-color);
 
     @include transition;
+    @include press;
   }
 
   &>*:disabled,
@@ -317,12 +321,10 @@ $button-themes: (
     opacity: 0.6;
   }
 
-  &:hover {
+  @include on-hover {
     &>*:not(:disabled) {
       text-underline-offset: 0.75rem;
       text-decoration-color: rgba(0, 0, 0, 0);
-
-      @include transition;
     }
   }
 }
@@ -385,7 +387,11 @@ $button-themes: (
   text-decoration: none;
 
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
   @include transition;
+  @include press;
 
   &>* {
     color: $text-color;
@@ -424,7 +430,7 @@ $button-themes: (
     box-shadow: none;
   }
 
-  &:hover:not(:disabled):not([aria-disabled="true"]) {
+  @include on-hover(':not(:disabled):not([aria-disabled="true"])') {
     background: $hover;
     color: $text-hover-color;
 
@@ -459,7 +465,6 @@ $button-themes: (
     }
 
     @include big-shadow();
-    @include transition;
   }
 }
 
@@ -493,11 +498,13 @@ $button-themes: (
     opacity: 0.6;
   }
 
-  &:hover,
-  &:hover>* {
-    @if $underline {
-      text-underline-offset: 0.5rem;
-      text-decoration-color: rgba($text-color, 1);
+  @if $underline {
+    @include can-hover {
+      &:hover,
+      &:hover>* {
+        text-underline-offset: 0.5rem;
+        text-decoration-color: rgba($text-color, 1);
+      }
     }
   }
 }

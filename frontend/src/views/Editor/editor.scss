@@ -3,13 +3,13 @@
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
 @use '@/styles/variables/effects' as effects;
+@use '@/styles/variables/animations' as animations;
 
 .editor#editor-page {
   --editor-mobile-dock-height: calc(60px + (var(--layout-gap-sm) * 2));
 
   padding-top: var(--layout-gap-sm);
-  padding-bottom: calc(var(--editor-mobile-dock-height) + env(safe-area-inset-bottom));
-  min-height: 100vh;
+  padding-bottom: calc(var(--editor-mobile-dock-height) + var(--safe-area-bottom));
   min-height: 100dvh;
   padding-inline: var(--layout-gap-sm);
   display: flex;
@@ -22,7 +22,6 @@
     padding-top: var(--editor-mobile-dock-height);
     padding-bottom: 0;
     min-height: 0;
-    height: 100vh;
     height: 100dvh;
     overflow: hidden;
     padding-inline: 0;
@@ -71,9 +70,12 @@
       opacity: 0;
       pointer-events: none;
       transform: translateX(105%);
-      transition:
-        transform 240ms ease,
-        opacity 200ms ease;
+      // Panneau latéral mobile : courbe drawer, fermeture plus rapide que l'ouverture.
+      @include animations.transition(animations.$duration-exit, animations.$ease-drawer, (transform, opacity));
+
+      @include animations.reduced-motion {
+        transition-property: opacity;
+      }
 
       @include min-width(lg) {
         background: $translucent;
@@ -91,6 +93,7 @@
         opacity: 1;
         pointer-events: auto;
         transform: translateX(0);
+        transition-duration: animations.$duration-overlay;
       }
     }
 
@@ -119,6 +122,14 @@
           flex: 1 1 auto;
           min-height: 0;
         }
+
+        // Pendant le fondu, la vue sortante passe hors flux : sinon les deux
+        // vues se partagent la hauteur le temps de la transition.
+        > .editor-stage-leave-active {
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+        }
       }
     }
 
@@ -135,6 +146,9 @@
         opacity: 1;
         pointer-events: auto;
         transform: translateX(0);
+        // Toujours visible en desktop : rien à animer, et Vue ne retarde plus
+        // le démontage de la barre latérale.
+        transition: none;
 
         > .editor-sidebar {
           height: 100%;
@@ -144,11 +158,13 @@
   }
 }
 
-.editor-sidebar-enter-active,
+.editor-sidebar-enter-active {
+  @include animations.transition(animations.$duration-menu, animations.$ease-out, (transform, opacity));
+  will-change: transform, opacity;
+}
+
 .editor-sidebar-leave-active {
-  transition:
-    transform 240ms ease,
-    opacity 240ms ease;
+  @include animations.transition(animations.$duration-exit, animations.$ease-out, (transform, opacity));
   will-change: transform, opacity;
 }
 
@@ -164,9 +180,12 @@
   transform: translateX(0);
 }
 
-.editor-stage-enter-active,
+.editor-stage-enter-active {
+  @include animations.transition(animations.$duration-base, animations.$ease-out, opacity);
+}
+
 .editor-stage-leave-active {
-  transition: opacity 200ms ease;
+  @include animations.transition(animations.$duration-exit, animations.$ease-out, opacity);
 }
 
 .editor-stage-enter-from,

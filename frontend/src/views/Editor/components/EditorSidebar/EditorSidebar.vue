@@ -265,6 +265,7 @@ onBeforeUnmount(() => {
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
 @use '@/styles/components/buttons' as buttons;
 
 .editor-sidebar {
@@ -293,6 +294,7 @@ onBeforeUnmount(() => {
 
   > .base-sidebar__body {
     border-radius: borders.$rounded-xl;
+    overscroll-behavior: contain;
   }
 
   > .base-sidebar__footer {
@@ -355,9 +357,9 @@ onBeforeUnmount(() => {
   }
 }
 
-.editor-sidebar-panels-enter-active,
-.editor-sidebar-panels-leave-active {
-  transition: opacity 160ms ease;
+// Changement d'onglet : fréquent, donc sortie instantanée et entrée courte.
+.editor-sidebar-panels-enter-active {
+  @include animations.transition(animations.$duration-fast, animations.$ease-out, opacity);
 }
 
 .editor-sidebar-panels-enter-from,
@@ -370,17 +372,22 @@ onBeforeUnmount(() => {
   opacity: 1;
 }
 
-.editor-sidebar-feedback-enter-active,
+.editor-sidebar-feedback-enter-active {
+  @include animations.transition(animations.$duration-menu, animations.$ease-out, (opacity, transform));
+}
+
 .editor-sidebar-feedback-leave-active {
-  transition:
-    opacity 180ms ease,
-    transform 180ms ease;
+  @include animations.transition(animations.$duration-exit, animations.$ease-out, (opacity, transform));
 }
 
 .editor-sidebar-feedback-enter-from,
 .editor-sidebar-feedback-leave-to {
   opacity: 0;
   transform: translateY(-8px);
+
+  @include animations.reduced-motion {
+    transform: none;
+  }
 }
 
 .editor-sidebar-feedback-enter-to,

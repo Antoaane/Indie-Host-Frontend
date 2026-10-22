@@ -441,6 +441,7 @@ function handleCardClick(item: CatalogAmenityItem) {
             :placeholder="panelContent.overlay.searchPlaceholder"
             :maxlength="searchLimit"
             inputmode="search"
+            enterkeyhint="search"
             autocomplete="off"
           />
         </div>
@@ -576,6 +577,7 @@ function handleCardClick(item: CatalogAmenityItem) {
             type="text"
             placeholder="Ajouter un équipement personnalisé..."
             :maxlength="CUSTOM_AMENITY_MAX_LENGTH"
+            enterkeyhint="done"
             autocomplete="off"
           />
           <div class="action">

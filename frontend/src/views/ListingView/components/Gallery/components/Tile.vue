@@ -36,6 +36,7 @@ defineEmits<{ (e: 'click'): void }>()
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
 
 .listing-gallery-tile {
   position: absolute;
@@ -43,13 +44,13 @@ defineEmits<{ (e: 'click'): void }>()
   min-height: 1px;
 
   will-change: left, top, width, height, transform, opacity;
-  transition:
-    left 1000ms cubic-bezier(0.8, 0, 0.2, 1),
-    top 1000ms cubic-bezier(0.8, 0, 0.2, 1),
-    width 1000ms cubic-bezier(0.8, 0, 0.2, 1),
-    height 1000ms cubic-bezier(0.8, 0, 0.2, 1),
-    transform 750ms cubic-bezier(0.8, 0, 0.2, 1),
-    opacity 500ms ease-out;
+  // Recomposition ambiante de la mosaïque (toutes les 10 s) : les tuiles se
+  // déplacent à l'écran, d'où l'ease-in-out lent ; le fondu reste en ease-out.
+  @include animations.transition(
+    (1000ms, 1000ms, 1000ms, 1000ms, 750ms, 500ms),
+    (animations.$ease-in-out, animations.$ease-in-out, animations.$ease-in-out, animations.$ease-in-out, animations.$ease-in-out, animations.$ease-out),
+    (left, top, width, height, transform, opacity)
+  );
 
   transform-origin: center center;
 
@@ -62,6 +63,8 @@ defineEmits<{ (e: 'click'): void }>()
     background: transparent;
     border: 0;
     cursor: pointer;
+    @include animations.transition();
+    @include animations.press(0.98);
 
     > .image {
       width: 100%;
@@ -72,7 +75,16 @@ defineEmits<{ (e: 'click'): void }>()
       transform: translateZ(0);
       border-radius: 5px;
 
-      transition: object-position 10000ms cubic-bezier(0.20, 0, 0.80, 1), ;
+      // Ken Burns lent : part avec la recomposition puis se pose en douceur.
+      @include animations.transition(10000ms, animations.$ease-out, object-position);
+    }
+  }
+
+  @include animations.reduced-motion {
+    @include animations.transition(500ms, animations.$ease-out, opacity);
+
+    > .button > .image {
+      transition: none;
     }
   }
 }

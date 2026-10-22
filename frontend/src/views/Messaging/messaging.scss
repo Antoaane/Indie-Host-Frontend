@@ -2,14 +2,17 @@
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
 
 .messaging#messaging-page {
   --editor-mobile-dock-height: calc(60px + (var(--layout-gap-sm) * 2));
 
   padding-top: var(--layout-gap-sm);
   padding-bottom: calc(var(--editor-mobile-dock-height) + env(safe-area-inset-bottom));
-  min-height: 100vh;
-  min-height: 100dvh;
+  // Hauteur bornée sur mobile : la liste défile dans son conteneur et le fil
+  // ouvert (absolu, inset 0) reste dans l'écran au lieu de suivre la liste.
+  height: 100vh;
+  height: 100dvh;
   padding-inline: var(--layout-gap-sm);
   display: flex;
   flex-direction: column;
@@ -66,7 +69,13 @@
       opacity: 0;
       pointer-events: none;
       transform: translateX(105%);
-      transition: transform 240ms ease, opacity 200ms ease;
+      // Retour à la liste : sortie plus rapide que l'entrée.
+      @include animations.transition(animations.$duration-exit, animations.$ease-drawer, (transform, opacity));
+
+      @include animations.reduced-motion {
+        transform: none;
+        transition-property: opacity;
+      }
 
       @include min-width(lg) {
         background: $translucent;
@@ -84,6 +93,7 @@
         opacity: 1;
         pointer-events: auto;
         transform: translateX(0);
+        @include animations.transition(animations.$duration-overlay, animations.$ease-drawer, (transform, opacity));
       }
     }
 

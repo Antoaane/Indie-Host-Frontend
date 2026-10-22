@@ -159,7 +159,12 @@ const usageRatio = computed(() => (hasLimit.value ? Math.min(1, props.activeCoun
     border: 2px dashed rgba($secondary, 0.2);
     border-radius: borders.$rounded-xl;
     background: $accent-surface-0;
-    @include animations.transition();
+    @include animations.transition(animations.$duration-fast);
+
+    // Appui sur la carte (lien étiré), sauf sur le bouton de limite qui a le sien.
+    &:not(:has(> .limit-cta:active)) {
+      @include animations.press(0.98);
+    }
 
     > .create-link {
       flex: 1 1 auto;
@@ -191,7 +196,7 @@ const usageRatio = computed(() => (hasLimit.value ? Math.min(1, props.activeCoun
         border-radius: borders.$rounded;
         background: $secondary;
         color: $accent;
-        @include animations.transition();
+        @include animations.transition(animations.$duration-fast);
 
         > svg {
           width: 1.4rem;
@@ -260,12 +265,16 @@ const usageRatio = computed(() => (hasLimit.value ? Math.min(1, props.activeCoun
       }
     }
 
-    &:hover {
+    @include on-hover {
       border-color: rgba($secondary, 0.35);
       background: $accent;
 
       > .create-link > .icon {
         transform: scale(1.06);
+
+        @include animations.reduced-motion {
+          transform: none;
+        }
       }
     }
 
@@ -302,7 +311,8 @@ const usageRatio = computed(() => (hasLimit.value ? Math.min(1, props.activeCoun
     border: 1px solid var(--ui-new-card-line);
     border-radius: borders.$rounded-lg;
     background: $accent;
-    @include animations.transition();
+    @include animations.transition(animations.$duration-fast);
+    @include animations.press(0.98);
 
     > .icon {
       flex: 0 0 auto;
@@ -338,10 +348,14 @@ const usageRatio = computed(() => (hasLimit.value ? Math.min(1, props.activeCoun
       }
     }
 
-    &:hover:not(:disabled) {
+    @include on-hover(':not(:disabled)') {
       border-color: rgba($secondary, 0.25);
       transform: translateY(-1px);
       @include soft-shadow($color: rgba($secondary, 0.08));
+
+      @include animations.reduced-motion {
+        transform: none;
+      }
     }
 
     &:focus-visible {

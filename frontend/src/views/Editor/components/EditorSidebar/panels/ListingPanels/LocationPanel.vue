@@ -330,6 +330,7 @@ async function maybeResolvePreciseAddress(rawAddress?: string) {
             :maxlength="locationLimits.preciseAddress"
             autocomplete="street-address"
             inputmode="text"
+            enterkeyhint="search"
             :aria-invalid="Boolean(preciseAddressLengthError || addressResolveError)"
             @input="onPreciseAddressInput"
             @blur="maybeResolvePreciseAddress(inputValue($event))"
@@ -462,6 +463,7 @@ async function maybeResolvePreciseAddress(rawAddress?: string) {
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
 @use '@/styles/components/inputs' as inputs;
 @use '@/views/Editor/components/EditorSidebar/panels/panel.scss' as *;
 
@@ -506,9 +508,10 @@ async function maybeResolvePreciseAddress(rawAddress?: string) {
         font-size: 0.875rem;
         padding: 0.45rem 0.85rem;
         cursor: pointer;
-        transition: border-color 160ms ease, background-color 160ms ease, opacity 160ms ease;
+        @include animations.transition(animations.$duration-fast);
+        @include animations.press();
 
-        &:hover:enabled {
+        @include on-hover(':enabled') {
           border-color: rgba($secondary, 0.3);
           background: rgba($secondary, 0.04);
         }

@@ -2,6 +2,7 @@
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
 
 .listing-gallery {
   width: 100%;
@@ -20,6 +21,8 @@
     flex: 0 0 40%;
     overflow: hidden;
     cursor: pointer;
+    @include animations.transition();
+    @include animations.press(0.99);
 
     .listing-view:not(.is-mobile-layout) & {
       border-top-left-radius: borders.$rounded-lg;

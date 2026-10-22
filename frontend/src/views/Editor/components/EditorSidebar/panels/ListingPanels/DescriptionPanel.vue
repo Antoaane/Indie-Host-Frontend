@@ -412,7 +412,7 @@ onMounted(async () => {
             cursor: pointer;
           }
 
-          &:hover::-webkit-slider-thumb {
+          @include on-hover('::-webkit-slider-thumb') {
             background: rgba($secondary, 0.75);
           }
         }
@@ -428,15 +428,21 @@ onMounted(async () => {
         background: $accent;
         cursor: pointer;
         color: $secondary;
-        @include animations.transition();
+        @include animations.transition(animations.$duration-fast);
+        @include animations.press();
 
-        &:hover {
+        @include on-hover(':not(:disabled)') {
           background: $accent-surface-3;
         }
 
         &:disabled {
           opacity: 0.5;
           cursor: not-allowed;
+        }
+
+        @media (pointer: coarse) {
+          width: 2.75rem;
+          height: 2.75rem;
         }
       }
 
@@ -446,6 +452,11 @@ onMounted(async () => {
         > * {
           width: 2.5rem;
           height: 2.5rem;
+
+          @media (pointer: coarse) {
+            width: 2.75rem;
+            height: 2.75rem;
+          }
         }
       }
     }
@@ -501,18 +512,18 @@ onMounted(async () => {
 
       * {
         color: $secondary !important;
-        @include animations.transition($duration: 150ms);
+        @include animations.transition(animations.$duration-fast);
       }
 
       svg {
         * {
           stroke: $secondary !important;
 
-          @include animations.transition($duration: 150ms);
+          @include animations.transition(animations.$duration-fast);
         }
       }
 
-      &:hover {
+      @include on-hover {
         * {
           color: rgba($secondary, 0.8) !important;
         }
@@ -528,17 +539,18 @@ onMounted(async () => {
     button {
       border-radius: borders.$rounded-md;
 
-      @include animations.transition($duration: 150ms);
+      @include animations.transition(animations.$duration-fast);
+      @include animations.press();
 
       svg {
         * {
           stroke: $secondary !important;
 
-          @include animations.transition($duration: 150ms);
+          @include animations.transition(animations.$duration-fast);
         }
       }
 
-      &:hover {
+      @include on-hover {
         background-color: $accent-surface-3;
       }
 
@@ -550,6 +562,23 @@ onMounted(async () => {
             stroke: $accent !important;
           }
         }
+      }
+    }
+
+    // Cibles tactiles de 44 px : boutons et sélecteur de titre.
+    @media (pointer: coarse) {
+      button {
+        width: 2.75rem;
+        height: 2.75rem;
+        padding: 0.7rem;
+      }
+
+      .ql-picker {
+        height: 2.75rem;
+      }
+
+      .ql-picker-label::before {
+        line-height: calc(2.75rem - 2px);
       }
     }
   }
@@ -590,7 +619,7 @@ onMounted(async () => {
   > .description-overlay-panel {
     width: min(56rem, 100%);
     min-width: min(34rem, calc(100vw - var(--layout-gap)));
-    height: 84vh;
+    height: 84dvh;
     display: flex;
     flex-direction: column;
     gap: var(--layout-gap);
@@ -619,6 +648,11 @@ onMounted(async () => {
     > * {
       width: 2.5rem;
       height: 2.5rem;
+
+      @media (pointer: coarse) {
+        width: 2.75rem;
+        height: 2.75rem;
+      }
     }
   }
 

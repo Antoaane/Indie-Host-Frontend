@@ -1,5 +1,52 @@
 /* File: src/styles/variables/_animations.scss */
 
-@mixin transition($duration: 200ms, $timing-function: cubic-bezier(0.6, 0, 0.3, 1)) {
-  transition: all $duration $timing-function;
+// Courbes : ease-out marqué pour les entrées et les retours d'interaction,
+// ease-in-out pour un élément qui se déplace à l'écran, drawer pour les
+// panneaux et sheets. Jamais d'ease-in sur de l'UI : il retarde le départ,
+// le moment exact où l'œil regarde.
+$ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+$ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+$ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
+// Durées : l'UI reste sous 300 ms ; une sortie est plus rapide que l'entrée.
+$duration-press: 140ms;   // appui sur un bouton, une puce
+$duration-fast: 160ms;    // survol, changement de couleur, tooltip
+$duration-base: 200ms;    // changement d'état par défaut
+$duration-menu: 220ms;    // dropdown, popover, accordéon
+$duration-overlay: 280ms; // modale, drawer, sheet (entrée)
+$duration-exit: 180ms;    // sortie d'overlay ou de popover
+
+// Propriétés animées par défaut : uniquement ce qui se repeint ou se composite.
+// Jamais `all` : une largeur, un padding ou une hauteur qui change (resize,
+// contenu chargé) se mettrait à glisser. Passer `$properties` explicitement
+// pour animer une hauteur d'accordéon ou une barre de progression.
+$default-properties: color, background-color, border-color, outline-color, text-decoration-color, text-underline-offset, fill, stroke, opacity, visibility, transform, translate, scale, rotate, box-shadow, filter;
+
+@mixin transition($duration: $duration-base, $timing-function: $ease-out, $properties: $default-properties) {
+  transition-property: $properties;
+  transition-duration: $duration;
+  transition-timing-function: $timing-function;
+}
+
+// Retour de pression sur tout élément cliquable : l'interface répond dès que
+// le doigt se pose, pas au relâchement. Avec mouvement réduit, l'échelle est
+// remplacée par une légère baisse d'opacité.
+@mixin press($scale: 0.97) {
+  &:active:not(:disabled):not([aria-disabled="true"]) {
+    transform: scale($scale);
+    transition-duration: $duration-press;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &:active:not(:disabled):not([aria-disabled="true"]) {
+      transform: none;
+      opacity: 0.85;
+    }
+  }
+}
+
+@mixin reduced-motion {
+  @media (prefers-reduced-motion: reduce) {
+    @content;
+  }
 }

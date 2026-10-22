@@ -1240,7 +1240,7 @@ watch(
         >
           <span
             class="progress-fill"
-            :style="{ width: `${checklistProgressPercent}%` }"
+            :style="{ transform: `scaleX(${checklistProgressPercent / 100})` }"
           ></span>
         </div>
       </section>
@@ -1384,9 +1384,10 @@ watch(
 <style lang="scss">
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
 
 .pricing-checklist-view {
-  min-height: calc(100vh - 60px);
+  min-height: calc(100dvh - 60px);
   padding: clamp(5.4rem, 9vw, 6.8rem) clamp(1rem, 2.8vw, 1.85rem) clamp(1.8rem, 3vw, 2.8rem);
   background:
     radial-gradient(circle at 8% 0%, rgba($secondary, 0.1), transparent 50%),
@@ -1469,10 +1470,13 @@ watch(
       > .progress-fill {
         display: block;
         height: 100%;
-        width: 0;
+        width: 100%;
         border-radius: inherit;
         background: linear-gradient(90deg, rgba($secondary, 0.9), rgba($secondary, 0.68));
-        transition: width 0.22s ease;
+        // Remplissage en scaleX (compositeur) plutôt qu'en largeur.
+        transform: scaleX(0);
+        transform-origin: left;
+        @include animations.transition(animations.$duration-menu, animations.$ease-out, (transform));
       }
     }
   }
@@ -1643,14 +1647,19 @@ watch(
     cursor: pointer;
     background: rgba($secondary, 0.92);
     color: rgba($accent, 1);
-    transition: transform 0.16s ease, opacity 0.16s ease, background-color 0.16s ease;
+    @include animations.transition(animations.$duration-fast);
+    @include animations.press();
     min-height: 2.35rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
 
-    &:hover {
+    @include on-hover(':not(:disabled)') {
       transform: translateY(-1px);
+    }
+
+    @media (pointer: coarse) {
+      min-height: 2.75rem;
     }
 
     &:disabled {
@@ -1697,7 +1706,8 @@ watch(
       font-weight: 600;
       color: rgba($accent, 0.96);
       background: rgba($accent, 0.08);
-      transition: opacity 0.16s ease;
+      @include animations.transition(animations.$duration-fast);
+      @include animations.press();
       cursor: pointer;
 
       &:disabled {
@@ -1720,6 +1730,7 @@ watch(
       gap: 0.4rem;
       max-height: 12.8rem;
       overflow: auto;
+      overscroll-behavior: contain;
     }
 
     .dev-console-item {

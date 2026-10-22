@@ -1,6 +1,7 @@
 /* File: src/styles/layouts/_header.scss */
 
 @use "@/styles/variables/globals" as *;
+@use "@/styles/variables/animations" as animations;
 
 .layout-header {
   width: 100%;
@@ -18,7 +19,8 @@
   justify-content: flex-end;
 
   transform: translateX(-50%);
-  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  // Masquage au scroll : vu des dizaines de fois par session, donc court.
+  @include animations.transition(animations.$duration-overlay, animations.$ease-out, transform);
 
   &.is-nav-hidden {
     transform: translateX(-50%) translateY(-140%);

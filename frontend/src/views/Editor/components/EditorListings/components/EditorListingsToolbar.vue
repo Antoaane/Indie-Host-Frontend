@@ -29,6 +29,7 @@ const queryModel = computed({
       <input
         v-model="queryModel"
         type="search"
+        enterkeyhint="search"
         :placeholder="props.placeholder"
       />
     </div>

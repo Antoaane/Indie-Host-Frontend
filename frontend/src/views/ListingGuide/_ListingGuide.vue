@@ -1127,6 +1127,7 @@ watch(
               <input
                 v-model="commentForm.name"
                 type="text"
+                autocomplete="name"
                 placeholder="Ex. Camille"
                 minlength="2"
                 maxlength="60"

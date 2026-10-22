@@ -132,6 +132,8 @@ function closeOverlay() {
           <div class="close">
             <button
               type="button"
+              aria-label="Fermer"
+              title="Fermer"
               @click="closeOverlay"
             >
               <component

@@ -8,14 +8,17 @@
 
 .host-reservation-overlay {
   width: min(100vw, 640px);
-  height: 100vh;
-  max-height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
 
   display: flex;
   flex-direction: column;
   overflow: hidden;
 
   padding: var(--layout-gap-sm);
+  padding-top: calc(var(--layout-gap-sm) + var(--safe-area-top));
+  padding-right: calc(var(--layout-gap-sm) + var(--safe-area-right));
+  padding-bottom: calc(var(--layout-gap-sm) + var(--safe-area-bottom));
   background: rgba($accent, 0.5);
   backdrop-filter: blur(12px);
   border-radius: 0;
@@ -113,7 +116,7 @@
           text-align: left;
           display: flex;
           justify-content: space-evenly;
-          @include animations.transition(200ms);
+          @include animations.transition();
 
           >span {
             display: block !important;
@@ -159,7 +162,7 @@
         text-align: left;
         display: flex;
         justify-content: space-evenly;
-        @include animations.transition(200ms);
+        @include animations.transition();
 
         >span {
           display: block !important;
@@ -347,9 +350,10 @@
 
         cursor: pointer;
 
-        @include animations.transition(150ms);
+        @include animations.transition(animations.$duration-fast);
+        @include animations.press();
 
-        &:hover:not(:disabled) {
+        @include on-hover(':not(:disabled)') {
           background: $background;
           color: $accent;
           stroke: $accent;
@@ -358,6 +362,11 @@
             fill: $accent;
             stroke: $accent;
           }
+        }
+
+        @media (pointer: coarse) {
+          width: 44px;
+          height: 44px;
         }
 
         &:disabled {

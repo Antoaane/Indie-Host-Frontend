@@ -336,7 +336,9 @@ watch(
     @extend %overlay-panel;
     gap: var(--layout-gap);
     max-width: min(680px, 100%);
-    padding-bottom: var(--layout-gap-4xl);
+    padding-bottom: calc(var(--layout-gap-4xl) + var(--safe-area-bottom));
+    overflow-y: auto;
+    overscroll-behavior: contain;
 
     > .header {
       display: flex;
@@ -373,6 +375,12 @@ watch(
         align-items: center;
         justify-content: center;
         padding: 0;
+
+        @media (pointer: coarse) {
+          width: 44px;
+          min-width: 44px;
+          height: 44px;
+        }
       }
     }
 

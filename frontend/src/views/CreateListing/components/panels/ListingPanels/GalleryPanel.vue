@@ -2,6 +2,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { useTouchLongPress } from '@/composables/useTouchLongPress'
 import { Plus, Trash2 } from 'lucide-vue-next'
 import type { RawMedias } from '@/domain/listings/types'
 import { normalizeListingStatus } from '@/domain/listings/status'
@@ -68,6 +69,7 @@ const disableDropAnimation = ref(false)
 let dropAnimationResetRaf = 0
 let dragListenersBound = false
 const isDragging = computed(() => dragState.active)
+const touchLongPress = useTouchLongPress({ isActive: () => dragState.active })
 const acceptedMimeTypes = acceptedGalleryMimeTypes(galleryLimits.acceptedMimeTypes)
 const readableFormats = humanizeGalleryMimeTypes(galleryLimits.acceptedMimeTypes)
 const maxFileSizeMb = (galleryLimits.maxFileSizeBytes / (1024 * 1024)).toFixed(1)
@@ -503,6 +505,16 @@ function scheduleDropAnimationReset() {
 function onTilePointerDown(index: number, event: PointerEvent) {
   if (!canStartDrag(event)) return
 
+  // Au doigt, le tri démarre après un appui long : un glissé rapide fait défiler la page.
+  if (event.pointerType === 'touch') {
+    touchLongPress.arm(event, (downEvent) => {
+      dragState.sourceEl = tileRefs.value[index] ?? null
+      bindDragListeners()
+      startDrag(index, downEvent)
+    })
+    return
+  }
+
   dragState.pending = true
   dragState.active = false
   dragState.index = index
@@ -580,7 +592,7 @@ onBeforeUnmount(() => {
           :key="img.position ?? index"
           class="tile"
           :ref="(el) => setTileRef(el as HTMLElement | null, index)"
-          :style="{ ...tileStyle(index), touchAction: 'none' }"
+          :style="tileStyle(index)"
           :class="{
             'is-dragging': dragState.active && dragState.index === index,
             'is-over': dragState.active && dragState.overIndex === index && dragState.index !== index,

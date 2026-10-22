@@ -234,7 +234,7 @@ export function useHabitsAnim({
       '--shadow-start': '20%',
       '--shadow-end': '50%',
       duration: 0.3,
-      ease: 'power2.inOut',
+      ease: 'power2.out',
     })
     gsap.to(lightRef.value, {
       opacity: 1,

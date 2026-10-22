@@ -205,17 +205,17 @@ onMounted(() => {
 
         * {
           color: $secondary !important;
-          @include animations.transition($duration: 150ms);
+          @include animations.transition(animations.$duration-fast);
         }
 
         svg {
           * {
             stroke: $secondary !important;
-            @include animations.transition($duration: 150ms);
+            @include animations.transition(animations.$duration-fast);
           }
         }
 
-        &:hover {
+        @include on-hover {
           * {
             color: rgba($secondary, 0.8) !important;
           }
@@ -231,16 +231,17 @@ onMounted(() => {
       button {
         border-radius: borders.$rounded-md;
 
-        @include animations.transition($duration: 150ms);
+        @include animations.transition(animations.$duration-fast);
+        @include animations.press();
 
         svg {
           * {
             stroke: $secondary !important;
-            @include animations.transition($duration: 150ms);
+            @include animations.transition(animations.$duration-fast);
           }
         }
 
-        &:hover {
+        @include on-hover {
           background-color: $accent-surface-3;
         }
 
@@ -252,6 +253,23 @@ onMounted(() => {
               stroke: $accent !important;
             }
           }
+        }
+      }
+
+      // Cibles tactiles de 44 px : boutons et sélecteur de titre.
+      @media (pointer: coarse) {
+        button {
+          width: 2.75rem;
+          height: 2.75rem;
+          padding: 0.7rem;
+        }
+
+        .ql-picker {
+          height: 2.75rem;
+        }
+
+        .ql-picker-label::before {
+          line-height: calc(2.75rem - 2px);
         }
       }
     }

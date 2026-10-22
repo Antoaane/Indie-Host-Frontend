@@ -34,6 +34,7 @@
 
       cursor: pointer;
       @include animations.transition;
+      @include animations.press(0.99);
 
       h3 {
         margin: 0 !important;
@@ -50,7 +51,7 @@
       .lucide-chevron-left-icon {
         min-width: 18px;
         stroke: $accent;
-        @include animations.transition;
+        @include animations.transition(animations.$duration-menu);
 
         &.open {
           transform: rotate(-90deg);
@@ -98,18 +99,27 @@
   border-left: 2px solid rgba($accent, 0.3);
 }
 
-// Animation “height + opacity”
+// Animation “height + opacity” : propriétés explicites, le padding latéral
+// reste fixe (plus de glissement horizontal du texte à l'ouverture)
+.faq-fade-height-enter-active {
+  @include animations.transition(animations.$duration-menu, animations.$ease-out, (max-height, opacity));
+}
+
+.faq-fade-height-leave-active {
+  @include animations.transition(animations.$duration-exit, animations.$ease-out, (max-height, opacity));
+}
+
 .faq-fade-height-enter-active,
 .faq-fade-height-leave-active {
-  transition: all 0.35s cubic-bezier(0.8, 0, 0.2, 1);
+  @include animations.reduced-motion {
+    transition-property: opacity;
+  }
 }
 
 .faq-fade-height-enter-from,
 .faq-fade-height-leave-to {
   max-height: 0;
   opacity: 0;
-  padding: 0;
-  margin: 0;
 }
 
 .faq-fade-height-enter-to,

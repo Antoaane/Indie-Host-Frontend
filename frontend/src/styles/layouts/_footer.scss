@@ -12,6 +12,11 @@
   padding-left: var(--layout-gap-4xl);
   padding-right: var(--layout-gap-4xl);
 
+  // Réserve la place des boutons flottants de la landing (hauteur tactile 44 px).
+  &.has-floating-actions {
+    padding-bottom: calc(clamp(0.9rem, 2.8vw, 1.6rem) + 2.75rem + var(--safe-area-bottom));
+  }
+
   >p {
     margin: 0.5rem 0 !important;
 

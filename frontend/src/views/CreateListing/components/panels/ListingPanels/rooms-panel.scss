@@ -2,6 +2,7 @@
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
 @use '@/styles/components/buttons' as buttons;
 @use '@/styles/components/inputs' as inputs;
 @use '@/views/CreateListing/components/panels/panel.scss' as *;
@@ -108,6 +109,10 @@
       > button {
         @include buttons.low-btn($fullwidth: true, $color: $accent, $hover: $secondary, $text-color: $secondary, $text-hover-color: $accent, $borders: true, $stroke: false);
         min-height: 2rem;
+
+        @media (pointer: coarse) {
+          min-height: 2.75rem;
+        }
       }
     }
 
@@ -188,12 +193,14 @@
         height: 44px;
       }
 
+      // Colle au bas du slide (au-dessus du footer du wizard, qui porte déjà
+      // la safe-area) : pas d'inset ici, sinon les cartes défilent sous le bandeau.
       > .add-room {
         position: sticky;
-        bottom: calc(env(safe-area-inset-bottom) + var(--layout-gap-2xs));
+        bottom: var(--layout-gap-2xs);
         z-index: 4;
         padding-top: var(--layout-gap-xs);
-        padding-bottom: calc(env(safe-area-inset-bottom) + var(--layout-gap-xs));
+        padding-bottom: var(--layout-gap-xs);
         background: linear-gradient(
           180deg,
           rgba($accent, 0) 0%,
@@ -212,8 +219,8 @@
   > .rooms-bed-overlay-panel {
     width: min(44rem, 100%);
     min-width: min(34rem, calc(100vw - var(--layout-gap)));
-    min-height: min(26rem, calc(100vh - (var(--layout-gap) * 2)));
-    max-height: min(90vh, 44rem);
+    min-height: min(26rem, calc(100dvh - (var(--layout-gap) * 2)));
+    max-height: min(90dvh, 44rem);
     display: flex;
     flex-direction: column;
     gap: var(--layout-gap);
@@ -246,6 +253,11 @@
       > * {
         width: 36px;
         height: 36px;
+
+        @media (pointer: coarse) {
+          width: 44px;
+          height: 44px;
+        }
       }
     }
   }
@@ -267,6 +279,7 @@
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   .overlay-empty {
@@ -309,6 +322,11 @@
       > * {
         width: 36px;
         height: 36px;
+
+        @media (pointer: coarse) {
+          width: 44px;
+          height: 44px;
+        }
       }
     }
 
@@ -360,17 +378,20 @@
       background: $accent;
       color: rgba($secondary-text, 0.72);
       cursor: pointer;
-      transition:
-        border-color 140ms ease,
-        background-color 140ms ease,
-        color 140ms ease;
+      @include animations.transition(animations.$duration-fast);
+      @include animations.press();
+
+      @media (pointer: coarse) {
+        width: 44px;
+        height: 44px;
+      }
 
       > svg {
         width: 16px;
         height: 16px;
       }
 
-      &:hover {
+      @include on-hover {
         border-color: rgba($secondary, 0.26);
       }
 
@@ -409,7 +430,26 @@
       min-width: 100%;
       max-height: 82dvh;
       border-radius: borders.$rounded-xl borders.$rounded-xl 0 0;
-      padding-bottom: calc(env(safe-area-inset-bottom) + var(--layout-gap));
+      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--layout-gap));
+    }
+
+    // Sheet mobile : monte depuis le bas (courbe drawer), redescend plus vite.
+    // Surcharge la translation de 24px d'AbsoluteOverlay (mode centered).
+    &.absolute-overlay--centered.absolute-overlay-enter-active > .rooms-bed-overlay-panel {
+      @include animations.transition(animations.$duration-overlay, animations.$ease-drawer, transform);
+    }
+
+    &.absolute-overlay--centered.absolute-overlay-leave-active > .rooms-bed-overlay-panel {
+      @include animations.transition(animations.$duration-exit, animations.$ease-drawer, transform);
+    }
+
+    &.absolute-overlay--centered.absolute-overlay-enter-from > .rooms-bed-overlay-panel,
+    &.absolute-overlay--centered.absolute-overlay-leave-to > .rooms-bed-overlay-panel {
+      transform: translateY(100%);
+
+      @include animations.reduced-motion {
+        transform: none;
+      }
     }
   }
 }

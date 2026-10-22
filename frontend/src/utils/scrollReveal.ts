@@ -29,10 +29,10 @@ export function sr(
     x = 0,
     y = 0,
     opacity = 0,
-    duration = 0.75,
-    delay = 0.2,               // 🆕 valeur par défaut
+    duration = 0.6,
+    delay = 0,                 // une entrée démarre dès que l'élément arrive, sans attente
     stagger = 0,
-    ease = "power2.inOut",
+    ease = "power3.out",       // ease-out : mouvement immédiat, ralenti à l'arrivée (jamais d'in-out sur une entrée)
     start = "top 100%",
     end = "bottom 0%",
     once = false,

@@ -23,7 +23,7 @@
     align-items: flex-end;
 
     &.has-cover {
-      min-height: clamp(18rem, 48vh, 32rem);
+      min-height: clamp(18rem, 48svh, 32rem);
     }
 
     > .hub-cover {
@@ -105,15 +105,18 @@
     text-decoration: none;
     color: inherit;
     @include animations.transition();
+    @include animations.press(0.98);
 
-    &:hover,
-    &:focus-visible {
+    @include on-hover {
       border-color: rgba($secondary, 0.4);
       transform: translateY(-2px);
       @include big-shadow();
     }
 
     &:focus-visible {
+      border-color: rgba($secondary, 0.4);
+      transform: translateY(-2px);
+      @include big-shadow();
       outline: 2px solid $secondary;
       outline-offset: 2px;
     }
@@ -166,11 +169,14 @@
     }
   }
 
-  @media (prefers-reduced-motion: reduce) {
+  @include animations.reduced-motion {
     .hub-card {
       transition: none;
 
-      &:hover,
+      @include on-hover {
+        transform: none;
+      }
+
       &:focus-visible {
         transform: none;
       }

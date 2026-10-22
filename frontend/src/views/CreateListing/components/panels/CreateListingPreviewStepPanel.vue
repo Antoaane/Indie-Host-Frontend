@@ -45,6 +45,7 @@ function launchConfetti() {
     scalar: 0.9,
     ticks: 160,
     zIndex: 1200,
+    disableForReducedMotion: true,
     colors: [
       '#0b132b',
       '#f97316',
@@ -174,7 +175,7 @@ onBeforeUnmount(() => {
   }
 
   > .empty {
-    height: clamp(18rem, 52vh, 30rem);
+    height: clamp(18rem, 52svh, 30rem);
     display: grid;
     place-items: center;
     padding: var(--layout-gap-md);
@@ -188,7 +189,7 @@ onBeforeUnmount(() => {
     gap: var(--layout-gap-sm);
 
     > .preview-frame {
-      min-height: clamp(24rem, 62vh, 34rem);
+      min-height: clamp(24rem, 62svh, 34rem);
     }
   }
 }

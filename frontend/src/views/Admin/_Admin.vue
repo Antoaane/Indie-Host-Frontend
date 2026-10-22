@@ -537,6 +537,7 @@ onMounted(() => {
             <input
               v-model="query"
               type="search"
+              enterkeyhint="search"
               placeholder="Rechercher un nom, un email…"
               autocomplete="off"
             />

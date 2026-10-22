@@ -92,6 +92,7 @@ function increment() { setCapacity(capacity.value + 1) }
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
 @use '@/views/CreateListing/components/panels/panel.scss' as *;
 
 .create-capacity-panel {
@@ -129,9 +130,10 @@ function increment() { setCapacity(capacity.value + 1) }
           display: flex;
           align-items: center;
           justify-content: center;
-          transition: all 200ms cubic-bezier(0.6, 0, 0.3, 1);
+          @include animations.transition(animations.$duration-fast);
+          @include animations.press(0.95);
 
-          &:hover:not(:disabled) {
+          @include on-hover(':not(:disabled)') {
             background: rgba($secondary, 0.06);
             border-color: rgba($secondary, 0.32);
             color: $secondary-text;
@@ -139,7 +141,6 @@ function increment() { setCapacity(capacity.value + 1) }
 
           &:active:not(:disabled) {
             background: rgba($secondary, 0.11);
-            transform: scale(0.91);
           }
 
           &:disabled {

@@ -44,7 +44,7 @@ const signUpUrl = computed(() => {
 /* File: src/views/sign-in-view.scss */
 
 .sign-in-view {
-  min-height: calc(100vh - 60px);
+  min-height: calc(100dvh - 60px);
   display: flex;
   align-items: center;
   justify-content: center;

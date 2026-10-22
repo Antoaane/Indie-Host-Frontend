@@ -50,6 +50,7 @@
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
+    overscroll-behavior-y: contain;
 
     .listing-view:not(.is-mobile-layout) & {
       margin-bottom: 0;
@@ -86,6 +87,13 @@
 
       >.close {
         @include buttons.primary($theme: white, $icon-only: true);
+
+        >button {
+          @media (pointer: coarse) {
+            min-width: 44px;
+            min-height: 44px;
+          }
+        }
       }
     }
 
@@ -142,6 +150,7 @@
         padding-top: 0 !important;
         flex: 0 1 auto;
         overflow-y: scroll;
+        overscroll-behavior: contain;
 
         display: flex;
         flex-direction: column;

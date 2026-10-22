@@ -105,6 +105,7 @@ const actionsContent = editorStatic.actions
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
 
 .editor-sidebar-nav {
   width: 100%;
@@ -137,6 +138,8 @@ const actionsContent = editorStatic.actions
       background: rgba($accent-surface-2, 1);
       color: rgba($secondary-text, 0.95);
       cursor: pointer;
+      @include animations.transition(animations.$duration-fast);
+      @include animations.press();
 
       display: inline-flex;
       align-items: center;
@@ -167,6 +170,8 @@ const actionsContent = editorStatic.actions
 
         border: none;
         background: transparent;
+        @include animations.transition(animations.$duration-fast);
+        @include animations.press();
       }
 
       &.is-active {
@@ -189,7 +194,7 @@ const actionsContent = editorStatic.actions
       border-radius: borders.$rounded-md;
 
       transform: translate3d(calc(var(--active-index, 0) * (100% + var(--layout-gap-xs))), 0, 0);
-      transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      @include animations.transition(animations.$duration-base, animations.$ease-out, transform);
       will-change: transform;
       pointer-events: none;
     }

@@ -2,6 +2,7 @@
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
 @use '@/styles/components/buttons' as buttons;
 @use '@/styles/components/inputs' as inputs;
 @use '@/views/Editor/components/EditorSidebar/panels/panel.scss' as *;
@@ -46,6 +47,14 @@
           border: 1px solid rgba($secondary, 0.08);
           border-radius: borders.$rounded-md;
           cursor: pointer;
+          -webkit-user-select: none;
+          user-select: none;
+          @include animations.transition(animations.$duration-fast);
+
+          // Pas de retour d'appui sur une option désactivée.
+          &:not(:has(> input:disabled)) {
+            @include animations.press(0.99);
+          }
 
           input {
             margin-top: 4px;
@@ -93,7 +102,7 @@
         margin-top: 5rem;
         @include buttons.primary($theme: dark, $fullwidth: true);
 
-        &:hover {
+        @include on-hover {
 
           &>* {
             color: $accent !important;

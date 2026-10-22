@@ -239,14 +239,14 @@ watch(
 @use '@/styles/variables/globals' as *;
 
 .listing#listing-page {
-  height: 100vh;
+  height: 100dvh;
 
   @include min-width(lg) {
     overflow: hidden;
   }
 
   > .sub-container {
-    height: 100vh;
+    height: 100dvh;
   }
 }
 </style>

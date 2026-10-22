@@ -2,6 +2,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { useTouchLongPress } from '@/composables/useTouchLongPress'
 import { Film, Plus, Trash2 } from 'lucide-vue-next'
 import type { RawMediaVideo, RawMedias } from '@/domain/listings/types'
 import { normalizeListingStatus } from '@/domain/listings/status'
@@ -59,6 +60,7 @@ const dragState = reactive({
 const disableDropAnimation = ref(false)
 let dropAnimationResetRaf = 0
 const isDragging = computed(() => dragState.active)
+const touchLongPress = useTouchLongPress({ isActive: () => dragState.active })
 const acceptedMimeTypes = acceptedGalleryMimeTypes(galleryLimits.acceptedMimeTypes)
 const readableFormats = humanizeGalleryMimeTypes(galleryLimits.acceptedMimeTypes)
 const maxFileSizeMb = (galleryLimits.maxFileSizeBytes / (1024 * 1024)).toFixed(1)
@@ -546,6 +548,11 @@ function scheduleDropAnimationReset() {
 }
 
 function onTilePointerDown(index: number, event: PointerEvent) {
+  // Au doigt, le tri démarre après un appui long : un glissé rapide fait défiler la page.
+  if (event.pointerType === 'touch') {
+    touchLongPress.arm(event, (downEvent) => startDrag(index, downEvent))
+    return
+  }
   startDrag(index, event)
 }
 
@@ -805,7 +812,7 @@ onBeforeUnmount(() => {
     @include base-text($bold: true);
     opacity: 0;
     pointer-events: none;
-    @include animations.transition();
+    @include animations.transition(animations.$duration-fast);
   }
 
   &.is-dragging-files::after {

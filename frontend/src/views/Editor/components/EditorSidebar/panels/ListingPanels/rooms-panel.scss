@@ -2,6 +2,7 @@
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
 @use '@/styles/components/buttons' as buttons;
 @use '@/styles/components/inputs' as inputs;
 @use '@/views/Editor/components/EditorSidebar/panels/panel.scss' as *;
@@ -132,6 +133,11 @@
         @include buttons.low-btn($icon-only: true);
         width: 2.35rem;
         height: 2.35rem;
+
+        @media (pointer: coarse) {
+          width: 2.75rem;
+          height: 2.75rem;
+        }
       }
     }
 
@@ -148,8 +154,8 @@
   > .rooms-bed-overlay-panel {
     width: min(44rem, 100%);
     min-width: min(34rem, calc(100vw - var(--layout-gap)));
-    min-height: min(26rem, calc(100vh - (var(--layout-gap) * 2)));
-    max-height: min(90vh, 44rem);
+    min-height: min(26rem, calc(100dvh - (var(--layout-gap) * 2)));
+    max-height: min(90dvh, 44rem);
     display: flex;
     flex-direction: column;
     gap: var(--layout-gap);
@@ -177,6 +183,11 @@
       > * {
         width: 36px;
         height: 36px;
+
+        @media (pointer: coarse) {
+          width: 2.75rem;
+          height: 2.75rem;
+        }
       }
     }
   }
@@ -189,6 +200,7 @@
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
+    overscroll-behavior: contain;
     padding-right: 0.15rem;
   }
 
@@ -238,6 +250,11 @@
       > * {
         width: 36px;
         height: 36px;
+
+        @media (pointer: coarse) {
+          width: 2.75rem;
+          height: 2.75rem;
+        }
       }
     }
 
@@ -289,18 +306,21 @@
       background: $accent;
       color: rgba($secondary-text, 0.72);
       cursor: pointer;
-      transition:
-        border-color 140ms ease,
-        background-color 140ms ease,
-        color 140ms ease;
+      @include animations.transition(animations.$duration-fast);
+      @include animations.press();
 
       > svg {
         width: 16px;
         height: 16px;
       }
 
-      &:hover {
+      @include on-hover {
         border-color: rgba($secondary, 0.26);
+      }
+
+      @media (pointer: coarse) {
+        width: 2.75rem;
+        height: 2.75rem;
       }
 
       &.is-selected {

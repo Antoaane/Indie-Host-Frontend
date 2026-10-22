@@ -2,6 +2,7 @@
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
 
 #roi-section {
   padding-top: calc(var(--layout-gap) * 4);
@@ -143,13 +144,22 @@
     color: rgba($accent, 0.78);
     background: rgba($accent, 0.04);
     cursor: pointer;
-    transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease, color 180ms ease;
+    @include animations.transition(animations.$duration-fast);
+    @include animations.press();
     @include little-text($accent, $thin: false);
 
-    &:hover {
+    @include on-hover {
       transform: translateY(-1px);
       border-color: rgba($accent, 0.24);
       color: $accent;
+
+      @include animations.reduced-motion {
+        transform: none;
+      }
+    }
+
+    @media (pointer: coarse) {
+      min-height: 44px;
     }
 
     &.is-active {

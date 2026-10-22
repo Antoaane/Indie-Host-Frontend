@@ -33,8 +33,10 @@
 
     >.body {
       >.gallery {
+        // Les vignettes voisines se décalent vite ; celle qu'on tient suit le
+        // doigt sans transition (style inline + règle ci-dessous).
         >.tile {
-          transition: transform 80ms cubic-bezier(0.2, 0.7, 0.2, 1);
+          @include animations.transition(80ms, animations.$ease-out, transform);
         }
 
         >.tile.is-dragging {
@@ -65,7 +67,8 @@
         aspect-ratio: 1 / 1;
         overflow: hidden;
         cursor: grab;
-        transition: transform 120ms cubic-bezier(0.2, 0.7, 0.2, 1);
+        // Pas de press : le transform sert au glisser-déposer.
+        @include animations.transition(animations.$duration-fast, animations.$ease-out, (transform, box-shadow));
         will-change: transform;
 
         &::after {
@@ -94,12 +97,15 @@
           display: block;
         }
 
-        &:hover {
+        @include on-hover {
           transform: translateY(-1px);
           @include effects.soft-shadow(rgba(0, 0, 0, 0.2));
         }
 
-        &:hover::after,
+        @include on-hover('::after') {
+          opacity: 1;
+        }
+
         &:focus-within::after {
           opacity: 1;
         }
@@ -147,13 +153,19 @@
             place-items: center;
             background: rgba($dark, 0.72);
             cursor: pointer;
-            @include animations.transition(160ms);
+            @include animations.transition(animations.$duration-fast);
+            @include animations.press();
+
+            @media (pointer: coarse) {
+              width: 2.75rem;
+              height: 2.75rem;
+            }
 
             * {
               stroke: rgba($accent, 0.95);
             }
 
-            &:hover {
+            @include on-hover {
               background: rgba($bad, 0.9);
             }
           }

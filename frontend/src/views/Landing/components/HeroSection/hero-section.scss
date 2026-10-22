@@ -1,10 +1,11 @@
 /* File: src/views/Landing/components/HeroSection/hero-section.scss */
 
 @use "@/styles/variables/globals" as *;
+@use '@/styles/variables/animations' as animations;
 @use '@/styles/components/buttons' as buttons;
 
 #hero-section {
-  padding-top: calc(((var(--layout-gap-md) * 2) + 60px) + 5vh);
+  padding-top: calc(((var(--layout-gap-md) * 2) + 60px) + 5svh);
   display: flex;
   position: relative;
   isolation: isolate;
@@ -33,7 +34,7 @@
 
   /* Mobile : marge nav→h1, h1 bien lisible, p plus discret, image de couverture corrigée */
   @media (max-width: 1024px) {
-    padding-top: calc(((var(--layout-gap-md) * 2) + 52px) + 12vh + 2rem);
+    padding-top: calc(((var(--layout-gap-md) * 2) + 52px) + 12svh + 2rem);
 
     .content > div {
       padding-top: 2.5rem;
@@ -77,7 +78,8 @@
 
   @include min-width(lg) {
     padding-top: calc(70px + 2.5rem);
-    height: 100vh !important;
+    // svh : premier écran stable, pas de saut quand la barre d'URL se replie (iPad)
+    height: 100svh !important;
   }
 
   .wrapper {
@@ -383,7 +385,8 @@
         &.hero-mockup-shell {
           @include min-width(lg) {
             transform: translate3d(var(--hero-mouse-x, 0px), var(--hero-mouse-y, 0px), 0);
-            transition: transform 700ms cubic-bezier(0.23, 1, 0.32, 1);
+            // Suivi de souris volontairement lent : parallaxe, pas une interaction
+            @include animations.transition(700ms, animations.$ease-out, transform);
             will-change: transform;
           }
         }
@@ -397,14 +400,14 @@
         .hero-image {
           will-change: transform, opacity;
           width: auto;
-          height: 68vh;
+          height: 68svh;
           margin-inline: auto;
 
           @media (max-width: 1024px) {
             display: block;
             max-width: 100%;
             height: auto;
-            max-height: 70vh;
+            max-height: 70svh;
             object-fit: contain;
             object-position: center center;
 
@@ -414,7 +417,7 @@
           }
 
           @include min-width(lg) {
-            height: 90vh;
+            height: 90svh;
             max-height: 1100px;
           }
         }
@@ -518,7 +521,8 @@
           perspective(1100px)
           rotateX(calc(7deg - (var(--light-hero-open, 0) * 6deg)))
           scale(calc(0.965 + (var(--light-hero-open, 0) * 0.075)));
-        transition: transform 140ms linear;
+        // Lissage du scroll : ease-out, chaque mise à jour repart sans retard
+        @include animations.transition(140ms, animations.$ease-out, transform);
 
         > span {
           display: none;

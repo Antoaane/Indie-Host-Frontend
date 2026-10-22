@@ -684,6 +684,7 @@ onBeforeUnmount(() => {
               type="text"
               placeholder="Nom, prénom, pseudo ou e-mail"
               autocomplete="off"
+              enterkeyhint="search"
             />
           </label>
 
