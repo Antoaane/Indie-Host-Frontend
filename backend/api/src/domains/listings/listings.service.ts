@@ -19,6 +19,11 @@ import {
 } from '../users/users.repository.js';
 import { LISTING_LIMIT_COUNTED_STATUSES, resolveMaxActiveListingsFromBilling } from '../payments/plans.catalog.js';
 import { buildDefaultResource, type ListingResourceKey } from './listings.constants.js';
+import {
+  isRedactedPatch,
+  redactListingSectionForPublic,
+  resolveListingAccessForOwner,
+} from './listings.access.js';
 import type { CreateListingInput } from './listings.schemas.js';
 
 type ListingRecord = Listing & { owner: User | null };
@@ -1010,9 +1015,10 @@ export class ListingsService {
     return { listingId };
   }
 
-  async getListingResource(resource: ListingResourceKey, listingId: string) {
+  async getListingResource(resource: ListingResourceKey, listingId: string, auth: RequestAuth | null = null) {
     const select = {
       id: true,
+      ownerId: true,
       [resource]: true,
     } as Prisma.ListingSelect;
 
@@ -1045,7 +1051,12 @@ export class ListingsService {
       return resolvedHost;
     }
 
-    return asObject(rawValue, fallback);
+    const value = asObject(rawValue, fallback);
+    if (resource !== 'bookings' && resource !== 'arrival') return value;
+
+    const ownerId = (listing as { ownerId?: string | null }).ownerId ?? null;
+    const access = await resolveListingAccessForOwner(this.prisma, ownerId, auth);
+    return access.canReadPrivate ? value : redactListingSectionForPublic(resource, value);
   }
 
   async getListingBundle(listingId: string, auth: RequestAuth | null = null) {
@@ -1074,7 +1085,12 @@ export class ListingsService {
       });
     }
 
-    return sections;
+    if (isOwner) return sections;
+    return {
+      ...sections,
+      bookings: redactListingSectionForPublic('bookings', sections.bookings),
+      arrival: redactListingSectionForPublic('arrival', sections.arrival),
+    };
   }
 
   async getListingDomain(listingId: string, auth: RequestAuth | null) {
@@ -1769,6 +1785,8 @@ export class ListingsService {
     auth: RequestAuth | null;
   }) {
     const { listingId, resource, patch, auth } = args;
+    if (isRedactedPatch(patch)) return 'redacted' as const;
+
     const select = {
       id: true,
       ownerId: true,

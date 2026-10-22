@@ -337,9 +337,11 @@ export const listingsPlugin = fp(async (fastify) => {
     reply.send(domain);
   });
 
-  fastify.get('/listings/:resource/:listingId', async (request, reply) => {
+  fastify.get('/listings/:resource/:listingId', {
+    preHandler: fastify.authenticateOptional,
+  }, async (request, reply) => {
     const params = listingResourceParamsSchema.parse(request.params);
-    const resource = await service.getListingResource(params.resource, params.listingId);
+    const resource = await service.getListingResource(params.resource, params.listingId, request.auth);
 
     if (!resource) {
       reply.code(404).send({ message: 'Listing not found.' });
@@ -369,6 +371,11 @@ export const listingsPlugin = fp(async (fastify) => {
 
     if (updated === 'forbidden') {
       reply.code(403).send({ message: 'You cannot edit this listing.' });
+      return;
+    }
+
+    if (updated === 'redacted') {
+      reply.code(409).send({ message: 'Votre session a expiré : rechargez la page avant d’enregistrer.' });
       return;
     }
 

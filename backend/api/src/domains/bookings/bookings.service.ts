@@ -1244,6 +1244,8 @@ export class BookingsService {
         url: absoluteGuideUrl,
         relativeUrl: access.confirmation.guideUrl,
       },
+      // Guide complet (adresse, accès, Wi-Fi) : seul le voyageur muni de sa clé le reçoit, une fois débloqué.
+      arrival: activation.isActive ? access.listingArrival : null,
       messaging: {
         conversationId: conversation.id,
       },

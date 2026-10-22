@@ -227,6 +227,13 @@ async function fetchRemote<T>(url: string): Promise<T> {
   return fetchRemoteWithToken<T>(url, token)
 }
 
+// Écrans de l'hôte : sans jeton, l'API renvoie la version publique (réservations retirées)
+// et l'enregistrer ensuite écraserait les données. On attend donc Clerk avant de lire.
+async function fetchRemoteAsOwner<T>(url: string): Promise<T> {
+  const token = await getAuthToken({ waitForReady: true })
+  return fetchRemoteWithToken<T>(url, token)
+}
+
 async function patchRemoteWithToken<T>(url: string, payload: unknown, token: string | null): Promise<T> {
   const axios = await getAxios()
   const requestToken = token ?? await readFreshTokenFromClerkRuntime({ skipCache: true })
@@ -477,10 +484,10 @@ export function createApiListingsController(): ListingsController {
       assertApiEnabled('charger le brouillon de cette annonce')
 
       const [core, bookings, medias, arrival] = await Promise.all([
-        fetchRemote<RawCore>(resolveUrl(buildListingUrl('core', listingId))),
-        fetchRemote<RawBookings>(resolveUrl(buildListingUrl('bookings', listingId))),
-        fetchRemote<RawMedias>(resolveUrl(buildListingUrl('medias', listingId))),
-        fetchRemote<RawArrival>(resolveUrl(buildListingUrl('arrival', listingId))),
+        fetchRemoteAsOwner<RawCore>(resolveUrl(buildListingUrl('core', listingId))),
+        fetchRemoteAsOwner<RawBookings>(resolveUrl(buildListingUrl('bookings', listingId))),
+        fetchRemoteAsOwner<RawMedias>(resolveUrl(buildListingUrl('medias', listingId))),
+        fetchRemoteAsOwner<RawArrival>(resolveUrl(buildListingUrl('arrival', listingId))),
       ])
 
       return { core, bookings, medias, arrival }
@@ -490,7 +497,7 @@ export function createApiListingsController(): ListingsController {
       assertApiEnabled('charger les données de réservation')
 
       const [bookings, notes, comments, host] = await Promise.all([
-        fetchRemote<RawBookings>(resolveUrl(buildListingUrl('bookings', listingId))),
+        fetchRemoteAsOwner<RawBookings>(resolveUrl(buildListingUrl('bookings', listingId))),
         fetchRemote<RawNotes>(resolveUrl(buildListingUrl('notes', listingId))),
         fetchRemote<RawComments>(resolveUrl(buildListingUrl('comments', listingId))),
         fetchRemote<RawHost>(resolveUrl(buildListingUrl('host', listingId))),

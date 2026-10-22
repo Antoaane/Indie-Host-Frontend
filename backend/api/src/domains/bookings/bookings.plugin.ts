@@ -15,6 +15,7 @@ import {
 } from './bookings.schemas.js';
 import { BookingsService } from './bookings.service.js';
 import { PaymentsService } from '../payments/payments.service.js';
+import { redactBookingsForPublic, resolveListingAccess } from '../listings/listings.access.js';
 
 function firstHeaderValue(value: string | string[] | undefined): string {
   if (Array.isArray(value)) {
@@ -40,7 +41,9 @@ export const bookingsPlugin = fp(async (fastify) => {
   const paymentsService = new PaymentsService(fastify.prisma);
   const service = new BookingsService(fastify.prisma, paymentsService);
 
-  fastify.get('/bookings/listings/:listingId', async (request, reply) => {
+  fastify.get('/bookings/listings/:listingId', {
+    preHandler: fastify.authenticateOptional,
+  }, async (request, reply) => {
     const { listingId } = listingBookingsParamsSchema.parse(request.params);
     const bookings = await service.getListingBookings(listingId);
 
@@ -49,7 +52,8 @@ export const bookingsPlugin = fp(async (fastify) => {
       return;
     }
 
-    reply.send(bookings);
+    const access = await resolveListingAccess(fastify.prisma, listingId, request.auth);
+    reply.send(access?.canReadPrivate ? bookings : redactBookingsForPublic(bookings));
   });
 
   fastify.get('/bookings/guides/:guideKey', async (request, reply) => {
@@ -191,7 +195,8 @@ export const bookingsPlugin = fp(async (fastify) => {
       return;
     }
 
-    reply.code(201).send(created);
+    // Le voyageur ne reçoit que sa propre réservation, jamais celles des autres.
+    reply.code(201).send({ ...created, bookings: redactBookingsForPublic(created.bookings) });
   });
 
   fastify.patch('/bookings/:reservationId', {
@@ -199,6 +204,17 @@ export const bookingsPlugin = fp(async (fastify) => {
   }, async (request, reply) => {
     const { reservationId } = updateBookingParamsSchema.parse(request.params);
     const payload = updateBookingSchema.parse(asObject(request.body));
+
+    const access = await resolveListingAccess(fastify.prisma, payload.listingId, request.auth);
+    if (!access) {
+      reply.code(404).send({ message: 'Listing not found.' });
+      return;
+    }
+
+    if (!access.canReadPrivate) {
+      reply.code(403).send({ message: 'You cannot edit this reservation.' });
+      return;
+    }
 
     const updated = await service.updateBooking(reservationId, payload.listingId, payload.patch);
 

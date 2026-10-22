@@ -81,7 +81,8 @@ const { checkoutPayload, isCheckout, checkoutStatus, onReserve, cancelCheckout, 
   listingData,
   listingId,
   rawListing: computed(() => props.rawListing ?? null),
-  fetchEditableListingBundle: (targetListingId) => controller.fetchEditableListingBundle(targetListingId),
+  // Le voyageur lit la version publique : plages occupées et tarifs, sans les réservations des autres.
+  fetchEditableListingBundle: (targetListingId) => controller.fetchListingBundle(targetListingId),
   syncListingAvailability: (targetListingId) => controller.syncListingAvailability(targetListingId),
   patchListingDraft: (targetListingId, payload) => controller.patchListingDraft(targetListingId, payload),
 })

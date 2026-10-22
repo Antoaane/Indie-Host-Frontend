@@ -9,6 +9,7 @@ import {
   patchMediaSchema,
 } from './medias.schemas.js';
 import { MediasService } from './medias.service.js';
+import { resolveListingAccess } from '../listings/listings.access.js';
 
 // Marge pour les en-têtes : le corps binaire d'une vidéo ne dépasse pas VIDEO_MAX_BYTES.
 const VIDEO_BODY_LIMIT_BYTES = VIDEO_MAX_BYTES + 1024 * 1024;
@@ -39,6 +40,12 @@ export const mediasPlugin = fp(async (fastify) => {
   }, async (request, reply) => {
     const { listingId } = mediaListingParamsSchema.parse(request.params);
     const patch = patchMediaSchema.parse(asObject(request.body));
+
+    const access = await resolveListingAccess(fastify.prisma, listingId, request.auth);
+    if (access && !access.canWrite) {
+      reply.code(403).send({ message: 'You cannot edit this listing.' });
+      return;
+    }
 
     const medias = await service.patchListingMedias(listingId, patch);
 

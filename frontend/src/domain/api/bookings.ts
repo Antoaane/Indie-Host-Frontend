@@ -104,6 +104,8 @@ export type ReservationGuideAccessPayload = {
     url: string
     relativeUrl: string
   }
+  // Guide complet, envoyé seulement au voyageur muni de sa clé une fois le guide débloqué.
+  arrival: Record<string, unknown> | null
   messaging: {
     conversationId: string
   }
@@ -467,6 +469,9 @@ function normalizeGuideAccessPayload(payload: Record<string, unknown> | null | u
       url: toTrimmedString(guide.url),
       relativeUrl: toTrimmedString(guide.relativeUrl),
     },
+    arrival: (source.arrival && typeof source.arrival === 'object' && !Array.isArray(source.arrival))
+      ? source.arrival as Record<string, unknown>
+      : null,
     messaging: {
       conversationId: toTrimmedString(messaging.conversationId),
     },

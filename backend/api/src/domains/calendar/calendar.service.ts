@@ -366,13 +366,13 @@ export class CalendarService {
 
     calendar.method(ICalCalendarMethod.PUBLISH);
 
+    // Flux public (collé dans Airbnb, Booking…) : les plages suffisent, jamais le nom ni le message du voyageur.
     for (const event of reservationEvents) {
       calendar.createEvent({
         id: event.id,
         start: event.start,
         end: event.end,
-        summary: event.summary,
-        description: event.description,
+        summary: 'Réservé',
         status: toIcalStatus(event.status),
       });
     }
@@ -384,8 +384,7 @@ export class CalendarService {
         id: event.externalUid ?? event.id,
         start: event.startDate,
         end: event.endDate,
-        summary: event.summary ?? 'Imported event',
-        description: event.description ?? undefined,
+        summary: 'Indisponible',
         status: toIcalStatus(event.status),
       });
     }

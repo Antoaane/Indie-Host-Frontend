@@ -755,6 +755,31 @@ async function submitTravelerComment() {
   }
 }
 
+function buildGuideReservation(access: ReservationGuideAccessPayload): RawBookingReservation {
+  return {
+    id: access.reservation.id,
+    guestName: access.reservation.guestName,
+    start: access.reservation.startISO,
+    end: access.reservation.endISO,
+    nights: access.reservation.nights,
+    message: '',
+    guests: {
+      adults: 1,
+      children: 0,
+      infants: 0,
+      pets: 0,
+      pmr: 0,
+    },
+    payment: {
+      total: 0,
+      deposit: 0,
+      balance: 0,
+      status: 'pending',
+      method: 'Carte',
+    },
+  } as RawBookingReservation
+}
+
 watch(
   listingKey,
   async () => {
@@ -795,30 +820,7 @@ watch(
             rawBookings.value = {
               price: 0,
               fees: [],
-              reservations: [
-                {
-                  id: access.reservation.id,
-                  guestName: access.reservation.guestName,
-                  start: access.reservation.startISO,
-                  end: access.reservation.endISO,
-                  nights: access.reservation.nights,
-                  message: '',
-                  guests: {
-                    adults: 1,
-                    children: 0,
-                    infants: 0,
-                    pets: 0,
-                    pmr: 0,
-                  },
-                  payment: {
-                    total: 0,
-                    deposit: 0,
-                    balance: 0,
-                    status: 'pending',
-                    method: 'Carte',
-                  },
-                },
-              ],
+              reservations: [buildGuideReservation(access)],
               'booked-days': [],
               'external-booked-days': [],
             } as RawBookings
@@ -855,10 +857,14 @@ watch(
         resolveWritableListingId(listingLookupKey),
       ])
 
-      rawArrival.value = arrival
+      // L'annonce publique ne contient ni le guide complet ni les réservations : le voyageur les reçoit avec sa clé.
+      const activeAccess = guideAccess.value?.status === 'active' ? guideAccess.value : null
+      rawArrival.value = (activeAccess?.arrival as RawArrival | null | undefined) ?? arrival
       rawCore.value = core
       rawHost.value = host
-      rawBookings.value = bookings
+      rawBookings.value = activeAccess
+        ? { ...bookings, reservations: [buildGuideReservation(activeAccess)] } as RawBookings
+        : bookings
       rawComments.value = comments
       writableListingId.value = resolvedListingId
       await loadGuideConversationThread()
