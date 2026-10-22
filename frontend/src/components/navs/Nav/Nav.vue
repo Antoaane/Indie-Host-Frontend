@@ -18,6 +18,7 @@ import { closeMobileMenu, isMobileMenuOpen, isNavForcedHidden } from '@/componen
 import { createMyStripeConnectDashboardLink, fetchMyStripeSubscriptionState } from '@/domain/api/stripeSubscriptions'
 import { isManagedListingHostname } from '@/domain/listings/publicDomain'
 import { useAdminAccess } from '@/composables/useAdminAccess'
+import { useBootLoader } from '@/composables/useBootLoader'
 import { readActiveUserId } from '@/router/backOfficeUser'
 import { vp } from '@/utils/viewport'
 import clerkToken from '@/utils/clerkToken'
@@ -85,6 +86,7 @@ const isNavActuallyHidden = computed(() => isNavForcedHidden.value || isNavHidde
 const isHost = computed(() => navVariant.value === 'host')
 const isBackOfficeDockMode = computed(() => isHost.value && !vp.lg.value)
 const { isAdminUser } = useAdminAccess()
+const { isBootLoaderActive } = useBootLoader()
 
 type BackOfficeRouteName = 'editor' | 'create-listing' | 'management' | 'messaging'
 type BackOfficeUserRouteName = 'editor-user' | 'create-listing-user' | 'management-user' | 'messaging-user'
@@ -479,6 +481,8 @@ const backOfficeDockItems = computed(() => {
 function animateNavIn() {
   const navElement = navRoot.value?.querySelector<HTMLElement>('.navbar, .back-office-dock-nav')
   if (!navElement) return
+  // Sous l'écran de chargement, la barre se révèle avec le reste de la page.
+  if (isBootLoaderActive.value) return
   if (document.documentElement.classList.contains('is-ios') && !vp.lg.value) return
   if (document.documentElement.classList.contains('ios-landing-lite')) return
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return

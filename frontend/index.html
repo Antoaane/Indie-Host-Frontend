@@ -8,6 +8,11 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
+    <!-- Tableau de bord rechargé : classe posée avant le premier affichage pour que le fond
+         soit déjà celui de l'écran de chargement (BootLoader.vue), sans flash sombre sur mobile. -->
+    <script>
+      if (/^\/dashboard(\/|$)/.test(location.pathname)) document.documentElement.classList.add('is-booting')
+    </script>
 
     <!-- Preload ressources critiques : polices + image LCP hero -->
     <!-- Sans ces hints, iOS Safari découvre ces fichiers trop tard (après parse JS) -->

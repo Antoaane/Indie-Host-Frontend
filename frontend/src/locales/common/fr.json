@@ -1,1 +1,5 @@
-{}
+{
+  "bootLoader": {
+    "label": "Chargement de votre espace…"
+  }
+}
