@@ -8,6 +8,7 @@ import type { ListingDomainRecord } from '@/domain/api/listingDomains'
 import { getListingsController } from '@/domain/listings/controller'
 import type { UserListingCard } from '@/domain/listings/types'
 import { readActiveUserId } from '@/router/backOfficeUser'
+import editorLocale from '@/locales/editor/fr.json'
 import ListingCustomDomainPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/CustomDomainPanel.vue'
 import ListingSubdomainPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/DomainPanel.vue'
 
@@ -33,11 +34,14 @@ function readQueryValue(value: unknown): string | null {
   return null
 }
 
+// Statuts traduits (« paused » → « En pause ») ; un statut inconnu reste brut.
+const statusLabels: Record<string, string> = { draft: 'Brouillon', ...editorLocale.editor.listings.status }
+
 function formatListingLabel(listing: UserListingCard): string {
   const title = (listing.title ?? '').trim() || 'Annonce sans titre'
   const status = (listing.status ?? '').trim()
   if (!status) return title
-  return `${title} (${status})`
+  return `${title} (${statusLabels[status.toLowerCase()] ?? status})`
 }
 
 function resolveErrorMessage(error: unknown, fallback: string): string {
@@ -161,12 +165,12 @@ onMounted(() => {
 <template>
   <section class="domain-panel">
     <div class="domain-panel__header">
-      <h1>Domaines de l annonce</h1>
+      <h1>Domaines de l’annonce</h1>
       <p>Chaque annonce dispose d’un sous-domaine IndieHost gratuit et peut aussi utiliser un nom de domaine que vous possédez déjà.</p>
     </div>
 
     <section class="domain-panel__section">
-      <h2>Annonce a configurer</h2>
+      <h2>Annonce à configurer</h2>
       <p class="domain-panel__hint">Choisissez une annonce puis gerez son sous-domaine public.</p>
 
       <p

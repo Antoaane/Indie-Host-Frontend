@@ -100,7 +100,8 @@ function buildStoragePayload(draft: RawListingBundle, strategy: PersistStrategy)
   }
 }
 
-function shouldPreferCompactStorage(draft: RawListingBundle): boolean {
+/** Vrai si une image du brouillon ne peut pas être stockée localement (data URL, src trop longue). */
+export function shouldPreferCompactStorage(draft: RawListingBundle): boolean {
   const medias = draft.medias
   if (!medias || typeof medias !== 'object' || Array.isArray(medias)) return false
 

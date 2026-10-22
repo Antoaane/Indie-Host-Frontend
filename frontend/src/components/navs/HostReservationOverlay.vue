@@ -472,10 +472,11 @@ async function loadListings() {
       fetched = await controller.fetchListings()
     }
 
-    listings.value = fetched
+    // Une page principale (hub) ne se réserve pas : la proposer affichait un calendrier entièrement barré.
+    listings.value = fetched.filter((listing) => listing.kind !== 'hub')
 
-    if (!selectedListingId.value || !fetched.some((listing) => listing.listingId === selectedListingId.value)) {
-      selectedListingId.value = fetched[0]?.listingId ?? null
+    if (!selectedListingId.value || !listings.value.some((listing) => listing.listingId === selectedListingId.value)) {
+      selectedListingId.value = listings.value[0]?.listingId ?? null
     }
 
     if (selectedListingId.value) {

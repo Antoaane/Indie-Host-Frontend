@@ -1,7 +1,7 @@
 <!-- File: src/views/Editor/components/EditorSidebar/EditorSidebar.vue -->
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import BaseSidebar from '@/components/layouts/BaseSidebar.vue'
 import EditorSidebarNav from '@/views/Editor/components/EditorSidebar/EditorSidebarNav.vue'
@@ -54,6 +54,35 @@ const sidebarContent = editorStatic.sidebar
 
 const showApplyToAllToggle = computed(() => Boolean(props.hasMultiplePendingListings))
 const shouldShowFooter = computed(() => Boolean(props.hasPendingChanges))
+
+// Le pied (Annuler / Appliquer) flotte au-dessus du corps défilant : sa hauteur
+// réelle est réservée en bas du corps pour que le dernier élément reste atteignable.
+const sidebarRef = ref<{ $el?: HTMLElement } | null>(null)
+const footerHeight = ref(0)
+let footerObserver: ResizeObserver | null = null
+
+function observeFooter() {
+  footerObserver?.disconnect()
+  footerObserver = null
+  const footer = sidebarRef.value?.$el?.querySelector?.<HTMLElement>(':scope > .base-sidebar__footer')
+  if (!footer || typeof ResizeObserver === 'undefined') {
+    footerHeight.value = 0
+    return
+  }
+  footerObserver = new ResizeObserver(() => {
+    footerHeight.value = Math.ceil(footer.getBoundingClientRect().height)
+  })
+  footerObserver.observe(footer)
+}
+
+watch(shouldShowFooter, () => nextTick(observeFooter))
+onMounted(observeFooter)
+
+// Un nouvel onglet s'ouvre en haut, pas à la position de défilement du précédent.
+watch(tab, () => {
+  const body = sidebarRef.value?.$el?.querySelector?.<HTMLElement>(':scope > .base-sidebar__body')
+  if (body) body.scrollTop = 0
+})
 const canPublish = computed(() => {
   if (props.isLoading || isPublishing.value || isCancelling.value) return false
   if (showApplyToAllToggle.value && applyToAllPending.value) {
@@ -154,13 +183,16 @@ async function cancelDraftChanges() {
 
 onBeforeUnmount(() => {
   clearSuccessFeedback()
+  footerObserver?.disconnect()
 })
 </script>
 
 <template>
   <BaseSidebar
+    ref="sidebarRef"
     class="editor-sidebar"
     :class="{ 'is-action-running': isActionRunning }"
+    :style="{ '--editor-sidebar-footer-height': `${footerHeight}px` }"
     body-scrollable
   >
     <template #header>
@@ -295,6 +327,7 @@ onBeforeUnmount(() => {
   > .base-sidebar__body {
     border-radius: borders.$rounded-xl;
     overscroll-behavior: contain;
+    padding-bottom: var(--editor-sidebar-footer-height, 0px);
   }
 
   > .base-sidebar__footer {

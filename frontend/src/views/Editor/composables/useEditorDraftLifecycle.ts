@@ -10,6 +10,7 @@ import {
 import {
   persistListingDraft,
   persistListingPublishedSnapshot,
+  shouldPreferCompactStorage,
 } from '@/views/Editor/utils/persistListingDraft'
 import type { EditorSource } from '@/views/Editor/types/editor'
 import type { VolatileBundle } from '@/views/Editor/utils/listingApi'
@@ -70,9 +71,15 @@ export function useEditorDraftLifecycle(options: DraftLifecycleOptions) {
     try {
       const fetched = await options.getSource().fetchEditableListingBundle(listingId)
       const fetchedSnapshot = snapshotListingDraft(fetched)
-      const localDraft = fetchListingDraft(listingId)
+      // Le stockage local retire les photos en data URL (quota). Quand l'annonce
+      // en contient, les médias du serveur font foi : sinon la galerie paraît vide
+      // et « Appliquer » publierait une galerie amputée.
+      const keepServerMedias = shouldPreferCompactStorage(fetchedSnapshot)
+      const withServerMedias = (snapshot: RawListingBundle | null): RawListingBundle | null =>
+        snapshot && keepServerMedias ? { ...snapshot, medias: fetchedSnapshot.medias } : snapshot
+      const localDraft = withServerMedias(fetchListingDraft(listingId))
       const localSnapshot = localDraft ? snapshotListingDraft(localDraft) : null
-      const localPublished = fetchListingPublishedSnapshot(listingId)
+      const localPublished = withServerMedias(fetchListingPublishedSnapshot(listingId))
       const localPublishedSnapshot = localPublished ? snapshotListingDraft(localPublished) : null
       const previousDraftSnapshot = options.draftSnapshotByListingId[listingId]
       const publishedSnapshot = options.publishedSnapshotByListingId[listingId]

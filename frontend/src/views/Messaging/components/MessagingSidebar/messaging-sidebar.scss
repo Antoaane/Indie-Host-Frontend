@@ -41,9 +41,11 @@
 
       >.state {
         margin: 0;
-        padding: var(--layout-gap-sm);
+        padding: var(--layout-gap-xl) var(--layout-gap-md);
         color: rgba($secondary-text, 0.78);
         @include little-text($thin: false);
+        text-align: center;
+        text-wrap: balance;
 
         &.is-error {
           color: rgba($bad, 0.95);

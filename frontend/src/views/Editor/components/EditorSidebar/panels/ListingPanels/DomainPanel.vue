@@ -244,7 +244,8 @@ onMounted(() => {
       </div>
 
       <p class="hint">
-        URL publique : <strong>{{ previewUrl || `https://mon-logement.${rootDomain}` }}</strong>
+        <template v-if="previewUrl">URL publique : <strong>{{ previewUrl }}</strong></template>
+        <template v-else>Exemple d’URL publique : <strong>https://mon-logement.{{ rootDomain }}</strong></template>
       </p>
 
       <div class="actions">

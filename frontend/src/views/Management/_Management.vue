@@ -51,6 +51,7 @@ const selectedListingId = ref<string | null>(null)
 const selectedReservationId = ref<string | null>(null)
 const isDeleteOverlayOpen = ref(false)
 const isMobileStageOpen = ref(false)
+const isDevBuild = import.meta.env.DEV
 
 const listings = ref<UserListingCard[]>([])
 const listingsStatus = reactive({
@@ -1124,8 +1125,10 @@ const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !nor
       >
         <section class="stage">
           <div class="content">
+            <!-- Sur mobile, la barre porte le retour aux annonces : elle reste
+                 affichée même sans réservation, sinon le panneau est une impasse. -->
             <div
-              v-if="reservationsForListing.length"
+              v-if="reservationsForListing.length || isMobileViewport"
               class="reservation-toolbar"
             >
               <div
@@ -1142,7 +1145,10 @@ const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !nor
                 </button>
               </div>
 
+              <!-- Calendrier et ajout rapide : en cours de développement (panneau vide,
+                   bouton sans action), donc absents des builds de production. -->
               <div
+                v-if="isDevBuild"
                 class="icon-btn calendar in-dev-hide"
                 :class="{ 'is-active': stage === 'calendar' }"
               >
@@ -1156,12 +1162,16 @@ const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !nor
               </div>
 
               <ManagementReservationSlider
+                v-if="reservationsForListing.length"
                 :reservations="reservationsForListing"
                 :activeReservationId="selectedReservationId"
                 @select="handleSelectReservation"
               />
 
-              <div class="icon-btn add in-dev-hide">
+              <div
+                v-if="isDevBuild"
+                class="icon-btn add in-dev-hide"
+              >
                 <button
                   type="button"
                   aria-label="Ajouter une r&eacute;servation" title="Ajouter une r&eacute;servation"
@@ -1386,7 +1396,12 @@ const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !nor
                     v-else
                     class="reservation-empty"
                   >
-                    S&eacute;lectionnez une r&eacute;servation pour afficher le d&eacute;tail.
+                    <template v-if="reservationsForListing.length">
+                      S&eacute;lectionnez une r&eacute;servation pour afficher le d&eacute;tail.
+                    </template>
+                    <template v-else>
+                      Aucune r&eacute;servation pour cette annonce pour le moment.
+                    </template>
                   </div>
                 </div>
               </Transition>

@@ -9,7 +9,9 @@
 @use '@/styles/components/overlays' as overlays;
 
 .editor-listings {
-  --editor-listing-card-min-width: 10rem;
+  // Une carte par ligne sur téléphone : à deux colonnes, la vignette (statut +
+  // « Configurer mon compte ») devient illisible.
+  --editor-listing-card-min-width: 15rem;
 
   @include min-width(lg) {
     --editor-listing-card-min-width: 20rem;
@@ -58,7 +60,12 @@
 
       > .card {
         min-width: 0;
-        aspect-ratio: 9 / 13;
+        aspect-ratio: auto;
+
+        // Ratio commun dès qu'il y a plusieurs colonnes (lignes alignées).
+        @include min-width(sm) {
+          aspect-ratio: 9 / 13;
+        }
 
         position: relative;
         isolation: isolate;

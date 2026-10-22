@@ -225,8 +225,6 @@ onMounted(() => {
       > label {
         display: block;
         @include little-text($color: rgba($secondary, 0.7), $bold: true, $thin: false);
-        text-transform: uppercase;
-        letter-spacing: 0.04rem;
       }
 
       > .field {
@@ -242,8 +240,6 @@ onMounted(() => {
     > .label {
       margin: 0 0 0.5rem 0;
       @include little-text($color: rgba($secondary, 0.7), $bold: true, $thin: false);
-      text-transform: uppercase;
-      letter-spacing: 0.04rem;
     }
 
     > .ql-toolbar {

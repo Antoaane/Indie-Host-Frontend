@@ -100,7 +100,13 @@
 
       >.danger {
         margin-top: 5rem;
-        @include buttons.primary($theme: dark, $fullwidth: true);
+        @include buttons.primary($theme: white, $fullwidth: true);
+
+        // Action destructive signalée en rouge dès le repos : le survol n'existe pas au doigt.
+        &>* {
+          color: $bad;
+          outline-color: rgba($bad, 0.25);
+        }
 
         @include on-hover {
 

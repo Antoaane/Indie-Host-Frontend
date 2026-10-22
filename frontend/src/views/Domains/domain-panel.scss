@@ -1,9 +1,18 @@
+/* File: src/views/Domains/domain-panel.scss */
+
+@use '@/styles/variables/globals' as *;
+
 .domain-panel {
   width: min(980px, 100%);
-  margin: 5rem auto 3rem;
+  // Mobile : la navigation est un dock en bas (60 px + marges) ; desktop : en-tête fixe en haut.
+  margin: var(--layout-gap) auto calc(60px + var(--layout-gap-sm) * 2 + var(--safe-area-bottom) + var(--layout-gap));
   display: flex;
   flex-direction: column;
   gap: 1rem;
+
+  @include min-width(lg) {
+    margin: 5rem auto 3rem;
+  }
 
   &__header,
   &__section {

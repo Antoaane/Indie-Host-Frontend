@@ -87,7 +87,7 @@ const showSearchEmpty = computed(() => !props.isLoading && !props.error && hasCo
         class="state"
         aria-live="polite"
       >
-        {{ showSearchEmpty ? props.searchEmptyLabel : 'Aucune conversation disponible.' }}
+        {{ showSearchEmpty ? props.searchEmptyLabel : 'Aucune conversation pour le moment. Les échanges avec vos voyageurs apparaîtront ici dès leur première réservation.' }}
       </p>
       <ul
         v-else

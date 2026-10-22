@@ -139,8 +139,6 @@ function fieldCounter(fieldKey: string): string {
       > label {
         display: block;
         @include little-text($color: rgba($secondary, 0.7), $bold: true, $thin: false);
-        text-transform: uppercase;
-        letter-spacing: 0.04rem;
       }
 
       > .field {
