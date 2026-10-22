@@ -117,6 +117,29 @@
     text-align: center;
   }
 
+  // Case « J'accepte les CGV et la politique de confidentialité » (inscription).
+  .cl-formFieldCheckboxInput {
+    width: 1.125rem;
+    height: 1.125rem;
+    flex-shrink: 0;
+    accent-color: $secondary;
+    cursor: pointer;
+  }
+
+  .cl-formFieldCheckboxLabel {
+    cursor: pointer;
+    @include little-text(rgba($secondary, 0.8), $thin: false);
+
+    a {
+      @include animations.transition(animations.$duration-fast);
+      @include little-text($secondary, $bold: true, $underline: true);
+
+      @include on-hover {
+        color: $primary_gradiant_ink_first;
+      }
+    }
+  }
+
   .cl-formFieldErrorText,
   .cl-alertText {
     @include little-text($bad-ink, $thin: false);

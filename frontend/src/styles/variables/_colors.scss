@@ -59,6 +59,9 @@ $bad: rgb(255, 82, 82);
 // destructive ; $bad seul tombe à 3:1 sur blanc.
 $bad-ink: color.scale($bad, $lightness: -40%);
 $good: rgb(0, 255, 166);
+// Vert lisible sur fond clair pour les textes de succès ; le menthe de $good
+// tombe à 1.4:1 sur blanc et reste réservé aux fonds sombres et aux pastilles.
+$good-ink: color.scale($good, $lightness: -56%);
 // $coussi_coussa: #ffc87a;
 // $obsolete: #FF7A7A;
 $progressing: rgb(255, 216, 119);

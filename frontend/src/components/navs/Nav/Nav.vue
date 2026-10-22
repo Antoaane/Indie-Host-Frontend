@@ -209,10 +209,12 @@ async function handleOpenStripeConnectDashboard(_event?: MouseEvent) {
 }
 
 function handleOpenMyAccount() {
+  closeDockOptions()
   clerk.value?.openUserProfile()
 }
 
 function handleOpenMyProfile() {
+  closeDockOptions()
   myProfileDialogOpen.value = true
 }
 

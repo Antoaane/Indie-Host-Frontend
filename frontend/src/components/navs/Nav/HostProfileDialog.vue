@@ -57,11 +57,11 @@ const avatarUrl = computed(() => {
 
 const pseudoTooShort = computed(() => form.pseudo.trim().length < 2)
 
-const canSubmit = computed(() => {
-  if (state.isSaving || state.isLoading) return false
-  if (pseudoTooShort.value) return false
-  return true
-})
+// Erreur affichée une fois le champ quitté ou l'envoi tenté, pas dès l'ouverture.
+const pseudoTouched = ref(false)
+const showPseudoError = computed(() => pseudoTouched.value && !state.isLoading && pseudoTooShort.value)
+
+const canSubmit = computed(() => !state.isSaving && !state.isLoading)
 
 function readString(value: unknown): string {
   if (typeof value !== 'string') return ''
@@ -131,6 +131,8 @@ async function loadProfile() {
 
 async function handleSave() {
   if (!canSubmit.value) return
+  pseudoTouched.value = true
+  if (pseudoTooShort.value) return
 
   state.isSaving = true
   state.saveError = ''
@@ -184,6 +186,7 @@ watch(
       return
     }
 
+    pseudoTouched.value = false
     void loadProfile()
   },
 )
@@ -199,8 +202,8 @@ watch(
     <section class="panel">
       <header class="header">
         <div class="title-copy">
-          <p class="eyebrow">Profil hôte</p>
           <h2>Mon profil</h2>
+          <p class="subtitle">Votre pseudo et votre bio apparaissent sur vos annonces.</p>
         </div>
 
         <button
@@ -212,18 +215,6 @@ watch(
           <X :size="18" />
         </button>
       </header>
-
-      <p class="hint">
-        La photo est synchronisée avec Clerk. Utilisez
-        <button
-          type="button"
-          class="inline-action"
-          @click="openClerkAccountManagement"
-        >
-          Mes informations
-        </button>
-        pour la modifier.
-      </p>
 
       <div class="avatar-row">
         <img
@@ -240,17 +231,22 @@ watch(
           <UserRound :size="24" />
         </span>
 
-        <button
-          type="button"
-          class="avatar-action"
-          @click="openClerkAccountManagement"
-        >
-          Modifier la photo
-        </button>
+        <div class="avatar-copy">
+          <p class="hint">La photo vient de votre compte, dans Mes informations.</p>
+          <div class="avatar-action">
+            <button
+              type="button"
+              @click="openClerkAccountManagement"
+            >
+              Modifier la photo
+            </button>
+          </div>
+        </div>
       </div>
 
       <form
         class="form"
+        novalidate
         @submit.prevent="handleSave"
       >
         <label class="field">
@@ -261,6 +257,9 @@ watch(
             maxlength="120"
             placeholder="Votre pseudo"
             autocomplete="nickname"
+            :aria-invalid="showPseudoError"
+            :aria-describedby="showPseudoError ? 'host-profile-pseudo-error' : undefined"
+            @blur="pseudoTouched = true"
           />
         </label>
 
@@ -275,8 +274,10 @@ watch(
         </label>
 
         <p
-          v-if="pseudoTooShort"
+          v-if="showPseudoError"
+          id="host-profile-pseudo-error"
           class="status is-error"
+          role="alert"
         >
           Le pseudo doit contenir au moins 2 caractères.
         </p>
@@ -303,22 +304,24 @@ watch(
         </p>
 
         <footer class="actions">
-          <button
-            type="button"
-            class="ghost-button"
-            :disabled="state.isSaving"
-            @click="closeDialog"
-          >
-            Annuler
-          </button>
+          <div class="cancel">
+            <button
+              type="button"
+              :disabled="state.isSaving"
+              @click="closeDialog"
+            >
+              Annuler
+            </button>
+          </div>
 
-          <button
-            type="submit"
-            class="save-button"
-            :disabled="!canSubmit"
-          >
-            {{ state.isSaving ? 'Enregistrement…' : 'Enregistrer' }}
-          </button>
+          <div class="save">
+            <button
+              type="submit"
+              :disabled="!canSubmit"
+            >
+              {{ state.isSaving ? 'Enregistrement…' : 'Enregistrer' }}
+            </button>
+          </div>
         </footer>
       </form>
 
@@ -330,6 +333,7 @@ watch(
 <style lang="scss">
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
 @use '@/styles/components/buttons' as buttons;
 @use '@/styles/components/inputs' as inputs;
 @use '@/styles/components/overlays' as overlays;
@@ -352,54 +356,49 @@ watch(
       > .title-copy {
         display: flex;
         flex-direction: column;
-        gap: 0.2rem;
-
-        > .eyebrow {
-          margin: 0;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          color: rgba($secondary, 0.62);
-          @include little-text($thin: false);
-        }
+        gap: var(--layout-gap-xs);
 
         > h2 {
           margin: 0;
           @include h2-title;
         }
+
+        > .subtitle {
+          margin: 0;
+          @include base-text(rgba($secondary-text, 0.72), $thin: false);
+        }
       }
 
       > .close-button {
-        @include buttons.secondary;
-        width: 2.1rem;
-        min-width: 2.1rem;
-        height: 2.1rem;
-        border-radius: 999px;
+        flex-shrink: 0;
+        width: 2.25rem;
+        height: 2.25rem;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         padding: 0;
+        border: none;
+        border-radius: borders.$rounded;
+        background: rgba($secondary, 0.06);
+        color: $secondary;
+        cursor: pointer;
+        touch-action: manipulation;
+        @include animations.transition(animations.$duration-fast);
+        @include animations.press(0.94);
+
+        @include on-hover {
+          background: rgba($secondary, 0.12);
+        }
+
+        &:focus-visible {
+          outline: 2px solid rgba($secondary, 0.4);
+          outline-offset: 2px;
+        }
 
         @media (pointer: coarse) {
           width: 44px;
-          min-width: 44px;
           height: 44px;
         }
-      }
-    }
-
-    > .hint {
-      margin: 0;
-      color: rgba($secondary-text, 0.72);
-      @include base-text($thin: false);
-
-      > .inline-action {
-        border: 0;
-        padding: 0;
-        background: none;
-        color: $secondary;
-        text-decoration: underline;
-        text-underline-offset: 0.15em;
-        cursor: pointer;
       }
     }
 
@@ -407,13 +406,17 @@ watch(
       display: flex;
       align-items: center;
       gap: var(--layout-gap-sm);
+      padding: var(--layout-gap-sm);
+      border-radius: borders.$rounded-md;
+      background: $accent-surface-1;
 
       > .avatar {
+        flex-shrink: 0;
         width: 3.25rem;
         height: 3.25rem;
-        border-radius: 999px;
+        border-radius: borders.$rounded;
         object-fit: cover;
-        border: 1px solid rgba($secondary, 0.2);
+        border: 1px solid rgba($secondary, 0.12);
       }
 
       > .avatar-fallback {
@@ -424,8 +427,21 @@ watch(
         color: rgba($secondary, 0.75);
       }
 
-      > .avatar-action {
-        @include buttons.secondary;
+      > .avatar-copy {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--layout-gap-xs);
+        min-width: 0;
+
+        > .hint {
+          margin: 0;
+          @include little-text(rgba($secondary-text, 0.72), $thin: false);
+        }
+
+        > .avatar-action {
+          @include buttons.primary($theme: white, $little: true);
+        }
       }
     }
 
@@ -440,10 +456,14 @@ watch(
         gap: 0.42rem;
 
         > .field-label {
-          @include little-text($thin: false);
+          @include little-text($secondary, $bold: true);
         }
 
         @include inputs.field($theme: accent, $compact: true);
+
+        > input[aria-invalid="true"] {
+          border-color: rgba($bad-ink, 0.5);
+        }
       }
 
       > .bio-field {
@@ -459,22 +479,22 @@ watch(
         }
 
         &.is-success {
-          color: rgba($good, 0.95);
+          color: $good-ink;
         }
       }
 
       > .actions {
         display: flex;
         justify-content: flex-end;
-        gap: var(--layout-gap-xs);
-        padding-top: 0.4rem;
+        gap: var(--layout-gap-sm);
+        padding-top: var(--layout-gap-xs);
 
-        > .ghost-button {
-          @include buttons.secondary;
+        > .cancel {
+          @include buttons.primary($theme: white);
         }
 
-        > .save-button {
-          @include buttons.primary(true);
+        > .save {
+          @include buttons.primary($theme: black);
         }
       }
     }

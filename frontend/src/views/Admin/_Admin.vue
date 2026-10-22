@@ -436,7 +436,6 @@ onMounted(() => {
 
 <template>
   <section class="admin-panel">
-    <!-- div et non <header> : l'élément header porte les styles globaux de la barre du site (fixe, flex). -->
     <div class="admin-header">
       <h1>Administration</h1>
       <p>Comptes clients, abonnements et liens de paiement. Vous agissez ici au nom d’IndieHost.</p>

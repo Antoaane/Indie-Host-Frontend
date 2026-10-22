@@ -716,7 +716,7 @@
         }
 
         &.is-paid {
-          color: rgba($good, 0.92);
+          color: $good-ink;
         }
 
         &.is-pending {
@@ -852,7 +852,7 @@
           }
 
           &.success {
-            color: rgba($good, 0.9);
+            color: $good-ink;
           }
         }
       }

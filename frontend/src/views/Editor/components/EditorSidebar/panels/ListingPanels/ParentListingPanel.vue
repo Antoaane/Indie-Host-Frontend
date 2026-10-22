@@ -216,7 +216,7 @@ onMounted(() => { void load() })
       color: rgba($secondary, 0.7);
 
       &.is-success {
-        color: rgba($good, 0.95);
+        color: $good-ink;
       }
 
       &.is-error {

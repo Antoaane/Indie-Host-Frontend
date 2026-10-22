@@ -146,7 +146,7 @@ const emit = defineEmits<{
     > .info {
       margin: 0;
       @include little-text($thin: false);
-      color: rgba($good, 0.95);
+      color: $good-ink;
     }
   }
 

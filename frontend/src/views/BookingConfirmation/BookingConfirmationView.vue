@@ -926,7 +926,7 @@ async function cancelCurrentReservation() {
   font-size: 14px;
 
   &.is-success {
-    color: rgba($good, 0.92);
+    color: $good-ink;
   }
 
   &.is-error {
