@@ -3,15 +3,16 @@
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/animations' as animations;
 
-// Styles de base pour les titres et paragraphes
+// Styles de base pour les titres et paragraphes. Lignes d'accordéon : un cran
+// sous les titres de section (lp-h3 donnait aux groupes la taille d'une section).
 h3 {
   margin: 0 !important;
-  @include lp-h3-title($accent);
+  @include lp-h4-title($accent);
 }
 
 h4 {
   margin: 0 !important;
-  @include lp-h4-title($accent);
+  @include base-text($accent, $bold: true, $thin: false, $bigger: true);
 }
 
 mark {
