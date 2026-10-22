@@ -922,7 +922,7 @@ async function cancelCurrentReservation() {
   }
 
   &.is-error {
-    color: rgba($bad, 0.92);
+    color: $bad-ink;
   }
 }
 
@@ -1086,7 +1086,7 @@ async function cancelCurrentReservation() {
 
   &.danger {
     border-color: rgba($bad, 0.36);
-    color: rgba($bad, 0.96);
+    color: $bad-ink;
     background: rgba($bad, 0.1);
   }
 

@@ -37,6 +37,12 @@ $primary_gradiant_first: rgb(163, 153, 255);
 $primary_gradiant_second: rgb(223, 153, 255);
 $primary_gradiant_third: rgb(255, 196, 197);
 
+// Encre de marque : le dégradé signature mêlé au $secondary pour les fonds
+// clairs (lavande ≈ 6:1, orchidée ≈ 5:1 sur $accent). Le dégradé pastel
+// d'origine tombe à 2.4:1 sur blanc.
+$primary_gradiant_ink_first: color.mix($primary_gradiant_first, $secondary, 52%);
+$primary_gradiant_ink_second: color.mix($primary_gradiant_second, $secondary, 56%);
+
 $secondary_gradiant_first: rgb(254, 251, 153);
 $secondary_gradiant_second: rgb(153, 255, 226);
 
@@ -49,6 +55,9 @@ $secondary_text_gradiant_second: rgba($secondary-text, 0.75);
 // STATUS
 $airbnb: rgb(255, 82, 82);
 $bad: rgb(255, 82, 82);
+// Rouge lisible sur fond clair (≈ 5.9:1) pour les textes d'erreur et d'action
+// destructive ; $bad seul tombe à 3:1 sur blanc.
+$bad-ink: color.scale($bad, $lightness: -40%);
 $good: rgb(0, 255, 166);
 // $coussi_coussa: #ffc87a;
 // $obsolete: #FF7A7A;
