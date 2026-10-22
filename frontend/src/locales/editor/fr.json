@@ -528,6 +528,9 @@
         "cancellation": {
           "title": "Conditions d’annulation",
           "subtitle": "Choisissez une politique et personnalisez si besoin",
+          "refundsEnabled": "Rembourser le voyageur s’il annule",
+          "refundsEnabledHint": "Le voyageur qui annule est remboursé selon la politique choisie ci-dessous.",
+          "refundsDisabledHint": "Réservations non remboursables : le voyageur peut annuler, mais les sommes versées ne lui sont pas remboursées. Si vous annulez vous-même un séjour, le voyageur est toujours remboursé intégralement.",
           "policyLabel": "Politique",
           "policies": {
             "flexible": "Flexible",

@@ -61,6 +61,10 @@ export const cancelBookingSchema = z.object({
   reason: z.string().trim().max(1000).optional(),
 });
 
+export const hostCancelBookingSchema = z.object({
+  reason: z.string().trim().max(1000).optional(),
+});
+
 export const bookingGuideParamsSchema = z.object({
   guideKey: z.string().trim().min(1),
 });

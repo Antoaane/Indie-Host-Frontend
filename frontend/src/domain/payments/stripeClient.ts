@@ -1,6 +1,9 @@
 // File: src/domain/payments/stripeClient.ts
 
-import { loadStripe, type Stripe } from '@stripe/stripe-js'
+// Variante « pure » : le script Stripe (et ses cookies anti-fraude) n'est injecté qu'à l'appel de
+// loadStripe(), c'est-à-dire à l'étape de paiement, et non dès qu'une page importe ce module.
+import { loadStripe } from '@stripe/stripe-js/pure'
+import type { Stripe } from '@stripe/stripe-js'
 
 let stripePromise: Promise<Stripe | null> | null = null
 const TRUTHY_ENV_VALUES = new Set(['1', 'true', 'yes', 'on'])

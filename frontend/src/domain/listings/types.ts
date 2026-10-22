@@ -121,6 +121,8 @@ export type RawReservationConfirmation = {
 export type RawPricingCancellationPolicy = 'flexible' | 'moderate' | 'strict' | 'custom' | string
 export type RawPricingCancellation = RawPerkScoring & {
   policy?: RawPricingCancellationPolicy
+  // Désactivé par défaut : sans accord de l'hôte, les réservations sont non remboursables.
+  refundsEnabled?: boolean
   custom?: {
     days?: number | null
     feePercent?: number | null

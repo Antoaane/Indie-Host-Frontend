@@ -1,0 +1,22 @@
+# IndieHost — https://indiehost.fr
+# Moteurs de recherche et agents IA sont les bienvenus sur les pages publiques.
+# Résumé du produit pour les assistants IA : https://indiehost.fr/llms.txt
+
+User-agent: *
+Allow: /
+Allow: /api/v1/listings/sitemap.xml
+Disallow: /api/
+Disallow: /dashboard/
+Disallow: /editor
+Disallow: /management
+Disallow: /messagerie
+Disallow: /domains
+Disallow: /create-listing
+Disallow: /pricing/callback
+Disallow: /booking/confirmation/
+Disallow: /listing/guide/
+Disallow: /sign-in
+Disallow: /sign-up
+
+Sitemap: https://indiehost.fr/sitemap.xml
+Sitemap: https://indiehost.fr/api/v1/listings/sitemap.xml

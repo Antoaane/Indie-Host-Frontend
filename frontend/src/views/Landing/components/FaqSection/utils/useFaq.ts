@@ -1,7 +1,7 @@
 // File: src/views/Landing/components/FaqSection/utils/useFaq.ts
 
 // DEPS
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { useHead } from '@unhead/vue'
 
 import { normalizeSearchText } from '@/utils/search'
@@ -83,21 +83,7 @@ export function useFaq(initialNodes: FaqNode[] = []) {
     ],
   })
 
-  // 5. (Optionnel) tracker search sur Google Analytics
-  function trackSearch() {
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      ; (window as any).gtag('event', 'faq_search', {
-        search_term: search.value,
-      })
-    }
-  }
-
-  // Si besoin, tu peux watcher `search` pour déclencher automatiquement le GA
-  watch(search, () => {
-    if (search.value.length >= 2) {
-      trackSearch()
-    }
-  })
+  // Aucune mesure d'audience : les recherches saisies dans la FAQ restent dans le navigateur.
 
   return {
     // données pour le template

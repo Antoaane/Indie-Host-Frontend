@@ -1,0 +1,189 @@
+/* File: src/views/Legal/legal-page.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
+
+// Documents longs : corps Outfit 300 pour la lecture, largeur de ligne bornée, aucune carte imbriquée.
+.legal-page {
+  --ui-legal-muted: #{rgba($secondary-text, 0.7)};
+  --ui-legal-border: #{rgba($secondary, 0.08)};
+
+  min-height: calc(100dvh - #{$nav-height});
+  padding-top: $nav-height;
+  padding-bottom: var(--layout-gap-4xl);
+  background-color: $background;
+  color: $secondary-text;
+
+  >.legal-page__inner {
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-2xl);
+    padding-top: var(--layout-gap-2xl);
+
+    >.legal-page__header {
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-xs);
+
+      >.legal-page__title {
+        margin: 0;
+        @include h1-title($colorful: false);
+      }
+
+      >.legal-page__updated {
+        margin: 0;
+        @include little-text(var(--ui-legal-muted));
+      }
+    }
+
+    >.legal-page__content {
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-xl);
+      max-width: 70ch;
+
+      section {
+        display: flex;
+        flex-direction: column;
+        gap: var(--layout-gap-sm);
+      }
+
+      h2 {
+        margin: 0;
+        @include h3-title($colorful: false);
+      }
+
+      h3 {
+        margin: var(--layout-gap-sm) 0 0;
+        @include h4-title($colorful: false);
+      }
+
+      p,
+      li {
+        @include base-text($thin: false, $bigger: true);
+      }
+
+      ul,
+      ol {
+        margin: 0;
+        padding-left: 1.25rem;
+        display: flex;
+        flex-direction: column;
+        gap: var(--layout-gap-xs);
+      }
+
+      ul {
+        list-style: disc;
+      }
+
+      ol {
+        list-style: decimal;
+      }
+
+      code {
+        padding: 0 var(--layout-gap-2xs);
+        border-radius: borders.$rounded-xs;
+        background-color: rgba($secondary, 0.06);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.9em;
+      }
+
+      a {
+        color: $secondary-text;
+        text-decoration: underline;
+        text-decoration-color: rgba($secondary, 0.35);
+        text-underline-offset: 0.2em;
+        @include animations.transition(animations.$duration-fast);
+
+        @include on-hover {
+          text-decoration-color: $secondary;
+        }
+
+        &:focus-visible {
+          outline: 2px solid $secondary;
+          outline-offset: 2px;
+          border-radius: borders.$rounded-xs;
+        }
+      }
+
+      blockquote {
+        margin: 0;
+        padding: var(--layout-gap) var(--layout-gap-xl);
+        border-radius: borders.$rounded-md;
+        background-color: $accent-surface-1;
+      }
+
+      .legal-table {
+        overflow-x: auto;
+        border: 1px solid var(--ui-legal-border);
+        border-radius: borders.$rounded-lg;
+        background-color: $accent;
+        overscroll-behavior-x: contain;
+      }
+
+      table {
+        width: 100%;
+        min-width: 36rem;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        padding: var(--layout-gap-sm) var(--layout-gap-md);
+        border-bottom: 1px solid var(--ui-legal-border);
+        text-align: left;
+        vertical-align: top;
+        @include little-text($thin: false);
+      }
+
+      thead th,
+      tbody th {
+        @include little-text($bold: true);
+      }
+
+      tbody tr:last-child {
+        >th,
+        >td {
+          border-bottom: none;
+        }
+      }
+    }
+
+    >.legal-page__nav {
+      padding-top: var(--layout-gap-xl);
+      border-top: 1px solid var(--ui-legal-border);
+
+      >ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--layout-gap-xs) var(--layout-gap);
+
+        a {
+          display: inline-flex;
+          align-items: center;
+          min-height: 44px;
+          @include little-text(var(--ui-legal-muted), $thin: false);
+          @include animations.transition(animations.$duration-fast);
+
+          @include on-hover {
+            color: $secondary-text;
+          }
+
+          &[aria-current='page'] {
+            @include little-text($secondary-text, $bold: true);
+          }
+
+          &:focus-visible {
+            outline: 2px solid $secondary;
+            outline-offset: 2px;
+            border-radius: borders.$rounded-xs;
+          }
+        }
+      }
+    }
+  }
+}

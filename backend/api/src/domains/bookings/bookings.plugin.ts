@@ -9,6 +9,7 @@ import {
   bookingGuideParamsSchema,
   bookingConfirmationParamsSchema,
   createBookingSchema,
+  hostCancelBookingSchema,
   listingBookingsParamsSchema,
   updateBookingParamsSchema,
   updateBookingSchema,
@@ -155,6 +156,44 @@ export const bookingsPlugin = fp(async (fastify) => {
 
     if (canceled === 'forbidden') {
       reply.code(403).send({ message: 'Invalid reservation access token.' });
+      return;
+    }
+
+    reply.send(canceled);
+  });
+
+  // Annulation par l'hôte depuis la gestion : remboursement intégral du voyageur, dates libérées.
+  fastify.post('/bookings/:reservationId/host-cancel', {
+    preHandler: fastify.authenticate,
+  }, async (request, reply) => {
+    const { reservationId } = bookingConfirmationParamsSchema.parse(request.params);
+    const payload = hostCancelBookingSchema.parse(asObject(request.body));
+
+    const reservation = await fastify.prisma.reservation.findUnique({
+      where: { id: reservationId },
+      select: { listingId: true },
+    });
+    const access = reservation
+      ? await resolveListingAccess(fastify.prisma, reservation.listingId, request.auth)
+      : null;
+
+    if (!reservation || !access) {
+      reply.code(404).send({ message: 'Reservation not found.' });
+      return;
+    }
+
+    if (!access.canReadPrivate) {
+      reply.code(403).send({ message: 'You cannot cancel this reservation.' });
+      return;
+    }
+
+    const canceled = await service.cancelBookingAsHost(reservationId, {
+      reason: payload.reason,
+      publicBaseUrl: resolvePublicBaseUrl(request),
+    });
+
+    if (!canceled || canceled === 'forbidden') {
+      reply.code(404).send({ message: 'Reservation not found.' });
       return;
     }
 

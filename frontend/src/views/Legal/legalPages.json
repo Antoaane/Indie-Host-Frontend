@@ -1,0 +1,43 @@
+{
+  "updatedAt": "2026-10-22",
+  "updatedAtLabel": "22 octobre 2026",
+  "canonicalOrigin": "https://indiehost.fr",
+  "pages": [
+    {
+      "slug": "mentions-legales",
+      "title": "Mentions légales",
+      "navLabel": "Mentions légales",
+      "description": "Éditeur, hébergeur, directeur de la publication et signalement de contenus du site IndieHost."
+    },
+    {
+      "slug": "confidentialite",
+      "title": "Politique de confidentialité",
+      "navLabel": "Confidentialité",
+      "description": "Données personnelles traitées par IndieHost, finalités, durées de conservation, prestataires et exercice de vos droits."
+    },
+    {
+      "slug": "cookies",
+      "title": "Politique de cookies",
+      "navLabel": "Cookies",
+      "description": "Cookies et stockage local utilisés par IndieHost : uniquement des traceurs nécessaires au fonctionnement, sans publicité ni mesure d'audience."
+    },
+    {
+      "slug": "cgv",
+      "title": "Conditions générales de vente et d'utilisation (hôtes)",
+      "navLabel": "CGV hôtes",
+      "description": "Conditions des abonnements IndieHost et SuperHost : prix, essai gratuit, résiliation, rétractation, obligations des hôtes et sous-traitance des données."
+    },
+    {
+      "slug": "cgu-voyageurs",
+      "title": "Conditions d'utilisation et de réservation (voyageurs)",
+      "navLabel": "CGU voyageurs",
+      "description": "Règles applicables aux voyageurs qui réservent un logement sur une page IndieHost : rôle d'IndieHost, réservation, paiement, séjour et avis."
+    },
+    {
+      "slug": "annulation-remboursement",
+      "title": "Annulation et remboursement",
+      "navLabel": "Annulation et remboursement",
+      "description": "Barèmes d'annulation des réservations, délais de remboursement et conditions de remboursement des abonnements IndieHost."
+    }
+  ]
+}

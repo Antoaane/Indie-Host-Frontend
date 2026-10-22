@@ -314,13 +314,13 @@
     "pillars": [
       {
         "id": "pillar1",
-        "title": "面向<strong>独立房东</strong>的免费方案",
-        "description": "为重视独立的房东设计。免费方案覆盖<strong>约 70% 使用场景</strong>：建站、接直订，无订阅、无隐藏费用。"
+        "title": "面向<strong>独立房东</strong>的免费试用",
+        "description": "为重视独立的房东设计。<strong>免费试用 30 天</strong>，无合约绑定：建站、接直订。之后为固定订阅，每月 19 欧元起（含税），零佣金。"
       },
       {
         "id": "pillar2",
         "title": "数据存放，心中有数。",
-        "description": "托管于法国，符合<strong>GDPR</strong>。我们从不售卖您的数据，收入来自订阅。"
+        "description": "托管于欧盟，符合<strong>GDPR</strong>。我们从不售卖您的数据，也不使用广告或流量统计追踪，收入来自订阅。"
       },
       {
         "id": "pillar3",
@@ -535,7 +535,7 @@
           {
             "id": "q-8",
             "question": "我可以随时取消订阅吗？",
-            "answer": "可以。我们的订阅没有合约绑定，可在控制台几次点击即可免费取消。订阅将持续有效至已付费周期结束。"
+            "answer": "可以。我们的订阅没有合约绑定，可随时在您的账户中（我的资料 › 我的订阅）免费取消。订阅将持续有效至已付费周期结束，之后不再扣费。"
           },
           {
             "id": "q-9",
@@ -755,7 +755,7 @@
     "inputPlaceholder": "粘贴您的房源链接",
     "previewCtaLabel": "生成我的页面",
     "createAccountCtaLabel": "免费激活我的页面",
-    "createAccountCtaHint": "免费 · 无绑定 · 零佣金",
+    "createAccountCtaHint": "30 天免费试用 · 无绑定 · 零佣金",
     "backButtonAriaLabel": "返回首页",
     "primaryCta": {
       "label": "免费体验导入",

@@ -314,13 +314,13 @@
     "pillars": [
       {
         "id": "pillar1",
-        "title": "Free plan for <strong>independent hosts</strong>",
-        "description": "Built for hosts who value their independence. Our free plan covers <strong>70% of use cases</strong>: create your site, accept direct bookings—no subscription, no hidden fees."
+        "title": "Free trial for <strong>independent hosts</strong>",
+        "description": "Built for hosts who value their independence. Try IndieHost <strong>free for 30 days</strong>, no commitment: create your site and accept direct bookings. Then a flat subscription from €19/month incl. VAT, with zero commission."
       },
       {
         "id": "pillar2",
         "title": "Know where your data lives.",
-        "description": "Hosted in France, protected under <strong>GDPR</strong>. We never sell your data—our revenue comes from subscriptions, not your privacy. Simple as that."
+        "description": "Hosted in the European Union, protected under <strong>GDPR</strong>. We never sell your data and use no ads or analytics trackers—our revenue comes from subscriptions, not your privacy. Simple as that."
       },
       {
         "id": "pillar3",
@@ -535,7 +535,7 @@
           {
             "id": "q-8",
             "question": "Can I cancel my subscription at any time?",
-            "answer": "Yes. Our subscriptions have no commitment and can be cancelled in a few clicks from your dashboard, free of charge. Your subscription stays active until the end of the period you already paid for."
+            "answer": "Yes. Our subscriptions have no commitment and can be cancelled at any time, free of charge, from your account (My profile, My subscription). Your subscription stays active until the end of the period you already paid for, with no further charge."
           },
           {
             "id": "q-9",
@@ -755,7 +755,7 @@
     "inputPlaceholder": "Paste your listing link",
     "previewCtaLabel": "Generate my site",
     "createAccountCtaLabel": "Activate my site for free",
-    "createAccountCtaHint": "Free · No credit card required · Zero commission",
+    "createAccountCtaHint": "30-day free trial · No commitment · Zero commission",
     "backButtonAriaLabel": "Back to homepage",
     "primaryCta": {
       "label": "Try the free import",

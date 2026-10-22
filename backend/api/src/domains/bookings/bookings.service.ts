@@ -66,10 +66,12 @@ type ReservationConversation = {
 };
 
 type CancellationPolicyKey = 'flexible' | 'moderate' | 'strict' | 'custom';
-type CancellationStage = 'full_refund' | 'partial_refund' | 'late_cancellation' | 'after_arrival';
+type CancellationStage = 'full_refund' | 'partial_refund' | 'late_cancellation' | 'after_arrival' | 'non_refundable';
 
 type ResolvedCancellationPolicy = {
   policy: CancellationPolicyKey;
+  // Les remboursements au voyageur n'existent que si l'hôte les a autorisés dans ses préférences.
+  refundsEnabled: boolean;
   days: number;
   feePercent: number;
   lateFeePercent: number;
@@ -327,6 +329,7 @@ function resolveCancellationPolicyFromBookings(bookings: Record<string, unknown>
 
   return {
     policy,
+    refundsEnabled: cancellation.refundsEnabled === true,
     days,
     feePercent,
     lateFeePercent,
@@ -353,6 +356,10 @@ function resolveCancellationQuote(input: {
     stage = 'after_arrival';
     retainedPercent = CANCELLATION_FEE_MAX;
     canCancel = false;
+  } else if (!input.policy.refundsEnabled) {
+    // Réservation non remboursable : le voyageur peut annuler et libérer les dates, sans remboursement.
+    stage = 'non_refundable';
+    retainedPercent = CANCELLATION_FEE_MAX;
   } else if (msUntilArrival < 24 * HOUR_MS) {
     stage = 'late_cancellation';
     retainedPercent = input.policy.lateFeePercent;
@@ -421,7 +428,9 @@ function readReservationCancellationState(paymentRaw: Record<string, unknown>): 
         ? 'full_refund'
         : stageRaw === 'after_arrival'
           ? 'after_arrival'
-          : 'partial_refund';
+          : stageRaw === 'non_refundable'
+            ? 'non_refundable'
+            : 'partial_refund';
 
   return {
     status,
@@ -731,10 +740,15 @@ export class BookingsService {
         };
       }
 
+      // Paiement reversé à l'hôte (destination charge) : le remboursement reprend la somme sur son
+      // compte Stripe. Sans reverse_transfer, il serait débité du solde d'IndieHost.
+      const isDestinationCharge = Boolean(paymentIntent.transfer_data?.destination);
       const refund = await this.stripe.refunds.create({
         payment_intent: input.paymentIntentId,
         amount: amountToRefund,
         reason: 'requested_by_customer',
+        ...(isDestinationCharge ? { reverse_transfer: true } : {}),
+        ...(paymentIntent.application_fee_amount ? { refund_application_fee: true } : {}),
         metadata: {
           reservationId: input.reservationId,
           listingId: input.listingId,
@@ -1248,6 +1262,7 @@ export class BookingsService {
         reason: cancellationDetails.state.reason,
         policy: {
           policy: cancellationDetails.policy.policy,
+          refundsEnabled: cancellationDetails.policy.refundsEnabled,
           days: cancellationDetails.policy.days,
           feePercent: cancellationDetails.policy.feePercent,
           lateFeePercent: cancellationDetails.policy.lateFeePercent,
@@ -1438,10 +1453,28 @@ export class BookingsService {
     return calendar.toString();
   }
 
+  /**
+   * Annulation décidée par l'hôte : le voyageur est remboursé intégralement, quelle que soit la
+   * politique d'annulation, et les dates sont libérées. L'appelant vérifie que l'acteur gère l'annonce.
+   */
+  async cancelBookingAsHost(
+    reservationId: string,
+    options?: { reason?: string | null; publicBaseUrl?: string | null },
+  ) {
+    const reservation = await this.prisma.reservation.findUnique({
+      where: { id: reservationId.trim() },
+      select: { id: true, listingId: true, startDate: true },
+    });
+    if (!reservation) return null;
+
+    const token = this.buildGuideAccessKey(reservation.id, reservation.listingId, reservation.startDate);
+    return this.cancelBooking(reservation.id, token, { ...options, canceledBy: 'host' });
+  }
+
   async cancelBooking(
     reservationId: string,
     token: string,
-    options?: { reason?: string | null; publicBaseUrl?: string | null },
+    options?: { reason?: string | null; publicBaseUrl?: string | null; canceledBy?: 'guest' | 'host' },
   ) {
     const access = await this.resolveReservationAccessContext(reservationId, token);
     if (!access || access === 'forbidden') return access;
@@ -1453,7 +1486,15 @@ export class BookingsService {
       });
     }
 
-    if (!cancellationDetails.canCancel) {
+    const canceledBy = options?.canceledBy ?? 'guest';
+    const isHostCancellation = canceledBy === 'host';
+    // L'hôte qui annule rembourse tout (CGU voyageurs) ; le voyageur suit la politique de l'annonce.
+    const refundableAmountMinor = isHostCancellation
+      ? cancellationDetails.quote.chargedAmountMinor
+      : cancellationDetails.quote.refundableAmountMinor;
+    const stage = isHostCancellation ? 'full_refund' as const : cancellationDetails.quote.stage;
+
+    if (!isHostCancellation && !cancellationDetails.canCancel) {
       throw createRequestError(
         'Cette réservation ne peut plus être annulée en ligne.',
         409,
@@ -1470,14 +1511,14 @@ export class BookingsService {
     const stripeResult = await this.applyStripeCancellation({
       paymentIntentId: cancellationDetails.paymentIntentId,
       chargedAmountMinor: cancellationDetails.quote.chargedAmountMinor,
-      refundableAmountMinor: cancellationDetails.quote.refundableAmountMinor,
+      refundableAmountMinor,
       reservationId: access.reservationId,
       listingId: access.listingId,
     });
 
     const effectiveRefundMinor = (cancellationDetails.paymentIntentId && this.stripe)
       ? Math.max(0, Math.min(cancellationDetails.quote.chargedAmountMinor, stripeResult.refundedAmountMinor))
-      : cancellationDetails.quote.refundableAmountMinor;
+      : refundableAmountMinor;
     const effectiveRetainedMinor = Math.max(0, cancellationDetails.quote.chargedAmountMinor - effectiveRefundMinor);
     const effectiveRetainedPercent = cancellationDetails.quote.chargedAmountMinor > 0
       ? Math.round((effectiveRetainedMinor / cancellationDetails.quote.chargedAmountMinor) * 100)
@@ -1488,8 +1529,9 @@ export class BookingsService {
       cancellation: {
         status: 'canceled',
         canceledAtISO,
+        canceledBy,
         reason,
-        stage: cancellationDetails.quote.stage,
+        stage,
         chargedAmountMinor: cancellationDetails.quote.chargedAmountMinor,
         refundableAmountMinor: effectiveRefundMinor,
         retainedAmountMinor: effectiveRetainedMinor,
@@ -1601,8 +1643,9 @@ export class BookingsService {
           : 'refunded';
       const cancellationPayload = {
         canceledAtISO,
+        canceledBy,
         reason,
-        stage: cancellationDetails.quote.stage,
+        stage,
         chargedAmountMinor: cancellationDetails.quote.chargedAmountMinor,
         refundableAmountMinor: effectiveRefundMinor,
         retainedAmountMinor: effectiveRetainedMinor,

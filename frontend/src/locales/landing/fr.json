@@ -302,13 +302,13 @@
     "pillars": [
       {
         "id": "pillar1",
-        "title": "Une offre gratuite pour les <strong>loueurs indépendants</strong>",
-        "description": "Nous pensons aux loueurs qui veulent garder leur indépendance. Notre formule gratuite répond aux besoins de <strong>70 % du marché</strong> : créez votre site, recevez des réservations directes, sans abonnement ni engagement."
+        "title": "Un essai gratuit pour les <strong>loueurs indépendants</strong>",
+        "description": "Nous pensons aux loueurs qui veulent garder leur indépendance. Testez IndieHost <strong>30 jours gratuitement</strong>, sans engagement : créez votre site et recevez des réservations directes. Ensuite, un abonnement fixe dès 19 € TTC par mois, sans aucune commission."
       },
       {
         "id": "pillar2",
         "title": "La vraie sérénité, c’est savoir où vont vos données.",
-        "description": "Vos données sont hébergées en France et protégées selon les règles strictes du <strong>RGPD</strong> européen. Votre vie privée n’est jamais monnayée : notre seul modèle économique, c’est l’abonnement, tout simplement. La confidentialité n’est pas une promesse, c’est notre réalité."
+        "description": "Vos données sont hébergées dans l’Union européenne et protégées selon les règles strictes du <strong>RGPD</strong> européen. Votre vie privée n’est jamais monnayée : ni publicité, ni revente, ni outil de mesure d’audience. Notre seul modèle économique, c’est l’abonnement, tout simplement."
       },
       {
         "id": "pillar3",
@@ -362,7 +362,7 @@
         "Valider votre potentiel avant d'investir davantage"
       ],
       "superhostTitle": "SuperHost",
-      "superhostPrice": "39 EUR / mois TTC",
+      "superhostPrice": "49 EUR / mois TTC",
       "superhostPoints": [
         "Passer à un vrai canal d'acquisition directe",
         "Gagner du temps avec plus d'outils et d'automatisation",
@@ -537,7 +537,7 @@
           {
             "id": "q-8",
             "question": "Puis-je annuler mon abonnement à tout moment ?",
-            "answer": "Oui. Nos abonnements sont sans engagement et se résilient en quelques clics depuis votre tableau de bord, sans frais. Votre abonnement reste actif jusqu’à la fin de la période déjà payée."
+            "answer": "Oui. Nos abonnements sont sans engagement et se résilient à tout moment, sans frais, depuis votre compte (Mon profil, section Mon abonnement). Votre abonnement reste actif jusqu’à la fin de la période déjà payée, sans nouveau prélèvement."
           },
           {
             "id": "q-9",
@@ -757,7 +757,7 @@
     "inputPlaceholder": "Lien de votre logement Airbnb ou Booking",
     "previewCtaLabel": "Générer mon site !",
     "createAccountCtaLabel": "Activer mon site gratuitement",
-    "createAccountCtaHint": "Gratuit · Sans engagement · Sans commission",
+    "createAccountCtaHint": "30 jours d’essai · Sans engagement · Sans commission",
     "backButtonAriaLabel": "Retour à la page d'accueil",
     "primaryCta": {
       "label": "Essayer l'import gratuit",

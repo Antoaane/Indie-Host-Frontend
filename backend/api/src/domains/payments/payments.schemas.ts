@@ -70,6 +70,10 @@ export const updateExtraListingsSchema = z.object({
   quantity: z.coerce.number().int().min(0).max(50),
 });
 
+export const updateSubscriptionCancellationSchema = z.object({
+  cancelAtPeriodEnd: z.boolean(),
+});
+
 export const adminUserParamsSchema = z.object({
   userId: z.string().trim().min(1),
 });

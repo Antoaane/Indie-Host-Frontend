@@ -314,13 +314,13 @@
     "pillars": [
       {
         "id": "pillar1",
-        "title": "Plano grátis para <strong>anfitriões independentes</strong>",
-        "description": "Para quem valoriza a independência. O plano grátis cobre <strong>70% dos casos</strong>: crie o seu site, aceite reservas diretas — sem subscrição nem taxas escondidas."
+        "title": "Teste grátis para <strong>anfitriões independentes</strong>",
+        "description": "Para quem valoriza a independência. Experimente o IndieHost <strong>grátis durante 30 dias</strong>, sem fidelização: crie o seu site e aceite reservas diretas. Depois, uma subscrição fixa a partir de 19 €/mês com IVA, sem comissões."
       },
       {
         "id": "pillar2",
         "title": "Saiba onde estão os seus dados.",
-        "description": "Alojados em França, protegidos pelo <strong>RGPD</strong>. Nunca vendemos os seus dados — o nosso rendimento vem das subscrições."
+        "description": "Alojados na União Europeia, protegidos pelo <strong>RGPD</strong>. Nunca vendemos os seus dados nem usamos publicidade ou ferramentas de medição de audiência — o nosso rendimento vem das subscrições."
       },
       {
         "id": "pillar3",
@@ -535,7 +535,7 @@
           {
             "id": "q-8",
             "question": "Posso cancelar a minha subscrição a qualquer momento?",
-            "answer": "Sim. As nossas subscrições não têm fidelização e cancelam-se em poucos cliques a partir do seu painel, sem custos. A subscrição mantém-se ativa até ao fim do período já pago."
+            "answer": "Sim. As nossas subscrições não têm fidelização e podem ser canceladas a qualquer momento, sem custos, a partir da sua conta (O meu perfil, A minha subscrição). A subscrição mantém-se ativa até ao fim do período já pago, sem novas cobranças."
           },
           {
             "id": "q-9",
@@ -755,7 +755,7 @@
     "inputPlaceholder": "Cole o link do seu anúncio",
     "previewCtaLabel": "Gerar meu site",
     "createAccountCtaLabel": "Ativar meu site grátis",
-    "createAccountCtaHint": "Grátis · Sem compromisso · Sem comissão",
+    "createAccountCtaHint": "30 dias grátis · Sem compromisso · Sem comissão",
     "backButtonAriaLabel": "Voltar ao início",
     "primaryCta": {
       "label": "Testar a importação grátis",

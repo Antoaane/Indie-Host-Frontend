@@ -314,13 +314,13 @@
     "pillars": [
       {
         "id": "pillar1",
-        "title": "Plan gratis para <strong>anfitriones independientes</strong>",
-        "description": "Diseñado para anfitriones que valoran su independencia. Nuestro plan gratuito cubre el <strong>70% de los casos de uso</strong>: crea tu sitio, acepta reservas directas—sin suscripción ni gastos ocultos."
+        "title": "Prueba gratis para <strong>anfitriones independientes</strong>",
+        "description": "Diseñado para anfitriones que valoran su independencia. Prueba IndieHost <strong>gratis durante 30 días</strong>, sin permanencia: crea tu sitio y acepta reservas directas. Después, una suscripción fija desde 19 €/mes IVA incluido, sin comisiones."
       },
       {
         "id": "pillar2",
         "title": "Saber dónde están tus datos.",
-        "description": "Alojados en Francia, protegidos por el <strong>RGPD</strong>. Nunca vendemos tus datos—nuestros ingresos vienen de suscripciones, no de tu privacidad. Así de simple."
+        "description": "Alojados en la Unión Europea, protegidos por el <strong>RGPD</strong>. Nunca vendemos tus datos ni usamos publicidad o rastreadores de audiencia: nuestros ingresos vienen de suscripciones, no de tu privacidad. Así de simple."
       },
       {
         "id": "pillar3",
@@ -535,7 +535,7 @@
           {
             "id": "q-8",
             "question": "¿Puedo cancelar mi suscripción en cualquier momento?",
-            "answer": "Sí. Nuestras suscripciones no tienen permanencia y se cancelan en unos clics desde tu panel, sin coste. Tu suscripción sigue activa hasta el final del periodo ya pagado."
+            "answer": "Sí. Nuestras suscripciones no tienen permanencia y se cancelan en cualquier momento, sin coste, desde tu cuenta (Mi perfil, Mi suscripción). Tu suscripción sigue activa hasta el final del periodo ya pagado, sin nuevos cargos."
           },
           {
             "id": "q-9",
@@ -755,7 +755,7 @@
     "inputPlaceholder": "Pega el enlace de tu anuncio",
     "previewCtaLabel": "Genera mi sitio",
     "createAccountCtaLabel": "Activar mi sitio gratis",
-    "createAccountCtaHint": "Gratis · Sin tarjeta de crédito · Cero comisiones",
+    "createAccountCtaHint": "30 días de prueba · Sin permanencia · Cero comisiones",
     "backButtonAriaLabel": "Volver a la página principal",
     "primaryCta": {
       "label": "Probar la importación gratuita",

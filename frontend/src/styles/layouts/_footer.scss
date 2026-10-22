@@ -2,15 +2,49 @@
 
 @use "@/styles/variables/globals" as *;
 @use "@/styles/variables/borders" as borders;
+@use "@/styles/variables/animations" as animations;
 
 .layout-footer {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--layout-gap-2xs);
 
   background-color: $accent;
 
-  padding-left: var(--layout-gap-4xl);
-  padding-right: var(--layout-gap-4xl);
+  padding-top: var(--layout-gap-sm);
+  padding-left: var(--layout-gap);
+  padding-right: var(--layout-gap);
+
+  // Liens légaux : cibles tactiles de 44 px, sur une ou plusieurs lignes selon la largeur.
+  >.layout-footer__legal {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    column-gap: var(--layout-gap);
+
+    >a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 44px;
+      @include little-text(rgba($secondary-text, 0.7), $thin: false);
+      @include animations.transition(animations.$duration-fast);
+
+      @include on-hover {
+        color: $secondary-text;
+      }
+
+      &.router-link-exact-active {
+        @include little-text($secondary-text, $bold: true);
+      }
+
+      &:focus-visible {
+        outline: 2px solid $secondary;
+        outline-offset: 2px;
+        border-radius: borders.$rounded-xs;
+      }
+    }
+  }
 
   // Réserve la place des boutons flottants de la landing (hauteur tactile 44 px).
   &.has-floating-actions {

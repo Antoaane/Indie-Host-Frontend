@@ -6,6 +6,10 @@ import { createRouter, createWebHistory, type RouteLocationNormalized } from 'vu
 import { isListingHostname } from '@/domain/listings/publicDomain'
 import { normalizeListingSlug } from '@/domain/listings/slug'
 import { resolveRuntimeUserId } from '@/router/backOfficeUser'
+// Import direct : ses styles partent dans le CSS principal et habillent dès le premier rendu
+// la version statique des documents générée au build (lisible sans JavaScript).
+import LegalPage from '@/views/Legal/LegalPage.vue'
+import { legalPages, legalSlugPattern } from '@/views/Legal/legalPages'
 const HomePage = () => {
   if (typeof window !== 'undefined' && isListingHostname(window.location.hostname)) {
     return import('@/views/Listing/_Listing.vue')
@@ -170,6 +174,16 @@ const router = createRouter({
       path: '/donation',
       name: 'Donation',
       component: () => import('@/views/Donation/_DonationPage.vue'),
+      meta: { navVariant: 'landing' },
+    },
+    {
+      path: '/legal',
+      redirect: { name: 'legal', params: { page: legalPages[0]?.slug ?? 'mentions-legales' } },
+    },
+    {
+      path: `/legal/:page(${legalSlugPattern})`,
+      name: 'legal',
+      component: LegalPage,
       meta: { navVariant: 'landing' },
     },
     {
@@ -371,7 +385,8 @@ const router = createRouter({
 router.beforeEach((to) => {
   if (typeof window === 'undefined') return true
   if (!isListingHostname(window.location.hostname)) return true
-  if (to.name === 'home' || to.name === 'listing' || to.name === 'listing-guide' || to.name === 'booking-confirmation') return true
+  // Les documents légaux restent accessibles aux voyageurs sur le domaine de l'hôte.
+  if (to.name === 'home' || to.name === 'listing' || to.name === 'listing-guide' || to.name === 'booking-confirmation' || to.name === 'legal') return true
   return { name: 'home' }
 })
 

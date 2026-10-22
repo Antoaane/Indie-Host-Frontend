@@ -10,6 +10,7 @@ import ui from '@nuxt/ui/vite'
 import svgLoader from 'vite-svg-loader'
 import svgToVuePlugin from './plugins/svg-to-vue/vite-plugin-svg-to-vue';
 import fileCommentInjector from './plugins/file-path-comment/vite-plugin-file-comment'
+import legalPrerender from './plugins/legal-prerender/vite-plugin-legal-prerender'
 
 type ParsedEndpoint = {
   origin?: string
@@ -182,6 +183,7 @@ export default defineConfig(({ mode }) => {
       ui(),
       // vueDevTools(),
       svgLoader(),
+      legalPrerender(),
     ],
     resolve: {
       alias: {

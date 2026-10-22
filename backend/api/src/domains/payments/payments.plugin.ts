@@ -13,6 +13,7 @@ import {
   getMySubscriptionQuerySchema,
   syncConnectStateSchema,
   updateExtraListingsSchema,
+  updateSubscriptionCancellationSchema,
 } from './payments.schemas.js';
 import { PaymentsService } from './payments.service.js';
 
@@ -243,6 +244,26 @@ export const paymentsPlugin = fp(async (fastify) => {
 
     if (result.state !== 'updated') {
       reply.code(409).send({ message: result.message, details: result });
+      return;
+    }
+
+    reply.send(result);
+  });
+
+  // Résiliation depuis le compte : effet à la fin de la période payée, réversible jusque-là.
+  fastify.post('/payments/stripe/subscriptions/cancellation', {
+    preHandler: fastify.authenticate,
+  }, async (request, reply) => {
+    const payload = updateSubscriptionCancellationSchema.parse(asObject(request.body));
+    const result = await service.setMySubscriptionCancellation(request.auth, payload.cancelAtPeriodEnd);
+
+    if (!result) {
+      reply.code(401).send({ message: 'Authentication required.' });
+      return;
+    }
+
+    if (result === 'no_subscription') {
+      reply.code(409).send({ message: 'Aucun abonnement payant à résilier sur ce compte.' });
       return;
     }
 

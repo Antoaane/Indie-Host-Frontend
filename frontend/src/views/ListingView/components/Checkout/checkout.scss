@@ -280,6 +280,34 @@
       >.section-subtitle {
         @include little-text($color: rgba($secondary-text, 0.7));
       }
+
+      >.cancellation-summary {
+        display: flex;
+        flex-direction: column;
+        gap: var(--layout-gap-xs);
+        padding: var(--layout-gap-sm) var(--layout-gap-md);
+        border-radius: borders.$rounded-md;
+        border: 1px solid rgba($secondary, 0.12);
+        background: $accent-surface-1;
+
+        >.cancellation-summary-title {
+          margin: 0;
+          @include little-text($bold: true);
+        }
+
+        >ul {
+          margin: 0;
+          padding-left: 1.1rem;
+          list-style: disc;
+          display: flex;
+          flex-direction: column;
+          gap: var(--layout-gap-2xs);
+
+          >li {
+            @include little-text($color: rgba($secondary-text, 0.78), $thin: false);
+          }
+        }
+      }
     }
 
     .progress-check-field {

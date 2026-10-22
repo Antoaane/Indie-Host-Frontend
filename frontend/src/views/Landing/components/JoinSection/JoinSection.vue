@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 // DEPS
-import { computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { computed, onMounted, onBeforeUnmount, nextTick, ref } from 'vue'
 // COMPONENTS
 import FrenchFlag from '@/components/svgs/icons/FrenchFlag.vue'
 import form from '@/views/Landing/components/JoinSection/components/FormComp/FormComp.vue'
@@ -43,8 +43,21 @@ const formProps = computed(() => ({
 }))
 
 let widgetId: number | null = null
+let sectionObserver: IntersectionObserver | null = null
+const sectionRef = ref<HTMLElement | null>(null)
 
-function waitForHcaptcha(timeoutMs = 5000): Promise<boolean> {
+const HCAPTCHA_SCRIPT_SRC = 'https://js.hcaptcha.com/1/api.js?render=explicit&hl=fr'
+
+// hCaptcha n'est chargé qu'à l'approche du formulaire : aucun script ni traceur tiers sur le reste du site.
+function loadHcaptchaScript() {
+  if ((window as any).hcaptcha || document.querySelector(`script[src="${HCAPTCHA_SCRIPT_SRC}"]`)) return
+  const script = document.createElement('script')
+  script.src = HCAPTCHA_SCRIPT_SRC
+  script.async = true
+  document.head.appendChild(script)
+}
+
+function waitForHcaptcha(timeoutMs = 10000): Promise<boolean> {
   if ((window as any).hcaptcha) return Promise.resolve(true)
   return new Promise((resolve) => {
     const startedAt = Date.now()
@@ -62,7 +75,24 @@ function waitForHcaptcha(timeoutMs = 5000): Promise<boolean> {
   })
 }
 
-onMounted(async () => {
+onMounted(() => {
+  const section = sectionRef.value
+  if (!section || typeof IntersectionObserver === 'undefined') {
+    void renderHcaptcha()
+    return
+  }
+
+  sectionObserver = new IntersectionObserver((entries) => {
+    if (!entries.some((entry) => entry.isIntersecting)) return
+    sectionObserver?.disconnect()
+    sectionObserver = null
+    void renderHcaptcha()
+  }, { rootMargin: '400px 0px' })
+  sectionObserver.observe(section)
+})
+
+async function renderHcaptcha() {
+  loadHcaptchaScript()
   const hasHcaptcha = await waitForHcaptcha()
   if (!hasHcaptcha) return
   await nextTick() // s’assurer que le DOM de JoinSection est là
@@ -82,9 +112,12 @@ onMounted(async () => {
     size: 'normal',
     theme: 'light',
   })
-})
+}
 
 onBeforeUnmount(() => {
+  sectionObserver?.disconnect()
+  sectionObserver = null
+
   const hc = (window as any).hcaptcha
   if (hc && widgetId != null) {
     try {
@@ -95,7 +128,10 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section id="join-section">
+  <section
+    id="join-section"
+    ref="sectionRef"
+  >
     <div class="wrapper">
       <div class="title">
         <div>

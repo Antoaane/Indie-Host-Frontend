@@ -19,6 +19,7 @@ type CancellationCustom = {
 
 type PricingCancellation = {
   policy?: CancellationPolicy
+  refundsEnabled?: boolean
   custom?: CancellationCustom
 }
 
@@ -40,6 +41,8 @@ const custom = computed<CancellationCustom>(() => cancellation.value.custom ?? {
 const pricingLimits = editorStatic.validation.pricing
 
 const policy = computed<CancellationPolicy>(() => cancellation.value.policy ?? 'flexible')
+// Désactivé par défaut : le voyageur n'est remboursé que si l'hôte l'autorise.
+const refundsEnabled = computed(() => cancellation.value.refundsEnabled === true)
 const customDays = computed(() => (Number.isFinite(Number(custom.value.days)) ? clampInteger(custom.value.days, pricingLimits.cancellationDaysMin, pricingLimits.cancellationDaysMax, pricingLimits.cancellationDaysMin) : null))
 const customFee = computed(() => (Number.isFinite(Number(custom.value.feePercent)) ? clampPercent(Number(custom.value.feePercent)) : null))
 const panelContent = editorStatic.panels.pricing.cancellation
@@ -200,7 +203,22 @@ function parseOptionalNumber(raw: string): number | null {
     </div>
 
     <div class="body">
-      <div class="field">
+      <label class="toggle">
+        <input
+          type="checkbox"
+          :checked="refundsEnabled"
+          @change="updateCancellation({ refundsEnabled: ($event.target as HTMLInputElement).checked })"
+        />
+        <span>{{ panelContent.refundsEnabled }}</span>
+      </label>
+      <p class="hint">
+        {{ refundsEnabled ? panelContent.refundsEnabledHint : panelContent.refundsDisabledHint }}
+      </p>
+
+      <div
+        v-if="refundsEnabled"
+        class="field"
+      >
         <div class="field-label">
           <p>{{ panelContent.policyLabel }}</p>
         </div>
@@ -217,7 +235,10 @@ function parseOptionalNumber(raw: string): number | null {
         </div>
       </div>
 
-      <div class="field">
+      <div
+        v-if="refundsEnabled"
+        class="field"
+      >
         <div class="field-label">
           <p>{{ panelContent.severityRulesLabel }}</p>
         </div>
@@ -246,7 +267,7 @@ function parseOptionalNumber(raw: string): number | null {
       </div>
 
       <div
-        v-if="policy === 'custom'"
+        v-if="refundsEnabled && policy === 'custom'"
         class="custom-settings"
       >
         <div class="field">
@@ -289,7 +310,10 @@ function parseOptionalNumber(raw: string): number | null {
           </ul>
         </div>
       </div>
-      <p class="hint">
+      <p
+        v-if="refundsEnabled"
+        class="hint"
+      >
         {{ cancellationHint }}
       </p>
     </div>
@@ -303,6 +327,7 @@ function parseOptionalNumber(raw: string): number | null {
 @use '@/styles/variables/borders' as borders;
 @use '@/styles/variables/animations' as animations;
 @use '@/styles/components/inputs' as inputs;
+@use '@/styles/components/buttons' as buttons;
 @use '@/views/Editor/components/EditorSidebar/panels/panel.scss' as *;
 
 .editor-cancellation-panel {
@@ -314,6 +339,12 @@ function parseOptionalNumber(raw: string): number | null {
 
   > .body {
     @extend %panel-body;
+
+    // Même interrupteur que le panneau Taxes.
+    .toggle {
+      @include buttons.checkbox-label(white);
+      border: 1px solid rgba($secondary, 0.06);
+    }
 
     .field {
       @extend %panel-field;

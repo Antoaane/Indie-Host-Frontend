@@ -1,0 +1,32 @@
+# IndieHost
+
+> IndieHost est une plateforme française qui permet aux hôtes de locations saisonnières de créer leur propre site de réservation directe, sans commission : page d'annonce sur un sous-domaine indiehost.fr ou sur leur nom de domaine, paiement en ligne sécurisé par Stripe, calendrier synchronisé avec Airbnb et Booking.com, messagerie avec les voyageurs et guide d'arrivée numérique. Les hôtes paient un abonnement fixe, avec 30 jours d'essai gratuit.
+
+Informations clés :
+
+- Offres : IndieHost à 19 € TTC par mois (2 logements en ligne), SuperHost à 49 € TTC par mois (6 logements en ligne), logement supplémentaire à 12 € TTC par mois. Brouillons illimités. 30 jours d'essai gratuit, sans engagement, résiliable à tout moment depuis le compte de l'hôte.
+- IndieHost ne prélève aucune commission sur les réservations des hôtes.
+- Une annonce existante peut être importée depuis Airbnb ou Booking.com.
+- Plusieurs logements d'un même hôte peuvent être regroupés sous une page principale.
+- Pour les voyageurs : le contrat de location est conclu directement avec l'hôte ; IndieHost fournit la page de réservation et le paiement.
+- Données hébergées dans l'Union européenne ; aucune publicité, aucune revente de données, aucun outil de mesure d'audience.
+- Éditeur : IndieHost SAS, Castanet-Tolosan (France). Contact : contact@indiehost.fr
+
+## Pages principales
+
+- [Accueil](https://indiehost.fr/): présentation du produit, fonctionnalités et questions fréquentes
+- [Tarifs](https://indiehost.fr/pricing): offres IndieHost et SuperHost, essai gratuit
+- [Soutenir IndieHost](https://indiehost.fr/donation): soutenir le projet par un don
+
+## Informations légales
+
+- [Mentions légales](https://indiehost.fr/legal/mentions-legales): éditeur, hébergeur, signalement de contenus
+- [Politique de confidentialité](https://indiehost.fr/legal/confidentialite): données traitées, durées de conservation, prestataires, droits RGPD
+- [Politique de cookies](https://indiehost.fr/legal/cookies): uniquement des cookies nécessaires au fonctionnement
+- [Conditions générales hôtes](https://indiehost.fr/legal/cgv): abonnements, essai, résiliation, rétractation, obligations des hôtes
+- [Conditions voyageurs](https://indiehost.fr/legal/cgu-voyageurs): réservation, paiement, séjour, avis
+- [Annulation et remboursement](https://indiehost.fr/legal/annulation-remboursement): barèmes d'annulation et délais de remboursement
+
+## Optional
+
+- [Annonces publiées](https://indiehost.fr/api/v1/listings/sitemap.xml): plan des pages de réservation des hôtes

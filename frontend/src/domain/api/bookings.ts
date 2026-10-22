@@ -60,12 +60,13 @@ export type BookingConfirmationPayload = {
     reason: string | null
     policy: {
       policy: 'flexible' | 'moderate' | 'strict' | 'custom'
+      refundsEnabled: boolean
       days: number
       feePercent: number
       lateFeePercent: number
     }
     refund: {
-      stage: 'full_refund' | 'partial_refund' | 'late_cancellation' | 'after_arrival'
+      stage: 'full_refund' | 'partial_refund' | 'late_cancellation' | 'after_arrival' | 'non_refundable'
       currency: string
       chargedAmount: number
       refundableAmount: number
@@ -369,7 +370,9 @@ function normalizeBookingConfirmation(payload: Record<string, unknown> | null | 
         ? 'late_cancellation'
         : rawRefundStage === 'after_arrival'
           ? 'after_arrival'
-          : 'partial_refund'
+          : rawRefundStage === 'non_refundable'
+            ? 'non_refundable'
+            : 'partial_refund'
   const hostEmail = toTrimmedString(host.email)
   const rawHostName = toTrimmedString(host.name)
   const hostName = (rawHostName && !isDeprecatedHostIdentity(rawHostName) ? rawHostName : '')
@@ -409,6 +412,7 @@ function normalizeBookingConfirmation(payload: Record<string, unknown> | null | 
       reason: toOptionalString(cancellation.reason),
       policy: {
         policy,
+        refundsEnabled: cancellationPolicy.refundsEnabled === true,
         days: Math.max(0, toNonNegativeInt(cancellationPolicy.days)),
         feePercent: Math.min(100, Math.max(0, toNonNegativeInt(cancellationPolicy.feePercent))),
         lateFeePercent: Math.min(100, Math.max(0, toNonNegativeInt(cancellationPolicy.lateFeePercent))),
@@ -637,6 +641,39 @@ export async function cancelBookingReservation(input: {
     return normalizeBookingConfirmation(data)
   } catch (error) {
     throw new Error(resolveErrorMessage(error, 'Impossible d annuler la réservation.'))
+  }
+}
+
+// Annulation décidée par l'hôte : l'API rembourse intégralement le voyageur et libère les dates.
+export async function cancelReservationAsHost(input: {
+  reservationId: string
+  reason?: string
+}): Promise<BookingConfirmationPayload> {
+  const reservationId = input.reservationId.trim()
+  if (!reservationId) {
+    throw new Error('Identifiant de réservation manquant.')
+  }
+
+  const token = await getAuthToken()
+  if (!token) {
+    throw new Error('Votre session a expiré : reconnectez-vous puis réessayez.')
+  }
+
+  const axios = await getAxios()
+  const reason = toTrimmedString(input.reason)
+
+  try {
+    const { data } = await axios.post<Record<string, unknown>>(
+      resolveUrl(buildBookingResourceUrl(reservationId, 'host-cancel')),
+      reason ? { reason } : {},
+      {
+        withCredentials: false,
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    )
+    return normalizeBookingConfirmation(data)
+  } catch (error) {
+    throw new Error(resolveErrorMessage(error, 'Impossible d’annuler et de rembourser cette réservation.'))
   }
 }
 

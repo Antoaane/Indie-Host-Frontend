@@ -7,6 +7,7 @@ import { ArrowLeft, ArrowUpRight, Calendar, Pen, Plus } from 'lucide-vue-next'
 
 import DatePicker from '@/components/DatePicker/DatePicker.vue'
 import ConfirmationDialog from '@/components/overlays/ConfirmationDialog.vue'
+import { cancelReservationAsHost } from '@/domain/api/bookings'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
 import { vp } from '@/utils/viewport'
 import type { EditorMode, EditorSource } from '@/views/Editor/types/editor'
@@ -824,6 +825,27 @@ async function savePaymentChanges() {
   }
 }
 
+// Réservation payée en ligne : l'hôte ne la supprime pas, il l'annule et le voyageur est remboursé
+// intégralement par l'API (le montant est repris sur son compte Stripe).
+const isSelectedReservationPaidOnline = computed(() => Boolean(selectedReservation.value?.payment.isStripeBacked))
+const selectedReservationRefundLabel = computed(() => new Intl.NumberFormat('fr-FR', {
+  style: 'currency',
+  currency: 'EUR',
+}).format(selectedReservation.value?.payment.onlinePaid ?? 0))
+const deleteDialogContent = computed(() => (isSelectedReservationPaidOnline.value
+  ? {
+      subject: 'Annulation de réservation',
+      title: 'Annuler et rembourser le voyageur ?',
+      message: `Le voyageur sera remboursé intégralement (${selectedReservationRefundLabel.value} payés en ligne), sur le moyen de paiement utilisé. Le montant est repris sur votre compte Stripe et les dates redeviennent disponibles.`,
+      confirmLabel: deleteStatus.isDeleting ? 'Remboursement…' : 'Oui, annuler et rembourser',
+    }
+  : {
+      subject: 'Suppression de réservation',
+      title: 'Confirmer la suppression',
+      message: 'Cette réservation sera supprimée définitivement.',
+      confirmLabel: deleteStatus.isDeleting ? 'Suppression…' : 'Oui, supprimer',
+    }))
+
 function openDeleteOverlay() {
   if (!selectedReservation.value) return
   deleteStatus.error = null
@@ -842,6 +864,21 @@ async function confirmDeleteReservation() {
 
   deleteStatus.isDeleting = true
   deleteStatus.error = null
+
+  if (isSelectedReservationPaidOnline.value) {
+    try {
+      await cancelReservationAsHost({ reservationId: reservation.id })
+      reservationsByListingId[listingId] = reservationsByListingId[listingId].filter((item) => item.id !== reservation.id)
+      selectedReservationId.value = findClosestReservationForListing(reservationsByListingId[listingId] ?? [])?.id ?? reservationsByListingId[listingId]?.[0]?.id ?? null
+      isDeleteOverlayOpen.value = false
+    } catch (error) {
+      console.error('[Management] host cancellation failed', error)
+      deleteStatus.error = error instanceof Error ? error.message : 'Impossible d’annuler et de rembourser cette réservation.'
+    } finally {
+      deleteStatus.isDeleting = false
+    }
+    return
+  }
 
   try {
     const editable = await props.source.fetchEditableListingBundle(listingId)
@@ -1380,7 +1417,7 @@ const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !nor
                           :disabled="deleteStatus.isDeleting"
                           @click="openDeleteOverlay"
                         >
-                          Supprimer la r&eacute;servation
+                          {{ isSelectedReservationPaidOnline ? 'Annuler et rembourser' : 'Supprimer la réservation' }}
                         </button>
                       </div>
                       <p
@@ -1422,10 +1459,10 @@ const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !nor
 
   <ConfirmationDialog
     :open="isDeleteOverlayOpen"
-    subject="Suppression de r&eacute;servation"
-    title="Confirmer la suppression"
-    message="Cette r&eacute;servation sera supprim&eacute;e d&eacute;finitivement."
-    :confirm-label="deleteStatus.isDeleting ? 'Suppression...' : 'Oui, supprimer'"
+    :subject="deleteDialogContent.subject"
+    :title="deleteDialogContent.title"
+    :message="deleteDialogContent.message"
+    :confirm-label="deleteDialogContent.confirmLabel"
     cancel-label="Annuler"
     :confirm-disabled="deleteStatus.isDeleting"
     :cancel-disabled="deleteStatus.isDeleting"

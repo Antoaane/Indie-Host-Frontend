@@ -6,6 +6,7 @@ import { UserRound, X } from 'lucide-vue-next'
 import { computed, reactive, ref, watch } from 'vue'
 
 import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'
+import HostSubscriptionSettings from '@/components/navs/Nav/HostSubscriptionSettings.vue'
 import { fetchMyUser, updateMyUser } from '@/domain/api/users'
 import clerkToken from '@/utils/clerkToken'
 
@@ -320,6 +321,8 @@ watch(
           </button>
         </footer>
       </form>
+
+      <HostSubscriptionSettings :active="open" />
     </section>
   </AbsoluteOverlay>
 </template>

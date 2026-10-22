@@ -2213,6 +2213,43 @@ export class PaymentsService {
     return respond('updated', next, null);
   }
 
+  /**
+   * Résiliation en ligne par l'hôte (article L215-1-1 du Code de la consommation) : l'abonnement
+   * s'arrête à la fin de la période déjà payée, sans remboursement. `false` annule la résiliation.
+   * Les remboursements (rétractation sous 14 jours) se traitent à part, sur demande par e-mail.
+   */
+  async setMySubscriptionCancellation(
+    auth: RequestAuth | null,
+    cancelAtPeriodEnd: boolean,
+  ): Promise<MySubscriptionStateResult | 'no_subscription' | null> {
+    const user = await upsertUserFromAuth(this.prisma, auth);
+    if (!user) return null;
+
+    const billing = this.readBillingSnapshot(user);
+    if (billing.complimentary || !billing.planCode) return 'no_subscription';
+
+    if (this.getSubscriptionExecutionMode() === 'mock' || !this.stripe) {
+      const next = await this.updateUserStripeState({
+        user,
+        billingPatch: { cancelAtPeriodEnd, updatedAtISO: nowIso() },
+      });
+      return this.buildSubscriptionStateForUser(next, { allowAdmin: hasAdminAccess(auth), sync: false });
+    }
+
+    if (!billing.customerId) return 'no_subscription';
+    const liveSubscription = await this.getCurrentStripeSubscription({
+      customerId: billing.customerId,
+      subscriptionId: billing.subscriptionId,
+    });
+    if (!liveSubscription) return 'no_subscription';
+
+    if (Boolean(liveSubscription.cancel_at_period_end) !== cancelAtPeriodEnd) {
+      await this.stripe.subscriptions.update(liveSubscription.id, { cancel_at_period_end: cancelAtPeriodEnd });
+    }
+
+    return this.buildSubscriptionStateForUser(user, { allowAdmin: hasAdminAccess(auth), sync: true });
+  }
+
   async getMySubscriptionState(auth: RequestAuth | null, options?: { sync?: boolean }): Promise<MySubscriptionStateResult | null> {
     const user = await upsertUserFromAuth(this.prisma, auth);
     if (!user) return null;

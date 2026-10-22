@@ -42,12 +42,13 @@ type ConfirmationViewModel = {
     reason: string | null
     policy: {
       policy: 'flexible' | 'moderate' | 'strict' | 'custom'
+      refundsEnabled: boolean
       days: number
       feePercent: number
       lateFeePercent: number
     }
     refund: {
-      stage: 'full_refund' | 'partial_refund' | 'late_cancellation' | 'after_arrival'
+      stage: 'full_refund' | 'partial_refund' | 'late_cancellation' | 'after_arrival' | 'non_refundable'
       currency: string
       chargedAmount: number
       refundableAmount: number
@@ -292,6 +293,7 @@ async function loadFromLocalFallback(params: {
       reason: null,
       policy: {
         policy: 'flexible',
+        refundsEnabled: false,
         days: 3,
         feePercent: 10,
         lateFeePercent: 30,
@@ -545,7 +547,8 @@ const guideActivationLabel = computed(() => {
 const cancellationPolicyLabel = computed(() => {
   const model = confirmation.value
   if (!model) return ''
-  const { policy } = model.cancellation.policy
+  const { policy, refundsEnabled } = model.cancellation.policy
+  if (!refundsEnabled) return 'Non remboursable'
   if (policy === 'moderate') return 'Modérée'
   if (policy === 'strict') return 'Stricte'
   if (policy === 'custom') return 'Personnalisée'
@@ -559,6 +562,7 @@ const cancellationStageLabel = computed(() => {
   if (stage === 'full_refund') return 'Remboursement intégral'
   if (stage === 'late_cancellation') return 'Annulation tardive'
   if (stage === 'after_arrival') return 'Arrivée dépassée'
+  if (stage === 'non_refundable') return 'Non remboursable'
   return 'Remboursement partiel'
 })
 
@@ -583,12 +587,16 @@ const cancellationRetainedLabel = computed(() => {
 const cancellationSummaryLine = computed(() => {
   const model = confirmation.value
   if (!model) return ''
+  if (!model.cancellation.policy.refundsEnabled) {
+    return 'Réservation non remboursable : l\'hôte n\'accepte pas de remboursement si vous annulez.'
+  }
   return `Annulation jusqu'à ${model.cancellation.policy.days} jour${model.cancellation.policy.days > 1 ? 's' : ''} avant arrivée: sans frais.`
 })
 
 const cancellationPenaltyLine = computed(() => {
   const model = confirmation.value
   if (!model) return ''
+  if (!model.cancellation.policy.refundsEnabled) return 'Si l\'hôte annule le séjour, vous êtes remboursé intégralement.'
   return `Ensuite: retenue de ${model.cancellation.policy.feePercent}% (retenue de ${model.cancellation.policy.lateFeePercent}% sous 24h).`
 })
 

@@ -366,6 +366,32 @@ export async function updateMyExtraListings(quantity: number): Promise<UpdateExt
   }
 }
 
+/**
+ * Résiliation depuis le compte (`true`) ou reprise avant la fin de période (`false`).
+ * L'abonnement reste actif jusqu'à la fin de la période payée ; aucun remboursement n'est émis.
+ */
+export async function setMySubscriptionCancellation(cancelAtPeriodEnd: boolean): Promise<StripeSubscriptionState> {
+  const axios = await getAxios()
+  const headers = await getHeaders({ requiresAuth: true })
+
+  try {
+    const { data } = await axios.post<StripeSubscriptionState>(
+      resolveUrl(buildApiUrl('/payments/stripe/subscriptions/cancellation')),
+      { cancelAtPeriodEnd },
+      {
+        withCredentials: false,
+        headers,
+      },
+    )
+
+    return data
+  } catch (error) {
+    throw new Error(toApiErrorMessage(error, cancelAtPeriodEnd
+      ? 'Impossible de résilier votre abonnement pour le moment.'
+      : 'Impossible de reprendre votre abonnement pour le moment.'))
+  }
+}
+
 export type AdminSubscriptionLinkResponse = {
   state: 'created' | 'plan_unavailable'
   mode: 'live' | 'mock'

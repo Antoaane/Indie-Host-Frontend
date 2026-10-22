@@ -31,6 +31,7 @@ import {
 import {
   resolveCheckoutPaymentChoice,
   validateReservationAgainstRules,
+  type ListingCancellationPolicy,
 } from '@/domain/listings/reservationRules'
 import {
   getStripePublishableKey,
@@ -354,6 +355,41 @@ const canSubmit = computed(() =>
   canAccessFinalStep.value &&
   !paymentIntentError.value,
 )
+
+const CANCELLATION_POLICY_LABELS: Record<ListingCancellationPolicy, string> = {
+  flexible: 'flexible',
+  moderate: 'modérée',
+  strict: 'stricte',
+  custom: 'personnalisée',
+}
+
+// Information précontractuelle : le barème appliqué par l'API à l'annulation, annoncé avant le paiement.
+const cancellationRules = computed(() => props.listing.bookings.rules.cancellation)
+const cancellationPolicyLabel = computed(() => (cancellationRules.value.refundsEnabled
+  ? `politique ${CANCELLATION_POLICY_LABELS[cancellationRules.value.policy]}`
+  : 'réservation non remboursable'))
+const cancellationRuleLines = computed(() => {
+  const { refundsEnabled, fullRefundDays, feePercent, lateFeePercent } = cancellationRules.value
+  if (!refundsEnabled) {
+    return [
+      'L\'hôte n\'accepte pas de remboursement : en cas d\'annulation de votre part, les sommes versées ne sont pas remboursées.',
+      'Si l\'hôte annule le séjour, vous êtes remboursé intégralement.',
+    ]
+  }
+
+  const lines = fullRefundDays > 1
+    ? [
+        `Remboursement intégral jusqu'à ${fullRefundDays} jours avant l'arrivée.`,
+        `Ensuite, ${feePercent} % des sommes versées sont retenus.`,
+      ]
+    : ['Remboursement intégral jusqu\'à 24 h avant l\'arrivée.']
+
+  return [
+    ...lines,
+    `À moins de 24 h de l'arrivée, ${lateFeePercent} % sont retenus.`,
+    'À partir du jour d\'arrivée, l\'annulation en ligne n\'est plus possible.',
+  ]
+})
 
 const submitLabel = computed(() => {
   if (reservationError.value) return 'Réservation invalide'
@@ -1251,49 +1287,37 @@ onBeforeUnmount(() => {
           class="progress-section-body"
           :class="{ 'is-disabled': !canAccessFinalStep }"
         >
+          <div class="cancellation-summary">
+            <p class="cancellation-summary-title">
+              Conditions d'annulation de l'hôte ({{ cancellationPolicyLabel }})
+            </p>
+            <ul>
+              <li
+                v-for="rule in cancellationRuleLines"
+                :key="rule"
+              >
+                {{ rule }}
+              </li>
+            </ul>
+          </div>
           <p class="section-text">
-            En cliquant sur le bouton ci-dessous, j'accepte :
-            <button
-              type="button"
-              class="link"
-            >
-              Règlement intérieur de l'hôte
-            </button>
-            ,
-            <button
-              type="button"
-              class="link"
-            >
-              Règles de base pour les voyageurs
-            </button>
-            .
+            Vous concluez le contrat de location directement avec l'hôte, qui reste responsable du logement et du séjour. IndieHost fournit la page de réservation et le paiement en ligne. Une réservation pour des dates déterminées n'ouvre pas droit à rétractation.
           </p>
           <p class="section-text">
-            IndieHost est un outil de réservation et de paiement, pas une plateforme de location. L'hôte reste responsable des conditions du séjour et de la gestion des éventuels dommages.
-          </p>
-          <p class="section-text">
-            J'accepte aussi les
-            <button
-              type="button"
+            En cliquant sur le bouton ci-dessous, j'accepte les conditions d'annulation de l'hôte et les
+            <a
               class="link"
-            >
-              Conditions de service
-            </button>
-            , les
-            <button
-              type="button"
+              href="/legal/cgu-voyageurs"
+              target="_blank"
+              rel="noopener"
+            >conditions d'utilisation et de réservation</a>,
+            et je reconnais avoir pris connaissance de la
+            <a
               class="link"
-            >
-              Conditions de service relatives aux paiements
-            </button>
-            et j'ai pris connaissance de la
-            <button
-              type="button"
-              class="link"
-            >
-              Politique de confidentialité
-            </button>
-            .
+              href="/legal/confidentialite"
+              target="_blank"
+              rel="noopener"
+            >politique de confidentialité</a>.
           </p>
         </div>
       </transition>
