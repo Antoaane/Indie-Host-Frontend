@@ -24,7 +24,7 @@
   @include halo();
 
   @include min-width(lg) {
-    height: 70px;
+    height: $nav-bar-height;
     padding: 0 1.5rem;
 
     border-radius: borders.$rounded-lg;

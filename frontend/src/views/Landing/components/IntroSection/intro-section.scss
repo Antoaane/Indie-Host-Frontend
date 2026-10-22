@@ -84,7 +84,7 @@
   padding-bottom: calc(var(--layout-gap) * 4);
 
   @media (max-width: 1024px) {
-    padding-top: 70px;
+    padding-top: $nav-bar-height;
     padding-bottom: var(--layout-gap-4xl);
   }
 
@@ -467,8 +467,8 @@
     }
 
     @include min-width(lg) {
-      max-width: 90rem;
-      height: 85svh;
+      max-width: 80rem;
+      height: 75svh;
       margin-top: var(--layout-gap-3xl);
       border-radius: borders.$rounded-xxl;
     }

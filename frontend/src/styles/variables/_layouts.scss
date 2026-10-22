@@ -100,7 +100,8 @@ $breakpoints: (
   @return (base: (calc(1rem * #{$multiple})),
     md: (calc(1.125rem * #{$multiple})),
     lg: (calc(1.25rem * #{$multiple})),
-    xxl: (calc(1.5rem * #{$multiple})));
+    // Plafonné à la valeur lg : au-delà, les marges gonflaient l'interface sur grand écran.
+    xxl: (calc(1.25rem * #{$multiple})));
 }
 
 $layout-gap: get-layout-gap();
@@ -196,7 +197,10 @@ $gap-4xl-mltpler : 2;
   }
 }
 
-$nav-height: calc(70px + (var(--layout-gap) + (var(--layout-gap) * 0.667)));
+// Hauteur de la barre de navigation (mobile et desktop) : source unique pour
+// tous les décalages d'en-tête.
+$nav-bar-height: 3.75rem;
+$nav-height: calc(#{$nav-bar-height} + (var(--layout-gap) + (var(--layout-gap) * 0.667)));
 
 @mixin container($max: xxl, $additional-width: 0rem) {
   & {

@@ -36,6 +36,15 @@ html {
   @media (prefers-reduced-motion: reduce) {
     scroll-behavior: auto;
   }
+
+  // Densité desktop : à la souris sur grand écran, l'interface en rem passe à
+  // 15 px (93,75 % de la taille choisie dans le navigateur). Les écrans tactiles
+  // gardent 16 px et leurs cibles de 44 px.
+  @include min-width(lg) {
+    @include can-hover {
+      font-size: 93.75%;
+    }
+  }
 }
 
 // Contrôles : clic immédiat (pas d'attente du double-tap zoom) et libellé
@@ -63,12 +72,16 @@ summary,
 }
 
 // iOS zoome sur un champ dont le texte fait moins de 16 px et ne dézoome pas
-// au blur. Plancher par défaut ; les champs stylés en `little-text` le
-// rétablissent eux-mêmes sous `(pointer: coarse)`.
+// au blur : plancher à 16 px sur écran tactile. Les champs stylés en
+// `little-text` le rétablissent eux-mêmes sous `(pointer: coarse)`.
 input,
 textarea,
 select {
-  font-size: max(1rem, 16px);
+  font-size: 1rem;
+
+  @media (pointer: coarse) {
+    font-size: max(1rem, 16px);
+  }
 }
 
 body {
@@ -187,7 +200,7 @@ main#landing-page {
     @include min-width(lg) {
       min-height: auto;
       margin-bottom: 0;
-      padding-top: calc(var(--layout-gap) + 70px);
+      padding-top: calc(var(--layout-gap) + #{$nav-bar-height});
       padding-bottom: var(--layout-gap-4xl);
     }
   }

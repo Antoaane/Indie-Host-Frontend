@@ -6,8 +6,8 @@ import { toPrismaJson } from '../../lib/prisma.js';
 const DEFAULT_ARRIVAL = {
   intro: {
     title: 'Bienvenue',
-    subtitle: 'Pour profiter des lieux au maximum, voici votre guide d\'arrivee.',
-    tagline: 'Propulse par IndieHost',
+    subtitle: 'Pour profiter des lieux au maximum, voici votre guide d’arrivée.',
+    tagline: 'Propulsé par IndieHost',
   },
   practical: {
     savings: { message: '' },

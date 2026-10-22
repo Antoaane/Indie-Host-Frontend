@@ -77,7 +77,7 @@
   }
 
   @include min-width(lg) {
-    padding-top: calc(70px + 2.5rem);
+    padding-top: calc(#{$nav-bar-height} + 2.5rem);
     // svh : premier écran stable, pas de saut quand la barre d'URL se replie (iPad)
     height: 100svh !important;
   }

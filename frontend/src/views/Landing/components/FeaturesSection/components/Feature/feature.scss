@@ -130,7 +130,7 @@
       }
 
       @include min-width(lg) {
-        height: calc(90svh - (var(--layout-gap-4xl) + 70px));
+        height: calc(90svh - (var(--layout-gap-4xl) + #{$nav-bar-height}));
       }
 
       &.hzt {
@@ -176,12 +176,12 @@
         height: auto;
 
         @include min-width(xs) {
-          height: calc(70svh - (var(--layout-gap-4xl) + 70px));
+          height: calc(70svh - (var(--layout-gap-4xl) + #{$nav-bar-height}));
           width: auto;
         }
 
         @include min-width(lg) {
-          height: calc(90svh - (var(--layout-gap-4xl) + 70px));
+          height: calc(90svh - (var(--layout-gap-4xl) + #{$nav-bar-height}));
           width: auto;
         }
 

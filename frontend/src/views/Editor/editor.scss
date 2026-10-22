@@ -17,7 +17,7 @@
   overflow-x: hidden;
 
   @include min-width(lg) {
-    --editor-mobile-dock-height: calc(70px + var(--layout-gap) + var(--layout-gap-md));
+    --editor-mobile-dock-height: calc(#{$nav-bar-height} + var(--layout-gap) + var(--layout-gap-md));
 
     padding-top: var(--editor-mobile-dock-height);
     padding-bottom: 0;

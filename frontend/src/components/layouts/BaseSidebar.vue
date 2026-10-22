@@ -105,11 +105,4 @@ withDefaults(
   }
 }
 
-@include min-width(xxl) {
-  .base-sidebar {
-    --sidebar-min-width: 34rem;
-    --sidebar-width: 36rem;
-    --sidebar-max-width: 38rem;
-  }
-}
 </style>

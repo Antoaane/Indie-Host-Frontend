@@ -13,23 +13,23 @@ export type ListingResourceKey = (typeof LISTING_RESOURCES)[number];
 export const DEFAULT_ARRIVAL = {
   intro: {
     title: 'Bienvenue',
-    subtitle: 'Pour profiter des lieux au maximum, voici votre guide d\'arrivee.',
-    tagline: 'Propulse par IndieHost',
+    subtitle: 'Pour profiter des lieux au maximum, voici votre guide d’arrivée.',
+    tagline: 'Propulsé par IndieHost',
   },
   practical: {
     savings: {
-      message: 'Reservez en direct pour eviter les commissions.',
+      message: 'Réservez en direct pour éviter les commissions.',
     },
     access: {
-      address: 'Adresse complete envoyee 24h avant l\'arrivee.',
-      checkIn: 'A partir de 16h.',
-      checkOut: 'Avant 11h.',
+      address: 'Adresse complète envoyée 24 h avant l’arrivée.',
+      checkIn: 'À partir de 16 h.',
+      checkOut: 'Avant 11 h.',
       parking: 'Gratuit sur place.',
     },
     services: {
-      wifi: 'Nom du reseau et mot de passe disponibles sur place.',
+      wifi: 'Nom du réseau et mot de passe disponibles sur place.',
       contacts: 'Urgences 112.',
-      assistance: 'Assistance hote disponible par message.',
+      assistance: 'Assistance de l’hôte disponible par message.',
     },
     rules: '',
     shops: '',
