@@ -1,6 +1,8 @@
 <!-- File: src/components/layouts/BootLoader.vue -->
 
 <script setup lang="ts">
+import { useAuth } from '@clerk/vue'
+import { watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import LogoIconLight from '@/components/svgs/icons/LogoIconLight.vue'
@@ -8,8 +10,21 @@ import { startBootLoader, useBootLoader } from '@/composables/useBootLoader'
 import commonLocale from '@/locales/common/fr.json'
 
 const { isBootLoaderActive } = useBootLoader()
+const { isLoaded } = useAuth()
 
-startBootLoader(useRouter())
+const whenAuthReady = new Promise<void>((resolve) => {
+  if (isLoaded.value) {
+    resolve()
+    return
+  }
+  const stop = watch(isLoaded, (loaded) => {
+    if (!loaded) return
+    stop()
+    resolve()
+  })
+})
+
+startBootLoader(useRouter(), whenAuthReady)
 </script>
 
 <template>

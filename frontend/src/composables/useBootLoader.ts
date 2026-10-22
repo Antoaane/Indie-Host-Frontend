@@ -11,6 +11,9 @@ const DASHBOARD_PATH = /^\/dashboard(\/|$)/
 // Silence réseau exigé : les requêtes enchaînées (annonces puis annonce sélectionnée)
 // partent bien avant ce délai.
 const QUIET_MS = 220
+// Tant qu'aucune requête n'est partie, la vue attend encore quelque chose (jeton Clerk) :
+// le silence ne prouve rien, on laisse plus de marge.
+const FIRST_REQUEST_GRACE_MS = 600
 // Plafond absolu : l'écran ne bloque jamais l'accès plus longtemps.
 const MAX_WAIT_MS = 5000
 // Durée de la classe de révélation, un peu plus longue que la transition du contenu.
@@ -20,6 +23,7 @@ const isActive = ref(typeof window !== 'undefined' && DASHBOARD_PATH.test(window
 
 let started = false
 let pendingRequests = 0
+let hasSeenRequest = false
 let isRouteReady = false
 let quietTimer: number | null = null
 let maxWaitTimer: number | null = null
@@ -34,7 +38,7 @@ function clearQuietTimer() {
 function scheduleRelease() {
   clearQuietTimer()
   if (!isActive.value || !isRouteReady || pendingRequests > 0) return
-  quietTimer = window.setTimeout(releaseBootLoader, QUIET_MS)
+  quietTimer = window.setTimeout(releaseBootLoader, hasSeenRequest ? QUIET_MS : FIRST_REQUEST_GRACE_MS)
 }
 
 function releaseBootLoader() {
@@ -66,6 +70,7 @@ async function watchApiRequests() {
 
   const requestId = axios.interceptors.request.use((config) => {
     pendingRequests += 1
+    hasSeenRequest = true
     clearQuietTimer()
     return config
   })
@@ -86,7 +91,9 @@ async function watchApiRequests() {
   }
 }
 
-export function startBootLoader(router: Router) {
+// `whenAuthReady` : session Clerk chargée. Une URL avec userId passe la garde du routeur
+// sans attendre Clerk, alors que les vues attendent leur jeton pour appeler l'API.
+export function startBootLoader(router: Router, whenAuthReady: Promise<unknown>) {
   if (started || !isActive.value) return
   started = true
 
@@ -94,7 +101,7 @@ export function startBootLoader(router: Router) {
   maxWaitTimer = window.setTimeout(releaseBootLoader, MAX_WAIT_MS)
   void watchApiRequests()
 
-  void Promise.all([router.isReady(), document.fonts?.ready])
+  void Promise.all([router.isReady(), whenAuthReady, document.fonts?.ready])
     .then(() => {
       // Redirection hors du tableau de bord (connexion…) : rien à attendre.
       if (!DASHBOARD_PATH.test(router.currentRoute.value.path)) {
