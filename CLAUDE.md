@@ -679,6 +679,8 @@ Les domaines personnalisés pointent **directement** sur le VPS (pas via Cloudfl
 
 ## Dernières modifications (mis à jour 2026-10-22)
 
+- **Écran de chargement du tableau de bord** (`components/layouts/BootLoader.vue`, `composables/useBootLoader.ts`) : actif seulement quand la page chargée est sous `/dashboard`, il reste jusqu'à ce que la route soit résolue, Clerk chargé et l'API silencieuse 220 ms (intercepteurs axios, plafond 5 s), puis le contenu monte d'un bloc. Un script en ligne de `index.html` pose `html.is-booting` avant le premier affichage : à garder (et à autoriser par hash si une CSP `script-src` est ajoutée). Une nouvelle vue du tableau de bord qui appelle l'API autrement qu'avec axios ne sera pas attendue.
+
 - **Pages légales, traceurs, remboursements** (`94d6974`) :
   - **Pages légales** : documents dans `frontend/src/views/Legal/` (registre `legalPages.json`, un fragment HTML par document dans `content/`), route `/legal/:page`, pré-rendus en HTML statique au build (`frontend/plugins/legal-prerender/`).
   - **Traceurs** : aucun avant consentement (pas de GTM ni GA4 ; hCaptcha, Stripe.js et Google Maps chargés seulement à la demande), donc pas de bandeau cookies. Toute nouvelle balise tierce doit garder cette règle ou ajouter un consentement.

@@ -93,6 +93,9 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ### Interface (passe contraste et Clerk du 2026-10-22)
 
+- [ ] Dédoublonner les appels API au chargement du tableau de bord : sur l'éditeur, `GET /payments/stripe/subscriptions/me` part 7 fois, `/users/me/listings` et chaque section d'annonce (`core`, `bookings`, `medias`…) 2 fois, `/listings/:id/domain` 4 fois (34 requêtes au total). Partager une seule promesse par ressource. L'écran de chargement attend la fin de ces appels, donc chaque doublon retire en partie le délai d'affichage.
+- [ ] CSP complète : autoriser par son hash le script en ligne de `frontend/index.html` qui pose `html.is-booting` (écran de chargement du tableau de bord), sinon le fond mobile redevient sombre avant le montage de l'app.
+
 - [ ] Nom public de l'hôte : ne plus le tirer de la partie locale de l'e-mail (`readEmailLocalPart` dans `backend/api/src/domains/listings/listings.service.ts`, `resolveIdentityLabel` dans `users/users.repository.ts`). Afficher le prénom, sinon « votre hôte ». Demande un redéploiement de l'API.
 - [ ] Libellé par défaut `status: 'Host'`, en anglais, dans `toHostProfile` (`users.repository.ts`), affiché sous le nom de l'hôte sur l'annonce (`HostProfile.vue`). Le remplacer par « Hôte » ou le laisser vide.
 - [ ] Pied de page de la landing en thème sombre : `.layout-footer` garde son fond `$accent` clair (`styles/layouts/_footer.scss`). Lui donner une variante sombre.
@@ -113,6 +116,7 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ## Fait
 
+- [x] 2026-10-22 — Écran de chargement au rechargement d'une page du tableau de bord (`BootLoader.vue`, `useBootLoader.ts`) : logo et halo de marque, retiré d'un seul geste quand la route, Clerk et l'API sont prêts (silence réseau de 220 ms, plafond 5 s), au lieu d'une page qui se montait par morceaux. Fond clair dès le premier affichage sur mobile (`2fda2d5`, `1fc08a7`).
 - [x] 2026-10-22 — Contraste et thème clair inspiré d'Apple (`18e1a21`, `c6a3795`, `2d79183`) :
   - encres lisibles `$bad-ink`, `$good-ink` et `$primary_gradiant_ink_*` à la place du rouge, du menthe et du dégradé pastel sur fond clair ;
   - textes Outfit en 300 au minimum, CTA principaux noirs, halos de marque en fond du héros et de l'appel final ;
