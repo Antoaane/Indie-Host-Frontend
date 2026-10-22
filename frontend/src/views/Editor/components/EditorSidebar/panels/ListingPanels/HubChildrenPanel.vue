@@ -229,7 +229,7 @@ onMounted(() => { void load() })
       color: rgba($secondary, 0.72);
 
       &.is-error {
-        color: rgba($bad, 0.95);
+        color: $bad-ink;
       }
     }
   }

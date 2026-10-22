@@ -417,7 +417,7 @@
     }
 
     .feedback.error {
-      color: $bad;
+      color: $bad-ink;
     }
   }
 
@@ -656,7 +656,7 @@
 
             @include on-hover(':not(:disabled)') {
               border-color: rgba($bad, 0.5);
-              color: rgba($bad, 0.95);
+              color: $bad-ink;
             }
 
             // Zone tactile élargie à 44 px sans grossir la puce.
@@ -848,7 +848,7 @@
           font-weight: 600;
 
           &.error {
-            color: $bad;
+            color: $bad-ink;
           }
 
           &.success {
@@ -896,7 +896,7 @@
     > .error {
       margin: 0;
       font-size: 0.875rem;
-      color: $bad;
+      color: $bad-ink;
     }
   }
 }

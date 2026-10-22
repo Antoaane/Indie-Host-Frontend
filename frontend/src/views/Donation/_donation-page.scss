@@ -7,7 +7,8 @@
 .donation-page {
   padding-top: $nav-height;
   min-height: calc(100dvh - $nav-height);
-  background-color: $background;
+  // Titre et sous-titre sont en $accent : le fond doit rester sombre.
+  background-color: $secondary;
   color: $accent;
 
   padding-bottom: var(--layout-gap-4xl);

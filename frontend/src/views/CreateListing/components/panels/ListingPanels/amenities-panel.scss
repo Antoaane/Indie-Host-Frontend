@@ -397,7 +397,7 @@
               @include on-hover {
                 background: rgba($bad, 0.08);
                 border-color: rgba($bad, 0.2);
-                color: $bad;
+                color: $bad-ink;
               }
 
               @media (pointer: coarse) {

@@ -370,7 +370,7 @@ onBeforeUnmount(() => {
       margin: 0 0 var(--layout-gap-sm) 0;
       font-size: 0.9rem;
       font-weight: 500;
-      color: rgba($bad, 0.95);
+      color: $bad-ink;
     }
 
     > .sync-status {

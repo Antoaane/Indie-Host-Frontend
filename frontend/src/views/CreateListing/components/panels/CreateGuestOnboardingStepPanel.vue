@@ -140,7 +140,7 @@ const emit = defineEmits<{
     > .error {
       margin: 0;
       @include little-text($thin: false);
-      color: rgba($bad, 0.95);
+      color: $bad-ink;
     }
 
     > .info {

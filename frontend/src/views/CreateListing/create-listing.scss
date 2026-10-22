@@ -368,7 +368,7 @@ body:has(.create-listing#create-listing-page) {
 
       >.error {
         margin: 0;
-        color: rgba($bad, 0.95);
+        color: $bad-ink;
         @include little-text($thin: false);
       }
 

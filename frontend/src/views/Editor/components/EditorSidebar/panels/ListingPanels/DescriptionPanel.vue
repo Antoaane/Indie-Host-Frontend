@@ -465,7 +465,7 @@ onMounted(async () => {
   > .generate-error {
     margin: 0 0 var(--layout-gap-sm);
     @include little-text($thin: false);
-    color: $bad;
+    color: $bad-ink;
   }
 
   > .body {

@@ -101,7 +101,8 @@
       >.meta {
         margin: 0;
         font-size: 0.75rem;
-        color: rgba($secondary-text, 0.55);
+        // 12 px : 0.55 tombait à 4.1:1, sous le seuil de 4.5.
+        color: rgba($secondary-text, 0.7);
       }
 
       >.status-pill {

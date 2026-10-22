@@ -410,7 +410,7 @@ onMounted(() => {
       }
 
       &.is-error {
-        color: rgba($bad, 0.95);
+        color: $bad-ink;
       }
     }
   }

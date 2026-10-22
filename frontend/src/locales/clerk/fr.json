@@ -1,1 +1,14 @@
-{}
+{
+  "signIn": {
+    "start": {
+      "subtitle": "Accédez à votre espace IndieHost",
+      "titleCombined": "Continuer vers IndieHost"
+    }
+  },
+  "signUp": {
+    "start": {
+      "subtitle": "Pour réserver ou gérer vos logements sur IndieHost",
+      "subtitleCombined": "Pour réserver ou gérer vos logements sur IndieHost"
+    }
+  }
+}

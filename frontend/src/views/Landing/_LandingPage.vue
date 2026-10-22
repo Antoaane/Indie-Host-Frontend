@@ -436,30 +436,76 @@ onBeforeUnmount(() => {
   color: $secondary !important;
 }
 
-#landing-page.is-light-theme .text-gradiant {
-  background: none !important;
-  -webkit-background-clip: initial !important;
-  background-clip: initial !important;
-  -webkit-text-fill-color: $primary_gradiant_first !important;
-  color: $primary_gradiant_first !important;
-}
-
+// Thème clair : le dégradé signature passe en « encre » (lavande → orchidée
+// assombries par le $secondary), comme les titres en dégradé d'Apple qui partent
+// d'une teinte profonde. Le pastel d'origine tombait à 2.4:1 sur fond clair.
+#landing-page.is-light-theme .text-gradiant,
+#landing-page.is-light-theme h1 strong,
 #landing-page.is-light-theme h2 strong,
-#landing-page.is-light-theme h3 strong {
-  background: none !important;
-  -webkit-background-clip: initial !important;
-  background-clip: initial !important;
-  -webkit-text-fill-color: $primary_gradiant_first !important;
-  color: $primary_gradiant_first !important;
-}
-
-#landing-page.is-light-theme #hero-section h1 strong,
+#landing-page.is-light-theme h3 strong,
+#landing-page.is-light-theme h4 strong,
+#landing-page.is-light-theme .step-section .step,
 #landing-page.is-light-theme #hero-section .hero-counter {
-  background: linear-gradient(87deg, $primary_gradiant_second 0%, $primary_gradiant_third 100%) !important;
+  background: linear-gradient(87deg, $primary_gradiant_ink_first 0%, $primary_gradiant_ink_second 100%) !important;
   -webkit-background-clip: text !important;
   background-clip: text !important;
   color: transparent !important;
   -webkit-text-fill-color: transparent !important;
+}
+
+// Modes allégés (Safari, iOS mobile) : pas de texte en dégradé, encre unie.
+html.safari-landing-lite #landing-page.is-light-theme .text-gradiant,
+html.safari-landing-lite #landing-page.is-light-theme h1 strong,
+html.safari-landing-lite #landing-page.is-light-theme h2 strong,
+html.safari-landing-lite #landing-page.is-light-theme h3 strong,
+html.safari-landing-lite #landing-page.is-light-theme #hero-section .hero-counter,
+html.is-ios.mobile-landing-lite #landing-page.is-light-theme .text-gradiant,
+html.is-ios.mobile-landing-lite #landing-page.is-light-theme h1 strong,
+html.is-ios.mobile-landing-lite #landing-page.is-light-theme h2 strong,
+html.is-ios.mobile-landing-lite #landing-page.is-light-theme h3 strong {
+  background: none !important;
+  -webkit-text-fill-color: currentColor !important;
+  color: $primary_gradiant_ink_first !important;
+}
+
+// Thème clair : l'action principale se remplit du noir du site. Le bouton blanc
+// pensé pour le fond sombre se fondait dans le fond clair.
+#landing-page.is-light-theme #hero-section .cta-primary > *,
+#landing-page.is-light-theme #final-cta-section .cta-primary > * {
+  background-color: $secondary-button-reference !important;
+  color: $accent !important;
+  outline-color: rgba($secondary, 0.12) !important;
+}
+
+@include can-hover {
+  #landing-page.is-light-theme #hero-section .cta-primary:hover > *,
+  #landing-page.is-light-theme #final-cta-section .cta-primary:hover > * {
+    background-color: $quinary !important;
+    color: $accent !important;
+  }
+}
+
+// Écho du halo du héros derrière le dernier appel à l'action.
+#landing-page.is-light-theme #final-cta-section {
+  position: relative;
+  isolation: isolate;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(30% 45% at 30% 50%, rgba($primary_gradiant_first, 0.26) 0%, rgba($primary_gradiant_first, 0) 100%),
+      radial-gradient(30% 45% at 70% 55%, rgba($primary_gradiant_second, 0.22) 0%, rgba($primary_gradiant_second, 0) 100%);
+  }
+}
+
+// Grands titres : interlettrage resserré, comme sur les pages produit Apple.
+#landing-page.is-light-theme h1,
+#landing-page.is-light-theme h2 {
+  letter-spacing: -0.02em;
 }
 
 #landing-page.is-light-theme .metric,

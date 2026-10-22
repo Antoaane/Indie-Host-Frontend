@@ -37,7 +37,6 @@
   border-radius: borders.$rounded;
   background: $accent-surface-2;
   @include little-text(rgba($secondary-text, 0.75), true);
-  text-transform: uppercase;
 }
 
 .donation-hero__body {

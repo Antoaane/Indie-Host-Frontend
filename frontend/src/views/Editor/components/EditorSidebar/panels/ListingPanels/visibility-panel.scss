@@ -104,15 +104,15 @@
 
         // Action destructive signalée en rouge dès le repos : le survol n'existe pas au doigt.
         &>* {
-          color: $bad;
-          outline-color: rgba($bad, 0.25);
+          color: $bad-ink;
+          outline-color: rgba($bad-ink, 0.25);
         }
 
         @include on-hover {
 
           &>* {
             color: $accent !important;
-            background-color: $bad !important;
+            background-color: $bad-ink !important;
             outline: 3px solid rgba($accent, 0.75) !important;
 
             &>* {

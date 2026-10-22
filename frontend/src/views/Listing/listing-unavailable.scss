@@ -18,10 +18,7 @@
 
     > .eyebrow {
       margin: 0;
-      text-transform: uppercase;
-      letter-spacing: 0.2em;
-      font-size: 0.75rem;
-      opacity: 0.6;
+      @include little-text(rgba($secondary, 0.72), $bold: true);
     }
 
     > h1 {

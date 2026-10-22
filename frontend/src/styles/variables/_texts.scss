@@ -9,16 +9,17 @@
   font-family: 'outfit', sans-serif;
   color: $color;
 
+  // 300 au minimum : Outfit 200 (extra-light) devient gris pâle sur fond clair.
   @if $bold {
     font-weight: 500;
   }
 
   @else if $thin {
-    font-weight: 200;
+    font-weight: 300;
   }
 
   @else {
-    font-weight: 300;
+    font-weight: 400;
   }
 
   text-decoration: if($underline, underline, none);
@@ -61,11 +62,11 @@
   }
 
   @else if $thin {
-    font-weight: 200;
+    font-weight: 300;
   }
 
   @else {
-    font-weight: 300;
+    font-weight: 400;
   }
 
   text-decoration: if($underline, underline, none);

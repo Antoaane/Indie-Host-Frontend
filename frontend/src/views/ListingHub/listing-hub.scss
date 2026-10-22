@@ -4,6 +4,12 @@
 @use '@/styles/variables/borders' as borders;
 @use '@/styles/variables/animations' as animations;
 
+// Le conteneur est centré : le fond clair passe par le body, sombre sous lg,
+// sinon les titres sombres de la page disparaissent sur mobile.
+body:has(.listing-hub) {
+  background-color: $background;
+}
+
 // Page principale publique : un bandeau d'accueil puis la grille des logements.
 .listing-hub {
   @include container($max: xl);

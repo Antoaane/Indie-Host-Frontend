@@ -2,7 +2,11 @@
 
 @use "@/styles/variables/globals" as *;
 
-* {
+// Police et couleur par défaut de chaque élément, sauf dans les composants Clerk
+// (classes `cl-*`) qui reposent sur l'héritage : sans cette exception, le texte
+// du bouton « Continuer » sortait foncé sur fond foncé. `:where()` garde une
+// spécificité nulle, comme le `*` d'origine.
+:where(*:not([class^="cl-"], [class^="cl-"] *)) {
   font-family: 'outfit', sans-serif;
   color: $secondary-text;
 }

@@ -1,0 +1,185 @@
+/* File: src/styles/components/_clerk.scss */
+
+// Habillage des composants Clerk (connexion, inscription, profil) aux tokens du
+// site. Les classes `cl-*` sont l'API de style stable de Clerk ; le préfixe
+// `.cl-rootBox` donne la spécificité nécessaire pour passer devant ses styles
+// internes (une seule classe), états :hover / :focus compris.
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
+
+.cl-rootBox {
+  font-family: 'Outfit', sans-serif;
+
+  .cl-cardBox {
+    width: min(100%, 26rem);
+    border: 1px solid rgba($secondary, 0.08);
+    border-radius: borders.$rounded-xl;
+    @include big-shadow();
+  }
+
+  .cl-card {
+    gap: var(--layout-gap-xl);
+    padding: var(--layout-gap-2xl) var(--layout-gap-xl);
+    border-radius: 0;
+    background: $accent;
+    box-shadow: none;
+  }
+
+  .cl-headerTitle {
+    @include h2-title($secondary, $bigger: false, $colorful: false);
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+
+  .cl-headerSubtitle {
+    @include little-text(rgba($secondary, 0.72));
+  }
+
+  // Boutons Google / Facebook : même gabarit que les boutons secondaires du site.
+  .cl-socialButtonsBlockButton {
+    min-height: 2.75rem;
+    border: 1px solid rgba($secondary, 0.12);
+    border-radius: borders.$rounded-sm;
+    background: $accent;
+    box-shadow: none;
+    @include animations.transition(animations.$duration-fast);
+    @include animations.press();
+
+    @include on-hover {
+      border-color: rgba($secondary, 0.24);
+      background: $tertiary;
+    }
+
+    &:focus-visible {
+      outline: 2px solid rgba($secondary, 0.4);
+      outline-offset: 2px;
+    }
+  }
+
+  .cl-socialButtonsBlockButtonText {
+    @include base-text($secondary, $bold: true);
+  }
+
+  .cl-dividerLine {
+    background: rgba($secondary, 0.1);
+  }
+
+  .cl-dividerText {
+    @include little-text(rgba($secondary, 0.6));
+  }
+
+  .cl-formFieldLabel {
+    @include little-text($secondary, $bold: true);
+  }
+
+  .cl-formFieldHintText,
+  .cl-formFieldInfoText {
+    @include little-text(rgba($secondary, 0.72));
+  }
+
+  // Champs : même rendu que `inputs.field` (fond $tertiary, 44 px, halo au focus).
+  .cl-formFieldInput,
+  .cl-otpCodeFieldInput {
+    min-height: 2.75rem;
+    padding-inline: 0.9rem;
+    border: 1px solid rgba($secondary-text, 0.1);
+    border-radius: borders.$rounded-md;
+    background: $tertiary;
+    color: $secondary;
+    font-size: 1rem;
+    box-shadow: none;
+    @include animations.transition(animations.$duration-fast);
+
+    &::placeholder {
+      color: rgba($secondary-text, 0.5);
+    }
+
+    @include on-hover {
+      border-color: rgba($secondary-text, 0.18);
+    }
+
+    &:focus,
+    &:focus-visible {
+      border-color: rgba($secondary-text, 0.35);
+      outline: none;
+      @include halo(xs, false, rgba($secondary-text, 0.35), 0.35);
+    }
+
+    @media (pointer: coarse) {
+      font-size: max(1rem, 16px);
+    }
+  }
+
+  .cl-otpCodeFieldInput {
+    padding-inline: 0;
+    text-align: center;
+  }
+
+  .cl-formFieldErrorText,
+  .cl-alertText {
+    @include little-text($bad-ink, $thin: false);
+  }
+
+  .cl-alert {
+    border: 1px solid rgba($bad-ink, 0.2);
+    border-radius: borders.$rounded-md;
+    background: rgba($bad, 0.08);
+  }
+
+  // Bouton principal : noir du site, halo de marque au lieu du dégradé gris de Clerk.
+  .cl-formButtonPrimary {
+    min-height: 2.75rem;
+    border: none;
+    border-radius: borders.$rounded-sm;
+    background: $secondary-button-reference;
+    background-image: none;
+    color: $accent;
+    box-shadow:
+      0 0.5rem 1.25rem -0.5rem rgba($primary_gradiant_first, 0.9),
+      0 0.15rem 0.4rem rgba($secondary, 0.2);
+    @include animations.transition(animations.$duration-fast);
+    @include base-text($accent, $bold: true);
+    @include animations.press();
+
+    @include on-hover {
+      background: $quinary;
+      box-shadow:
+        0 0.6rem 1.5rem -0.5rem rgba($primary_gradiant_second, 0.95),
+        0 0.15rem 0.4rem rgba($secondary, 0.24);
+    }
+
+    &:focus-visible {
+      outline: 2px solid rgba($secondary, 0.5);
+      outline-offset: 2px;
+    }
+
+    &::after {
+      display: none;
+    }
+  }
+
+  .cl-footer {
+    background: $accent-surface-0;
+    background-image: none;
+  }
+
+  .cl-footerActionText {
+    @include little-text(rgba($secondary, 0.72));
+  }
+
+  .cl-footerActionLink {
+    @include animations.transition(animations.$duration-fast);
+    @include little-text($secondary, $bold: true, $underline: true);
+
+    @include on-hover {
+      color: $primary_gradiant_ink_first;
+    }
+  }
+
+  .cl-formFieldAction,
+  .cl-identityPreviewEditButton {
+    @include little-text($primary_gradiant_ink_first, $bold: true);
+  }
+}

@@ -16,7 +16,7 @@ const props = withDefaults(
 <template>
   <section class="listing-unavailable">
     <div class="content">
-      <p class="eyebrow">Indie Host</p>
+      <p class="eyebrow">IndieHost</p>
       <h1>{{ props.title }}</h1>
       <p class="message">{{ props.message }}</p>
     </div>

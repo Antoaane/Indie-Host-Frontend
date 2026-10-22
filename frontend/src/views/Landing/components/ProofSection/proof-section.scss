@@ -34,12 +34,10 @@
     text-align: center;
   }
 
+  // Surtitre en casse normale (pas d'étiquette en capitales, cf. DESIGN.md).
   .eyebrow {
     margin: 0;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: rgba($accent, 0.68);
-    @include little-text($accent, $thin: false);
+    @include base-text($accent, $bold: true);
   }
 
   h2 {

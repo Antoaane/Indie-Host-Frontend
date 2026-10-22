@@ -201,7 +201,7 @@ async function handleImport() {
       color: rgba($secondary, 0.7);
 
       &.is-error {
-        color: rgba($bad, 0.95);
+        color: $bad-ink;
       }
     }
   }

@@ -81,12 +81,10 @@
     text-align: center;
   }
 
+  // Surtitre en casse normale (pas d'étiquette en capitales, cf. DESIGN.md).
   .pricing-eyebrow {
     margin: 0;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: rgba($accent, 0.72);
-    @include little-text($accent, $thin: false);
+    @include base-text($accent, $bold: true);
   }
 
   .pricing-title h1,
@@ -323,8 +321,6 @@
 
     .plan-tier {
       @include little-text($accent, $thin: false);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
     }
 
     .plan-highlight {
@@ -504,10 +500,7 @@
 
     .block-label {
       margin: 0;
-      color: rgba($accent, 0.58);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      @include little-text($accent, $thin: false);
+      @include little-text(rgba($accent, 0.72), $thin: false);
     }
 
     ul {

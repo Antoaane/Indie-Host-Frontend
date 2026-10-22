@@ -149,7 +149,7 @@ const props = withDefaults(defineProps<{
 
   > .error {
     margin: var(--layout-gap-sm) 0 0 0;
-    color: rgba($bad, 0.95);
+    color: $bad-ink;
     @include little-text($thin: false);
   }
 }
