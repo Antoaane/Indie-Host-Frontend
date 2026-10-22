@@ -8,6 +8,19 @@ IndieHost est une plateforme SaaS de location saisonnière à **0% de commission
 
 ---
 
+## Suivi des tâches : `TODO.md` (règle permanente)
+
+`TODO.md`, à la racine, est la liste unique de ce qui reste à faire, par l'utilisateur ou par Claude. Il sert à ne jamais perdre le fil d'une session à l'autre.
+
+**Structure imposée par l'utilisateur, toujours deux parties** : `## Ce que vous devez faire` (actions et décisions de l'utilisateur) puis `## À faire par Claude` (chacune découpée en sous-sections thématiques `###`), et enfin `## Fait`. Ne jamais mélanger les deux types dans une même liste : une tâche qui dépend des deux est coupée en deux entrées, et celle de Claude précise « (après …) ». Le même découpage s'applique aux récapitulatifs de fin de tâche donnés à l'utilisateur.
+
+1. **Avant toute tâche**, lire `TODO.md`. Si la demande y figure déjà, partir de cette entrée ; sinon, l'ajouter dans la bonne partie et la bonne section.
+2. **Tout ce qui est remis à plus tard** va dans `TODO.md`, avec son contexte (fichiers, raison, qui doit agir) : point découvert en chemin, hors périmètre, en attente d'une décision ou d'une information de l'utilisateur. Ne pas le laisser seulement dans la conversation.
+3. **À la fin d'une tâche**, cocher l'entrée et la déplacer dans « Fait », avec la date et le commit.
+4. **Sessions parallèles** : le fichier est partagé. Ne modifier que ses propres entrées, et ne committer que ses propres lignes.
+
+---
+
 ## Architecture générale
 
 Monorepo avec 3 services + reverse proxy, orchestrés via Docker Compose :
@@ -665,6 +678,13 @@ Les domaines personnalisés pointent **directement** sur le VPS (pas via Cloudfl
 ---
 
 ## Dernières modifications (mis à jour 2026-10-22)
+
+- **Pages légales, traceurs, remboursements** (`94d6974`) :
+  - **Pages légales** : documents dans `frontend/src/views/Legal/` (registre `legalPages.json`, un fragment HTML par document dans `content/`), route `/legal/:page`, pré-rendus en HTML statique au build (`frontend/plugins/legal-prerender/`).
+  - **Traceurs** : aucun avant consentement (pas de GTM ni GA4 ; hCaptcha, Stripe.js et Google Maps chargés seulement à la demande), donc pas de bandeau cookies. Toute nouvelle balise tierce doit garder cette règle ou ajouter un consentement.
+  - **Remboursements voyageurs** : seulement si l'hôte active `bookings.pricing.cancellation.refundsEnabled` (désactivé par défaut, sinon réservation non remboursable). Une annulation par l'hôte (`POST /bookings/:id/host-cancel`) rembourse intégralement. Les remboursements font `reverse_transfer` (repris sur le compte Stripe de l'hôte).
+  - **Abonnements** : résiliation et reprise depuis Mon profil (`POST /payments/stripe/subscriptions/cancellation`), fin de période sans remboursement ; remboursement uniquement en cas de rétractation dans les 14 jours, sur demande par e-mail.
+  - **Restes à faire** : voir `TODO.md`.
 
 - **Passe Emil Kowalski sur tout le front (mobile + desktop)** : `_animations.scss` réécrit (courbes `$ease-out/$ease-in-out/$ease-drawer`, durées `$duration-*`, `transition()` sans `all`, `press()`, `reduced-motion`) ; survol derrière `on-hover`/`can-hover` ; `scale(0.97)` à l'appui dans `buttons.*` et sur les contrôles maison ; overlays en sheet `translateY(100%)` sous lg et modale `scale(0.96)` au-delà, popovers ancrés au déclencheur ; base mobile globale (tap highlight, `touch-action`, champs 16 px, safe areas toujours actives, `touchstart` passif pour `:active` sur iOS) ; `100vh` → `dvh`/`svh` ; `sr()` en `power3.out` 0.6 s sans délai. Règles reportées dans `DESIGN.md` (Motion) et le skill `indiehost-ui`.
 
