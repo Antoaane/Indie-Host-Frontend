@@ -7,6 +7,7 @@ import { computed } from 'vue'
 // UTILS
 import { formatRatingValue } from '@/views/ListingView/utils/formatters'
 import { useListingViewport } from '@/views/ListingView/composables/useListingViewport'
+import { sanitizeHtml } from '@/utils/sanitizeHtml'
 
 // TYPES
 import type { CommentItem } from '@/views/ListingView/types/listing'
@@ -98,11 +99,11 @@ function handleReadMoreClick() {
           v-else
           aria-hidden="true"
           class="avatar"
-          v-html="fallbackInitials"
+          v-html="sanitizeHtml(fallbackInitials)"
         ></span>
 
         <div class="info">
-          <h4 v-html="comment.name"></h4>
+          <h4 v-html="sanitizeHtml(comment.name)"></h4>
           <div
             v-if="isLg"
             class="note"
@@ -136,7 +137,7 @@ function handleReadMoreClick() {
         </div>
       </div>
     </div>
-    <blockquote v-html="comment.comment"></blockquote>
+    <blockquote v-html="sanitizeHtml(comment.comment)"></blockquote>
     <span
       v-if="!isLg && props.seeMore"
       class="more"

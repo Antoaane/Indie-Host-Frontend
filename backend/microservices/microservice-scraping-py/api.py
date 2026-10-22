@@ -45,7 +45,6 @@ for _secret_var in ("SCRAPFLY_KEY",):
     _hydrate_secret_env(_secret_var)
 
 from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from airbnb_scraper import scrape_listing as scrape_airbnb
@@ -101,19 +100,16 @@ async def lifespan(app: FastAPI):
     yield
 
 
+# Service interne : seule l'API Fastify l'appelle (POST /api/v1/imports/scrape), sur le réseau
+# Docker. Pas de documentation publique ni de CORS : aucun navigateur ne doit l'appeler.
 app = FastAPI(
     title="Indie Host Scraping API",
     description="API de scraping pour importer des annonces Airbnb et Booking vers Indie Host",
     version="1.0.0",
     lifespan=lifespan,
-)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None,
 )
 
 

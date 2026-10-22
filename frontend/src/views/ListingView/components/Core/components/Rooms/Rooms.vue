@@ -6,6 +6,7 @@ import { computed } from 'vue'
 import { BedDouble, BedSingle } from 'lucide-vue-next'
 // UTILS
 import { formatICUMessage } from '@/utils/i18n'
+import { sanitizeHtml } from '@/utils/sanitizeHtml'
 // TYPES
 import type { RoomsModel, BedItem } from '@/views/ListingView/types/listing'
 
@@ -68,7 +69,7 @@ function getRoomDisplayName(roomName: string, index: number) {
       >
         <li v-if="room.beds">
           <div>
-            <h3 v-html="getRoomDisplayName(room.name, index)" />
+            <h3 v-html="sanitizeHtml(getRoomDisplayName(room.name, index))" />
             <div class="icons">
               <template
                 v-for="(bed, bIndex) in room.beds"

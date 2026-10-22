@@ -5,6 +5,7 @@
 import * as LucideIcons from 'lucide-vue-next'
 // TYPES
 import type { PerkItem } from '@/views/ListingView/types/listing'
+import { sanitizeHtml } from '@/utils/sanitizeHtml'
 // CONTENT
 const props = defineProps<{
   data: PerkItem[]
@@ -41,12 +42,12 @@ function resolveIcon(name: string) {
         <div class="body">
           <h3
             class="title"
-            v-html="perk.name"
+            v-html="sanitizeHtml(perk.name)"
           />
           <p
             v-if="perk.description"
             class="description"
-            v-html="perk.description"
+            v-html="sanitizeHtml(perk.description)"
           />
         </div>
       </li>

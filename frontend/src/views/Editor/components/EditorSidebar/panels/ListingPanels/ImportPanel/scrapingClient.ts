@@ -1,6 +1,7 @@
 // File: src/views/Editor/components/EditorSidebar/panels/ListingPanels/ImportPanel/scrapingClient.ts
 
-const BASE_URL = (import.meta.env.VITE_SCRAPING_API_URL ?? '/scraping').replace(/\/$/, '')
+// Le microservice de scraping n'est plus exposé : l'import passe par l'API, qui valide l'URL.
+const BASE_URL = ((import.meta.env.VITE_API_BASE_URL ?? '').trim() || '/api/v1').replace(/\/$/, '')
 
 /** Timeout en ms pour l'appel au serveur de scraping.
  * Certaines annonces Airbnb peuvent prendre plus de 90 s avec les fallbacks HTML/Playwright.
@@ -12,11 +13,10 @@ export type ScrapeListingOptions = {
   currency?: string
   checkIn?: string
   checkOut?: string
-  proxyUrl?: string
 }
 
 export async function scrapeListing(options: ScrapeListingOptions): Promise<Record<string, unknown>> {
-  const { url, currency = 'EUR', checkIn = '', checkOut = '', proxyUrl = '' } = options
+  const { url, currency = 'EUR', checkIn = '', checkOut = '' } = options
   const trimmedUrl = (url ?? '').trim()
   if (!trimmedUrl) {
     throw new Error("L'URL est requise.")
@@ -27,7 +27,7 @@ export async function scrapeListing(options: ScrapeListingOptions): Promise<Reco
 
   let res: Response
   try {
-    res = await fetch(`${BASE_URL}/scrape`, {
+    res = await fetch(`${BASE_URL}/imports/scrape`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -37,7 +37,6 @@ export async function scrapeListing(options: ScrapeListingOptions): Promise<Reco
         currency,
         check_in: checkIn ?? '',
         check_out: checkOut ?? '',
-        proxy_url: proxyUrl ?? '',
       }),
       signal: controller.signal,
     })
@@ -53,7 +52,7 @@ export async function scrapeListing(options: ScrapeListingOptions): Promise<Reco
 
   const json = await res.json().catch(() => ({}))
   if (!res.ok) {
-    throw new Error((json.detail ?? json.error ?? "Impossible de récupérer l'annonce.").toString())
+    throw new Error((json.message ?? json.detail ?? "Impossible de récupérer l'annonce.").toString())
   }
   return json as Record<string, unknown>
 }

@@ -188,7 +188,7 @@ export const bookingsPlugin = fp(async (fastify) => {
     preHandler: fastify.authenticateOptional,
   }, async (request, reply) => {
     const payload = createBookingSchema.parse(asObject(request.body));
-    const created = await service.createBooking(payload);
+    const created = await service.createBooking(payload, request.auth);
 
     if (!created) {
       reply.code(404).send({ message: 'Listing not found.' });

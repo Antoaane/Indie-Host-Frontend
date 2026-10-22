@@ -1,3 +1,4 @@
+import type { FastifyReply, FastifyRequest } from 'fastify';
 import fp from 'fastify-plugin';
 
 import { asObject } from '../../lib/json.js';
@@ -7,6 +8,7 @@ import {
   imagekitUploadSchema,
   mediaListingParamsSchema,
   patchMediaSchema,
+  readListingIdFromLegacyFolder,
 } from './medias.schemas.js';
 import { MediasService } from './medias.service.js';
 import { resolveListingAccess } from '../listings/listings.access.js';
@@ -19,9 +21,35 @@ function readHeader(value: string | string[] | undefined): string {
   return typeof raw === 'string' ? raw.trim() : '';
 }
 
+function safeDecodeURIComponent(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
 export const mediasPlugin = fp(async (fastify) => {
   const service = new MediasService(fastify.prisma);
   const imageKit = new ImageKitService();
+
+  // Envoi rattaché à une annonce : seul qui peut la modifier (propriétaire ou admin) dépose dans son dossier ImageKit.
+  async function ensureCanUploadToListing(request: FastifyRequest, reply: FastifyReply, listingId: string | null): Promise<boolean> {
+    if (!listingId) return true;
+
+    const access = await resolveListingAccess(fastify.prisma, listingId, request.auth);
+    if (!access) {
+      reply.code(404).send({ message: 'Listing not found.' });
+      return false;
+    }
+
+    if (!access.canWrite) {
+      reply.code(403).send({ message: 'You cannot edit this listing.' });
+      return false;
+    }
+
+    return true;
+  }
 
   fastify.get('/medias/listings/:listingId', async (request, reply) => {
     const { listingId } = mediaListingParamsSchema.parse(request.params);
@@ -68,11 +96,13 @@ export const mediasPlugin = fp(async (fastify) => {
     }
 
     const payload = imagekitUploadSchema.parse(asObject(request.body));
+    const listingId = payload.listingId ?? readListingIdFromLegacyFolder(payload.folder);
+    if (!await ensureCanUploadToListing(request, reply, listingId)) return;
+
     const uploaded = await imageKit.uploadDataImage({
       fileData: payload.fileData,
       fileName: payload.fileName,
-      folder: payload.folder,
-      useUniqueFileName: payload.useUniqueFileName,
+      listingId,
       tags: ['indiehost', 'upload', 'editor'],
     });
 
@@ -113,15 +143,15 @@ export const mediasPlugin = fp(async (fastify) => {
       return;
     }
 
-    const fileName = decodeURIComponent(readHeader(request.headers['x-file-name'])) || `video-${Date.now()}`;
-    const listingId = readHeader(request.headers['x-listing-id']).replace(/[^a-zA-Z0-9._-]+/g, '-');
-    const folder = listingId ? `${imageKit.resolveFolder()}/${listingId}/videos` : `${imageKit.resolveFolder()}/videos`;
+    const fileName = safeDecodeURIComponent(readHeader(request.headers['x-file-name'])) || `video-${Date.now()}`;
+    const listingId = readHeader(request.headers['x-listing-id']) || null;
+    if (!await ensureCanUploadToListing(request, reply, listingId)) return;
 
     const uploaded = await imageKit.uploadVideoBuffer({
       buffer: body,
       fileName,
       mimeType,
-      folder,
+      listingId,
       tags: ['indiehost', 'upload', 'editor', 'video'],
     });
 
@@ -142,7 +172,8 @@ export const mediasPlugin = fp(async (fastify) => {
     }
 
     const payload = imagekitImportSchema.parse(asObject(request.body));
-    const folder = imageKit.resolveFolder(payload.folder);
+    const listingId = payload.listingId ?? readListingIdFromLegacyFolder(payload.folder);
+    if (!await ensureCanUploadToListing(request, reply, listingId)) return;
 
     const bySourceUrl = new Map<string, Promise<{
       image: Awaited<ReturnType<ImageKitService['uploadRemoteImage']>> | null;
@@ -187,8 +218,7 @@ export const mediasPlugin = fp(async (fastify) => {
       const uploadPromise = imageKit.uploadRemoteImage({
         url: sourceUrl,
         fileName: input.fileName,
-        folder,
-        useUniqueFileName: payload.useUniqueFileName,
+        listingId,
         fallbackBaseName: `scraped-${position + 1}`,
         tags: ['indiehost', 'scraped', 'editor'],
       }).then((image) => ({

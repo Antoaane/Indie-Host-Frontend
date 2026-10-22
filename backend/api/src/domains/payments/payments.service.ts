@@ -18,6 +18,7 @@ import { toPrismaJson } from '../../lib/prisma.js';
 import { hasAdminAccess } from '../../lib/authRole.js';
 import type { RequestAuth } from '../../types/auth.js';
 import { resolveUserByIdentifier, upsertUserFromAuth } from '../users/users.repository.js';
+import { computeReservationTotal, isReservationRangeAvailable } from './reservationPricing.js';
 
 type CheckoutPaymentChoice = 'full' | 'split' | 'cash';
 type CheckoutDeferredMode = 'none' | 'online' | 'cash';
@@ -282,6 +283,8 @@ const ADMIN_LISTING_TRANSFER_TRIAL_SOURCE = 'admin_listing_transfer';
 const ADMIN_LISTING_TRANSFER_TRIAL_EXPIRED_STATUS = 'canceled';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+// Statuts Stripe qui valident une réservation (mêmes que le parcours de réservation du front).
+const SETTLED_RESERVATION_PAYMENT_STATUSES = new Set(['succeeded', 'processing', 'requires_capture']);
 const DEFAULT_CAPACITY = 1;
 const MAX_CAPACITY = 50;
 const DEFAULT_MIN_NIGHTS = 2;
@@ -757,6 +760,13 @@ function normalizeReservationInput(
   };
 }
 
+function assertReservationRangeAvailable(bookings: Record<string, unknown>, startISO: string, endISO: string) {
+  if (isReservationRangeAvailable(bookings, startISO, endISO)) return;
+  const error = createBadRequestError('Ces dates ne sont plus disponibles.', 'RESERVATION_RANGE_UNAVAILABLE');
+  error.statusCode = 409;
+  throw error;
+}
+
 function resolveDeferredMode(choice: CheckoutPaymentChoice): CheckoutDeferredMode {
   if (choice === 'full') return 'none';
   if (choice === 'cash') return 'cash';
@@ -943,6 +953,21 @@ export class PaymentsService {
       bookings: listingBookings,
     });
     const normalizedReservation = normalizeReservationInput(input.reservation, rules);
+    const expectedTotalAmountMinor = toMinorUnit(computeReservationTotal({
+      core: listingCore,
+      bookings: listingBookings,
+      startISO: normalizedReservation.startISO,
+      endISO: normalizedReservation.endISO,
+      occupants: normalizedReservation.occupants,
+    }));
+    if (normalizedReservation.totalAmountMinor !== expectedTotalAmountMinor) {
+      throw createBadRequestError(
+        'Le tarif de ce séjour a changé. Rechargez la page pour voir le prix à jour.',
+        'INVALID_RESERVATION_TOTAL',
+      );
+    }
+    assertReservationRangeAvailable(listingBookings, normalizedReservation.startISO, normalizedReservation.endISO);
+
     const payment = validatePaymentBreakdownInput({
       payment: input.payment,
       reservation: normalizedReservation,
@@ -2536,8 +2561,12 @@ export class PaymentsService {
 
     const billing = this.readBillingSnapshot(user);
     const sessionCustomerId = typeof session.customer === 'string' ? session.customer : session.customer?.id ?? null;
+    // Toutes nos sessions portent client_reference_id = id de l'utilisateur concerné : sans ce
+    // lien (ou le même client Stripe), on pourrait activer son compte avec la session d'un autre.
+    const sessionBelongsToUser = session.client_reference_id === user.id
+      || Boolean(billing.customerId && sessionCustomerId === billing.customerId);
 
-    if (billing.customerId && sessionCustomerId && billing.customerId !== sessionCustomerId) {
+    if (!sessionBelongsToUser || (billing.customerId && sessionCustomerId && billing.customerId !== sessionCustomerId)) {
       return {
         state: 'not_found',
         mode,
@@ -2862,6 +2891,73 @@ export class PaymentsService {
       status: session.status,
       currency: session.currency,
       connectedAccountId: session.connectedAccountId,
+    };
+  }
+
+  // Une réservation de voyageur n'est créée que sur un PaymentIntent émis par l'API pour cette
+  // annonce et ces dates, réglé côté Stripe et jamais rattaché à une autre réservation.
+  async verifyReservationPayment(input: {
+    listingId: string;
+    paymentIntentId: string;
+    startISO: string;
+    endISO: string;
+  }) {
+    const payment = await this.prisma.payment.findUnique({
+      where: { stripePaymentIntentId: input.paymentIntentId },
+    });
+    const metadata = asObject(payment?.metadata);
+    if (
+      !payment
+      || payment.listingId !== input.listingId
+      || readString(metadata.reservationStartISO) !== input.startISO
+      || readString(metadata.reservationEndISO) !== input.endISO
+    ) {
+      throw createBadRequestError('Le paiement ne correspond pas à cette réservation.', 'RESERVATION_PAYMENT_MISMATCH');
+    }
+    if (payment.reservationId) {
+      throw createBadRequestError('Ce paiement est déjà associé à une réservation.', 'RESERVATION_PAYMENT_ALREADY_USED');
+    }
+
+    const chargeNowAmountMinor = payment.chargeNowAmountMinor ?? payment.amountMinor;
+    let status = payment.status;
+    if (this.stripe) {
+      const intent = await this.stripe.paymentIntents.retrieve(input.paymentIntentId);
+      if (
+        intent.amount !== chargeNowAmountMinor
+        || intent.currency !== payment.currency
+        || intent.metadata?.listingId !== input.listingId
+      ) {
+        throw createBadRequestError('Le paiement ne correspond pas à cette réservation.', 'RESERVATION_PAYMENT_MISMATCH');
+      }
+      status = intent.status;
+    } else if (env.NODE_ENV !== 'production') {
+      // Mode simulé (aucune clé Stripe) : uniquement hors production.
+      status = 'succeeded';
+    }
+
+    if (!SETTLED_RESERVATION_PAYMENT_STATUSES.has(status)) {
+      throw createBadRequestError('Le paiement n a pas abouti.', 'RESERVATION_PAYMENT_NOT_COMPLETED');
+    }
+
+    if (status !== payment.status) {
+      await this.prisma.payment.update({
+        where: { id: payment.id },
+        data: { status },
+      });
+    }
+
+    const deferredAmountMinor = payment.deferredAmountMinor ?? 0;
+    return {
+      paymentIntentId: input.paymentIntentId,
+      status,
+      currency: payment.currency,
+      connectedAccountId: payment.stripeConnectedAccountId,
+      choice: payment.paymentChoice,
+      totalAmountMinor: toNumber(metadata.paymentTotalAmountMinor, chargeNowAmountMinor + deferredAmountMinor),
+      chargeNowAmountMinor,
+      deferredAmountMinor,
+      deferredMode: payment.deferredMode,
+      deferredDueDateISO: payment.deferredDueDate ? payment.deferredDueDate.toISOString().slice(0, 10) : null,
     };
   }
 

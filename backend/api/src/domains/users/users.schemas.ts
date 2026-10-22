@@ -16,12 +16,12 @@ export const adminInvitationSchema = z.object({
   redirectUrl: z.string().url().optional(),
 });
 
+// L'email vient de Clerk et le profil Stripe (Connect + abonnement) de Stripe : jamais du client,
+// sinon un compte pourrait s'attribuer un abonnement actif.
 export const updateMeSchema = z.object({
-  email: z.string().email().optional(),
   firstName: z.string().trim().min(1).max(120).optional(),
   lastName: z.string().trim().min(1).max(120).optional(),
   displayName: z.string().trim().min(1).max(120).optional(),
   avatarUrl: z.string().url().optional(),
   hostProfile: z.record(z.any()).optional(),
-  stripeConnect: z.record(z.any()).optional(),
 });

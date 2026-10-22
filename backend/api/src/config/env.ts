@@ -71,6 +71,8 @@ const envSchema = z.object({
   CUSTOM_DOMAIN_CNAME_TARGET: z.string().trim().optional().default(''),
   CUSTOM_DOMAINS_FILE: z.string().trim().optional().default(''),
   GROQ_API_KEY: z.string().trim().optional().default(''),
+  // Microservice de scraping, joignable uniquement sur le réseau Docker (plus exposé par nginx).
+  SCRAPING_SERVICE_URL: z.string().trim().url().default('http://scraping:8000'),
 });
 
 const parsed = envSchema.safeParse(resolveEnvWithSecretFallback());

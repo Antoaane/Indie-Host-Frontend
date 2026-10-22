@@ -5,6 +5,7 @@
 import type { TitleModel } from '@/views/ListingView/types/listing'
 import { computed } from 'vue'
 import { formatICUMessage } from '@/utils/i18n'
+import { sanitizeHtml } from '@/utils/sanitizeHtml'
 
 interface StaticContent {
   travelers: string
@@ -29,8 +30,8 @@ const bathroomsLabel = computed(() => formatICUMessage(props.staticContent.bathr
 
 <template>
   <div class="listing-title">
-    <h1 v-html="data.title" />
-    <h2 v-html="`${data.type} — ${data.location.city}, ${data.location.country}`" />
+    <h1 v-html="sanitizeHtml(data.title)" />
+    <h2 v-html="sanitizeHtml(`${data.type} — ${data.location.city}, ${data.location.country}`)" />
     <ul>
       <li> {{ data.guest_capacity }} {{ travelerLabel }} </li>
 

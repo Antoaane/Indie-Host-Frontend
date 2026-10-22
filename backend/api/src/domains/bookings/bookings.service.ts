@@ -7,8 +7,11 @@ import { env } from '../../config/env.js';
 import { deepMerge, asObject, toNumber } from '../../lib/json.js';
 import { buildMessageId, buildReservationId } from '../../lib/id.js';
 import { toPrismaJson } from '../../lib/prisma.js';
+import { hasAdminAccess } from '../../lib/authRole.js';
+import type { RequestAuth } from '../../types/auth.js';
 import { PaymentsService } from '../payments/payments.service.js';
-import { isDeprecatedHostIdentity } from '../users/users.repository.js';
+import { isReservationRangeAvailable } from '../payments/reservationPricing.js';
+import { isDeprecatedHostIdentity, upsertUserFromAuth } from '../users/users.repository.js';
 
 type RawReservation = Record<string, unknown>;
 
@@ -249,6 +252,36 @@ function toMinorUnit(amount: number): number {
 
 function toMajorUnit(minorAmount: number): number {
   return Math.max(0, Math.round(minorAmount / 100));
+}
+
+type VerifiedReservationPayment = Awaited<ReturnType<PaymentsService['verifyReservationPayment']>>;
+
+// Même forme que le paiement construit par le parcours de réservation du front, mais avec les
+// montants et statuts lus dans la ligne Payment et chez Stripe.
+function buildVerifiedReservationPayment(
+  clientPayment: Record<string, unknown>,
+  verified: VerifiedReservationPayment,
+): Record<string, unknown> {
+  return {
+    ...clientPayment,
+    total: toMajorUnit(verified.totalAmountMinor),
+    deposit: toMajorUnit(verified.chargeNowAmountMinor),
+    balance: toMajorUnit(verified.deferredAmountMinor),
+    status: verified.deferredAmountMinor === 0 ? 'paid' : 'pending',
+    method: verified.choice === 'cash' ? 'En ligne + Espèces' : 'En ligne',
+    stripe: {
+      ...asObject(clientPayment.stripe),
+      paymentIntentId: verified.paymentIntentId,
+      status: verified.status,
+      currency: verified.currency,
+      connectedAccountId: verified.connectedAccountId,
+      paymentChoice: verified.choice,
+      chargeNowAmount: toMajorUnit(verified.chargeNowAmountMinor),
+      deferredAmount: toMajorUnit(verified.deferredAmountMinor),
+      deferredMode: verified.deferredMode,
+      deferredDueDateISO: verified.deferredDueDateISO,
+    },
+  };
 }
 
 function createRequestError(
@@ -610,6 +643,30 @@ export class BookingsService {
       };
     }
 
+    // L'identifiant du PaymentIntent vient du JSON de la réservation : on ne rembourse que s'il a
+    // été créé par l'API pour cette annonce et n'est rattaché à aucune autre réservation.
+    const paymentRecord = await this.prisma.payment.findUnique({
+      where: { stripePaymentIntentId: input.paymentIntentId },
+      select: { listingId: true, reservationId: true },
+    });
+    const ownsPaymentIntent = Boolean(
+      paymentRecord
+      && paymentRecord.listingId === input.listingId
+      && (!paymentRecord.reservationId || paymentRecord.reservationId === input.reservationId),
+    );
+    if (!ownsPaymentIntent) {
+      console.warn('[bookings] refund skipped: payment intent not linked to this reservation', {
+        reservationId: input.reservationId,
+        listingId: input.listingId,
+      });
+      return {
+        action: 'none',
+        stripeStatus: null,
+        stripeRefundId: null,
+        refundedAmountMinor: 0,
+      };
+    }
+
     if (!this.stripe) {
       return {
         action: refundableAmountMinor > 0 ? 'mock_refund' : 'none',
@@ -622,6 +679,18 @@ export class BookingsService {
     try {
       const paymentIntent = await this.stripe.paymentIntents.retrieve(input.paymentIntentId);
       const currentStatus = paymentIntent.status ?? null;
+      if (paymentIntent.metadata?.listingId !== input.listingId) {
+        console.warn('[bookings] refund skipped: payment intent metadata does not match the listing', {
+          reservationId: input.reservationId,
+          listingId: input.listingId,
+        });
+        return {
+          action: 'none',
+          stripeStatus: currentStatus,
+          stripeRefundId: null,
+          refundedAmountMinor: 0,
+        };
+      }
       const cancellableStatuses = new Set([
         'requires_payment_method',
         'requires_confirmation',
@@ -1567,7 +1636,7 @@ export class BookingsService {
     });
   }
 
-  async createBooking(input: Record<string, unknown>) {
+  async createBooking(input: Record<string, unknown>, auth: RequestAuth | null = null) {
     const listingId = String(input.listingId ?? '').trim();
     if (this.paymentsService) {
       const reservable = await this.paymentsService.ensureListingReservable(listingId);
@@ -1578,6 +1647,7 @@ export class BookingsService {
       where: { id: listingId },
       select: {
         id: true,
+        ownerId: true,
         bookings: true,
       },
     });
@@ -1592,6 +1662,36 @@ export class BookingsService {
       reservations: [],
     });
 
+    const actor = await upsertUserFromAuth(this.prisma, auth);
+    const isHostActor = hasAdminAccess(auth) || Boolean(actor && listing.ownerId && listing.ownerId === actor.id);
+    let payment = asObject(input.payment, {});
+
+    // Réservation d'un voyageur : dates libres et PaymentIntent émis par l'API, réglé et propre à
+    // ces dates. Les montants et le statut du paiement viennent du serveur, pas du navigateur.
+    if (!isHostActor) {
+      const startISO = normalizeDayValue(input.start);
+      const endISO = normalizeDayValue(input.end);
+      if (!startISO || !endISO || startISO >= endISO) {
+        throw createRequestError('Sélection de dates invalide.', 400, 'INVALID_RESERVATION_RANGE');
+      }
+      if (!isReservationRangeAvailable(bookings, startISO, endISO)) {
+        throw createRequestError('Ces dates ne sont plus disponibles.', 409, 'RESERVATION_RANGE_UNAVAILABLE');
+      }
+
+      const paymentIntentId = readString(asObject(payment.stripe).paymentIntentId);
+      if (!paymentIntentId || !this.paymentsService) {
+        throw createRequestError('Paiement introuvable pour cette réservation.', 400, 'RESERVATION_PAYMENT_REQUIRED');
+      }
+
+      const verified = await this.paymentsService.verifyReservationPayment({
+        listingId,
+        paymentIntentId,
+        startISO,
+        endISO,
+      });
+      payment = buildVerifiedReservationPayment(payment, verified);
+    }
+
     const existingReservations = extractReservations(bookings);
     const bookedDays = extractBookedDays(bookings);
     const usedReservationIds = new Set(
@@ -1599,7 +1699,8 @@ export class BookingsService {
         .map((reservation) => reservationIdFromRow(reservation))
         .filter((value): value is string => Boolean(value)),
     );
-    const requestedReservationId = normalizeReservationId(input.id);
+    // Un voyageur ne choisit pas l'identifiant : il pourrait viser une réservation existante.
+    const requestedReservationId = isHostActor ? normalizeReservationId(input.id) : null;
     const safeReservationId = await this.ensureReservationId(requestedReservationId, listingId, usedReservationIds);
     const reservations = existingReservations.filter((reservation) => reservationIdFromRow(reservation) !== safeReservationId);
     const rawContact = asObject(input.contact, {});
@@ -1619,9 +1720,10 @@ export class BookingsService {
       guestName: input.guestName,
       guestAvatar: input.guestAvatar,
       message: input.message,
-      internalNote: input.internalNote,
+      // Note interne et fil de messages : réservés à l'hôte, jamais fournis par un voyageur.
+      internalNote: isHostActor ? input.internalNote : undefined,
       guests: asObject(input.guests, {}),
-      payment: asObject(input.payment, {}),
+      payment,
       contact,
       confirmation: {
         guideAccessKey: confirmation.guideAccessKey,
@@ -1629,7 +1731,7 @@ export class BookingsService {
         generatedAt: confirmation.generatedAt,
       },
       createdAt: typeof input.createdAt === 'string' ? input.createdAt : new Date().toISOString(),
-      messaging: asObject(input.messaging, {}),
+      messaging: isHostActor ? asObject(input.messaging, {}) : {},
     };
 
     reservations.unshift(reservation);

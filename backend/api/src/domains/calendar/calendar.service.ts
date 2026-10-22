@@ -6,6 +6,10 @@ import * as nodeIcal from 'node-ical';
 import { env } from '../../config/env.js';
 import { asObject } from '../../lib/json.js';
 import { toPrismaJson } from '../../lib/prisma.js';
+import { assertPublicHttpsUrl, fetchPublicText, RemoteFetchError } from '../../lib/safeRemoteFetch.js';
+
+// Un export iCal Airbnb/Booking pèse quelques dizaines de Ko.
+const ICAL_MAX_BYTES = 5 * 1024 * 1024;
 
 type ImportCalendarInput = {
   name?: string;
@@ -399,38 +403,29 @@ export class CalendarService {
       throw new Error('No iCal content or source URL provided.');
     }
 
-    const abortController = new AbortController();
-    const timeout = setTimeout(() => {
-      abortController.abort();
-    }, this.syncFetchTimeoutMs);
-
     try {
-      const response = await fetch(input.url, {
-        method: 'GET',
-        headers: {
-          Accept: 'text/calendar,text/plain,*/*',
-        },
-        signal: abortController.signal,
+      // URL saisie par l'hôte : https public uniquement (pas de réseau interne), taille plafonnée.
+      const response = await fetchPublicText(input.url, {
+        timeoutMs: this.syncFetchTimeoutMs,
+        maxBytes: ICAL_MAX_BYTES,
+        accept: 'text/calendar,text/plain,*/*',
       });
 
-      if (!response.ok) {
-        throw new Error(`Unable to fetch iCal source (${response.status}).`);
+      if (response.status < 200 || response.status >= 300) {
+        throw new RemoteFetchError(`Unable to fetch iCal source (${response.status}).`);
       }
 
-      const payload = await response.text();
-      if (!payload.trim()) {
-        throw new Error('Fetched iCal source is empty.');
+      if (!response.body.trim()) {
+        throw new RemoteFetchError('Fetched iCal source is empty.');
       }
 
-      return payload;
+      return response.body;
     } catch (error) {
       if (isAbortError(error)) {
-        throw new Error(`Unable to fetch iCal source (timeout after ${this.syncFetchTimeoutMs}ms).`);
+        throw new RemoteFetchError(`Unable to fetch iCal source (timeout after ${this.syncFetchTimeoutMs}ms).`);
       }
 
       throw error;
-    } finally {
-      clearTimeout(timeout);
     }
   }
 
@@ -782,13 +777,15 @@ export class CalendarService {
 
     if (!listing) return null;
 
-    const sourceIcal = await this.parseIncomingIcal(input);
+    // Validée dès l'ajout (et non seulement à la synchro) : webcal:// et http:// sont enregistrées en https://.
+    const sourceUrl = input.url ? (await assertPublicHttpsUrl(input.url)).toString() : null;
+    const sourceIcal = await this.parseIncomingIcal({ ...input, url: sourceUrl ?? undefined });
 
     const sync = await this.prisma.calendarSync.create({
       data: {
         listingId,
         name: input.name ?? null,
-        sourceUrl: input.url ?? null,
+        sourceUrl,
         rawIcs: sourceIcal,
         timezone: input.timezone ?? null,
         lastStatus: SYNC_STATUS_SYNCING,
@@ -899,7 +896,8 @@ export class CalendarService {
       },
     });
 
-    return sources.map((source) => {
+    // `rawIcs` (copie brute du flux OTA, avec les détails des réservations) ne quitte jamais l'API.
+    return sources.map(({ rawIcs: _rawIcs, ...source }) => {
       const freshness = this.resolveFreshness(source.lastSyncedAt);
       return {
         ...source,

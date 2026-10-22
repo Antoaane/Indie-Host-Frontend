@@ -5,6 +5,7 @@
 import type { HostProfileModel } from '@/views/ListingView/types/listing'
 import { computed } from 'vue'
 import { formatICUMessage } from '@/utils/i18n'
+import { sanitizeHtml } from '@/utils/sanitizeHtml'
 
 interface StaticContent {
   seniority: string
@@ -32,13 +33,13 @@ const seniorityText = computed(() => {
     <div class="body">
       <h2
         class="name"
-        v-html="data.name"
+        v-html="sanitizeHtml(data.name)"
       />
       <ul class="meta">
         <li
           v-if="data.status"
           class="item"
-          v-html="data.status"
+          v-html="sanitizeHtml(data.status)"
         />
         <li
           v-if="data.seniority > 1"

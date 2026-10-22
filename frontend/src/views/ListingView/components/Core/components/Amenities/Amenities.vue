@@ -8,6 +8,7 @@ import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'
 // TYPES
 import type { AmenitiesModel } from '@/views/ListingView/types/listing'
 import { resolveAmenityIconComponent, resolveLucideComponent } from '@/utils/amenitiesIcons'
+import { sanitizeHtml } from '@/utils/sanitizeHtml'
 
 interface StaticContent {
   title: string
@@ -105,7 +106,7 @@ function closeOverlay() {
         />
         <span
           class="name"
-          v-html="amenity.name"
+          v-html="sanitizeHtml(amenity.name)"
         ></span>
       </li>
     </ul>
@@ -151,7 +152,7 @@ function closeOverlay() {
             :key="category.name"
             class="category"
           >
-            <h3 v-html="category.name"></h3>
+            <h3 v-html="sanitizeHtml(category.name)"></h3>
             <ul>
               <li
                 v-for="amenity in category.items"
@@ -167,12 +168,12 @@ function closeOverlay() {
                 <div class="texts">
                   <p
                     class="name"
-                    v-html="amenity.name"
+                    v-html="sanitizeHtml(amenity.name)"
                   />
                   <p
                     v-if="amenity.description"
                     class="description"
-                    v-html="amenity.description"
+                    v-html="sanitizeHtml(amenity.description)"
                   />
                 </div>
               </li>

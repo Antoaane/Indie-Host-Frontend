@@ -1596,8 +1596,13 @@ export class ListingsService {
     const domain = normalizeCustomDomain(hostname);
     if (!isValidCustomDomain(domain)) return null;
 
+    // Seul un domaine dont la vérification DNS a abouti sert une annonce : un domaine simplement
+    // déclaré ne doit pas détourner le trafic.
     const listings = await this.prisma.listing.findMany({
-      where: { customDomain: { in: [domain, buildCustomDomainTwin(domain)] } },
+      where: {
+        customDomain: { in: [domain, buildCustomDomainTwin(domain)] },
+        customDomainVerifiedAt: { not: null },
+      },
       select: {
         id: true,
         status: true,
@@ -1606,7 +1611,7 @@ export class ListingsService {
         subdomainSlug: true,
         customDomain: true,
       },
-      orderBy: { customDomainVerifiedAt: { sort: 'desc', nulls: 'last' } },
+      orderBy: { customDomainVerifiedAt: 'desc' },
     });
 
     const matched = listings.find((listing) => this.getListingStatus(listing) !== 'deleted');
@@ -1837,6 +1842,22 @@ export class ListingsService {
       }
       const currentStatus = this.extractStatus(currentValue);
       const nextStatus = this.extractStatus(normalizedMerged);
+      if (allowAdmin) {
+        // Gel posé par un admin : marqué pour que le propriétaire ne puisse pas le lever.
+        if (nextStatus === 'blocked' && currentStatus !== 'blocked') normalizedMerged.blockedBy = 'admin';
+        if (nextStatus !== 'blocked') delete normalizedMerged.blockedBy;
+      } else {
+        const frozenByAdmin = currentStatus === 'blocked' && currentValue.blockedBy === 'admin';
+        if ((frozenByAdmin || currentStatus === 'deleted') && nextStatus !== currentStatus) {
+          return 'forbidden' as const;
+        }
+        // Type et marqueur de gel fixés par le serveur : passer en page principale sortirait
+        // l'annonce du compte des logements du plan.
+        if (currentValue.kind === undefined) delete normalizedMerged.kind;
+        else normalizedMerged.kind = currentValue.kind;
+        if (currentValue.blockedBy === undefined) delete normalizedMerged.blockedBy;
+        else normalizedMerged.blockedBy = currentValue.blockedBy;
+      }
       if (nextStatus === 'published' && (!allowAdmin || currentStatus !== 'published')) {
         await this.assertCanPublishListing(actor, { allowAdmin, listingId });
       }

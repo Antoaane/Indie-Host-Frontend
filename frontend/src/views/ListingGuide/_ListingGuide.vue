@@ -16,6 +16,7 @@ import { getListingsController } from '@/domain/listings/controller'
 import { isListingIdLike, normalizeListingSlug } from '@/domain/listings/slug'
 import type { RawArrival, RawBookingReservation, RawBookings, RawComments, RawCore, RawHost } from '@/domain/listings/types'
 import { vp } from '@/utils/viewport'
+import { sanitizeHtml } from '@/utils/sanitizeHtml'
 import { loadArrival, loadBookings, loadComments, loadCore, loadHost } from '@/views/Listing/utils/fetchListingRaw'
 
 type PracticalKey = keyof RawArrival['practical']
@@ -990,7 +991,7 @@ watch(
               <div
                 v-if="entry.html"
                 class="panel-html"
-                v-html="entry.html"
+                v-html="sanitizeHtml(entry.html)"
               />
               <p
                 v-else
@@ -1011,7 +1012,7 @@ watch(
             <div
               v-if="hasGuideContent"
               class="panel-editorial"
-              v-html="arrivalContent.guide.content"
+              v-html="sanitizeHtml(arrivalContent.guide.content)"
             />
             <p
               v-else

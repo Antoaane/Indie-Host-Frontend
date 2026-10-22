@@ -8,6 +8,7 @@ import { ref } from 'vue'
 import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'
 // TYPES
 import type { DescriptionModel } from '@/views/ListingView/types/listing'
+import { sanitizeHtml } from '@/utils/sanitizeHtml'
 
 interface StaticContent {
   title: string
@@ -43,7 +44,7 @@ function closePopup() {
 
     <span
       class="preview--editorial"
-      v-html="data.description"
+      v-html="sanitizeHtml(data.description)"
     />
 
     <div class="trigger">
@@ -81,7 +82,7 @@ function closePopup() {
         <h2 v-html="staticContent.title" />
         <span
           class="content"
-          v-html="data.description"
+          v-html="sanitizeHtml(data.description)"
         />
         <!-- <div class="block">
             <p v-html="data.brief" />

@@ -29,9 +29,11 @@ Monorepo avec 3 services + reverse proxy, orchestrés via Docker Compose :
 ### Routing nginx (dev et prod)
 ```
 /api/*       → backend Fastify  (port 4000)
-/scraping/*  → microservice Python (port 8000)
 /*           → frontend Vite (port 5179 en dev, nginx static en prod)
 ```
+Le microservice de scraping n'est **pas** exposé en prod (seul le nginx de dev garde `/scraping/*`) : l'API l'appelle sur le réseau Docker (`SCRAPING_SERVICE_URL`, défaut `http://scraping:8000`).
+
+nginx restaure l'IP réelle derrière Cloudflare (`set_real_ip_from` + `CF-Connecting-IP` dans `nginx.conf.template` ; mettre à jour les plages si Cloudflare en publie de nouvelles) et écrase `X-Real-IP` / `X-Forwarded-Host` : l'API s'appuie sur `X-Real-IP` pour ses limites de débit (`lib/rateLimit.ts`).
 
 ### Docker Compose services
 | Service | Rôle | Dépendances |
@@ -102,11 +104,11 @@ cd backend/api && npm run prisma:studio  # UI Prisma
 
 ### Microservice scraping (`backend/microservices/microservice-scraping-py/`)
 
-FastAPI Python, stateless. Endpoint `POST /scrape` :
+FastAPI Python, stateless, **interne** (ni CORS ni documentation Swagger). Endpoint `POST /scrape` :
 - Input : `{ url, currency?, check_in?, check_out?, proxy_url? }`
 - Output : données brutes listing (title, photos, équipements, prix, avis)
 - Scrapers : Airbnb (`airbnb_scraper.py`), Booking.com (`booking_scraper.py`)
-- CORS ouvert (`allow_origins=["*"]`) — interne uniquement
+- Appelé uniquement par l'API via `POST /api/v1/imports/scrape` (`domains/imports/`) : route publique (import depuis la landing sans compte), URL Airbnb/Booking **reconstruite** côté serveur à partir de l'identifiant (jamais l'URL fournie), `proxy_url` jamais transmis, 6 imports / 10 min / IP, 3 imports simultanés max, erreurs techniques du scraper gardées dans les logs
 
 ---
 
@@ -380,7 +382,7 @@ Dans Clerk Dashboard → Developers → Paths :
 
 ### Création d'annonce
 1. Wizard `CreateListing` (15+ étapes : titre, description, localisation, capacité, chambres, galerie, équipements, tarification, remises, règles, import)
-2. Import optionnel Airbnb/Booking via microservice Python `/scraping/scrape`
+2. Import optionnel Airbnb/Booking via `POST /api/v1/imports/scrape` (relais vers le microservice Python)
 3. Sauvegarde brouillon : `PATCH /api/v1/listings/:id/draft`
 4. Publication : `POST /api/v1/listings/publish` (vérifie abonnement Stripe)
 
@@ -389,6 +391,11 @@ Dans Clerk Dashboard → Developers → Paths :
 2. Acompte ou intégralité selon config `payment.mode`
 3. Backend : création `Reservation` + `CalendarEvent`
 4. Guest : confirmation + lien guide d'arrivée `/listing/guide/:id`
+
+Le serveur ne fait pas confiance au navigateur :
+- `POST /payments/stripe/payment-intents` recalcule le total (`domains/payments/reservationPricing.ts`) et refuse les dates déjà prises. **Ce calcul est une copie de `frontend/src/domain/listings/pricing.ts` + `reservationRules.ts` (`computeReservationPricing`) : toute évolution de la tarification doit être faite des deux côtés**, sinon les réservations sont refusées (`INVALID_RESERVATION_TOTAL`).
+- `POST /bookings` d'un voyageur (ni propriétaire ni admin) exige un PaymentIntent émis par l'API pour cette annonce et ces dates, réglé chez Stripe et jamais rattaché à une autre réservation (`PaymentsService.verifyReservationPayment`) ; montants et statut du paiement sont réécrits depuis la ligne `Payment`, l'id de réservation est choisi par le serveur, `internalNote` / `messaging` sont ignorés.
+- Une annulation ne rembourse qu'un PaymentIntent lié à la réservation dans la table `Payment` (et dont la metadata `listingId` correspond).
 
 ### Synchronisation calendrier
 - Sources iCal externes (Airbnb, Booking) configurées dans Management
@@ -401,8 +408,12 @@ Dans Clerk Dashboard → Developers → Paths :
 - `CLERK_SECRET_KEY` et `STRIPE_SECRET_KEY` **jamais** dans le code ni dans les logs
 - En prod : toutes les clés secrètes passent par `secrets/*.txt` (Docker secrets)
 - `.env` racine est dans `.gitignore` — ne pas committer
-- Le microservice scraping a CORS ouvert (`*`) — accessible uniquement en interne Docker
+- Le microservice scraping n'est joignable que sur le réseau Docker (voir « Microservice scraping »)
 - Backend valide chaque requête via JWT Clerk (pas de bypass possible)
+- Rôle admin : lu uniquement dans `private_metadata` / `public_metadata` Clerk (jamais `unsafe_metadata`, modifiable par l'utilisateur) ou via `SUPER_ADMIN_EMAILS`
+- Tout `v-html` de contenu hôte, voyageur ou importé passe par `sanitizeHtml()` (`frontend/src/utils/sanitizeHtml.ts`, DOMPurify, classes `ql-*` uniquement)
+- URL distantes récupérées par le serveur (sources iCal) : `lib/safeRemoteFetch.ts` (https, IP publiques uniquement, redirections revalidées, taille plafonnée)
+- Gel admin : un admin qui passe une annonce en `blocked` pose `core.blockedBy = 'admin'` ; le propriétaire ne peut alors plus changer le statut (ni réactiver une annonce `deleted`), ni modifier `kind`
 
 ---
 
@@ -649,7 +660,7 @@ Les domaines personnalisés pointent **directement** sur le VPS (pas via Cloudfl
 
 - `frontend` : `npm run build` lance `vue-tsc --build` en parallèle de `vite build` → **toute erreur TS fait échouer l'image Docker**. Lancer `cd frontend && npm run type-check` avant de déployer.
 - Le build de l'image `scraping` (Playwright + Chromium, ~2 Go) prend ~15 min sur le VPS ; les autres rebuilds sont rapides grâce au cache.
-- Vérifications post-déploiement : `https://indiehost.fr`, `/api/health`, `/scraping/health`, un sous-domaine `*.indiehost.fr`, `http://` → 301 ; `docker compose logs migrate` doit afficher « All migrations have been successfully applied ».
+- Vérifications post-déploiement : `https://indiehost.fr`, `/api/health`, `docker compose ps scraping` (healthy ; `/scraping/*` n'est plus routé publiquement), un sous-domaine `*.indiehost.fr`, `http://` → 301 ; `docker compose logs migrate` doit afficher « All migrations have been successfully applied ».
 
 ---
 

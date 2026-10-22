@@ -2,34 +2,36 @@ import fp from 'fastify-plugin';
 import { z } from 'zod';
 
 import { env } from '../../config/env.js';
+import { rateLimitByIp } from '../../lib/rateLimit.js';
 
+// Bornes sur la taille du prompt : la route reste publique (assistant de création sans compte).
 const roomBedSchema = z.object({
-  type: z.string().optional(),
+  type: z.string().max(40).optional(),
   quantity: z.coerce.number().optional(),
   capacity: z.coerce.number().optional(),
 });
 
 const roomSchema = z.object({
-  'room-name': z.string().optional(),
-  name: z.string().optional(),
-  beds: z.array(roomBedSchema).optional(),
+  'room-name': z.string().max(120).optional(),
+  name: z.string().max(120).optional(),
+  beds: z.array(roomBedSchema).max(20).optional(),
 });
 
 const amenitySchema = z.object({
-  name: z.string(),
+  name: z.string().max(120),
   relevance: z.coerce.number().optional(),
   pinned: z.boolean().optional(),
 });
 
 const generateDescriptionBodySchema = z.object({
-  title: z.string().optional(),
-  type: z.string().optional(),
-  city: z.string().optional(),
-  country: z.string().optional(),
-  region: z.string().optional(),
+  title: z.string().max(200).optional(),
+  type: z.string().max(40).optional(),
+  city: z.string().max(120).optional(),
+  country: z.string().max(120).optional(),
+  region: z.string().max(120).optional(),
   guest_capacity: z.coerce.number().optional(),
-  rooms: z.array(roomSchema).optional(),
-  amenities: z.array(amenitySchema).optional(),
+  rooms: z.array(roomSchema).max(30).optional(),
+  amenities: z.array(amenitySchema).max(200).optional(),
   length_level: z.coerce.number().min(1).max(3).optional().default(2),
 });
 
@@ -172,7 +174,14 @@ async function callGroq(prompt: string, apiKey: string, lengthLevel: number): Pr
 
 export const aiPlugin = fp(async (fastify) => {
   fastify.post('/ai/description', {
-    preHandler: fastify.authenticateOptional,
+    preHandler: [
+      rateLimitByIp({
+        max: 20,
+        windowMs: 10 * 60 * 1000,
+        message: 'Trop de générations à la suite. Réessayez dans quelques minutes.',
+      }),
+      fastify.authenticateOptional,
+    ],
   }, async (request, reply) => {
     const apiKey = env.GROQ_API_KEY;
     if (!apiKey) {

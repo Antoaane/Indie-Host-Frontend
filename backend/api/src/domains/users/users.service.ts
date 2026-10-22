@@ -16,13 +16,11 @@ import {
 import { buildHostProfileFromUser, isDeprecatedHostIdentity, resolveUserByIdentifier, upsertUserFromAuth } from './users.repository.js';
 
 type UpdateMeInput = {
-  email?: string;
   firstName?: string;
   lastName?: string;
   displayName?: string;
   avatarUrl?: string;
   hostProfile?: Record<string, unknown>;
-  stripeConnect?: Record<string, unknown>;
 };
 
 type SearchUsersInput = {
@@ -173,13 +171,11 @@ export class UsersService {
     const updated = await this.prisma.user.update({
       where: { id: user.id },
       data: {
-        email: input.email ?? user.email,
         firstName: input.firstName ?? user.firstName,
         lastName: input.lastName ?? user.lastName,
         displayName: input.displayName ?? user.displayName,
         avatarUrl: input.avatarUrl ?? user.avatarUrl,
         hostProfile: toPrismaJson(input.hostProfile ?? asObject(user.hostProfile, buildHostProfileFromUser(user))),
-        stripeConnectProfile: toPrismaJson(input.stripeConnect ?? asObject(user.stripeConnectProfile)),
       },
     });
 
