@@ -4,6 +4,7 @@
 import { computed, onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue'
 import { ArrowLeft, ExternalLink } from 'lucide-vue-next'
 import ListingView from '@/views/ListingView/_ListingView.vue'
+import ListingHubView from '@/views/ListingHub/_ListingHub.vue'
 import type { RawListingBundle } from '@/domain/listings/types'
 import { buildListingSlug, isTransientListingId } from '@/domain/listings/slug'
 import { fetchListingDomain } from '@/domain/api/listingDomains'
@@ -28,6 +29,8 @@ let wrapperResizeObserver: ResizeObserver | null = null
 const previewContent = editorStatic.preview
 const previewActions = editorStatic.actions
 const publicListingHref = ref<string | null>(null)
+// Page principale : même rendu que la page publique (_Listing.vue), pas une fiche logement.
+const isHubListing = computed(() => props.rawListing?.core?.kind === 'hub')
 const publicListingSlug = computed(() => {
   const fromSelection = typeof props.listingId === 'string' ? props.listingId.trim() : ''
   const fromCore = typeof props.rawListing?.core?.id === 'string' ? props.rawListing.core.id.trim() : ''
@@ -163,10 +166,16 @@ onBeforeUnmount(() => {
     <div
       v-if="props.rawListing"
       class="content"
+      :class="{ 'is-hub': isHubListing }"
       ref="wrapper"
     >
+      <ListingHubView
+        v-if="isHubListing"
+        :key="`hub-${props.rawListing.core?.id ?? 'hub'}`"
+        :rawListing="props.rawListing"
+      />
       <ListingView
-        v-if="aspectRatio"
+        v-else-if="aspectRatio"
         :aspect="aspectRatio"
         :rawListing="props.rawListing"
         :forcedViewportMode="props.displayMode ?? undefined"
@@ -228,6 +237,12 @@ onBeforeUnmount(() => {
     min-height: 0;
     overflow: hidden;
     position: relative;
+
+    &.is-hub {
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      background-color: $background;
+    }
   }
 
   > .empty {

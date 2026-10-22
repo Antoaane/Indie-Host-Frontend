@@ -268,6 +268,15 @@ watch(
           </span>
         </label>
 
+        <p
+          v-if="showPseudoError"
+          id="host-profile-pseudo-error"
+          class="status is-error"
+          role="alert"
+        >
+          Le pseudo doit contenir au moins 2 caractères.
+        </p>
+
         <label class="field">
           <span class="field-label">Bio</span>
           <span class="control is-textarea">
@@ -279,15 +288,6 @@ watch(
             />
           </span>
         </label>
-
-        <p
-          v-if="showPseudoError"
-          id="host-profile-pseudo-error"
-          class="status is-error"
-          role="alert"
-        >
-          Le pseudo doit contenir au moins 2 caractères.
-        </p>
 
         <p
           v-if="state.loadError"
