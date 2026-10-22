@@ -89,16 +89,13 @@ export function readRoleFromAuthPayload(payload: unknown): string | null {
   const fromRoot = readRoleFromRecord(record);
   if (fromRoot) return fromRoot;
 
+  // Uniquement les métadonnées que seul le backend Clerk peut écrire : unsafe_metadata est
+  // modifiable par l'utilisateur lui-même depuis le navigateur (user.update()).
   const metadataKeys = [
     'privateMetadata',
     'private_metadata',
     'publicMetadata',
     'public_metadata',
-    'unsafeMetadata',
-    'unsafe_metadata',
-    'metadata',
-    'userMetadata',
-    'user_metadata',
   ];
 
   for (const key of metadataKeys) {

@@ -40,7 +40,10 @@ export class MessagingService {
 
     if (query.guestTempId) {
       where.guestTempId = query.guestTempId;
-    } else if (actor && !allowAdmin) {
+    } else if (!actor) {
+      // Sans compte ni clé voyageur, aucun filtre ne s'appliquerait : jamais toute la table.
+      return [];
+    } else if (!allowAdmin) {
       where.OR = [
         { hostUserId: actor.id },
         {
@@ -75,8 +78,12 @@ export class MessagingService {
     });
 
     if (!listing) return null;
+    if (!actor && !input.guestTempId) return 'forbidden' as const;
 
-    const hostUserId = actor?.id ?? listing.ownerId ?? null;
+    // L'hôte est toujours le propriétaire de l'annonce, jamais l'utilisateur qui ouvre la conversation.
+    const hostUserId = listing.ownerId ?? null;
+    const isOwner = Boolean(actor && listing.ownerId === actor.id);
+    const guestUserId = isOwner ? (input.guestUserId ?? null) : (actor?.id ?? null);
 
     const existing = await this.prisma.conversation.findFirst({
       where: {
@@ -93,7 +100,7 @@ export class MessagingService {
         listingId: input.listingId,
         reservationId: input.reservationId ?? null,
         hostUserId,
-        guestUserId: input.guestUserId ?? null,
+        guestUserId,
         guestTempId: input.guestTempId ?? null,
         subject: input.subject ?? null,
       },
@@ -135,17 +142,22 @@ export class MessagingService {
 
     if (!conversation) return null;
 
-    const isHostActor = Boolean(
-      allowAdmin
-      || (actor && (conversation.hostUserId === actor.id || conversation.guestUserId === actor.id)),
+    const isHostActor = Boolean(actor && conversation.hostUserId === actor.id);
+    const isGuestActor = Boolean(
+      (actor && conversation.guestUserId === actor.id)
+      || (input.guestTempId && conversation.guestTempId === input.guestTempId),
     );
-    const isGuestActor = Boolean(input.guestTempId && conversation.guestTempId === input.guestTempId);
 
-    if (!isHostActor && !isGuestActor) {
+    if (!allowAdmin && !isHostActor && !isGuestActor) {
       return 'forbidden' as const;
     }
 
-    const authorRole = input.author ?? (isHostActor ? 'host' : 'guest');
+    // Le rôle de l'auteur découle de l'identité, pas du corps de la requête ; seul l'admin
+    // peut publier un message « system ».
+    let authorRole: 'host' | 'guest' | 'system';
+    if (isHostActor) authorRole = 'host';
+    else if (isGuestActor) authorRole = 'guest';
+    else authorRole = input.author === 'system' ? 'system' : 'host';
 
     const message = await this.prisma.message.create({
       data: {

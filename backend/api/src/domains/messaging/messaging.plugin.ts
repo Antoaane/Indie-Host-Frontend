@@ -32,6 +32,11 @@ export const messagingPlugin = fp(async (fastify) => {
       return;
     }
 
+    if (conversation === 'forbidden') {
+      reply.code(401).send({ message: 'Authentication required.' });
+      return;
+    }
+
     reply.code(201).send(conversation);
   });
 

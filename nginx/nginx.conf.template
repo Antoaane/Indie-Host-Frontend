@@ -33,6 +33,10 @@ server {
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_prefer_server_ciphers on;
 
+    # Tous les sous-domaines sont servis en HTTPS (certificat wildcard). Pas de `preload` :
+    # l'inscription dans les navigateurs est quasi irréversible.
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
     include /etc/nginx/snippets/proxy-locations.conf;
 }
 

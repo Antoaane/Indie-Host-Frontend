@@ -84,13 +84,12 @@ export function readClerkUserRole(user: unknown): string | null {
   const roleAtRoot = readRoleFromRecord(record);
   if (roleAtRoot) return roleAtRoot;
 
+  // unsafeMetadata est modifiable par l'utilisateur lui-même : jamais une source de rôle.
   const metadataKeys = [
     'privateMetadata',
     'private_metadata',
     'publicMetadata',
     'public_metadata',
-    'unsafeMetadata',
-    'unsafe_metadata',
   ];
 
   for (const key of metadataKeys) {

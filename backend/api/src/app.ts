@@ -61,48 +61,9 @@ export async function buildApp() {
     bodyLimit: env.API_BODY_LIMIT_BYTES,
   });
 
-  await app.register(sensible);
-
-  await app.register(cors, {
-    origin: (origin, callback) => {
-      if (!origin) {
-        callback(null, true);
-        return;
-      }
-
-      if (isOriginAllowed(origin, env.CORS_ORIGINS)) {
-        callback(null, true);
-        return;
-      }
-
-      callback(new Error('Origin not allowed by CORS'), false);
-    },
-    credentials: false,
-  });
-
-  await app.register(prismaPlugin);
-  await app.register(authPlugin);
-
-  app.get('/health', async () => ({
-    status: 'ok',
-    service: 'indiehost-api',
-    timestamp: new Date().toISOString(),
-  }));
-
-  await app.register(async (v1) => {
-    await v1.register(aiPlugin);
-    await v1.register(usersPlugin);
-    await v1.register(listingsPlugin);
-    await v1.register(bookingsPlugin);
-    await v1.register(mediasPlugin);
-    await v1.register(arrivalPlugin);
-    await v1.register(messagingPlugin);
-    await v1.register(paymentsPlugin);
-    await v1.register(calendarPlugin);
-  }, {
-    prefix: `/${env.API_PREFIX.replace(/^\/+/, '')}`,
-  });
-
+  // Fastify fige le gestionnaire d'erreurs de chaque route à son enregistrement : il doit être
+  // déclaré avant les plugins, sinon les routes gardent celui par défaut, qui renvoie au client
+  // le message brut des erreurs 500.
   app.setErrorHandler((error, request, reply) => {
     if (error instanceof ZodError) {
       reply.code(400).send({
@@ -131,6 +92,39 @@ export async function buildApp() {
       ...(statusCode < 500 && typeof errorCode === 'string' ? { code: errorCode } : {}),
       ...(statusCode < 500 && errorDetails !== undefined ? { details: errorDetails } : {}),
     });
+  });
+
+  await app.register(sensible);
+
+  await app.register(cors, {
+    // Origine refusée : aucun en-tête CORS n'est renvoyé et le navigateur bloque la réponse.
+    origin: (origin, callback) => {
+      callback(null, !origin || isOriginAllowed(origin, env.CORS_ORIGINS));
+    },
+    credentials: false,
+  });
+
+  await app.register(prismaPlugin);
+  await app.register(authPlugin);
+
+  app.get('/health', async () => ({
+    status: 'ok',
+    service: 'indiehost-api',
+    timestamp: new Date().toISOString(),
+  }));
+
+  await app.register(async (v1) => {
+    await v1.register(aiPlugin);
+    await v1.register(usersPlugin);
+    await v1.register(listingsPlugin);
+    await v1.register(bookingsPlugin);
+    await v1.register(mediasPlugin);
+    await v1.register(arrivalPlugin);
+    await v1.register(messagingPlugin);
+    await v1.register(paymentsPlugin);
+    await v1.register(calendarPlugin);
+  }, {
+    prefix: `/${env.API_PREFIX.replace(/^\/+/, '')}`,
   });
 
   return app;
