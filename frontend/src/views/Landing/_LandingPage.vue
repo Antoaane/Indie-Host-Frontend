@@ -357,6 +357,7 @@ onBeforeUnmount(() => {
 <style lang="scss">
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/animations' as animations;
+@use '@/styles/variables/borders' as borders;
 
 #landing-page {
   background: $secondary !important;
@@ -471,6 +472,13 @@ onBeforeUnmount(() => {
   background: rgba($secondary, 0.04) !important;
   border-color: rgba($secondary, 0.15) !important;
   box-shadow: 0 8px 22px -18px rgba($secondary, 0.3);
+}
+
+// Le conteneur du formulaire n'a de fond qu'en thème clair : sans marge
+// intérieure, le titre et les champs collent à son bord.
+#landing-page.is-light-theme .form-container {
+  padding: var(--layout-gap-xl);
+  border-radius: borders.$rounded-xl;
 }
 
 #landing-page.is-light-theme input,

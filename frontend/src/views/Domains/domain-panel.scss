@@ -10,8 +10,9 @@
   flex-direction: column;
   gap: 1rem;
 
+  // Desktop : sous l'en-tête fixe (même décalage que la page Admin).
   @include min-width(lg) {
-    margin: 5rem auto 3rem;
+    margin: calc(#{$nav-height} + var(--layout-gap-sm)) auto 3rem;
   }
 
   &__header,

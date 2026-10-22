@@ -36,16 +36,18 @@
       @include animations.transition;
       @include animations.press(0.99);
 
+      // Lignes d'accordéon : un cran sous les titres de section (lp-h3 donnait
+      // aux groupes la taille d'un titre de section).
       h3 {
         margin: 0 !important;
         text-align: left !important;
-        @include lp-h3-title($accent);
+        @include lp-h4-title($accent);
       }
 
       h4 {
         margin: 0 !important;
         text-align: left !important;
-        @include lp-h4-title($accent);
+        @include base-text($accent, $bold: true, $thin: false, $bigger: true);
       }
 
       .lucide-chevron-left-icon {
