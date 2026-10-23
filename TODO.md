@@ -30,6 +30,7 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 - [ ] Guide d'arrivée : formulaire d'avis (après la première nuit), encart « avis déjà déposé », liens légaux en bas. Page de confirmation : liens légaux.
 - [ ] Mon profil : bloc « Mes données » (téléchargement de l'export, suppression de compte avec confirmation).
 - [ ] Tableau de bord : rechargement de `/dashboard/editor` avec l'onglet Réseau ouvert : environ 15 requêtes au lieu de 34, écran de chargement plus court.
+- [ ] Éditeur (première passe UX) sur une vraie annonce : sommaire groupes + sections, pastilles « à compléter », bandeau d'état après une frappe (« Enregistrement… » puis « Modifications non appliquées · Brouillon enregistré à HH:MM »), Appliquer / Annuler, aide ⓘ du sous-domaine, mobile à 360 px (groupes défilants, bouton retour). Vérifié par Claude sur `/dev/editor` (données en mémoire), pas en prod.
 
 ### Légal et argent
 
@@ -95,12 +96,15 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ### Interface
 
+- [ ] Éditeur, deuxième passe UX (audit du 2026-10-23) : panneaux repliés par défaut avec un résumé sur une ligne (« Localisation · Saint-François », « Photos · 2 photos », « Domaine · www.… · vérifié ») qui se déplient au clic ; menu ⋮ des cartes complété (Voir la page publique, Copier le lien, Dupliquer, Réimporter, Mettre en pause, puis Supprimer en rouge) et « Supprimer l'annonce » retiré du bas du panneau Visibilité.
+- [ ] Éditeur, troisième passe UX : aperçu permanent à droite dès qu'une annonce est sélectionnée (la grille devient une barre de sélection compacte), défilement de l'aperçu vers la section en cours d'édition, colonne élargie à 600 px quand l'aperçu est ouvert.
 - [ ] Ajuster le style de la case CGV de l'inscription Clerk (`styles/components/_clerk.scss`, classes `cl-formFieldCheckbox*`) (après votre vérification en navigation privée).
 - [ ] Deux titres `h2` de la landing (`FaqSection/faq-section.scss`, `HowSection/how-section.scss`) gardent une marge basse de 0,5 rem au-delà de `lg`, héritée du mixin `lp-h2-title` ; la valeur du site (3 gaps / 1 rem) ne s'appliquait que sur mobile. Rendu conservé à l'identique pendant la passe Sass ; décider si la grande marge doit aussi valoir sur bureau (après votre regard).
 - [ ] `ListingView/components/Core/components/Title/TitleSk.vue` importe un `title.scss` inexistant ; le composant n'est importé nulle part. Supprimer le fichier ou le corriger.
 
 ## Fait
 
+- [x] 2026-10-23 — Éditeur, première passe UX (commit `7d21892`) : sommaire à deux niveaux (cinq groupes, puces de sections ancrées, section active suivie au défilement, pastilles « à compléter »), panneaux réordonnés (essentiel d'abord, technique ensuite, import et légal dans Réglages), bandeau d'état permanent avec Appliquer / Annuler toujours visibles et heure du dernier enregistrement, aide repliée derrière ⓘ (sous-domaine ; guide du domaine plus ouvert d'office), onglets accessibles (`role="tab"`, `aria-selected`, flèches), route de dev `/dev/editor` sans backend pour vérifier dans le navigateur. Vérifié à 1316 px et 360 px sur données en mémoire.
 - [x] 2026-10-23 — Favicon vérifié : les cinq fichiers déclarés dans `index.html` (ICO, SVG, PNG 96 px, Apple touch, manifeste) sont servis en prod. `public/favicon.ico` (repli `/favicon.ico`, 32 px, image différente) aligné sur l'icône complète 16/32/48 px ; `favicon-og.ico` et `favicon.zip` (non référencés, 210 Ko) retirés ; `site.webmanifest` servi en `application/manifest+json` au lieu d'`octet-stream` (`frontend/nginx.conf`, effectif au prochain build de l'image).
 - [x] 2026-10-23 — Passe sur la liste (commit `171ef05`) :
   - **Légal** : e-mail de confirmation et d'annulation au voyageur (`lib/mailer.ts`, `domains/notifications/`, champ e-mail obligatoire au checkout) ; statut de l'hôte particulier/professionnel avec raison sociale et SIRET, affiché sur l'annonce et au checkout ; numéro d'enregistrement du meublé de tourisme dans l'éditeur et sur l'annonce ; règlement intérieur affiché et accepté avant le paiement, et sur l'annonce ; liens légaux compacts sur l'annonce, la page principale, le guide et la confirmation.
