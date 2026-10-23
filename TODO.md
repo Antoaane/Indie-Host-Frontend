@@ -12,14 +12,15 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ### Bloquant : paiements des hôtes
 
-- [ ] **Stripe Dashboard (compte plateforme live) : compléter le profil plateforme Connect.** Tant qu’il n’est pas validé, Stripe refuse de créer le compte connecté d’un hôte (`You must complete your platform profile to use Connect and create live connected accounts`) : aucun hôte ne peut activer les encaissements, donc aucune réservation payante n’est possible. Ouvrir https://dashboard.stripe.com/connect/accounts/overview (questionnaire) puis https://dashboard.stripe.com/settings/connect/platform-profile, répondre et accepter les responsabilités (gestion des pertes). Constaté le 2026-10-23 sur le compte connecté de démonstration : `POST /payments/stripe/connect/onboarding-link` → 400 `STRIPE_CONNECT_PLATFORM_PROFILE_REQUIRED`. Ensuite, cliquer à nouveau « Configurer Stripe Connect » : la page doit ouvrir Stripe.
+- [ ] **Redéployer pour débloquer les encaissements des hôtes.** Le profil plateforme Stripe était déjà validé (15 mars 2026) en modèle « logiciel » : l’hôte encaisse directement et Stripe porte le risque. Le code créait pourtant des comptes Express de place de marché, que Stripe refusait (`STRIPE_CONNECT_PLATFORM_PROFILE_REQUIRED`). Le code est maintenant aligné sur le profil (commit `e1d28ba`). Après déploiement, cliquer « Configurer Stripe Connect » avec le compte de démonstration : la page doit ouvrir l’inscription Stripe.
+- [ ] Première vraie réservation : vérifier dans le Dashboard Stripe de l’hôte que le paiement y apparaît (et pas sur le compte IndieHost), puis tester une annulation remboursée.
 
 ### Déploiement de la passe du 2026-10-23 (commit `171ef05`)
 
 - [ ] **Avant de redéployer**, vérifier dans `/opt/indiehost/.env` que `BOOKING_GUIDE_ACCESS_SECRET` fait au moins 16 caractères et n'est pas la valeur par défaut : sinon l'API refuse maintenant de démarrer en production (`config/env.ts`).
 - [ ] Redéployer (`git pull && docker compose up -d --build --wait`) : quatre migrations Prisma à appliquer (`20261023000000` à `20261023000003`, vérifier `docker compose logs migrate`), image `frontend` reconstruite (pré-rendu de `/` et `/pricing`), image `scraping` reconstruite (légendes des photos Airbnb, ~15 min). `nginx/proxy-locations.conf` a changé (CSP en mode rapport) : `docker compose up -d --force-recreate --wait nginx`.
 - [ ] Faire une sauvegarde de la base avant ce déploiement : la purge RGPD tourne 5 min après le démarrage de l'API et anonymise d'un coup les réservations de plus de 5 ans et les messages de plus d'un an (`RETENTION_PURGE_ENABLED=false` pour la couper le temps de vérifier).
-- [ ] Stripe Dashboard (compte plateforme live) → Développeurs → Webhooks → ajouter `https://indiehost.fr/api/v1/payments/stripe/webhook` avec les événements listés dans `.env.example`, puis copier le secret `whsec_…` dans `STRIPE_WEBHOOK_SECRET` et redéployer l'API. Test : « Envoyer un événement test » doit répondre 200.
+- [ ] Stripe Dashboard (compte plateforme live) → Développeurs → Webhooks : créer **deux** destinations vers `https://indiehost.fr/api/v1/payments/stripe/webhook`, avec les événements listés dans `.env.example` : « Votre compte » (secret `whsec_…` dans `STRIPE_WEBHOOK_SECRET`) et « Comptes connectés » (secret dans `STRIPE_CONNECT_WEBHOOK_SECRET`), puis redéployer l’API. Les remboursements et litiges des réservations arrivent par la seconde. Test : « Envoyer un événement test » doit répondre 200.
 - [ ] Clerk Dashboard (instance Production) → Webhooks → ajouter `https://indiehost.fr/api/v1/webhooks/clerk`, événement `user.deleted`, secret dans `CLERK_WEBHOOK_SECRET`, redéployer. Sans lui, une suppression faite dans Clerk n'est pas répercutée en base.
 - [ ] E-mails : créer un mot de passe d'application Google Workspace pour `no-reply@indiehost.fr` (validation en deux étapes requise), puis renseigner `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=465`, `SMTP_SECURE=true`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM`, `BASE_URL=https://indiehost.fr` (modèle commenté dans `.env.example`). Aperçu des modèles : `cd backend/api && npx tsx src/domains/notifications/preview.cli.ts`.
 - [ ] Après déploiement, parcourir le site avec la console ouverte (connexion Clerk, checkout Stripe, import, carte, upload ImageKit) et relever les violations `Content-Security-Policy-Report-Only` : Claude ajustera puis passera la CSP en mode bloquant.
@@ -43,14 +44,14 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 - [ ] Adhérer à un médiateur de la consommation (par exemple CM2C ou Medicys). C'est obligatoire, car la plupart des hôtes sont des particuliers. Claude complètera ensuite les CGV (voir « À faire par Claude »).
 - [ ] Faire valider par un avocat :
   - les CGV hôtes, les CGU voyageurs et la page annulation et remboursement ;
-  - la **taxe de séjour** : les paiements en destination charges font probablement d'IndieHost un intermédiaire de paiement (art. L2333-34 CGCT), qui doit collecter la taxe pour les loueurs particuliers ;
+  - la **taxe de séjour** : depuis le 2026-10-23, les paiements sont encaissés directement sur le compte Stripe de l’hôte et IndieHost ne détient jamais les fonds ; faire confirmer qu’IndieHost n’est donc pas intermédiaire de paiement au sens de l’art. L2333-34 CGCT ;
+  - l’article 10 des CGV (Encaissement des réservations), réécrit pour ce modèle ;
   - la déclaration **DAC7** des revenus des hôtes (art. 1649 ter A CGI).
 - [ ] Tester en réel, en mode test Stripe ou avec une petite réservation :
   - annulation par le voyageur avec et sans « Rembourser le voyageur s'il annule » ;
   - « Annuler et rembourser » depuis la page Gestion ;
   - résiliation puis reprise de l'abonnement depuis Mon profil ;
   - réception de l'e-mail de confirmation puis d'annulation (une fois SMTP configuré).
-- [ ] Décider qui paie les frais Stripe des réservations. En destination charges sans commission (`application_fee_amount` à 0), ils sont prélevés sur le compte d'IndieHost, alors que la FAQ dit « seuls les frais de transaction de Stripe s'appliquent ».
 - [ ] Consigner dans un registre interne des violations l'incident du 2026-10-22 (art. 33.5 RGPD), en quatre points :
   - les réservations et les guides d'arrivée étaient lisibles publiquement ;
   - cause : routes API sans contrôle d'accès ;
@@ -109,6 +110,7 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ## Fait
 
+- [x] 2026-10-23 — Stripe Connect aligné sur le profil plateforme validé (modèle « logiciel ») : comptes des hôtes créés avec les propriétés de contrôleur équivalentes à Standard (l’hôte paie ses frais, Stripe porte le risque, Dashboard Stripe complet), paiements des réservations créés sur le compte de l’hôte, vérification, annulation et remboursement sur ce compte, Stripe.js chargé avec le compte de l’hôte au checkout, webhook à deux secrets, lien du tableau de bord vers dashboard.stripe.com, article 10 des CGV réécrit. Décision « qui paie les frais Stripe » réglée : l’hôte, comme l’annonce la FAQ. Aucun compte connecté n’existait en live, donc rien à migrer. Paramètres validés contre la documentation Stripe ; pas de test réel en local (clé de test factice) (commit `e1d28ba`).
 - [x] 2026-10-23 — « Configurer Stripe Connect » ne faisait rien au clic : l’API répondait 400 (profil plateforme Stripe non validé, voir « Bloquant ») et la page de checklist (`PricingChecklistCallbackView.vue`) n’affichait ses messages d’erreur et d’information que dans la console de dev. Messages désormais affichés sous « Prochaine étape » (encart d’erreur `role="alert"`) ; pour ce cas, l’hôte lit un message qui le concerne et l’admin garde la consigne technique ; le client API garde le code d’erreur (`StripeApiError`). Non déployé (commit `4c9b0c8`).
 - [x] 2026-10-23 — Connexion par lien à jeton (Impersonate, jeton de connexion, invitation acceptée chez Clerk) : arrivée sur le tableau de bord au lieu de la landing ; un ticket posé sur `/` part vers la page de connexion qui le consomme (commit `398908d`).
 - [x] 2026-10-23 — Pile Docker locale vérifiée : les 7 migrations Prisma (dont les 4 du jour) s’appliquent sur une base vierge, aucune différence avec `schema.prisma` (`prisma migrate diff`, `migration_lock.toml` ajouté), API saine ; test de fumée conforme (webhooks Stripe et Clerk en 503 sans secret, export et suppression de compte en 401 sans jeton, 21e PaymentIntent en 429, purge RGPD planifiée) (commit `398908d`).
