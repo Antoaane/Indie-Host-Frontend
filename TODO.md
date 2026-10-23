@@ -101,6 +101,7 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ## Fait
 
+- [x] 2026-10-23 — Favicon vérifié : les cinq fichiers déclarés dans `index.html` (ICO, SVG, PNG 96 px, Apple touch, manifeste) sont servis en prod. `public/favicon.ico` (repli `/favicon.ico`, 32 px, image différente) aligné sur l'icône complète 16/32/48 px ; `favicon-og.ico` et `favicon.zip` (non référencés, 210 Ko) retirés ; `site.webmanifest` servi en `application/manifest+json` au lieu d'`octet-stream` (`frontend/nginx.conf`, effectif au prochain build de l'image).
 - [x] 2026-10-23 — Passe sur la liste (commit `171ef05`) :
   - **Légal** : e-mail de confirmation et d'annulation au voyageur (`lib/mailer.ts`, `domains/notifications/`, champ e-mail obligatoire au checkout) ; statut de l'hôte particulier/professionnel avec raison sociale et SIRET, affiché sur l'annonce et au checkout ; numéro d'enregistrement du meublé de tourisme dans l'éditeur et sur l'annonce ; règlement intérieur affiché et accepté avant le paiement, et sur l'annonce ; liens légaux compacts sur l'annonce, la page principale, le guide et la confirmation.
   - **RGPD** : export (`GET /users/me/export`) et suppression de compte (`DELETE /users/me`, anonymisation, refus si abonnement ou séjour en cours) depuis Mon profil ; webhook Clerk `user.deleted` ; purge quotidienne (réservations 5 ans, messages 1 an, `Payment.raw*` 90 j, `rawIcs` 7 j, comptes inactifs 3 ans) ; nombre de voyageurs PMR retiré des métadonnées Stripe ; jetons et clés de guide masqués dans les logs, rotation des journaux Docker.
