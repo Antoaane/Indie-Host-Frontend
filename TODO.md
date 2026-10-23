@@ -97,6 +97,7 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ### Produit et technique
 
+- [ ] (après votre accord) Ajouter un SPF et un DMARC à la racine `indiehost.fr` dans Cloudflare. Les e-mails Google Workspace (contact@, dev@) n’ont ni l’un ni l’autre, ce qui les expose au classement en spam. Valeurs : `v=spf1 include:_spf.google.com ~all`, et `v=DMARC1; p=none` sur `_dmarc`. Constaté le 2026-10-23 en préparant Brevo.
 - [ ] (après votre redéploiement avec la clé Brevo) Contrôler dans les journaux de Brevo (Emails transactionnels → Logs) que les premiers e-mails partent et arrivent sans tomber en spam.
 - [ ] Option : un interrupteur « Rappels par e-mail » dans Mon profil (`HostProfileDialog.vue`). Aujourd’hui, on se désinscrit par le lien de chaque rappel, et on se réinscrit en écrivant au support (`User.emailRemindersOptOutAt`).
 - [ ] (après la première inscription d’un nouvel hôte) Vérifier sur Stripe que son compte a été créé pré-rempli : `business_type: individual`, MCC 7011, description, e-mail et nom. Ce chemin n’a encore jamais tourné en production, car le seul compte connecté date d’avant le pré-remplissage.
