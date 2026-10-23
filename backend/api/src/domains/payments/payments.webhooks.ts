@@ -6,6 +6,7 @@ import Stripe from 'stripe';
 import { env } from '../../config/env.js';
 import { asObject } from '../../lib/json.js';
 import { toPrismaJson } from '../../lib/prisma.js';
+import { hostNotifications } from '../notifications/hostNotifications.js';
 
 // Même version d'API que PaymentsService : les objets reçus ont la forme attendue par le SDK.
 const STRIPE_API_VERSION = '2025-02-24.acacia';
@@ -312,8 +313,10 @@ export class StripeWebhookProcessor {
     };
 
     if (failed) {
-      // Niveau error : visible dans `docker compose logs api`, à traiter à la main (voyageur à rembourser autrement).
+      // Niveau error : visible dans `docker compose logs api` ; l'hôte est prévenu par e-mail
+      // (voyageur à rembourser autrement).
       log.error(details, '[payments] Stripe refund FAILED');
+      void hostNotifications.refundFailed(this.prisma, { payment, refundId: refund.id, amountMinor: refund.amount });
     } else {
       log.info(details, '[payments] Stripe refund updated');
     }
@@ -367,6 +370,16 @@ export class StripeWebhookProcessor {
       disputeAmountMinor: dispute.amount,
       ...fundsPatch,
     }, '[payments] Stripe dispute update');
+
+    if (event.type === 'charge.dispute.created') {
+      void hostNotifications.disputeOpened(this.prisma, {
+        payment,
+        disputeId: dispute.id,
+        amountMinor: dispute.amount,
+        reason: dispute.reason,
+        evidenceDueBy: dispute.evidence_details?.due_by ? new Date(dispute.evidence_details.due_by * 1000) : null,
+      });
+    }
 
     return true;
   }

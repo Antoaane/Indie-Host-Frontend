@@ -1,4 +1,4 @@
-// Aperçu des e-mails voyageurs avec des données d'exemple.
+// Aperçu des e-mails voyageurs et hôtes avec des données d'exemple.
 //
 //   cd backend/api
 //   npx tsx src/domains/notifications/preview.cli.ts            # écrit dans <tmp système>/indiehost-mail-preview
@@ -13,6 +13,25 @@ import path from 'node:path';
 
 import { buildBookingCancellationEmail } from './bookingCancellation.js';
 import { buildBookingConfirmationEmail, type BookingConfirmationEmailData } from './bookingConfirmation.js';
+import {
+  buildHostCalendarSyncErrorEmail,
+  buildHostConnectIncompleteEmail,
+  buildHostDraftReminderEmail,
+  buildHostListingLimitReachedEmail,
+  buildHostListingPublishedEmail,
+  buildHostPlanEndingEmail,
+  buildHostWelcomeEmail,
+  describeListingAllowance,
+} from './hostAccountEmails.js';
+import {
+  buildHostArrivalTomorrowEmail,
+  buildHostBookingCanceledEmail,
+  buildHostBookingReceivedEmail,
+  buildHostDisputeEmail,
+  buildHostGuestMessageEmail,
+  buildHostRefundFailedEmail,
+  buildHostReviewReceivedEmail,
+} from './hostBookingEmails.js';
 
 const args = process.argv.slice(2);
 const toStdout = args.includes('--stdout');
@@ -107,6 +126,176 @@ const samples = {
     confirmationUrl: base.confirmationUrl,
   }),
 };
+
+// --- E-mails aux hôtes ---
+const site = 'https://indiehost.fr';
+const unsubscribeUrl = `${site}/api/v1/notifications/unsubscribe?u=user_1&t=exemple`;
+const stay = { listingTitle: base.listingTitle, guestName: base.guestName, startDate: start, endDate: end, nights: 3 };
+const contact = { email: 'julien.martin@example.com', phone: '06 12 34 56 78' };
+const allowance = describeListingAllowance('indiehost', 2, 2);
+
+Object.assign(samples, {
+  'hote-nouvelle-reservation': buildHostBookingReceivedEmail({
+    ...stay,
+    hostFirstName: 'Camille',
+    guests: base.guests,
+    contact,
+    currency: 'EUR',
+    total: 486,
+    paidNow: 146,
+    balance: 340,
+    balanceMode: 'online',
+    balanceDueDate: new Date('2026-03-05T00:00:00.000Z'),
+    travellerMessage: base.travellerMessage,
+    managementUrl: `${site}/dashboard/management`,
+  }),
+  'hote-annulation-voyageur': buildHostBookingCanceledEmail({
+    ...stay,
+    hostFirstName: 'Camille',
+    canceledBy: 'guest',
+    currency: 'EUR',
+    chargedAmount: 146,
+    refundedAmount: 116.8,
+    retainedAmount: 29.2,
+    reason: 'Empêchement professionnel.',
+    managementUrl: `${site}/dashboard/management`,
+  }),
+  'hote-annulation-hote': buildHostBookingCanceledEmail({
+    ...stay,
+    hostFirstName: 'Camille',
+    canceledBy: 'host',
+    currency: 'EUR',
+    chargedAmount: 146,
+    refundedAmount: 146,
+    retainedAmount: 0,
+    reason: null,
+    managementUrl: `${site}/dashboard/management`,
+  }),
+  'hote-arrivee-demain': buildHostArrivalTomorrowEmail({
+    ...stay,
+    hostFirstName: 'Camille',
+    guests: base.guests,
+    contact,
+    currency: 'EUR',
+    balance: 340,
+    balanceMode: 'cash',
+    travellerMessage: base.travellerMessage,
+    messagesUrl: `${site}/dashboard/messages`,
+  }),
+  'hote-message-voyageur': buildHostGuestMessageEmail({
+    hostFirstName: 'Camille',
+    guestName: 'Julien',
+    listingTitle: base.listingTitle,
+    excerpt: 'Bonjour, est-ce qu’il y a un parking à proximité ? Nous arriverons avec deux voitures.',
+    stay: { startDate: start, endDate: end },
+    messagesUrl: `${site}/dashboard/messages`,
+  }),
+  'hote-nouvel-avis': buildHostReviewReceivedEmail({
+    hostFirstName: 'Camille',
+    listingTitle: base.listingTitle,
+    author: 'Julien',
+    rating: 5,
+    text: 'Gîte superbe, très bien équipé, et Camille est aux petits soins. Nous reviendrons !',
+    listingUrl: 'https://gite-bel-air.indiehost.fr',
+  }),
+  'hote-litige': buildHostDisputeEmail({
+    hostFirstName: 'Camille',
+    listingTitle: base.listingTitle,
+    guestName: 'Julien',
+    amountMinor: 48600,
+    currency: 'eur',
+    reason: 'product_not_received',
+    evidenceDueBy: new Date('2026-04-02T00:00:00.000Z'),
+  }),
+  'hote-remboursement-echoue': buildHostRefundFailedEmail({
+    hostFirstName: 'Camille',
+    listingTitle: base.listingTitle,
+    guestName: 'Julien',
+    amountMinor: 11680,
+    currency: 'eur',
+    contact,
+    messagesUrl: `${site}/dashboard/messages`,
+  }),
+  'hote-bienvenue': buildHostWelcomeEmail({
+    hostFirstName: 'Camille',
+    trialEndDate: new Date('2026-04-12T00:00:00.000Z'),
+    paymentsReady: false,
+    hasPublishedListing: false,
+    activationUrl: `${site}/pricing/callback?onboarding=listing&intent=publish`,
+    editorUrl: `${site}/dashboard/editor`,
+  }),
+  'hote-annonce-en-ligne': buildHostListingPublishedEmail({
+    hostFirstName: 'Camille',
+    listingTitle: base.listingTitle,
+    publicUrl: 'https://gite-bel-air.indiehost.fr',
+    limitReached: null,
+    dashboardUrl: `${site}/dashboard/editor`,
+  }),
+  'hote-annonce-en-ligne-derniere-place': buildHostListingPublishedEmail({
+    hostFirstName: 'Camille',
+    listingTitle: base.listingTitle,
+    publicUrl: 'https://gite-bel-air.indiehost.fr',
+    limitReached: allowance,
+    dashboardUrl: `${site}/dashboard/editor`,
+  }),
+  'hote-limite-atteinte': buildHostListingLimitReachedEmail({
+    hostFirstName: 'Camille',
+    allowance,
+    dashboardUrl: `${site}/dashboard/editor`,
+    unsubscribeUrl,
+  }),
+  'hote-brouillon': buildHostDraftReminderEmail({
+    hostFirstName: 'Camille',
+    drafts: [{ title: base.listingTitle, missing: ['quelques photos : vous en avez 2, 5 au moins sont conseillées', 'un prix par nuit'] }],
+    accountSteps: ['Activer les paiements : un compte Stripe à votre nom, environ 5 minutes.'],
+    step: 1,
+    editorUrl: `${site}/dashboard/editor`,
+    unsubscribeUrl,
+  }),
+  'hote-brouillons-dernier-rappel': buildHostDraftReminderEmail({
+    hostFirstName: 'Camille',
+    drafts: [
+      { title: base.listingTitle, missing: [] },
+      { title: 'Studio du port', missing: ['des photos (5 au moins sont conseillées)'] },
+    ],
+    accountSteps: [],
+    step: 2,
+    editorUrl: `${site}/dashboard/editor`,
+    unsubscribeUrl,
+  }),
+  'hote-paiements-a-activer': buildHostConnectIncompleteEmail({
+    hostFirstName: 'Camille',
+    started: true,
+    activationUrl: `${site}/pricing/callback?onboarding=listing&intent=publish`,
+    unsubscribeUrl,
+  }),
+  'hote-fin-essai': buildHostPlanEndingEmail({
+    hostFirstName: 'Camille',
+    variant: 'trial_converts',
+    endDate: new Date('2026-04-12T00:00:00.000Z'),
+    planName: 'IndieHost',
+    monthlyAmount: '19,00 €',
+    activeListings: 1,
+    dashboardUrl: `${site}/dashboard/editor`,
+    plansUrl: `${site}/pricing`,
+  }),
+  'hote-fin-acces-offert': buildHostPlanEndingEmail({
+    hostFirstName: 'Camille',
+    variant: 'complimentary_ends',
+    endDate: new Date('2026-04-12T00:00:00.000Z'),
+    planName: null,
+    monthlyAmount: null,
+    activeListings: 2,
+    dashboardUrl: `${site}/dashboard/editor`,
+    plansUrl: `${site}/pricing`,
+  }),
+  'hote-calendrier-en-erreur': buildHostCalendarSyncErrorEmail({
+    hostFirstName: 'Camille',
+    listingTitle: base.listingTitle,
+    calendarName: 'Airbnb',
+    editorUrl: `${site}/dashboard/editor`,
+  }),
+});
 
 if (toStdout) {
   for (const [name, email] of Object.entries(samples)) {

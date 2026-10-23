@@ -7,9 +7,16 @@ export const LEGAL_LINKS = {
   travellerTerms: `${LEGAL_ORIGIN}/legal/cgu-voyageurs`,
   cancellation: `${LEGAL_ORIGIN}/legal/annulation-remboursement`,
   privacy: `${LEGAL_ORIGIN}/legal/confidentialite`,
+  hostTerms: `${LEGAL_ORIGIN}/legal/cgv`,
 } as const;
 
 export const COMPANY_NAME = 'IndieHost SAS';
+
+/** Adresse de réponse des e-mails aux hôtes : une réponse arrive au support. */
+export const SUPPORT_EMAIL = 'contact@indiehost.fr';
+
+/** Destinataire du message : le pied de page (liens légaux, réponse possible ou non) en dépend. */
+export type MailAudience = 'guest' | 'host';
 
 const COLORS = {
   page: '#f3f4f6',
@@ -204,7 +211,25 @@ export type MailDocument = {
   body: string[];
   /** Phrase légale propre au message, sous les liens communs. */
   legalNote: string;
+  /** `guest` par défaut. */
+  audience?: MailAudience;
+  /** Lien de désinscription des rappels (e-mails aux hôtes qui ne sont pas indispensables). */
+  unsubscribeUrl?: string | null;
 };
+
+function renderFooter(document: MailDocument): string {
+  if (document.audience === 'host') {
+    const unsubscribe = document.unsubscribeUrl
+      ? `<p style="margin:8px 0 0;">${renderLink('Ne plus recevoir ces rappels', document.unsubscribeUrl)}</p>`
+      : '';
+    return `<p style="margin:0 0 8px;">${escapeHtml(document.legalNote)}</p>
+            <p style="margin:0;">Une question ? Répondez simplement à cet e-mail. ${escapeHtml(COMPANY_NAME)} · ${renderLink('Conditions générales', LEGAL_LINKS.hostTerms)} · ${renderLink('Confidentialité', LEGAL_LINKS.privacy)}</p>${unsubscribe}`;
+  }
+
+  return `<p style="margin:0 0 8px;">${escapeHtml(document.legalNote)}</p>
+            <p style="margin:0 0 8px;">${escapeHtml(COMPANY_NAME)} · ${renderLink('Conditions d’utilisation et de réservation (voyageurs)', LEGAL_LINKS.travellerTerms)} · ${renderLink('Annulation et remboursement', LEGAL_LINKS.cancellation)} · ${renderLink('Confidentialité', LEGAL_LINKS.privacy)}</p>
+            <p style="margin:0;">IndieHost met en relation hôtes et voyageurs sans commission : le contrat d’hébergement est conclu entre vous et l’hôte. Cet e-mail a été envoyé automatiquement, merci de ne pas y répondre.</p>`;
+}
 
 export function renderDocument(document: MailDocument): string {
   const body = document.body.join('\n');
@@ -236,9 +261,7 @@ ${body}
         </tr>
         <tr>
           <td style="padding:18px 28px 26px;border-top:1px solid ${COLORS.border};font-size:12px;line-height:1.6;color:${COLORS.muted};">
-            <p style="margin:0 0 8px;">${escapeHtml(document.legalNote)}</p>
-            <p style="margin:0 0 8px;">${escapeHtml(COMPANY_NAME)} · ${renderLink('Conditions d’utilisation et de réservation (voyageurs)', LEGAL_LINKS.travellerTerms)} · ${renderLink('Annulation et remboursement', LEGAL_LINKS.cancellation)} · ${renderLink('Confidentialité', LEGAL_LINKS.privacy)}</p>
-            <p style="margin:0;">IndieHost met en relation hôtes et voyageurs sans commission : le contrat d’hébergement est conclu entre vous et l’hôte. Cet e-mail a été envoyé automatiquement, merci de ne pas y répondre.</p>
+            ${renderFooter(document)}
           </td>
         </tr>
       </table>
@@ -250,15 +273,29 @@ ${body}
 }
 
 /** Version texte : titre, blocs séparés par des lignes vides, pied légal commun. */
-export function renderPlainText(title: string, blocks: string[], legalNote: string): string {
+export function renderPlainText(
+  title: string,
+  blocks: string[],
+  legalNote: string,
+  options?: { audience?: MailAudience; unsubscribeUrl?: string | null },
+): string {
+  const footer = options?.audience === 'host'
+    ? [
+        `Une question ? Répondez simplement à cet e-mail. ${COMPANY_NAME} · Conditions générales : ${LEGAL_LINKS.hostTerms}`,
+        ...(options.unsubscribeUrl ? [`Ne plus recevoir ces rappels : ${options.unsubscribeUrl}`] : []),
+      ]
+    : [
+        `${COMPANY_NAME} · Conditions voyageurs : ${LEGAL_LINKS.travellerTerms} · Annulation et remboursement : ${LEGAL_LINKS.cancellation}`,
+        'IndieHost met en relation hôtes et voyageurs sans commission : le contrat d’hébergement est conclu entre vous et l’hôte. E-mail automatique, merci de ne pas y répondre.',
+      ];
+
   return [
     `IndieHost — ${title}`,
     '',
     ...blocks.flatMap((block) => [block, '']),
     '--',
     legalNote,
-    `${COMPANY_NAME} · Conditions voyageurs : ${LEGAL_LINKS.travellerTerms} · Annulation et remboursement : ${LEGAL_LINKS.cancellation}`,
-    'IndieHost met en relation hôtes et voyageurs sans commission : le contrat d’hébergement est conclu entre vous et l’hôte. E-mail automatique, merci de ne pas y répondre.',
+    ...footer,
   ].join('\n');
 }
 

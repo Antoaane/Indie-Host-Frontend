@@ -9,6 +9,7 @@ const SECRET_FALLBACK_KEYS = [
   'CLERK_SECRET_KEY',
   'STRIPE_SECRET_KEY',
   'SMTP_PASSWORD',
+  'BREVO_API_KEY',
 ] as const;
 
 type SecretFallbackKey = (typeof SECRET_FALLBACK_KEYS)[number];
@@ -94,8 +95,17 @@ const envSchema = z.object({
   GROQ_API_KEY: z.string().trim().optional().default(''),
   // Microservice de scraping, joignable uniquement sur le réseau Docker (plus exposé par nginx).
   SCRAPING_SERVICE_URL: z.string().trim().url().default('http://scraping:8000'),
-  // E-mails transactionnels (confirmation et annulation de réservation, `lib/mailer.ts`). Tout est
-  // optionnel : sans SMTP_URL ni SMTP_HOST, aucun e-mail n'est envoyé et l'API continue normalement.
+  // E-mails automatiques (voyageurs et hôtes, `lib/mailer.ts`). Tout est optionnel : sans clé Brevo
+  // ni SMTP, aucun e-mail n'est envoyé et l'API continue normalement.
+  // Brevo (API HTTP) prime sur le SMTP. Clé : Brevo → SMTP & API → Clés API (ou BREVO_API_KEY_FILE).
+  BREVO_API_KEY: z.string().trim().optional().default(''),
+  // Rappels planifiés aux hôtes (`jobs/hostReminders.ts`) : `false` pour les couper.
+  HOST_REMINDERS_ENABLED: z
+    .string()
+    .trim()
+    .optional()
+    .default('true')
+    .transform((value) => !['false', '0', 'no', 'off'].includes(value.toLowerCase())),
   // SMTP_URL (ex. smtps://user:pass@smtp.gmail.com:465) prime sur les variables séparées.
   SMTP_URL: z.string().trim().optional().default(''),
   SMTP_HOST: z.string().trim().optional().default(''),

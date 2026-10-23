@@ -19,7 +19,13 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 ### Suites du déploiement du 2026-10-23
 
 - [ ] Clerk Dashboard (instance Production) → Webhooks → ajouter `https://indiehost.fr/api/v1/webhooks/clerk`, événement `user.deleted`, secret dans `CLERK_WEBHOOK_SECRET`, redéployer. Sans lui, une suppression faite dans Clerk n'est pas répercutée en base.
-- [ ] E-mails : créer un mot de passe d'application Google Workspace pour `no-reply@indiehost.fr` (validation en deux étapes requise), puis renseigner `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=465`, `SMTP_SECURE=true`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM`, `BASE_URL=https://indiehost.fr` (modèle commenté dans `.env.example`). Aperçu des modèles : `cd backend/api && npx tsx src/domains/notifications/preview.cli.ts`.
+- [ ] **E-mails avec Brevo**, qui remplace le mot de passe d’application Google. Ces étapes activent aussi les e-mails aux voyageurs.
+  1. Créer un compte gratuit sur brevo.com.
+  2. Dans Brevo → Expéditeurs, domaines et IP dédiées → Domaines, ajouter `indiehost.fr`. Brevo affiche 3 ou 4 enregistrements DNS (code Brevo, DKIM, DMARC). Je les ajoute dans Cloudflare avec votre accord.
+  3. Dans Brevo → SMTP & API → Clés API, créer une clé.
+  4. Sur le serveur, la mettre dans `/opt/indiehost/.env` sous la forme `BREVO_API_KEY=…`. Vérifier aussi que `BASE_URL=https://indiehost.fr` est bien présent.
+  5. Redéployer (la migration `20261023000004` s’applique seule), puis me prévenir.
+  6. Avant le premier envoi réel, vous pouvez voir ce qui partira : `docker compose exec api node dist/jobs/hostReminders.cli.js --dry-run`.
 - [ ] Parcourir le site avec la console ouverte (connexion Clerk, checkout Stripe, import, carte, upload ImageKit) et relever les violations `Content-Security-Policy-Report-Only` : Claude ajustera puis passera la CSP en mode bloquant.
 
 ### Vérifications visuelles (Claude n'a pas de navigateur sur ces écrans)
@@ -47,13 +53,16 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
   - annulation par le voyageur avec et sans « Rembourser le voyageur s'il annule » ;
   - « Annuler et rembourser » depuis la page Gestion ;
   - résiliation puis reprise de l'abonnement depuis Mon profil ;
-  - réception de l'e-mail de confirmation puis d'annulation (une fois SMTP configuré).
+  - réception de l'e-mail de confirmation puis d'annulation (une fois Brevo configuré), côté voyageur et côté hôte.
 - [ ] Consigner dans un registre interne des violations l'incident du 2026-10-22 (art. 33.5 RGPD), en quatre points :
   - les réservations et les guides d'arrivée étaient lisibles publiquement ;
   - cause : routes API sans contrôle d'accès ;
   - correctif : commit `8caed97` ;
   - constat : 0 donnée de voyageur exposée (2 annonces en brouillon, 0 réservation).
 - [ ] Valider deux précisions à ajouter dans `confidentialite.html` (Claude les rédige dès votre accord) : échanges bruts avec Stripe conservés 90 jours ; messages sans réservation supprimés 1 an après envoi.
+- [ ] Brevo, deux points :
+  - accepter l’accord de sous-traitance des données (DPA) dans votre compte Brevo, obligatoire au titre de l’article 28 du RGPD ;
+  - confirmer sa raison sociale exacte. La politique de confidentialité indique « Brevo (Sendinblue SAS), Union européenne (France) », à vérifier sur votre contrat Brevo.
 
 ### RGPD
 
@@ -90,6 +99,8 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ### Produit et technique
 
+- [ ] (après votre clé Brevo et les enregistrements DNS) Les ajouter dans Cloudflare avec votre accord. Ensuite, vérifier l’authentification du domaine chez Brevo et contrôler dans ses journaux que les premiers e-mails arrivent sans tomber en spam.
+- [ ] Option : un interrupteur « Rappels par e-mail » dans Mon profil (`HostProfileDialog.vue`). Aujourd’hui, on se désinscrit par le lien de chaque rappel, et on se réinscrit en écrivant au support (`User.emailRemindersOptOutAt`).
 - [ ] (après la première inscription d’un nouvel hôte) Vérifier sur Stripe que son compte a été créé pré-rempli : `business_type: individual`, MCC 7011, description, e-mail et nom. Ce chemin n’a encore jamais tourné en production, car le seul compte connecté date d’avant le pré-remplissage.
 - [ ] Image de marque de l’inscription Connect : l’icône IndieHost s’affiche, mais le panneau de gauche garde le violet Stripe par défaut au lieu de `#111117`. Chercher si Connect a des réglages de marque à part (Paramètres → Connect) ; toute modification se fera avec votre accord.
 - [ ] (après l’accès Accounts v2 accordé par Stripe) Créer les comptes des hôtes avec l’API Accounts v2 et le Dashboard Express, Stripe gardant le risque. À faire : passer le SDK `stripe` de la version 17.7 à une version qui expose `v2.core.accounts` ; mettre à jour `ensureStripeConnectAccount` et `CONNECT_DASHBOARD_TYPE` (`payments.service.ts`). Le lien de connexion Express et le remplacement des comptes jamais soumis existent déjà. À vérifier d’abord dans la documentation Stripe : Express avec pertes portées par Stripe en v2, pour un compte FR.

@@ -4,6 +4,7 @@ import { buildMessageId } from '../../lib/id.js';
 import { hasAdminAccess } from '../../lib/authRole.js';
 import { sanitizePlainText } from '../../lib/sanitizeHtml.js';
 import type { RequestAuth } from '../../types/auth.js';
+import { hostNotifications } from '../notifications/hostNotifications.js';
 import { upsertUserFromAuth } from '../users/users.repository.js';
 
 type ListConversationsInput = {
@@ -184,6 +185,16 @@ export class MessagingService {
       where: { id: conversationId },
       data: { updatedAt: new Date() },
     });
+
+    if (authorRole === 'guest') {
+      void hostNotifications.guestMessage(this.prisma, {
+        messageId: message.id,
+        conversationId,
+        listingId: conversation.listingId,
+        reservationId: conversation.reservationId,
+        body,
+      });
+    }
 
     return message;
   }

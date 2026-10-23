@@ -1,5 +1,6 @@
 import { buildApp } from './app.js';
 import { env } from './config/env.js';
+import { startHostRemindersScheduler } from './jobs/hostReminders.js';
 import { startRetentionScheduler } from './jobs/retention.js';
 
 async function start() {
@@ -15,6 +16,15 @@ async function start() {
       });
     } else {
       app.log.warn('Retention purge disabled (RETENTION_PURGE_ENABLED=false): run `npm run purge` manually.');
+    }
+
+    // Rappels par e-mail aux hôtes (arrivée demain, brouillon, paiements, fin d'essai…) : sans effet
+    // tant qu'aucun service d'envoi n'est configuré ; HOST_REMINDERS_ENABLED=false pour les couper.
+    if (env.HOST_REMINDERS_ENABLED) {
+      const stopHostReminders = startHostRemindersScheduler(app.prisma, app.log);
+      app.addHook('onClose', async () => {
+        stopHostReminders();
+      });
     }
   }
 

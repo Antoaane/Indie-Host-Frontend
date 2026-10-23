@@ -421,9 +421,19 @@ Modèle aligné sur le profil plateforme Stripe validé (« les marchands encais
 - Tableau de bord de l'hôte : `dashboard.stripe.com` (Dashboard complet) ; lien de connexion `accounts.createLoginLink` pour un compte au Dashboard Express. L'inscription affiche l'image de marque du compte IndieHost (nom, icône, couleurs dans Stripe → Paramètres → Adaptation à votre marque).
 - L'hôte est le commerçant : il paie les frais Stripe et gère ses litiges dans son Dashboard ; IndieHost ne détient jamais les fonds.
 
+### E-mails automatiques (Brevo)
+
+Envoi par l'API HTTP de Brevo (`BREVO_API_KEY`, gratuit jusqu'à 300 e-mails/jour) ou à défaut en SMTP (`lib/mailer.ts`) ; sans l'un ni l'autre, rien ne part et l'API continue. Expéditeur `MAIL_FROM`, réponses des e-mails hôtes vers `contact@indiehost.fr`.
+- Voyageurs : confirmation et annulation (`notifications.service.ts`).
+- Hôtes, sur événement (`domains/notifications/hostNotifications.ts`, appelé sans attendre) : nouvelle réservation, annulation (par le voyageur ou l'hôte), message d'un voyageur (au plus un e-mail par conversation toutes les 30 min), nouvel avis, annonce en ligne (une fois par annonce, avec « dernier logement disponible » si la publication remplit l'offre), limite de l'offre atteinte, litige ouvert et remboursement échoué (webhooks Stripe des comptes connectés).
+- Hôtes, rappels planifiés (`jobs/hostReminders.ts`, chaque heure de 9 h à 20 h, heure de Paris, `HOST_REMINDERS_ENABLED=false` pour couper) : arrivée demain, bienvenue, brouillon inactif (2 jours puis dernier rappel), paiements Stripe pas activés (2 jours après la bienvenue, puis 7 jours plus tard), fin d'essai / d'abonnement résilié / d'accès offert (3 jours avant), calendrier iCal en erreur (après une nouvelle tentative, une fois par semaine). `npm run host-reminders -- --dry-run` liste ce qui partirait.
+- Anti-doublon : chaque e-mail pose une ligne `HostNotification` (clé unique) avant l'envoi, retirée si l'envoi échoue ; purgée après 400 jours (`jobs/retention.ts`).
+- Les rappels (brouillon, paiements, limite) portent un lien de désinscription signé (`GET/POST /notifications/unsubscribe`, en-têtes `List-Unsubscribe` en un clic) → `User.emailRemindersOptOutAt` ; les e-mails liés à une réservation ou un paiement ne se refusent pas.
+- Gabarits : `hostEmailKit.ts` (blocs rendus en HTML et en texte), `hostBookingEmails.ts`, `hostAccountEmails.ts`. Aperçu de tous les e-mails : `cd backend/api && npx tsx src/domains/notifications/preview.cli.ts`.
+
 ### Synchronisation calendrier
-- Sources iCal externes (Airbnb, Booking) configurées dans Management
-- Sync périodique → `CalendarEvent` créés automatiquement
+- Sources iCal externes (Airbnb, Booking) configurées dans l'éditeur (Réglages, puis iCal)
+- Synchronisées à la consultation de l'annonce publique (`syncListingSourcesForPublicView`), pas par une tâche périodique ; les sources en erreur sont relancées par les rappels aux hôtes avant d'alerter → `CalendarEvent` créés automatiquement
 
 ---
 
@@ -632,7 +642,7 @@ Mis en ligne le 2026-10-20. La prod tourne sur un **VPS Hostinger** (KVM 2, Ubun
 | Clerk | instance **Production** (`clerk.indiehost.fr`), paths `/`, `/sign-in`, `/sign-up` |
 | Stripe | compte live IndieHost SAS. **Connect en modèle « logiciel »** (profil plateforme validé le 15 mars 2026) : l'hôte encaisse directement, paie ses frais Stripe, a le Dashboard Stripe complet, Stripe porte le risque des soldes négatifs. Webhook `POST /api/v1/payments/stripe/webhook` avec deux destinations et deux secrets : « Votre compte » (`STRIPE_WEBHOOK_SECRET`) et « Comptes connectés » (`STRIPE_CONNECT_WEBHOOK_SECRET`, où vivent les paiements des réservations) ; 503 tant qu'aucun secret n'est renseigné |
 | Clerk webhook | `POST /api/v1/webhooks/clerk` (`CLERK_WEBHOOK_SECRET`, signature Svix vérifiée à la main) : `user.deleted` → anonymisation du compte ; 503 tant que le secret est vide |
-| E-mails | nodemailer via `SMTP_*` / `MAIL_FROM` (`lib/mailer.ts`, `domains/notifications/`) : confirmation et annulation de réservation au voyageur ; désactivés (warn au boot) tant que SMTP n'est pas configuré |
+| E-mails | Brevo (`BREVO_API_KEY`, domaine `indiehost.fr` authentifié chez Brevo) ou SMTP (`SMTP_*`) via `lib/mailer.ts` : e-mails voyageurs et hôtes (voir « E-mails automatiques ») ; désactivés (warn au premier envoi) tant qu'aucun des deux n'est configuré |
 
 ### Secrets de prod
 
@@ -700,6 +710,8 @@ Les domaines personnalisés pointent **directement** sur le VPS (pas via Cloudfl
 ---
 
 ## Dernières modifications (mis à jour 2026-10-23)
+
+- **E-mails automatiques aux hôtes via Brevo** : 14 e-mails (réservations, messages, avis, litiges, annonce en ligne, limite de l'offre, rappels planifiés), anti-doublon `HostNotification`, désinscription des rappels, migration `20261023000004_host_notifications`. Détail dans « E-mails automatiques (Brevo) ».
 
 - **Barre latérale de l'éditeur, première passe UX** (audit du 2026-10-23, suite dans `TODO.md`) :
   - Sommaire à deux niveaux à la place des trois onglets : cinq groupes (Essentiel, Tarifs, Guide d'arrivée, Adresses, Réglages) puis les sections du groupe en puces défilantes, avec pastille « à compléter » calculée depuis le brouillon. Registre unique dans `components/EditorSidebar/editorSections.ts` (ordre d'affichage, libellés `editor.sidebar.groups/sections`, règles de complétude) ; chaque panneau est enveloppé dans `EditorSection.vue` (`data-section`), ce qui permet le défilement vers une section et le suivi de la section visible (`EditorSidebar.vue`). Une nouvelle section = une entrée dans le registre + un `EditorSection` dans le conteneur du groupe (`ListingPanels.vue` rend essentiel / adresses / réglages selon sa prop `group`).

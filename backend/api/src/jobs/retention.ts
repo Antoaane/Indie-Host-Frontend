@@ -18,7 +18,8 @@ import { toPrismaJson } from '../lib/prisma.js';
  * - compte : 3 ans d'inactivité → anonymisé (sauf abonnement en cours ou séjour à venir) ;
  * - échanges bruts Stripe (`Payment.rawRequest` / `rawResponse`, qui contiennent le client_secret) :
  *   90 jours, durée technique non listée par la politique ;
- * - copie brute des flux iCal (`CalendarSync.rawIcs`) : 7 jours, re-téléchargée à chaque synchronisation.
+ * - copie brute des flux iCal (`CalendarSync.rawIcs`) : 7 jours, re-téléchargée à chaque synchronisation ;
+ * - journal des e-mails aux hôtes (`HostNotification`, identifiants seulement) : 400 jours.
  * Idempotent : chaque passe ne touche que les lignes pas encore purgées.
  */
 
@@ -28,6 +29,8 @@ export const RETENTION_RULES = {
   inactiveAccountYears: 3,
   paymentRawDays: 90,
   calendarIcsDays: 7,
+  // Journal des e-mails aux hôtes (`HostNotification`) : sert à ne pas renvoyer un même e-mail.
+  hostNotificationDays: 400,
 } as const;
 
 const BATCH_SIZE = 200;
@@ -44,6 +47,7 @@ export type RetentionPurgeReport = {
   messagesDeleted: number;
   paymentsRawCleared: number;
   calendarIcsCleared: number;
+  hostNotificationsDeleted: number;
   accountsAnonymized: number;
   accountsSkipped: number;
 };
@@ -226,6 +230,9 @@ export async function runRetentionPurge(
   const reservationThreadsStripped = await purgeReservationThreadCopies(prisma, messagesCutoff);
   const paymentsRawCleared = await purgePaymentRawExchanges(prisma, subtractDays(now, RETENTION_RULES.paymentRawDays));
   const calendarIcsCleared = await purgeCalendarRawIcs(prisma, subtractDays(now, RETENTION_RULES.calendarIcsDays));
+  const hostNotificationsDeleted = (await prisma.hostNotification.deleteMany({
+    where: { createdAt: { lt: subtractDays(now, RETENTION_RULES.hostNotificationDays) } },
+  })).count;
   const accounts = await purgeInactiveAccounts(prisma, service, logger, subtractYears(now, RETENTION_RULES.inactiveAccountYears), now);
 
   const report: RetentionPurgeReport = {
@@ -236,6 +243,7 @@ export async function runRetentionPurge(
     messagesDeleted,
     paymentsRawCleared,
     calendarIcsCleared,
+    hostNotificationsDeleted,
     accountsAnonymized: accounts.anonymized,
     accountsSkipped: accounts.skipped,
   };

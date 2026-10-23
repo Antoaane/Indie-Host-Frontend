@@ -13,6 +13,7 @@ import { hasAdminAccess } from '../../lib/authRole.js';
 import type { RequestAuth } from '../../types/auth.js';
 import { PaymentsService } from '../payments/payments.service.js';
 import { isReservationRangeAvailable } from '../payments/reservationPricing.js';
+import { hostNotifications } from '../notifications/hostNotifications.js';
 import { notifications } from '../notifications/notifications.service.js';
 import {
   CANCELLATION_FEE_MAX,
@@ -1448,6 +1449,14 @@ export class BookingsService {
       },
     });
 
+    void hostNotifications.guestMessage(this.prisma, {
+      messageId: created.id,
+      conversationId: conversation.id,
+      listingId: access.listingId,
+      reservationId: access.reservationId,
+      body: created.body,
+    });
+
     const refreshedConversation = await this.ensureReservationConversation(access, {
       syncListing: true,
     });
@@ -1732,6 +1741,14 @@ export class BookingsService {
       reason,
       publicBaseUrl: options?.publicBaseUrl,
     });
+    void hostNotifications.bookingCanceled(this.prisma, {
+      access,
+      canceledBy,
+      chargedAmountMinor: cancellationDetails.quote.chargedAmountMinor,
+      refundedAmountMinor: effectiveRefundMinor,
+      retainedAmountMinor: effectiveRetainedMinor,
+      reason,
+    });
 
     return this.getBookingConfirmation(access.reservationId, token, {
       publicBaseUrl: options?.publicBaseUrl,
@@ -2014,6 +2031,10 @@ export class BookingsService {
       void notifications.sendBookingConfirmationEmail({
         access: createAccess,
         guestEmail: readString(createAccess.reservationContact.email) ?? readString(actor?.email),
+        guests: asObject(input.guests, {}),
+      });
+      void hostNotifications.bookingReceived(this.prisma, {
+        access: createAccess,
         guests: asObject(input.guests, {}),
       });
     }

@@ -61,7 +61,33 @@ function resolveBalanceMode(payment: Record<string, unknown>, balance: number): 
   return /esp[eè]ces/i.test(readString(payment.method) ?? '') ? 'cash' : 'online';
 }
 
-function buildAbsoluteUrl(path: string, baseUrl: string): string {
+export type BookingAmounts = {
+  currency: string;
+  /** Montants en euros. */
+  total: number;
+  paidNow: number;
+  balance: number;
+  balanceMode: BalanceMode;
+  balanceDueDateISO: string | null;
+};
+
+/** Montants d'une réservation lus dans sa copie JSON `payment` (même lecture pour voyageur et hôte). */
+export function readBookingAmounts(payment: Record<string, unknown>): BookingAmounts {
+  const stripe = asObject(payment.stripe);
+  const total = toNumber(payment.total, 0);
+  const paidNow = toNumber(stripe.chargeNowAmount, toNumber(payment.deposit, total));
+  const balance = toNumber(stripe.deferredAmount, toNumber(payment.balance, Math.max(0, total - paidNow)));
+  return {
+    currency: resolveCurrency(payment),
+    total,
+    paidNow,
+    balance,
+    balanceMode: resolveBalanceMode(payment, balance),
+    balanceDueDateISO: readString(stripe.deferredDueDateISO),
+  };
+}
+
+export function buildAbsoluteUrl(path: string, baseUrl: string): string {
   try {
     return new URL(path, `${baseUrl}/`).toString();
   } catch {
@@ -104,9 +130,7 @@ export async function sendBookingConfirmationEmail(input: SendBookingConfirmatio
     const baseUrl = resolvePublicBaseUrl(input.publicBaseUrl);
     const payment = access.payment;
     const stripe = asObject(payment.stripe);
-    const total = toNumber(payment.total, 0);
-    const paidNow = toNumber(stripe.chargeNowAmount, toNumber(payment.deposit, total));
-    const balance = toNumber(stripe.deferredAmount, toNumber(payment.balance, Math.max(0, total - paidNow)));
+    const amounts = readBookingAmounts(payment);
 
     const email = buildBookingConfirmationEmail({
       reservationId: access.reservationId,
@@ -118,13 +142,13 @@ export async function sendBookingConfirmationEmail(input: SendBookingConfirmatio
       endDate: access.endDate,
       nights: Math.max(1, Math.round(access.nights)),
       guests: readGuestsBreakdown(input.guests ?? {}),
-      currency: resolveCurrency(payment),
+      currency: amounts.currency,
       amounts: {
-        total,
-        paidNow,
-        balance,
-        balanceMode: resolveBalanceMode(payment, balance),
-        balanceDueDateISO: readString(stripe.deferredDueDateISO),
+        total: amounts.total,
+        paidNow: amounts.paidNow,
+        balance: amounts.balance,
+        balanceMode: amounts.balanceMode,
+        balanceDueDateISO: amounts.balanceDueDateISO,
       },
       paymentChoice: readString(stripe.paymentChoice),
       paymentMethodLabel: readString(payment.method),

@@ -12,6 +12,7 @@ import { importsPlugin } from './domains/imports/imports.plugin.js';
 import { listingsPlugin } from './domains/listings/listings.plugin.js';
 import { mediasPlugin } from './domains/medias/medias.plugin.js';
 import { messagingPlugin } from './domains/messaging/messaging.plugin.js';
+import { notificationsPlugin } from './domains/notifications/notifications.plugin.js';
 import { paymentsPlugin } from './domains/payments/payments.plugin.js';
 import { privacyPlugin } from './domains/privacy/privacy.plugin.js';
 import { usersPlugin } from './domains/users/users.plugin.js';
@@ -150,6 +151,7 @@ export async function buildApp() {
     await v1.register(paymentsPlugin);
     await v1.register(calendarPlugin);
     await v1.register(importsPlugin);
+    await v1.register(notificationsPlugin);
   }, {
     prefix: `/${env.API_PREFIX.replace(/^\/+/, '')}`,
   });

@@ -27,6 +27,8 @@ import {
 } from './listings.access.js';
 import type { CreateGuideReviewInput, CreateListingInput } from './listings.schemas.js';
 import { parseGuideAccessKey, toIsoDay, verifyGuideAccessKey } from '../../lib/guideKey.js';
+import { resolvePublicBaseUrl } from '../../lib/mailer.js';
+import { hostNotifications } from '../notifications/hostNotifications.js';
 import { sanitizeListingSection, sanitizePlainText } from '../../lib/sanitizeHtml.js';
 
 type ListingRecord = Listing & { owner: User | null };
@@ -1145,6 +1147,8 @@ export class ListingsService {
       },
     });
 
+    if (listingStatus === 'published') void this.notifyListingPublication(listingId);
+
     return { listingId };
   }
 
@@ -2054,6 +2058,7 @@ export class ListingsService {
     const data: Prisma.ListingUpdateInput = {
       updatedAt: new Date(),
     };
+    let publishedNow = false;
 
     if (resource === 'core') {
       normalizedMerged.id = listingId;
@@ -2085,6 +2090,7 @@ export class ListingsService {
       if (nextStatus === 'published' && (!allowAdmin || currentStatus !== 'published')) {
         await this.assertCanPublishListing(actor, { allowAdmin, listingId });
       }
+      publishedNow = nextStatus === 'published' && currentStatus !== 'published';
       data.core = toJsonInput(normalizedMerged);
       data.status = nextStatus;
       data.kind = normalizeListingKind(normalizedMerged.kind);
@@ -2104,6 +2110,8 @@ export class ListingsService {
       where: { id: listingId },
       data,
     });
+
+    if (publishedNow) void this.notifyListingPublication(listingId);
 
     return normalizedMerged;
   }
@@ -2208,7 +2216,69 @@ export class ListingsService {
       return toGuideReview(entry);
     });
 
+    if (result && typeof result === 'object') {
+      void this.resolveListingPublicUrl(access.listingId).then((listingUrl) => hostNotifications.reviewReceived(this.prisma, {
+        listingId: access.listingId,
+        reservationId: access.reservationId,
+        author,
+        rating,
+        text,
+        listingUrl,
+      })).catch((error) => {
+        console.error('[listings] e-mail d’avis à l’hôte non envoyé', { listingId: access.listingId, error });
+      });
+    }
+
     return result;
+  }
+
+  /** Adresse publique d'une annonce (domaine personnalisé vérifié, sinon sous-domaine), pour les e-mails. */
+  private async resolveListingPublicUrl(listingId: string): Promise<string | null> {
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      select: {
+        id: true,
+        ownerId: true,
+        subdomainSlug: true,
+        customDomain: true,
+        customDomainVerifiedAt: true,
+        customDomainVerificationToken: true,
+        core: true,
+      },
+    });
+    if (!listing) return null;
+    if (listing.customDomain && listing.customDomainVerifiedAt) return `https://${listing.customDomain}`;
+    const record = await this.toDomainRecord(listing);
+    return record.publicUrl;
+  }
+
+  /** E-mail à l'hôte après une mise en ligne (annonce en ligne, dernière place de l'offre utilisée). */
+  private async notifyListingPublication(listingId: string): Promise<void> {
+    try {
+      const listing = await this.prisma.listing.findUnique({
+        where: { id: listingId },
+        select: { kind: true, core: true, owner: true },
+      });
+      if (!listing?.owner) return;
+
+      const publicUrl = await this.resolveListingPublicUrl(listingId)
+        ?? `${resolvePublicBaseUrl()}/${buildListingSlugFromCore(asObject(listing.core, buildDefaultResource('core', listingId)), listingId)}`;
+
+      // Les pages principales ne comptent pas dans la limite de l'offre.
+      let allowance: { planCode: unknown; activeListings: number; maxActiveListings: number } | null = null;
+      const maxActiveListings = this.buildPublicationReadiness(listing.owner).maxActiveListings;
+      if (normalizeListingKind(asObject(listing.core).kind) === 'listing' && maxActiveListings) {
+        const activeListings = await this.prisma.listing.count({
+          where: { ownerId: listing.owner.id, kind: 'listing', status: { in: [...LISTING_LIMIT_COUNTED_STATUSES] } },
+        });
+        const billing = asObject(asObject(listing.owner.stripeConnectProfile).billing);
+        allowance = { planCode: billing.planCode, activeListings, maxActiveListings };
+      }
+
+      await hostNotifications.listingPublished(this.prisma, { listingId, publicUrl, allowance });
+    } catch (error) {
+      console.error('[listings] e-mail de mise en ligne non envoyé', { listingId, error });
+    }
   }
 
   async transferListingOwnership(args: {

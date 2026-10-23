@@ -34,9 +34,12 @@ model User {
   stripeConnectProfile   Json?
   // Compte clos (suppression RGPD) : ligne anonymisée et conservée pour les écritures comptables.
   deletedAt              DateTime?
+  // Rappels par e-mail (brouillon, compte de paiement, limite du plan) refusés via le lien de désinscription.
+  emailRemindersOptOutAt DateTime?
   createdAt              DateTime       @default(now())
   updatedAt              DateTime       @updatedAt
 
+  hostNotifications      HostNotification[]
   listings               Listing[]      @relation("OwnerListings")
   hostConversations      Conversation[] @relation("HostConversations")
   guestConversations     Conversation[] @relation("GuestConversations")
@@ -254,4 +257,22 @@ model CalendarEvent {
   @@index([endDate])
   @@unique([listingId, externalUid, source])
   @@unique([listingId, reservationId, source])
+}
+
+// E-mails automatiques envoyés aux hôtes (`domains/notifications/hostNotifications.ts`). Une ligne est
+// posée avant l'envoi : la clé unique garantit qu'un même événement (réservation, rappel…) ne part
+// qu'une fois, même si deux traitements se chevauchent ; elle est retirée si l'envoi échoue.
+model HostNotification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      String
+  dedupeKey String   @unique
+  // Annonce, réservation, conversation… concernée (limitation de fréquence).
+  refId     String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, kind])
+  @@index([kind, refId, createdAt])
+  @@index([createdAt])
 }
