@@ -7,6 +7,7 @@ import { injectHead, type VueHeadClient } from '@unhead/vue'
 import { isListingHostname } from '@/domain/listings/publicDomain'
 import { normalizeListingSlug } from '@/domain/listings/slug'
 import { resolveRuntimeUserId } from '@/router/backOfficeUser'
+import { resolveTicketEntryRoute } from '@/utils/authEntry'
 // Import direct : ses styles partent dans le CSS principal et habillent dès le premier rendu
 // la version statique des documents générée au build (lisible sans JavaScript).
 import LegalPage from '@/views/Legal/LegalPage.vue'
@@ -412,7 +413,12 @@ const router = createRouter({
 
 router.beforeEach((to) => {
   if (typeof window === 'undefined') return true
-  if (!isListingHostname(window.location.hostname)) return true
+  if (!isListingHostname(window.location.hostname)) {
+    // Lien à jeton Clerk qui pointe sur l'accueil : la page de connexion consomme le jeton
+    // puis ouvre le tableau de bord, sans passer par la landing.
+    if (to.name === 'home') return resolveTicketEntryRoute(to.query) ?? true
+    return true
+  }
   // Les documents légaux restent accessibles aux voyageurs sur le domaine de l'hôte.
   if (to.name === 'home' || to.name === 'listing' || to.name === 'listing-guide' || to.name === 'booking-confirmation' || to.name === 'legal') return true
   return { name: 'home' }

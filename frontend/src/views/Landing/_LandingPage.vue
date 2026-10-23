@@ -11,6 +11,7 @@ import { sr } from '@/utils/scrollReveal'
 import { vp } from '@/utils/viewport'
 import detectOS from '@/utils/detectOs'
 import { forceReleaseScrollLock } from '@/components/overlays/scrollLock'
+import { useDashboardEntryRedirect } from '@/composables/useDashboardEntryRedirect'
 // CONTENT
 import type { LandingContent } from '@/views/Landing/types/content'
 import { useLandingLocale } from '@/views/Landing/composables/useLandingLocale'
@@ -28,6 +29,8 @@ import FaqSection from '@/views/Landing/components/FaqSection/FaqSection.vue'
 import FinalCtaSection from '@/views/Landing/components/FinalCtaSection/FinalCtaSection.vue'
 
 const { content } = useLandingLocale()
+// Connexion par lien à jeton : l'hôte arrive sur son tableau de bord, pas sur la landing.
+useDashboardEntryRedirect()
 
 if (vp.lg.value) {
   gsap.registerPlugin(ScrollTrigger, ScrollSmoother)

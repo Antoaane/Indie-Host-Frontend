@@ -363,6 +363,7 @@ Limites abonnement : max **6 annonces actives** par défaut.
 - **Token injection** : `utils/clerkToken.ts` → `getToken()` → header `Authorization: Bearer`
 - **Rôles admin** : `utils/clerkRole.ts` + `composables/useAdminAccess.ts`
 - **JWKS** : Backend vérifie JWT via `CLERK_JWKS_URL`
+- **Connexion par lien à jeton** (jeton de connexion, « Impersonate » du Clerk Dashboard, invitation acceptée sur le portail Clerk) : Clerk renvoie vers l'URL d'accueil de l'instance (`paths.home = "/"` en prod), donc la landing. `utils/authEntry.ts` (importé en tête de `main.ts` pour lire les paramètres `__clerk_*` avant que Clerk ne les retire) + `composables/useDashboardEntryRedirect.ts` (appelé par la landing) ouvrent alors `/dashboard/editor` : arrivée directe sur `/` avec une session de moins de 5 min, une session « actor » ou des paramètres Clerk, une seule fois par session. Un `__clerk_ticket` présent sur `/` part vers `/sign-in` (ou `/sign-up` si `__clerk_status=sign_up`) avec `redirect_url=/dashboard/editor` (garde du routeur).
 
 ### Problème connu — page grise sur accès par IP
 
