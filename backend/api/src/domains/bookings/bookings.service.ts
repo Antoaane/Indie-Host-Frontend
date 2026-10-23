@@ -578,8 +578,13 @@ export class BookingsService {
     // été créé par l'API pour cette annonce et n'est rattaché à aucune autre réservation.
     const paymentRecord = await this.prisma.payment.findUnique({
       where: { stripePaymentIntentId: input.paymentIntentId },
-      select: { listingId: true, reservationId: true },
+      select: { listingId: true, reservationId: true, stripeConnectedAccountId: true },
     });
+    // Paiement direct : le PaymentIntent vit sur le compte Stripe de l'hôte. Un ancien paiement
+    // créé sur la plateforme (destination charge) n'a pas de compte à cibler.
+    const stripeAccountOptions = paymentRecord?.stripeConnectedAccountId
+      ? { stripeAccount: paymentRecord.stripeConnectedAccountId }
+      : undefined;
     const ownsPaymentIntent = Boolean(
       paymentRecord
       && paymentRecord.listingId === input.listingId
@@ -608,7 +613,7 @@ export class BookingsService {
     }
 
     try {
-      const paymentIntent = await this.stripe.paymentIntents.retrieve(input.paymentIntentId);
+      const paymentIntent = await this.stripe.paymentIntents.retrieve(input.paymentIntentId, {}, stripeAccountOptions);
       const currentStatus = paymentIntent.status ?? null;
       if (paymentIntent.metadata?.listingId !== input.listingId) {
         console.warn('[bookings] refund skipped: payment intent metadata does not match the listing', {
@@ -630,7 +635,7 @@ export class BookingsService {
       ]);
 
       if (cancellableStatuses.has(paymentIntent.status)) {
-        const canceledIntent = await this.stripe.paymentIntents.cancel(input.paymentIntentId);
+        const canceledIntent = await this.stripe.paymentIntents.cancel(input.paymentIntentId, {}, stripeAccountOptions);
         return {
           action: 'canceled',
           stripeStatus: canceledIntent.status ?? currentStatus,
@@ -662,8 +667,8 @@ export class BookingsService {
         };
       }
 
-      // Paiement reversé à l'hôte (destination charge) : le remboursement reprend la somme sur son
-      // compte Stripe. Sans reverse_transfer, il serait débité du solde d'IndieHost.
+      // Paiement direct : le remboursement est débité du solde Stripe de l'hôte. Pour un ancien
+      // paiement reversé (destination charge), reverse_transfer reprend la somme sur son compte.
       const isDestinationCharge = Boolean(paymentIntent.transfer_data?.destination);
       const refund = await this.stripe.refunds.create({
         payment_intent: input.paymentIntentId,
@@ -675,7 +680,7 @@ export class BookingsService {
           reservationId: input.reservationId,
           listingId: input.listingId,
         },
-      });
+      }, stripeAccountOptions);
 
       return {
         action: amountToRefund < amountReceived ? 'partially_refunded' : 'refunded',

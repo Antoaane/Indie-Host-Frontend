@@ -76,6 +76,10 @@ const envSchema = z.object({
   STRIPE_CONNECT_DEFAULT_APPLICATION_FEE_BPS: z.coerce.number().int().min(0).max(10000).default(0),
   // Secret de signature du webhook Stripe (whsec_…) ; vide → POST /payments/stripe/webhook répond 503.
   STRIPE_WEBHOOK_SECRET: z.string().trim().optional().default(''),
+  // Paiements directs : remboursements, litiges et statut des paiements se produisent sur les
+  // comptes Stripe des hôtes. Stripe les envoie par une destination « comptes connectés », qui a
+  // son propre secret de signature (même URL que STRIPE_WEBHOOK_SECRET).
+  STRIPE_CONNECT_WEBHOOK_SECRET: z.string().trim().optional().default(''),
   ICAL_EXPORT_DEFAULT_PRODID: z.string().trim().min(1).default('IndieHost//Calendar//FR'),
   // Valeur par défaut tolérée en dev/test seulement : en production, le secret doit être fourni
   // (vérifié plus bas), sinon n'importe qui pourrait forger une clé de guide d'arrivée.

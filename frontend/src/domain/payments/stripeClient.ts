@@ -5,7 +5,9 @@
 import { loadStripe } from '@stripe/stripe-js/pure'
 import type { Stripe } from '@stripe/stripe-js'
 
-let stripePromise: Promise<Stripe | null> | null = null
+// Une instance par compte : les paiements directs vivent sur le compte Stripe de l'hôte, et
+// Stripe.js doit être initialisé avec ce compte pour retrouver le PaymentIntent.
+const stripePromises = new Map<string, Promise<Stripe | null>>()
 const TRUTHY_ENV_VALUES = new Set(['1', 'true', 'yes', 'on'])
 
 function isTruthyEnvFlag(value: unknown): boolean {
@@ -28,15 +30,19 @@ export function getStripePaymentReturnUrl(): string {
   return window.location.href
 }
 
-export function loadStripeClient(): Promise<Stripe | null> {
-  if (stripePromise) return stripePromise
+/**
+ * @param stripeAccount compte Stripe de l'hôte qui encaisse (paiement direct). Sans compte,
+ * l'instance vise le compte plateforme d'IndieHost.
+ */
+export function loadStripeClient(stripeAccount?: string | null): Promise<Stripe | null> {
+  const account = (stripeAccount ?? '').trim()
+  const cached = stripePromises.get(account)
+  if (cached) return cached
 
   const key = getStripePublishableKey()
-  if (!key) {
-    stripePromise = Promise.resolve(null)
-    return stripePromise
-  }
-
-  stripePromise = loadStripe(key)
-  return stripePromise
+  const promise = key
+    ? loadStripe(key, account ? { stripeAccount: account } : undefined)
+    : Promise.resolve(null)
+  stripePromises.set(account, promise)
+  return promise
 }

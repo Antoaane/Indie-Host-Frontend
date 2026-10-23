@@ -380,18 +380,23 @@ export async function stripeWebhooksPlugin(fastify: FastifyInstance): Promise<vo
     done(null, body);
   });
 
-  const webhookSecret = env.STRIPE_WEBHOOK_SECRET;
-  const stripe = env.STRIPE_SECRET_KEY && webhookSecret
+  // Deux destinations Stripe peuvent viser cette URL : les événements du compte plateforme
+  // (STRIPE_WEBHOOK_SECRET) et ceux des comptes connectés des hôtes, où vivent les paiements
+  // directs (STRIPE_CONNECT_WEBHOOK_SECRET). Chacune signe avec son propre secret.
+  const webhookSecrets = [env.STRIPE_WEBHOOK_SECRET, env.STRIPE_CONNECT_WEBHOOK_SECRET].filter(Boolean);
+  const stripe = env.STRIPE_SECRET_KEY && webhookSecrets.length
     ? new Stripe(env.STRIPE_SECRET_KEY, { apiVersion: STRIPE_API_VERSION })
     : null;
   const processor = new StripeWebhookProcessor(fastify.prisma);
 
   if (!stripe) {
     fastify.log.warn(
-      webhookSecret
+      webhookSecrets.length
         ? '[payments] STRIPE_SECRET_KEY absent : POST /payments/stripe/webhook répondra 503 (remboursements échoués et litiges non suivis).'
-        : '[payments] STRIPE_WEBHOOK_SECRET absent : POST /payments/stripe/webhook répondra 503 (remboursements échoués et litiges non suivis).',
+        : '[payments] STRIPE_WEBHOOK_SECRET et STRIPE_CONNECT_WEBHOOK_SECRET absents : POST /payments/stripe/webhook répondra 503 (remboursements échoués et litiges non suivis).',
     );
+  } else if (!env.STRIPE_CONNECT_WEBHOOK_SECRET) {
+    fastify.log.warn('[payments] STRIPE_CONNECT_WEBHOOK_SECRET absent : les événements des comptes des hôtes (remboursements, litiges des paiements directs) seront refusés.');
   }
 
   fastify.post('/payments/stripe/webhook', {
@@ -409,11 +414,18 @@ export async function stripeWebhooksPlugin(fastify: FastifyInstance): Promise<vo
       return;
     }
 
-    let event: Stripe.Event;
-    try {
-      event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
-    } catch (error) {
-      request.log.warn({ err: error }, '[payments] Stripe webhook signature rejected');
+    let event: Stripe.Event | null = null;
+    let lastError: unknown = null;
+    for (const secret of webhookSecrets) {
+      try {
+        event = stripe.webhooks.constructEvent(rawBody, signature, secret);
+        break;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+    if (!event) {
+      request.log.warn({ err: lastError }, '[payments] Stripe webhook signature rejected');
       reply.code(400).send({ message: 'Signature Stripe invalide.' });
       return;
     }

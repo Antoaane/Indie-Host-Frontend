@@ -1407,8 +1407,17 @@ export class PaymentsService {
       };
     }
 
+    // Modèle « logiciel » validé dans le profil plateforme Stripe (Connect) : l'hôte encaisse
+    // lui-même (paiements directs), paie ses frais Stripe, a le Dashboard Stripe complet, et
+    // Stripe porte le risque des soldes négatifs. Plus de comptes `express`, qui exigeaient
+    // qu'IndieHost se porte responsable des pertes.
     const account = await this.stripe.accounts.create({
-      type: 'express',
+      controller: {
+        fees: { payer: 'account' },
+        losses: { payments: 'stripe' },
+        requirement_collection: 'stripe',
+        stripe_dashboard: { type: 'full' },
+      },
       country: (options?.country ?? 'FR').toUpperCase(),
       capabilities: {
         transfers: { requested: true },
@@ -2860,6 +2869,9 @@ export class PaymentsService {
     } else {
       const applicationFee = this.computeApplicationFee(chargeNowAmountMinor);
 
+      // Paiement direct : créé sur le compte Stripe de l'hôte, qui est le commerçant et paie ses
+      // frais. Le voyageur règle l'hôte ; IndieHost ne touche pas les fonds (commission
+      // éventuelle via application_fee_amount, nulle par défaut).
       const createParams: Stripe.PaymentIntentCreateParams = {
         amount: chargeNowAmountMinor,
         currency,
@@ -2869,15 +2881,11 @@ export class PaymentsService {
         metadata,
       };
 
-      createParams.transfer_data = {
-        destination: connectedAccountId,
-      };
-
       if (applicationFee > 0) {
         createParams.application_fee_amount = applicationFee;
       }
 
-      const intent = await this.stripe.paymentIntents.create(createParams);
+      const intent = await this.stripe.paymentIntents.create(createParams, { stripeAccount: connectedAccountId });
 
       if (!intent.client_secret) {
         throw new Error('Stripe did not return a client_secret.');
@@ -2961,7 +2969,12 @@ export class PaymentsService {
     const chargeNowAmountMinor = payment.chargeNowAmountMinor ?? payment.amountMinor;
     let status = payment.status;
     if (this.stripe) {
-      const intent = await this.stripe.paymentIntents.retrieve(input.paymentIntentId);
+      // Le PaymentIntent vit sur le compte de l'hôte (paiement direct).
+      const intent = await this.stripe.paymentIntents.retrieve(
+        input.paymentIntentId,
+        {},
+        payment.stripeConnectedAccountId ? { stripeAccount: payment.stripeConnectedAccountId } : undefined,
+      );
       if (
         intent.amount !== chargeNowAmountMinor
         || intent.currency !== payment.currency
@@ -3086,12 +3099,23 @@ export class PaymentsService {
       };
     }
 
-    const loginLink = await this.stripe.accounts.createLoginLink(requestedAccountId);
+    // Les liens de connexion n'existent que pour le Dashboard Express. Un hôte au Dashboard
+    // Stripe complet se connecte directement sur dashboard.stripe.com avec ses identifiants.
+    const account = await this.stripe.accounts.retrieve(requestedAccountId);
+    const dashboardType = account.controller?.stripe_dashboard?.type ?? (account.type === 'express' ? 'express' : 'full');
+    if (dashboardType === 'express') {
+      const loginLink = await this.stripe.accounts.createLoginLink(requestedAccountId);
+      return {
+        mode: 'live',
+        accountId: requestedAccountId,
+        url: loginLink.url,
+      };
+    }
 
     return {
       mode: 'live',
       accountId: requestedAccountId,
-      url: loginLink.url,
+      url: 'https://dashboard.stripe.com/',
     };
   }
 

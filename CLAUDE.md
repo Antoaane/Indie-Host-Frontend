@@ -411,6 +411,15 @@ Le serveur ne fait pas confiance au navigateur :
 - `POST /bookings` d'un voyageur (ni propriétaire ni admin) exige un PaymentIntent émis par l'API pour cette annonce et ces dates, réglé chez Stripe et jamais rattaché à une autre réservation (`PaymentsService.verifyReservationPayment`) ; montants et statut du paiement sont réécrits depuis la ligne `Payment`, l'id de réservation est choisi par le serveur, `internalNote` / `messaging` sont ignorés.
 - Une annulation ne rembourse qu'un PaymentIntent lié à la réservation dans la table `Payment` (et dont la metadata `listingId` correspond).
 
+### Paiements des réservations (Stripe Connect, paiements directs)
+
+Modèle aligné sur le profil plateforme Stripe validé (« les marchands encaissent directement », Stripe responsable des soldes négatifs, Dashboard Stripe complet). Ne jamais revenir aux comptes `express` ni aux destination charges sans refaire le profil plateforme : Stripe refuse alors la création des comptes (`STRIPE_CONNECT_PLATFORM_PROFILE_REQUIRED`).
+- Compte de l'hôte : `stripe.accounts.create` avec `controller` = `fees.payer: account`, `losses.payments: stripe`, `requirement_collection: stripe`, `stripe_dashboard.type: full` (équivalent Standard), inscription par Account Link hébergé par Stripe (`payments.service.ts`, `ensureStripeConnectAccount`).
+- Paiement : PaymentIntent créé **sur le compte de l'hôte** (`{ stripeAccount }`), sans `transfer_data` ; commission éventuelle par `application_fee_amount` (0 par défaut). Côté voyageur, Stripe.js est chargé avec ce compte (`loadStripeClient(stripeAccount)` dans `domain/payments/stripeClient.ts`, appelé par `Checkout.vue`).
+- Vérification, annulation et remboursement d'un paiement : toujours avec `{ stripeAccount: Payment.stripeConnectedAccountId }` (`verifyReservationPayment`, `BookingsService.applyStripeCancellation`).
+- Tableau de bord de l'hôte : `dashboard.stripe.com` (les liens de connexion n'existent que pour le Dashboard Express).
+- L'hôte est le commerçant : il paie les frais Stripe et gère ses litiges dans son Dashboard ; IndieHost ne détient jamais les fonds.
+
 ### Synchronisation calendrier
 - Sources iCal externes (Airbnb, Booking) configurées dans Management
 - Sync périodique → `CalendarEvent` créés automatiquement
@@ -487,7 +496,7 @@ Installés le 2026-10-21 et versionnés dans le repo. Claude les charge selon la
 |---------|-------|------|
 | **Clerk** | Auth utilisateurs + JWT backend | `VITE_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY` |
 | **Stripe** | Paiements réservations + abonnements SaaS | `VITE_STRIPE_PUBLISHABLE_KEY`, `STRIPE_SECRET_KEY` |
-| **Stripe Connect** | Reversements hôtes | `stripeConnectAccountId` par User |
+| **Stripe Connect** | Compte d'encaissement de chaque hôte (paiements directs) | `stripeConnectAccountId` par User |
 | **ImageKit** | CDN + upload images | `IMAGEKIT_ENDPOINT`, `IMAGEKIT_API_KEY` |
 | **Cloudflare** | DNS-01 pour SSL wildcard `*.indiehost.fr` | `cloudflare.ini` |
 | **Let's Encrypt** | Certificats SSL auto-renewing | via Certbot |
@@ -620,7 +629,7 @@ Mis en ligne le 2026-10-20. La prod tourne sur un **VPS Hostinger** (KVM 2, Ubun
 | Cloudflare | zone `indiehost.fr` : `@` et `*` en A/AAAA proxied vers le VPS · SSL **Full (strict)** · Always HTTPS · TLS min 1.2 |
 | Certificat | Let's Encrypt wildcard via certbot DNS-01 Cloudflare → `certbot/conf/live/indiehost.fr/` (renouvellement auto) |
 | Clerk | instance **Production** (`clerk.indiehost.fr`), paths `/`, `/sign-in`, `/sign-up` |
-| Stripe | compte live IndieHost SAS — webhook `POST /api/v1/payments/stripe/webhook` (`STRIPE_WEBHOOK_SECRET`, voir `.env.example`) : remboursements échoués, litiges, statut des PaymentIntents ; 503 tant que le secret est vide |
+| Stripe | compte live IndieHost SAS. **Connect en modèle « logiciel »** (profil plateforme validé le 15 mars 2026) : l'hôte encaisse directement, paie ses frais Stripe, a le Dashboard Stripe complet, Stripe porte le risque des soldes négatifs. Webhook `POST /api/v1/payments/stripe/webhook` avec deux destinations et deux secrets : « Votre compte » (`STRIPE_WEBHOOK_SECRET`) et « Comptes connectés » (`STRIPE_CONNECT_WEBHOOK_SECRET`, où vivent les paiements des réservations) ; 503 tant qu'aucun secret n'est renseigné |
 | Clerk webhook | `POST /api/v1/webhooks/clerk` (`CLERK_WEBHOOK_SECRET`, signature Svix vérifiée à la main) : `user.deleted` → anonymisation du compte ; 503 tant que le secret est vide |
 | E-mails | nodemailer via `SMTP_*` / `MAIL_FROM` (`lib/mailer.ts`, `domains/notifications/`) : confirmation et annulation de réservation au voyageur ; désactivés (warn au boot) tant que SMTP n'est pas configuré |
 
@@ -712,7 +721,7 @@ Les domaines personnalisés pointent **directement** sur le VPS (pas via Cloudfl
 - **Pages légales, traceurs, remboursements** (`94d6974`) :
   - **Pages légales** : documents dans `frontend/src/views/Legal/` (registre `legalPages.json`, un fragment HTML par document dans `content/`), route `/legal/:page`, pré-rendus en HTML statique au build (`frontend/plugins/legal-prerender/`).
   - **Traceurs** : aucun avant consentement (pas de GTM ni GA4 ; hCaptcha, Stripe.js et Google Maps chargés seulement à la demande), donc pas de bandeau cookies. Toute nouvelle balise tierce doit garder cette règle ou ajouter un consentement.
-  - **Remboursements voyageurs** : seulement si l'hôte active `bookings.pricing.cancellation.refundsEnabled` (désactivé par défaut, sinon réservation non remboursable). Une annulation par l'hôte (`POST /bookings/:id/host-cancel`) rembourse intégralement. Les remboursements font `reverse_transfer` (repris sur le compte Stripe de l'hôte).
+  - **Remboursements voyageurs** : seulement si l'hôte active `bookings.pricing.cancellation.refundsEnabled` (désactivé par défaut, sinon réservation non remboursable). Une annulation par l'hôte (`POST /bookings/:id/host-cancel`) rembourse intégralement. Les remboursements sont débités du compte Stripe de l'hôte (paiement direct, voir « Paiements des réservations »).
   - **Abonnements** : résiliation et reprise depuis Mon profil (`POST /payments/stripe/subscriptions/cancellation`), fin de période sans remboursement ; remboursement uniquement en cas de rétractation dans les 14 jours, sur demande par e-mail.
   - **Restes à faire** : voir `TODO.md`.
 

@@ -527,8 +527,9 @@ function resolvePaymentElementLoadErrorMessage(rawMessage: string): string | nul
   return message
 }
 
-async function mountPaymentElement(clientSecret: string) {
-  stripe = await loadStripeClient()
+async function mountPaymentElement(clientSecret: string, stripeAccount: string | null) {
+  // Paiement direct : le PaymentIntent est créé sur le compte Stripe de l'hôte.
+  stripe = await loadStripeClient(stripeAccount)
   if (!stripe) {
     throw new Error('Le client Stripe ne peut pas être initialisé. Vérifiez VITE_STRIPE_PUBLISHABLE_KEY.')
   }
@@ -640,7 +641,7 @@ async function preparePaymentIntent() {
     paymentIntentConnectedAccountId.value = session.connectedAccountId || resolveConnectedAccountId()
     isPreparingPayment.value = false
     await nextTick()
-    await mountPaymentElement(session.clientSecret)
+    await mountPaymentElement(session.clientSecret, paymentIntentConnectedAccountId.value || null)
   } catch (error) {
     if (sequence !== intentRequestSequence) return
     console.error('[Checkout] prepare payment intent failed', error)
