@@ -181,7 +181,10 @@ export default defineConfig(({ mode }) => {
         restart: ['src/assets/media/**/*.svg'], // Restart vite si des SVG changent
       }),
       vue(),
-      ui(),
+      // Pas de mode de couleur automatique : le site n'a pas de thème sombre. Sinon @nuxt/ui
+      // pose `html.dark` d'après le système et passe `body` en `color-scheme: dark`, ce qui
+      // affiche les contrôles natifs (radios, cases, listes) en sombre sur fond clair.
+      ui({ colorMode: false }),
       // vueDevTools(),
       svgLoader(),
       legalPrerender(),
