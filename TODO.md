@@ -12,7 +12,7 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ### Bloquant : paiements des hôtes
 
-- [ ] **Redéployer, puis terminer l’inscription Stripe du compte de démonstration** : recliquer « Configurer Stripe Connect » sur indiehost.fr, choisir « Particulier », puis remplir le formulaire Stripe, désormais allégé (identité, adresse, date de naissance, téléphone, IBAN). Le compte `acct_1UTgHiBxC9MDMaAf` sera complété automatiquement (particulier, catégorie hébergement, description) au clic. Claude ne remplit pas ces informations ; il vérifiera la page d’activation après le déploiement.
+- [ ] **Redéployer, puis me prévenir** : je vérifierai la page d’activation et l’ouverture de l’inscription Stripe Express. Ensuite, terminer l’inscription du compte de démonstration : « Configurer Stripe Connect », « Particulier », puis identité, adresse, date de naissance, IBAN et code SMS (pas de mot de passe). L’ancien compte `acct_1UTgHiBxC9MDMaAf` (Dashboard complet, jamais rempli) sera remplacé automatiquement par un compte Express au clic. Claude ne remplit pas ces informations.
 - [ ] Première vraie réservation : vérifier dans le Dashboard Stripe de l’hôte que le paiement y apparaît (et pas sur le compte IndieHost), puis tester une annulation remboursée.
 
 ### Suites du déploiement du 2026-10-23
@@ -106,6 +106,7 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ## Fait
 
+- [x] 2026-10-23 — Comptes des hôtes au Dashboard Express : validation par code SMS, sans mot de passe Stripe, Stripe garde le risque et l’hôte ses frais ; remplacement automatique d’un compte jamais rempli créé avec l’ancien Dashboard (commit `23b6815`, non déployé). Image de marque Stripe appliquée avec l’accord de l’utilisateur : icône IndieHost 512 px, couleurs `#111117` (Paramètres → Adaptation à votre marque, commune à tout le compte : Checkout, reçus, inscription Connect, Dashboard Express).
 - [x] 2026-10-23 — Inscription Stripe des hôtes allégée et ouverte aux particuliers : choix « particulier / professionnel » avant l’ouverture de Stripe ; pour un particulier, compte déclaré personne physique (pas de SIRET, de société ni de représentant légal), catégorie hébergement, description et site de l’annonce pré-remplis ; formulaire limité au nécessaire immédiat (`currently_due`). Non déployé (commit `a46070c`).
 - [x] 2026-10-23 — Déploiement en production (par l’utilisateur, commits jusqu’à `e6e4b0a`, sauvegarde de la base faite avant) vérifié par Claude : site, API, pré-rendu de `/` et `/pricing`, CGV à jour, CSP en mode rapport, redirection `www`, type MIME du manifeste, webhook Stripe qui répond « signature manquante » (secrets pris en compte). Webhook Clerk encore à 503 (secret à créer).
 - [x] 2026-10-23 — Stripe Connect débloqué : il restait l’étape « Confirmer vos choix d’intégration » du guide de démarrage Stripe (modèle logiciel, acceptation du Contrat d’utilisation de la plateforme Connect, validée par Claude avec l’accord explicite de l’utilisateur). « Configurer Stripe Connect » ouvre maintenant l’inscription Stripe ; premier compte connecté `acct_1UTgHiBxC9MDMaAf` créé avec `fees.payer: account`, `losses.payments: stripe`, Dashboard complet.
