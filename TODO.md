@@ -30,6 +30,7 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 - [ ] Guide d'arrivée : formulaire d'avis (après la première nuit), encart « avis déjà déposé », liens légaux en bas. Page de confirmation : liens légaux.
 - [ ] Mon profil : bloc « Mes données » (téléchargement de l'export, suppression de compte avec confirmation).
 - [ ] Tableau de bord : rechargement de `/dashboard/editor` avec l'onglet Réseau ouvert : environ 15 requêtes au lieu de 34, écran de chargement plus court.
+- [ ] Connexion par lien à jeton, après déploiement : ouvrir un compte client via « Impersonate » du Clerk Dashboard (ou un jeton de connexion) et vérifier l’arrivée directe sur le tableau de bord, puis revenir sur la landing par le logo et vérifier qu’elle reste affichée. Testé par Claude en local sur un faux jeton et sur la règle de décision, pas avec une vraie session.
 - [ ] Éditeur (première passe UX) sur une vraie annonce : sommaire groupes + sections, pastilles « à compléter », bandeau d'état après une frappe (« Enregistrement… » puis « Modifications non appliquées · Brouillon enregistré à HH:MM »), Appliquer / Annuler, aide ⓘ du sous-domaine, mobile à 360 px (groupes défilants, bouton retour). Vérifié par Claude sur `/dev/editor` (données en mémoire), pas en prod.
 
 ### Légal et argent
@@ -104,6 +105,8 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ## Fait
 
+- [x] 2026-10-23 — Connexion par lien à jeton (Impersonate, jeton de connexion, invitation acceptée chez Clerk) : arrivée sur le tableau de bord au lieu de la landing ; un ticket posé sur `/` part vers la page de connexion qui le consomme (commit `398908d`).
+- [x] 2026-10-23 — Pile Docker locale vérifiée : les 7 migrations Prisma (dont les 4 du jour) s’appliquent sur une base vierge, aucune différence avec `schema.prisma` (`prisma migrate diff`, `migration_lock.toml` ajouté), API saine ; test de fumée conforme (webhooks Stripe et Clerk en 503 sans secret, export et suppression de compte en 401 sans jeton, 21e PaymentIntent en 429, purge RGPD planifiée) (commit `398908d`).
 - [x] 2026-10-23 — Éditeur, première passe UX (commit `7d21892`) : sommaire à deux niveaux (cinq groupes, puces de sections ancrées, section active suivie au défilement, pastilles « à compléter »), panneaux réordonnés (essentiel d'abord, technique ensuite, import et légal dans Réglages), bandeau d'état permanent avec Appliquer / Annuler toujours visibles et heure du dernier enregistrement, aide repliée derrière ⓘ (sous-domaine ; guide du domaine plus ouvert d'office), onglets accessibles (`role="tab"`, `aria-selected`, flèches), route de dev `/dev/editor` sans backend pour vérifier dans le navigateur. Vérifié à 1316 px et 360 px sur données en mémoire.
 - [x] 2026-10-23 — Favicon vérifié : les cinq fichiers déclarés dans `index.html` (ICO, SVG, PNG 96 px, Apple touch, manifeste) sont servis en prod. `public/favicon.ico` (repli `/favicon.ico`, 32 px, image différente) aligné sur l'icône complète 16/32/48 px ; `favicon-og.ico` et `favicon.zip` (non référencés, 210 Ko) retirés ; `site.webmanifest` servi en `application/manifest+json` au lieu d'`octet-stream` (`frontend/nginx.conf`, effectif au prochain build de l'image).
 - [x] 2026-10-23 — Passe sur la liste (commit `171ef05`) :
