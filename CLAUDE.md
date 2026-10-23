@@ -423,7 +423,9 @@ Modèle aligné sur le profil plateforme Stripe validé (« les marchands encais
 
 ### E-mails automatiques (Brevo)
 
-Envoi par l'API HTTP de Brevo (`BREVO_API_KEY`, gratuit jusqu'à 300 e-mails/jour) ou à défaut en SMTP (`lib/mailer.ts`) ; sans l'un ni l'autre, rien ne part et l'API continue. Expéditeur `MAIL_FROM`, réponses des e-mails hôtes vers `contact@indiehost.fr`.
+Envoi par l'API HTTP de Brevo (`BREVO_API_KEY`, gratuit jusqu'à 300 e-mails/jour) ou à défaut en SMTP (`lib/mailer.ts`) ; sans l'un ni l'autre, rien ne part et l'API continue. Expéditeur `MAIL_FROM` (par défaut `IndieHost <no-reply@mail.indiehost.fr>`), réponses des e-mails hôtes vers `contact@indiehost.fr`.
+- Domaine d'envoi : le sous-domaine `mail.indiehost.fr`, authentifié chez Brevo, car la racine sert à Google Workspace. Les enregistrements sont dans Cloudflare : TXT `brevo-code` sur `mail`, CNAME `brevo1/brevo2._domainkey.mail` (DNS only), TXT `_dmarc.mail` en `p=none`. `mail`, `clerk`, `accounts`, `clkmail` et `custom` sont réservés aux sous-domaines d'annonce (`reservedSlugs`). Un expéditeur hors de ce sous-domaine serait refusé ou classé en spam.
+- Brevo anonymise les ouvertures par défaut. Ses liens de suivi des clics ne se désactivent pas sur l'offre gratuite.
 - Voyageurs : confirmation et annulation (`notifications.service.ts`).
 - Hôtes, sur événement (`domains/notifications/hostNotifications.ts`, appelé sans attendre) : nouvelle réservation, annulation (par le voyageur ou l'hôte), message d'un voyageur (au plus un e-mail par conversation toutes les 30 min), nouvel avis, annonce en ligne (une fois par annonce, avec « dernier logement disponible » si la publication remplit l'offre), limite de l'offre atteinte, litige ouvert et remboursement échoué (webhooks Stripe des comptes connectés).
 - Hôtes, rappels planifiés (`jobs/hostReminders.ts`, chaque heure de 9 h à 20 h, heure de Paris, `HOST_REMINDERS_ENABLED=false` pour couper) : arrivée demain, bienvenue, brouillon inactif (2 jours puis dernier rappel), paiements Stripe pas activés (2 jours après la bienvenue, puis 7 jours plus tard), fin d'essai / d'abonnement résilié / d'accès offert (3 jours avant), calendrier iCal en erreur (après une nouvelle tentative, une fois par semaine). `npm run host-reminders -- --dry-run` liste ce qui partirait.
@@ -642,7 +644,7 @@ Mis en ligne le 2026-10-20. La prod tourne sur un **VPS Hostinger** (KVM 2, Ubun
 | Clerk | instance **Production** (`clerk.indiehost.fr`), paths `/`, `/sign-in`, `/sign-up` |
 | Stripe | compte live IndieHost SAS. **Connect en modèle « logiciel »** (profil plateforme validé le 15 mars 2026) : l'hôte encaisse directement, paie ses frais Stripe, a le Dashboard Stripe complet, Stripe porte le risque des soldes négatifs. Webhook `POST /api/v1/payments/stripe/webhook` avec deux destinations et deux secrets : « Votre compte » (`STRIPE_WEBHOOK_SECRET`) et « Comptes connectés » (`STRIPE_CONNECT_WEBHOOK_SECRET`, où vivent les paiements des réservations) ; 503 tant qu'aucun secret n'est renseigné |
 | Clerk webhook | `POST /api/v1/webhooks/clerk` (`CLERK_WEBHOOK_SECRET`, signature Svix vérifiée à la main) : `user.deleted` → anonymisation du compte ; 503 tant que le secret est vide |
-| E-mails | Brevo (`BREVO_API_KEY`, domaine `indiehost.fr` authentifié chez Brevo) ou SMTP (`SMTP_*`) via `lib/mailer.ts` : e-mails voyageurs et hôtes (voir « E-mails automatiques ») ; désactivés (warn au premier envoi) tant qu'aucun des deux n'est configuré |
+| E-mails | Brevo (`BREVO_API_KEY`, compte « IndieHost », domaine d'envoi `mail.indiehost.fr` authentifié le 2026-10-23, expéditeur `no-reply@mail.indiehost.fr`) ou SMTP (`SMTP_*`) via `lib/mailer.ts` : e-mails voyageurs et hôtes (voir « E-mails automatiques ») ; désactivés (warn au premier envoi) tant qu'aucun des deux n'est configuré |
 
 ### Secrets de prod
 

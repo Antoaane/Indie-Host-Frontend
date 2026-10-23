@@ -120,7 +120,9 @@ const envSchema = z.object({
   SMTP_USER: z.string().trim().optional().default(''),
   // Mot de passe SMTP : variable directe ou secret Docker via SMTP_PASSWORD_FILE (voir SECRET_FALLBACK_KEYS).
   SMTP_PASSWORD: z.string().optional().default(''),
-  MAIL_FROM: z.string().trim().min(1).default('IndieHost <no-reply@indiehost.fr>'),
+  // Sous-domaine authentifié chez Brevo (DKIM + DMARC dans Cloudflare) : la racine indiehost.fr sert
+  // à Google Workspace, Brevo demande un domaine d'envoi qu'aucun autre service n'utilise.
+  MAIL_FROM: z.string().trim().min(1).default('IndieHost <no-reply@mail.indiehost.fr>'),
   MAIL_REPLY_TO: z.string().trim().optional().default(''),
   // Origine publique du site (liens des e-mails : page de confirmation, guide d'arrivée).
   // Même variable que celle de nginx dans le .env racine ; vide → déduite de PUBLIC_LISTING_ROOT_DOMAIN.

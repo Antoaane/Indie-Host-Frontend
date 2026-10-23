@@ -85,7 +85,7 @@ function normalizeRecipients(to: string | string[]): string[] {
   return list.map((value) => value.trim()).filter((value) => value.includes('@'));
 }
 
-/** « IndieHost <no-reply@indiehost.fr> » → { name, email } (format attendu par Brevo). */
+/** « IndieHost <no-reply@mail.indiehost.fr> » → { name, email } (format attendu par Brevo). */
 function parseAddress(raw: string): { email: string; name?: string } {
   const match = raw.trim().match(/^(.*)<([^>]+)>$/);
   if (!match) return { email: raw.trim() };

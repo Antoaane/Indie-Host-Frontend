@@ -19,13 +19,11 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 ### Suites du déploiement du 2026-10-23
 
 - [ ] Clerk Dashboard (instance Production) → Webhooks → ajouter `https://indiehost.fr/api/v1/webhooks/clerk`, événement `user.deleted`, secret dans `CLERK_WEBHOOK_SECRET`, redéployer. Sans lui, une suppression faite dans Clerk n'est pas répercutée en base.
-- [ ] **E-mails avec Brevo**, qui remplace le mot de passe d’application Google. Ces étapes activent aussi les e-mails aux voyageurs.
-  1. Créer un compte gratuit sur brevo.com.
-  2. Dans Brevo → Expéditeurs, domaines et IP dédiées → Domaines, ajouter `indiehost.fr`. Brevo affiche 3 ou 4 enregistrements DNS (code Brevo, DKIM, DMARC). Je les ajoute dans Cloudflare avec votre accord.
-  3. Dans Brevo → SMTP & API → Clés API, créer une clé.
-  4. Sur le serveur, la mettre dans `/opt/indiehost/.env` sous la forme `BREVO_API_KEY=…`. Vérifier aussi que `BASE_URL=https://indiehost.fr` est bien présent.
-  5. Redéployer (la migration `20261023000004` s’applique seule), puis me prévenir.
-  6. Avant le premier envoi réel, vous pouvez voir ce qui partira : `docker compose exec api node dist/jobs/hostReminders.cli.js --dry-run`.
+- [ ] **Brevo : poser la clé et redéployer.** Le compte, le domaine d’envoi `mail.indiehost.fr` et l’expéditeur sont déjà faits. Ces étapes activent aussi les e-mails aux voyageurs.
+  1. Dans Brevo → SMTP & API → Clés API, créer une clé (nom : « IndieHost API »).
+  2. La mettre dans `/opt/indiehost/.env` sur le serveur sous la forme `BREVO_API_KEY=…`. Si une ligne `MAIL_FROM` existe, la supprimer ou la passer à `IndieHost <no-reply@mail.indiehost.fr>`. Vérifier aussi que `BASE_URL=https://indiehost.fr` est présent.
+  3. Redéployer (la migration `20261023000004` s’applique seule), puis me prévenir.
+  4. Avant le premier envoi réel, vous pouvez voir ce qui partira : `docker compose exec api node dist/jobs/hostReminders.cli.js --dry-run`.
 - [ ] Parcourir le site avec la console ouverte (connexion Clerk, checkout Stripe, import, carte, upload ImageKit) et relever les violations `Content-Security-Policy-Report-Only` : Claude ajustera puis passera la CSP en mode bloquant.
 
 ### Vérifications visuelles (Claude n'a pas de navigateur sur ces écrans)
@@ -99,7 +97,7 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ### Produit et technique
 
-- [ ] (après votre clé Brevo et les enregistrements DNS) Les ajouter dans Cloudflare avec votre accord. Ensuite, vérifier l’authentification du domaine chez Brevo et contrôler dans ses journaux que les premiers e-mails arrivent sans tomber en spam.
+- [ ] (après votre redéploiement avec la clé Brevo) Contrôler dans les journaux de Brevo (Emails transactionnels → Logs) que les premiers e-mails partent et arrivent sans tomber en spam.
 - [ ] Option : un interrupteur « Rappels par e-mail » dans Mon profil (`HostProfileDialog.vue`). Aujourd’hui, on se désinscrit par le lien de chaque rappel, et on se réinscrit en écrivant au support (`User.emailRemindersOptOutAt`).
 - [ ] (après la première inscription d’un nouvel hôte) Vérifier sur Stripe que son compte a été créé pré-rempli : `business_type: individual`, MCC 7011, description, e-mail et nom. Ce chemin n’a encore jamais tourné en production, car le seul compte connecté date d’avant le pré-remplissage.
 - [ ] Image de marque de l’inscription Connect : l’icône IndieHost s’affiche, mais le panneau de gauche garde le violet Stripe par défaut au lieu de `#111117`. Chercher si Connect a des réglages de marque à part (Paramètres → Connect) ; toute modification se fera avec votre accord.
@@ -121,6 +119,11 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ## Fait
 
+- [x] 2026-10-23 — Brevo configuré par Claude dans la session Chrome de l’utilisateur, à sa demande. Le compte « IndieHost » existait déjà.
+  - Domaine d’envoi `mail.indiehost.fr` authentifié : c’est un sous-domaine, car la racine sert à Google Workspace et Brevo demande un domaine qu’aucun autre service d’e-mail n’utilise.
+  - Enregistrements ajoutés dans Cloudflare : TXT code Brevo, deux CNAME DKIM (DNS only), DMARC `p=none` sur `_dmarc.mail`.
+  - Expéditeur `IndieHost <no-reply@mail.indiehost.fr>` vérifié, avec DKIM et DMARC validés.
+  - `MAIL_FROM` par défaut aligné, et `mail`, `clerk`, `accounts`, `clkmail`, `custom` réservés aux sous-domaines d’annonce (commit en cours).
 - [x] 2026-10-23 — E-mails automatiques aux hôtes via Brevo, sans effet tant que la clé n’est pas posée (commit `3b7cb5b`, non déployé).
   - Sur événement : nouvelle réservation, annulation, message d’un voyageur, avis, annonce en ligne, dernier logement de l’offre utilisé, litige, remboursement échoué.
   - Rappels planifiés : arrivée demain, bienvenue, brouillon inactif, paiements à activer, fin d’essai ou d’accès offert, calendrier iCal en erreur.

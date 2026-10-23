@@ -577,6 +577,12 @@ export class ListingsService {
     'listing',
     'listing-guide',
     'health',
+    // Sous-domaines déjà pris dans le DNS (envoi des e-mails, Clerk, cible des domaines personnalisés).
+    'mail',
+    'clerk',
+    'accounts',
+    'clkmail',
+    'custom',
   ]);
 
   constructor(private readonly prisma: PrismaClient) {}
