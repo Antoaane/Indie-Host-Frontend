@@ -10,10 +10,12 @@ import {
   confirmStripeSubscriptionCheckout,
   createStripeConnectOnboardingLink,
   fetchMyStripeSubscriptionState,
+  StripeApiError,
   syncMyStripeConnectState,
   type StripeSubscriptionState,
   type SubscriptionPlanCode,
 } from '@/domain/api/stripeSubscriptions'
+import { useAdminAccess } from '@/composables/useAdminAccess'
 import { getListingsController } from '@/domain/listings/controller'
 import { normalizeListingStatus } from '@/domain/listings/status'
 import type { UserListingCard } from '@/domain/listings/types'
@@ -773,10 +775,24 @@ async function launchConnectOnboardingWithListingId(listingId?: string | null) {
 
     window.location.assign(onboardingLink.url)
   } catch (error) {
-    errorMessage.value = resolveErrorMessage(error, 'Impossible de lancer Stripe Connect.')
+    errorMessage.value = resolveConnectLaunchErrorMessage(error)
   } finally {
     isLaunchingConnect.value = false
   }
+}
+
+// Profil plateforme Stripe Connect non validé : c'est à IndieHost d'agir dans son propre
+// Dashboard Stripe, pas à l'hôte. L'hôte reçoit un message qui le concerne ; l'admin garde
+// la consigne technique (lien vers le profil plateforme).
+const STRIPE_CONNECT_PLATFORM_PROFILE_REQUIRED = 'STRIPE_CONNECT_PLATFORM_PROFILE_REQUIRED'
+const { isAdminUser } = useAdminAccess()
+
+function resolveConnectLaunchErrorMessage(error: unknown): string {
+  if (error instanceof StripeApiError && error.code === STRIPE_CONNECT_PLATFORM_PROFILE_REQUIRED) {
+    if (isAdminUser.value) return error.message
+    return 'Les paiements en ligne ne peuvent pas encore être activés : IndieHost finalise sa configuration Stripe. Réessayez un peu plus tard ou écrivez-nous à contact@indiehost.fr.'
+  }
+  return resolveErrorMessage(error, 'Impossible de lancer Stripe Connect.')
 }
 
 async function launchConnectOnboarding() {
@@ -1274,6 +1290,24 @@ watch(
           Mise à jour de votre progression...
         </p>
 
+        <!-- Messages d'action : ils n'étaient visibles que dans la console technique (dev),
+             un échec (Stripe Connect, publication, changement de plan) semblait ne rien faire. -->
+        <p
+          v-if="errorMessage"
+          class="feedback is-error"
+          role="alert"
+        >
+          {{ errorMessage }}
+        </p>
+        <p
+          v-else-if="infoMessage"
+          class="feedback is-info"
+          role="status"
+          aria-live="polite"
+        >
+          {{ infoMessage }}
+        </p>
+
         <SignedOut>
           <div class="actions-panel">
             <SignUpButton
@@ -1629,6 +1663,26 @@ watch(
       margin: 0;
       color: rgba($secondary-text, 0.7);
       font-size: 0.82rem;
+    }
+
+    > .feedback {
+      margin: 0;
+      padding: var(--layout-gap-sm) var(--layout-gap-md);
+      border-radius: borders.$rounded-sm;
+      @include little-text($thin: false);
+      overflow-wrap: anywhere;
+
+      &.is-error {
+        color: $bad-ink;
+        background: rgba($bad, 0.08);
+        border: 1px solid rgba($bad, 0.22);
+      }
+
+      &.is-info {
+        color: $secondary-text;
+        background: $accent-surface-1;
+        border: 1px solid rgba($secondary, 0.08);
+      }
     }
   }
 

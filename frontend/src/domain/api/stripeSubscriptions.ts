@@ -301,6 +301,28 @@ async function getAuthToken(): Promise<string | null> {
   return waitForClerkToken({ timeoutMs: 2500, pollEveryMs: 60 })
 }
 
+/** Erreur d'API qui garde le code renvoyé par le serveur (ex. `STRIPE_CONNECT_PLATFORM_PROFILE_REQUIRED`). */
+export class StripeApiError extends Error {
+  readonly code: string | null
+  readonly status: number | null
+
+  constructor(message: string, options: { code?: string | null; status?: number | null } = {}) {
+    super(message)
+    this.name = 'StripeApiError'
+    this.code = options.code ?? null
+    this.status = options.status ?? null
+  }
+}
+
+function toStripeApiError(error: unknown, fallback: string): StripeApiError {
+  const response = error && typeof error === 'object'
+    ? (error as { response?: { status?: unknown; data?: { code?: unknown } } }).response
+    : undefined
+  const code = typeof response?.data?.code === 'string' ? response.data.code : null
+  const status = typeof response?.status === 'number' ? response.status : null
+  return new StripeApiError(toApiErrorMessage(error, fallback), { code, status })
+}
+
 function toApiErrorMessage(error: unknown, fallback: string): string {
   if (error && typeof error === 'object') {
     const response = (error as { response?: { data?: { message?: unknown } } }).response
@@ -653,7 +675,7 @@ export async function createStripeConnectOnboardingLink(input: {
     )
     return data
   } catch (error) {
-    throw new Error(toApiErrorMessage(error, 'Impossible de lancer la configuration Stripe Connect.'))
+    throw toStripeApiError(error, 'Impossible de lancer la configuration Stripe Connect.')
   }
 }
 
