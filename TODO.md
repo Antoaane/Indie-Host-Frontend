@@ -10,6 +10,28 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ## Ce que vous devez faire
 
+### Déploiement de la passe du 2026-10-23 (commit `171ef05`)
+
+- [ ] **Avant de redéployer**, vérifier dans `/opt/indiehost/.env` que `BOOKING_GUIDE_ACCESS_SECRET` fait au moins 16 caractères et n'est pas la valeur par défaut : sinon l'API refuse maintenant de démarrer en production (`config/env.ts`).
+- [ ] Redéployer (`git pull && docker compose up -d --build --wait`) : quatre migrations Prisma à appliquer (`20261023000000` à `20261023000003`, vérifier `docker compose logs migrate`), image `frontend` reconstruite (pré-rendu de `/` et `/pricing`), image `scraping` reconstruite (légendes des photos Airbnb, ~15 min). `nginx/proxy-locations.conf` a changé (CSP en mode rapport) : `docker compose up -d --force-recreate --wait nginx`.
+- [ ] Faire une sauvegarde de la base avant ce déploiement : la purge RGPD tourne 5 min après le démarrage de l'API et anonymise d'un coup les réservations de plus de 5 ans et les messages de plus d'un an (`RETENTION_PURGE_ENABLED=false` pour la couper le temps de vérifier).
+- [ ] Stripe Dashboard (compte plateforme live) → Développeurs → Webhooks → ajouter `https://indiehost.fr/api/v1/payments/stripe/webhook` avec les événements listés dans `.env.example`, puis copier le secret `whsec_…` dans `STRIPE_WEBHOOK_SECRET` et redéployer l'API. Test : « Envoyer un événement test » doit répondre 200.
+- [ ] Clerk Dashboard (instance Production) → Webhooks → ajouter `https://indiehost.fr/api/v1/webhooks/clerk`, événement `user.deleted`, secret dans `CLERK_WEBHOOK_SECRET`, redéployer. Sans lui, une suppression faite dans Clerk n'est pas répercutée en base.
+- [ ] E-mails : créer un mot de passe d'application Google Workspace pour `no-reply@indiehost.fr` (validation en deux étapes requise), puis renseigner `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=465`, `SMTP_SECURE=true`, `SMTP_USER`, `SMTP_PASSWORD`, `MAIL_FROM`, `BASE_URL=https://indiehost.fr` (modèle commenté dans `.env.example`). Aperçu des modèles : `cd backend/api && npx tsx src/domains/notifications/preview.cli.ts`.
+- [ ] Cloudflare : créer la règle de redirection `www.indiehost.fr` → `indiehost.fr` (301). Claude l'a préparée mais le mode automatique lui a refusé la modification. Rules → Redirect Rules → expression `(http.host eq "www.indiehost.fr")`, cible `concat("https://indiehost.fr", http.request.uri.path)`, 301, conserver la chaîne de requête. Ou autoriser `mcp__cloudflare__execute` dans `.claude/settings.local.json` et demander à Claude de le faire.
+- [ ] Après déploiement, parcourir le site avec la console ouverte (connexion Clerk, checkout Stripe, import, carte, upload ImageKit) et relever les violations `Content-Security-Policy-Report-Only` : Claude ajustera puis passera la CSP en mode bloquant.
+- [ ] Vérifier `curl -A bot https://indiehost.fr/pricing | grep "<h1>"` (pré-rendu) et `https://www.indiehost.fr` → 301 une fois la règle Cloudflare posée.
+
+### Vérifications visuelles (Claude n'a pas de navigateur sur ces écrans)
+
+- [ ] Landing : bouton lecture/pause en coin de chaque vidéo (features, étapes, preuve, aperçu mobile), pied de page en thème sombre, titres d'onglet par page.
+- [ ] Éditeur : panneau galerie avec le champ « Description de la photo » (barre latérale à 360 px et 1280 px, case « + »), panneau « Informations légales » (statut particulier/professionnel, SIRET, n° d'enregistrement), panneau domaine personnalisé avec la ligne TXT et les deux contrôles après « Vérifier ».
+- [ ] Annonce publique : section « Règlement intérieur », n° d'enregistrement sous le titre, ligne de statut de l'hôte, liens légaux en bas (bureau : bandeau sous la carte ; mobile : fin du défilement au-dessus de la barre de réservation), galerie mobile au clavier.
+- [ ] Checkout : champ e-mail obligatoire, bloc règlement intérieur à l'étape 4, phrase « Vous réservez auprès d'un hôte … » à l'étape 5.
+- [ ] Guide d'arrivée : formulaire d'avis (après la première nuit), encart « avis déjà déposé », liens légaux en bas. Page de confirmation : liens légaux.
+- [ ] Mon profil : bloc « Mes données » (téléchargement de l'export, suppression de compte avec confirmation).
+- [ ] Tableau de bord : rechargement de `/dashboard/editor` avec l'onglet Réseau ouvert : environ 15 requêtes au lieu de 34, écran de chargement plus court.
+
 ### Légal et argent
 
 - [ ] Donner un numéro de téléphone de contact. La LCEN l'impose dans les mentions légales (`frontend/src/views/Legal/content/mentions-legales.html`, section « Éditeur du site »).
@@ -21,13 +43,15 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 - [ ] Tester en réel, en mode test Stripe ou avec une petite réservation :
   - annulation par le voyageur avec et sans « Rembourser le voyageur s'il annule » ;
   - « Annuler et rembourser » depuis la page Gestion ;
-  - résiliation puis reprise de l'abonnement depuis Mon profil.
+  - résiliation puis reprise de l'abonnement depuis Mon profil ;
+  - réception de l'e-mail de confirmation puis d'annulation (une fois SMTP configuré).
 - [ ] Décider qui paie les frais Stripe des réservations. En destination charges sans commission (`application_fee_amount` à 0), ils sont prélevés sur le compte d'IndieHost, alors que la FAQ dit « seuls les frais de transaction de Stripe s'appliquent ».
 - [ ] Consigner dans un registre interne des violations l'incident du 2026-10-22 (art. 33.5 RGPD), en quatre points :
   - les réservations et les guides d'arrivée étaient lisibles publiquement ;
   - cause : routes API sans contrôle d'accès ;
   - correctif : commit `8caed97` ;
   - constat : 0 donnée de voyageur exposée (2 annonces en brouillon, 0 réservation).
+- [ ] Valider deux précisions à ajouter dans `confidentialite.html` (Claude les rédige dès votre accord) : échanges bruts avec Stripe conservés 90 jours ; messages sans réservation supprimés 1 an après envoi.
 
 ### RGPD
 
@@ -36,86 +60,57 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 ### Produit
 
 - [ ] Option : choisir un outil de mesure d'audience sans cookie (Plausible, Umami ou Matomo configuré en mode exempté), si vous voulez des statistiques.
-- [ ] Renseigner un pseudo dans « Mon profil » (menu de l'avatar) : sans pseudo, la page principale affiche « Proposé par sciranguinvest », tiré de l'adresse e-mail.
+- [ ] Renseigner un pseudo ou un prénom dans « Mon profil » (menu de l'avatar) : sans nom, la page principale n'affiche plus « Proposé par … » et l'annonce affiche « Votre hôte ».
 - [ ] Ouvrir https://indiehost.fr/sign-up en navigation privée et regarder la case « J'accepte les CGV… » : elle a été stylée sans pouvoir l'afficher, car la session de Claude est connectée et Claude ne saisit pas de mot de passe en production.
+- [ ] Renseigner votre statut (particulier / professionnel) et, si votre commune l'exige, le numéro d'enregistrement de chaque logement dans le nouveau panneau « Informations légales » de l'éditeur.
 
 ### Sécurité (audit du 2026-10-22)
 
 - [ ] Vérifier dans le Clerk Dashboard (Production → Users) qu'aucun compte n'a de clé `role` dans son *Unsafe metadata*. Avant `507d16c`, ce champ, modifiable par l'utilisateur lui-même, suffisait pour devenir super admin. Claude n'a pas pu lister les utilisateurs (données personnelles).
 - [ ] Faire une vraie réservation de test dès qu'une annonce est publiée. Depuis `229cd07`, le prix est recalculé côté serveur (`payments/reservationPricing.ts`) et la réservation exige un PaymentIntent vérifié ; ce parcours n'a pas pu être testé en prod (aucune annonce publiée).
 - [ ] Si vous aviez gelé une annonce en tant qu'admin avant le 2026-10-22, la repasser en « Réservations bloquées » : le gel n'est verrouillé pour le propriétaire que s'il porte le marqueur `core.blockedBy`, posé depuis `229cd07`.
+- [ ] Domaines personnalisés déjà rattachés mais non vérifiés avant le 2026-10-23 : le jeton TXT n'est créé qu'au premier clic sur « Vérifier » ; prévenir l'hôte concerné qu'il doit ajouter l'enregistrement TXT affiché.
 
 ## À faire par Claude
 
 ### Légal et argent
 
 - [ ] Compléter l'article 18 de `cgv.html` avec le nom et les coordonnées du médiateur de la consommation (après votre adhésion).
-- [ ] Envoyer un e-mail de confirmation au voyageur après sa réservation (support durable, art. L221-13 C. conso). Aujourd'hui, seule la page de confirmation existe ; le backend n'envoie aucun e-mail.
-- [ ] Ajouter dans l'éditeur le statut de l'hôte (particulier ou professionnel) et l'afficher sur l'annonce et au checkout (art. L111-7 C. conso). Les CGV le promettent déjà (article 3).
-- [ ] Ajouter le numéro d'enregistrement du meublé de tourisme (loi Le Meur) dans l'éditeur et l'afficher sur l'annonce publique.
+- [ ] Ajouter dans `confidentialite.html` les durées manquantes (échanges Stripe 90 jours, messages sans réservation 1 an) (après votre validation).
 - [ ] Collecte de la taxe de séjour et export DAC7 (après l'avis de l'avocat).
 
-### RGPD
+### Sécurité
 
-- [ ] Permettre la suppression et l'export de compte (droits art. 15 à 20), et ajouter le webhook Clerk `user.deleted`. Aujourd'hui, supprimer une annonce ne change que son statut, et les lignes `User` restent en base.
-- [ ] Purger automatiquement selon les durées annoncées dans `confidentialite.html` :
-  - réservations : 5 ans après le séjour, puis anonymisation ;
-  - messages : 1 an après le séjour ;
-  - `Payment.rawRequest` et `rawResponse` (le second contient le `client_secret`) ;
-  - `CalendarSync.rawIcs` ;
-  - comptes inactifs depuis 3 ans.
-- [ ] Retirer le nombre de voyageurs à mobilité réduite (PMR) des métadonnées Stripe, car c'est une donnée de santé (`payments.service.ts`, `checkoutPayment.ts`).
-- [ ] Masquer dans les logs Fastify les `?token=` et les clés de guide `rg.` (option `redact` du logger), et ajouter une rotation des logs nginx et Docker.
-
-### Accessibilité, SEO et agents IA
-
-- [ ] Texte alternatif des photos d'annonce :
-  - ajouter un champ « Description de la photo » dans l'éditeur et l'assistant de création ;
-  - utiliser comme repli « <titre> — photo N », au lieu du nom de fichier (`GalleryPanel.vue`) ;
-  - reprendre les légendes lors de l'import Airbnb ;
-  - prendre `||` au lieu de `??` dans les transformations d'import.
-- [ ] Donner un nom accessible aux boutons de la galerie (`Tile.vue`, `Gallery.vue`) et aux 6 vidéos. Ajouter un bouton pause aux vidéos de la landing.
-- [ ] Afficher les notes d'avis sous forme de texte lisible (« Note : 4 sur 5 ») et non seulement en étoiles (`CommentCard.vue`). Corriger les 5 alt identiques de la landing (`locales/landing/fr.json`).
-- [ ] Donner un `<title>` à chaque route (`meta.title` et `router.afterEach`), et remettre `lang="fr"` en quittant la landing (`useLandingLocale.ts`).
-- [ ] Pré-rendre la landing et `/pricing` en HTML statique, comme les pages légales, pour les agents IA qui n'exécutent pas JavaScript.
-- [ ] Rediriger `www.indiehost.fr` vers `indiehost.fr` en 301 (règle Cloudflare) : les deux répondent aujourd'hui en 200.
-- [ ] Afficher les liens légaux sur les pages d'annonce des hôtes. Le pied de page global n'y est pas, pour ne pas gêner la barre de réservation mobile ; prévoir une version compacte à tester sur mobile.
+- [ ] Passer la CSP de `Content-Security-Policy-Report-Only` à `Content-Security-Policy` dans `nginx/proxy-locations.conf` (après votre relevé des violations en prod).
+- [ ] Option : script de reprise `npm run sanitize:backfill` (nettoyage HTML des annonces et messages existants, avec `--dry-run`) ; aujourd'hui seul ce qui est réenregistré est nettoyé.
+- [ ] Option : signer l'URL de l'export `.ics` public. Elle n'expose plus que « Réservé » / « Indisponible », et la signer casserait les synchronisations déjà configurées chez Airbnb et Booking.
 
 ### Produit et technique
 
-- [ ] Afficher le règlement intérieur de l'hôte avant le paiement : la version publique du guide d'arrivée contient `practical.rules`.
-- [ ] Réparer le dépôt d'avis par le voyageur depuis le guide : `PATCH /listings/comments` est réservé au propriétaire, donc l'envoi échoue. Prévoir une route protégée par la clé de guide.
-- [ ] Regrouper les barèmes d'annulation, aujourd'hui définis à trois endroits :
-  - `bookings.service.ts` ;
-  - `reservationRules.ts` ;
-  - `CancellationPanel.vue`.
-- [ ] Webhooks Stripe pour suivre les remboursements échoués et les litiges (aucun webhook n'est utilisé aujourd'hui).
+- [ ] Page Gestion : afficher à l'hôte les remboursements échoués et les litiges remontés par le webhook Stripe (`Payment.refundStatus`, `disputeStatus`…) : fusionner les lignes `Payment` dans `getListingBookings` (`bookings.service.ts`) et ajouter un badge dans `ManagementReservationSlider.vue` / `ManagementPaymentEditor.vue`.
+- [ ] Éditeur : l'aperçu ne reflète le statut de l'hôte (particulier/professionnel) qu'après rechargement, car la section `host` est enregistrée hors file de brouillon (`listingHost.ts`) ; ajouter `host` au flux `DraftPatch` (`useEditorController.ts`, `listingsController.ts`).
+- [ ] Guide : les avis déposés avant le 2026-10-23 n'ont pas de `reservationId`, la détection « déjà un avis » ne les voit pas (impossible à rattacher).
+- [ ] Option : mot de passe SMTP en secret Docker (`secrets/smtp_password.txt` → `SMTP_PASSWORD_FILE`, déjà lu par `env.ts`) : ajouter l'entrée `secrets:` au service `api` et le modèle dans `init-indiehost.*`.
+- [ ] `_ListingGuide.vue` : `rawComments` encore chargé mais plus utilisé pour l'écriture ; nettoyer.
+- [ ] Rendre `BookingsService.rebuildListingBookedDaysFromCalendarEvents` cohérent avec les annulations (il compte toutes les lignes `Reservation`, annulées comprises) : incohérence préexistante relevée pendant la passe « réservation atomique ».
 
-### Interface (passe contraste et Clerk du 2026-10-22)
+### Interface
 
-- [ ] Dédoublonner les appels API au chargement du tableau de bord : sur l'éditeur, `GET /payments/stripe/subscriptions/me` part 7 fois, `/users/me/listings` et chaque section d'annonce (`core`, `bookings`, `medias`…) 2 fois, `/listings/:id/domain` 4 fois (34 requêtes au total). Partager une seule promesse par ressource. L'écran de chargement attend la fin de ces appels, donc chaque doublon retire en partie le délai d'affichage.
-- [ ] CSP complète : autoriser par son hash le script en ligne de `frontend/index.html` qui pose `html.is-booting` (écran de chargement du tableau de bord), sinon le fond mobile redevient sombre avant le montage de l'app.
-
-- [ ] Nom public de l'hôte : ne plus le tirer de la partie locale de l'e-mail (`readEmailLocalPart` dans `backend/api/src/domains/listings/listings.service.ts`, `resolveIdentityLabel` dans `users/users.repository.ts`). Afficher le prénom, sinon « votre hôte ». Demande un redéploiement de l'API.
-- [ ] Libellé par défaut `status: 'Host'`, en anglais, dans `toHostProfile` (`users.repository.ts`), affiché sous le nom de l'hôte sur l'annonce (`HostProfile.vue`). Le remplacer par « Hôte » ou le laisser vide.
-- [ ] Pied de page de la landing en thème sombre : `.layout-footer` garde son fond `$accent` clair (`styles/layouts/_footer.scss`). Lui donner une variante sombre.
 - [ ] Ajuster le style de la case CGV de l'inscription Clerk (`styles/components/_clerk.scss`, classes `cl-formFieldCheckbox*`) (après votre vérification en navigation privée).
-- [ ] Avertissements Sass `mixed-decls` au build (environ 180) : des mixins (`_texts.scss`, `_buttons.scss`, `_inputs.scss`…) placent des déclarations après des règles imbriquées. Dart Sass 2 changera l'ordre de sortie, donc le rendu ; remettre les déclarations avant les règles imbriquées.
-
-### Sécurité (audit du 2026-10-22)
-
-- [ ] Domaines personnalisés : prouver la propriété par un enregistrement TXT. Aujourd'hui l'enregistrement A suffit, donc le premier compte qui déclare un domaine pointant déjà vers le VPS l'obtient (`CustomDomainPanel.vue`, vérification dans `listings.service.ts`).
-- [ ] CSP complète (`script-src`, `connect-src`, `frame-src`) dans `nginx/proxy-locations.conf`, d'abord en `Content-Security-Policy-Report-Only` pour repérer ce qui casserait (Clerk, Stripe, ImageKit, Google Maps). Seule une CSP minimale est posée aujourd'hui.
-- [ ] Annonces sans propriétaire : n'importe quel compte connecté peut les modifier, s'y rattacher et y envoyer des fichiers (`canWrite` dans `listings/listings.access.ts`, rattachement dans `patchListingResource`). Réserver ce cas à l'admin, après avoir vérifié qu'aucun parcours légitime n'en dépend.
-- [ ] Rendre atomique le rattachement d'un PaymentIntent à une réservation : deux `POST /bookings` simultanés avec le même paiement passeraient la vérification (`verifyReservationPayment`, puis rattachement dans `persistReservation`). Même chose pour deux réservations concurrentes sur les mêmes dates (ancien SEC-011).
-- [ ] Limiter le débit de `POST /payments/stripe/payment-intents` et `POST /bookings` avec `lib/rateLimit.ts`, déjà utilisé par l'import et l'IA (ancien SEC-007).
-- [ ] Rendre `BOOKING_GUIDE_ACCESS_SECRET` obligatoire quand `NODE_ENV=production` : `config/env.ts` a une valeur par défaut en clair. La prod utilise bien une valeur personnalisée (ancien SEC-006).
-- [ ] Nettoyer aussi le HTML côté serveur à l'écriture (description, guide d'arrivée, avis), en plus de `sanitizeHtml()` au rendu.
-- [ ] Invalider le cache du rôle admin (5 min, `plugins/auth.ts`) quand un rôle est retiré.
-- [ ] Option : signer l'URL de l'export `.ics` public. Elle n'expose plus que « Réservé » / « Indisponible », et la signer casserait les synchronisations déjà configurées chez Airbnb et Booking.
+- [ ] Deux titres `h2` de la landing (`FaqSection/faq-section.scss`, `HowSection/how-section.scss`) gardent une marge basse de 0,5 rem au-delà de `lg`, héritée du mixin `lp-h2-title` ; la valeur du site (3 gaps / 1 rem) ne s'appliquait que sur mobile. Rendu conservé à l'identique pendant la passe Sass ; décider si la grande marge doit aussi valoir sur bureau (après votre regard).
+- [ ] `ListingView/components/Core/components/Title/TitleSk.vue` importe un `title.scss` inexistant ; le composant n'est importé nulle part. Supprimer le fichier ou le corriger.
 
 ## Fait
 
+- [x] 2026-10-23 — Passe sur la liste (commit `171ef05`) :
+  - **Légal** : e-mail de confirmation et d'annulation au voyageur (`lib/mailer.ts`, `domains/notifications/`, champ e-mail obligatoire au checkout) ; statut de l'hôte particulier/professionnel avec raison sociale et SIRET, affiché sur l'annonce et au checkout ; numéro d'enregistrement du meublé de tourisme dans l'éditeur et sur l'annonce ; règlement intérieur affiché et accepté avant le paiement, et sur l'annonce ; liens légaux compacts sur l'annonce, la page principale, le guide et la confirmation.
+  - **RGPD** : export (`GET /users/me/export`) et suppression de compte (`DELETE /users/me`, anonymisation, refus si abonnement ou séjour en cours) depuis Mon profil ; webhook Clerk `user.deleted` ; purge quotidienne (réservations 5 ans, messages 1 an, `Payment.raw*` 90 j, `rawIcs` 7 j, comptes inactifs 3 ans) ; nombre de voyageurs PMR retiré des métadonnées Stripe ; jetons et clés de guide masqués dans les logs, rotation des journaux Docker.
+  - **Accessibilité, SEO, agents IA** : description des photos (éditeur, assistant, import, repli « <titre> — photo N ») ; noms accessibles de la galerie et des vidéos, bouton pause sur les vidéos de la landing ; notes d'avis en texte ; alt distincts de la landing dans les 7 langues ; `<title>` par route et `lang="fr"` restauré ; pré-rendu statique de `/` et `/pricing` ; liens légaux sur les pages d'annonce.
+  - **Produit** : avis voyageur depuis le guide réparé (route protégée par la clé de guide) ; barèmes d'annulation regroupés en un module miroir par côté ; webhooks Stripe (remboursements échoués, litiges, statut des paiements).
+  - **Interface** : appels API du tableau de bord dédoublonnés (34 → ~15, `requestCache.ts`) ; hash CSP du script `is-booting` ; nom public de l'hôte sans e-mail, « Hôte » au lieu de « Host », repli « Votre hôte » ; pied de page sombre sur la landing.
+  - **Sécurité** : TXT de propriété pour les domaines personnalisés ; CSP complète en mode rapport ; annonces sans propriétaire réservées à l'admin ; réservation atomique (verrou par annonce, `Payment.reservationId` unique, remboursement automatique du perdant) ; limites de débit sur les PaymentIntents et les réservations ; `BOOKING_GUIDE_ACCESS_SECRET` obligatoire en prod ; HTML nettoyé côté serveur à l'écriture ; cache du rôle admin réduit à 60 s.
+  - **Build** : plus aucun avertissement Sass (`mixed-decls` × 184 et `slash-div` × 2) : déclarations remises avant les règles imbriquées dans les mixins et les appels, surcharges volontaires isolées dans un bloc `& { }` commenté.
+  - **Non fait** : redirection `www` → apex (refusée par le mode automatique, voir plus haut).
 - [x] 2026-10-22 — Écran de chargement au rechargement d'une page du tableau de bord (`BootLoader.vue`, `useBootLoader.ts`) : logo et halo de marque, retiré d'un seul geste quand la route, Clerk et l'API sont prêts (silence réseau de 220 ms, plafond 5 s), au lieu d'une page qui se montait par morceaux. Fond clair dès le premier affichage sur mobile (`2fda2d5`, `1fc08a7`).
 - [x] 2026-10-22 — Contraste et thème clair inspiré d'Apple (`18e1a21`, `c6a3795`, `2d79183`) :
   - encres lisibles `$bad-ink`, `$good-ink` et `$primary_gradiant_ink_*` à la place du rouge, du menthe et du dégradé pastel sur fond clair ;
