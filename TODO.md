@@ -123,7 +123,7 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
   - Domaine d’envoi `mail.indiehost.fr` authentifié : c’est un sous-domaine, car la racine sert à Google Workspace et Brevo demande un domaine qu’aucun autre service d’e-mail n’utilise.
   - Enregistrements ajoutés dans Cloudflare : TXT code Brevo, deux CNAME DKIM (DNS only), DMARC `p=none` sur `_dmarc.mail`.
   - Expéditeur `IndieHost <no-reply@mail.indiehost.fr>` vérifié, avec DKIM et DMARC validés.
-  - `MAIL_FROM` par défaut aligné, et `mail`, `clerk`, `accounts`, `clkmail`, `custom` réservés aux sous-domaines d’annonce (commit en cours).
+  - `MAIL_FROM` par défaut aligné, et `mail`, `clerk`, `accounts`, `clkmail`, `custom` réservés aux sous-domaines d’annonce (commit `b6b8b97`, non déployé).
 - [x] 2026-10-23 — E-mails automatiques aux hôtes via Brevo, sans effet tant que la clé n’est pas posée (commit `3b7cb5b`, non déployé).
   - Sur événement : nouvelle réservation, annulation, message d’un voyageur, avis, annonce en ligne, dernier logement de l’offre utilisé, litige, remboursement échoué.
   - Rappels planifiés : arrivée demain, bienvenue, brouillon inactif, paiements à activer, fin d’essai ou d’accès offert, calendrier iCal en erreur.
