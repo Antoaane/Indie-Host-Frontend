@@ -1333,10 +1333,10 @@ watch(
             </div>
             <p class="host-status-hint">
               <template v-if="connectHostStatus === 'individual'">
-                Stripe vous demandera votre identité, votre adresse, votre date de naissance, un numéro de téléphone et votre IBAN. Aucun SIRET ni site web. Comptez environ 3 minutes.
+                Stripe vous demandera votre identité, votre adresse, votre date de naissance et votre IBAN, puis un code reçu par SMS pour valider votre compte. Aucun SIRET, site web ni mot de passe à créer. Comptez environ 3 minutes.
               </template>
               <template v-else>
-                Stripe vous demandera le type de votre activité, son numéro d’immatriculation, l’identité de son représentant et l’IBAN de l’activité.
+                Stripe vous demandera le type de votre activité, son numéro d’immatriculation, l’identité de son représentant et l’IBAN de l’activité, puis un code reçu par SMS pour valider le compte.
               </template>
             </p>
           </fieldset>

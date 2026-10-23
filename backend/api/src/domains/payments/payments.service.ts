@@ -47,6 +47,10 @@ type CreateConnectOnboardingLinkInput = {
   hostStatus?: 'individual' | 'professional';
 };
 
+// Dashboard des comptes des hôtes : Express (connexion par SMS, inscription la plus courte).
+// Immuable sur un compte existant : changer cette valeur impose de recréer les comptes.
+const CONNECT_DASHBOARD_TYPE = 'express' as const;
+
 // Hébergement touristique (catégorie d'activité Stripe) : évite de la demander à l'hôte.
 const STRIPE_CONNECT_LODGING_MCC = '7011';
 const STRIPE_CONNECT_PRODUCT_DESCRIPTION =
@@ -1471,15 +1475,15 @@ export class PaymentsService {
     }
 
     // Modèle « logiciel » validé dans le profil plateforme Stripe (Connect) : l'hôte encaisse
-    // lui-même (paiements directs), paie ses frais Stripe, a le Dashboard Stripe complet, et
-    // Stripe porte le risque des soldes négatifs. Plus de comptes `express`, qui exigeaient
-    // qu'IndieHost se porte responsable des pertes.
+    // lui-même (paiements directs), paie ses frais Stripe, et Stripe porte le risque des soldes
+    // négatifs. Dashboard Express : l'hôte valide son compte par SMS, sans mot de passe Stripe
+    // (pas de compte `type: express`, qui ferait porter les pertes à IndieHost).
     const account = await this.stripe.accounts.create({
       controller: {
         fees: { payer: 'account' },
         losses: { payments: 'stripe' },
         requirement_collection: 'stripe',
-        stripe_dashboard: { type: 'full' },
+        stripe_dashboard: { type: CONNECT_DASHBOARD_TYPE },
       },
       country: (options?.country ?? 'FR').toUpperCase(),
       default_currency: 'eur',
@@ -3086,9 +3090,32 @@ export class PaymentsService {
 
     try {
       const prefill = this.stripe ? await this.buildConnectAccountPrefill(user, input.hostStatus) : undefined;
+      let forcedAccountId: string | null | undefined = input.accountId;
+
+      // Le type de dashboard d'un compte est immuable. Un compte créé avec l'ancien dashboard
+      // (complet) et jamais rempli est abandonné au profit d'un compte Express ; un compte déjà
+      // soumis est conservé tel quel, pour ne jamais faire refaire l'inscription d'un hôte.
+      const currentAccountId = readString(input.accountId) ?? user.stripeConnectAccountId;
+      if (this.stripe && currentAccountId) {
+        const current = await this.stripe.accounts.retrieve(currentAccountId);
+        const currentDashboard = current.controller?.stripe_dashboard?.type ?? null;
+        if (!current.details_submitted && currentDashboard !== CONNECT_DASHBOARD_TYPE) {
+          console.info('[payments] Stripe Connect account replaced (dashboard type change, never submitted)', {
+            previousAccountId: currentAccountId,
+            previousDashboard: currentDashboard,
+          });
+          user = await this.updateUserStripeState({
+            user,
+            stripeConnectAccountId: null,
+            connectPatch: { accountId: null, replacedAccountId: currentAccountId },
+          });
+          forcedAccountId = null;
+        }
+      }
+
       const connect = await this.ensureStripeConnectAccount(user, {
         country: input.country,
-        forcedAccountId: input.accountId,
+        forcedAccountId,
         prefill,
       });
       user = connect.user;
