@@ -37,6 +37,7 @@ const {
   hasAnyPendingChanges,
   hasMultiplePendingListings,
   isPatchSyncPending,
+  lastDraftSavedAt,
   isStripeConnectPublishLocked,
   listings,
   listingsStatus,
@@ -150,6 +151,7 @@ watch(selectedListingId, (listingId) => {
             :showMobileBack="isMobileViewport"
             :isLoading="draftStatus.isLoading"
             :isPatchSyncing="isPatchSyncPending"
+            :lastSavedAt="lastDraftSavedAt"
             :hasPendingChanges="selectedListingHasPendingChanges"
             :hasAnyPendingChanges="hasAnyPendingChanges"
             :hasMultiplePendingListings="hasMultiplePendingListings"

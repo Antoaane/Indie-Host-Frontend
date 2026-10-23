@@ -13,6 +13,7 @@ import {
 } from '@/domain/api/listingDomains'
 import { fetchMyStripeSubscriptionState } from '@/domain/api/stripeSubscriptions'
 import { getPublicListingRootDomain } from '@/domain/listings/publicDomain'
+import PanelHeader from '@/views/Editor/components/EditorSidebar/panels/PanelHeader.vue'
 
 const props = defineProps<{
   listingId: string
@@ -223,10 +224,13 @@ onMounted(() => {
 
 <template>
   <section class="editor-domain-panel">
-    <div class="header">
-      <h3>Adresse IndieHost (sous-domaine)</h3>
-      <p>Votre annonce a deux adresses possibles. Celle-ci est <strong>gratuite et immédiate</strong> : choisissez un nom, elle est en ligne sur {{ rootDomain }} sans aucun réglage. Le panneau suivant permet en plus d’utiliser <strong>votre propre nom de domaine</strong> ; les deux adresses mènent à cette annonce.</p>
-    </div>
+    <PanelHeader
+      title="Adresse IndieHost (sous-domaine)"
+      :summary="`Gratuite et immédiate, sur ${rootDomain}.`"
+    >
+      <p>Votre annonce a deux adresses possibles. Celle-ci est <strong>gratuite et immédiate</strong> : choisissez un nom, elle est en ligne sur {{ rootDomain }} sans aucun réglage.</p>
+      <p>Le panneau suivant permet en plus d’utiliser <strong>votre propre nom de domaine</strong> ; les deux adresses mènent à cette annonce.</p>
+    </PanelHeader>
 
     <div class="body">
       <div class="input">
@@ -351,10 +355,6 @@ onMounted(() => {
 
 .editor-domain-panel {
   @extend %panel;
-
-  > .header {
-    @extend %panel-header;
-  }
 
   > .body {
     @extend %panel-body;

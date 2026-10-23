@@ -75,7 +75,9 @@
         "save": "Sauvegarder",
         "apply": "Appliquer",
         "cancel": "Annuler",
-        "applyAllPending": "Appliquer à toutes les annonces modifiées"
+        "applyAllPending": "Appliquer à toutes les annonces modifiées",
+        "applyAria": "Appliquer les modifications à la version en ligne",
+        "cancelAria": "Annuler les modifications non appliquées"
       },
       "success": {
         "save": "Brouillon sauvegardé.",
@@ -91,6 +93,62 @@
       },
       "sync": {
         "pending": "Synchronisation automatique en cours…"
+      },
+      "groups": {
+        "essentials": "Essentiel",
+        "pricing": "Tarifs",
+        "arrival": "Guide d’arrivée",
+        "addresses": "Adresses",
+        "settings": "Réglages"
+      },
+      "groupsAria": "Parties de l’annonce",
+      "sectionsAria": "Sections",
+      "sections": {
+        "title": "Titre",
+        "gallery": "Photos",
+        "description": "Description",
+        "capacity": "Capacité",
+        "rooms": "Pièces",
+        "amenities": "Équipements",
+        "location": "Localisation",
+        "pricingBase": "Tarifs",
+        "stay": "Séjour",
+        "fees": "Frais",
+        "taxes": "Taxes",
+        "payment": "Paiement",
+        "deposit": "Caution",
+        "cancellation": "Annulation",
+        "summary": "Récapitulatif",
+        "arrivalIntro": "En-tête",
+        "savings": "Économies",
+        "access": "Accès",
+        "services": "Services",
+        "rules": "Règles",
+        "shops": "Commerces",
+        "guide": "Guide",
+        "subdomain": "Sous-domaine",
+        "customDomain": "Domaine",
+        "parent": "Page principale",
+        "hubChildren": "Logements",
+        "visibility": "Visibilité",
+        "legal": "Légal",
+        "reviews": "Avis",
+        "calendar": "iCal",
+        "import": "Import"
+      },
+      "completion": {
+        "todo": "à compléter",
+        "todoAria": "Section à compléter"
+      },
+      "status": {
+        "saving": "Enregistrement du brouillon…",
+        "savedAt": "Brouillon enregistré à {time}",
+        "pending": "Modifications non appliquées",
+        "upToDate": "Version en ligne à jour",
+        "dot": {
+          "pending": "Modifications en attente",
+          "upToDate": "À jour"
+        }
       }
     },
     "preview": {

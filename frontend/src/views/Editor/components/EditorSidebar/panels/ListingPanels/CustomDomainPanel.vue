@@ -52,8 +52,8 @@ type GuideStep = {
 
 type GuideStepState = 'done' | 'active' | 'todo'
 
-// Le guide s'ouvre seul les premières fois (tant qu'aucun domaine n'est rattaché), puis via le bouton d'aide.
-const GUIDE_AUTO_OPEN_LIMIT = 3
+// Le guide ne s'ouvre plus tout seul : il reste disponible derrière le bouton d'aide.
+const GUIDE_AUTO_OPEN_LIMIT = 0
 const GUIDE_AUTO_OPEN_STORAGE_KEY = 'indiehost:custom-domain-guide:auto-opens'
 let hasAutoOpenedGuideThisSession = false
 
@@ -460,7 +460,7 @@ onBeforeUnmount(() => {
     <div class="header">
       <div class="main">
         <h3>Votre propre nom de domaine</h3>
-        <p>À la différence de l’adresse IndieHost, ce domaine vous appartient : vous l’avez acheté chez un registrar (OVH, Gandi, IONOS…), ex. www.gite-belair.fr. Il demande un réglage DNS — guidé pas à pas via le bouton d’aide — puis fonctionne en HTTPS, en parallèle de l’adresse {{ rootDomain }}.</p>
+        <p>Un domaine que vous possédez déjà (ex. www.gite-belair.fr), relié en quatre étapes via le bouton d’aide.</p>
       </div>
 
       <div class="header-actions">

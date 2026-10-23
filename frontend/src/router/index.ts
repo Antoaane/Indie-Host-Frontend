@@ -391,6 +391,15 @@ const router = createRouter({
         }
       },
     },
+    // Éditeur sur données en mémoire, sans compte ni API : seulement en développement.
+    ...(import.meta.env.DEV
+      ? [{
+          path: '/dev/editor',
+          name: 'dev-editor',
+          component: () => import('@/views/Editor/dev/DevEditorRoute.vue'),
+          meta: { navVariant: 'host', hideNav: true, title: 'Éditeur (dev)' },
+        }]
+      : []),
     {
       path: '/:slug([a-z0-9-]+)',
       name: 'listing',

@@ -3,6 +3,7 @@
 <script setup lang="ts">
 import type { RawListingBundle } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
+import EditorSection from '@/views/Editor/components/EditorSidebar/EditorSection.vue'
 
 import BasePricingPanel from '@/views/Editor/components/EditorSidebar/panels/PricingPanels/BasePricingPanel.vue'
 import StayDurationPanel from '@/views/Editor/components/EditorSidebar/panels/PricingPanels/StayDurationPanel.vue'
@@ -24,38 +25,54 @@ const emit = defineEmits<{
 
 <template>
   <div class="editor-pricing-panels">
-    <BasePricingPanel
-      :bookings="props.draft.bookings"
-      @patch="emit('patch', $event)"
-    />
-    <StayDurationPanel
-      :bookings="props.draft.bookings"
-      @patch="emit('patch', $event)"
-    />
-    <FeesPanel
-      :bookings="props.draft.bookings"
-      @patch="emit('patch', $event)"
-    />
-    <TaxesPanel
-      :bookings="props.draft.bookings"
-      @patch="emit('patch', $event)"
-    />
-    <PaymentPanel
-      :bookings="props.draft.bookings"
-      @patch="emit('patch', $event)"
-    />
-    <DepositPanel
-      :bookings="props.draft.bookings"
-      @patch="emit('patch', $event)"
-    />
-    <CancellationPanel
-      :bookings="props.draft.bookings"
-      @patch="emit('patch', $event)"
-    />
-    <SummaryPanel
-      :core="props.draft.core"
-      :bookings="props.draft.bookings"
-    />
+    <EditorSection section="pricingBase">
+      <BasePricingPanel
+        :bookings="props.draft.bookings"
+        @patch="emit('patch', $event)"
+      />
+    </EditorSection>
+    <EditorSection section="stay">
+      <StayDurationPanel
+        :bookings="props.draft.bookings"
+        @patch="emit('patch', $event)"
+      />
+    </EditorSection>
+    <EditorSection section="fees">
+      <FeesPanel
+        :bookings="props.draft.bookings"
+        @patch="emit('patch', $event)"
+      />
+    </EditorSection>
+    <EditorSection section="taxes">
+      <TaxesPanel
+        :bookings="props.draft.bookings"
+        @patch="emit('patch', $event)"
+      />
+    </EditorSection>
+    <EditorSection section="payment">
+      <PaymentPanel
+        :bookings="props.draft.bookings"
+        @patch="emit('patch', $event)"
+      />
+    </EditorSection>
+    <EditorSection section="deposit">
+      <DepositPanel
+        :bookings="props.draft.bookings"
+        @patch="emit('patch', $event)"
+      />
+    </EditorSection>
+    <EditorSection section="cancellation">
+      <CancellationPanel
+        :bookings="props.draft.bookings"
+        @patch="emit('patch', $event)"
+      />
+    </EditorSection>
+    <EditorSection section="summary">
+      <SummaryPanel
+        :core="props.draft.core"
+        :bookings="props.draft.bookings"
+      />
+    </EditorSection>
   </div>
 </template>
 

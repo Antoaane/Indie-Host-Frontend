@@ -8,12 +8,18 @@ import EditorSidebarNav from '@/views/Editor/components/EditorSidebar/EditorSide
 import ListingPanels from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/ListingPanels.vue'
 import PricingPanels from '@/views/Editor/components/EditorSidebar/panels/PricingPanels/PricingPanels.vue'
 import ArrivalPanels from '@/views/Editor/components/EditorSidebar/panels/ArrivalPanels/ArrivalPanels.vue'
+import {
+  computeEditorSectionCompletion,
+  findEditorGroupOfSection,
+  resolveEditorGroups,
+  type EditorGroupId,
+  type EditorSectionId,
+} from '@/views/Editor/components/EditorSidebar/editorSections'
 import type { RawListingBundle } from '@/domain/listings/types'
 import type { ListingDomainRecord } from '@/domain/api/listingDomains'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 
-type SidebarTab = 'listing' | 'pricing' | 'arrival'
 type SuccessFeedback = 'publish' | 'publishAll' | 'cancel' | null
 
 const props = defineProps<{
@@ -22,6 +28,8 @@ const props = defineProps<{
   showMobileBack?: boolean
   isLoading?: boolean
   isPatchSyncing?: boolean
+  /** Horodatage du dernier enregistrement du brouillon dans cette session. */
+  lastSavedAt?: number | null
   hasPendingChanges?: boolean
   hasAnyPendingChanges?: boolean
   hasMultiplePendingListings?: boolean
@@ -40,9 +48,22 @@ const emit = defineEmits<{
   (e: 'select-listing', listingId: string): void
 }>()
 
-const isHubListing = computed(() => props.draft.core?.kind === 'hub')
+const sidebarContent = editorStatic.sidebar
 
-const tab = ref<SidebarTab>('listing')
+const isHubListing = computed(() => props.draft.core?.kind === 'hub')
+const groups = computed(() => resolveEditorGroups(isHubListing.value))
+
+const group = ref<EditorGroupId>('essentials')
+const activeSection = ref<EditorSectionId | null>(null)
+
+const incompleteSections = computed<Partial<Record<EditorSectionId, boolean>>>(() => {
+  const completion = computeEditorSectionCompletion(props.draft)
+  const result: Partial<Record<EditorSectionId, boolean>> = {}
+  for (const [sectionId, isComplete] of Object.entries(completion)) {
+    if (isComplete === false) result[sectionId as EditorSectionId] = true
+  }
+  return result
+})
 
 const isPublishing = ref(false)
 const isCancelling = ref(false)
@@ -50,39 +71,126 @@ const error = ref<string | null>(null)
 const successFeedback = ref<SuccessFeedback>(null)
 const successTimer = ref<number | null>(null)
 const applyToAllPending = ref(false)
-const sidebarContent = editorStatic.sidebar
 
 const showApplyToAllToggle = computed(() => Boolean(props.hasMultiplePendingListings))
-const shouldShowFooter = computed(() => Boolean(props.hasPendingChanges))
 
-// Le pied (Annuler / Appliquer) flotte au-dessus du corps défilant : sa hauteur
-// réelle est réservée en bas du corps pour que le dernier élément reste atteignable.
+// ---------------------------------------------------------------------------
+// État d'enregistrement : brouillon automatique (350 ms après la frappe) puis
+// « Appliquer » pour pousser vers la version en ligne. Le bandeau le dit en clair.
+const timeFormatter = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' })
+
+const saveState = computed<'saving' | 'pending' | 'upToDate'>(() => {
+  if (props.isPatchSyncing) return 'saving'
+  if (props.hasPendingChanges) return 'pending'
+  return 'upToDate'
+})
+
+const saveStateText = computed(() => {
+  if (saveState.value === 'saving') return sidebarContent.status.saving
+  if (saveState.value === 'pending') return sidebarContent.status.pending
+  return sidebarContent.status.upToDate
+})
+
+// Seconde ligne, plus discrète : l'heure du dernier enregistrement du brouillon.
+const saveStateDetail = computed(() => {
+  if (saveState.value !== 'pending' || !props.lastSavedAt) return ''
+  return sidebarContent.status.savedAt.replace('{time}', timeFormatter.format(new Date(props.lastSavedAt)))
+})
+
+// ---------------------------------------------------------------------------
+// Sommaire : défilement vers une section et section active suivant le défilement.
 const sidebarRef = ref<{ $el?: HTMLElement } | null>(null)
-const footerHeight = ref(0)
-let footerObserver: ResizeObserver | null = null
+let scrollFrame: number | null = null
+let autoScrollUntil = 0
 
-function observeFooter() {
-  footerObserver?.disconnect()
-  footerObserver = null
-  const footer = sidebarRef.value?.$el?.querySelector?.<HTMLElement>(':scope > .base-sidebar__footer')
-  if (!footer || typeof ResizeObserver === 'undefined') {
-    footerHeight.value = 0
-    return
-  }
-  footerObserver = new ResizeObserver(() => {
-    footerHeight.value = Math.ceil(footer.getBoundingClientRect().height)
-  })
-  footerObserver.observe(footer)
+function bodyElement(): HTMLElement | null {
+  return sidebarRef.value?.$el?.querySelector?.<HTMLElement>(':scope > .base-sidebar__body') ?? null
 }
 
-watch(shouldShowFooter, () => nextTick(observeFooter))
-onMounted(observeFooter)
+function sectionElements(): HTMLElement[] {
+  const body = bodyElement()
+  if (!body) return []
+  return Array.from(body.querySelectorAll<HTMLElement>('.editor-section[data-section]'))
+}
 
-// Un nouvel onglet s'ouvre en haut, pas à la position de défilement du précédent.
-watch(tab, () => {
-  const body = sidebarRef.value?.$el?.querySelector?.<HTMLElement>(':scope > .base-sidebar__body')
+function prefersReducedMotion(): boolean {
+  return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+}
+
+function updateActiveSectionFromScroll() {
+  scrollFrame = null
+  if (Date.now() < autoScrollUntil) return
+  const body = bodyElement()
+  const elements = sectionElements()
+  if (!body || !elements.length) return
+
+  const bodyTop = body.getBoundingClientRect().top
+  const threshold = bodyTop + body.clientHeight * 0.35
+  const atBottom = body.scrollTop + body.clientHeight >= body.scrollHeight - 2
+
+  let current = elements[0]
+  if (atBottom) {
+    current = elements[elements.length - 1]
+  } else {
+    for (const element of elements) {
+      if (element.getBoundingClientRect().top <= threshold) current = element
+    }
+  }
+
+  const sectionId = current.dataset.section as EditorSectionId | undefined
+  if (sectionId && sectionId !== activeSection.value) activeSection.value = sectionId
+}
+
+function handleBodyScroll() {
+  if (scrollFrame !== null) return
+  scrollFrame = window.requestAnimationFrame(updateActiveSectionFromScroll)
+}
+
+async function scrollToSection(sectionId: EditorSectionId, { smooth = true }: { smooth?: boolean } = {}) {
+  const targetGroup = findEditorGroupOfSection(sectionId)
+  if (targetGroup !== group.value) {
+    group.value = targetGroup
+    await nextTick()
+  }
+  await nextTick()
+
+  const body = bodyElement()
+  const element = body?.querySelector<HTMLElement>(`.editor-section[data-section="${sectionId}"]`)
+  activeSection.value = sectionId
+  if (!body || !element) return
+
+  const top = element.getBoundingClientRect().top - body.getBoundingClientRect().top + body.scrollTop
+  const behavior: ScrollBehavior = smooth && !prefersReducedMotion() ? 'smooth' : 'auto'
+  autoScrollUntil = Date.now() + (behavior === 'smooth' ? 600 : 50)
+  body.scrollTo({ top: Math.max(0, top), behavior })
+}
+
+function resetActiveSectionForGroup() {
+  const firstSection = groups.value.find((candidate) => candidate.id === group.value)?.sections[0]
+  activeSection.value = firstSection?.id ?? null
+}
+
+// Un nouveau groupe s'ouvre en haut, pas à la position de défilement du précédent.
+watch(group, async () => {
+  const body = bodyElement()
   if (body) body.scrollTop = 0
+  resetActiveSectionForGroup()
+  await nextTick()
+  updateActiveSectionFromScroll()
 })
+
+watch(groups, (nextGroups) => {
+  if (!nextGroups.some((candidate) => candidate.id === group.value)) {
+    group.value = nextGroups[0]?.id ?? 'essentials'
+  }
+})
+
+onMounted(() => {
+  bodyElement()?.addEventListener('scroll', handleBodyScroll, { passive: true })
+  resetActiveSectionForGroup()
+})
+
+// ---------------------------------------------------------------------------
 const canPublish = computed(() => {
   if (props.isLoading || isPublishing.value || isCancelling.value) return false
   if (showApplyToAllToggle.value && applyToAllPending.value) {
@@ -130,11 +238,16 @@ function showSuccessFeedback(type: Exclude<SuccessFeedback, null> = 'publish') {
 
 watch(
   () => props.listingId,
-  () => {
-    tab.value = 'listing'
+  async () => {
+    group.value = 'essentials'
     error.value = null
     applyToAllPending.value = false
     clearSuccessFeedback()
+    const body = bodyElement()
+    if (body) body.scrollTop = 0
+    resetActiveSectionForGroup()
+    await nextTick()
+    updateActiveSectionFromScroll()
   },
 )
 
@@ -183,7 +296,8 @@ async function cancelDraftChanges() {
 
 onBeforeUnmount(() => {
   clearSuccessFeedback()
-  footerObserver?.disconnect()
+  bodyElement()?.removeEventListener('scroll', handleBodyScroll)
+  if (scrollFrame !== null) window.cancelAnimationFrame(scrollFrame)
 })
 </script>
 
@@ -192,27 +306,101 @@ onBeforeUnmount(() => {
     ref="sidebarRef"
     class="editor-sidebar"
     :class="{ 'is-action-running': isActionRunning }"
-    :style="{ '--editor-sidebar-footer-height': `${footerHeight}px` }"
     body-scrollable
   >
     <template #header>
-      <Transition name="editor-sidebar-feedback">
-        <p
-          v-if="successFeedback"
-          class="action-feedback"
-          role="status"
-          aria-live="polite"
-        >
-          {{ successFeedbackText }}
-        </p>
-      </Transition>
+      <div class="sidebar-head">
+        <Transition name="editor-sidebar-feedback">
+          <p
+            v-if="successFeedback"
+            class="action-feedback"
+            role="status"
+            aria-live="polite"
+          >
+            {{ successFeedbackText }}
+          </p>
+        </Transition>
 
-      <EditorSidebarNav
-        v-model="tab"
-        :showMobileBack="props.showMobileBack"
-        :hubMode="isHubListing"
-        @mobile-back="emit('mobile-back')"
-      />
+        <div
+          class="save-state"
+          :class="`is-${saveState}`"
+        >
+          <p
+            class="text"
+            role="status"
+            aria-live="polite"
+          >
+            <span
+              class="dot"
+              aria-hidden="true"
+            />
+            <span class="lines">
+              <span class="line">{{ saveStateText }}</span>
+              <span
+                v-if="saveStateDetail"
+                class="detail"
+              >{{ saveStateDetail }}</span>
+            </span>
+          </p>
+
+          <div class="actions">
+            <div
+              v-if="props.hasPendingChanges"
+              class="btn is-cancel"
+            >
+              <button
+                type="button"
+                :disabled="!canCancel"
+                :aria-label="sidebarContent.actions.cancelAria"
+                @click="cancelDraftChanges"
+              >
+                {{ sidebarContent.actions.cancel }}
+              </button>
+            </div>
+            <div class="btn is-apply">
+              <button
+                type="button"
+                :disabled="!canPublish"
+                :aria-label="sidebarContent.actions.applyAria"
+                :aria-busy="isPublishing"
+                @click="publishDraft"
+              >
+                {{ sidebarContent.actions.apply }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <label
+          v-if="showApplyToAllToggle"
+          class="apply-all-toggle"
+        >
+          <input
+            v-model="applyToAllPending"
+            type="checkbox"
+            :disabled="isActionRunning || !!props.isLoading"
+          >
+          <span>{{ applyToAllLabel }}</span>
+        </label>
+
+        <p
+          v-if="error"
+          class="error"
+          role="alert"
+        >
+          {{ error }}
+        </p>
+
+        <EditorSidebarNav
+          v-model="group"
+          :groups="groups"
+          :activeSection="activeSection"
+          :incompleteSections="incompleteSections"
+          :showMobileBack="props.showMobileBack"
+          @select-section="scrollToSection($event)"
+          @mobile-back="emit('mobile-back')"
+        />
+      </div>
     </template>
 
     <Transition
@@ -220,7 +408,9 @@ onBeforeUnmount(() => {
       mode="out-in"
     >
       <ListingPanels
-        v-if="tab === 'listing' || isHubListing"
+        v-if="group === 'essentials' || group === 'addresses' || group === 'settings'"
+        :key="group"
+        :group="group"
         :listing-id="props.listingId"
         :draft="props.draft"
         :canPublishListing="props.canPublishListing"
@@ -230,7 +420,7 @@ onBeforeUnmount(() => {
         @select-listing="emit('select-listing', $event)"
       />
       <PricingPanels
-        v-else-if="tab === 'pricing'"
+        v-else-if="group === 'pricing'"
         :draft="props.draft"
         @patch="handlePatch"
       />
@@ -241,54 +431,6 @@ onBeforeUnmount(() => {
         @patch="handlePatch"
       />
     </Transition>
-
-    <template #footer v-if="shouldShowFooter">
-      <p
-        v-if="error"
-        class="error"
-      >
-        {{ error }}
-      </p>
-      <p
-        v-if="props.isPatchSyncing"
-        class="sync-status"
-        role="status"
-        aria-live="polite"
-      >
-        {{ sidebarContent.sync.pending }}
-      </p>
-      <label
-        v-if="showApplyToAllToggle"
-        class="apply-all-toggle"
-      >
-        <input
-          v-model="applyToAllPending"
-          type="checkbox"
-          :disabled="isActionRunning || !!props.isLoading"
-        >
-        <span>{{ applyToAllLabel }}</span>
-      </label>
-      <div class="actions">
-        <div class="btn is-cancel">
-          <button
-            type="button"
-            :disabled="!canCancel"
-            @click="cancelDraftChanges"
-          >
-            {{ sidebarContent.actions.cancel }}
-          </button>
-        </div>
-        <div class="btn is-apply">
-          <button
-            type="button"
-            :disabled="!canPublish"
-            @click="publishDraft"
-          >
-            {{ sidebarContent.actions.apply }}
-          </button>
-        </div>
-      </div>
-    </template>
   </BaseSidebar>
 </template>
 
@@ -303,86 +445,139 @@ onBeforeUnmount(() => {
 .editor-sidebar {
   position: relative;
 
-  .action-feedback {
-    margin: 0;
-    padding: 0.45rem 0.75rem;
+  > .base-sidebar__header > .sidebar-head {
+    position: relative;
+    width: 100%;
+    padding: 0.5rem;
 
-    position: absolute;
-    top: 0.25rem;
-    right: 0.25rem;
-    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-xs);
 
-    border-radius: borders.$rounded-sm;
-    background-color: rgba($good, 0.92);
-    color: $secondary;
+    border-radius: borders.$rounded-xl;
+    background-color: $accent;
 
-    font-size: 0.8rem;
-    font-weight: 700;
-    line-height: 1.2;
-    letter-spacing: 0.01em;
+    > .action-feedback {
+      margin: 0;
+      padding: 0.45rem 0.75rem;
 
-    pointer-events: none;
+      position: absolute;
+      top: 0.25rem;
+      right: 0.25rem;
+      z-index: 5;
+
+      border-radius: borders.$rounded-sm;
+      background-color: rgba($good, 0.92);
+      color: $secondary;
+      @include little-text($bold: true);
+      line-height: 1.2;
+
+      pointer-events: none;
+    }
+
+    // Bandeau d'état : ce qui est enregistré, ce qui est en ligne, et le bouton pour appliquer.
+    > .save-state {
+      min-height: 2.5rem;
+      padding: 0.15rem 0.25rem 0.15rem 0.5rem;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--layout-gap-sm);
+
+      > .text {
+        margin: 0;
+        min-width: 0;
+
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        @include little-text(rgba($secondary-text, 0.75), $thin: false);
+
+        > .lines {
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          line-height: 1.2;
+
+          > .line {
+            text-wrap: balance;
+          }
+
+          > .detail {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: rgba($secondary-text, 0.55);
+          }
+        }
+
+        > .dot {
+          flex: 0 0 auto;
+          width: 0.5rem;
+          height: 0.5rem;
+          border-radius: borders.$rounded;
+          background: $good-ink;
+          @include animations.transition(animations.$duration-base, animations.$ease-out, (background-color, opacity));
+        }
+      }
+
+      > .actions {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        gap: var(--layout-gap-xs);
+
+        > .btn.is-apply {
+          @include buttons.primary($cta: true, $theme: dark, $little: true);
+        }
+
+        > .btn.is-cancel {
+          @include buttons.primary($theme: white, $little: true);
+        }
+      }
+
+      &.is-pending > .text {
+        color: $secondary-text;
+
+        > .dot {
+          background: $progressing;
+          box-shadow: 0 0 0 1px rgba($secondary, 0.12);
+        }
+      }
+
+      &.is-saving > .text > .dot {
+        background: rgba($secondary, 0.35);
+      }
+    }
+
+    > .apply-all-toggle {
+      margin: 0 0.5rem;
+      width: auto;
+      justify-content: flex-start;
+      @include buttons.checkbox-label(white);
+    }
+
+    > .error {
+      margin: 0 0.5rem;
+      @include little-text($bad-ink, $thin: false);
+    }
+
+    > .editor-sidebar-nav {
+      padding-top: 0.25rem;
+      border-top: 1px solid rgba($secondary, 0.06);
+    }
   }
 
   > .base-sidebar__body {
     border-radius: borders.$rounded-xl;
     overscroll-behavior: contain;
-    padding-bottom: var(--editor-sidebar-footer-height, 0px);
-  }
-
-  > .base-sidebar__footer {
-    width: 100%;
-    padding: var(--layout-gap-md);
-    padding-top: var(--layout-gap-xl);
-
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    z-index: 99;
-
-    background: linear-gradient(to bottom, rgba($accent, 0) 0%, $accent 25%, $accent 100%);
-    // border-bottom-left-radius: borders.$rounded-xl;
-    // border-bottom-right-radius: borders.$rounded-xl;
-    border-radius: borders.$rounded-xl;
-
-    > .apply-all-toggle {
-      margin: 0 0 var(--layout-gap-sm) 0;
-      width: 100%;
-      justify-content: flex-start;
-      @include buttons.checkbox-label(white);
-    }
-
-    > .actions {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: var(--layout-gap-sm);
-
-      & > .btn.is-apply {
-        @include buttons.primary($cta: true, $theme: dark, $fullwidth: true);
-      }
-
-      & > .btn.is-cancel {
-        @include buttons.primary($theme: white, $fullwidth: true);
-      }
-    }
-
-    > .error {
-      margin: 0 0 var(--layout-gap-sm) 0;
-      font-size: 0.9rem;
-      font-weight: 500;
-      color: $bad-ink;
-    }
-
-    > .sync-status {
-      margin: 0 0 var(--layout-gap-sm) 0;
-      font-size: 0.86rem;
-      font-weight: 600;
-      color: rgba($secondary, 0.7);
-    }
+    scroll-padding-top: var(--layout-gap-xs);
   }
 
   &.is-action-running {
-    > .base-sidebar__header,
+    > .base-sidebar__header > .sidebar-head > .editor-sidebar-nav,
     > .base-sidebar__body {
       pointer-events: none;
       user-select: none;
@@ -390,7 +585,7 @@ onBeforeUnmount(() => {
   }
 }
 
-// Changement d'onglet : fréquent, donc sortie instantanée et entrée courte.
+// Changement de groupe : fréquent, donc sortie instantanée et entrée courte.
 .editor-sidebar-panels-enter-active {
   @include animations.transition(animations.$duration-fast, animations.$ease-out, opacity);
 }

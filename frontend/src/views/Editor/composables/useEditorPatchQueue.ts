@@ -19,6 +19,8 @@ export function useEditorPatchQueue(options?: UseEditorPatchQueueOptions) {
   const patchListingId = ref<string | null>(null)
   const patchSyncTask = ref<Promise<void> | null>(null)
   const isPatchSyncing = ref(false)
+  // Dernier enregistrement réussi du brouillon (affiché dans le bandeau d'état de l'éditeur).
+  const lastSavedAt = ref<number | null>(null)
 
   const isPatchSyncPending = computed(
     () => Boolean(isPatchSyncing.value || patchQueue.value || patchTimer.value || patchSyncTask.value),
@@ -58,6 +60,7 @@ export function useEditorPatchQueue(options?: UseEditorPatchQueueOptions) {
         if (options?.persistPatch) {
           await options.persistPatch(listingId, queued)
         }
+        lastSavedAt.value = Date.now()
       } catch (error) {
         console.log('[Editor] flush patch queue failed', { listingId, error })
         if (shouldThrow) throw error
@@ -118,6 +121,7 @@ export function useEditorPatchQueue(options?: UseEditorPatchQueueOptions) {
     patchListingId.value = null
     patchSyncTask.value = null
     isPatchSyncing.value = false
+    lastSavedAt.value = null
     clearPatchTimer()
   }
 
@@ -127,5 +131,6 @@ export function useEditorPatchQueue(options?: UseEditorPatchQueueOptions) {
     queuePatchPersistence,
     resetPatchQueueState,
     isPatchSyncPending,
+    lastSavedAt,
   }
 }

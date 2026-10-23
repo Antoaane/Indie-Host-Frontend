@@ -6,6 +6,7 @@ import { computed } from 'vue'
 import type { RawArrival, RawCore } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
+import EditorSection from '@/views/Editor/components/EditorSidebar/EditorSection.vue'
 
 import ArrivalIntroPanel from '@/views/Editor/components/EditorSidebar/panels/ArrivalPanels/ArrivalIntroPanel.vue'
 import ArrivalSectionPanel from '@/views/Editor/components/EditorSidebar/panels/ArrivalPanels/ArrivalSectionPanel.vue'
@@ -37,58 +38,72 @@ const accessValues = computed(() => {
 
 <template>
   <div class="editor-arrival-panels">
-    <ArrivalIntroPanel
-      :arrival="props.arrival"
-      @patch="emit('patch', $event)"
-    />
-    <ArrivalSectionPanel
-      section-key="savings"
-      :title="panelContent.practical.savings.title"
-      :subtitle="panelContent.practical.savings.subtitle"
-      :fields="panelContent.practical.savings.fields"
-      :values="props.arrival?.practical?.savings"
-      @patch="emit('patch', $event)"
-    />
-    <ArrivalSectionPanel
-      section-key="access"
-      :title="panelContent.practical.access.title"
-      :subtitle="panelContent.practical.access.subtitle"
-      :fields="panelContent.practical.access.fields"
-      :values="accessValues"
-      :locked-field-keys="['address']"
-      :locked-field-hint="panelContent.practical.access.addressLockedHint"
-      @patch="emit('patch', $event)"
-    />
-    <ArrivalSectionPanel
-      section-key="services"
-      :title="panelContent.practical.services.title"
-      :subtitle="panelContent.practical.services.subtitle"
-      :fields="panelContent.practical.services.fields"
-      :values="props.arrival?.practical?.services"
-      @patch="emit('patch', $event)"
-    />
-    <ArrivalHtmlPanel
-      section-key="rules"
-      :title="panelContent.practical.rules.title"
-      :subtitle="panelContent.practical.rules.subtitle"
-      :label="panelContent.practical.rules.label"
-      :placeholder="panelContent.practical.rules.placeholder"
-      :value="props.arrival?.practical?.rules"
-      @patch="emit('patch', $event)"
-    />
-    <ArrivalHtmlPanel
-      section-key="shops"
-      :title="panelContent.practical.shops.title"
-      :subtitle="panelContent.practical.shops.subtitle"
-      :label="panelContent.practical.shops.label"
-      :placeholder="panelContent.practical.shops.placeholder"
-      :value="props.arrival?.practical?.shops"
-      @patch="emit('patch', $event)"
-    />
-    <ArrivalGuidePanel
-      :arrival="props.arrival"
-      @patch="emit('patch', $event)"
-    />
+    <EditorSection section="arrivalIntro">
+      <ArrivalIntroPanel
+        :arrival="props.arrival"
+        @patch="emit('patch', $event)"
+      />
+    </EditorSection>
+    <EditorSection section="savings">
+      <ArrivalSectionPanel
+        section-key="savings"
+        :title="panelContent.practical.savings.title"
+        :subtitle="panelContent.practical.savings.subtitle"
+        :fields="panelContent.practical.savings.fields"
+        :values="props.arrival?.practical?.savings"
+        @patch="emit('patch', $event)"
+      />
+    </EditorSection>
+    <EditorSection section="access">
+      <ArrivalSectionPanel
+        section-key="access"
+        :title="panelContent.practical.access.title"
+        :subtitle="panelContent.practical.access.subtitle"
+        :fields="panelContent.practical.access.fields"
+        :values="accessValues"
+        :locked-field-keys="['address']"
+        :locked-field-hint="panelContent.practical.access.addressLockedHint"
+        @patch="emit('patch', $event)"
+      />
+    </EditorSection>
+    <EditorSection section="services">
+      <ArrivalSectionPanel
+        section-key="services"
+        :title="panelContent.practical.services.title"
+        :subtitle="panelContent.practical.services.subtitle"
+        :fields="panelContent.practical.services.fields"
+        :values="props.arrival?.practical?.services"
+        @patch="emit('patch', $event)"
+      />
+    </EditorSection>
+    <EditorSection section="rules">
+      <ArrivalHtmlPanel
+        section-key="rules"
+        :title="panelContent.practical.rules.title"
+        :subtitle="panelContent.practical.rules.subtitle"
+        :label="panelContent.practical.rules.label"
+        :placeholder="panelContent.practical.rules.placeholder"
+        :value="props.arrival?.practical?.rules"
+        @patch="emit('patch', $event)"
+      />
+    </EditorSection>
+    <EditorSection section="shops">
+      <ArrivalHtmlPanel
+        section-key="shops"
+        :title="panelContent.practical.shops.title"
+        :subtitle="panelContent.practical.shops.subtitle"
+        :label="panelContent.practical.shops.label"
+        :placeholder="panelContent.practical.shops.placeholder"
+        :value="props.arrival?.practical?.shops"
+        @patch="emit('patch', $event)"
+      />
+    </EditorSection>
+    <EditorSection section="guide">
+      <ArrivalGuidePanel
+        :arrival="props.arrival"
+        @patch="emit('patch', $event)"
+      />
+    </EditorSection>
   </div>
 </template>
 
