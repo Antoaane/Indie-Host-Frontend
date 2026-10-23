@@ -462,12 +462,19 @@ Envoi par l'API HTTP de Brevo (`BREVO_API_KEY`, gratuit jusqu'à 300 e-mails/jou
 
 ---
 
-## MCP configurés (Claude Code — `~/.claude/settings.json`)
+## MCP configurés
 
-| MCP | Transport | Rôle |
-|-----|-----------|------|
-| **vercel** | stdio (npx) | Gestion déploiements Vercel |
-| **clerk** | HTTP — `https://mcp.clerk.com/mcp` | Snippets code Clerk officiels |
+Serveurs du projet dans `.mcp.json` (versionné, tous activés par `enableAllProjectMcpServers`). Les secrets n'y figurent jamais : ils viennent de variables d'environnement de la machine.
+
+| MCP | Transport | Rôle | Secret |
+|-----|-----------|------|--------|
+| **hostinger** | stdio (`npx hostinger-api-mcp`) | VPS, pare-feu | `HOSTINGER_API_TOKEN` |
+| **stripe** | HTTP — `https://mcp.stripe.com` | Lecture du compte Stripe live, documentation | OAuth |
+| **clerk** | HTTP — `https://mcp.clerk.com/mcp` | Configuration Clerk, snippets | OAuth |
+| **cloudflare** | HTTP — `https://mcp.cloudflare.com/mcp` | DNS de `indiehost.fr` | OAuth |
+| **brevo** | HTTP — `https://mcp.brevo.com/v1/brevo/mcp` | E-mails : journaux transactionnels, expéditeurs, domaines | `BREVO_MCP_TOKEN` : clé « MCP » de Brevo, accès complet en lecture et écriture au compte (distincte de `BREVO_API_KEY` du serveur) |
+
+Hors projet (`~/.claude/settings.json`) : **vercel** (stdio, npx).
 
 ---
 

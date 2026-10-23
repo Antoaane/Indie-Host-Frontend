@@ -18,6 +18,13 @@
     "cloudflare": {
       "type": "http",
       "url": "https://mcp.cloudflare.com/mcp"
+    },
+    "brevo": {
+      "type": "http",
+      "url": "https://mcp.brevo.com/v1/brevo/mcp",
+      "headers": {
+        "Authorization": "Bearer ${BREVO_MCP_TOKEN:-}"
+      }
     }
   }
 }

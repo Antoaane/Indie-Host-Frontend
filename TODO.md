@@ -19,6 +19,10 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 ### Suites du déploiement du 2026-10-23
 
 - [ ] Clerk Dashboard (instance Production) → Webhooks → ajouter `https://indiehost.fr/api/v1/webhooks/clerk`, événement `user.deleted`, secret dans `CLERK_WEBHOOK_SECRET`, redéployer. Sans lui, une suppression faite dans Clerk n'est pas répercutée en base.
+- [ ] **MCP Brevo pour Claude** (déclaré dans `.mcp.json`) :
+  1. Dans Brevo → SMTP et API → Clés API et MCP, générer une clé en cochant « Create MCP server API key ». Prenez une clé distincte de celle du serveur : celle-ci donne un accès complet au compte.
+  2. La poser dans une variable d’environnement Windows, en PowerShell : `[Environment]::SetEnvironmentVariable('BREVO_MCP_TOKEN', '<la clé>', 'User')`.
+  3. Fermer puis rouvrir complètement VS Code.
 - [ ] **Brevo : poser la clé et redéployer.** Le compte, le domaine d’envoi `mail.indiehost.fr` et l’expéditeur sont déjà faits. Ces étapes activent aussi les e-mails aux voyageurs.
   1. Dans Brevo → SMTP & API → Clés API, créer une clé (nom : « IndieHost API »).
   2. La mettre dans `/opt/indiehost/.env` sur le serveur sous la forme `BREVO_API_KEY=…`. Si une ligne `MAIL_FROM` existe, la supprimer ou la passer à `IndieHost <no-reply@mail.indiehost.fr>`. Vérifier aussi que `BASE_URL=https://indiehost.fr` est présent.
