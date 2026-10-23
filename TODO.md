@@ -10,6 +10,10 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ## Ce que vous devez faire
 
+### Bloquant : paiements des hôtes
+
+- [ ] **Stripe Dashboard (compte plateforme live) : compléter le profil plateforme Connect.** Tant qu’il n’est pas validé, Stripe refuse de créer le compte connecté d’un hôte (`You must complete your platform profile to use Connect and create live connected accounts`) : aucun hôte ne peut activer les encaissements, donc aucune réservation payante n’est possible. Ouvrir https://dashboard.stripe.com/connect/accounts/overview (questionnaire) puis https://dashboard.stripe.com/settings/connect/platform-profile, répondre et accepter les responsabilités (gestion des pertes). Constaté le 2026-10-23 sur le compte connecté de démonstration : `POST /payments/stripe/connect/onboarding-link` → 400 `STRIPE_CONNECT_PLATFORM_PROFILE_REQUIRED`. Ensuite, cliquer à nouveau « Configurer Stripe Connect » : la page doit ouvrir Stripe.
+
 ### Déploiement de la passe du 2026-10-23 (commit `171ef05`)
 
 - [ ] **Avant de redéployer**, vérifier dans `/opt/indiehost/.env` que `BOOKING_GUIDE_ACCESS_SECRET` fait au moins 16 caractères et n'est pas la valeur par défaut : sinon l'API refuse maintenant de démarrer en production (`config/env.ts`).
@@ -105,6 +109,7 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ## Fait
 
+- [x] 2026-10-23 — « Configurer Stripe Connect » ne faisait rien au clic : l’API répondait 400 (profil plateforme Stripe non validé, voir « Bloquant ») et la page de checklist (`PricingChecklistCallbackView.vue`) n’affichait ses messages d’erreur et d’information que dans la console de dev. Messages désormais affichés sous « Prochaine étape » (encart d’erreur `role="alert"`) ; pour ce cas, l’hôte lit un message qui le concerne et l’admin garde la consigne technique ; le client API garde le code d’erreur (`StripeApiError`). Non déployé (commit `4c9b0c8`).
 - [x] 2026-10-23 — Connexion par lien à jeton (Impersonate, jeton de connexion, invitation acceptée chez Clerk) : arrivée sur le tableau de bord au lieu de la landing ; un ticket posé sur `/` part vers la page de connexion qui le consomme (commit `398908d`).
 - [x] 2026-10-23 — Pile Docker locale vérifiée : les 7 migrations Prisma (dont les 4 du jour) s’appliquent sur une base vierge, aucune différence avec `schema.prisma` (`prisma migrate diff`, `migration_lock.toml` ajouté), API saine ; test de fumée conforme (webhooks Stripe et Clerk en 503 sans secret, export et suppression de compte en 401 sans jeton, 21e PaymentIntent en 429, purge RGPD planifiée) (commit `398908d`).
 - [x] 2026-10-23 — Éditeur, première passe UX (commit `7d21892`) : sommaire à deux niveaux (cinq groupes, puces de sections ancrées, section active suivie au défilement, pastilles « à compléter »), panneaux réordonnés (essentiel d'abord, technique ensuite, import et légal dans Réglages), bandeau d'état permanent avec Appliquer / Annuler toujours visibles et heure du dernier enregistrement, aide repliée derrière ⓘ (sous-domaine ; guide du domaine plus ouvert d'office), onglets accessibles (`role="tab"`, `aria-selected`, flèches), route de dev `/dev/editor` sans backend pour vérifier dans le navigateur. Vérifié à 1316 px et 360 px sur données en mémoire.
