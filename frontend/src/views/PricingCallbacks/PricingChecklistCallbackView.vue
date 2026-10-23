@@ -12,6 +12,7 @@ import {
   fetchMyStripeSubscriptionState,
   StripeApiError,
   syncMyStripeConnectState,
+  type StripeConnectHostStatus,
   type StripeSubscriptionState,
   type SubscriptionPlanCode,
 } from '@/domain/api/stripeSubscriptions'
@@ -63,6 +64,9 @@ const isHydrating = ref(false)
 const actionPlanCode = ref<SubscriptionPlanCode | null>(null)
 const isCreatingListingForOnboarding = ref(false)
 const isLaunchingConnect = ref(false)
+// Particulier par défaut, comme la plupart des hôtes : Stripe suit alors le parcours d'une
+// personne physique (identité, adresse, IBAN), sans SIRET ni société.
+const connectHostStatus = ref<StripeConnectHostStatus>('individual')
 const isPublishingFromOnboarding = ref(false)
 const isKeepingBlockedFromOnboarding = ref(false)
 
@@ -767,6 +771,7 @@ async function launchConnectOnboardingWithListingId(listingId?: string | null) {
       refreshUrl: buildConnectCallbackUrl('refresh', targetPlanCode, ensuredListingId),
       returnUrl: buildConnectCallbackUrl('return', targetPlanCode, ensuredListingId),
       country: 'FR',
+      hostStatus: connectHostStatus.value,
     })
 
     if (listingOnboardingState.value) {
@@ -929,6 +934,7 @@ async function relaunchConnect() {
     refreshUrl: buildConnectCallbackUrl('refresh', targetPlanCode, listingId),
     returnUrl: buildConnectCallbackUrl('return', targetPlanCode, listingId),
     country: 'FR',
+    hostStatus: connectHostStatus.value,
   })
 
   window.location.assign(onboardingLink.url)
@@ -1289,6 +1295,52 @@ watch(
         >
           Mise à jour de votre progression...
         </p>
+
+        <!-- Avant l'inscription Stripe : particulier ou professionnel, et ce qui sera demandé. -->
+        <SignedIn>
+          <fieldset
+            v-if="primaryAction.id === 'connect'"
+            class="host-status"
+          >
+            <legend>Vous louez en tant que</legend>
+            <div class="host-status-options">
+              <label class="host-status-option">
+                <input
+                  v-model="connectHostStatus"
+                  type="radio"
+                  name="connect-host-status"
+                  value="individual"
+                  :disabled="isOnboardingActionBusy"
+                >
+                <span class="text">
+                  <span class="title">Particulier</span>
+                  <span class="desc">Vous louez votre logement à titre personnel, sans entreprise.</span>
+                </span>
+              </label>
+              <label class="host-status-option">
+                <input
+                  v-model="connectHostStatus"
+                  type="radio"
+                  name="connect-host-status"
+                  value="professional"
+                  :disabled="isOnboardingActionBusy"
+                >
+                <span class="text">
+                  <span class="title">Professionnel</span>
+                  <span class="desc">Micro-entreprise, société, SCI ou conciergerie.</span>
+                </span>
+              </label>
+            </div>
+            <p class="host-status-hint">
+              <template v-if="connectHostStatus === 'individual'">
+                Stripe vous demandera votre identité, votre adresse, votre date de naissance, un numéro de téléphone et votre IBAN. Aucun SIRET ni site web. Comptez environ 3 minutes.
+              </template>
+              <template v-else>
+                Stripe vous demandera le type de votre activité, son numéro d’immatriculation, l’identité de son représentant et l’IBAN de l’activité.
+              </template>
+            </p>
+          </fieldset>
+        </SignedIn>
 
         <!-- Messages d'action : ils n'étaient visibles que dans la console technique (dev),
              un échec (Stripe Connect, publication, changement de plan) semblait ne rien faire. -->
@@ -1663,6 +1715,83 @@ watch(
       margin: 0;
       color: rgba($secondary-text, 0.7);
       font-size: 0.82rem;
+    }
+
+    > .host-status {
+      margin: 0;
+      padding: 0;
+      border: none;
+      min-width: 0;
+
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-xs);
+
+      > legend {
+        padding: 0;
+        margin-bottom: var(--layout-gap-xs);
+        @include little-text($bold: true);
+      }
+
+      > .host-status-options {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+        gap: var(--layout-gap-xs);
+
+        > .host-status-option {
+          min-height: 2.75rem;
+          padding: var(--layout-gap-sm) var(--layout-gap-md);
+
+          display: flex;
+          align-items: flex-start;
+          gap: var(--layout-gap-sm);
+
+          border: 1px solid rgba($secondary, 0.12);
+          border-radius: borders.$rounded-md;
+          background: $accent;
+          cursor: pointer;
+          @include animations.transition(animations.$duration-fast);
+
+          @include on-hover {
+            border-color: rgba($secondary, 0.24);
+          }
+
+          &:has(> input:checked) {
+            border-color: $secondary;
+            background: $accent-surface-1;
+          }
+
+          &:has(> input:focus-visible) {
+            outline: 2px solid $secondary;
+            outline-offset: 2px;
+          }
+
+          > input {
+            margin: 0.2rem 0 0;
+            accent-color: $secondary;
+            flex: 0 0 auto;
+          }
+
+          > .text {
+            display: flex;
+            flex-direction: column;
+            gap: 0.1rem;
+
+            > .title {
+              @include little-text($bold: true);
+            }
+
+            > .desc {
+              @include little-text(rgba($secondary-text, 0.75), $thin: false);
+            }
+          }
+        }
+      }
+
+      > .host-status-hint {
+        margin: 0;
+        @include little-text(rgba($secondary-text, 0.75), $thin: false);
+      }
     }
 
     > .feedback {

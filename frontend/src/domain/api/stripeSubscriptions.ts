@@ -650,11 +650,15 @@ export async function confirmStripeSubscriptionCheckout(input: {
   }
 }
 
+export type StripeConnectHostStatus = 'individual' | 'professional'
+
 export async function createStripeConnectOnboardingLink(input: {
   accountId?: string
   refreshUrl: string
   returnUrl: string
   country?: string
+  /** Particulier : Stripe suit le parcours d'une personne physique (pas de SIRET ni de société). */
+  hostStatus?: StripeConnectHostStatus
 }): Promise<StripeConnectOnboardingLinkResponse> {
   const axios = await getAxios()
   const headers = await getHeaders({ requiresAuth: true })
@@ -667,6 +671,7 @@ export async function createStripeConnectOnboardingLink(input: {
         refreshUrl: input.refreshUrl,
         returnUrl: input.returnUrl,
         country: input.country ?? 'FR',
+        ...(input.hostStatus ? { hostStatus: input.hostStatus } : {}),
       },
       {
         withCredentials: false,

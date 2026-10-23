@@ -44,7 +44,18 @@ type CreateConnectOnboardingLinkInput = {
   refreshUrl: string;
   returnUrl: string;
   country?: string;
+  hostStatus?: 'individual' | 'professional';
 };
+
+// Hébergement touristique (catégorie d'activité Stripe) : évite de la demander à l'hôte.
+const STRIPE_CONNECT_LODGING_MCC = '7011';
+const STRIPE_CONNECT_PRODUCT_DESCRIPTION =
+  'Location saisonnière d’un logement meublé, réservée en direct sur le site de l’hôte (IndieHost).';
+
+type ConnectAccountPrefill = Pick<
+  Stripe.AccountCreateParams,
+  'business_type' | 'business_profile' | 'email' | 'individual'
+>;
 
 type CreateConnectDashboardLinkInput = {
   accountId?: string;
@@ -1353,9 +1364,61 @@ export class PaymentsService {
     return updated;
   }
 
+  /**
+   * Ce qu'IndieHost sait déjà de l'hôte, transmis à Stripe pour raccourcir l'inscription :
+   * Stripe ne repose pas une question pré-remplie, il la fait seulement confirmer.
+   */
+  private async buildConnectAccountPrefill(
+    user: User,
+    hostStatus?: 'individual' | 'professional',
+  ): Promise<ConnectAccountPrefill> {
+    const email = readString(user.email);
+    const firstName = readString(user.firstName);
+    const lastName = readString(user.lastName);
+    const siteUrl = await this.resolveHostPublicSiteUrl(user.id);
+
+    const prefill: ConnectAccountPrefill = {
+      business_profile: {
+        mcc: STRIPE_CONNECT_LODGING_MCC,
+        product_description: STRIPE_CONNECT_PRODUCT_DESCRIPTION,
+        ...(siteUrl ? { url: siteUrl } : {}),
+      },
+      ...(email ? { email } : {}),
+    };
+
+    // Particulier (comme sur Airbnb) : parcours de personne physique. Un professionnel garde le
+    // choix de Stripe (entreprise individuelle, société…), qu'IndieHost ne connaît pas.
+    if (hostStatus !== 'professional') {
+      prefill.business_type = 'individual';
+      prefill.individual = {
+        ...(email ? { email } : {}),
+        ...(firstName ? { first_name: firstName } : {}),
+        ...(lastName ? { last_name: lastName } : {}),
+      };
+    }
+
+    return prefill;
+  }
+
+  /** Adresse publique d'une annonce de l'hôte (site de l'activité demandé par Stripe), si elle existe. */
+  private async resolveHostPublicSiteUrl(userId: string): Promise<string | null> {
+    const rootDomain = readString(env.PUBLIC_LISTING_ROOT_DOMAIN);
+    if (!rootDomain || rootDomain === 'localhost' || rootDomain.endsWith('.localhost')) return null;
+
+    const listing = await this.prisma.listing.findFirst({
+      where: { ownerId: userId, status: { not: 'deleted' } },
+      orderBy: { updatedAt: 'desc' },
+      select: { subdomainSlug: true, customDomain: true, customDomainVerifiedAt: true },
+    });
+    if (!listing) return null;
+    if (listing.customDomain && listing.customDomainVerifiedAt) return `https://${listing.customDomain}`;
+    if (listing.subdomainSlug) return `https://${listing.subdomainSlug}.${rootDomain}`;
+    return null;
+  }
+
   private async ensureStripeConnectAccount(
     user: User,
-    options?: { country?: string; forcedAccountId?: string | null },
+    options?: { country?: string; forcedAccountId?: string | null; prefill?: ConnectAccountPrefill },
   ): Promise<{ user: User; accountId: string; created: boolean }> {
     const forced = readString(options?.forcedAccountId ?? null);
     const currentAccountId = forced ?? user.stripeConnectAccountId ?? null;
@@ -1419,6 +1482,8 @@ export class PaymentsService {
         stripe_dashboard: { type: 'full' },
       },
       country: (options?.country ?? 'FR').toUpperCase(),
+      default_currency: 'eur',
+      ...(options?.prefill ?? {}),
       capabilities: {
         transfers: { requested: true },
         card_payments: { requested: true },
@@ -3020,11 +3085,35 @@ export class PaymentsService {
     user = await this.enforceAdminListingTransferTrialExpiration(user);
 
     try {
+      const prefill = this.stripe ? await this.buildConnectAccountPrefill(user, input.hostStatus) : undefined;
       const connect = await this.ensureStripeConnectAccount(user, {
         country: input.country,
         forcedAccountId: input.accountId,
+        prefill,
       });
       user = connect.user;
+
+      // Compte déjà créé mais inscription pas encore envoyée : on complète ce qui manque.
+      // Stripe peut refuser une partie (informations déjà confirmées) : sans gravité, l'hôte
+      // les saisira dans le formulaire.
+      if (this.stripe && prefill && !connect.created) {
+        try {
+          const existing = await this.stripe.accounts.retrieve(connect.accountId);
+          if (!existing.details_submitted) {
+            await this.stripe.accounts.update(connect.accountId, {
+              ...(existing.business_type ? {} : { business_type: prefill.business_type }),
+              ...(prefill.individual && !existing.business_type ? { individual: prefill.individual } : {}),
+              business_profile: prefill.business_profile,
+              ...(existing.email || !prefill.email ? {} : { email: prefill.email }),
+            });
+          }
+        } catch (prefillError) {
+          console.warn('[payments] Stripe Connect prefill skipped', {
+            accountId: connect.accountId,
+            message: isRecord(prefillError) ? readString(prefillError.message) : null,
+          });
+        }
+      }
 
       if (!this.stripe) {
         const fakeUrl = `${input.returnUrl}?account=${connect.accountId}&mode=mock`;
@@ -3043,11 +3132,17 @@ export class PaymentsService {
         };
       }
 
+      // Inscription « au fil de l'eau » : seul le nécessaire immédiat est demandé ; Stripe
+      // réclamera le reste plus tard si l'activité de l'hôte l'exige.
       const accountLink = await this.stripe.accountLinks.create({
         account: connect.accountId,
         refresh_url: input.refreshUrl,
         return_url: input.returnUrl,
         type: 'account_onboarding',
+        collection_options: {
+          fields: 'currently_due',
+          future_requirements: 'omit',
+        },
       });
 
       await this.updateUserStripeState({

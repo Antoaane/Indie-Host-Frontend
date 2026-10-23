@@ -51,6 +51,9 @@ export const createConnectOnboardingLinkSchema = z.object({
   refreshUrl: z.string().url(),
   returnUrl: z.string().url(),
   country: z.string().trim().length(2).optional().default('FR'),
+  // Particulier : l'inscription Stripe suit le parcours d'une personne physique (identité,
+  // adresse, IBAN), sans structure d'entreprise. Professionnel : Stripe demande le type exact.
+  hostStatus: z.enum(['individual', 'professional']).optional(),
 });
 
 export const createConnectDashboardLinkSchema = z.object({
