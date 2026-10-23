@@ -121,6 +121,11 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ## Fait
 
+- [x] 2026-10-23 — E-mails automatiques aux hôtes via Brevo, sans effet tant que la clé n’est pas posée (commit `3b7cb5b`, non déployé).
+  - Sur événement : nouvelle réservation, annulation, message d’un voyageur, avis, annonce en ligne, dernier logement de l’offre utilisé, litige, remboursement échoué.
+  - Rappels planifiés : arrivée demain, bienvenue, brouillon inactif, paiements à activer, fin d’essai ou d’accès offert, calendrier iCal en erreur.
+  - Anti-doublon, désinscription des rappels, politique de confidentialité mise à jour.
+  - Testé sur la base locale, envoi vers Brevo simulé : une deuxième passe n’envoie rien de plus, un deuxième message en moins de 30 minutes ne déclenche pas d’e-mail, la désinscription en un clic fonctionne.
 - [x] 2026-10-23 — Redéploiement de `053e039` vérifié par Claude sur indiehost.fr. Le nouveau texte de la page d’activation s’affiche et les boutons radio sont corrects. « Configurer Stripe Connect » (Particulier) ouvre l’inscription Stripe sur le compte `acct_1UTgHiBxC9MDMaAf`, rattaché à nouveau sans doublon : c’est le seul compte connecté.
 - [x] 2026-10-23 — Retour au Dashboard complet pour les comptes des hôtes (commit `053e039`, non déployé). Le Dashboard Express (commit `23b6815`, déployé) est refusé par Stripe en production. Le remplacement de compte est aussi corrigé : l’ancien compte n’est détaché qu’après la création du nouveau, et un compte détaché par erreur est rattaché à nouveau. Le texte de la page d’activation est mis à jour.
 - [x] 2026-10-23 — Image de marque Stripe appliquée avec l’accord de l’utilisateur : icône IndieHost 512 px, couleurs `#111117` (Paramètres → Adaptation à votre marque, commune à tout le compte : Checkout, reçus, inscription Connect).
