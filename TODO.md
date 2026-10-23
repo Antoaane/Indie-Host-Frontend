@@ -12,7 +12,7 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ### Bloquant : paiements des hôtes
 
-- [ ] **Terminer l’inscription Stripe du compte de démonstration** (onglet laissé ouvert sur connect.stripe.com, sinon recliquer « Configurer Stripe Connect » sur indiehost.fr) : identité, activité, coordonnées bancaires. Le compte `acct_1UTgHiBxC9MDMaAf` existe, avec la bonne configuration, mais les encaissements restent désactivés tant que l’inscription n’est pas finie. Claude ne remplit pas ces informations.
+- [ ] **Redéployer, puis terminer l’inscription Stripe du compte de démonstration** : recliquer « Configurer Stripe Connect » sur indiehost.fr, choisir « Particulier », puis remplir le formulaire Stripe, désormais allégé (identité, adresse, date de naissance, téléphone, IBAN). Le compte `acct_1UTgHiBxC9MDMaAf` sera complété automatiquement (particulier, catégorie hébergement, description) au clic. Claude ne remplit pas ces informations ; il vérifiera la page d’activation après le déploiement.
 - [ ] Première vraie réservation : vérifier dans le Dashboard Stripe de l’hôte que le paiement y apparaît (et pas sur le compte IndieHost), puis tester une annulation remboursée.
 
 ### Suites du déploiement du 2026-10-23
@@ -106,6 +106,7 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ## Fait
 
+- [x] 2026-10-23 — Inscription Stripe des hôtes allégée et ouverte aux particuliers : choix « particulier / professionnel » avant l’ouverture de Stripe ; pour un particulier, compte déclaré personne physique (pas de SIRET, de société ni de représentant légal), catégorie hébergement, description et site de l’annonce pré-remplis ; formulaire limité au nécessaire immédiat (`currently_due`). Non déployé (commit `a46070c`).
 - [x] 2026-10-23 — Déploiement en production (par l’utilisateur, commits jusqu’à `e6e4b0a`, sauvegarde de la base faite avant) vérifié par Claude : site, API, pré-rendu de `/` et `/pricing`, CGV à jour, CSP en mode rapport, redirection `www`, type MIME du manifeste, webhook Stripe qui répond « signature manquante » (secrets pris en compte). Webhook Clerk encore à 503 (secret à créer).
 - [x] 2026-10-23 — Stripe Connect débloqué : il restait l’étape « Confirmer vos choix d’intégration » du guide de démarrage Stripe (modèle logiciel, acceptation du Contrat d’utilisation de la plateforme Connect, validée par Claude avec l’accord explicite de l’utilisateur). « Configurer Stripe Connect » ouvre maintenant l’inscription Stripe ; premier compte connecté `acct_1UTgHiBxC9MDMaAf` créé avec `fees.payer: account`, `losses.payments: stripe`, Dashboard complet.
 - [x] 2026-10-23 — Stripe live : deux destinations de webhook créées vers `https://indiehost.fr/api/v1/payments/stripe/webhook` (11 événements, charge utile instantanée, API `2025-08-27.basil`, la version du compte) : `indiehost-api-plateforme` sur « Votre compte » et `indiehost-api-comptes-hotes` sur « Comptes connectés ». Secrets non lus par Claude.
