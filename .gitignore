@@ -77,6 +77,9 @@ backend/api/.env
 /certbot/conf/csr
 /certbot/conf/keys
 /certbot/www
+# Liste des domaines clients vérifiés, écrite par l’API à l’exécution.
+/certbot/custom-domains
+/certbot/conf/renewal-hooks
 
 ############################
 # Skills Claude Code (.claude/skills)
