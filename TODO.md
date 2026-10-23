@@ -82,6 +82,7 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ### Sécurité
 
+- [ ] Dépendances : GitHub (Dependabot) signale 16 vulnérabilités sur la branche par défaut le 2026-10-23 (14 graves, 2 modérées). Les passer en revue (`npm audit` dans `frontend/` et `backend/api/`, `pip-audit` pour le scraping), mettre à jour ce qui peut l’être sans rupture et noter le reste.
 - [ ] Passer la CSP de `Content-Security-Policy-Report-Only` à `Content-Security-Policy` dans `nginx/proxy-locations.conf` (après votre relevé des violations en prod).
 - [ ] Option : script de reprise `npm run sanitize:backfill` (nettoyage HTML des annonces et messages existants, avec `--dry-run`) ; aujourd'hui seul ce qui est réenregistré est nettoyé.
 - [ ] Option : signer l'URL de l'export `.ics` public. Elle n'expose plus que « Réservé » / « Indisponible », et la signer casserait les synchronisations déjà configurées chez Airbnb et Booking.
