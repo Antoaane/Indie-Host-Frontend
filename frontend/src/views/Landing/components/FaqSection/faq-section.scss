@@ -10,7 +10,16 @@
   h2 {
     text-align: center;
     @include lp-h2-title($accent, false);
-    margin-bottom: calc(var(--layout-gap) * 3);
+
+    // Surcharge émise après le mixin : conserve l'ordre actuel de Sass
+    // (à partir de lg, le mixin reprend la main sur la marge, comme avant).
+    & {
+      margin-bottom: calc(var(--layout-gap) * 3);
+
+      @include min-width(lg) {
+        margin-bottom: 0.5rem;
+      }
+    }
   }
 
   .faq-search {

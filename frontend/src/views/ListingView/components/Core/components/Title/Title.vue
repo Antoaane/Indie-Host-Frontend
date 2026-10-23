@@ -12,7 +12,11 @@ interface StaticContent {
   beds: string
   bedrooms: string
   bathrooms: string
+  /** Libellé devant le numéro d'enregistrement du meublé de tourisme (loi Le Meur). */
+  registrationNumber?: string
 }
+
+const FALLBACK_REGISTRATION_LABEL = 'N° d’enregistrement'
 
 const props = defineProps<{
   data: TitleModel
@@ -26,6 +30,10 @@ const bedroomLabel = computed(() => formatICUMessage(props.staticContent.bedroom
 const bedsLabel = computed(() => formatICUMessage(props.staticContent.beds, { count: props.data.bedrooms.bed ?? 0 }))
 
 const bathroomsLabel = computed(() => formatICUMessage(props.staticContent.bathrooms, { count: props.data.bathrooms }))
+
+// Affiché seulement quand l'hôte l'a renseigné : obligatoire dans les communes qui l'exigent.
+const registrationNumber = computed(() => props.data.tourismRegistrationNumber?.trim() ?? '')
+const registrationLabel = computed(() => props.staticContent.registrationNumber || FALLBACK_REGISTRATION_LABEL)
 </script>
 
 <template>
@@ -43,6 +51,12 @@ const bathroomsLabel = computed(() => formatICUMessage(props.staticContent.bathr
 
       <li v-html="`<span></span> ${data.bathrooms} ${bathroomsLabel}`" />
     </ul>
+    <p
+      v-if="registrationNumber"
+      class="registration"
+    >
+      {{ registrationLabel }}&nbsp;: <span class="value">{{ registrationNumber }}</span>
+    </p>
   </div>
 </template>
 
@@ -79,6 +93,17 @@ const bathroomsLabel = computed(() => formatICUMessage(props.staticContent.bathr
         background-color: $secondary;
         border-radius: borders.$rounded;
       }
+    }
+  }
+
+  > .registration {
+    margin: var(--layout-gap-xs) 0 0;
+    @include little-text($thin: false);
+    color: rgba($secondary-text, 0.7);
+
+    > .value {
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.02em;
     }
   }
 }

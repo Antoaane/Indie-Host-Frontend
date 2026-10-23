@@ -270,7 +270,7 @@ Le payload exact depend de la source et de ce que la page expose, mais le contra
   ],
   "images": [
     {
-      "title": "Photo 1",
+      "title": "Légende fournie par la plateforme, sinon vide",
       "url": "https://..."
     }
   ],

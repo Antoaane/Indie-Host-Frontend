@@ -40,8 +40,10 @@ export async function resolveListingAccessForOwner(
 
   const actor = await upsertUserFromAuth(prisma, auth);
   const isOwner = Boolean(actor && ownerId && ownerId === actor.id);
-  // Une annonce sans propriétaire reste modifiable par un compte connecté (elle lui est alors rattachée).
-  return { canReadPrivate: isOwner, canWrite: isOwner || (!ownerId && Boolean(actor)) };
+  // Une annonce sans propriétaire (héritage d'anciennes créations) n'est modifiable que par un
+  // admin, qui la transfère au bon compte : aucun parcours ne crée plus d'annonce sans propriétaire
+  // (POST /listings exige un compte, l'assistant public reste en mémoire locale).
+  return { canReadPrivate: isOwner, canWrite: isOwner };
 }
 
 export function isRedactedPatch(patch: Record<string, unknown>): boolean {

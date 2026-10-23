@@ -318,6 +318,27 @@
     min-height: 0;
   }
 
+  // Desktop et tablette : la fiche garde son défilement interne (#core, checkout) et les
+  // mentions légales restent sous la carte, toujours visibles, sur un voile clair lisible
+  // devant la photo de couverture floutée.
+  &:not(.is-mobile-layout)>.core {
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-xs);
+
+    >:not(.legal-links-compact) {
+      flex: 1 1 auto;
+      min-height: 0;
+    }
+
+    >.legal-links-compact {
+      flex: 0 0 auto;
+      background: rgba($accent, 0.86);
+      backdrop-filter: blur(6px);
+      border-radius: borders.$rounded-lg;
+    }
+  }
+
   >.stay {
     // max-height: calc(100vh - $nav-height);
     height: auto;
@@ -377,6 +398,13 @@
           }
         }
       }
+    }
+
+    // Fin du contenu défilant. Les coins décoratifs de la barre de réservation (hauteur
+    // borders.$rounded-xl) débordent sur le bas de la zone de défilement : on les dépasse.
+    >.legal-links-compact {
+      padding-top: var(--layout-gap-md);
+      padding-bottom: calc(var(--layout-gap-sm) + #{borders.$rounded-xl});
     }
   }
 

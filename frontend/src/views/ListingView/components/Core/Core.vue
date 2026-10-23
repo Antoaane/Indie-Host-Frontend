@@ -18,6 +18,7 @@ import Description from '@/views/ListingView/components/Core/components/Descript
 import ListingVideos from '@/views/ListingView/components/Gallery/ListingVideos.vue'
 import Amenities from '@/views/ListingView/components/Core/components/Amenities/Amenities.vue'
 import Rooms from '@/views/ListingView/components/Core/components/Rooms/Rooms.vue'
+import HouseRules from '@/views/ListingView/components/Core/components/HouseRules/HouseRules.vue'
 import Availabilities from '@/views/ListingView/components/Core/components/Availabilities/Availabilities.vue'
 
 import Map from '@/views/ListingView/components/Core/components/Map/Map.vue'
@@ -130,6 +131,7 @@ const descriptionStatic = {
       :data="props.data.rooms"
       :staticContent="staticContent.listing.rooms"
     />
+    <HouseRules :data="props.data.houseRules" />
     <Availabilities
       v-if="isLg"
       v-model:model-value="selection"

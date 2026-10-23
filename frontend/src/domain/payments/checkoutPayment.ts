@@ -170,7 +170,7 @@ export function buildStripeReservationMetadata({
     reservation_children: String(Math.max(0, Number(reservation.occupants.children ?? 0) || 0)),
     reservation_babies: String(Math.max(0, Number(reservation.occupants.babies ?? 0) || 0)),
     reservation_animals: String(Math.max(0, Number(reservation.occupants.animals ?? 0) || 0)),
-    reservation_pmr: String(Math.max(0, Number(reservation.occupants.pmr ?? 0) || 0)),
+    // Pas de nombre de voyageurs PMR chez Stripe : donnée de santé (RGPD, art. 9).
   }
 
   if (paymentRules) {

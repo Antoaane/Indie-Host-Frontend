@@ -1,6 +1,7 @@
 // File: src/domain/api/listingCalendar.ts
 
 import clerkToken from '@/utils/clerkToken'
+import { invalidateListingSections } from '@/domain/api/listingsCache'
 
 export type ListingCalendarSyncSource = {
   id: string
@@ -179,6 +180,8 @@ export async function importListingCalendarSource(input: {
     },
   )
 
+  // Les jours importés alimentent la section `bookings` de l'annonce.
+  invalidateListingSections(listingId)
   return normalizeSyncResult(data)
 }
 
@@ -199,5 +202,6 @@ export async function syncListingCalendarSource(input: {
     },
   )
 
+  invalidateListingSections(listingId)
   return normalizeSyncResult(data)
 }

@@ -1,6 +1,13 @@
 // File: src/domain/api/users.ts
 
 import clerkToken from '@/utils/clerkToken'
+import { invalidateListingLists } from '@/domain/api/listingsCache'
+import { invalidateSharedRequests, sharedRequest } from '@/domain/api/requestCache'
+
+// `/users/me` est demandé par chaque `useAdminAccess()` monté (barre de navigation, éditeur…) :
+// une seule requête part, le résultat est gardé quelques secondes et invalidé à la mise à jour du profil.
+const MY_USER_KEY = 'users/me'
+const MY_USER_TTL_MS = 10_000
 
 export type ApiUserRecord = {
   id: string
@@ -280,31 +287,33 @@ function toApiErrorMessage(error: unknown, fallback: string): string {
   return fallback
 }
 
-export async function fetchMyUser(): Promise<ApiUserRecord> {
-  const axios = await getAxios()
-  const url = resolveUrl(buildMyUserUrl())
-  const initialToken = await getAuthToken({ waitForReady: true })
+export function fetchMyUser(): Promise<ApiUserRecord> {
+  return sharedRequest(MY_USER_KEY, async () => {
+    const axios = await getAxios()
+    const url = resolveUrl(buildMyUserUrl())
+    const initialToken = await getAuthToken({ waitForReady: true })
 
-  try {
-    const { data } = await axios.get<Record<string, unknown>>(url, {
-      withCredentials: false,
-      headers: buildAuthHeaders(initialToken),
-    })
-    return normalizeUserRecord(data)
-  } catch (error) {
-    if (readHttpStatus(error) === 401) {
-      const refreshedToken = await readFreshTokenFromClerkRuntime()
-      if (refreshedToken && refreshedToken !== initialToken) {
-        const { data } = await axios.get<Record<string, unknown>>(url, {
-          withCredentials: false,
-          headers: buildAuthHeaders(refreshedToken),
-        })
-        return normalizeUserRecord(data)
+    try {
+      const { data } = await axios.get<Record<string, unknown>>(url, {
+        withCredentials: false,
+        headers: buildAuthHeaders(initialToken),
+      })
+      return normalizeUserRecord(data)
+    } catch (error) {
+      if (readHttpStatus(error) === 401) {
+        const refreshedToken = await readFreshTokenFromClerkRuntime()
+        if (refreshedToken && refreshedToken !== initialToken) {
+          const { data } = await axios.get<Record<string, unknown>>(url, {
+            withCredentials: false,
+            headers: buildAuthHeaders(refreshedToken),
+          })
+          return normalizeUserRecord(data)
+        }
       }
-    }
 
-    throw error
-  }
+      throw error
+    }
+  }, { ttlMs: MY_USER_TTL_MS })
 }
 
 export async function updateMyUser(payload: UpdateMyUserPayload): Promise<ApiUserRecord> {
@@ -331,6 +340,8 @@ export async function updateMyUser(payload: UpdateMyUserPayload): Promise<ApiUse
     }
 
     throw error
+  } finally {
+    invalidateSharedRequests(MY_USER_KEY)
   }
 }
 
@@ -406,6 +417,8 @@ export async function transferListingOwnershipAsAdmin(
       },
     )
 
+    // L'annonce change de propriétaire : les listes (admin et client) ne sont plus à jour.
+    invalidateListingLists()
     return data
   } catch (error) {
     throw new Error(toApiErrorMessage(error, 'Impossible de transférer cette annonce.'))

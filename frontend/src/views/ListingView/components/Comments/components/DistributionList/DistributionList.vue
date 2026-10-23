@@ -29,7 +29,11 @@ console.log(`${props.entries.length ? '✅' : '❌'} [DistributionList.vue](setu
         >
           <span class="stars">
             <span v-html="e + 1"></span>
-            <Star :size="14" />
+            <span class="sr-only">{{ e + 1 > 1 ? 'étoiles' : 'étoile' }}</span>
+            <Star
+              :size="14"
+              aria-hidden="true"
+            />
           </span>
           <progress
             :value="entry.percentage"

@@ -1648,11 +1648,11 @@ watch(
     background: rgba($secondary, 0.92);
     color: rgba($accent, 1);
     @include animations.transition(animations.$duration-fast);
-    @include animations.press();
     min-height: 2.35rem;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    @include animations.press();
 
     @include on-hover(':not(:disabled)') {
       transform: translateY(-1px);
@@ -1707,8 +1707,8 @@ watch(
       color: rgba($accent, 0.96);
       background: rgba($accent, 0.08);
       @include animations.transition(animations.$duration-fast);
-      @include animations.press();
       cursor: pointer;
+      @include animations.press();
 
       &:disabled {
         opacity: 0.44;

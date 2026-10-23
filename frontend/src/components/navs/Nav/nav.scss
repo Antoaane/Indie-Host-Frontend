@@ -212,10 +212,10 @@
   }
 
   >.search {
-    @include inputs.search($theme: accent, $compact: true);
     min-width: 220px;
     width: 220px;
     flex: 0 0 auto;
+    @include inputs.search($theme: accent, $compact: true);
   }
 
   >.links {
@@ -341,8 +341,8 @@
     padding-right: var(--layout-gap-md);
 
     @include min-width(lg) {
-      @include container;
       padding-top: var(--layout-gap-4xl);
+      @include container;
     }
 
     >.mobile-links {
@@ -375,10 +375,10 @@
       }
 
       >.search {
-        @include inputs.search($theme: accent, $compact: true);
         min-width: 220px;
         width: 220px;
         flex: 0 0 auto;
+        @include inputs.search($theme: accent, $compact: true);
       }
     }
   }

@@ -2,6 +2,7 @@
 
 <script setup lang="ts">
 import type { ProofSectionContent } from '@/views/Landing/types/content'
+import LandingVideo from '@/views/Landing/components/LandingVideo/LandingVideo.vue'
 
 defineProps<{
   content: ProofSectionContent
@@ -45,24 +46,12 @@ const demoVideo = {
         data-sr-y="30"
       >
         <div class="demo-video">
-          <video
+          <LandingVideo
             v-if="demoVideo.webm || demoVideo.mp4"
-            autoplay
-            loop
-            muted
-            playsinline
-          >
-            <source
-              v-if="demoVideo.webm"
-              :src="demoVideo.webm"
-              type="video/webm"
-            />
-            <source
-              v-if="demoVideo.mp4"
-              :src="demoVideo.mp4"
-              type="video/mp4"
-            />
-          </video>
+            :webm="demoVideo.webm"
+            :mp4="demoVideo.mp4"
+            :label="content.demoVideoLabel"
+          />
         </div>
         <p class="demo-caption">
           {{ content.demoVideoLabel }}

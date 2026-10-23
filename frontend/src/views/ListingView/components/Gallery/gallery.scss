@@ -103,10 +103,22 @@
 
       >.swiper-wrapper {
         >.swiper-slide {
-          >img {
+          >.slide-button {
+            display: block;
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            padding: 0;
+            margin: 0;
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+
+            >img {
+              display: block;
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+            }
           }
         }
       }

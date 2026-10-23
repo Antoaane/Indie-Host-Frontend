@@ -1,13 +1,26 @@
 <!-- File: src/views/ListingView/components/Gallery/components/Tile.vue -->
 
 <script setup lang="ts">
+import { computed } from 'vue'
+
 const props = defineProps<{
   styleObj: Record<string, string>
   src: string
   alt?: string
   objPos?: string
+  /** Titre de l'annonce, pour le texte alternatif de secours. */
+  listingTitle?: string
+  /** Numéro de la photo (à partir de 1), pour le texte alternatif de secours. */
+  index?: number
 }>()
 defineEmits<{ (e: 'click'): void }>()
+
+const altText = computed(() => {
+  const alt = props.alt?.trim()
+  if (alt) return alt
+  const title = props.listingTitle?.trim() || 'Annonce'
+  return typeof props.index === 'number' ? `${title} — photo ${props.index}` : title
+})
 </script>
 
 <template>
@@ -18,11 +31,12 @@ defineEmits<{ (e: 'click'): void }>()
     <button
       class="button"
       type="button"
+      :aria-label="`Agrandir la photo : ${altText}`"
       @click="$emit('click')"
     >
       <img
         :src="props.src"
-        :alt="props.alt || ''"
+        :alt="altText"
         :style="{ objectPosition: props.objPos }"
         class="image"
         draggable="false"

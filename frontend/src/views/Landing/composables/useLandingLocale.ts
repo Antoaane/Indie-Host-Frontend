@@ -1,7 +1,8 @@
 // File: src/views/Landing/composables/useLandingLocale.ts
 
-import { computed, watchEffect } from 'vue'
+import { computed, getCurrentScope, onScopeDispose, watchEffect } from 'vue'
 import type { LandingContent } from '@/views/Landing/types/content'
+import { clerkDocumentLang } from '@/locales/clerk'
 
 import fr from '@/locales/landing/fr.json'
 import en from '@/locales/landing/en.json'
@@ -60,6 +61,11 @@ function getBrowserLocale(): SupportedLocale {
   return (localeMap[lang] ?? localeMap[code] ?? FALLBACK_LOCALE) as SupportedLocale
 }
 
+/** Contenu de la landing dans la langue du navigateur, sans effet de bord (hors composant). */
+export function getLandingContent(): LandingContent {
+  return LOCALE_CONTENT[getBrowserLocale()]
+}
+
 export function useLandingLocale() {
   const locale = computed<SupportedLocale>(() => getBrowserLocale())
   const content = computed<LandingContent>(() => LOCALE_CONTENT[locale.value])
@@ -69,6 +75,15 @@ export function useLandingLocale() {
       document.documentElement.lang = locale.value
     }
   })
+
+  // Le reste de l'application est en français : on rétablit `lang` en quittant la landing.
+  if (getCurrentScope()) {
+    onScopeDispose(() => {
+      if (typeof document !== 'undefined') {
+        document.documentElement.lang = clerkDocumentLang
+      }
+    })
+  }
 
   return { content, locale }
 }

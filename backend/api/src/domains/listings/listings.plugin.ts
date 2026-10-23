@@ -1,9 +1,12 @@
 import fp from 'fastify-plugin';
 
 import { asObject } from '../../lib/json.js';
+import { rateLimitByIp } from '../../lib/rateLimit.js';
 import { ListingsService } from './listings.service.js';
 import {
+  createGuideReviewSchema,
   createListingSchema,
+  listingGuideParamsSchema,
   listingDomainAvailabilitySchema,
   listHubsQuerySchema,
   listingIdParamsSchema,
@@ -335,6 +338,64 @@ export const listingsPlugin = fp(async (fastify) => {
     }
 
     reply.send(domain);
+  });
+
+  // Avis voyageur depuis le guide d'arrivée : protégé par la clé de guide (pas de compte Clerk).
+  // Déclaré avant `/listings/:resource/:listingId` pour ne pas être capturé par la route générique.
+  fastify.get('/listings/guides/:guideKey/review', async (request, reply) => {
+    const { guideKey } = listingGuideParamsSchema.parse(request.params);
+    const result = await service.getGuideReview(guideKey);
+
+    if (!result) {
+      reply.code(404).send({ message: 'Réservation introuvable.' });
+      return;
+    }
+
+    if (result === 'forbidden') {
+      reply.code(403).send({ message: 'Clé de guide invalide.' });
+      return;
+    }
+
+    reply.send(result);
+  });
+
+  fastify.post('/listings/guides/:guideKey/review', {
+    preHandler: rateLimitByIp({
+      max: 5,
+      windowMs: 10 * 60 * 1000,
+      message: 'Trop de tentatives. Réessayez dans quelques minutes.',
+    }),
+  }, async (request, reply) => {
+    const { guideKey } = listingGuideParamsSchema.parse(request.params);
+    const payload = createGuideReviewSchema.parse(asObject(request.body));
+    const result = await service.createGuideReview(guideKey, payload);
+
+    if (!result) {
+      reply.code(404).send({ message: 'Réservation introuvable.' });
+      return;
+    }
+
+    if (result === 'forbidden') {
+      reply.code(403).send({ message: 'Clé de guide invalide.' });
+      return;
+    }
+
+    if (result === 'invalid_text') {
+      reply.code(400).send({ message: 'Ajoutez un avis un peu plus détaillé (10 caractères minimum).' });
+      return;
+    }
+
+    if (result === 'already_reviewed') {
+      reply.code(409).send({ code: 'REVIEW_ALREADY_EXISTS', message: 'Vous avez déjà laissé un avis pour ce séjour.' });
+      return;
+    }
+
+    if (result === 'locked') {
+      reply.code(423).send({ code: 'REVIEW_LOCKED', message: 'Vous pourrez laisser un avis après votre première nuit sur place.' });
+      return;
+    }
+
+    reply.code(201).send({ review: result });
   });
 
   fastify.get('/listings/:resource/:listingId', {

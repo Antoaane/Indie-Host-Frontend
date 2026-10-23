@@ -1,7 +1,7 @@
 <!-- File: src/views/Editor/components/EditorSidebar/panels/ListingPanels/GalleryPanel.vue -->
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, reactive, ref, useId, watch } from 'vue'
 import { useTouchLongPress } from '@/composables/useTouchLongPress'
 import { Film, Plus, Trash2 } from 'lucide-vue-next'
 import type { RawMediaVideo, RawMedias } from '@/domain/listings/types'
@@ -25,6 +25,7 @@ const props = defineProps<{
   medias?: Partial<RawMedias> | null
   listingId?: string | null
   listingStatus?: string | null
+  listingTitle?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -33,10 +34,13 @@ const emit = defineEmits<{
 
 const images = computed<DraftImage[]>(() => (props.medias?.images as DraftImage[] | undefined) ?? [])
 const panelContent = editorStatic.panels.listing.gallery
+const captionContent = panelContent.caption
 const galleryLimits = editorStatic.validation.listing.gallery
 const titleValidation = editorStatic.validation.listing.title
 const textDefaults = editorStatic.validation.defaults.simpleText
-const imageAltMaxLength = resolveTextMaxLength(titleValidation.max, textDefaults)
+const imageAltMaxLength = resolveTextMaxLength(galleryLimits.altMax, textDefaults)
+const videoAltMaxLength = resolveTextMaxLength(titleValidation.max, textDefaults)
+const captionIdPrefix = useId()
 const fileInput = ref<HTMLInputElement | null>(null)
 const isUploading = ref(false)
 const isDraggingFiles = ref(false)
@@ -213,7 +217,7 @@ async function addVideoFiles(files: File[]) {
           src: uploaded.url,
           type: uploaded.mimeType,
           poster: uploaded.posterUrl ?? undefined,
-          alt: normalizeTextInput(file.name.replace(/\.[^/.]+$/, ''), imageAltMaxLength),
+          alt: normalizeTextInput(file.name.replace(/\.[^/.]+$/, ''), videoAltMaxLength),
         },
       ]
       setVideos(next)
@@ -279,6 +283,36 @@ function setImages(next: DraftImage[]) {
 
 function normalizePositions(next: DraftImage[]) {
   return next.map((img, idx) => ({ ...img, position: idx }))
+}
+
+// Texte alternatif affiché : la description saisie, sinon « <titre> — photo N » (même repli que l'annonce publique).
+function imageAltFallback(index: number): string {
+  const title = (props.listingTitle ?? '').trim()
+  return title
+    ? formatValidationMessage(panelContent.altFallback, { title, index: index + 1 })
+    : formatValidationMessage(panelContent.altFallbackUntitled, { index: index + 1 })
+}
+
+function imageAlt(img: DraftImage, index: number): string {
+  const alt = typeof img.alt === 'string' ? img.alt.trim() : ''
+  return alt || imageAltFallback(index)
+}
+
+function captionLabel(index: number): string {
+  return formatValidationMessage(captionContent.label, { index: index + 1 })
+}
+
+function captionInputId(index: number): string {
+  return `${captionIdPrefix}-caption-${index}`
+}
+
+// Les positions sont conservées telles quelles : les renormaliser changerait les clés des tuiles et ferait perdre le focus.
+function onCaptionInput(index: number, event: Event) {
+  const target = event.target as HTMLInputElement | null
+  const next = normalizeTextInput(target?.value ?? '', imageAltMaxLength)
+  const current = orderedImages.value[index]
+  if (!current || (current.alt ?? '') === next) return
+  setImages(orderedImages.value.map((img, idx) => (idx === index ? { ...img, alt: next } : img)))
 }
 
 function setGalleryFeedback(message: string, level: 'error' | 'success' = 'error') {
@@ -370,8 +404,8 @@ async function addGalleryFiles(files: File[]) {
               preferredMimeType: 'image/webp',
               quality: 0.86,
             })
-        const alt = normalizeTextInput(file.name.replace(/\.[^/.]+$/, ''), imageAltMaxLength)
-        return { src, alt, position: baseImages.length + index } as DraftImage
+        // Pas de nom de fichier en texte alternatif : vide, l'annonce publique affiche « <titre> — photo N ».
+        return { src, alt: '', position: baseImages.length + index } as DraftImage
       }),
     )
     const next = normalizePositions([
@@ -633,36 +667,55 @@ onBeforeUnmount(() => {
           @pointerdown="onTilePointerDown(index, $event)"
           @dragstart.prevent
         >
-          <img
-            v-if="img.src"
-            :src="img.src"
-            :alt="img.alt || ''"
-            loading="lazy"
-            draggable="false"
-            @dragstart.prevent
-          />
-          <div
-            v-else
-            class="placeholder"
-          />
-          <div class="tile-order">
-            <span class="order-index">{{ index + 1 }}</span>
-            <span
-              v-if="index === 0"
-              class="cover-label"
-            >
-              Couverture
-            </span>
+          <div class="thumb">
+            <img
+              v-if="img.src"
+              :src="img.src"
+              :alt="imageAlt(img, index)"
+              loading="lazy"
+              draggable="false"
+              @dragstart.prevent
+            />
+            <div
+              v-else
+              class="placeholder"
+            />
+            <div class="tile-order">
+              <span class="order-index">{{ index + 1 }}</span>
+              <span
+                v-if="index === 0"
+                class="cover-label"
+              >
+                Couverture
+              </span>
+            </div>
+            <div class="tile-remove">
+              <button
+                type="button"
+                aria-label="Supprimer l’image"
+                @pointerdown.stop
+                @click.stop="removeImage(index)" title="Supprimer l’image"
+              >
+                <Trash2 :size="18" />
+              </button>
+            </div>
           </div>
-          <div class="tile-remove">
-            <button
-              type="button"
-              aria-label="Supprimer l’image"
-              @pointerdown.stop
-              @click.stop="removeImage(index)" title="Supprimer l’image"
-            >
-              <Trash2 :size="18" />
-            </button>
+          <!-- Le champ ne déclenche pas le tri : l'appui y reste une saisie. -->
+          <div
+            class="caption"
+            @pointerdown.stop
+          >
+            <label :for="captionInputId(index)">{{ captionLabel(index) }}</label>
+            <input
+              :id="captionInputId(index)"
+              type="text"
+              :value="img.alt ?? ''"
+              :placeholder="captionContent.placeholder"
+              :maxlength="imageAltMaxLength"
+              inputmode="text"
+              autocomplete="off"
+              @input="onCaptionInput(index, $event)"
+            />
           </div>
         </div>
 
@@ -689,6 +742,12 @@ onBeforeUnmount(() => {
           />
         </div>
       </div>
+      <p
+        v-if="orderedImages.length"
+        class="hint"
+      >
+        {{ captionContent.hint }}
+      </p>
 
       <div class="videos">
         <div class="videos-header">

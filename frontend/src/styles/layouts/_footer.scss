@@ -58,3 +58,29 @@
     @include little-text($secondary-text);
   }
 }
+
+// Landing en thème sombre : le pied de page est hors de #landing-page, il suit la classe que
+// _LandingPage.vue pose sur <html>. Mêmes opacités que la variante claire, couleurs inversées.
+:root.landing-theme-dark .layout-footer {
+  background-color: $secondary;
+
+  >.layout-footer__legal>a {
+    color: rgba($accent, 0.7);
+
+    @include on-hover {
+      color: $accent;
+    }
+
+    &.router-link-exact-active {
+      color: $accent;
+    }
+
+    &:focus-visible {
+      outline-color: $accent;
+    }
+  }
+
+  >p {
+    color: $accent;
+  }
+}

@@ -11,6 +11,7 @@ import svgLoader from 'vite-svg-loader'
 import svgToVuePlugin from './plugins/svg-to-vue/vite-plugin-svg-to-vue';
 import fileCommentInjector from './plugins/file-path-comment/vite-plugin-file-comment'
 import legalPrerender from './plugins/legal-prerender/vite-plugin-legal-prerender'
+import marketingPrerender from './plugins/marketing-prerender/vite-plugin-marketing-prerender'
 
 type ParsedEndpoint = {
   origin?: string
@@ -184,6 +185,8 @@ export default defineConfig(({ mode }) => {
       // vueDevTools(),
       svgLoader(),
       legalPrerender(),
+      // Après legalPrerender : réécrit dist/index.html (accueil) et génère dist/pricing/index.html.
+      marketingPrerender(),
     ],
     resolve: {
       alias: {

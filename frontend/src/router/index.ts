@@ -3,6 +3,7 @@
 import SignInView from '@/views/SignInView.vue'
 import SignUpView from '@/views/SignUpView.vue'
 import { createRouter, createWebHistory, type RouteLocationNormalized } from 'vue-router'
+import { injectHead, type VueHeadClient } from '@unhead/vue'
 import { isListingHostname } from '@/domain/listings/publicDomain'
 import { normalizeListingSlug } from '@/domain/listings/slug'
 import { resolveRuntimeUserId } from '@/router/backOfficeUser'
@@ -28,6 +29,22 @@ const MessagingRoute = () => import('@/views/Messaging/MessagingRoute.vue')
 const ManagementRoute = () => import('@/views/Management/ManagementRoute.vue')
 const DomainsRoute = () => import('@/views/Domains/DomainsRoute.vue')
 const AdminRoute = () => import('@/views/Admin/AdminRoute.vue')
+
+declare module 'vue-router' {
+  interface RouteMeta {
+    /** Titre d'onglet de la page (français). Une vue peut le préciser avec `useHead`. */
+    title?: string
+  }
+}
+
+const SITE_NAME = 'IndieHost'
+const HOME_TITLE = 'IndieHost — Location saisonnière sans commission'
+
+function resolveRouteTitle(to: RouteLocationNormalized): string {
+  const title = to.meta.title?.trim()
+  if (!title) return SITE_NAME
+  return title.startsWith(SITE_NAME) ? title : `${title} | ${SITE_NAME}`
+}
 
 const BACK_OFFICE_USER_ROUTE_BY_ENTRY_NAME = {
   editor: 'editor-user',
@@ -93,31 +110,31 @@ const router = createRouter({
       path: '/',
       name: 'home',
       component: HomePage,
-      meta: { navVariant: 'landing' },
+      meta: { navVariant: 'landing', title: HOME_TITLE },
     },
     {
       path: '/sign-in/:step(.*)*',
       name: 'sign-in',
       component: SignInView,
-      meta: { navVariant: 'public' },
+      meta: { navVariant: 'public', title: 'Connexion' },
     },
     {
       path: '/sign-up/:step(.*)*',
       name: 'sign-up',
       component: SignUpView,
-      meta: { navVariant: 'public' },
+      meta: { navVariant: 'public', title: 'Inscription' },
     },
     {
       path: '/pricing',
       name: 'pricing',
       component: PricingView,
-      meta: { navVariant: 'public' },
+      meta: { navVariant: 'public', title: 'Tarifs' },
     },
     {
       path: '/pricing/callback',
       name: 'pricing-callback',
       component: PricingChecklistCallbackView,
-      meta: { navVariant: 'public' },
+      meta: { navVariant: 'public', title: 'Finalisation de votre abonnement' },
     },
     {
       path: '/pricing/callback/auth',
@@ -162,19 +179,19 @@ const router = createRouter({
       path: '/listing/guide/:id',
       name: 'listing-guide',
       component: ListingGuide,
-      meta: { hideNav: true },
+      meta: { hideNav: true, title: "Guide d'arrivée" },
     },
     {
       path: '/booking/confirmation/:reservationId',
       name: 'booking-confirmation',
       component: BookingConfirmationView,
-      meta: { navVariant: 'public', hideNav: true },
+      meta: { navVariant: 'public', hideNav: true, title: 'Confirmation de réservation' },
     },
     {
       path: '/donation',
       name: 'Donation',
       component: () => import('@/views/Donation/_DonationPage.vue'),
-      meta: { navVariant: 'landing' },
+      meta: { navVariant: 'landing', title: 'Faire un don' },
     },
     {
       path: '/legal',
@@ -184,91 +201,92 @@ const router = createRouter({
       path: `/legal/:page(${legalSlugPattern})`,
       name: 'legal',
       component: LegalPage,
-      meta: { navVariant: 'landing' },
+      // LegalPage.vue précise le titre du document via useHead.
+      meta: { navVariant: 'landing', title: 'Informations légales' },
     },
     {
       path: '/dashboard/editor/create',
       name: 'create-listing',
       component: CreateListingPublicRoute,
-      meta: { navVariant: 'public', hideNav: true },
+      meta: { navVariant: 'public', hideNav: true, title: 'Créer une annonce' },
       beforeEnter: resolveCreateListingEntryRedirect,
     },
     {
       path: '/create-listing',
       name: 'create-listing-public',
       component: CreateListingPublicRoute,
-      meta: { navVariant: 'public', hideNav: true },
+      meta: { navVariant: 'public', hideNav: true, title: 'Créer une annonce' },
     },
     {
       path: '/dashboard/editor/:userId/create',
       name: 'create-listing-user',
       component: CreateListingRoute,
-      meta: { navVariant: 'host', hideNav: true },
+      meta: { navVariant: 'host', hideNav: true, title: 'Créer une annonce' },
     },
     {
       path: '/dashboard/editor',
       name: 'editor',
       component: EditorRoute,
-      meta: { navVariant: 'host' },
+      meta: { navVariant: 'host', title: 'Mes annonces' },
       beforeEnter: resolveBackOfficeAccess,
     },
     {
       path: '/dashboard/editor/:userId',
       name: 'editor-user',
       component: EditorRoute,
-      meta: { navVariant: 'host' },
+      meta: { navVariant: 'host', title: 'Mes annonces' },
     },
     {
       path: '/dashboard/management',
       name: 'management',
       component: ManagementRoute,
-      meta: { navVariant: 'host' },
+      meta: { navVariant: 'host', title: 'Gestion' },
       beforeEnter: resolveBackOfficeAccess,
     },
     {
       path: '/dashboard/management/:userId',
       name: 'management-user',
       component: ManagementRoute,
-      meta: { navVariant: 'host' },
+      meta: { navVariant: 'host', title: 'Gestion' },
     },
     {
       path: '/dashboard/domains',
       name: 'domains',
       component: DomainsRoute,
-      meta: { navVariant: 'host' },
+      meta: { navVariant: 'host', title: 'Domaines' },
       beforeEnter: resolveBackOfficeAccess,
     },
     {
       path: '/dashboard/domains/:userId',
       name: 'domains-user',
       component: DomainsRoute,
-      meta: { navVariant: 'host' },
+      meta: { navVariant: 'host', title: 'Domaines' },
     },
     {
       path: '/dashboard/admin',
       name: 'admin',
       component: AdminRoute,
-      meta: { navVariant: 'host' },
+      meta: { navVariant: 'host', title: 'Administration' },
       beforeEnter: resolveBackOfficeAccess,
     },
     {
       path: '/dashboard/admin/:userId',
       name: 'admin-user',
       component: AdminRoute,
-      meta: { navVariant: 'host' },
+      meta: { navVariant: 'host', title: 'Administration' },
     },
     {
       path: '/dashboard/messages',
       name: 'messaging',
       component: MessagingRoute,
-      meta: { navVariant: 'host' },
+      meta: { navVariant: 'host', title: 'Messagerie' },
       beforeEnter: resolveBackOfficeAccess,
     },
     {
       path: '/dashboard/messages/:userId',
       name: 'messaging-user',
       component: MessagingRoute,
-      meta: { navVariant: 'host' },
+      meta: { navVariant: 'host', title: 'Messagerie' },
     },
     {
       path: '/editor/create',
@@ -377,7 +395,8 @@ const router = createRouter({
       path: '/:slug([a-z0-9-]+)',
       name: 'listing',
       component: Listing,
-      meta: { hideNav: true },
+      // _Listing.vue remplace ce titre par celui de l'annonce via useHead.
+      meta: { hideNav: true, title: 'Annonce' },
     },
   ],
 })
@@ -389,5 +408,33 @@ router.beforeEach((to) => {
   if (to.name === 'home' || to.name === 'listing' || to.name === 'listing-guide' || to.name === 'booking-confirmation' || to.name === 'legal') return true
   return { name: 'home' }
 })
+
+// Titre d'onglet : une seule entrée unhead, posée à l'installation puis mise à jour à chaque
+// navigation. Les vues qui appellent `useHead` (annonce, documents légaux) passent devant, et
+// leur départ rend la main à ce titre au lieu de celui capturé par unhead au premier rendu.
+// Le head est fourni par le plugin @nuxt/ui, installé avant le routeur dans main.ts.
+const installRouter = router.install
+router.install = (app) => {
+  installRouter.call(router, app)
+
+  let head: VueHeadClient | null = null
+  try {
+    head = app.runWithContext(() => injectHead())
+  } catch {
+    head = null
+  }
+
+  if (head) {
+    const titleEntry = head.push({ title: resolveRouteTitle(router.currentRoute.value) })
+    router.afterEach((to) => {
+      titleEntry.patch({ title: resolveRouteTitle(to) })
+    })
+    return
+  }
+
+  router.afterEach((to) => {
+    if (typeof document !== 'undefined') document.title = resolveRouteTitle(to)
+  })
+}
 
 export default router

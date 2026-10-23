@@ -376,6 +376,9 @@ body:has(.create-listing#create-listing-page) {
         display: flex;
         align-items: center;
         justify-content: space-between;
+        gap: var(--layout-gap-sm);
+        padding-bottom: calc(var(--layout-gap-xs) + env(safe-area-inset-bottom, 0px));
+        background-color: #00000000 !important;
 
         // Override hover pour éviter que les deux boutons semblent identiques
         // (blanc ↔ noir sont les couleurs de repos respectives des deux boutons)
@@ -393,9 +396,6 @@ body:has(.create-listing#create-listing-page) {
             outline: 3px solid rgba($secondary, 0.3) !important;
           }
         }
-        gap: var(--layout-gap-sm);
-        padding-bottom: calc(var(--layout-gap-xs) + env(safe-area-inset-bottom, 0px));
-        background-color: #00000000 !important;
 
         >.start-actions {
           display: inline-flex;

@@ -301,8 +301,12 @@ function removeCustomFee(index: number) {
 
       > .remove {
         @include buttons.primary($theme: light, $padding: false);
-        width: 40px;
-        height: 40px;
+
+        // Surcharge émise après le mixin : conserve l'ordre actuel de Sass
+        & {
+          width: 40px;
+          height: 40px;
+        }
 
         @media (pointer: coarse) {
           width: 2.75rem;

@@ -33,6 +33,7 @@ const videos = computed(() => (props.videos ?? []).filter((video) => typeof vide
         <video
           :src="video.src"
           :poster="video.poster || undefined"
+          :aria-label="video.alt?.trim() || `Vidéo ${index + 1} de l'annonce`"
           controls
           playsinline
           preload="metadata"

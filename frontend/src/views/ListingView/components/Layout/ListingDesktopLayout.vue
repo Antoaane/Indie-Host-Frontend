@@ -14,6 +14,7 @@ import Core from '@/views/ListingView/components/Core/Core.vue'
 import Comments from '@/views/ListingView/components/Comments/Comments.vue'
 import Booking from '@/views/ListingView/components/Booking/Booking.vue'
 import Checkout from '@/views/ListingView/components/Checkout/Checkout.vue'
+import LegalLinksCompact from '@/components/layouts/LegalLinksCompact.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -84,6 +85,7 @@ function onConfirmCheckout(payload: CheckoutConfirmationPayload) {
       <Gallery
         v-if="props.listingData"
         :medias="props.listingData.medias"
+        :listing-title="props.listingData.title.title"
         :preview-only="props.previewOnly"
       />
       <template v-else><div class="skeleton">Chargement…</div></template>
@@ -128,6 +130,8 @@ function onConfirmCheckout(payload: CheckoutConfirmationPayload) {
         Chargement…
       </div>
     </Transition>
+
+    <LegalLinksCompact v-if="!props.previewOnly" />
   </div>
 
   <div class="stay">

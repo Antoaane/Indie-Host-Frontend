@@ -1,6 +1,7 @@
 // File: src/views/ListingView/types/listing.ts
 
 import type { ListingReservationRules } from '@/domain/listings/reservationRules'
+import type { HostLegalStatus } from '@/domain/listings/types'
 
 // -------- MEDIAS --------
 export type ImageItem = { src: string; alt: string; position: number };
@@ -19,6 +20,8 @@ export type TitleModel = {
   guest_capacity: number;
   bedrooms: { quantity: number; bed?: number };
   bathrooms: number;
+  /** Numéro d'enregistrement du meublé de tourisme, vide si non renseigné. */
+  tourismRegistrationNumber: string;
 };
 
 // -------- POLITIQUES --------
@@ -36,6 +39,8 @@ export type PerksModel = PerkItem[];
 export type HostProfileModel = {
   name: string;
   status?: string;
+  legalStatus?: HostLegalStatus;
+  companyName?: string;
   seniority: number;
   globalNote?: number;
   avatar?: string;
@@ -129,6 +134,14 @@ export type NotesModel = {
   }>;
 };
 
+// -------- RÈGLEMENT INTÉRIEUR --------
+// `arrival.practical.rules` (Quill, HTML) : seule partie du guide d'arrivée exposée publiquement,
+// annoncée avant le paiement (information précontractuelle). `html` est brut : passer par sanitizeHtml().
+export type HouseRulesModel = {
+  html: string;   // '' quand l'hôte n'a rien renseigné
+  text: string;   // version texte brut (aperçu, détection du vide)
+};
+
 export type ReviewsVisibilityModel = {
   indiehost: boolean;
   airbnb: boolean;
@@ -161,4 +174,5 @@ export type ListingParsed = {
   comments: CommentsModel;
   commentsPages: CommentsPagesModel;
   reviewsVisibility: ReviewsVisibilityModel;
+  houseRules: HouseRulesModel;
 };

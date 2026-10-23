@@ -15,6 +15,7 @@ import NavLandingVariant from '@/components/navs/Nav/NavLandingVariant.vue'
 import NavPublicVariant from '@/components/navs/Nav/NavPublicVariant.vue'
 import type { NavItem, NavVariant } from '@/components/navs/Nav/navTypes'
 import { closeMobileMenu, isMobileMenuOpen, isNavForcedHidden } from '@/components/navs/navUtils'
+import { clearSharedRequests } from '@/domain/api/requestCache'
 import { createMyStripeConnectDashboardLink, fetchMyStripeSubscriptionState } from '@/domain/api/stripeSubscriptions'
 import { isManagedListingHostname } from '@/domain/listings/publicDomain'
 import { useAdminAccess } from '@/composables/useAdminAccess'
@@ -225,6 +226,8 @@ function closeMyProfileDialog() {
 }
 
 async function handleSignOut() {
+  // Rien de ce qui a été lu pour ce compte ne doit être servi au suivant.
+  clearSharedRequests()
   try {
     await signOut.value({ redirectUrl: '/' })
   } catch (error) {

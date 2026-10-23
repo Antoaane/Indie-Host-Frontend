@@ -11,6 +11,12 @@ export interface VideoAsset {
   mp4?: string
 }
 
+/** Libellés des boutons lecture / pause des vidéos de démonstration. */
+export interface VideoControlsContent {
+  play: string
+  pause: string
+}
+
 export interface CtaLink {
   label: string
   href: string
@@ -42,6 +48,8 @@ export interface IntroSectionContent {
   createAccountCtaLabel: string
   createAccountCtaHint?: string
   backButtonAriaLabel?: string
+  /** Nom accessible de la vidéo de démonstration de l'import (mobile). */
+  importDemoVideoLabel?: string
   primaryCta: CtaLink
 }
 
@@ -275,4 +283,5 @@ export interface LandingContent {
   join: JoinContent
   faq: FaqContent
   finalCtaSection: FinalCtaSectionContent
+  videoControls?: VideoControlsContent
 }

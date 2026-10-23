@@ -215,6 +215,18 @@ if [ ! -f "/secrets/cloudflare.ini" ]; then
   log_warn "Secret optionnel absent: /secrets/cloudflare.ini (necessaire pour HTTPS wildcard Cloudflare auto)."
 fi
 
+# Optionnel : sans secret de signature, POST /api/v1/payments/stripe/webhook repond 503 et les
+# remboursements echoues / litiges Stripe ne sont pas suivis (voir .env.example).
+if [ -z "$(read_env_var "STRIPE_WEBHOOK_SECRET")" ]; then
+  log_warn "Variable optionnelle absente: STRIPE_WEBHOOK_SECRET (webhook Stripe remboursements/litiges desactive)."
+fi
+
+# Optionnel : sans SMTP, aucun e-mail n'est envoye aux voyageurs (confirmation et annulation de
+# reservation, support durable du contrat). Voir SMTP_* et MAIL_* dans .env.example.
+if [ -z "$(read_env_var "SMTP_URL")" ] && [ -z "$(read_env_var "SMTP_HOST")" ]; then
+  log_warn "Variables optionnelles absentes: SMTP_URL / SMTP_HOST (e-mails de confirmation de reservation desactives)."
+fi
+
 if [ "$errors" -ne 0 ]; then
   log_error "Configuration invalide. Corrige .env et secrets/*.txt, puis relance docker compose."
   exit 1

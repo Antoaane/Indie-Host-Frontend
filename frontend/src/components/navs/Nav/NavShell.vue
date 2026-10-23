@@ -10,6 +10,7 @@ import HostProfileDialog from '@/components/navs/Nav/HostProfileDialog.vue'
 import RelativeOverlay from '@/components/overlays/RelativeOverlay.vue'
 import type { NavItem } from '@/components/navs/Nav/navTypes'
 import { closeMobileMenu, isMobileMenuOpen, scrollToTarget, toggleMobileMenu } from '@/components/navs/navUtils'
+import { clearSharedRequests } from '@/domain/api/requestCache'
 import { vp } from '@/utils/viewport'
 
 import { icons } from '@/components/svgs'
@@ -261,6 +262,7 @@ function closeMyProfileDialog() {
 
 async function handleSignOut() {
   closeProfileMenu()
+  clearSharedRequests()
 
   try {
     await signOut.value({ redirectUrl: '/' })

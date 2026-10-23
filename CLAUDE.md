@@ -427,6 +427,15 @@ Le serveur ne fait pas confiance au navigateur :
 - Tout `v-html` de contenu hôte, voyageur ou importé passe par `sanitizeHtml()` (`frontend/src/utils/sanitizeHtml.ts`, DOMPurify, classes `ql-*` uniquement)
 - URL distantes récupérées par le serveur (sources iCal) : `lib/safeRemoteFetch.ts` (https, IP publiques uniquement, redirections revalidées, taille plafonnée)
 - Gel admin : un admin qui passe une annonce en `blocked` pose `core.blockedBy = 'admin'` ; le propriétaire ne peut alors plus changer le statut (ni réactiver une annonce `deleted`), ni modifier `kind`
+- HTML nettoyé **aussi à l'écriture** côté API (`lib/sanitizeHtml.ts`, `sanitize-html`, même politique que `frontend/src/utils/sanitizeHtml.ts` : toute évolution se fait des deux côtés) : sections d'annonce (`core`, `arrival`, `comments`, `notes`, `host`, `medias.alt`), guide d'arrivée, messages (texte brut), import scraping, avis voyageur. Vérification rapide : `npx tsx backend/api/scripts/sanitize-smoke.ts`
+- Réservation atomique (`bookings.service.ts`) : verrou consultatif Postgres par annonce (`lib/advisoryLock.ts`) + relecture des disponibilités sous verrou + rattachement conditionnel du `Payment` (`reservationId` unique) dans une seule transaction ; un voyageur qui perd la course est remboursé automatiquement (409 `RESERVATION_RANGE_UNAVAILABLE`, `refunded: true`)
+- Limites de débit par IP (`lib/rateLimit.ts`) sur l'import, l'IA, `POST /payments/stripe/payment-intents`, `POST /bookings` et l'avis voyageur depuis le guide
+- Annonce sans propriétaire : modifiable par un admin uniquement (plus de rattachement automatique au premier compte connecté)
+- `BOOKING_GUIDE_ACCESS_SECRET` obligatoire et personnalisé (≥ 16 caractères) quand `NODE_ENV=production`, sinon l'API refuse de démarrer
+- Logs Fastify : `?token=`, `?key=`, clés de guide `rg.…`, `Authorization` et cookies masqués (`maskSensitiveUrl` dans `app.ts`) ; journaux Docker limités à 5 × 10 Mo par conteneur (`x-logging` dans `docker-compose.yml`)
+- Rôle admin : cache 60 s pour un rôle privilégié (5 min pour l'absence de rôle), `invalidateClerkRoleCache(userId)` exporté par `plugins/auth.ts`
+- CSP complète en `Content-Security-Policy-Report-Only` dans `nginx/proxy-locations.conf` (Clerk, Stripe, hCaptcha, ImageKit, Google Maps, polices). Le script en ligne de `frontend/index.html` est autorisé par hash : le recalculer avec `node scripts/csp-inline-script-hash.js` à chaque modification. À passer en `Content-Security-Policy` une fois les parcours vérifiés sans violation dans la console
+- RGPD (`domains/privacy/`, `jobs/retention.ts`) : `GET /users/me/export`, `DELETE /users/me` (anonymisation, refus 409 si abonnement ou séjour en cours), purge quotidienne selon `confidentialite.html` (réservations 5 ans, messages 1 an, `Payment.raw*` 90 j, `rawIcs` 7 j, comptes inactifs 3 ans ; `RETENTION_PURGE_ENABLED=false` pour couper, `npm run purge` à la main)
 
 ---
 
@@ -610,7 +619,9 @@ Mis en ligne le 2026-10-20. La prod tourne sur un **VPS Hostinger** (KVM 2, Ubun
 | Cloudflare | zone `indiehost.fr` : `@` et `*` en A/AAAA proxied vers le VPS · SSL **Full (strict)** · Always HTTPS · TLS min 1.2 |
 | Certificat | Let's Encrypt wildcard via certbot DNS-01 Cloudflare → `certbot/conf/live/indiehost.fr/` (renouvellement auto) |
 | Clerk | instance **Production** (`clerk.indiehost.fr`), paths `/`, `/sign-in`, `/sign-up` |
-| Stripe | compte live IndieHost SAS — aucun webhook utilisé par le backend |
+| Stripe | compte live IndieHost SAS — webhook `POST /api/v1/payments/stripe/webhook` (`STRIPE_WEBHOOK_SECRET`, voir `.env.example`) : remboursements échoués, litiges, statut des PaymentIntents ; 503 tant que le secret est vide |
+| Clerk webhook | `POST /api/v1/webhooks/clerk` (`CLERK_WEBHOOK_SECRET`, signature Svix vérifiée à la main) : `user.deleted` → anonymisation du compte ; 503 tant que le secret est vide |
+| E-mails | nodemailer via `SMTP_*` / `MAIL_FROM` (`lib/mailer.ts`, `domains/notifications/`) : confirmation et annulation de réservation au voyageur ; désactivés (warn au boot) tant que SMTP n'est pas configuré |
 
 ### Secrets de prod
 
@@ -662,7 +673,7 @@ Un hôte peut rattacher un domaine qu'il possède déjà depuis `/dashboard/doma
 |-------|-----------|
 | Rattachement | `PUT /api/v1/listings/:id/custom-domain { domain }` → `Listing.customDomain` (unique) ; plan requis, propriétaire uniquement ; `www.x.fr` et `x.fr` ne peuvent pas être rattachés à deux annonces différentes |
 | Instructions DNS | sous-domaine (`www`) → **CNAME** `CUSTOM_DOMAIN_CNAME_TARGET` (`custom.indiehost.fr`, enregistrement A **DNS only** côté Cloudflare — jamais proxifié) ; domaine nu → **A** `CUSTOM_DOMAIN_TARGET_IPV4` (`45.93.139.219`) |
-| Vérification | `POST …/custom-domain/verify` → `dns.resolve4(domain)` doit contenir l'IP du VPS → `customDomainVerifiedAt` |
+| Vérification | `POST …/custom-domain/verify` → **deux** contrôles : `dns.resolve4(domain)` doit contenir l'IP du VPS **et** un TXT `_indiehost-verification.<domaine>` (ou sur l'apex pour `www`) doit valoir `indiehost-verification=<jeton>` (`Listing.customDomainVerificationToken`, généré au rattachement) → `customDomainVerifiedAt`. Sans le TXT, le premier compte qui déclarait un domaine déjà pointé vers le VPS l'obtenait. |
 | Certificat | l'API écrit les domaines vérifiés dans `certbot/custom-domains/domains.txt` (volume partagé) ; le conteneur `certbot` émet un certificat Let's Encrypt **HTTP-01 webroot** toutes les 2 min pour chaque domaine sans certificat, et renouvelle tout en `certbot renew` toutes les 12 h |
 | Service | nginx `default_server` 443 : certificat choisi par SNI (`$ssl_server_name` filtré par un `map`), `location` communes dans `nginx/proxy-locations.conf` |
 | Routage front | `publicDomain.ts` → `isListingHostname()` (sous-domaine géré **ou** domaine personnalisé) ; l'API résout le hostname via `GET /listings/domains/resolve` |
@@ -677,7 +688,17 @@ Les domaines personnalisés pointent **directement** sur le VPS (pas via Cloudfl
 
 ---
 
-## Dernières modifications (mis à jour 2026-10-22)
+## Dernières modifications (mis à jour 2026-10-23)
+
+- **Passe « TODO » du 2026-10-23** (détail dans `TODO.md`, section « Fait ») :
+  - Front : titres de page par route (`meta.title`, entrée unhead patchée dans `router.afterEach`), `lang="fr"` restauré en quittant la landing, notes d'avis lisibles (`.sr-only` global), alt distincts de la landing, noms accessibles de la galerie et des vidéos, composant `Landing/components/LandingVideo/LandingVideo.vue` (bouton lecture/pause, pas d'autoplay en `prefers-reduced-motion`), pied de page sombre (`html.landing-theme-dark`), champ « Description de la photo » (éditeur + assistant, repli « <titre> — photo N », légendes Airbnb/Booking reprises), règlement intérieur avant paiement (`Checkout.vue` étape 4, section `Core/components/HouseRules`), statut de l'hôte particulier/professionnel + n° d'enregistrement meublé de tourisme (`LegalInfoPanel.vue`, `host.legalStatus`, `core.tourismRegistrationNumber`), liens légaux compacts (`components/layouts/LegalLinksCompact.vue`) sur annonce, page principale, guide et confirmation, e-mail obligatoire au checkout (`contact.email`).
+  - Appels API du tableau de bord dédoublonnés : `domain/api/requestCache.ts` (`sharedRequest`, promesse partagée + TTL court + invalidation par les mutations, cache vidé au changement d'utilisateur Clerk) et `domain/api/listingsCache.ts`. Toute nouvelle mutation doit invalider les clés concernées.
+  - Pré-rendu statique de `/` et `/pricing` au build (`frontend/plugins/marketing-prerender/`, après `legalPrerender()` dans `vite.config.ts`) : contenu sémantique injecté dans `#app` depuis `locales/landing/fr.json` et `pricingPlanCatalog.ts`, JSON-LD `FAQPage` / `Product`, remplacé par Vue au montage.
+  - Barèmes d'annulation : un seul module miroir par côté (`frontend/src/domain/listings/cancellationPolicy.ts` ↔ `backend/api/src/domains/bookings/cancellationPolicy.ts`), consommé par l'éditeur, le checkout, la confirmation, l'API et les e-mails.
+  - Avis voyageur depuis le guide : `GET/POST /listings/guides/:guideKey/review` (clé de guide, un avis par réservation, après la première nuit) ; helper partagé `lib/guideKey.ts`.
+  - Nom public de l'hôte : plus jamais tiré de l'e-mail (prénom, nom, pseudo, sinon « Votre hôte ») ; plus de libellé « Host ».
+  - Métadonnées Stripe sans nombre de voyageurs PMR (donnée de santé).
+  - Backend : voir les nouvelles lignes de « Sécurité » (nettoyage HTML à l'écriture, réservation atomique, limites de débit, CSP, RGPD) et « Déploiement » (webhooks Stripe et Clerk, e-mails SMTP, TXT des domaines personnalisés). Quatre migrations Prisma ajoutées (`20261023000000` à `20261023000003`).
 
 - **Écran de chargement du tableau de bord** (`components/layouts/BootLoader.vue`, `composables/useBootLoader.ts`) : actif seulement quand la page chargée est sous `/dashboard`, il reste jusqu'à ce que la route soit résolue, Clerk chargé et l'API silencieuse 220 ms (intercepteurs axios, plafond 5 s), puis le contenu monte d'un bloc. Un script en ligne de `index.html` pose `html.is-booting` avant le premier affichage : à garder (et à autoriser par hash si une CSP `script-src` est ajoutée). Une nouvelle vue du tableau de bord qui appelle l'API autrement qu'avec axios ne sera pas attendue.
 

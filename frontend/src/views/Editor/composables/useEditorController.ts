@@ -6,7 +6,7 @@ import { useRouter, type RouteLocationNormalizedLoaded } from 'vue-router'
 import type { ListingDomainRecord } from '@/domain/api/listingDomains'
 import type { RawListingBundle } from '@/domain/listings/types'
 import { normalizeListingStatus } from '@/domain/listings/status'
-import { fetchMyStripeSubscriptionState } from '@/domain/api/stripeSubscriptions'
+import { fetchMyStripeSubscriptionState, invalidateMySubscriptionState } from '@/domain/api/stripeSubscriptions'
 import {
   applyPatchToDraftBundle,
   snapshotListingDraft,
@@ -310,6 +310,8 @@ export function useEditorController(options: EditorControllerOptions) {
       // Les changements de statut déclenchés depuis la card doivent être appliqués immédiatement,
       // sans passer par le flux de validation manuelle des autres brouillons.
       await options.source.value.patchListingDraft(listingId, patch)
+      // Le nombre de logements en ligne (`listingAllowance.activeListings`) vient de changer.
+      invalidateMySubscriptionState()
 
       const selectedDraftSnapshot = isSelectedListing && draftLifecycle.draft.value
         ? snapshotListingDraft(draftLifecycle.draft.value)
@@ -381,6 +383,7 @@ export function useEditorController(options: EditorControllerOptions) {
     }
 
     await options.source.value.publishListingDraft(listingId, snapshot)
+    invalidateMySubscriptionState()
     listingState.publishedSnapshotByListingId[listingId] = snapshotListingDraft(snapshot)
     listingState.draftSnapshotByListingId[listingId] = snapshotListingDraft(snapshot)
     listingState.syncListingPendingChanges(listingId)
@@ -407,6 +410,7 @@ export function useEditorController(options: EditorControllerOptions) {
       }
 
       await options.source.value.publishListingDraft(listingId, snapshot)
+      invalidateMySubscriptionState()
       listingState.publishedSnapshotByListingId[listingId] = snapshotListingDraft(snapshot)
       listingState.draftSnapshotByListingId[listingId] = snapshotListingDraft(snapshot)
       listingState.syncListingPendingChanges(listingId)

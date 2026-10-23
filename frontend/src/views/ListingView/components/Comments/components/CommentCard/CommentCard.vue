@@ -41,6 +41,12 @@ const ratingLabel = computed(() =>
   }),
 )
 
+// Lecteurs d'écran : les étoiles sont décoratives, la note est donnée en texte.
+const ratingA11yLabel = computed(() => {
+  const note = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(props.comment.note)
+  return `Note : ${note} sur 5`
+})
+
 const stayLabel = computed(() => {
   const range = props.comment.stayDates
 
@@ -113,9 +119,12 @@ function handleReadMoreClick() {
               v-html="stayLabel"
             ></p>
             <div>
+              <span class="sr-only">{{ ratingA11yLabel }}</span>
               <Star
                 v-for="star in comment.note"
+                :key="star"
                 :size="isLg ? 12 : 10"
+                aria-hidden="true"
               />
             </div>
           </div>
@@ -130,9 +139,12 @@ function handleReadMoreClick() {
           v-html="stayLabel"
         ></p>
         <div>
+          <span class="sr-only">{{ ratingA11yLabel }}</span>
           <Star
             v-for="star in comment.note"
+            :key="star"
             :size="isLg ? 12 : 10"
+            aria-hidden="true"
           />
         </div>
       </div>

@@ -13,6 +13,9 @@
 
   background-color: $secondary;
 
+  padding-top: 100px;
+  padding-bottom: calc(var(--layout-gap) * 4);
+
   #landing-page.is-light-theme & {
     background: linear-gradient(
       180deg,
@@ -79,9 +82,6 @@
       display: none;
     }
   }
-
-  padding-top: 100px;
-  padding-bottom: calc(var(--layout-gap) * 4);
 
   @media (max-width: 1024px) {
     padding-top: $nav-bar-height;
@@ -277,15 +277,19 @@
     .import-input {
       width: 100%;
       @include inputs.search($theme: accent);
-      box-shadow: none;
+
+      // Surcharge émise après le mixin : conserve l'ordre actuel de Sass
+      & {
+        box-shadow: none;
+      }
     }
 
     .generate-btn {
       width: 100%;
-      @include buttons.primary(true, light);
       white-space: nowrap;
       position: relative;
       z-index: 1;
+      @include buttons.primary(true, light);
 
       &::before,
       &::after {
@@ -359,6 +363,8 @@
     }
 
     .mobile-import-demo {
+      // Ancre du bouton lecture / pause de LandingVideo.
+      position: relative;
       width: 100%;
       max-width: 22rem;
       margin-top: var(--layout-gap-xl);
@@ -541,8 +547,8 @@
   }
 
   .mobile-preview-back {
-    @include buttons.primary($theme: white, $icon-only: true, $little: false);
     flex: 0 0 auto;
+    @include buttons.primary($theme: white, $icon-only: true, $little: false);
 
     > button {
       width: 2.75rem;
@@ -558,8 +564,8 @@
   }
 
   .mobile-preview-cta {
-    @include buttons.primary($cta: true, $theme: light);
     flex: 0 0 auto;
+    @include buttons.primary($cta: true, $theme: light);
 
     & > button {
       min-height: 2.75rem;

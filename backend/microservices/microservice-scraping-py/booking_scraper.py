@@ -973,7 +973,9 @@ def _parse_images(soup: "BeautifulSoup", ld: dict | None) -> list[dict]:
         url = _upgrade_image_url(url)
         if url and url not in seen and _is_property_image(url):
             seen.add(url)
-            out.append({"url": url, "title": title or f"Photo {len(out) + 1}"})
+            # `title` = attribut alt de Booking quand il existe, sinon vide : le front applique
+            # son repli « <titre de l'annonce> — photo N » plutôt qu'un « Photo N » générique.
+            out.append({"url": url, "title": " ".join((title or "").split())[:160]})
 
     if ld:
         imgs = ld.get("image") or []

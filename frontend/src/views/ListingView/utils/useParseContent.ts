@@ -7,13 +7,16 @@ import type {
   RawNotes,
   RawComments,
   RawHost,
+  RawArrival,
   RawListingBundle,
+  HostLegalStatus,
 } from '@/domain/listings/types';
 import { getSynchronizedBookedDays } from '@/domain/listings/bookings';
 import { resolveWeekendPricing } from '@/domain/listings/pricing';
 import { buildPerkCandidates, selectTopPerkCandidates } from '@/domain/listings/perks';
 import { normalizeFeeItems, resolveListingReservationRules } from '@/domain/listings/reservationRules';
 import { getKnownAmenityCatalogItem, sanitizeKnownAmenities } from '@/utils/amenitiesCatalog';
+import { stripHtmlToText } from '@/utils/inputValidation';
 
 // ---- TYPES ----
 import type {
@@ -33,6 +36,7 @@ import type {
   CommentsPagesModel,
   MapModel,
   ReviewsVisibilityModel,
+  HouseRulesModel,
 } from '@/views/ListingView/types/listing';
 
 export type { RawListingBundle };
@@ -153,6 +157,9 @@ function parseTitle(core: Maybe<Partial<RawCore>>): TitleModel {
     guest_capacity: core?.guest_capacity ?? 0,
     bedrooms: { quantity: bedroom.length, bed: bedroom.beds ?? 0 }, // ƒª.‹÷? safe
     bathrooms,
+    tourismRegistrationNumber: typeof core?.tourismRegistrationNumber === 'string'
+      ? core.tourismRegistrationNumber.trim().toUpperCase()
+      : '',
   };
 }
 
@@ -176,12 +183,18 @@ function parsePerks(raw: RawListingBundle): PerksModel {
   }))
 }
 
+function parseHostLegalStatus(value: unknown): HostLegalStatus | undefined {
+  return value === 'individual' || value === 'professional' ? value : undefined;
+}
+
 function parseHost(host: Maybe<Partial<RawHost>>): HostProfileModel {
   const rawName = typeof host?.name === 'string' ? host.name.trim() : '';
   const safeName = rawName && !isDeprecatedHostIdentity(rawName) ? rawName : '';
   return {
     name: safeName,
     status: host?.status,
+    legalStatus: parseHostLegalStatus(host?.legalStatus),
+    companyName: typeof host?.companyName === 'string' ? host.companyName.trim() || undefined : undefined,
     seniority: host?.seniority ?? 0,
     globalNote: host?.['global-note'],
     avatar: host?.avatar,
@@ -343,6 +356,16 @@ function parseReviewsVisibility(core: Maybe<Partial<RawCore>>): ReviewsVisibilit
   }
 }
 
+// Règlement intérieur : seul champ du guide d'arrivée que l'API laisse dans le bundle public
+// (`redactArrivalForPublic`). Un contenu Quill vide (« <p><br></p> ») compte comme absent.
+function parseHouseRules(arrival: Maybe<Partial<RawArrival>>): HouseRulesModel {
+  const rawRules = arrival?.practical?.rules
+  const html = typeof rawRules === 'string' ? rawRules.trim() : ''
+  const text = html ? stripHtmlToText(html) : ''
+  if (!text) return { html: '', text: '' }
+  return { html, text }
+}
+
 function parseComments(raw: Maybe<Partial<RawComments>>): { pages: CommentsPagesModel; flat: CommentsModel } {
   const pages = (raw?.comments || []).map(page =>
     page.map(c => ({
@@ -389,6 +412,7 @@ export function core(raw: RawListingBundle): ListingParsed {
     comments: parsedComments.flat,
     commentsPages: parsedComments.pages,
     reviewsVisibility: parseReviewsVisibility(raw.core),
+    houseRules: parseHouseRules(raw.arrival),
   };
 }
 

@@ -138,7 +138,7 @@
           {
             "webp": "/assets/media/images/webp/editeur.webp",
             "png": "/assets/media/images/png/editeur.png",
-            "alt": "Seite zur Anzeigenbearbeitung"
+            "alt": "Visueller IndieHost-Anzeigeneditor mit Live-Vorschau der Seite"
           }
         ]
       },
@@ -157,7 +157,7 @@
           {
             "webp": "/assets/media/images/webp/seo.webp",
             "png": "/assets/media/images/png/seo.png",
-            "alt": "Seite zur Anzeigenbearbeitung"
+            "alt": "IndieHost-Anzeige in den Google-Suchergebnissen"
           }
         ]
       },
@@ -176,7 +176,7 @@
           {
             "webp": "/assets/media/images/webp/calendrier.webp",
             "png": "/assets/media/images/png/calendrier.png",
-            "alt": "Seite zur Anzeigenbearbeitung"
+            "alt": "Zentraler Buchungskalender mit An- und Abreisen sowie Zahlungsstatus"
           }
         ]
       },
@@ -195,7 +195,7 @@
           {
             "webp": "/assets/media/images/webp/notification.webp",
             "png": "/assets/media/images/png/notification.png",
-            "alt": "Seite zur Anzeigenbearbeitung"
+            "alt": "Automatische Nachricht an einen Gast vor der Ankunft"
           }
         ]
       },
@@ -214,7 +214,7 @@
           {
             "webp": "/assets/media/images/webp/glass-theme.webp",
             "png": "/assets/media/images/png/glass-theme.png",
-            "alt": "Seite zur Anzeigenbearbeitung"
+            "alt": "IndieHost-Anzeige mit individuellem grafischem Design"
           }
         ]
       },
@@ -233,7 +233,7 @@
           {
             "webp": "/assets/media/images/webp/guide.webp",
             "png": "/assets/media/images/png/guide.png",
-            "alt": "Seite zur Anzeigenbearbeitung"
+            "alt": "Gedrucktes Willkommensheft mit QR-Code zur IndieHost-Messaging-Funktion"
           }
         ]
       }
@@ -254,7 +254,7 @@
           {
             "webp": "/assets/media/images/webp/editeur.webp",
             "png": "/assets/media/images/png/editeur.png",
-            "alt": "Seite zur Anzeigenbearbeitung"
+            "alt": "IndieHost-Anzeigeneditor: Bearbeitungsfelder neben der Seitenvorschau"
           }
         ]
       },
@@ -754,6 +754,7 @@
     "body": "Fügen Sie den Airbnb- oder Booking-Link einer Ihrer Unterkünfte ein – wir erstellen Ihre Buchungsseite in Sekunden.",
     "inputPlaceholder": "Link zu Ihrer Unterkunft einfügen",
     "previewCtaLabel": "Meine Seite erstellen",
+    "importDemoVideoLabel": "Demo: Erstellung einer Buchungsseite aus einem Airbnb- oder Booking-Link",
     "createAccountCtaLabel": "Meine Seite kostenlos aktivieren",
     "createAccountCtaHint": "Kostenlos · Unverbindlich · Keine Provision",
     "backButtonAriaLabel": "Zurück zur Startseite",
@@ -762,5 +763,9 @@
       "href": "/pricing",
       "target": "_self"
     }
+  },
+  "videoControls": {
+    "play": "Video abspielen",
+    "pause": "Video pausieren"
   }
 }

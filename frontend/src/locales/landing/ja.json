@@ -138,7 +138,7 @@
           {
             "webp": "/assets/media/images/webp/editeur.webp",
             "png": "/assets/media/images/png/editeur.png",
-            "alt": "リスティング編集ページ"
+            "alt": "IndieHost のビジュアル編集画面。ページのプレビューがリアルタイムで更新される"
           }
         ]
       },
@@ -157,7 +157,7 @@
           {
             "webp": "/assets/media/images/webp/seo.webp",
             "png": "/assets/media/images/png/seo.png",
-            "alt": "リスティング編集ページ"
+            "alt": "Google 検索結果に表示された IndieHost のリスティング"
           }
         ]
       },
@@ -176,7 +176,7 @@
           {
             "webp": "/assets/media/images/webp/calendrier.webp",
             "png": "/assets/media/images/png/calendrier.png",
-            "alt": "リスティング編集ページ"
+            "alt": "チェックイン・チェックアウト・支払い状況をまとめた予約カレンダー"
           }
         ]
       },
@@ -195,7 +195,7 @@
           {
             "webp": "/assets/media/images/webp/notification.webp",
             "png": "/assets/media/images/png/notification.png",
-            "alt": "リスティング編集ページ"
+            "alt": "到着前にゲストへ自動送信されるメッセージ"
           }
         ]
       },
@@ -214,7 +214,7 @@
           {
             "webp": "/assets/media/images/webp/glass-theme.webp",
             "png": "/assets/media/images/png/glass-theme.png",
-            "alt": "リスティング編集ページ"
+            "alt": "カスタムテーマを適用した IndieHost のリスティングページ"
           }
         ]
       },
@@ -233,7 +233,7 @@
           {
             "webp": "/assets/media/images/webp/guide.webp",
             "png": "/assets/media/images/png/guide.png",
-            "alt": "リスティング編集ページ"
+            "alt": "IndieHost メッセージへの QR コード付き印刷版ウェルカムブック"
           }
         ]
       }
@@ -254,7 +254,7 @@
           {
             "webp": "/assets/media/images/webp/editeur.webp",
             "png": "/assets/media/images/png/editeur.png",
-            "alt": "リスティング編集ページ"
+            "alt": "IndieHost のリスティング編集画面：ページプレビューの横に編集項目"
           }
         ]
       },
@@ -754,6 +754,7 @@
     "body": "AirbnbまたはBookingの物件リンクを貼るだけで、数秒で予約ページを生成します。",
     "inputPlaceholder": "リスティングのリンクを貼り付け",
     "previewCtaLabel": "ページを生成",
+    "importDemoVideoLabel": "デモ：Airbnb または Booking のリンクから予約ページを作成",
     "createAccountCtaLabel": "無料でページを有効化",
     "createAccountCtaHint": "30日間無料トライアル・契約なし・手数料なし",
     "backButtonAriaLabel": "ホームに戻る",
@@ -762,5 +763,9 @@
       "href": "/pricing",
       "target": "_self"
     }
+  },
+  "videoControls": {
+    "play": "動画を再生",
+    "pause": "動画を一時停止"
   }
 }

@@ -77,8 +77,8 @@
         @include container(md);
 
         a {
-          @include buttons.link(white, true);
           font-weight: 600;
+          @include buttons.link(white, true);
         }
       }
     }
@@ -212,13 +212,12 @@
 
       border-radius: borders.$rounded-xl;
       border: 1px solid rgba($accent, 1);
+      @include halo(lg);
 
       @include min-width(lg) {
         max-width: 85vw;
         max-height: 90dvh;
       }
-
-      @include halo(lg);
     }
 
     // .close-btn {

@@ -2,6 +2,7 @@ import type { PrismaClient } from '@prisma/client';
 
 import { buildMessageId } from '../../lib/id.js';
 import { hasAdminAccess } from '../../lib/authRole.js';
+import { sanitizePlainText } from '../../lib/sanitizeHtml.js';
 import type { RequestAuth } from '../../types/auth.js';
 import { upsertUserFromAuth } from '../users/users.repository.js';
 
@@ -102,7 +103,7 @@ export class MessagingService {
         hostUserId,
         guestUserId,
         guestTempId: input.guestTempId ?? null,
-        subject: input.subject ?? null,
+        subject: input.subject ? sanitizePlainText(input.subject) || null : null,
       },
     });
   }
@@ -152,6 +153,11 @@ export class MessagingService {
       return 'forbidden' as const;
     }
 
+    // Les messages sont du texte brut : balises retirées, sauts de ligne conservés. Un corps qui
+    // n'était que du balisage est refusé.
+    const body = sanitizePlainText(input.body, { multiline: true });
+    if (!body) return 'empty_body' as const;
+
     // Le rôle de l'auteur découle de l'identité, pas du corps de la requête ; seul l'admin
     // peut publier un message « system ».
     let authorRole: 'host' | 'guest' | 'system';
@@ -168,7 +174,7 @@ export class MessagingService {
         authorRole,
         authorUserId: actor?.id ?? null,
         guestTempId: isGuestActor ? conversation.guestTempId : null,
-        body: input.body,
+        body,
         state: input.state ?? 'sent',
         sentAt: new Date(),
       },

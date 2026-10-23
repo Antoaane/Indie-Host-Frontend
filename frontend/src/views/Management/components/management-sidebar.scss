@@ -51,9 +51,8 @@
     cursor: pointer;
     text-align: left;
     @include animations.transition(animations.$duration-fast);
-    @include animations.press(0.98);
-
     @include effects.big-shadow(rgba(0, 0, 0, 0.08), 16px, -6px);
+    @include animations.press(0.98);
 
     @include on-hover {
       transform: translateY(-1px);

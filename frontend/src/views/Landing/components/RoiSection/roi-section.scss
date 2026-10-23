@@ -145,8 +145,8 @@
     background: rgba($accent, 0.04);
     cursor: pointer;
     @include animations.transition(animations.$duration-fast);
-    @include animations.press();
     @include little-text($accent, $thin: false);
+    @include animations.press();
 
     @include on-hover {
       transform: translateY(-1px);

@@ -1,6 +1,7 @@
 import fp from 'fastify-plugin';
 
 import { asObject } from '../../lib/json.js';
+import { rateLimitByIp } from '../../lib/rateLimit.js';
 import {
   createConnectDashboardLinkSchema,
   activateSubscriptionSchema,
@@ -16,12 +17,21 @@ import {
   updateSubscriptionCancellationSchema,
 } from './payments.schemas.js';
 import { PaymentsService } from './payments.service.js';
+import { stripeWebhooksPlugin } from './payments.webhooks.js';
 
 export const paymentsPlugin = fp(async (fastify) => {
   const service = new PaymentsService(fastify.prisma);
 
   fastify.post('/payments/stripe/payment-intents', {
-    preHandler: fastify.authenticateOptional,
+    // Création de PaymentIntent ouverte aux visiteurs : limitée par IP pour éviter les rafales.
+    preHandler: [
+      rateLimitByIp({
+        max: 20,
+        windowMs: 10 * 60 * 1000,
+        message: 'Trop de tentatives de paiement à la suite. Réessayez dans quelques minutes.',
+      }),
+      fastify.authenticateOptional,
+    ],
   }, async (request, reply) => {
     const payload = createPaymentIntentSchema.parse(asObject(request.body));
     const result = await service.createPaymentIntent(payload, request.auth);
@@ -318,4 +328,7 @@ export const paymentsPlugin = fp(async (fastify) => {
 
     reply.send(result);
   });
+
+  // Webhooks Stripe (remboursements échoués, litiges) : enfant encapsulé, corps brut, sans JWT.
+  await fastify.register(stripeWebhooksPlugin);
 });

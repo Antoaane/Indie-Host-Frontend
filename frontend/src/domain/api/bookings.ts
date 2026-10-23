@@ -2,6 +2,7 @@
 
 import type { RawBookingReservation } from '@/domain/listings/types'
 import clerkToken from '@/utils/clerkToken'
+import { invalidateListingSections } from '@/domain/api/listingsCache'
 
 type ParsedEndpoint = {
   origin?: string
@@ -671,6 +672,8 @@ export async function cancelReservationAsHost(input: {
         headers: { Authorization: `Bearer ${token}` },
       },
     )
+    // La réservation annulée disparaît de la section `bookings` de son annonce (identifiant inconnu ici).
+    invalidateListingSections()
     return normalizeBookingConfirmation(data)
   } catch (error) {
     throw new Error(resolveErrorMessage(error, 'Impossible d’annuler et de rembourser cette réservation.'))

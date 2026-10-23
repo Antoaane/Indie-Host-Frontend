@@ -13,10 +13,6 @@
   // « Configurer mon compte ») devient illisible.
   --editor-listing-card-min-width: 15rem;
 
-  @include min-width(lg) {
-    --editor-listing-card-min-width: 20rem;
-  }
-
   flex: 1 1 auto;
   height: 100%;
   min-height: 0;
@@ -26,6 +22,10 @@
 
   background: $accent;
   border-radius: borders.$rounded-xl;
+
+  @include min-width(lg) {
+    --editor-listing-card-min-width: 20rem;
+  }
 
   > .toolbar {
     padding: var(--layout-gap-sm);
@@ -61,14 +61,13 @@
       > .card {
         min-width: 0;
         aspect-ratio: auto;
+        position: relative;
+        isolation: isolate;
 
         // Ratio commun dès qu'il y a plusieurs colonnes (lignes alignées).
         @include min-width(sm) {
           aspect-ratio: 9 / 13;
         }
-
-        position: relative;
-        isolation: isolate;
 
         > .select {
           height: 100%;

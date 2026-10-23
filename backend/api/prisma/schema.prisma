@@ -32,6 +32,8 @@ model User {
   hostProfile            Json?
   stripeConnectAccountId String?
   stripeConnectProfile   Json?
+  // Compte clos (suppression RGPD) : ligne anonymisée et conservée pour les écritures comptables.
+  deletedAt              DateTime?
   createdAt              DateTime       @default(now())
   updatedAt              DateTime       @updatedAt
 
@@ -47,6 +49,8 @@ model Listing {
   subdomainSlug     String?
   customDomain           String?   @unique
   customDomainVerifiedAt DateTime?
+  // Jeton attendu dans le TXT _indiehost-verification.<domaine> : prouve que l'hôte contrôle la zone DNS.
+  customDomainVerificationToken String?
   // "listing" (logement) ou "hub" (page principale qui présente les logements rattachés)
   kind              String         @default("listing")
   parentListingId   String?
@@ -100,7 +104,8 @@ model Reservation {
 
   conversation Conversation?
   messages     Message[]
-  payments     Payment[]
+  // Ligne Payment rattachée (le JSON `payment` ci-dessus est la copie exposée au front).
+  paymentRecord Payment?
   calendarEvents CalendarEvent[]
 
   @@index([listingId])
@@ -159,7 +164,8 @@ model Payment {
   id                     String       @id @default(cuid())
   listingId              String
   listing                Listing      @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  reservationId          String?
+  // Un paiement n'est rattaché qu'à une seule réservation (rattachement conditionnel, atomique).
+  reservationId          String?      @unique
   reservation            Reservation? @relation(fields: [reservationId], references: [id], onDelete: SetNull)
   userId                 String?
   user                   User?        @relation("UserPayments", fields: [userId], references: [id], onDelete: SetNull)
@@ -176,12 +182,31 @@ model Payment {
   metadata               Json?
   rawRequest             Json?
   rawResponse            Json?
+  // Suivi webhook Stripe (payments.webhooks.ts) : remboursements et litiges.
+  refundStatus           String?
+  refundFailureReason    String?
+  refundedAmountMinor    Int?
+  refundUpdatedAt        DateTime?
+  disputeId              String?
+  disputeStatus          String?
+  disputeReason          String?
+  disputeAmountMinor     Int?
+  disputeUpdatedAt       DateTime?
   createdAt              DateTime     @default(now())
   updatedAt              DateTime     @updatedAt
 
   @@index([listingId])
-  @@index([reservationId])
   @@index([userId])
+  @@index([disputeStatus])
+}
+
+// Événements webhook Stripe déjà traités (idempotence : Stripe réémet les événements non acquittés).
+model StripeWebhookEvent {
+  id        String   @id
+  type      String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
 }
 
 model CalendarSync {

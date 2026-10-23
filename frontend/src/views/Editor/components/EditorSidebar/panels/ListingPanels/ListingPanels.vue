@@ -21,6 +21,7 @@ import AmenitiesPanel from '@/views/Editor/components/EditorSidebar/panels/Listi
 import CapacityPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/CapacityPanel.vue'
 import LocationPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/LocationPanel.vue'
 import RoomsPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/RoomsPanel.vue'
+import LegalInfoPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/LegalInfoPanel.vue'
 import ReviewsPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/ReviewsPanel.vue'
 
 const props = defineProps<{
@@ -72,6 +73,7 @@ const isHub = computed(() => props.draft.core?.kind === 'hub')
       :medias="props.draft.medias"
       :listing-id="props.listingId"
       :listing-status="props.draft.core?.status"
+      :listing-title="props.draft.core?.title"
       @patch="emit('patch', $event)"
     />
     <DescriptionPanel
@@ -94,6 +96,12 @@ const isHub = computed(() => props.draft.core?.kind === 'hub')
       />
       <RoomsPanel
         :core="props.draft.core"
+        @patch="emit('patch', $event)"
+      />
+      <LegalInfoPanel
+        :listing-id="props.listingId"
+        :core="props.draft.core"
+        :host="props.draft.host"
         @patch="emit('patch', $event)"
       />
       <ReviewsPanel

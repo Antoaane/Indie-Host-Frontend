@@ -20,12 +20,15 @@
     "prisma:push": "prisma db push",
     "prisma:studio": "prisma studio",
     "prisma:seed": "tsx prisma/seed.ts",
-    "stripe:billing:setup:dev": "node scripts/ensure-stripe-billing-plans.mjs"
+    "stripe:billing:setup:dev": "node scripts/ensure-stripe-billing-plans.mjs",
+    "purge": "tsx src/jobs/retention.cli.ts",
+    "purge:prod": "node dist/jobs/retention.cli.js"
   },
   "dependencies": {
     "@fastify/cors": "^10.0.2",
     "@fastify/sensible": "^6.0.3",
     "@prisma/client": "^6.6.0",
+    "@types/sanitize-html": "^2.16.2",
     "date-fns": "^4.1.0",
     "dotenv": "^16.5.0",
     "fastify": "^5.2.2",
@@ -33,11 +36,14 @@
     "ical-generator": "^9.0.0",
     "jose": "^6.0.11",
     "node-ical": "^0.26.0",
+    "nodemailer": "^7.0.13",
+    "sanitize-html": "^2.18.1",
     "stripe": "^17.7.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
     "@types/node": "^22.13.13",
+    "@types/nodemailer": "^7.0.12",
     "prisma": "^6.6.0",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2"

@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 // DEPS
-import { computed, nextTick, onMounted, onBeforeUnmount, ref } from 'vue'
+import { computed, nextTick, onMounted, onBeforeUnmount, ref, watch } from 'vue'
 import { ScrollSmoother } from 'gsap/ScrollSmoother'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import gsap from 'gsap'
@@ -47,6 +47,8 @@ const initialThemeState = resolveInitialLandingThemeState()
 const landingTheme = ref<LandingTheme>(initialThemeState.theme)
 const landingThemeMode = ref<LandingThemeMode>(initialThemeState.mode)
 const isLightTheme = computed(() => landingTheme.value === 'light')
+// Le pied de page global (hors #landing-page) suit le thème de la landing via cette classe sur <html>.
+const LANDING_ROOT_THEME_CLASS = 'landing-theme-dark'
 const lightHeroOpenProgress = ref(0)
 const landingDynamicStyle = computed(() => ({
   '--light-hero-open': String(lightHeroOpenProgress.value),
@@ -83,6 +85,13 @@ function scrollToTop() {
 function applyLandingTheme(theme: LandingTheme) {
   landingTheme.value = theme
 }
+
+function syncRootThemeClass(theme: LandingTheme) {
+  if (typeof document === 'undefined') return
+  document.documentElement.classList.toggle(LANDING_ROOT_THEME_CLASS, theme === 'dark')
+}
+
+watch(landingTheme, (theme) => syncRootThemeClass(theme))
 
 function getBrowserPreferredTheme(): LandingTheme {
   if (typeof window === 'undefined') return 'dark'
@@ -171,6 +180,7 @@ function releaseLandingScrollLockSafely() {
 }
 
 onMounted(() => {
+  syncRootThemeClass(landingTheme.value)
   isSafariLanding.value = detectSafariBrowser()
   if (typeof window !== 'undefined') {
     colorSchemeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
@@ -267,6 +277,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  document.documentElement.classList.remove(LANDING_ROOT_THEME_CLASS)
   window.removeEventListener('scroll', handleLandingScroll)
   if (colorSchemeMediaQuery && onSystemThemeChange) {
     if (typeof colorSchemeMediaQuery.removeEventListener === 'function') {

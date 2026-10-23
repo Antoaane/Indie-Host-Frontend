@@ -171,6 +171,13 @@
           "subtitle": "Montrez votre logement sous son meilleur jour",
           "addLabel": "Ajouter une photo",
           "dropHint": "Déposez vos photos ou vidéos ici pour les ajouter",
+          "caption": {
+            "label": "Description de la photo {index}",
+            "placeholder": "Ex. : salon avec vue sur le jardin",
+            "hint": "Décrivez chaque photo en quelques mots : le texte est lu par les lecteurs d’écran et aide au référencement."
+          },
+          "altFallback": "{title} — photo {index}",
+          "altFallbackUntitled": "Photo {index}",
           "videos": {
             "title": "Vidéos",
             "subtitle": "Jusqu’à {maxVideos} vidéos (MP4, WebM ou MOV, {maxSizeMb} Mo max). Elles sont hébergées avec vos photos et affichées sous la galerie de votre annonce.",
@@ -405,6 +412,44 @@
             "confirmCta": "Oui, supprimer",
             "cancelCta": "Annuler"
           }
+        },
+        "legal": {
+          "title": "Informations légales",
+          "subtitle": "Mentions obligatoires sur votre annonce et au moment de la réservation.",
+          "status": {
+            "label": "Vous louez en tant que",
+            "hint": "Information obligatoire sur votre annonce (art. L111-7 du Code de la consommation).",
+            "options": {
+              "individual": {
+                "title": "Particulier",
+                "description": "Vous louez votre logement à titre personnel, en dehors d’une activité professionnelle."
+              },
+              "professional": {
+                "title": "Professionnel",
+                "description": "Vous louez dans le cadre d’une activité professionnelle (société, loueur professionnel)."
+              }
+            }
+          },
+          "companyName": {
+            "label": "Raison sociale",
+            "hint": "Facultative, affichée à côté de votre statut sur l’annonce et au paiement.",
+            "placeholder": "Ex. : SAS Les Gîtes du Lac"
+          },
+          "siret": {
+            "label": "SIRET",
+            "hint": "Facultatif, 14 chiffres.",
+            "placeholder": "Ex. : 12345678900012"
+          },
+          "registration": {
+            "label": "Numéro d’enregistrement du meublé de tourisme",
+            "hint": "Obligatoire dans les communes qui l’exigent ; affiché sur l’annonce.",
+            "placeholder": "Ex. : 7510012345678"
+          },
+          "feedback": {
+            "saving": "Enregistrement…",
+            "saved": "Statut enregistré.",
+            "error": "Impossible d’enregistrer ces informations. Réessayez."
+          }
         }
       },
       "pricing": {
@@ -532,23 +577,12 @@
           "refundsEnabledHint": "Le voyageur qui annule est remboursé selon la politique choisie ci-dessous.",
           "refundsDisabledHint": "Réservations non remboursables : le voyageur peut annuler, mais les sommes versées ne lui sont pas remboursées. Si vous annulez vous-même un séjour, le voyageur est toujours remboursé intégralement.",
           "policyLabel": "Politique",
-          "policies": {
-            "flexible": "Flexible",
-            "moderate": "Modérée",
-            "strict": "Stricte",
-            "custom": "Personnalisée"
-          },
           "severityRulesLabel": "Règles par niveau de sévérité",
           "severityLabel": "Sévérité",
           "severities": {
             "low": "Faible",
             "medium": "Moyenne",
             "high": "Élevée"
-          },
-          "rules": {
-            "fullRefund": "Remboursement intégral jusqu’à {days} jours avant l’arrivée.",
-            "partialRefund": "À moins de {days} jours : retenue de {feePercent}% du montant total.",
-            "lateCancellation": "À moins de 24h de l’arrivée ou en cas de non-présentation : retenue de {lateFeePercent}%."
           },
           "daysBefore": "Jours avant arrivée",
           "feePercent": "% retenu après délai",
@@ -718,6 +752,7 @@
         },
         "gallery": {
           "maxImages": 60,
+          "altMax": 125,
           "maxFileSizeBytes": 10485760,
           "minWidth": 800,
           "minHeight": 600,
@@ -767,6 +802,14 @@
           "pauseMessageMax": 300,
           "messages": {
             "counter": "{current}/{max} caractères"
+          }
+        },
+        "legal": {
+          "companyNameMax": 120,
+          "siretLength": 14,
+          "registrationMax": 20,
+          "messages": {
+            "siret": "Le SIRET comporte 14 chiffres."
           }
         }
       },

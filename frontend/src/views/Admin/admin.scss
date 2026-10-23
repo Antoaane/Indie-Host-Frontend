@@ -23,7 +23,11 @@
 
     > h1 {
       @include h1-title();
-      margin-bottom: 0;
+
+      // Surcharge émise après le mixin : conserve l'ordre actuel de Sass
+      & {
+        margin-bottom: 0;
+      }
     }
 
     > p {

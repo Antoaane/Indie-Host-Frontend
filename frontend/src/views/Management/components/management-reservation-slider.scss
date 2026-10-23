@@ -1,5 +1,6 @@
 /* File: src/views/Management/components/management-reservation-slider.scss */
 
+@use 'sass:math';
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
 @use '@/styles/variables/effects' as effects;
@@ -7,9 +8,9 @@
 
 .management-reservation-slider {
   $height: 51.56px;
-  $gap: ($height - 43.19px) / 2;
+  $gap: math.div($height - 43.19px, 2);
 
-  $radius: ($height - $gap) / 2;
+  $radius: math.div($height - $gap, 2);
 
   min-width: 0;
   width: 100%;

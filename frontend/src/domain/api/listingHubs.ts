@@ -2,6 +2,7 @@
 // Pages principales (annonces mères) : une page au domaine du propriétaire qui présente ses logements.
 
 import clerkToken from '@/utils/clerkToken'
+import { invalidateListing } from '@/domain/api/listingsCache'
 
 export type ListingHubSummary = {
   listingId: string
@@ -177,6 +178,9 @@ export async function setListingParent(listingId: string, parentListingId: strin
         headers,
       },
     )
+    // Le rattachement figure dans les données de l'annonce et de la page principale.
+    invalidateListing(listingId)
+    if (parentListingId?.trim()) invalidateListing(parentListingId)
     return normalizeParentRecord(data)
   } catch (error) {
     throw new Error(toApiErrorMessage(error, 'Impossible de modifier la page principale de cette annonce.'))

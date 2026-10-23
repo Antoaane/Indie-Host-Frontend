@@ -2,6 +2,7 @@ import type { PrismaClient } from '@prisma/client';
 
 import { asObject, deepMerge } from '../../lib/json.js';
 import { toPrismaJson } from '../../lib/prisma.js';
+import { LISTING_ARRIVAL_TEXT_RULES, sanitizeTextFields } from '../../lib/sanitizeHtml.js';
 
 const DEFAULT_ARRIVAL = {
   intro: {
@@ -53,7 +54,9 @@ export class ArrivalService {
     if (!listing) return null;
 
     const current = asObject(listing.arrival, structuredClone(DEFAULT_ARRIVAL));
-    const merged = deepMerge(current, patch);
+    // Nettoyé à l'écriture (HTML Quill des règles / commerces / guide, texte brut ailleurs) : le
+    // front assainit aussi au rendu, mais l'API sert aussi le pré-rendu et, demain, e-mails et .ics.
+    const merged = sanitizeTextFields(deepMerge(current, patch), LISTING_ARRIVAL_TEXT_RULES);
 
     await this.prisma.listing.update({
       where: { id: listingId },

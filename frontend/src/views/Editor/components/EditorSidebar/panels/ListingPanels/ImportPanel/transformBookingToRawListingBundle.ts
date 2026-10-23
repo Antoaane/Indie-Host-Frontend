@@ -61,7 +61,7 @@ function normalizeText(value?: string): string {
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, ' ')
-    .trim() ?? ''
+    .trim() || ''
 }
 
 function resolveBookingHousingType(roomType?: string): string {
@@ -97,16 +97,16 @@ function parseLocationFromDescriptions(
 
   if (parts.length >= 4) {
     return {
-      city: parts[parts.length - 3] ?? undefined,
-      region: parts[parts.length - 2] ?? undefined,
-      country: parts[parts.length - 1] ?? undefined,
+      city: parts[parts.length - 3] || undefined,
+      region: parts[parts.length - 2] || undefined,
+      country: parts[parts.length - 1] || undefined,
     }
   }
 
   return {
-    city: parts[0] ?? undefined,
-    region: parts[1] ?? undefined,
-    country: parts[2] ?? undefined,
+    city: parts[0] || undefined,
+    region: parts[1] || undefined,
+    country: parts[2] || undefined,
   }
 }
 
@@ -204,9 +204,9 @@ function buildAmenities(scraped: BookingScrapedData): RawAmenity[] {
 
       amenities.push({
         id: inferredId,
-        name: catalogItem?.name ?? item.title,
-        description: item.subtitle ?? catalogItem?.description ?? '',
-        category: group.title ?? catalogItem?.category,
+        name: catalogItem?.name || item.title,
+        description: item.subtitle || catalogItem?.description || '',
+        category: group.title || catalogItem?.category,
       })
     }
   }
@@ -293,8 +293,8 @@ function buildArrivalFromHouseRules(
       savings: { message: 'Réservez en direct pour éviter les commissions.' },
       access: {
         address: '',
-        checkIn: checkIn ?? 'À préciser.',
-        checkOut: checkOut ?? 'À préciser.',
+        checkIn: checkIn || 'À préciser.',
+        checkOut: checkOut || 'À préciser.',
         parking: '',
       },
       services: {
@@ -332,6 +332,13 @@ function dedupeImportedImages(images?: Array<{ title?: string; url: string }>) {
   })
 }
 
+// Attribut alt renvoyé par le scraper gardé en texte alternatif ; un « Photo N » générique est écarté
+// pour laisser le repli « <titre de l'annonce> — photo N » de l'annonce publique.
+function importedImageAlt(title?: string): string {
+  const caption = (title || '').trim()
+  return /^photo\s*\d+$/i.test(caption) ? '' : caption
+}
+
 function buildEmptyRatingDistribution() {
   return {
     1: 0,
@@ -350,9 +357,9 @@ function amenitiesFromScraped(scraped: BookingScrapedData): RawAmenity[] {
       const catalogItem = getKnownAmenityCatalogItem(amenity.id)
       return [{
         id: amenity.id,
-        name: catalogItem?.name ?? amenity.name,
-        description: amenity.description ?? catalogItem?.description ?? '',
-        category: amenity.category ?? catalogItem?.category,
+        name: catalogItem?.name || amenity.name,
+        description: amenity.description || catalogItem?.description || '',
+        category: amenity.category || catalogItem?.category,
         relevance: amenity.relevance,
         pinned: amenity.pinned,
         perkEligible: amenity.perkEligible,
@@ -403,14 +410,14 @@ export function transformBookingToRawListingBundle(
   const locFromDesc = parseLocationFromDescriptions(scraped.location_descriptions)
   const roomCounts = mergeRoomCounts(parseRoomCountsFromItems(scraped.overview_items), scraped.room_counts)
   const location = {
-    city: scraped.city ?? locFromDesc?.city,
-    region: scraped.region ?? locFromDesc?.region,
-    country: scraped.country ?? locFromDesc?.country ?? 'France',
+    city: scraped.city || locFromDesc?.city,
+    region: scraped.region || locFromDesc?.region,
+    country: scraped.country || locFromDesc?.country || 'France',
   }
 
   const arrival = buildArrivalFromHouseRules(scraped.house_rules)
   if (arrival?.practical?.access) {
-    arrival.practical.access.address = scraped.precise_address ?? [
+    arrival.practical.access.address = scraped.precise_address || [
       location.city,
       location.region,
       location.country,
@@ -419,7 +426,7 @@ export function transformBookingToRawListingBundle(
 
   return {
     core: {
-      title: scraped.title ?? '',
+      title: scraped.title || '',
       type: resolveBookingHousingType(scraped.room_type),
       latitude: scraped.coordinates?.latitude,
       longitude: scraped.coordinates?.longitude,
@@ -427,7 +434,7 @@ export function transformBookingToRawListingBundle(
       lng: scraped.coordinates?.longitude,
       zoom: 13,
       guest_capacity: scraped.person_capacity ?? roomCounts.guest_capacity ?? 1,
-      precise_address: scraped.precise_address ?? '',
+      precise_address: scraped.precise_address || '',
       city: location.city,
       region: location.region,
       country: location.country,
@@ -441,7 +448,7 @@ export function transformBookingToRawListingBundle(
     medias: {
       images: dedupeImportedImages(scraped.images).map((img, i) => ({
         src: img.url,
-        alt: img.title ?? `Photo ${i + 1}`,
+        alt: importedImageAlt(img.title),
         position: i,
       })),
       videos: [],

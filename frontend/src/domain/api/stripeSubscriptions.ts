@@ -1,6 +1,7 @@
 // File: src/domain/api/stripeSubscriptions.ts
 
 import clerkToken from '@/utils/clerkToken'
+import { invalidateSharedRequests, invalidateSharedRequestsByPrefix, sharedRequest } from '@/domain/api/requestCache'
 
 export type SubscriptionPlanCode = 'indiehost' | 'superhost'
 
@@ -158,6 +159,34 @@ const CONNECT_ONBOARDING_LINK_PATH = '/payments/stripe/connect/onboarding-link'
 const CONNECT_DASHBOARD_LINK_PATH = '/payments/stripe/connect/dashboard-link'
 const CONNECT_SYNC_PATH = '/payments/stripe/connect/sync'
 
+// Cache partagé de l'état d'abonnement (`requestCache.ts`) : au chargement d'une page du tableau
+// de bord, l'éditeur, la liste des annonces, les panneaux domaine et la barre de navigation le
+// demandent chacun ; une seule requête part, et le résultat reste servi quelques secondes.
+// Toute mutation ci-dessous invalide la clé.
+const MY_SUBSCRIPTION_STATE_KEY = 'subscriptions/me'
+const ADMIN_SUBSCRIPTION_STATE_KEY_PREFIX = 'subscriptions/admin:'
+const SUBSCRIPTION_STATE_TTL_MS = 15_000
+
+function buildAdminSubscriptionStateKey(userId: string): string {
+  return `${ADMIN_SUBSCRIPTION_STATE_KEY_PREFIX}${userId.trim()}`
+}
+
+/** À appeler après toute action qui change l'abonnement ou Stripe Connect de l'utilisateur connecté. */
+export function invalidateMySubscriptionState() {
+  invalidateSharedRequests(MY_SUBSCRIPTION_STATE_KEY)
+}
+
+function invalidateAdminSubscriptionState(userId?: string | null) {
+  const normalized = userId?.trim()
+  if (normalized) {
+    invalidateSharedRequests(buildAdminSubscriptionStateKey(normalized))
+  } else {
+    invalidateSharedRequestsByPrefix(ADMIN_SUBSCRIPTION_STATE_KEY_PREFIX)
+  }
+  // L'admin peut être le client concerné ; son propre état ne doit pas rester figé.
+  invalidateMySubscriptionState()
+}
+
 function normalizePath(path: string): string {
   const trimmed = path.trim()
   if (!trimmed) return '/'
@@ -311,21 +340,25 @@ export async function fetchStripeSubscriptionPlans(): Promise<StripeSubscription
   }
 }
 
-export async function fetchMyStripeSubscriptionState({ sync = false }: { sync?: boolean } = {}): Promise<StripeSubscriptionState> {
-  const axios = await getAxios()
-  const headers = await getHeaders({ requiresAuth: true })
+// `sync` force une resynchronisation Stripe côté serveur : la requête part toujours (sauf si une
+// autre requête `sync` est déjà en cours) et son résultat, plus frais, est servi aux lectures simples.
+export function fetchMyStripeSubscriptionState({ sync = false }: { sync?: boolean } = {}): Promise<StripeSubscriptionState> {
+  return sharedRequest(MY_SUBSCRIPTION_STATE_KEY, async () => {
+    const axios = await getAxios()
+    const headers = await getHeaders({ requiresAuth: true })
 
-  try {
-    const { data } = await axios.get<StripeSubscriptionState>(resolveUrl(buildApiUrl(STATE_PATH)), {
-      withCredentials: false,
-      headers,
-      params: { sync: sync ? '1' : '0' },
-    })
+    try {
+      const { data } = await axios.get<StripeSubscriptionState>(resolveUrl(buildApiUrl(STATE_PATH)), {
+        withCredentials: false,
+        headers,
+        params: { sync: sync ? '1' : '0' },
+      })
 
-    return data
-  } catch (error) {
-    throw new Error(toApiErrorMessage(error, 'Impossible de charger votre abonnement.'))
-  }
+      return data
+    } catch (error) {
+      throw new Error(toApiErrorMessage(error, 'Impossible de charger votre abonnement.'))
+    }
+  }, { ttlMs: SUBSCRIPTION_STATE_TTL_MS, force: sync })
 }
 
 export async function fetchStripeSubscriptionCatalog(): Promise<StripeSubscriptionCatalog> {
@@ -360,6 +393,7 @@ export async function updateMyExtraListings(quantity: number): Promise<UpdateExt
       },
     )
 
+    invalidateMySubscriptionState()
     return data
   } catch (error) {
     throw new Error(toApiErrorMessage(error, 'Impossible de modifier vos logements supplémentaires.'))
@@ -384,6 +418,7 @@ export async function setMySubscriptionCancellation(cancelAtPeriodEnd: boolean):
       },
     )
 
+    invalidateMySubscriptionState()
     return data
   } catch (error) {
     throw new Error(toApiErrorMessage(error, cancelAtPeriodEnd
@@ -403,24 +438,26 @@ export type AdminSubscriptionLinkResponse = {
 }
 
 /** État d'abonnement d'un client, pour la fenêtre admin. */
-export async function fetchAdminUserSubscriptionState(userId: string, { sync = false }: { sync?: boolean } = {}): Promise<StripeSubscriptionState> {
-  const axios = await getAxios()
-  const headers = await getHeaders({ requiresAuth: true })
+export function fetchAdminUserSubscriptionState(userId: string, { sync = false }: { sync?: boolean } = {}): Promise<StripeSubscriptionState> {
+  return sharedRequest(buildAdminSubscriptionStateKey(userId), async () => {
+    const axios = await getAxios()
+    const headers = await getHeaders({ requiresAuth: true })
 
-  try {
-    const { data } = await axios.get<StripeSubscriptionState>(
-      resolveUrl(buildApiUrl(`/payments/stripe/admin/users/${encodeURIComponent(userId.trim())}/subscription`)),
-      {
-        withCredentials: false,
-        headers,
-        params: { sync: sync ? '1' : '0' },
-      },
-    )
+    try {
+      const { data } = await axios.get<StripeSubscriptionState>(
+        resolveUrl(buildApiUrl(`/payments/stripe/admin/users/${encodeURIComponent(userId.trim())}/subscription`)),
+        {
+          withCredentials: false,
+          headers,
+          params: { sync: sync ? '1' : '0' },
+        },
+      )
 
-    return data
-  } catch (error) {
-    throw new Error(toApiErrorMessage(error, 'Impossible de charger l’abonnement de ce client.'))
-  }
+      return data
+    } catch (error) {
+      throw new Error(toApiErrorMessage(error, 'Impossible de charger l’abonnement de ce client.'))
+    }
+  }, { ttlMs: SUBSCRIPTION_STATE_TTL_MS, force: sync })
 }
 
 /** Ajuste les logements supplémentaires d'un client (admin). */
@@ -438,6 +475,7 @@ export async function updateAdminUserExtraListings(userId: string, quantity: num
       },
     )
 
+    invalidateAdminSubscriptionState(userId)
     return data
   } catch (error) {
     throw new Error(toApiErrorMessage(error, 'Impossible de modifier les logements supplémentaires de ce client.'))
@@ -473,6 +511,7 @@ export async function grantAdminComplimentaryPlan(userId: string, input: {
       },
     )
 
+    invalidateAdminSubscriptionState(userId)
     return data
   } catch (error) {
     throw new Error(toApiErrorMessage(error, 'Impossible d’offrir ce plan.'))
@@ -493,6 +532,7 @@ export async function revokeAdminComplimentaryPlan(userId: string): Promise<Admi
       },
     )
 
+    invalidateAdminSubscriptionState(userId)
     return data
   } catch (error) {
     throw new Error(toApiErrorMessage(error, 'Impossible de retirer le plan offert.'))
@@ -554,6 +594,7 @@ export async function activateStripeSubscriptionPlan(input: {
       },
     )
 
+    invalidateMySubscriptionState()
     return data
   } catch (error) {
     throw new Error(toApiErrorMessage(error, 'Impossible de lancer l’activation du plan.'))
@@ -580,6 +621,7 @@ export async function confirmStripeSubscriptionCheckout(input: {
       },
     )
 
+    invalidateMySubscriptionState()
     return data
   } catch (error) {
     throw new Error(toApiErrorMessage(error, 'Impossible de confirmer le paiement Stripe.'))
@@ -653,6 +695,7 @@ export async function syncMyStripeConnectState(input?: { accountId?: string }): 
       },
     )
 
+    invalidateMySubscriptionState()
     return data
   } catch (error) {
     throw new Error(toApiErrorMessage(error, 'Impossible de synchroniser Stripe Connect.'))

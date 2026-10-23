@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { promises as dns } from 'node:dns';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -5,7 +6,7 @@ import path from 'node:path';
 import type { Listing, Prisma, PrismaClient, User } from '@prisma/client';
 
 import { env } from '../../config/env.js';
-import { deepMerge, asObject, toNumber } from '../../lib/json.js';
+import { deepMerge, asObject, isObject, toNumber } from '../../lib/json.js';
 import { buildListingId, buildReservationId } from '../../lib/id.js';
 import { toPrismaJson } from '../../lib/prisma.js';
 import { hasAdminAccess } from '../../lib/authRole.js';
@@ -24,7 +25,9 @@ import {
   redactListingSectionForPublic,
   resolveListingAccessForOwner,
 } from './listings.access.js';
-import type { CreateListingInput } from './listings.schemas.js';
+import type { CreateGuideReviewInput, CreateListingInput } from './listings.schemas.js';
+import { parseGuideAccessKey, toIsoDay, verifyGuideAccessKey } from '../../lib/guideKey.js';
+import { sanitizeListingSection, sanitizePlainText } from '../../lib/sanitizeHtml.js';
 
 type ListingRecord = Listing & { owner: User | null };
 type OwnerIdentitySource = {
@@ -60,6 +63,15 @@ export type ListingCustomDomainTargets = {
   cname: string | null;
 };
 
+/**
+ * Enregistrement TXT qui prouve la propriété du domaine. `names` : noms acceptés, le premier est celui
+ * du domaine rattaché, le second (pour `www.x.fr`) celui de l'apex `x.fr`, valable pour les deux adresses.
+ */
+export type ListingCustomDomainTxtRecord = {
+  names: string[];
+  value: string;
+};
+
 export type ListingDomainRecord = {
   listingId: string;
   subdomainSlug: string | null;
@@ -70,12 +82,25 @@ export type ListingDomainRecord = {
   customDomainUrl: string | null;
   customDomainVerifiedAt: string | null;
   customDomainTargets: ListingCustomDomainTargets;
+  customDomainVerificationToken: string | null;
+  customDomainVerificationRecord: ListingCustomDomainTxtRecord | null;
+};
+
+export type ListingCustomDomainCheck = {
+  ok: boolean;
+  reason: string | null;
 };
 
 export type ListingCustomDomainVerification = {
   ok: boolean;
   resolvedAddresses: string[];
   reason: string | null;
+  checks: {
+    // Résolution A / CNAME vers le VPS : indispensable au certificat et au routage.
+    address: ListingCustomDomainCheck;
+    // TXT `_indiehost-verification.<domaine>` : preuve de propriété de la zone DNS.
+    ownership: ListingCustomDomainCheck;
+  };
 };
 
 const DOMAIN_RECORD_SELECT = {
@@ -84,6 +109,7 @@ const DOMAIN_RECORD_SELECT = {
   subdomainSlug: true,
   customDomain: true,
   customDomainVerifiedAt: true,
+  customDomainVerificationToken: true,
   kind: true,
   parentListingId: true,
   core: true,
@@ -243,6 +269,31 @@ function buildCustomDomainTwin(hostname: string): string {
   return hostname.startsWith('www.') ? hostname.slice(4) : `www.${hostname}`;
 }
 
+const CUSTOM_DOMAIN_TXT_LABEL = '_indiehost-verification';
+const CUSTOM_DOMAIN_TXT_VALUE_PREFIX = 'indiehost-verification=';
+const CUSTOM_DOMAIN_TXT_NOT_FOUND_REASON = 'Enregistrement TXT introuvable ou différent';
+
+// 24 octets → 32 caractères base64url : imprévisible, sans caractère gênant dans une zone DNS.
+function generateCustomDomainVerificationToken(): string {
+  return randomBytes(24).toString('base64url');
+}
+
+// Noms TXT acceptés : celui du domaine rattaché, et pour `www.x.fr` aussi l'apex `x.fr`
+// (un seul enregistrement couvre alors les deux adresses, qu'on refuse déjà de séparer).
+function buildCustomDomainTxtNames(domain: string): string[] {
+  const names = [`${CUSTOM_DOMAIN_TXT_LABEL}.${domain}`];
+  if (domain.startsWith('www.')) names.push(`${CUSTOM_DOMAIN_TXT_LABEL}.${domain.slice(4)}`);
+  return names;
+}
+
+function buildCustomDomainTxtRecord(domain: string, token: string | null): ListingCustomDomainTxtRecord | null {
+  if (!token) return null;
+  return {
+    names: buildCustomDomainTxtNames(domain),
+    value: `${CUSTOM_DOMAIN_TXT_VALUE_PREFIX}${token}`,
+  };
+}
+
 function readBoolean(value: unknown, fallback = false): boolean {
   if (typeof value === 'boolean') return value;
   return fallback;
@@ -301,14 +352,8 @@ function readOwnerUsername(owner: OwnerIdentitySource | null | undefined, clerkU
   return null;
 }
 
-function readEmailLocalPart(value: string | null | undefined): string | null {
-  if (typeof value !== 'string') return null;
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-  const localPart = trimmed.split('@')[0]?.trim() ?? '';
-  return localPart || null;
-}
-
+// Nom public de l'hôte : prénom (et nom) ou pseudo, jamais la partie locale de l'e-mail.
+// Sans nom, `null` : le front affiche « votre hôte ».
 function resolveOwnerDisplayName(owner: OwnerIdentitySource | null | undefined, clerkUser: ClerkUserProfile | null): string | null {
   const directDisplayName = readString(owner?.displayName);
   if (directDisplayName && !isDeprecatedHostIdentity(directDisplayName)) return directDisplayName;
@@ -325,7 +370,7 @@ function resolveOwnerDisplayName(owner: OwnerIdentitySource | null | undefined, 
   const clerkFullName = [clerkUser?.firstName, clerkUser?.lastName].filter(Boolean).join(' ').trim();
   if (clerkFullName && !isDeprecatedHostIdentity(clerkFullName)) return clerkFullName;
 
-  return readEmailLocalPart(readString(clerkUser?.email) ?? readString(owner?.email));
+  return null;
 }
 
 function resolveOwnerEmail(owner: OwnerIdentitySource | null | undefined, clerkUser: ClerkUserProfile | null): string | null {
@@ -425,6 +470,87 @@ class ListingPublicationForbiddenError extends Error {
   constructor(public readonly details: ListingPublicationReadiness, message?: string) {
     super(message ?? 'Publishing requires an active subscription and a fully configured Stripe Connect account.');
   }
+}
+
+// ---- Avis voyageur depuis le guide d'arrivée ----
+
+// Même pagination que l'éditeur et la page publique : `comments.comments` est un tableau de pages de 10 avis.
+const GUIDE_REVIEW_PAGE_SIZE = 10;
+
+export type GuideReview = {
+  id: string;
+  reservationId: string;
+  createdAt: string;
+  rating: number;
+  text: string;
+  author: string;
+  stayDates: { start: string; end: string };
+};
+
+type GuideReviewAccess = {
+  reservationId: string;
+  listingId: string;
+  guestName: string;
+  startDate: Date;
+  endDate: Date;
+  comments: Record<string, unknown>;
+};
+
+// Texte brut : balises HTML retirées, entités décodées, caractères de contrôle supprimés, espaces et
+// sauts de ligne normalisés (la page publique passe de toute façon par sanitizeHtml côté front).
+function sanitizeReviewText(value: string): string {
+  return sanitizePlainText(value, { multiline: true });
+}
+
+function readCommentPages(comments: Record<string, unknown>): Record<string, unknown>[][] {
+  const pages = Array.isArray(comments.comments) ? comments.comments : [];
+  return pages.map((page) => (Array.isArray(page) ? page.filter(isObject) : []));
+}
+
+function findGuideReviewEntry(comments: Record<string, unknown>, reservationId: string): Record<string, unknown> | null {
+  for (const page of readCommentPages(comments)) {
+    for (const entry of page) {
+      if (readString(entry.reservationId) === reservationId) return entry;
+    }
+  }
+  return null;
+}
+
+function prependCommentEntry(comments: Record<string, unknown>, entry: Record<string, unknown>): Record<string, unknown>[][] {
+  const pages = readCommentPages(comments);
+  if (!pages.length) pages.push([]);
+  pages[0]!.unshift(entry);
+
+  for (let index = 0; index < pages.length; index += 1) {
+    const page = pages[index]!;
+    if (page.length <= GUIDE_REVIEW_PAGE_SIZE) continue;
+    const overflow = page.splice(GUIDE_REVIEW_PAGE_SIZE);
+    if (!pages[index + 1]) pages[index + 1] = [];
+    pages[index + 1]!.unshift(...overflow);
+  }
+
+  return pages;
+}
+
+function toGuideReview(entry: Record<string, unknown>): GuideReview {
+  const stayDates = asObject(entry['stay-dates']);
+  return {
+    id: readString(entry.id) ?? '',
+    reservationId: readString(entry.reservationId) ?? '',
+    createdAt: readString(entry.createdAt) ?? '',
+    rating: Math.min(5, Math.max(1, Math.round(toNumber(entry.rating ?? entry.note, 5)))),
+    text: readString(entry.text) ?? readString(entry.comment) ?? '',
+    author: readString(entry.author) ?? readString(entry.name) ?? '',
+    stayDates: {
+      start: readString(stayDates.start) ?? '',
+      end: readString(stayDates.end) ?? '',
+    },
+  };
+}
+
+// L'avis s'ouvre après la première nuit (jour UTC d'arrivée + 1), comme l'indique le guide.
+function resolveGuideReviewAvailableFrom(startDate: Date): Date {
+  return new Date(Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), startDate.getUTCDate()) + DAY_MS);
 }
 
 export class ListingsService {
@@ -805,10 +931,12 @@ export class ListingsService {
   private buildCustomDomainFields(listing: {
     customDomain: string | null;
     customDomainVerifiedAt: Date | null;
+    customDomainVerificationToken: string | null;
   }) {
     const customDomain = readString(listing.customDomain)?.toLowerCase() ?? null;
     const verifiedAt = customDomain ? listing.customDomainVerifiedAt : null;
     const customDomainStatus: ListingCustomDomainStatus = !customDomain ? 'none' : verifiedAt ? 'verified' : 'pending';
+    const token = customDomain ? readString(listing.customDomainVerificationToken) : null;
 
     return {
       customDomain,
@@ -816,6 +944,8 @@ export class ListingsService {
       customDomainUrl: customDomain ? `https://${customDomain}` : null,
       customDomainVerifiedAt: verifiedAt ? verifiedAt.toISOString() : null,
       customDomainTargets: this.customDomainTargets,
+      customDomainVerificationToken: token,
+      customDomainVerificationRecord: customDomain ? buildCustomDomainTxtRecord(customDomain, token) : null,
     };
   }
 
@@ -825,6 +955,7 @@ export class ListingsService {
     subdomainSlug: string | null;
     customDomain: string | null;
     customDomainVerifiedAt: Date | null;
+    customDomainVerificationToken: string | null;
     core: unknown;
   }): Promise<ListingDomainRecord> {
     const normalizedSubdomain = typeof listing.subdomainSlug === 'string' && listing.subdomainSlug.trim()
@@ -977,13 +1108,15 @@ export class ListingsService {
     }
 
     const defaults = this.buildFallbackBundle(listingId);
-    const core = payload.core ? deepMerge(defaults.core, payload.core) : defaults.core;
+    // Textes fournis par le client nettoyés à l'écriture (HTML Quill borné, texte brut ailleurs) ;
+    // `bookings` et `medias` n'ont pas de texte libre affiché.
+    const core = sanitizeListingSection('core', payload.core ? deepMerge(defaults.core, payload.core) : defaults.core);
     const bookings = payload.bookings ? deepMerge(defaults.bookings, payload.bookings) : defaults.bookings;
     const medias = payload.medias ? deepMerge(defaults.medias, payload.medias) : defaults.medias;
-    const arrival = payload.arrival ? deepMerge(defaults.arrival, payload.arrival) : defaults.arrival;
-    const notes = payload.notes ? deepMerge(defaults.notes, payload.notes) : defaults.notes;
-    const comments = payload.comments ? deepMerge(defaults.comments, payload.comments) : defaults.comments;
-    const host = payload.host ? deepMerge(buildHostProfileFromUser(owner), payload.host) : buildHostProfileFromUser(owner);
+    const arrival = sanitizeListingSection('arrival', payload.arrival ? deepMerge(defaults.arrival, payload.arrival) : defaults.arrival);
+    const notes = sanitizeListingSection('notes', payload.notes ? deepMerge(defaults.notes, payload.notes) : defaults.notes);
+    const comments = sanitizeListingSection('comments', payload.comments ? deepMerge(defaults.comments, payload.comments) : defaults.comments);
+    const host = sanitizeListingSection('host', payload.host ? deepMerge(buildHostProfileFromUser(owner), payload.host) : buildHostProfileFromUser(owner));
     core.id = listingId;
     const requestedSlug = buildListingSlugFromCore(core, listingId);
     core.slug = await this.buildUniqueListingSlug(requestedSlug);
@@ -1442,12 +1575,19 @@ export class ListingsService {
     }
 
     const unchanged = access.listing.customDomain === domain;
+    // Nouveau domaine (ou domaine repris après un détachement) : nouveau jeton et vérification à refaire.
+    // Un domaine déjà vérifié qui est simplement réenregistré garde son état ; un domaine en attente sans jeton
+    // (rattaché avant l'introduction du TXT) en reçoit un.
+    const verificationToken = unchanged && access.listing.customDomainVerificationToken
+      ? access.listing.customDomainVerificationToken
+      : generateCustomDomainVerificationToken();
     let updated;
     try {
       updated = await this.prisma.listing.update({
         where: { id: args.listingId },
         data: {
           customDomain: domain,
+          customDomainVerificationToken: verificationToken,
           ...(unchanged ? {} : { customDomainVerifiedAt: null }),
           ...(access.listing.ownerId || !access.actor
             ? {}
@@ -1467,8 +1607,12 @@ export class ListingsService {
       throw error;
     }
 
-    // Vérification immédiate (best effort) : si le DNS est déjà en place, le domaine est actif tout de suite.
-    const verification = await this.verifyCustomDomainDns(domain);
+    // Déjà vérifié et inchangé : rien à refaire.
+    if (updated.customDomainVerifiedAt) return this.toDomainRecord(updated);
+
+    // Vérification immédiate (best effort) : si les deux enregistrements sont déjà en place
+    // (par exemple après un détachement/rattachement rapide), le domaine est actif tout de suite.
+    const verification = await this.verifyCustomDomainDns(domain, verificationToken);
     if (verification.ok) {
       return this.markCustomDomainVerified(args.listingId);
     }
@@ -1487,7 +1631,29 @@ export class ListingsService {
     const domain = readString(access.listing.customDomain);
     if (!domain) return 'no_custom_domain' as const;
 
-    const verification = await this.verifyCustomDomainDns(domain);
+    // Un domaine vérifié le reste : on ne redemande jamais la preuve de propriété à un hôte déjà en ligne.
+    if (access.listing.customDomainVerifiedAt) {
+      const record = await this.toDomainRecord(access.listing);
+      const ok: ListingCustomDomainCheck = { ok: true, reason: null };
+      return {
+        record,
+        verification: { ok: true, resolvedAddresses: [], reason: null, checks: { address: ok, ownership: ok } },
+      };
+    }
+
+    // Domaine en attente rattaché avant l'introduction du TXT : on lui donne son jeton, l'hôte publie le TXT.
+    let token = readString(access.listing.customDomainVerificationToken);
+    if (!token) {
+      token = generateCustomDomainVerificationToken();
+      await this.prisma.listing.update({
+        where: { id: args.listingId },
+        data: { customDomainVerificationToken: token },
+        select: { id: true },
+      });
+      access.listing.customDomainVerificationToken = token;
+    }
+
+    const verification = await this.verifyCustomDomainDns(domain, token);
     const record = verification.ok
       ? await this.markCustomDomainVerified(args.listingId)
       : await this.toDomainRecord(access.listing);
@@ -1508,6 +1674,7 @@ export class ListingsService {
       data: {
         customDomain: null,
         customDomainVerifiedAt: null,
+        customDomainVerificationToken: null,
       },
       select: DOMAIN_RECORD_SELECT,
     });
@@ -1527,13 +1694,32 @@ export class ListingsService {
     return this.toDomainRecord(updated);
   }
 
-  private async verifyCustomDomainDns(domain: string): Promise<ListingCustomDomainVerification> {
+  /**
+   * Un domaine n'est actif qu'une fois les deux contrôles passés : la résolution A / CNAME vers le VPS
+   * (sinon ni certificat ni routage) et le TXT de propriété (sinon le premier compte qui déclare un domaine
+   * déjà pointé vers le VPS se l'approprie). Les deux sont faits à chaque fois pour afficher l'état de chacun.
+   */
+  private async verifyCustomDomainDns(domain: string, token: string): Promise<ListingCustomDomainVerification> {
+    const [address, ownership] = await Promise.all([
+      this.checkCustomDomainAddress(domain),
+      this.checkCustomDomainOwnership(domain, token),
+    ]);
+
+    const reasons = [address.check.reason, ownership.reason].filter((reason): reason is string => Boolean(reason));
+    return {
+      ok: address.check.ok && ownership.ok,
+      resolvedAddresses: address.resolvedAddresses,
+      reason: reasons.length ? reasons.join(' ') : null,
+      checks: { address: address.check, ownership },
+    };
+  }
+
+  private async checkCustomDomainAddress(domain: string): Promise<{ check: ListingCustomDomainCheck; resolvedAddresses: string[] }> {
     const targetIpv4 = this.customDomainTargets.ipv4;
     if (!targetIpv4) {
       return {
-        ok: false,
+        check: { ok: false, reason: 'La vérification DNS n’est pas configurée sur ce serveur (CUSTOM_DOMAIN_TARGET_IPV4).' },
         resolvedAddresses: [],
-        reason: 'La vérification DNS n’est pas configurée sur ce serveur (CUSTOM_DOMAIN_TARGET_IPV4).',
       };
     }
 
@@ -1544,19 +1730,55 @@ export class ListingsService {
     } catch (error) {
       const code = (error as { code?: unknown })?.code;
       const reason = code === 'ENOTFOUND' || code === 'ENODATA'
-        ? `Aucun enregistrement DNS trouvé pour ${domain}. Créez l’enregistrement puis réessayez (la propagation peut prendre jusqu’à 24 h).`
+        ? `Aucun enregistrement A ou CNAME trouvé pour ${domain}. Créez l’enregistrement puis réessayez (la propagation peut prendre jusqu’à 24 h).`
         : `Impossible de résoudre ${domain} pour le moment (${typeof code === 'string' ? code : 'erreur DNS'}).`;
-      return { ok: false, resolvedAddresses: [], reason };
+      return { check: { ok: false, reason }, resolvedAddresses: [] };
     }
 
     if (resolvedAddresses.includes(targetIpv4)) {
-      return { ok: true, resolvedAddresses, reason: null };
+      return { check: { ok: true, reason: null }, resolvedAddresses };
+    }
+
+    return {
+      check: { ok: false, reason: `${domain} pointe vers ${resolvedAddresses.join(', ')} au lieu de ${targetIpv4}.` },
+      resolvedAddresses,
+    };
+  }
+
+  // TXT `_indiehost-verification.<domaine>` (ou l'apex pour `www.`) dont une valeur vaut exactement
+  // `indiehost-verification=<jeton>` (segments recollés, espaces de bord retirés, casse respectée).
+  private async checkCustomDomainOwnership(domain: string, token: string): Promise<ListingCustomDomainCheck> {
+    const expected = `${CUSTOM_DOMAIN_TXT_VALUE_PREFIX}${token}`;
+    const names = buildCustomDomainTxtNames(domain);
+    let transientCode: string | null = null;
+
+    for (const name of names) {
+      let records: string[][];
+      try {
+        records = await dns.resolveTxt(name);
+      } catch (error) {
+        const code = (error as { code?: unknown })?.code;
+        if (code !== 'ENOTFOUND' && code !== 'ENODATA') {
+          transientCode = typeof code === 'string' ? code : 'erreur DNS';
+        }
+        continue;
+      }
+
+      const values = records.map((chunks) => chunks.join('').trim());
+      if (values.includes(expected)) return { ok: true, reason: null };
+    }
+
+    const namesLabel = names.join(' ou ');
+    if (transientCode) {
+      return {
+        ok: false,
+        reason: `Impossible de lire l’enregistrement TXT ${namesLabel} pour le moment (${transientCode}). Réessayez dans quelques minutes.`,
+      };
     }
 
     return {
       ok: false,
-      resolvedAddresses,
-      reason: `${domain} pointe vers ${resolvedAddresses.join(', ')} au lieu de ${targetIpv4}.`,
+      reason: `${CUSTOM_DOMAIN_TXT_NOT_FOUND_REASON} : créez un TXT ${namesLabel} avec la valeur ${expected}, puis réessayez (la propagation peut prendre jusqu’à 24 h).`,
     };
   }
 
@@ -1822,7 +2044,9 @@ export class ListingsService {
       : buildDefaultResource(resource, listingId);
     const rawValue = (listing as Record<string, unknown>)[resource];
     const currentValue = asObject(rawValue, fallback);
-    const merged = deepMerge(currentValue, patch);
+    // Nettoyage à l'écriture sur la valeur fusionnée : un enregistrement assainit aussi le contenu
+    // déjà stocké de la section (le front assainit par ailleurs au rendu).
+    const merged = sanitizeListingSection(resource, deepMerge(currentValue, patch));
     let normalizedMerged = resource === 'bookings'
       ? await this.normalizeBookingsResourceValue(listingId, merged)
       : merged;
@@ -1876,18 +2100,115 @@ export class ListingsService {
       data.host = toJsonInput(normalizedMerged);
     }
 
-    if (!listing.ownerId && actor) {
-      data.owner = {
-        connect: { id: actor.id },
-      };
-    }
-
     await this.prisma.listing.update({
       where: { id: listingId },
       data,
     });
 
     return normalizedMerged;
+  }
+
+  // Résout la réservation visée par une clé de guide et vérifie la signature (sans compte Clerk).
+  private async resolveGuideReviewAccess(guideKey: string): Promise<GuideReviewAccess | 'forbidden' | null> {
+    const parsed = parseGuideAccessKey(guideKey);
+    if (!parsed) return 'forbidden';
+
+    const reservation = await this.prisma.reservation.findUnique({
+      where: { id: parsed.reservationId },
+      select: {
+        id: true,
+        listingId: true,
+        guestName: true,
+        startDate: true,
+        endDate: true,
+        contact: true,
+        listing: { select: { comments: true } },
+      },
+    });
+    if (!reservation) return null;
+    if (!verifyGuideAccessKey(guideKey, reservation)) return 'forbidden';
+
+    return {
+      reservationId: reservation.id,
+      listingId: reservation.listingId,
+      guestName: reservation.guestName,
+      startDate: reservation.startDate,
+      endDate: reservation.endDate,
+      comments: asObject(reservation.listing.comments, buildDefaultResource('comments', reservation.listingId)),
+    };
+  }
+
+  private buildGuideReviewStatus(access: GuideReviewAccess, now = new Date()) {
+    const availableFrom = resolveGuideReviewAvailableFrom(access.startDate);
+    const existing = findGuideReviewEntry(access.comments, access.reservationId);
+    return {
+      reservationId: access.reservationId,
+      listingId: access.listingId,
+      availableFromISO: availableFrom.toISOString(),
+      canReview: !existing && now.getTime() >= availableFrom.getTime(),
+      review: existing ? toGuideReview(existing) : null,
+    };
+  }
+
+  async getGuideReview(guideKey: string) {
+    const access = await this.resolveGuideReviewAccess(guideKey);
+    if (!access || access === 'forbidden') return access;
+    return this.buildGuideReviewStatus(access);
+  }
+
+  async createGuideReview(guideKey: string, input: CreateGuideReviewInput) {
+    const access = await this.resolveGuideReviewAccess(guideKey);
+    if (!access || access === 'forbidden') return access;
+
+    const text = sanitizeReviewText(input.text);
+    if (text.length < 10) return 'invalid_text' as const;
+    const author = sanitizeReviewText(input.author ?? '').slice(0, 80) || access.guestName.trim() || 'Voyageur';
+    const rating = Math.min(5, Math.max(1, Math.round(input.rating)));
+    const now = new Date();
+
+    // Relecture dans la transaction : deux envois simultanés ne doivent produire qu'un seul avis.
+    const result = await this.prisma.$transaction(async (tx) => {
+      const listing = await tx.listing.findUnique({
+        where: { id: access.listingId },
+        select: { id: true, comments: true },
+      });
+      if (!listing) return null;
+
+      const comments = asObject(listing.comments, buildDefaultResource('comments', access.listingId));
+      const status = this.buildGuideReviewStatus({ ...access, comments }, now);
+      if (status.review) return 'already_reviewed' as const;
+      if (!status.canReview) return 'locked' as const;
+
+      const entry: Record<string, unknown> = {
+        id: `review-${access.reservationId}`,
+        source: 'indiehost',
+        reservationId: access.reservationId,
+        createdAt: now.toISOString(),
+        // Clés lues par la page publique (`useParseContent.parseComments`).
+        'profile-pic': '',
+        name: author,
+        note: rating,
+        comment: text,
+        'stay-dates': {
+          start: toIsoDay(access.startDate),
+          end: toIsoDay(access.endDate),
+        },
+        // Alias explicites.
+        author,
+        rating,
+        text,
+      };
+
+      const nextComments = { ...comments, comments: prependCommentEntry(comments, entry) };
+      await tx.listing.update({
+        where: { id: access.listingId },
+        data: { comments: toJsonInput(nextComments), updatedAt: now },
+      });
+
+      return toGuideReview(entry);
+    });
+
+    return result;
   }
 
   async transferListingOwnership(args: {

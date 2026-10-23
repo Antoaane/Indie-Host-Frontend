@@ -138,7 +138,7 @@
           {
             "webp": "/assets/media/images/webp/editeur.webp",
             "png": "/assets/media/images/png/editeur.png",
-            "alt": "Listing edit page"
+            "alt": "IndieHost visual listing editor with the page preview updating in real time"
           }
         ]
       },
@@ -157,7 +157,7 @@
           {
             "webp": "/assets/media/images/webp/seo.webp",
             "png": "/assets/media/images/png/seo.png",
-            "alt": "Listing edit page"
+            "alt": "IndieHost listing shown in Google search results"
           }
         ]
       },
@@ -176,7 +176,7 @@
           {
             "webp": "/assets/media/images/webp/calendrier.webp",
             "png": "/assets/media/images/png/calendrier.png",
-            "alt": "Listing edit page"
+            "alt": "Centralised booking calendar with check-ins, check-outs and payment status"
           }
         ]
       },
@@ -195,7 +195,7 @@
           {
             "webp": "/assets/media/images/webp/notification.webp",
             "png": "/assets/media/images/png/notification.png",
-            "alt": "Listing edit page"
+            "alt": "Automatic message sent to a guest before arrival"
           }
         ]
       },
@@ -214,7 +214,7 @@
           {
             "webp": "/assets/media/images/webp/glass-theme.webp",
             "png": "/assets/media/images/png/glass-theme.png",
-            "alt": "Listing edit page"
+            "alt": "IndieHost listing dressed in a custom graphic theme"
           }
         ]
       },
@@ -233,7 +233,7 @@
           {
             "webp": "/assets/media/images/webp/guide.webp",
             "png": "/assets/media/images/png/guide.png",
-            "alt": "Listing edit page"
+            "alt": "Printed welcome booklet with its QR code to the IndieHost messaging"
           }
         ]
       }
@@ -254,7 +254,7 @@
           {
             "webp": "/assets/media/images/webp/editeur.webp",
             "png": "/assets/media/images/png/editeur.png",
-            "alt": "Listing edit page"
+            "alt": "IndieHost listing editor: edit fields next to the page preview"
           }
         ]
       },
@@ -754,6 +754,7 @@
     "body": "Paste the Airbnb or Booking.com link of any of your properties—we'll generate your booking page in seconds.",
     "inputPlaceholder": "Paste your listing link",
     "previewCtaLabel": "Generate my site",
+    "importDemoVideoLabel": "Demo: creating a booking page from an Airbnb or Booking.com link",
     "createAccountCtaLabel": "Activate my site for free",
     "createAccountCtaHint": "30-day free trial · No commitment · Zero commission",
     "backButtonAriaLabel": "Back to homepage",
@@ -762,5 +763,9 @@
       "href": "#join-section",
       "target": "_self"
     }
+  },
+  "videoControls": {
+    "play": "Play the video",
+    "pause": "Pause the video"
   }
 }

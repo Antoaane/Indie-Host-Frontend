@@ -19,15 +19,24 @@ const props = withDefaults(
   defineProps<{
     medias: MediasModel
     previewOnly?: boolean
+    /** Titre de l'annonce : texte alternatif de secours des photos sans description. */
+    listingTitle?: string
   }>(),
-  { previewOnly: false },
+  { previewOnly: false, listingTitle: '' },
 )
 
 const { isLg, mode } = useListingViewport()
 
 const isTabletMode = computed(() => mode.value === 'tablet')
 
-const orderedImages = computed(() => orderByIndex(props.medias.images))
+// Une photo sans description reçoit « <titre> — photo N » (N = rang d'affichage).
+const orderedImages = computed(() => {
+  const title = props.listingTitle.trim() || 'Annonce'
+  return orderByIndex(props.medias.images).map((img, i) => ({
+    ...img,
+    alt: img.alt?.trim() || `${title} — photo ${i + 1}`,
+  }))
+})
 
 const coverImage = computed(() => orderedImages.value.find((img) => (img.position ?? 0) === 0) ?? orderedImages.value[0])
 const mosaicImages = computed(() => orderedImages.value.filter((img) => img !== coverImage.value))
@@ -92,6 +101,7 @@ const swiperParams = swiperBaseParams as unknown as Record<string, unknown>
       class="cover"
       role="button"
       tabindex="0"
+      :aria-label="`Voir toutes les photos — ${coverImage.alt}`"
       @click="openCoverLightbox"
       @keydown.enter.prevent="openCoverLightbox"
       @keydown.space.prevent="openCoverLightbox"
@@ -125,13 +135,19 @@ const swiperParams = swiperBaseParams as unknown as Record<string, unknown>
         v-for="(slide, slideIndex) in slides"
         :key="slide.position"
       >
-        <img
-          class="slide-page-svg"
-          loading="lazy"
-          :src="slide.src"
-          :alt="slide.alt"
+        <button
+          type="button"
+          class="slide-button"
+          :aria-label="`Agrandir la photo : ${slide.alt}`"
           @click="openSlideLightbox(slideIndex)"
-        />
+        >
+          <img
+            class="slide-page-svg"
+            loading="lazy"
+            :src="slide.src"
+            :alt="slide.alt"
+          />
+        </button>
       </SwiperSlide>
     </Swiper>
   </section>

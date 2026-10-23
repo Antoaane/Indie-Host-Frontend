@@ -56,6 +56,8 @@
         flex-direction: column-reverse;
         align-items: center;
         gap: 1.5rem;
+        padding-left: var(--layout-gap-4xl);
+        padding-right: var(--layout-gap-4xl);
 
         @include min-width(lg) {
           height: 80vh;
@@ -67,8 +69,6 @@
         }
 
         @include container(xxl, 5rem);
-        padding-left: var(--layout-gap-4xl);
-        padding-right: var(--layout-gap-4xl);
       }
     }
 
@@ -100,13 +100,12 @@
 
         border-radius: borders.$rounded-xl;
         border: 1px solid rgba($accent, 1);
+        @include halo(lg);
 
         @include min-width(lg) {
           max-width: 85vw;
           max-height: 90vh;
         }
-
-        @include halo(lg);
       }
 
       // .close-btn {

@@ -6,8 +6,10 @@ import { useRoute } from 'vue-router'
 
 import { fetchBookingConfirmation, buildReservationStayIcalUrl, cancelBookingReservation } from '@/domain/api/bookings'
 import { normalizeReservations } from '@/domain/listings/bookings'
+import { getCancellationPolicyLabel, resolveCancellationPolicy } from '@/domain/listings/cancellationPolicy'
 import { getListingsController } from '@/domain/listings/controller'
 import type { RawHost } from '@/domain/listings/types'
+import LegalLinksCompact from '@/components/layouts/LegalLinksCompact.vue'
 
 type ConfirmationViewModel = {
   reservationId: string
@@ -291,13 +293,11 @@ async function loadFromLocalFallback(params: {
       canCancel: false,
       canceledAtISO: null,
       reason: null,
-      policy: {
-        policy: 'flexible',
-        refundsEnabled: false,
-        days: 3,
-        feePercent: 10,
-        lateFeePercent: 30,
-      },
+      policy: (() => {
+        // Barème par défaut lu dans la définition partagée, jamais recopié ici.
+        const { policy, refundsEnabled, days, feePercent, lateFeePercent } = resolveCancellationPolicy(null)
+        return { policy, refundsEnabled, days, feePercent, lateFeePercent }
+      })(),
       refund: {
         stage: 'partial_refund',
         currency,
@@ -549,10 +549,7 @@ const cancellationPolicyLabel = computed(() => {
   if (!model) return ''
   const { policy, refundsEnabled } = model.cancellation.policy
   if (!refundsEnabled) return 'Non remboursable'
-  if (policy === 'moderate') return 'Modérée'
-  if (policy === 'strict') return 'Stricte'
-  if (policy === 'custom') return 'Personnalisée'
-  return 'Flexible'
+  return getCancellationPolicyLabel(policy)
 })
 
 const cancellationStageLabel = computed(() => {
@@ -864,6 +861,8 @@ async function cancelCurrentReservation() {
         </section>
       </template>
     </section>
+
+    <LegalLinksCompact />
   </main>
 </template>
 
@@ -874,9 +873,16 @@ async function cancelCurrentReservation() {
 .booking-confirmation-page {
   min-height: 100dvh;
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--layout-gap-md);
   padding: 36px 16px;
+
+  // Mentions légales en bas de page, même quand la carte est plus courte que la fenêtre.
+  > .legal-links-compact {
+    margin-top: auto;
+    padding-bottom: var(--safe-area-bottom);
+  }
   background:
     radial-gradient(120% 100% at 50% -10%, rgba($accent, 1) 0%, rgba($secondary-surface-1, 1) 72%);
 }

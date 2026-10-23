@@ -67,6 +67,19 @@ export const transferListingOwnershipSchema = z.object({
 
 export const patchListingResourceSchema = rawJsonSchema;
 
+export const listingGuideParamsSchema = z.object({
+  guideKey: z.string().trim().min(1).max(200),
+});
+
+// Avis déposé par le voyageur depuis son guide d'arrivée (clé de guide, pas de compte).
+export const createGuideReviewSchema = z.object({
+  rating: z.coerce.number().int().min(1).max(5),
+  text: z.string().trim().min(10).max(2000),
+  author: z.string().trim().max(80).optional(),
+});
+
+export type CreateGuideReviewInput = z.infer<typeof createGuideReviewSchema>;
+
 export type CreateListingInput = z.infer<typeof createListingSchema>;
 export type ListingDomainAvailabilityInput = z.infer<typeof listingDomainAvailabilitySchema>;
 export type UpsertListingDomainInput = z.infer<typeof upsertListingDomainSchema>;

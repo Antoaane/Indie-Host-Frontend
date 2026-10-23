@@ -5,6 +5,7 @@
 @use '@/styles/variables/animations' as animations;
 @use '@/styles/variables/effects' as effects;
 @use '@/styles/components/buttons' as buttons;
+@use '@/styles/components/inputs' as inputs;
 @use '@/views/Editor/components/EditorSidebar/panels/panel.scss' as *;
 
 .editor-gallery-panel {
@@ -68,154 +69,181 @@
 
     >.gallery {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      // Colonnes fluides : assez larges pour que le champ de description sous chaque vignette reste lisible.
+      @include responsive-grid-columns(8.5rem, auto-fill);
       gap: var(--layout-gap-xs);
 
       >.tile {
         position: relative;
-        border-radius: borders.$rounded-md;
-        aspect-ratio: 1 / 1;
-        overflow: hidden;
-        cursor: grab;
-        // Poignée de tri : pas de sélection ni de menu « Enregistrer l'image » à l'appui long.
-        -webkit-user-select: none;
-        user-select: none;
-        -webkit-touch-callout: none;
-        @include animations.transition(animations.$duration-fast, animations.$ease-out, (transform, box-shadow));
+        display: flex;
+        flex-direction: column;
+        gap: var(--layout-gap-xs);
+        min-width: 0;
+        @include animations.transition(animations.$duration-fast, animations.$ease-out, transform);
         will-change: transform;
 
-        &::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: rgba($dark, 0.35);
-          opacity: 0;
-          pointer-events: none;
-          @include animations.transition(animations.$duration-fast);
-        }
-
-        >img,
-        >.placeholder {
-          height: 100%;
-          padding: 0;
-          border-radius: inherit;
-        }
-
-        >img {
+        // Vignette = poignée de tri : pas de sélection ni de menu « Enregistrer l'image » à l'appui long.
+        >.thumb {
           position: relative;
-          z-index: 0;
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-          display: block;
-        }
+          border-radius: borders.$rounded-md;
+          aspect-ratio: 1 / 1;
+          overflow: hidden;
+          cursor: grab;
+          -webkit-user-select: none;
+          user-select: none;
+          -webkit-touch-callout: none;
+          @include animations.transition(animations.$duration-fast, animations.$ease-out, (transform, box-shadow));
 
-        @include on-hover {
-          transform: translateY(-1px);
-          @include effects.soft-shadow(rgba(0, 0, 0, 0.2));
-
-          @include animations.reduced-motion {
-            transform: none;
-          }
-        }
-
-        @include on-hover('::after') {
-          opacity: 1;
-        }
-
-        &:focus-within::after {
-          opacity: 1;
-        }
-
-        >.tile-order {
-          position: absolute;
-          top: 0.35rem;
-          left: 0.35rem;
-          z-index: 3;
-          display: inline-flex;
-          align-items: center;
-          gap: 0.35rem;
-          padding: 0.28rem 0.5rem;
-          border-radius: borders.$rounded;
-          background: $accent;
-          pointer-events: none;
-          white-space: nowrap;
-          @include little-text($thin: false);
-
-          >.order-index {
-            font-weight: 700;
-            line-height: 1;
-            color: $secondary;
-          }
-
-          >.cover-label {
-            line-height: 1;
-            opacity: 0.95;
-            color: $secondary;
-          }
-        }
-
-        >.tile-remove {
-          position: absolute;
-          bottom: 0.35rem;
-          right: 0.35rem;
-          z-index: 2;
-
-          button {
-            border: none;
-            width: 1.9rem;
-            height: 1.9rem;
-            border-radius: borders.$rounded;
-            display: grid;
-            place-items: center;
-            background: rgba($dark, 0.72);
-            cursor: pointer;
+          &::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba($dark, 0.35);
+            opacity: 0;
+            pointer-events: none;
             @include animations.transition(animations.$duration-fast);
-            @include animations.press();
+          }
 
-            * {
-              stroke: rgba($accent, 0.95);
+          >img,
+          >.placeholder {
+            height: 100%;
+            padding: 0;
+            border-radius: inherit;
+          }
+
+          >img {
+            position: relative;
+            z-index: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+          }
+
+          @include on-hover {
+            transform: translateY(-1px);
+            @include effects.soft-shadow(rgba(0, 0, 0, 0.2));
+
+            @include animations.reduced-motion {
+              transform: none;
+            }
+          }
+
+          @include on-hover('::after') {
+            opacity: 1;
+          }
+
+          &:focus-within::after {
+            opacity: 1;
+          }
+
+          >.tile-order {
+            position: absolute;
+            top: 0.35rem;
+            left: 0.35rem;
+            z-index: 3;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.28rem 0.5rem;
+            border-radius: borders.$rounded;
+            background: $accent;
+            pointer-events: none;
+            white-space: nowrap;
+            @include little-text($thin: false);
+
+            >.order-index {
+              font-weight: 700;
+              line-height: 1;
+              color: $secondary;
             }
 
-            @include on-hover {
-              background: rgba($bad, 0.9);
+            >.cover-label {
+              line-height: 1;
+              opacity: 0.95;
+              color: $secondary;
             }
+          }
 
-            // Zone tactile élargie sans grossir le bouton dans la vignette.
-            @media (pointer: coarse) {
-              position: relative;
+          >.tile-remove {
+            position: absolute;
+            bottom: 0.35rem;
+            right: 0.35rem;
+            z-index: 2;
 
-              &::before {
-                content: '';
-                position: absolute;
-                inset: -0.4rem;
+            button {
+              border: none;
+              width: 1.9rem;
+              height: 1.9rem;
+              border-radius: borders.$rounded;
+              display: grid;
+              place-items: center;
+              background: rgba($dark, 0.72);
+              cursor: pointer;
+              @include animations.transition(animations.$duration-fast);
+              @include animations.press();
+
+              * {
+                stroke: rgba($accent, 0.95);
+              }
+
+              @include on-hover {
+                background: rgba($bad, 0.9);
+              }
+
+              // Zone tactile élargie sans grossir le bouton dans la vignette.
+              @media (pointer: coarse) {
+                position: relative;
+
+                &::before {
+                  content: '';
+                  position: absolute;
+                  inset: -0.4rem;
+                }
               }
             }
           }
+
+          >.placeholder {
+            position: relative;
+            z-index: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, $accent-surface-2 0%, $accent-surface-1 100%);
+          }
         }
 
-        &.is-dragging {
+        &.is-dragging >.thumb {
           opacity: 0.95;
           cursor: grabbing;
           @include effects.soft-shadow(rgba(0, 0, 0, 0.35));
         }
 
-        &.is-over {
+        &.is-over >.thumb {
           outline: 2px dashed rgba($secondary, 0.5);
           outline-offset: -4px;
         }
 
-        >.placeholder {
-          position: relative;
-          z-index: 0;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(180deg, $accent-surface-2 0%, $accent-surface-1 100%);
+        // Description de la photo (texte alternatif) : champ compact sous la vignette, libellé masqué visuellement.
+        >.caption {
+          @include inputs.field($theme: base, $compact: true);
+
+          >label {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            margin: -1px;
+            padding: 0;
+            overflow: hidden;
+            clip-path: inset(50%);
+            white-space: nowrap;
+          }
         }
       }
 
       >.add {
         width: 100%;
+        align-self: start;
         aspect-ratio: 1 / 1;
         display: flex;
         align-items: center;

@@ -175,6 +175,12 @@
         width: 100%;
         height: auto;
 
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        grid-column: 1 / -1;
+
         @include min-width(xs) {
           height: calc(70svh - (var(--layout-gap-4xl) + #{$nav-bar-height}));
           width: auto;
@@ -184,12 +190,6 @@
           height: calc(90svh - (var(--layout-gap-4xl) + #{$nav-bar-height}));
           width: auto;
         }
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        grid-column: 1 / -1;
 
         @include min-width(lg) {
           grid-column: span 6 / span 6;

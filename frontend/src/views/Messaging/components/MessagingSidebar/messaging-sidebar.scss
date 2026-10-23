@@ -75,8 +75,8 @@
             outline: 2px solid transparent;
             outline-offset: 2px;
             @include animations.transition(animations.$duration-fast);
-            @include animations.press(0.98);
             @include effects.big-shadow;
+            @include animations.press(0.98);
 
             @include on-hover {
               transform: translateY(-1px);

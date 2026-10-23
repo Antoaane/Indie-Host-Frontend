@@ -710,15 +710,21 @@ def _extract_highlight_titles(*roots: Any, soup: "BeautifulSoup | None" = None) 
     return filtered
 
 
-def _normalize_image_entries(values: list[str]) -> list[dict]:
+def _normalize_image_entries(values: list[str | tuple[str, str]]) -> list[dict]:
+    """Accepte des URL nues ou des couples (url, légende).
+
+    `title` reste vide quand Airbnb ne fournit pas de légende : le front applique alors
+    son propre repli (« <titre de l'annonce> — photo N ») plutôt qu'un « Photo N » générique.
+    """
     out: list[dict] = []
     seen: set[str] = set()
-    for idx, url in enumerate(values, start=1):
+    for value in values:
+        url, caption = value if isinstance(value, tuple) else (value, "")
         clean = _clean_text(url)
         if not clean or clean in seen or not IMAGE_URL_RE.match(clean):
             continue
         seen.add(clean)
-        out.append({"title": f"Photo {idx}", "url": clean})
+        out.append({"title": _clean_text(caption)[:160], "url": clean})
     return out
 
 
@@ -928,23 +934,46 @@ def _extract_review_count(*roots: Any) -> int | None:
     return None
 
 
-def _extract_images_from_value(value: Any) -> list[dict]:
-    urls: list[str] = []
+IMAGE_CAPTION_KEYS = {"caption", "accessibilitylabel", "alt", "alttext", "imagealttext"}
+
+
+def _extract_image_caption(value: dict) -> str:
+    """Légende d'une photo Airbnb (`caption`, `accessibilityLabel`…) portée par le même nœud que son URL."""
+    for key, child in value.items():
+        key_name = _clean_text(key).replace("_", "").replace("-", "").casefold()
+        if key_name in IMAGE_CAPTION_KEYS and isinstance(child, str):
+            caption = _clean_text(child)
+            if caption:
+                return caption
+    return ""
+
+
+def _collect_image_entries(value: Any) -> list[tuple[str, str]]:
+    entries: list[tuple[str, str]] = []
     if isinstance(value, str):
         clean = _clean_text(value)
         if IMAGE_URL_RE.match(clean) and any(token in clean.lower() for token in ("jpg", "jpeg", "png", "webp", "picture", "image", "photo", "muscache")):
-            urls.append(clean)
+            entries.append((clean, ""))
     elif isinstance(value, dict):
+        # La légende du nœud s'applique à ses URL directes ; un nœud enfant qui a la sienne la garde.
+        caption = _extract_image_caption(value)
         for key, child in value.items():
             key_name = _clean_text(key).lower()
             if key_name in {"url", "image", "src", "picture", "pictureurl", "thumbnailurl"}:
-                urls.extend(item["url"] for item in _extract_images_from_value(child))
+                children = _collect_image_entries(child)
             elif any(token in key_name for token in ("image", "photo", "picture", "gallery")):
-                urls.extend(item["url"] for item in _extract_images_from_value(child))
+                children = _collect_image_entries(child)
+            else:
+                continue
+            entries.extend((url, child_caption or caption) for url, child_caption in children)
     elif isinstance(value, list):
         for child in value:
-            urls.extend(item["url"] for item in _extract_images_from_value(child))
-    return _normalize_image_entries(urls)
+            entries.extend(_collect_image_entries(child))
+    return entries
+
+
+def _extract_images_from_value(value: Any) -> list[dict]:
+    return _normalize_image_entries(_collect_image_entries(value))
 
 
 def _extract_amenities_from_value(value: Any, default_title: str = "Equipements") -> list[dict]:
@@ -1267,12 +1296,12 @@ def _normalize_scraped_data(
     latitude, longitude = _extract_coordinates(*roots, ld_listing.get("geo"))
     images = result.get("images")
     if not isinstance(images, list) or not images:
-        image_urls = []
+        image_entries: list[str | tuple[str, str]] = []
         if meta_image:
-            image_urls.append(meta_image)
+            image_entries.append(meta_image)
         for root in roots:
-            image_urls.extend(item["url"] for item in _extract_images_from_value(root))
-        images = _normalize_image_entries(image_urls)
+            image_entries.extend(_collect_image_entries(root))
+        images = _normalize_image_entries(image_entries)
 
     amenities = result.get("amenities")
     if not isinstance(amenities, list) or not amenities:

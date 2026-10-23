@@ -15,6 +15,7 @@ import GlowTopRightSharp from '@/components/svgs/images/GlowTopRightSharp.vue'
 import GlowRightSharp from '@/components/svgs/images/GlowRightSharp.vue'
 import GlowLeftSharp from '@/components/svgs/images/GlowLeftSharp.vue'
 import GlowBottomLeftSharp from '@/components/svgs/images/GlowBottomLeftSharp.vue'
+import LandingVideo from '@/views/Landing/components/LandingVideo/LandingVideo.vue'
 import type { FeatureItem } from '@/views/Landing/types/content'
 
 // PROPS
@@ -36,6 +37,9 @@ function stripHtml(value: string) {
     .replace(/\s+/g, ' ')
     .trim()
 }
+
+// Nom accessible de la vidéo : la description de l'image équivalente, sinon le titre du bloc.
+const videoLabel = computed(() => media?.alt || stripHtml(props.feature.title))
 
 const displayDescription = computed(() => {
   if (props.feature.id !== 'transformezChaqueVisiteEnProchaineReservation') {
@@ -83,23 +87,12 @@ onMounted(async () => {
         :data-sr-x="index % 2 !== 0 ? -50 : 50"
         :class="'media ' + (props.feature.layout || 'hzt')"
       >
-        <video
+        <LandingVideo
           v-if="(video?.webm || video?.mp4) && !isIosMobile"
-          autoplay
-          loop
-          muted
-          playsinline
+          :webm="video?.webm"
+          :mp4="video?.mp4"
+          :label="videoLabel"
         >
-          <source
-            v-if="video?.webm"
-            :src="video.webm"
-            type="video/webm"
-          />
-          <source
-            v-if="video?.mp4"
-            :src="video.mp4"
-            type="video/mp4"
-          />
           <img
             v-if="media?.webp"
             :src="media.webp"
@@ -112,7 +105,7 @@ onMounted(async () => {
             :alt="media?.alt || 'Feature image'"
             loading="lazy"
           />
-        </video>
+        </LandingVideo>
         <img
           v-else-if="media?.webp || media?.png"
           :src="media?.webp || media?.png"
@@ -164,25 +157,12 @@ onMounted(async () => {
         :data-sr-x="index % 2 !== 0 ? -50 : 50"
         :class="'media ' + (props.feature.layout || 'hzt')"
       >
-        <video
+        <LandingVideo
           v-if="(video?.webm || video?.mp4) && !isIosMobile"
-          autoplay
-          loop
-          muted
-          playsinline
+          :webm="video?.webm"
+          :mp4="video?.mp4"
+          :label="videoLabel"
         >
-          <source
-            v-if="video?.webm"
-            :src="video.webm"
-            type="video/webm"
-          />
-
-          <source
-            v-if="video?.mp4"
-            :src="video.mp4"
-            type="video/mp4"
-          />
-
           <img
             v-if="media?.webp"
             :src="media.webp"
@@ -196,7 +176,7 @@ onMounted(async () => {
             :alt="media?.alt || 'Feature image'"
             loading="lazy"
           />
-        </video>
+        </LandingVideo>
         <img
           v-else-if="media?.webp || media?.png"
           :src="media?.webp || media?.png"

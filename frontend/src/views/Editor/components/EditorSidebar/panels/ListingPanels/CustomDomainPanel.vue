@@ -1,14 +1,15 @@
 <!-- File: src/views/Editor/components/EditorSidebar/panels/ListingPanels/CustomDomainPanel.vue -->
 
 <script setup lang="ts">
-import { computed, onMounted, ref, useId, watch, type Component } from 'vue'
-import { Globe, Info, Link2, Settings2, ShieldCheck } from 'lucide-vue-next'
+import { computed, onBeforeUnmount, onMounted, ref, useId, watch, type Component } from 'vue'
+import { Check, CircleAlert, CircleCheck, Copy, Globe, Info, Link2, Settings2, ShieldCheck } from 'lucide-vue-next'
 
 import {
   fetchListingDomain,
   removeListingCustomDomain,
   saveListingCustomDomain,
   verifyListingCustomDomain,
+  type ListingCustomDomainVerification,
   type ListingDomainRecord,
 } from '@/domain/api/listingDomains'
 import { fetchMyStripeSubscriptionState } from '@/domain/api/stripeSubscriptions'
@@ -24,10 +25,23 @@ const emit = defineEmits<{
 }>()
 
 type DnsRecord = {
-  type: 'A' | 'CNAME'
+  key: string
+  type: 'A' | 'CNAME' | 'TXT'
+  // Nom relatif à la zone, tel que le registrar le demande (`www`, `@`, `_indiehost-verification.www`).
   name: string
+  // Nom complet, pour les registrars qui attendent un nom qualifié.
+  fullName: string
   value: string
 }
+
+type VerificationCheckView = {
+  key: 'address' | 'ownership'
+  label: string
+  ok: boolean
+  reason: string | null
+}
+
+const COPY_FEEDBACK_MS = 2000
 
 type GuideStep = {
   key: string
@@ -54,19 +68,19 @@ const guideSteps: GuideStep[] = [
     key: 'attach',
     icon: Link2,
     title: 'Rattachez-le à cette annonce',
-    description: 'Saisissez-le ci-dessous puis cliquez sur « Rattacher ce domaine ». IndieHost vous indique alors l’enregistrement DNS exact à créer.',
+    description: 'Saisissez-le ci-dessous puis cliquez sur « Rattacher ce domaine ». IndieHost vous indique alors les deux enregistrements DNS exacts à créer.',
   },
   {
     key: 'dns',
     icon: Settings2,
-    title: 'Créez l’enregistrement DNS chez votre registrar',
-    description: 'Dans votre espace client, ouvrez la zone DNS du domaine et ajoutez l’enregistrement affiché (type, nom, valeur). La propagation prend de quelques minutes à 24 h.',
+    title: 'Créez les deux enregistrements DNS chez votre registrar',
+    description: 'Dans votre espace client, ouvrez la zone DNS du domaine et ajoutez les enregistrements affichés (type, nom, valeur) : le A ou CNAME fait pointer le domaine vers IndieHost, le TXT prouve que vous êtes bien propriétaire du domaine. La propagation prend de quelques minutes à 24 h.',
   },
   {
     key: 'verify',
     icon: ShieldCheck,
     title: 'Vérifiez : votre annonce est en ligne',
-    description: 'Cliquez sur « Vérifier la configuration DNS ». Une fois validé, le certificat HTTPS est généré automatiquement et votre annonce répond sur votre domaine.',
+    description: 'Cliquez sur « Vérifier la configuration DNS ». Le résultat de chaque enregistrement s’affiche. Une fois les deux validés, le certificat HTTPS est généré automatiquement et votre annonce répond sur votre domaine.',
   },
 ]
 
@@ -84,6 +98,11 @@ const isDeleting = ref(false)
 const errorMessage = ref<string | null>(null)
 const successMessage = ref<string | null>(null)
 const hasSelectedPlan = ref(false)
+// Dernier résultat de « Vérifier » : l'état de chaque enregistrement reste affiché jusqu'au prochain changement.
+const lastVerification = ref<ListingCustomDomainVerification | null>(null)
+const copiedRecordKey = ref<string | null>(null)
+const copyFeedback = ref<string | null>(null)
+let copyFeedbackTimer: ReturnType<typeof setTimeout> | null = null
 
 const rootDomain = getPublicListingRootDomain()
 const normalizedDomain = computed(() => normalizeDomainInput(domainInput.value))
@@ -110,22 +129,109 @@ const activeGuideStepIndex = computed(() => {
   return normalizedDomain.value ? 1 : 0
 })
 
-// Enregistrement à créer chez le registrar : CNAME pour un sous-domaine (www…), A pour un domaine nu.
+// Nom relatif à la zone (`www`, `@`, `_indiehost-verification.www`) à partir d'un nom complet et de son apex.
+function toZoneRelativeName(fullName: string, apex: string): string {
+  if (fullName === apex) return '@'
+  return fullName.endsWith(`.${apex}`) ? fullName.slice(0, -(apex.length + 1)) : fullName
+}
+
+// Enregistrements à créer chez le registrar : CNAME pour un sous-domaine (www…) ou A pour un domaine nu,
+// puis le TXT de propriété dès que le domaine est rattaché (le jeton vient de l'API).
 const dnsRecords = computed<DnsRecord[]>(() => {
   const domain = attachedDomain.value ?? (isValidDomain(normalizedDomain.value) ? normalizedDomain.value : '')
   if (!domain) return []
 
   const labels = domain.split('.')
-  const name = labels.length > 2 ? labels.slice(0, -2).join('.') : '@'
+  const apex = labels.slice(-2).join('.')
+  const name = toZoneRelativeName(domain, apex)
+  const records: DnsRecord[] = []
 
   if (name !== '@' && targets.value.cname) {
-    return [{ type: 'CNAME', name, value: targets.value.cname }]
+    records.push({ key: 'address', type: 'CNAME', name, fullName: domain, value: targets.value.cname })
+  } else if (targets.value.ipv4) {
+    records.push({ key: 'address', type: 'A', name, fullName: domain, value: targets.value.ipv4 })
   }
-  if (targets.value.ipv4) {
-    return [{ type: 'A', name, value: targets.value.ipv4 }]
+
+  const txt = currentDomain.value?.customDomainVerificationRecord
+  const txtName = txt?.names[0]
+  if (txt && txtName && attachedDomain.value === domain) {
+    records.push({ key: 'ownership', type: 'TXT', name: toZoneRelativeName(txtName, apex), fullName: txtName, value: txt.value })
   }
-  return []
+
+  return records
 })
+
+const hasTxtRecord = computed(() => dnsRecords.value.some((record) => record.type === 'TXT'))
+
+// Pour `www.x.fr`, le TXT peut aussi être posé sur l'apex : il vaut alors pour `www.x.fr` et `x.fr`.
+const txtApexAlternative = computed(() => currentDomain.value?.customDomainVerificationRecord?.names[1] ?? null)
+
+const verificationChecks = computed<VerificationCheckView[]>(() => {
+  const verification = lastVerification.value
+  if (!verification || isVerified.value) return []
+
+  const addressRecord = dnsRecords.value.find((record) => record.key === 'address')
+  return [
+    {
+      key: 'address',
+      label: `Enregistrement ${addressRecord?.type ?? 'A / CNAME'} (pointage vers IndieHost)`,
+      ok: verification.checks.address.ok,
+      reason: verification.checks.address.reason,
+    },
+    {
+      key: 'ownership',
+      label: 'Enregistrement TXT (preuve de propriété)',
+      ok: verification.checks.ownership.ok,
+      reason: verification.checks.ownership.reason,
+    },
+  ]
+})
+
+function clearCopyFeedback() {
+  if (copyFeedbackTimer) {
+    clearTimeout(copyFeedbackTimer)
+    copyFeedbackTimer = null
+  }
+  copiedRecordKey.value = null
+  copyFeedback.value = null
+}
+
+async function writeToClipboard(value: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(value)
+      return true
+    }
+
+    const textarea = document.createElement('textarea')
+    textarea.value = value
+    textarea.setAttribute('readonly', '')
+    textarea.style.position = 'fixed'
+    textarea.style.opacity = '0'
+    document.body.appendChild(textarea)
+    textarea.focus()
+    textarea.select()
+    const copied = document.execCommand('copy')
+    document.body.removeChild(textarea)
+    return copied
+  } catch {
+    return false
+  }
+}
+
+async function copyRecordValue(record: DnsRecord) {
+  clearCopyFeedback()
+  const copied = await writeToClipboard(record.value)
+
+  if (copied) {
+    copiedRecordKey.value = record.key
+    copyFeedback.value = `Valeur de l’enregistrement ${record.type} copiée.`
+  } else {
+    copyFeedback.value = 'Copie impossible : sélectionnez la valeur puis copiez-la manuellement.'
+  }
+
+  copyFeedbackTimer = setTimeout(clearCopyFeedback, COPY_FEEDBACK_MS)
+}
 
 function guideStepState(index: number): GuideStepState {
   if (index < activeGuideStepIndex.value) return 'done'
@@ -211,6 +317,7 @@ async function loadCurrentDomain() {
   if (!props.listingId.trim()) return
 
   resetFeedback()
+  lastVerification.value = null
   currentDomain.value = null
   domainInput.value = ''
   isLoadingCurrent.value = true
@@ -268,10 +375,11 @@ async function saveDomain() {
   isSaving.value = true
   try {
     const domain = await saveListingCustomDomain(props.listingId, normalizedDomain.value)
+    lastVerification.value = null
     applyRecord(domain)
     successMessage.value = domain.customDomainStatus === 'verified'
       ? `${domain.customDomain} est rattaché et déjà actif.`
-      : `${domain.customDomain} est rattaché. Créez l’enregistrement DNS ci-dessous puis vérifiez la configuration.`
+      : `${domain.customDomain} est rattaché. Créez les deux enregistrements DNS ci-dessous puis vérifiez la configuration.`
   } catch (error) {
     console.error('[EditorCustomDomainPanel] failed to save custom domain', error)
     errorMessage.value = resolveErrorMessage(error, 'Impossible de rattacher ce nom de domaine.')
@@ -288,11 +396,16 @@ async function verifyDomain() {
   try {
     const { record, verification } = await verifyListingCustomDomain(props.listingId)
     applyRecord(record)
+    lastVerification.value = verification
     if (verification.ok) {
       successMessage.value = `Configuration DNS validée : ${record.customDomain} est actif. Le certificat HTTPS est généré dans les minutes qui suivent.`
       return
     }
-    errorMessage.value = verification.reason ?? 'La configuration DNS n’est pas encore en place.'
+    // Le détail par enregistrement est affiché dans la liste des contrôles ; ici, le résumé.
+    const failing = [verification.checks.address, verification.checks.ownership].filter((check) => !check.ok).length
+    errorMessage.value = failing === 2
+      ? 'Aucun des deux enregistrements n’est encore en place. Vérifiez chaque ligne ci-dessous.'
+      : 'Un enregistrement manque encore. Vérifiez la ligne signalée ci-dessous.'
   } catch (error) {
     console.error('[EditorCustomDomainPanel] failed to verify custom domain', error)
     errorMessage.value = resolveErrorMessage(error, 'Impossible de vérifier la configuration DNS.')
@@ -308,6 +421,7 @@ async function deleteDomain() {
   isDeleting.value = true
   try {
     const domain = await removeListingCustomDomain(props.listingId)
+    lastVerification.value = null
     applyRecord(domain)
     successMessage.value = 'Le nom de domaine a été détaché de cette annonce.'
   } catch (error) {
@@ -334,6 +448,10 @@ watch(domainInput, () => {
 onMounted(() => {
   void loadSubscriptionState()
   void loadCurrentDomain()
+})
+
+onBeforeUnmount(() => {
+  clearCopyFeedback()
 })
 </script>
 
@@ -491,30 +609,109 @@ onMounted(() => {
         v-if="dnsRecords.length"
         class="dns"
       >
-        <p class="dns-title">Enregistrement à créer dans la zone DNS de votre registrar (OVH, Gandi, IONOS, GoDaddy…)</p>
+        <p class="dns-title">
+          {{ hasTxtRecord ? 'Enregistrements à créer' : 'Enregistrement à créer' }} dans la zone DNS de votre registrar (OVH, Gandi, IONOS, GoDaddy…)
+        </p>
         <table>
           <thead>
             <tr>
-              <th>Type</th>
-              <th>Nom</th>
-              <th>Valeur</th>
+              <th scope="col">Type</th>
+              <th scope="col">Nom</th>
+              <th scope="col">Valeur</th>
             </tr>
           </thead>
           <tbody>
             <tr
               v-for="record in dnsRecords"
-              :key="`${record.type}-${record.name}`"
+              :key="record.key"
             >
               <td>{{ record.type }}</td>
-              <td><code>{{ record.name }}</code></td>
-              <td><code>{{ record.value }}</code></td>
+              <td>
+                <code>{{ record.name }}</code>
+                <small v-if="record.name !== record.fullName">{{ record.fullName }}</small>
+              </td>
+              <td>
+                <div class="value">
+                  <code>{{ record.value }}</code>
+                  <div class="copy">
+                    <button
+                      type="button"
+                      :aria-label="copiedRecordKey === record.key ? 'Valeur copiée' : `Copier la valeur de l’enregistrement ${record.type}`"
+                      :title="copiedRecordKey === record.key ? 'Copié' : 'Copier la valeur'"
+                      @click="copyRecordValue(record)"
+                    >
+                      <Check
+                        v-if="copiedRecordKey === record.key"
+                        :size="15"
+                      />
+                      <Copy
+                        v-else
+                        :size="15"
+                      />
+                    </button>
+                  </div>
+                </div>
+              </td>
             </tr>
           </tbody>
         </table>
+        <p
+          v-if="hasTxtRecord"
+          class="dns-hint"
+        >
+          L’enregistrement TXT prouve que vous êtes bien propriétaire du domaine : sans lui, n’importe qui pourrait rattacher votre domaine à son annonce.
+          <template v-if="txtApexAlternative">
+            Vous pouvez aussi le placer sur <code>{{ txtApexAlternative }}</code> (sans www) : il vaut alors pour les deux adresses.
+          </template>
+        </p>
         <p class="dns-hint">
           La propagation DNS prend de quelques minutes à 24 h. Une fois vérifié, le certificat HTTPS est généré automatiquement.
         </p>
+        <p
+          class="sr-only"
+          role="status"
+          aria-live="polite"
+        >
+          {{ copyFeedback ?? '' }}
+        </p>
       </div>
+
+      <ul
+        v-if="verificationChecks.length"
+        class="checks"
+        aria-label="Résultat de la vérification DNS"
+      >
+        <li
+          v-for="check in verificationChecks"
+          :key="check.key"
+          :class="check.ok ? 'is-ok' : 'is-missing'"
+        >
+          <span
+            class="icon"
+            aria-hidden="true"
+          >
+            <CircleCheck
+              v-if="check.ok"
+              :size="16"
+            />
+            <CircleAlert
+              v-else
+              :size="16"
+            />
+          </span>
+          <div class="content">
+            <p class="label">
+              {{ check.label }} : <strong>{{ check.ok ? 'OK' : 'manquant' }}</strong>
+            </p>
+            <p
+              v-if="!check.ok && check.reason"
+              class="reason"
+            >
+              {{ check.reason }}
+            </p>
+          </div>
+        </li>
+      </ul>
 
       <p
         v-if="!isLoadingSubscription && !props.isAdmin && !hasSelectedPlan"
@@ -531,6 +728,7 @@ onMounted(() => {
       <p
         v-if="successMessage"
         class="meta is-success"
+        role="status"
       >
         {{ successMessage }}
       </p>
@@ -543,6 +741,7 @@ onMounted(() => {
       <p
         v-if="errorMessage"
         class="meta is-error"
+        role="alert"
       >
         {{ errorMessage }}
       </p>
@@ -849,6 +1048,120 @@ onMounted(() => {
         code {
           font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
           user-select: all;
+        }
+
+        // Nom complet sous le nom relatif, pour les registrars qui attendent un nom qualifié.
+        td > small {
+          display: block;
+          @include little-text();
+          color: rgba($secondary, 0.6);
+        }
+
+        // Valeur + bouton copier : la valeur garde la place, le bouton ne se rétrécit jamais.
+        td > .value {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: var(--layout-gap-xs);
+
+          > code {
+            min-width: 0;
+            flex: 1 1 auto;
+          }
+
+          > .copy {
+            flex: 0 0 auto;
+            @include buttons.low-btn($icon-only: true, $deep: true, $borders: true, $text-color: rgba($secondary, 0.7));
+
+            > button {
+              // Icône 15 px : cible d'au moins 44 px au tact, compacte à la souris.
+              width: 2rem;
+              height: 2rem;
+
+              @media (pointer: coarse) {
+                width: 2.75rem;
+                height: 2.75rem;
+              }
+            }
+          }
+        }
+      }
+
+      > .dns-hint > code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        color: rgba($secondary, 0.82);
+        user-select: all;
+      }
+    }
+
+    // Résultat de « Vérifier » : une ligne par enregistrement, OK ou manquant avec la raison.
+    > .checks {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-xs);
+
+      > li {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--layout-gap-xs);
+        padding: var(--layout-gap-xs) var(--layout-gap-sm);
+        border-radius: borders.$rounded-sm;
+        border: 1px solid rgba($secondary, 0.08);
+        background: rgba($secondary, 0.02);
+
+        > .icon {
+          flex: 0 0 auto;
+          display: inline-flex;
+          // Aligne l'icône sur la première ligne de texte.
+          margin-top: 0.1rem;
+        }
+
+        > .content {
+          min-width: 0;
+          flex: 1 1 auto;
+
+          display: flex;
+          flex-direction: column;
+          gap: var(--layout-gap-2xs);
+
+          > p {
+            margin: 0;
+            @include little-text($thin: false);
+            color: rgba($secondary, 0.82);
+            word-break: break-word;
+          }
+
+          > .reason {
+            color: rgba($secondary, 0.7);
+          }
+        }
+
+        &.is-ok {
+          border-color: rgba($good, 0.4);
+
+          > .icon > svg {
+            stroke: $good-ink;
+          }
+
+          > .content > .label > strong {
+            color: $good-ink;
+          }
+        }
+
+        &.is-missing {
+          border-color: rgba($bad, 0.3);
+
+          > .icon > svg {
+            stroke: $bad-ink;
+          }
+
+          > .content > .label > strong {
+            color: $bad-ink;
+          }
         }
       }
     }

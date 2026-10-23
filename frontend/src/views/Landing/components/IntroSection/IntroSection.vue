@@ -12,6 +12,7 @@ import { useImportLoadingFeedback } from '@/composables/useImportLoadingFeedback
 import GradiantSeparator from '@/components/svgs/images/GradiantSeparator.vue'
 import ListingView from '@/views/ListingView/_ListingView.vue'
 import PreviewSkeleton from '@/views/Landing/components/IntroSection/PreviewSkeleton.vue'
+import LandingVideo from '@/views/Landing/components/LandingVideo/LandingVideo.vue'
 import type { IntroSectionContent } from '@/views/Landing/types/content'
 import type { RawListingBundle } from '@/domain/listings/types'
 import {
@@ -271,18 +272,11 @@ onBeforeUnmount(() => {
           v-if="showMobileTeaser"
           class="mobile-import-demo"
         >
-          <video
-            autoplay
-            loop
-            muted
-            playsinline
+          <LandingVideo
+            :webm="mobileImportVideoSrc"
+            :label="props.content.importDemoVideoLabel || 'IndieHost'"
             preload="metadata"
-          >
-            <source
-              :src="mobileImportVideoSrc"
-              type="video/webm"
-            />
-          </video>
+          />
         </div>
 
         <Transition name="activate-reveal">

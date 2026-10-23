@@ -8,6 +8,7 @@ const SECRET_FALLBACK_KEYS = [
   'IMAGEKIT_API_KEY',
   'CLERK_SECRET_KEY',
   'STRIPE_SECRET_KEY',
+  'SMTP_PASSWORD',
 ] as const;
 
 type SecretFallbackKey = (typeof SECRET_FALLBACK_KEYS)[number];
@@ -41,6 +42,8 @@ function resolveEnvWithSecretFallback(): NodeJS.ProcessEnv {
   return next;
 }
 
+const DEFAULT_BOOKING_GUIDE_ACCESS_SECRET = 'indiehost_booking_guide_secret';
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().positive().default(4000),
@@ -56,13 +59,27 @@ const envSchema = z.object({
   CLERK_ISSUER: z.string().trim().optional().default(''),
   CLERK_AUDIENCE: z.string().trim().optional().default(''),
   CLERK_SECRET_KEY: z.string().trim().optional().default(''),
+  // Secret de signature (Svix, `whsec_…`) du webhook Clerk `POST /webhooks/clerk` (événement
+  // `user.deleted`). Vide : la route répond 503 et la suppression côté Clerk n'est pas répercutée.
+  CLERK_WEBHOOK_SECRET: z.string().trim().optional().default(''),
+  // Purge automatique des données (durées de la politique de confidentialité) : `false` pour la couper.
+  RETENTION_PURGE_ENABLED: z
+    .string()
+    .trim()
+    .optional()
+    .default('true')
+    .transform((value) => !['false', '0', 'no', 'off'].includes(value.toLowerCase())),
   // Emails (séparés par des virgules) qui obtiennent le rôle super_admin quelle que soit la métadonnée Clerk.
   SUPER_ADMIN_EMAILS: z.string().trim().optional().default(''),
   STRIPE_SECRET_KEY: z.string().trim().optional().default(''),
   STRIPE_CONNECT_PLATFORM_FEE_BPS: z.coerce.number().int().min(0).max(10000).default(0),
   STRIPE_CONNECT_DEFAULT_APPLICATION_FEE_BPS: z.coerce.number().int().min(0).max(10000).default(0),
+  // Secret de signature du webhook Stripe (whsec_…) ; vide → POST /payments/stripe/webhook répond 503.
+  STRIPE_WEBHOOK_SECRET: z.string().trim().optional().default(''),
   ICAL_EXPORT_DEFAULT_PRODID: z.string().trim().min(1).default('IndieHost//Calendar//FR'),
-  BOOKING_GUIDE_ACCESS_SECRET: z.string().trim().min(1).default('indiehost_booking_guide_secret'),
+  // Valeur par défaut tolérée en dev/test seulement : en production, le secret doit être fourni
+  // (vérifié plus bas), sinon n'importe qui pourrait forger une clé de guide d'arrivée.
+  BOOKING_GUIDE_ACCESS_SECRET: z.string().trim().min(1).default(DEFAULT_BOOKING_GUIDE_ACCESS_SECRET),
   ICAL_SYNC_THROTTLE_SECONDS: z.coerce.number().int().min(60).default(300),
   ICAL_SYNC_FETCH_TIMEOUT_MS: z.coerce.number().int().min(1000).default(15000),
   PUBLIC_LISTING_ROOT_DOMAIN: z.string().trim().min(1).default('indiehost.fr'),
@@ -73,6 +90,27 @@ const envSchema = z.object({
   GROQ_API_KEY: z.string().trim().optional().default(''),
   // Microservice de scraping, joignable uniquement sur le réseau Docker (plus exposé par nginx).
   SCRAPING_SERVICE_URL: z.string().trim().url().default('http://scraping:8000'),
+  // E-mails transactionnels (confirmation et annulation de réservation, `lib/mailer.ts`). Tout est
+  // optionnel : sans SMTP_URL ni SMTP_HOST, aucun e-mail n'est envoyé et l'API continue normalement.
+  // SMTP_URL (ex. smtps://user:pass@smtp.gmail.com:465) prime sur les variables séparées.
+  SMTP_URL: z.string().trim().optional().default(''),
+  SMTP_HOST: z.string().trim().optional().default(''),
+  SMTP_PORT: z.coerce.number().int().positive().default(465),
+  // `true` = TLS implicite (port 465) ; `false` = STARTTLS (port 587).
+  SMTP_SECURE: z
+    .string()
+    .trim()
+    .optional()
+    .default('true')
+    .transform((value) => !['false', '0', 'no', 'off'].includes(value.toLowerCase())),
+  SMTP_USER: z.string().trim().optional().default(''),
+  // Mot de passe SMTP : variable directe ou secret Docker via SMTP_PASSWORD_FILE (voir SECRET_FALLBACK_KEYS).
+  SMTP_PASSWORD: z.string().optional().default(''),
+  MAIL_FROM: z.string().trim().min(1).default('IndieHost <no-reply@indiehost.fr>'),
+  MAIL_REPLY_TO: z.string().trim().optional().default(''),
+  // Origine publique du site (liens des e-mails : page de confirmation, guide d'arrivée).
+  // Même variable que celle de nginx dans le .env racine ; vide → déduite de PUBLIC_LISTING_ROOT_DOMAIN.
+  BASE_URL: z.string().trim().optional().default(''),
 });
 
 const parsed = envSchema.safeParse(resolveEnvWithSecretFallback());
@@ -86,6 +124,16 @@ if (!parsed.success) {
 }
 
 const raw = parsed.data;
+
+if (
+  raw.NODE_ENV === 'production' &&
+  (raw.BOOKING_GUIDE_ACCESS_SECRET === DEFAULT_BOOKING_GUIDE_ACCESS_SECRET ||
+    raw.BOOKING_GUIDE_ACCESS_SECRET.length < 16)
+) {
+  throw new Error(
+    'Invalid environment variables:\nBOOKING_GUIDE_ACCESS_SECRET: must be set to a custom value of at least 16 characters when NODE_ENV=production',
+  );
+}
 
 const corsOrigins = raw.CORS_ORIGINS
   .split(',')

@@ -2828,7 +2828,7 @@ export class PaymentsService {
       reservationChildren: String(validation.reservation.occupants.children),
       reservationBabies: String(validation.reservation.occupants.babies),
       reservationAnimals: String(validation.reservation.occupants.animals),
-      reservationPmr: String(validation.reservation.occupants.pmr),
+      // Pas de nombre de voyageurs PMR chez Stripe : c'est une donnée de santé (RGPD, art. 9).
     };
     if (validation.payment.deferredDueDateISO) {
       metadata.paymentDeferredDueDateISO = validation.payment.deferredDueDateISO;
@@ -2952,7 +2952,10 @@ export class PaymentsService {
       throw createBadRequestError('Le paiement ne correspond pas à cette réservation.', 'RESERVATION_PAYMENT_MISMATCH');
     }
     if (payment.reservationId) {
-      throw createBadRequestError('Ce paiement est déjà associé à une réservation.', 'RESERVATION_PAYMENT_ALREADY_USED');
+      // 409 comme l'écriture conditionnelle de BookingsService (même code d'erreur).
+      const error = createBadRequestError('Ce paiement est déjà associé à une réservation.', 'RESERVATION_PAYMENT_ALREADY_USED');
+      (error as { statusCode?: number }).statusCode = 409;
+      throw error;
     }
 
     const chargeNowAmountMinor = payment.chargeNowAmountMinor ?? payment.amountMinor;

@@ -1,7 +1,7 @@
 <!-- File: src/components/navs/HostReservationOverlay.vue -->
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { Minus, Plus, X } from 'lucide-vue-next'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
@@ -504,7 +504,11 @@ watch(
   },
 )
 
+// L'overlay est monté (caché) sur toutes les pages du tableau de bord : ses annonces et le
+// calendrier de la première ne sont lus qu'à l'ouverture (voir `watch(open)`), sinon chaque page
+// chargeait deux fois la liste et les sections de l'annonce sélectionnée.
 watch(activeUserId, () => {
+  if (!props.open) return
   void loadListings()
 })
 
@@ -513,10 +517,6 @@ watch(selectedListingId, (listingId) => {
   if (!listingId?.trim()) return
   if (Object.prototype.hasOwnProperty.call(bookingsByListingId, listingId)) return
   void refreshBookedRangesForListing(listingId)
-})
-
-onMounted(() => {
-  void loadListings()
 })
 </script>
 

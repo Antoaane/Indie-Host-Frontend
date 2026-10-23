@@ -10,7 +10,11 @@
 
   h3 {
     @include lp-h3-title($accent, true);
-    margin-bottom: var(--layout-gap-sm);
+
+    // Surcharge émise après le mixin : conserve l'ordre actuel de Sass
+    & {
+      margin-bottom: var(--layout-gap-sm);
+    }
   }
 
   p {
@@ -19,8 +23,8 @@
     @include container(md);
 
     a {
-      @include buttons.link(white, true);
       font-weight: 600;
+      @include buttons.link(white, true);
     }
   }
 

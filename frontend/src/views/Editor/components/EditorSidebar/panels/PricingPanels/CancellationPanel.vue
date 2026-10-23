@@ -7,10 +7,17 @@ import type { RawBookings } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 import { clampInteger, formatValidationMessage, parseOptionalInteger } from '@/utils/inputValidation'
+import {
+  CANCELLATION_POLICIES,
+  describeCancellationPolicy,
+  getCancellationPolicyDefinition,
+  isCancellationPolicyCode,
+  resolveCancellationPolicy,
+  type CancellationPolicyCode,
+} from '@/domain/listings/cancellationPolicy'
 
-type CancellationPolicy = 'flexible' | 'moderate' | 'strict' | 'custom'
-type CancellationPresetPolicy = Exclude<CancellationPolicy, 'custom'>
-type CancellationSeverity = 'low' | 'medium' | 'high'
+// Le barème (politiques, délais, retenues, phrases) vient de domain/listings/cancellationPolicy.ts,
+// miroir de l'API : ce panneau ne fait que l'afficher et enregistrer les choix de l'hôte.
 
 type CancellationCustom = {
   days?: number | null
@@ -18,7 +25,7 @@ type CancellationCustom = {
 }
 
 type PricingCancellation = {
-  policy?: CancellationPolicy
+  policy?: CancellationPolicyCode
   refundsEnabled?: boolean
   custom?: CancellationCustom
 }
@@ -40,7 +47,7 @@ const cancellation = computed<PricingCancellation>(() => pricing.value.cancellat
 const custom = computed<CancellationCustom>(() => cancellation.value.custom ?? {})
 const pricingLimits = editorStatic.validation.pricing
 
-const policy = computed<CancellationPolicy>(() => cancellation.value.policy ?? 'flexible')
+const policy = computed<CancellationPolicyCode>(() => (isCancellationPolicyCode(cancellation.value.policy) ? cancellation.value.policy : 'flexible'))
 // Désactivé par défaut : le voyageur n'est remboursé que si l'hôte l'autorise.
 const refundsEnabled = computed(() => cancellation.value.refundsEnabled === true)
 const customDays = computed(() => (Number.isFinite(Number(custom.value.days)) ? clampInteger(custom.value.days, pricingLimits.cancellationDaysMin, pricingLimits.cancellationDaysMax, pricingLimits.cancellationDaysMin) : null))
@@ -55,30 +62,10 @@ const cancellationHint = computed(() =>
   }),
 )
 
-const POLICY_PRESETS: Record<
-  CancellationPresetPolicy,
-  {
-    severity: CancellationSeverity
-    days: number
-    feePercent: number
-  }
-> = {
-  flexible: {
-    severity: 'low',
-    days: 3,
-    feePercent: 10,
-  },
-  moderate: {
-    severity: 'medium',
-    days: 7,
-    feePercent: 20,
-  },
-  strict: {
-    severity: 'high',
-    days: 14,
-    feePercent: 35,
-  },
-}
+const policyOptions = CANCELLATION_POLICIES.map((definition) => ({
+  code: definition.code,
+  label: definition.label,
+}))
 
 function updatePricing(next: Partial<PricingSettings>) {
   emit('patch', {
@@ -123,63 +110,52 @@ function clampPercent(value: number) {
   return clampInteger(value, pricingLimits.discountMin, pricingLimits.discountMax, pricingLimits.discountMin)
 }
 
-function resolveLateFeePercent(feePercent: number) {
-  return clampPercent(feePercent + 20)
-}
-
-function getPolicyRules(policyKey: CancellationPresetPolicy, values?: Partial<CancellationCustom>) {
-  const defaults = POLICY_PRESETS[policyKey]
-  const days = Number.isFinite(Number(values?.days)) ? Math.max(pricingLimits.cancellationDaysMin, Number(values?.days)) : defaults.days
-  const feePercent = Number.isFinite(Number(values?.feePercent)) ? clampPercent(Number(values?.feePercent)) : defaults.feePercent
-  const lateFeePercent = resolveLateFeePercent(feePercent)
-
-  return [
-    panelContent.rules.fullRefund.replace('{days}', String(days)),
-    panelContent.rules.partialRefund.replace('{days}', String(days)).replace('{feePercent}', String(feePercent)),
-    panelContent.rules.lateCancellation.replace('{lateFeePercent}', String(lateFeePercent)),
-  ]
-}
-
+// Aperçu des règles personnalisées, résolues exactement comme l'API (valeurs manquantes → secours de la définition).
 const customRules = computed(() =>
-  getPolicyRules('moderate', {
-    days: customDays.value ?? pricingLimits.cancellationDaysMin,
-    feePercent: customFee.value ?? pricingLimits.discountMin,
-  }),
+  describeCancellationPolicy(resolveCancellationPolicy({
+    policy: 'custom',
+    refundsEnabled: true,
+    custom: {
+      days: customDays.value,
+      feePercent: customFee.value,
+    },
+  })),
 )
 
 const selectedPolicyDetails = computed<{
-  key: CancellationPolicy
+  key: CancellationPolicyCode
   label: string
   severityLabel: string | null
   rules: string[]
 }>(() => {
-  if (policy.value === 'custom') {
+  const definition = getCancellationPolicyDefinition(policy.value)
+
+  if (definition.code === 'custom') {
     return {
       key: 'custom',
-      label: panelContent.policies.custom,
+      label: definition.label,
       severityLabel: null,
       rules: customRules.value,
     }
   }
 
-  const selectedPolicy = policy.value as CancellationPresetPolicy
-  const preset = POLICY_PRESETS[selectedPolicy]
-
   return {
-    key: selectedPolicy,
-    label: panelContent.policies[selectedPolicy],
-    severityLabel: panelContent.severities[preset.severity],
-    rules: getPolicyRules(selectedPolicy),
+    key: definition.code,
+    label: definition.label,
+    severityLabel: definition.severity ? panelContent.severities[definition.severity] : null,
+    rules: describeCancellationPolicy(resolveCancellationPolicy({ policy: definition.code, refundsEnabled: true })),
   }
 })
 
-function onPolicyChange(nextPolicy: CancellationPolicy) {
+function onPolicyChange(rawPolicy: string) {
+  const nextPolicy: CancellationPolicyCode = isCancellationPolicyCode(rawPolicy) ? rawPolicy : 'flexible'
   if (nextPolicy === 'custom') {
     updateCancellation({ policy: nextPolicy })
     return
   }
 
-  const preset = POLICY_PRESETS[nextPolicy]
+  // Pré-remplit les champs personnalisés avec la politique choisie : l'hôte part de ces valeurs s'il passe en « Personnalisée ».
+  const preset = getCancellationPolicyDefinition(nextPolicy)
   updateCancellation({
     policy: nextPolicy,
     custom: {
@@ -225,12 +201,15 @@ function parseOptionalNumber(raw: string): number | null {
         <div class="select">
           <select
             :value="policy"
-            @change="onPolicyChange(($event.target as HTMLSelectElement).value as CancellationPolicy)"
+            @change="onPolicyChange(($event.target as HTMLSelectElement).value)"
           >
-            <option value="flexible">{{ panelContent.policies.flexible }}</option>
-            <option value="moderate">{{ panelContent.policies.moderate }}</option>
-            <option value="strict">{{ panelContent.policies.strict }}</option>
-            <option value="custom">{{ panelContent.policies.custom }}</option>
+            <option
+              v-for="option in policyOptions"
+              :key="option.code"
+              :value="option.code"
+            >
+              {{ option.label }}
+            </option>
           </select>
         </div>
       </div>

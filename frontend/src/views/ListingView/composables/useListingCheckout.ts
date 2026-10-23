@@ -323,6 +323,7 @@ function buildReservationFromCheckout(
         firstName: travelerFirstName || confirmationPayload.cardholder.firstName.trim(),
         lastName: travelerLastName || confirmationPayload.cardholder.lastName.trim(),
         phone: confirmationPayload.travelerContact.phone.trim(),
+        email: confirmationPayload.travelerContact.email.trim().toLowerCase(),
       },
       createdAt: new Date().toISOString(),
     },

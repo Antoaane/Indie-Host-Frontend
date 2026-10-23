@@ -60,6 +60,8 @@ export type RawCore = Record<string, unknown> & {
   lat?: number
   lng?: number
   zoom?: number
+  /** Numéro d'enregistrement du meublé de tourisme (loi Le Meur), majuscules, affiché sur l'annonce. */
+  tourismRegistrationNumber?: string
 }
 export type RawBookedDay = {
   start: string
@@ -289,9 +291,16 @@ export type RawComment = Record<string, unknown> & {
 export type RawComments = Record<string, unknown> & {
   comments?: RawComment[][]
 }
+/** Qualité du loueur, information précontractuelle obligatoire (art. L111-7 Code de la consommation). */
+export type HostLegalStatus = 'individual' | 'professional'
 export type RawHost = Record<string, unknown> & {
   name?: string
   status?: string
+  legalStatus?: HostLegalStatus
+  /** Raison sociale, hôte professionnel uniquement. */
+  companyName?: string
+  /** SIRET (14 chiffres), hôte professionnel uniquement. */
+  siret?: string
   seniority?: number
   'global-note'?: number
   avatar?: string

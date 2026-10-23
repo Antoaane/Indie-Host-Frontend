@@ -2,6 +2,7 @@ import type { FastifyRequest } from 'fastify';
 import fp from 'fastify-plugin';
 
 import { asObject } from '../../lib/json.js';
+import { rateLimitByIp } from '../../lib/rateLimit.js';
 import {
   bookingAccessQuerySchema,
   cancelBookingSchema,
@@ -224,7 +225,15 @@ export const bookingsPlugin = fp(async (fastify) => {
   });
 
   fastify.post('/bookings', {
-    preHandler: fastify.authenticateOptional,
+    // Création ouverte aux visiteurs : limitée par IP pour éviter les rafales de réservations.
+    preHandler: [
+      rateLimitByIp({
+        max: 10,
+        windowMs: 10 * 60 * 1000,
+        message: 'Trop de réservations à la suite. Réessayez dans quelques minutes.',
+      }),
+      fastify.authenticateOptional,
+    ],
   }, async (request, reply) => {
     const payload = createBookingSchema.parse(asObject(request.body));
     const created = await service.createBooking(payload, request.auth);

@@ -28,7 +28,10 @@ const aspectRatio = ref<{ width: number; height: number } | null>(null)
 let wrapperResizeObserver: ResizeObserver | null = null
 const previewContent = editorStatic.preview
 const previewActions = editorStatic.actions
-const publicListingHref = ref<string | null>(null)
+// Adresse publique (sous-domaine / domaine personnalisé) de l'annonce affichée, lue à la demande.
+const publicDomainUrl = ref<string | null>(null)
+let publicDomainResolvedFor: string | null = null
+let publicDomainRequestId = 0
 // Page principale : même rendu que la page publique (_Listing.vue), pas une fiche logement.
 const isHubListing = computed(() => props.rawListing?.core?.kind === 'hub')
 const publicListingSlug = computed(() => {
@@ -52,25 +55,37 @@ const resolvedListingId = computed(() => {
   return listingId
 })
 
-async function resolvePublicListingHref() {
+// Lien « voir en ligne » : adresse publique si elle est connue, sinon la route par slug.
+const publicListingHref = computed(() => {
+  if (!resolvedListingId.value || !publicListingSlug.value) return null
+  return publicDomainUrl.value ?? `/${publicListingSlug.value}`
+})
+
+// Le domaine n'est lu que lorsque l'aperçu est affiché : au chargement de l'éditeur il est caché,
+// et cette lecture (relancée à chaque changement de titre, qui modifie le slug) retardait le
+// premier affichage. Une fois lue pour une annonce et une révision de domaine, elle n'est pas relue.
+function resolvePublicDomainUrl() {
   const listingId = resolvedListingId.value
-  const fallbackSlug = publicListingSlug.value
+  const marker = listingId ? `${listingId}#${props.domainRevision ?? 0}` : null
 
-  if (!listingId || !fallbackSlug) {
-    publicListingHref.value = null
-    return
+  if (marker !== publicDomainResolvedFor) {
+    publicDomainUrl.value = null
+    publicDomainResolvedFor = null
   }
 
-  publicListingHref.value = `/${fallbackSlug}`
+  if (!listingId || !marker || !props.isShowed) return
 
-  try {
-    const domain = await fetchListingDomain(listingId)
-    if (domain.publicUrl) {
-      publicListingHref.value = domain.publicUrl
-    }
-  } catch {
-    // Fallback conservé: route slug standard si le domaine n'est pas disponible.
-  }
+  publicDomainResolvedFor = marker
+  const requestId = ++publicDomainRequestId
+  fetchListingDomain(listingId)
+    .then((domain) => {
+      if (requestId !== publicDomainRequestId) return
+      publicDomainUrl.value = domain.publicUrl ?? null
+    })
+    .catch(() => {
+      // Fallback conservé: route slug standard si le domaine n'est pas disponible.
+      if (requestId === publicDomainRequestId) publicDomainResolvedFor = null
+    })
 }
 
 function updateScale() {
@@ -96,9 +111,9 @@ watch(
 )
 
 watch(
-  [resolvedListingId, publicListingSlug, () => props.domainRevision],
+  [resolvedListingId, () => props.domainRevision, () => props.isShowed],
   () => {
-    void resolvePublicListingHref()
+    resolvePublicDomainUrl()
   },
   { immediate: true },
 )

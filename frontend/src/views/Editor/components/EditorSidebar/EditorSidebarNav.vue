@@ -139,11 +139,11 @@ const actionsContent = editorStatic.actions
       color: rgba($secondary-text, 0.95);
       cursor: pointer;
       @include animations.transition(animations.$duration-fast);
-      @include animations.press();
 
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      @include animations.press();
     }
   }
 

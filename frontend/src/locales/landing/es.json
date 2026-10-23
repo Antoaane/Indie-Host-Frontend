@@ -138,7 +138,7 @@
           {
             "webp": "/assets/media/images/webp/editeur.webp",
             "png": "/assets/media/images/png/editeur.png",
-            "alt": "Página de edición de un anuncio"
+            "alt": "Editor visual de anuncios IndieHost con la vista previa actualizándose en tiempo real"
           }
         ]
       },
@@ -157,7 +157,7 @@
           {
             "webp": "/assets/media/images/webp/seo.webp",
             "png": "/assets/media/images/png/seo.png",
-            "alt": "Página de edición de un anuncio"
+            "alt": "Anuncio IndieHost mostrado en los resultados de búsqueda de Google"
           }
         ]
       },
@@ -176,7 +176,7 @@
           {
             "webp": "/assets/media/images/webp/calendrier.webp",
             "png": "/assets/media/images/png/calendrier.png",
-            "alt": "Página de edición de un anuncio"
+            "alt": "Calendario centralizado de reservas con llegadas, salidas y estado de los pagos"
           }
         ]
       },
@@ -195,7 +195,7 @@
           {
             "webp": "/assets/media/images/webp/notification.webp",
             "png": "/assets/media/images/png/notification.png",
-            "alt": "Página de edición de un anuncio"
+            "alt": "Mensaje automático enviado a un viajero antes de su llegada"
           }
         ]
       },
@@ -214,7 +214,7 @@
           {
             "webp": "/assets/media/images/webp/glass-theme.webp",
             "png": "/assets/media/images/png/glass-theme.png",
-            "alt": "Página de edición de un anuncio"
+            "alt": "Anuncio IndieHost con un tema gráfico personalizado"
           }
         ]
       },
@@ -233,7 +233,7 @@
           {
             "webp": "/assets/media/images/webp/guide.webp",
             "png": "/assets/media/images/png/guide.png",
-            "alt": "Página de edición de un anuncio"
+            "alt": "Libreto de bienvenida impreso con su código QR hacia la mensajería IndieHost"
           }
         ]
       }
@@ -254,7 +254,7 @@
           {
             "webp": "/assets/media/images/webp/editeur.webp",
             "png": "/assets/media/images/png/editeur.png",
-            "alt": "Página de edición de un anuncio"
+            "alt": "Editor de anuncios IndieHost: campos de edición junto a la vista previa de la página"
           }
         ]
       },
@@ -754,6 +754,7 @@
     "body": "Pega el enlace de Airbnb o Booking.com de cualquiera de tus propiedades—generamos tu página de reservas en segundos.",
     "inputPlaceholder": "Pega el enlace de tu anuncio",
     "previewCtaLabel": "Genera mi sitio",
+    "importDemoVideoLabel": "Demostración: creación de una página de reservas desde un enlace de Airbnb o Booking.com",
     "createAccountCtaLabel": "Activar mi sitio gratis",
     "createAccountCtaHint": "30 días de prueba · Sin permanencia · Cero comisiones",
     "backButtonAriaLabel": "Volver a la página principal",
@@ -762,5 +763,9 @@
       "href": "#join-section",
       "target": "_self"
     }
+  },
+  "videoControls": {
+    "play": "Reproducir el vídeo",
+    "pause": "Pausar el vídeo"
   }
 }

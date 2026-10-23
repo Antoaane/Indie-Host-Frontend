@@ -7,6 +7,7 @@ import { onMounted, ref, type Component } from 'vue'
 // UTILS
 import detectOS from '@/utils/detectOs'
 import { vp } from '@/utils/viewport'
+import LandingVideo from '@/views/Landing/components/LandingVideo/LandingVideo.vue'
 
 const props = defineProps<{
   /** Numéro (ou titre court) de l'étape à afficher. */
@@ -86,24 +87,13 @@ onMounted(async () => {
           alt="Décoration contextuelle"
         />
         <!-- Illustration passée en paramètre avec nom de classe {nom du fichier} -->
-        <video
+        <LandingVideo
           v-if="props.video1 && props.video2 && !isIosMobile"
           :class="[{ image: true }, props.illustrationClass]"
-          autoplay
-          loop
-          muted
-          playsinline
+          :webm="props.video1"
+          :mp4="props.video2"
+          :label="props.illustrationAlt || props.illustrationTitle"
         >
-          <source
-            :src="props.video1"
-            type="video/webm"
-          />
-
-          <source
-            :src="props.video2"
-            type="video/mp4"
-          />
-
           <img
             :src="props.illustration1 as unknown as string"
             :alt="props.illustrationAlt || 'Feature image'"
@@ -115,7 +105,7 @@ onMounted(async () => {
             :alt="props.illustrationAlt || 'Feature image'"
             loading="lazy"
           />
-        </video>
+        </LandingVideo>
         <img
           v-else-if="typeof props.illustration1 === 'string'"
           :class="[{ image: true }, props.illustrationClass]"

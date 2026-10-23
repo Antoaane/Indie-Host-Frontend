@@ -584,10 +584,14 @@ onMounted(async () => {
   }
 
   > .ql-container {
-    @include inputs.richtext($theme: base);
-    min-height: 0;
     display: flex;
     flex-direction: column;
+    @include inputs.richtext($theme: base);
+
+    // Surcharge émise après le mixin : conserve l'ordre actuel de Sass
+    & {
+      min-height: 0;
+    }
 
     > .ql-editor {
       flex: 1 1 auto;

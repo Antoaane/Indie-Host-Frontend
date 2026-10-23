@@ -79,6 +79,11 @@ export const messagingPlugin = fp(async (fastify) => {
       return;
     }
 
+    if (message === 'empty_body') {
+      reply.code(400).send({ message: 'Le message est vide.' });
+      return;
+    }
+
     reply.code(201).send(message);
   });
 

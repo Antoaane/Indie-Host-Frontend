@@ -12,12 +12,12 @@ body:has(.listing-hub) {
 
 // Page principale publique : un bandeau d'accueil puis la grille des logements.
 .listing-hub {
-  @include container($max: xl);
   margin-inline: auto;
   padding: var(--layout-gap-2xl) var(--layout-gap) var(--layout-gap-4xl);
   display: flex;
   flex-direction: column;
   gap: var(--layout-gap-3xl);
+  @include container($max: xl);
 
   .hub-hero {
     position: relative;
@@ -49,11 +49,15 @@ body:has(.listing-hub) {
       gap: var(--layout-gap-xs);
 
       > h1 {
-        @include main-title($color: $secondary, $colorful: false);
-        margin: 0;
-        padding: 0;
         max-width: 24ch;
         text-wrap: balance;
+        @include main-title($color: $secondary, $colorful: false);
+
+        // Surcharge émise après le mixin : conserve l'ordre actuel de Sass
+        & {
+          margin: 0;
+          padding: 0;
+        }
       }
 
       > .hub-intro {
@@ -82,7 +86,11 @@ body:has(.listing-hub) {
 
     > h2 {
       @include lp-h3-title($colorful: false);
-      margin: 0;
+
+      // Surcharge émise après le mixin : conserve l'ordre actuel de Sass
+      & {
+        margin: 0;
+      }
     }
 
     > .hub-state {
@@ -148,7 +156,11 @@ body:has(.listing-hub) {
 
       > .hub-card-title {
         @include lp-h4-title();
-        margin: 0;
+
+        // Surcharge émise après le mixin : conserve l'ordre actuel de Sass
+        & {
+          margin: 0;
+        }
       }
 
       > .hub-card-meta {

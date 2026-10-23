@@ -1,9 +1,11 @@
 import { createHmac } from 'node:crypto';
-import type { MessageState, PrismaClient } from '@prisma/client';
+import type { MessageState, Prisma, PrismaClient } from '@prisma/client';
 import ical, { ICalCalendarMethod, ICalEventStatus } from 'ical-generator';
 import Stripe from 'stripe';
 
 import { env } from '../../config/env.js';
+import { acquireListingBookingLock } from '../../lib/advisoryLock.js';
+import { buildGuideAccessKey, parseGuideAccessKey, toIsoDay } from '../../lib/guideKey.js';
 import { deepMerge, asObject, toNumber } from '../../lib/json.js';
 import { buildMessageId, buildReservationId } from '../../lib/id.js';
 import { toPrismaJson } from '../../lib/prisma.js';
@@ -11,9 +13,26 @@ import { hasAdminAccess } from '../../lib/authRole.js';
 import type { RequestAuth } from '../../types/auth.js';
 import { PaymentsService } from '../payments/payments.service.js';
 import { isReservationRangeAvailable } from '../payments/reservationPricing.js';
+import { notifications } from '../notifications/notifications.service.js';
+import {
+  CANCELLATION_FEE_MAX,
+  resolveCancellationOutcome,
+  resolveCancellationPolicy,
+  type CancellationStage,
+  type ResolvedCancellationPolicy,
+} from './cancellationPolicy.js';
 import { isDeprecatedHostIdentity, upsertUserFromAuth } from '../users/users.repository.js';
 
 type RawReservation = Record<string, unknown>;
+
+// Client Prisma hors ou dans une transaction interactive (PrismaClient satisfait TransactionClient).
+type DbClient = Prisma.TransactionClient;
+
+// Rattachement d'une ligne Payment à la réservation écrite :
+// - `required` (voyageur) : le paiement doit exister et n'être rattaché à aucune réservation, sinon
+//   la transaction est annulée ;
+// - `optional` (hôte / admin) : rattachement si possible, jamais bloquant.
+type PaymentAttachmentMode = 'required' | 'optional';
 
 type ReservationConfirmation = {
   guideAccessKey: string;
@@ -65,17 +84,7 @@ type ReservationConversation = {
   messages: ReservationThreadMessage[];
 };
 
-type CancellationPolicyKey = 'flexible' | 'moderate' | 'strict' | 'custom';
-type CancellationStage = 'full_refund' | 'partial_refund' | 'late_cancellation' | 'after_arrival' | 'non_refundable';
-
-type ResolvedCancellationPolicy = {
-  policy: CancellationPolicyKey;
-  // Les remboursements au voyageur n'existent que si l'hôte les a autorisés dans ses préférences.
-  refundsEnabled: boolean;
-  days: number;
-  feePercent: number;
-  lateFeePercent: number;
-};
+// Barème d'annulation (politiques, paliers, stades) : voir ./cancellationPolicy.ts, miroir du front.
 
 type CancellationQuote = {
   stage: CancellationStage;
@@ -110,29 +119,19 @@ type StripeCancellationResult = {
 };
 
 const INTERNAL_RESERVATION_SOURCE = 'indiehost_reservation';
+// Transaction de création : l'attente du verrou d'annonce compte dans ce délai.
+const BOOKING_TRANSACTION_MAX_WAIT_MS = 5_000;
+const BOOKING_TRANSACTION_TIMEOUT_MS = 20_000;
+// Nouvel objet à chaque appel : asObject() renvoie le repli par référence.
+const emptyBookings = (): Record<string, unknown> => ({
+  price: 0,
+  fees: [],
+  'booked-days': [],
+  'external-booked-days': [],
+  reservations: [],
+});
 const GUIDE_ACTIVATION_WINDOW_MS = 48 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
-const HOUR_MS = 60 * 60 * 1000;
-const CANCELLATION_DAYS_MAX = 365;
-const CANCELLATION_FEE_MAX = 100;
-const CANCELLATION_LATE_FEE_STEP = 20;
-const CANCELLATION_PRESETS: Record<'flexible' | 'moderate' | 'strict', {
-  days: number;
-  feePercent: number;
-}> = {
-  flexible: {
-    days: 3,
-    feePercent: 10,
-  },
-  moderate: {
-    days: 7,
-    feePercent: 20,
-  },
-  strict: {
-    days: 14,
-    feePercent: 35,
-  },
-};
 
 function parseDate(value: unknown): Date | null {
   if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
@@ -303,37 +302,9 @@ function createRequestError(
   return error;
 }
 
-function isCancellationPolicyKey(value: unknown): value is CancellationPolicyKey {
-  return value === 'flexible' || value === 'moderate' || value === 'strict' || value === 'custom';
-}
-
 function resolveCancellationPolicyFromBookings(bookings: Record<string, unknown>): ResolvedCancellationPolicy {
-  const pricing = asObject(bookings.pricing);
-  const cancellation = asObject(pricing.cancellation);
-  const policy = isCancellationPolicyKey(cancellation.policy) ? cancellation.policy : 'flexible';
-  const basePreset = CANCELLATION_PRESETS[policy === 'custom' ? 'moderate' : policy];
-
-  const custom = asObject(cancellation.custom);
-  const days = policy === 'custom'
-    ? clampInteger(custom.days, 0, CANCELLATION_DAYS_MAX, basePreset.days)
-    : basePreset.days;
-  const feePercent = policy === 'custom'
-    ? clampInteger(custom.feePercent, 0, CANCELLATION_FEE_MAX, basePreset.feePercent)
-    : basePreset.feePercent;
-  const lateFeePercent = clampInteger(
-    feePercent + CANCELLATION_LATE_FEE_STEP,
-    0,
-    CANCELLATION_FEE_MAX,
-    Math.min(CANCELLATION_FEE_MAX, feePercent + CANCELLATION_LATE_FEE_STEP),
-  );
-
-  return {
-    policy,
-    refundsEnabled: cancellation.refundsEnabled === true,
-    days,
-    feePercent,
-    lateFeePercent,
-  };
+  // Même résolution que le front (préférences `bookings.pricing.cancellation`, valeurs bornées, secours).
+  return resolveCancellationPolicy(asObject(asObject(bookings.pricing).cancellation));
 }
 
 function resolveCancellationQuote(input: {
@@ -346,27 +317,8 @@ function resolveCancellationQuote(input: {
   const canceledAtISO = now.toISOString();
   const chargedAmountMinor = Math.max(0, Math.round(input.chargedAmountMinor));
   const msUntilArrival = input.startDate.getTime() - now.getTime();
-  const fullRefundThresholdMs = input.policy.days * DAY_MS;
-
-  let stage: CancellationStage = 'partial_refund';
-  let retainedPercent = input.policy.feePercent;
-  let canCancel = true;
-
-  if (msUntilArrival <= 0) {
-    stage = 'after_arrival';
-    retainedPercent = CANCELLATION_FEE_MAX;
-    canCancel = false;
-  } else if (!input.policy.refundsEnabled) {
-    // Réservation non remboursable : le voyageur peut annuler et libérer les dates, sans remboursement.
-    stage = 'non_refundable';
-    retainedPercent = CANCELLATION_FEE_MAX;
-  } else if (msUntilArrival < 24 * HOUR_MS) {
-    stage = 'late_cancellation';
-    retainedPercent = input.policy.lateFeePercent;
-  } else if (msUntilArrival >= fullRefundThresholdMs) {
-    stage = 'full_refund';
-    retainedPercent = 0;
-  }
+  // Palier du barème partagé (arrivée dépassée → non remboursable → moins de 24 h → délai de la politique).
+  const { stage, retainedPercent, canCancel } = resolveCancellationOutcome(input.policy, msUntilArrival / DAY_MS);
 
   const refundableAmountMinor = canCancel
     ? Math.max(0, Math.round(chargedAmountMinor * (1 - retainedPercent / 100)))
@@ -448,10 +400,6 @@ function readReservationCancellationState(paymentRaw: Record<string, unknown>): 
   };
 }
 
-function toIsoDay(value: Date): string {
-  return value.toISOString().slice(0, 10);
-}
-
 function normalizeBaseUrl(value: string | null | undefined): string | null {
   const raw = readString(value);
   if (!raw) return null;
@@ -481,32 +429,6 @@ export class BookingsService {
           apiVersion: '2025-02-24.acacia',
         })
       : null;
-  }
-
-  private buildGuideAccessKey(reservationId: string, listingId: string, startDate: Date | null | undefined): string {
-    const safeReservationId = reservationId.trim();
-    const startISO = startDate ? toIsoDay(startDate) : '';
-    const payload = `${safeReservationId}|${listingId.trim()}|${startISO}`;
-    const signature = createHmac('sha256', env.BOOKING_GUIDE_ACCESS_SECRET)
-      .update(payload)
-      .digest('hex')
-      .slice(0, 20);
-    return `rg.${safeReservationId}.${signature}`;
-  }
-
-  private parseGuideAccessKey(guideKey: string): { reservationId: string; signature: string } | null {
-    const trimmed = guideKey.trim();
-    const match = trimmed.match(/^rg\.([a-zA-Z0-9_-]+)\.([a-f0-9]{20})$/);
-    if (!match) return null;
-
-    const reservationId = match[1]?.trim() ?? '';
-    const signature = match[2]?.trim() ?? '';
-    if (!reservationId || !signature) return null;
-
-    return {
-      reservationId,
-      signature,
-    };
   }
 
   private buildGuideUrl(guideAccessKey: string, listingId?: string | null, reservationId?: string | null): string {
@@ -542,7 +464,7 @@ export class BookingsService {
     contact: Record<string, unknown>,
   ): ReservationConfirmation {
     const rawConfirmation = asObject(contact.confirmation);
-    const expectedGuideAccessKey = this.buildGuideAccessKey(reservationId, listingId, startDate);
+    const expectedGuideAccessKey = buildGuideAccessKey(reservationId, listingId, startDate);
     const sourceGuideAccessKey = readString(rawConfirmation.guideAccessKey)
       ?? readString(rawConfirmation.guideAccessToken)
       ?? readString(rawConfirmation.token);
@@ -770,6 +692,47 @@ export class BookingsService {
     }
   }
 
+  // Rembourse un paiement vérifié dont la réservation n'a pas pu être créée (dates prises entre la
+  // vérification et l'écriture sous verrou). Ne lève jamais : un échec est journalisé pour
+  // traitement manuel, et le 409 d'origine est renvoyé au voyageur.
+  private async refundUnplaceableReservationPayment(input: {
+    listingId: string;
+    paymentIntentId: string;
+    chargedAmountMinor: number;
+  }): Promise<boolean> {
+    try {
+      const result = await this.applyStripeCancellation({
+        paymentIntentId: input.paymentIntentId,
+        chargedAmountMinor: input.chargedAmountMinor,
+        refundableAmountMinor: input.chargedAmountMinor,
+        reservationId: '',
+        listingId: input.listingId,
+      });
+      if (result.action === 'none') {
+        console.error('[bookings] orphan payment left unrefunded after a lost booking race', {
+          listingId: input.listingId,
+          paymentIntentId: input.paymentIntentId,
+        });
+        return false;
+      }
+
+      await this.prisma.payment.updateMany({
+        where: { stripePaymentIntentId: input.paymentIntentId, listingId: input.listingId, reservationId: null },
+        data: {
+          status: result.action === 'canceled' ? 'canceled' : 'refunded',
+        },
+      });
+      return true;
+    } catch (error) {
+      console.error('[bookings] orphan payment refund failed after a lost booking race', {
+        listingId: input.listingId,
+        paymentIntentId: input.paymentIntentId,
+        error,
+      });
+      return false;
+    }
+  }
+
   private composeCalendarDescription(message: string | null, guideUrl: string | null): string | null {
     const normalizedMessage = readString(message);
     const normalizedGuideUrl = readString(guideUrl);
@@ -955,8 +918,8 @@ export class BookingsService {
     };
   }
 
-  private async reservationIdUsedByAnotherListing(reservationId: string, listingId: string): Promise<boolean> {
-    const existing = await this.prisma.reservation.findUnique({
+  private async reservationIdUsedByAnotherListing(db: DbClient, reservationId: string, listingId: string): Promise<boolean> {
+    const existing = await db.reservation.findUnique({
       where: { id: reservationId },
       select: { listingId: true },
     });
@@ -965,7 +928,12 @@ export class BookingsService {
     return existing.listingId !== listingId;
   }
 
-  private async ensureReservationId(preferredId: string | null, listingId: string, usedReservationIds: Set<string> = new Set()): Promise<string> {
+  private async ensureReservationId(
+    db: DbClient,
+    preferredId: string | null,
+    listingId: string,
+    usedReservationIds: Set<string> = new Set(),
+  ): Promise<string> {
     const requestedId = preferredId ?? buildReservationId(listingId);
 
     let candidate = requestedId;
@@ -973,7 +941,7 @@ export class BookingsService {
 
     while (attempts < 20) {
       const alreadyUsedInListing = usedReservationIds.has(candidate);
-      const belongsToOtherListing = await this.reservationIdUsedByAnotherListing(candidate, listingId);
+      const belongsToOtherListing = await this.reservationIdUsedByAnotherListing(db, candidate, listingId);
 
       if (!alreadyUsedInListing && !belongsToOtherListing) {
         return candidate;
@@ -1003,10 +971,10 @@ export class BookingsService {
     });
   }
 
-  private async upsertInternalReservationEvent(listingId: string, reservation: PersistedReservation) {
+  private async upsertInternalReservationEvent(db: DbClient, listingId: string, reservation: PersistedReservation) {
     const description = this.composeCalendarDescription(reservation.message, reservation.guideUrl);
 
-    await this.prisma.calendarEvent.upsert({
+    await db.calendarEvent.upsert({
       where: {
         listingId_reservationId_source: {
           listingId,
@@ -1036,8 +1004,8 @@ export class BookingsService {
     });
   }
 
-  private async removeInternalReservationEvent(listingId: string, reservationId: string) {
-    await this.prisma.calendarEvent.deleteMany({
+  private async removeInternalReservationEvent(db: DbClient, listingId: string, reservationId: string) {
+    await db.calendarEvent.deleteMany({
       where: {
         listingId,
         reservationId,
@@ -1046,7 +1014,84 @@ export class BookingsService {
     });
   }
 
-  private async persistReservation(row: RawReservation, listingId: string): Promise<PersistedReservation> {
+  /**
+   * Rattache la ligne Payment du PaymentIntent à la réservation par une écriture conditionnelle
+   * (`reservationId IS NULL`) : elle ne peut réussir qu'une seule fois, même pour deux requêtes
+   * simultanées. En mode `required`, un échec annule la transaction appelante (409).
+   */
+  private async attachPaymentToReservation(db: DbClient, input: {
+    stripePaymentIntentId: string;
+    listingId: string;
+    reservationId: string;
+    mode: PaymentAttachmentMode;
+  }): Promise<void> {
+    const alreadyLinked = await db.payment.findFirst({
+      where: {
+        stripePaymentIntentId: input.stripePaymentIntentId,
+        listingId: input.listingId,
+        reservationId: input.reservationId,
+      },
+      select: { id: true },
+    });
+    // Ré-enregistrement de la même réservation : rien à faire.
+    if (alreadyLinked) return;
+
+    if (input.mode === 'optional') {
+      // Une autre ligne Payment pointe déjà sur cette réservation : l'index unique interdirait le
+      // rattachement, on garde le lien existant (le remboursement retrouve aussi le paiement par
+      // son PaymentIntent).
+      const otherPaymentLinked = await db.payment.findFirst({
+        where: {
+          reservationId: input.reservationId,
+          NOT: { stripePaymentIntentId: input.stripePaymentIntentId },
+        },
+        select: { id: true },
+      });
+      if (otherPaymentLinked) {
+        console.warn('[bookings] payment attachment skipped: another payment is already linked to this reservation', {
+          reservationId: input.reservationId,
+          listingId: input.listingId,
+        });
+        return;
+      }
+    }
+
+    const attached = await db.payment.updateMany({
+      where: {
+        stripePaymentIntentId: input.stripePaymentIntentId,
+        listingId: input.listingId,
+        reservationId: null,
+      },
+      data: {
+        reservationId: input.reservationId,
+      },
+    });
+    if (attached.count === 1) return;
+
+    if (input.mode === 'required') {
+      throw createRequestError(
+        'Ce paiement est déjà associé à une autre réservation.',
+        409,
+        'RESERVATION_PAYMENT_ALREADY_USED',
+        {
+          listingId: input.listingId,
+          paymentIntentId: input.stripePaymentIntentId,
+        },
+      );
+    }
+
+    console.warn('[bookings] payment attachment skipped: payment intent missing or already used', {
+      reservationId: input.reservationId,
+      listingId: input.listingId,
+    });
+  }
+
+  private async persistReservation(
+    db: DbClient,
+    row: RawReservation,
+    listingId: string,
+    options: { paymentAttachment: PaymentAttachmentMode },
+  ): Promise<PersistedReservation> {
     const reservationId = normalizeReservationId(row.id) ?? buildReservationId(listingId);
     const guestName = typeof row.guestName === 'string' ? row.guestName : 'Voyageur';
     const startDate = parseDate(row.start) ?? new Date();
@@ -1067,7 +1112,7 @@ export class BookingsService {
       messaging: toPrismaJson(asObject(row.messaging, {})),
     };
 
-    const existing = await this.prisma.reservation.findUnique({
+    const existing = await db.reservation.findUnique({
       where: { id: reservationId },
       select: {
         id: true,
@@ -1078,18 +1123,18 @@ export class BookingsService {
     let persistedReservationId = reservationId;
 
     if (existing && existing.listingId === listingId) {
-      await this.prisma.reservation.update({
+      await db.reservation.update({
         where: { id: reservationId },
         data: payload,
       });
     } else {
       if (existing && existing.listingId !== listingId) {
-        persistedReservationId = await this.ensureReservationId(null, listingId, new Set([
+        persistedReservationId = await this.ensureReservationId(db, null, listingId, new Set([
           reservationId,
         ]));
       }
 
-      await this.prisma.reservation.create({
+      await db.reservation.create({
         data: {
           id: persistedReservationId,
           listingId,
@@ -1100,15 +1145,14 @@ export class BookingsService {
 
     const stripePaymentIntentId = extractStripePaymentIntentId(row);
     if (stripePaymentIntentId) {
-      await this.prisma.payment.updateMany({
-        where: {
-          stripePaymentIntentId,
-          listingId,
-        },
-        data: {
-          reservationId: persistedReservationId,
-        },
+      await this.attachPaymentToReservation(db, {
+        stripePaymentIntentId,
+        listingId,
+        reservationId: persistedReservationId,
+        mode: options.paymentAttachment,
       });
+    } else if (options.paymentAttachment === 'required') {
+      throw createRequestError('Paiement introuvable pour cette réservation.', 400, 'RESERVATION_PAYMENT_REQUIRED');
     }
 
     return {
@@ -1173,7 +1217,7 @@ export class BookingsService {
     const confirmation = this.readReservationConfirmation(reservation.listingId, reservation.id, reservation.contact);
     if (!confirmation) return 'forbidden';
 
-    const expectedGuideAccessKey = this.buildGuideAccessKey(
+    const expectedGuideAccessKey = buildGuideAccessKey(
       reservation.id,
       reservation.listingId,
       reservation.startDate,
@@ -1287,7 +1331,7 @@ export class BookingsService {
     guideKey: string,
     options?: { publicBaseUrl?: string | null },
   ) {
-    const parsedGuideKey = this.parseGuideAccessKey(guideKey);
+    const parsedGuideKey = parseGuideAccessKey(guideKey);
     if (!parsedGuideKey) return 'forbidden' as const;
 
     const access = await this.resolveReservationAccessContext(parsedGuideKey.reservationId, guideKey);
@@ -1337,7 +1381,7 @@ export class BookingsService {
   }
 
   async getGuideConversation(guideKey: string) {
-    const parsedGuideKey = this.parseGuideAccessKey(guideKey);
+    const parsedGuideKey = parseGuideAccessKey(guideKey);
     if (!parsedGuideKey) return 'forbidden' as const;
 
     const access = await this.resolveReservationAccessContext(parsedGuideKey.reservationId, guideKey);
@@ -1356,7 +1400,7 @@ export class BookingsService {
   }
 
   async sendGuideConversationMessage(guideKey: string, body: string) {
-    const parsedGuideKey = this.parseGuideAccessKey(guideKey);
+    const parsedGuideKey = parseGuideAccessKey(guideKey);
     if (!parsedGuideKey) return 'forbidden' as const;
 
     const access = await this.resolveReservationAccessContext(parsedGuideKey.reservationId, guideKey);
@@ -1467,7 +1511,7 @@ export class BookingsService {
     });
     if (!reservation) return null;
 
-    const token = this.buildGuideAccessKey(reservation.id, reservation.listingId, reservation.startDate);
+    const token = buildGuideAccessKey(reservation.id, reservation.listingId, reservation.startDate);
     return this.cancelBooking(reservation.id, token, { ...options, canceledBy: 'host' });
   }
 
@@ -1607,7 +1651,7 @@ export class BookingsService {
       }
     }
 
-    await this.removeInternalReservationEvent(access.listingId, access.reservationId);
+    await this.removeInternalReservationEvent(this.prisma, access.listingId, access.reservationId);
 
     const paymentLookup = [
       {
@@ -1674,6 +1718,16 @@ export class BookingsService {
       });
     }
 
+    void notifications.sendBookingCancellationEmail({
+      access,
+      canceledBy,
+      chargedAmountMinor: cancellationDetails.quote.chargedAmountMinor,
+      refundedAmountMinor: effectiveRefundMinor,
+      retainedAmountMinor: effectiveRetainedMinor,
+      reason,
+      publicBaseUrl: options?.publicBaseUrl,
+    });
+
     return this.getBookingConfirmation(access.reservationId, token, {
       publicBaseUrl: options?.publicBaseUrl,
     });
@@ -1697,26 +1751,24 @@ export class BookingsService {
 
     if (!listing) return null;
 
-    const bookings = asObject(listing.bookings, {
-      price: 0,
-      fees: [],
-      'booked-days': [],
-      'external-booked-days': [],
-      reservations: [],
-    });
+    const bookings = asObject(listing.bookings, emptyBookings());
 
     const actor = await upsertUserFromAuth(this.prisma, auth);
     const isHostActor = hasAdminAccess(auth) || Boolean(actor && listing.ownerId && listing.ownerId === actor.id);
     let payment = asObject(input.payment, {});
 
+    const startISO = normalizeDayValue(input.start);
+    const endISO = normalizeDayValue(input.end);
+    if (!startISO || !endISO || startISO >= endISO) {
+      throw createRequestError('Sélection de dates invalide.', 400, 'INVALID_RESERVATION_RANGE');
+    }
+
     // Réservation d'un voyageur : dates libres et PaymentIntent émis par l'API, réglé et propre à
     // ces dates. Les montants et le statut du paiement viennent du serveur, pas du navigateur.
+    let verifiedGuestPayment: { paymentIntentId: string; chargedAmountMinor: number } | null = null;
     if (!isHostActor) {
-      const startISO = normalizeDayValue(input.start);
-      const endISO = normalizeDayValue(input.end);
-      if (!startISO || !endISO || startISO >= endISO) {
-        throw createRequestError('Sélection de dates invalide.', 400, 'INVALID_RESERVATION_RANGE');
-      }
+      // Premier filtre, hors transaction : évite l'aller-retour Stripe pour des dates déjà prises.
+      // La décision finale est reprise sous verrou dans la transaction ci-dessous.
       if (!isReservationRangeAvailable(bookings, startISO, endISO)) {
         throw createRequestError('Ces dates ne sont plus disponibles.', 409, 'RESERVATION_RANGE_UNAVAILABLE');
       }
@@ -1733,121 +1785,184 @@ export class BookingsService {
         endISO,
       });
       payment = buildVerifiedReservationPayment(payment, verified);
+      verifiedGuestPayment = { paymentIntentId, chargedAmountMinor: verified.chargeNowAmountMinor };
     }
 
-    const existingReservations = extractReservations(bookings);
-    const bookedDays = extractBookedDays(bookings);
-    const usedReservationIds = new Set(
-      existingReservations
-        .map((reservation) => reservationIdFromRow(reservation))
-        .filter((value): value is string => Boolean(value)),
-    );
     // Un voyageur ne choisit pas l'identifiant : il pourrait viser une réservation existante.
     const requestedReservationId = isHostActor ? normalizeReservationId(input.id) : null;
-    const safeReservationId = await this.ensureReservationId(requestedReservationId, listingId, usedReservationIds);
-    const reservations = existingReservations.filter((reservation) => reservationIdFromRow(reservation) !== safeReservationId);
     const rawContact = asObject(input.contact, {});
-    const confirmation = this.buildReservationConfirmation(
-      listingId,
-      safeReservationId,
-      parseDate(input.start),
-      rawContact,
-    );
-    const contact = this.buildContactWithConfirmation(rawContact, confirmation);
 
-    const reservation: RawReservation = {
-      id: safeReservationId,
-      start: input.start,
-      end: input.end,
-      nights: input.nights,
-      guestName: input.guestName,
-      guestAvatar: input.guestAvatar,
-      message: input.message,
-      // Note interne et fil de messages : réservés à l'hôte, jamais fournis par un voyageur.
-      internalNote: isHostActor ? input.internalNote : undefined,
-      guests: asObject(input.guests, {}),
-      payment,
-      contact,
-      confirmation: {
-        guideAccessKey: confirmation.guideAccessKey,
-        guideUrl: confirmation.guideUrl,
-        generatedAt: confirmation.generatedAt,
-      },
-      createdAt: typeof input.createdAt === 'string' ? input.createdAt : new Date().toISOString(),
-      messaging: isHostActor ? asObject(input.messaging, {}) : {},
-    };
+    // Section critique : verrou consultatif sur l'annonce, puis relecture des disponibilités, écriture
+    // du JSON de l'annonce, de la ligne Reservation, du rattachement du paiement (écriture
+    // conditionnelle, une seule fois) et de l'événement de calendrier. Tout est annulé ensemble.
+    const created = await this.prisma.$transaction(async (tx) => {
+      await acquireListingBookingLock(tx, listingId);
 
-    reservations.unshift(reservation);
-
-    const start = normalizeDayValue(input.start);
-    const end = normalizeDayValue(input.end);
-
-    if (start && end) {
-      appendBookedDayIfMissing(bookedDays, start, end);
-    }
-
-    const nextBookings = {
-      ...bookings,
-      reservations,
-      'booked-days': bookedDays,
-    };
-
-    await this.prisma.listing.update({
-      where: { id: listingId },
-      data: {
-        bookings: toPrismaJson(nextBookings),
-      },
-    });
-
-    const persistedReservation = await this.persistReservation(reservation, listingId);
-    let responseReservationId = persistedReservation.id;
-    let responseConfirmation = confirmation;
-    let responseBookings = nextBookings;
-
-    if (persistedReservation.id !== safeReservationId) {
-      const remappedConfirmation = this.buildReservationConfirmation(
-        listingId,
-        persistedReservation.id,
-        parseDate(reservations[0]?.start),
-        asObject(reservations[0]?.contact),
-      );
-      const remappedContact = this.buildContactWithConfirmation(asObject(reservations[0]?.contact), remappedConfirmation);
-
-      reservations[0] = {
-        ...reservations[0],
-        id: persistedReservation.id,
-        contact: remappedContact,
-        confirmation: {
-          guideAccessKey: remappedConfirmation.guideAccessKey,
-          guideUrl: remappedConfirmation.guideUrl,
-          generatedAt: remappedConfirmation.generatedAt,
-        },
-      };
-
-      const syncedBookings = {
-        ...nextBookings,
-        reservations,
-      };
-
-      await this.prisma.reservation.update({
-        where: {
-          id: persistedReservation.id,
-        },
-        data: {
-          contact: toPrismaJson(remappedContact),
-        },
+      const lockedListing = await tx.listing.findUnique({
+        where: { id: listingId },
+        select: { bookings: true },
       });
+      if (!lockedListing) return null;
 
-      await this.prisma.listing.update({
+      const lockedBookings = asObject(lockedListing.bookings, emptyBookings());
+      const existingReservations = extractReservations(lockedBookings);
+      const bookedDays = extractBookedDays(lockedBookings);
+      const usedReservationIds = new Set(
+        existingReservations
+          .map((reservation) => reservationIdFromRow(reservation))
+          .filter((value): value is string => Boolean(value)),
+      );
+      const replacesExistingReservation = Boolean(requestedReservationId && usedReservationIds.has(requestedReservationId));
+      const safeReservationId = await this.ensureReservationId(tx, requestedReservationId, listingId, usedReservationIds);
+
+      // Disponibilité relue après le verrou : seule décision qui compte. Un hôte qui ré-enregistre
+      // une réservation existante sous le même identifiant (mise à jour) n'est pas concerné.
+      if (!replacesExistingReservation && !isReservationRangeAvailable(lockedBookings, startISO, endISO)) {
+        throw createRequestError('Ces dates ne sont plus disponibles.', 409, 'RESERVATION_RANGE_UNAVAILABLE', {
+          listingId,
+          startISO,
+          endISO,
+        });
+      }
+
+      const reservations = existingReservations.filter((reservation) => reservationIdFromRow(reservation) !== safeReservationId);
+      const confirmation = this.buildReservationConfirmation(
+        listingId,
+        safeReservationId,
+        parseDate(input.start),
+        rawContact,
+      );
+      const contact = this.buildContactWithConfirmation(rawContact, confirmation);
+
+      const reservation: RawReservation = {
+        id: safeReservationId,
+        start: input.start,
+        end: input.end,
+        nights: input.nights,
+        guestName: input.guestName,
+        guestAvatar: input.guestAvatar,
+        message: input.message,
+        // Note interne et fil de messages : réservés à l'hôte, jamais fournis par un voyageur.
+        internalNote: isHostActor ? input.internalNote : undefined,
+        guests: asObject(input.guests, {}),
+        payment,
+        contact,
+        confirmation: {
+          guideAccessKey: confirmation.guideAccessKey,
+          guideUrl: confirmation.guideUrl,
+          generatedAt: confirmation.generatedAt,
+        },
+        createdAt: typeof input.createdAt === 'string' ? input.createdAt : new Date().toISOString(),
+        messaging: isHostActor ? asObject(input.messaging, {}) : {},
+      };
+
+      reservations.unshift(reservation);
+      appendBookedDayIfMissing(bookedDays, startISO, endISO);
+
+      const nextBookings = {
+        ...lockedBookings,
+        reservations,
+        'booked-days': bookedDays,
+      };
+
+      await tx.listing.update({
         where: { id: listingId },
         data: {
-          bookings: toPrismaJson(syncedBookings),
+          bookings: toPrismaJson(nextBookings),
         },
       });
-      responseReservationId = persistedReservation.id;
-      responseConfirmation = remappedConfirmation;
-      responseBookings = syncedBookings;
-    }
+
+      const persistedReservation = await this.persistReservation(tx, reservation, listingId, {
+        paymentAttachment: isHostActor ? 'optional' : 'required',
+      });
+      let responseReservationId = persistedReservation.id;
+      let responseConfirmation = confirmation;
+      let responseBookings = nextBookings;
+
+      if (persistedReservation.id !== safeReservationId) {
+        const remappedConfirmation = this.buildReservationConfirmation(
+          listingId,
+          persistedReservation.id,
+          parseDate(reservations[0]?.start),
+          asObject(reservations[0]?.contact),
+        );
+        const remappedContact = this.buildContactWithConfirmation(asObject(reservations[0]?.contact), remappedConfirmation);
+
+        reservations[0] = {
+          ...reservations[0],
+          id: persistedReservation.id,
+          contact: remappedContact,
+          confirmation: {
+            guideAccessKey: remappedConfirmation.guideAccessKey,
+            guideUrl: remappedConfirmation.guideUrl,
+            generatedAt: remappedConfirmation.generatedAt,
+          },
+        };
+
+        const syncedBookings = {
+          ...nextBookings,
+          reservations,
+        };
+
+        await tx.reservation.update({
+          where: {
+            id: persistedReservation.id,
+          },
+          data: {
+            contact: toPrismaJson(remappedContact),
+          },
+        });
+
+        await tx.listing.update({
+          where: { id: listingId },
+          data: {
+            bookings: toPrismaJson(syncedBookings),
+          },
+        });
+        responseReservationId = persistedReservation.id;
+        responseConfirmation = remappedConfirmation;
+        responseBookings = syncedBookings;
+      }
+
+      await this.upsertInternalReservationEvent(tx, listingId, {
+        ...persistedReservation,
+        id: responseReservationId,
+        guideUrl: responseConfirmation.guideUrl,
+      });
+
+      return {
+        reservationId: responseReservationId,
+        confirmation: responseConfirmation,
+        bookings: responseBookings,
+      };
+    }, {
+      maxWait: BOOKING_TRANSACTION_MAX_WAIT_MS,
+      timeout: BOOKING_TRANSACTION_TIMEOUT_MS,
+    }).catch(async (error: unknown) => {
+      // Le voyageur a payé mais perd la course sur les dates : son paiement est remboursé tout de
+      // suite plutôt que de rester orphelin chez Stripe.
+      if (verifiedGuestPayment && readString(asObject(error).code) === 'RESERVATION_RANGE_UNAVAILABLE') {
+        const refunded = await this.refundUnplaceableReservationPayment({
+          listingId,
+          ...verifiedGuestPayment,
+        });
+        if (refunded) {
+          throw createRequestError(
+            'Ces dates viennent d être réservées par un autre voyageur. Votre paiement a été remboursé.',
+            409,
+            'RESERVATION_RANGE_UNAVAILABLE',
+            { listingId, startISO, endISO, refunded: true },
+          );
+        }
+      }
+      throw error;
+    });
+
+    if (!created) return null;
+
+    const responseReservationId = created.reservationId;
+    const responseConfirmation = created.confirmation;
+    let responseBookings = created.bookings;
 
     let responseConversationId: string | null = null;
     const createAccess = await this.resolveReservationAccessContext(
@@ -1876,12 +1991,6 @@ export class BookingsService {
       };
     }
 
-    await this.upsertInternalReservationEvent(listingId, {
-      ...persistedReservation,
-      id: responseReservationId,
-      guideUrl: responseConfirmation.guideUrl,
-    });
-
     if (this.paymentsService) {
       try {
         await this.paymentsService.enforceTrialReservationLimitForListing(listingId);
@@ -1892,6 +2001,16 @@ export class BookingsService {
           error,
         });
       }
+    }
+
+    // Support durable du contrat (art. L221-13 C. conso) : confirmation e-mail au voyageur, hors
+    // transaction et sans attendre (toute erreur est journalisée, jamais remontée).
+    if (!isHostActor && createAccess && createAccess !== 'forbidden') {
+      void notifications.sendBookingConfirmationEmail({
+        access: createAccess,
+        guestEmail: readString(createAccess.reservationContact.email) ?? readString(actor?.email),
+        guests: asObject(input.guests, {}),
+      });
     }
 
     return {
@@ -1911,125 +2030,151 @@ export class BookingsService {
   }
 
   async updateBooking(reservationId: string, listingId: string, patch: Record<string, unknown>) {
-    const listing = await this.prisma.listing.findUnique({
+    const listingExists = await this.prisma.listing.findUnique({
       where: { id: listingId },
-      select: {
-        id: true,
-        bookings: true,
-      },
+      select: { id: true },
     });
 
-    if (!listing) return null;
+    if (!listingExists) return null;
 
-    const bookings = asObject(listing.bookings, {
-      price: 0,
-      fees: [],
-      'booked-days': [],
-      'external-booked-days': [],
-      reservations: [],
-    });
+    // Même verrou d'annonce que la création : une modification par l'hôte ne s'entrelace jamais avec
+    // une réservation de voyageur. Pas de contrôle de disponibilité ici (l'hôte gère ses dates).
+    const updated = await this.prisma.$transaction(async (tx) => {
+      await acquireListingBookingLock(tx, listingId);
 
-    const reservations = extractReservations(bookings);
-    const bookedDays = extractBookedDays(bookings);
-    const index = reservations.findIndex((item) => reservationIdFromRow(item) === reservationId);
+      const listing = await tx.listing.findUnique({
+        where: { id: listingId },
+        select: {
+          id: true,
+          bookings: true,
+        },
+      });
 
-    if (index < 0) return 'not_found' as const;
+      if (!listing) return null;
 
-    const usedReservationIds = new Set(
-      reservations
-        .filter((_, itemIndex) => itemIndex !== index)
-        .map((reservation) => reservationIdFromRow(reservation))
-        .filter((value): value is string => Boolean(value)),
-    );
-    const safeReservationId = await this.ensureReservationId(reservationId, listingId, usedReservationIds);
+      const bookings = asObject(listing.bookings, emptyBookings());
 
-    const updatedReservation = deepMerge(reservations[index] ?? {}, patch) as RawReservation;
-    updatedReservation.id = safeReservationId;
-    const updatedContact = asObject(updatedReservation.contact);
-    const updatedConfirmation = this.buildReservationConfirmation(
-      listingId,
-      safeReservationId,
-      parseDate(updatedReservation.start),
-      updatedContact,
-    );
-    updatedReservation.contact = this.buildContactWithConfirmation(updatedContact, updatedConfirmation);
-    updatedReservation.confirmation = {
-      guideAccessKey: updatedConfirmation.guideAccessKey,
-      guideUrl: updatedConfirmation.guideUrl,
-      generatedAt: updatedConfirmation.generatedAt,
-    };
-    reservations[index] = updatedReservation;
+      const reservations = extractReservations(bookings);
+      const bookedDays = extractBookedDays(bookings);
+      const index = reservations.findIndex((item) => reservationIdFromRow(item) === reservationId);
 
-    const updatedStart = normalizeDayValue(updatedReservation.start);
-    const updatedEnd = normalizeDayValue(updatedReservation.end);
-    if (updatedStart && updatedEnd) {
-      appendBookedDayIfMissing(bookedDays, updatedStart, updatedEnd);
-    }
+      if (index < 0) return 'not_found' as const;
 
-    const nextBookings = {
-      ...bookings,
-      reservations,
-      'booked-days': bookedDays,
-    };
-
-    await this.prisma.listing.update({
-      where: { id: listingId },
-      data: {
-        bookings: toPrismaJson(nextBookings),
-      },
-    });
-
-    const persistedReservation = await this.persistReservation(updatedReservation, listingId);
-    let finalReservationId = persistedReservation.id;
-    let finalConfirmation = updatedConfirmation;
-
-    if (persistedReservation.id !== reservationId) {
-      await this.removeInternalReservationEvent(listingId, reservationId);
-    }
-
-    if (persistedReservation.id !== safeReservationId) {
-      finalConfirmation = this.buildReservationConfirmation(
-        listingId,
-        persistedReservation.id,
-        parseDate(updatedReservation.start),
-        asObject(updatedReservation.contact),
+      const usedReservationIds = new Set(
+        reservations
+          .filter((_, itemIndex) => itemIndex !== index)
+          .map((reservation) => reservationIdFromRow(reservation))
+          .filter((value): value is string => Boolean(value)),
       );
-      updatedReservation.contact = this.buildContactWithConfirmation(asObject(updatedReservation.contact), finalConfirmation);
+      const safeReservationId = await this.ensureReservationId(tx, reservationId, listingId, usedReservationIds);
+
+      const updatedReservation = deepMerge(reservations[index] ?? {}, patch) as RawReservation;
+      updatedReservation.id = safeReservationId;
+      const updatedContact = asObject(updatedReservation.contact);
+      const updatedConfirmation = this.buildReservationConfirmation(
+        listingId,
+        safeReservationId,
+        parseDate(updatedReservation.start),
+        updatedContact,
+      );
+      updatedReservation.contact = this.buildContactWithConfirmation(updatedContact, updatedConfirmation);
       updatedReservation.confirmation = {
-        guideAccessKey: finalConfirmation.guideAccessKey,
-        guideUrl: finalConfirmation.guideUrl,
-        generatedAt: finalConfirmation.generatedAt,
+        guideAccessKey: updatedConfirmation.guideAccessKey,
+        guideUrl: updatedConfirmation.guideUrl,
+        generatedAt: updatedConfirmation.generatedAt,
       };
-      updatedReservation.id = persistedReservation.id;
       reservations[index] = updatedReservation;
 
-      const syncedBookings = {
-        ...nextBookings,
+      const updatedStart = normalizeDayValue(updatedReservation.start);
+      const updatedEnd = normalizeDayValue(updatedReservation.end);
+      if (updatedStart && updatedEnd) {
+        appendBookedDayIfMissing(bookedDays, updatedStart, updatedEnd);
+      }
+
+      const nextBookings = {
+        ...bookings,
         reservations,
+        'booked-days': bookedDays,
       };
 
-      await this.prisma.reservation.update({
-        where: {
-          id: persistedReservation.id,
-        },
-        data: {
-          contact: toPrismaJson(asObject(updatedReservation.contact)),
-        },
-      });
-
-      await this.prisma.listing.update({
+      await tx.listing.update({
         where: { id: listingId },
         data: {
-          bookings: toPrismaJson(syncedBookings),
+          bookings: toPrismaJson(nextBookings),
         },
       });
-    }
 
-    if (updatedReservation.id !== persistedReservation.id) {
-      updatedReservation.id = persistedReservation.id;
-    }
+      const persistedReservation = await this.persistReservation(tx, updatedReservation, listingId, {
+        paymentAttachment: 'optional',
+      });
+      let finalConfirmation = updatedConfirmation;
 
-    finalReservationId = updatedReservation.id as string;
+      if (persistedReservation.id !== reservationId) {
+        await this.removeInternalReservationEvent(tx, listingId, reservationId);
+      }
+
+      if (persistedReservation.id !== safeReservationId) {
+        finalConfirmation = this.buildReservationConfirmation(
+          listingId,
+          persistedReservation.id,
+          parseDate(updatedReservation.start),
+          asObject(updatedReservation.contact),
+        );
+        updatedReservation.contact = this.buildContactWithConfirmation(asObject(updatedReservation.contact), finalConfirmation);
+        updatedReservation.confirmation = {
+          guideAccessKey: finalConfirmation.guideAccessKey,
+          guideUrl: finalConfirmation.guideUrl,
+          generatedAt: finalConfirmation.generatedAt,
+        };
+        updatedReservation.id = persistedReservation.id;
+        reservations[index] = updatedReservation;
+
+        const syncedBookings = {
+          ...nextBookings,
+          reservations,
+        };
+
+        await tx.reservation.update({
+          where: {
+            id: persistedReservation.id,
+          },
+          data: {
+            contact: toPrismaJson(asObject(updatedReservation.contact)),
+          },
+        });
+
+        await tx.listing.update({
+          where: { id: listingId },
+          data: {
+            bookings: toPrismaJson(syncedBookings),
+          },
+        });
+      }
+
+      if (updatedReservation.id !== persistedReservation.id) {
+        updatedReservation.id = persistedReservation.id;
+      }
+
+      await this.upsertInternalReservationEvent(tx, listingId, {
+        ...persistedReservation,
+        id: persistedReservation.id,
+        guideUrl: finalConfirmation.guideUrl,
+      });
+
+      return {
+        reservation: updatedReservation,
+        confirmation: finalConfirmation,
+      };
+    }, {
+      maxWait: BOOKING_TRANSACTION_MAX_WAIT_MS,
+      timeout: BOOKING_TRANSACTION_TIMEOUT_MS,
+    });
+
+    if (!updated || updated === 'not_found') return updated;
+
+    const updatedReservation = updated.reservation;
+    const finalConfirmation = updated.confirmation;
+    const finalReservationId = updatedReservation.id as string;
     const updateAccess = await this.resolveReservationAccessContext(
       finalReservationId,
       finalConfirmation.guideAccessKey,
@@ -2044,12 +2189,6 @@ export class BookingsService {
         messages: conversation.messages,
       };
     }
-
-    await this.upsertInternalReservationEvent(listingId, {
-      ...persistedReservation,
-      id: finalReservationId,
-      guideUrl: finalConfirmation.guideUrl,
-    });
 
     if (this.paymentsService) {
       try {

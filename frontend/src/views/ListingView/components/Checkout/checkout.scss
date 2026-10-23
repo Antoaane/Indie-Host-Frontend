@@ -281,6 +281,11 @@
         @include little-text($color: rgba($secondary-text, 0.7));
       }
 
+      // Qualité du loueur (particulier / professionnel) : mention légale, lue avant les conditions.
+      >.host-legal-status {
+        font-weight: 600;
+      }
+
       >.cancellation-summary {
         display: flex;
         flex-direction: column;
@@ -306,6 +311,141 @@
           >li {
             @include little-text($color: rgba($secondary-text, 0.78), $thin: false);
           }
+        }
+      }
+    }
+
+    // Règlement intérieur de l'hôte : aperçu replié, contenu déplié par grid-template-rows (hauteur réelle).
+    .house-rules {
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-xs);
+      padding: var(--layout-gap-sm) var(--layout-gap-md);
+      border-radius: borders.$rounded-md;
+      border: 1px solid rgba($secondary, 0.12);
+      background: $accent-surface-1;
+
+      >.house-rules-title {
+        @include little-text($bold: true);
+      }
+
+      >.house-rules-excerpt {
+        @include little-text($color: rgba($secondary-text, 0.78), $thin: false);
+        overflow-wrap: anywhere;
+      }
+
+      >.house-rules-content {
+        display: grid;
+        grid-template-rows: 0fr;
+        opacity: 0;
+        @include animations.transition(animations.$duration-menu, animations.$ease-out, (grid-template-rows, opacity));
+
+        >.house-rules-content-inner {
+          min-height: 0;
+          overflow: hidden;
+        }
+      }
+
+      &.is-expanded>.house-rules-content {
+        grid-template-rows: 1fr;
+        opacity: 1;
+      }
+
+      // HTML Quill assaini (sanitizeHtml) : listes Quill 2 = <ol><li data-list="bullet|ordered">.
+      .house-rules-html {
+        @include little-text($color: rgba($secondary-text, 0.85), $thin: false);
+        line-height: 1.55;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+
+        p,
+        ul,
+        ol,
+        blockquote {
+          margin: 0 0 var(--layout-gap-2xs);
+        }
+
+        ul,
+        ol {
+          padding-left: 1.1rem;
+          list-style: disc;
+        }
+
+        ol {
+          list-style: decimal;
+        }
+
+        li[data-list='bullet'] {
+          list-style-type: disc;
+        }
+
+        li[data-list='ordered'] {
+          list-style-type: decimal;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4 {
+          margin: var(--layout-gap-xs) 0 var(--layout-gap-2xs);
+          @include little-text($bold: true);
+        }
+
+        strong,
+        b {
+          color: $secondary-text;
+        }
+
+        a {
+          color: $secondary-text;
+          text-decoration: underline;
+          text-underline-offset: 0.2rem;
+        }
+      }
+
+      >.house-rules-toggle {
+        align-self: flex-start;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        @include little-text($bold: true);
+        min-height: 44px;
+        margin: calc(var(--layout-gap-2xs) * -1) 0;
+        padding: 0;
+        border: none;
+        background: transparent;
+        color: $secondary-text;
+        cursor: pointer;
+        text-decoration: underline;
+        text-underline-offset: 0.2rem;
+        text-decoration-color: rgba($secondary-text, 0.45);
+        @include animations.transition(animations.$duration-fast, animations.$ease-out, (text-decoration-color, color));
+
+        @include on-hover {
+          text-decoration-color: $secondary-text;
+        }
+
+        &:focus-visible {
+          outline: 2px solid $secondary;
+          outline-offset: 2px;
+          border-radius: borders.$rounded-xs;
+        }
+
+        >.house-rules-chevron {
+          flex-shrink: 0;
+          transform: rotate(0deg);
+          @include animations.transition(animations.$duration-menu, animations.$ease-out, (transform));
+
+          &.is-open {
+            transform: rotate(180deg);
+          }
+        }
+      }
+
+      @include animations.reduced-motion {
+        >.house-rules-content,
+        >.house-rules-toggle>.house-rules-chevron {
+          transition-duration: 0ms;
         }
       }
     }
@@ -740,7 +880,8 @@
     }
   }
 
-  .phone-input-field {
+  .phone-input-field,
+  .email-input-field {
     display: flex;
     flex-direction: column;
     gap: 0.45rem;
@@ -780,6 +921,24 @@
     >.field-help {
       margin: 0;
       @include little-text($color: rgba($secondary-text, 0.65));
+    }
+
+    // Erreur annoncée (aria-live) : le paragraphe reste dans le flux, vide tant que le champ est valide.
+    >.field-error {
+      margin: 0;
+      @include little-text($color: $bad-ink, $thin: false);
+
+      &:empty {
+        display: none;
+      }
+    }
+
+    >input[aria-invalid='true'] {
+      border-color: $bad-ink;
+
+      &:focus {
+        outline-color: rgba($bad-ink, 0.35);
+      }
     }
   }
 

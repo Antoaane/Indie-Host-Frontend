@@ -156,6 +156,7 @@ export function createListingSteps(): CreateListingStep[] {
         medias: draft.medias,
         listingId: resolveDraftListingId(draft),
         listingStatus: draft.core?.status,
+        listingTitle: draft.core?.title,
         validationError: context?.validationError ?? null,
       }),
       acceptsPatch: true,

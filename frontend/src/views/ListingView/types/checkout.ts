@@ -8,6 +8,8 @@ export type CheckoutConfirmationPayload = {
     firstName: string
     lastName: string
     phone: string
+    // Adresse normalisée (trim + minuscules) : support durable de la confirmation (art. L221-13 C. conso).
+    email: string
   }
   cardholder: {
     firstName: string

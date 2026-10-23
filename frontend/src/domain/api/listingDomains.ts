@@ -1,6 +1,13 @@
 // File: src/domain/api/listingDomains.ts
 
 import clerkToken from '@/utils/clerkToken'
+import {
+  LISTING_DOMAIN_TTL_MS,
+  buildListingDomainKey,
+  invalidateListingDomain,
+  invalidateListingLists,
+} from '@/domain/api/listingsCache'
+import { sharedRequest } from '@/domain/api/requestCache'
 
 export type ListingSubdomainAvailability = {
   slug: string
@@ -17,6 +24,12 @@ export type ListingCustomDomainTargets = {
   cname: string | null
 }
 
+// TXT de preuve de propriété : `names[0]` est le nom du domaine rattaché, `names[1]` (pour www.) celui de l'apex.
+export type ListingCustomDomainTxtRecord = {
+  names: string[]
+  value: string
+}
+
 export type ListingDomainRecord = {
   listingId: string
   subdomainSlug: string | null
@@ -27,12 +40,23 @@ export type ListingDomainRecord = {
   customDomainUrl: string | null
   customDomainVerifiedAt: string | null
   customDomainTargets: ListingCustomDomainTargets
+  customDomainVerificationToken: string | null
+  customDomainVerificationRecord: ListingCustomDomainTxtRecord | null
+}
+
+export type ListingCustomDomainCheck = {
+  ok: boolean
+  reason: string | null
 }
 
 export type ListingCustomDomainVerification = {
   ok: boolean
   resolvedAddresses: string[]
   reason: string | null
+  checks: {
+    address: ListingCustomDomainCheck
+    ownership: ListingCustomDomainCheck
+  }
 }
 
 export type ListingCustomDomainVerificationResult = {
@@ -273,17 +297,45 @@ function normalizeDomainRecord(data: Record<string, unknown> | null | undefined)
       ipv4: toTrimmedString(targets.ipv4) || null,
       cname: toTrimmedString(targets.cname) || null,
     },
+    customDomainVerificationToken: toTrimmedString(payload.customDomainVerificationToken) || null,
+    customDomainVerificationRecord: normalizeTxtRecord(payload.customDomainVerificationRecord),
+  }
+}
+
+function normalizeTxtRecord(value: unknown): ListingCustomDomainTxtRecord | null {
+  if (!value || typeof value !== 'object') return null
+  const payload = value as Record<string, unknown>
+  const names = (Array.isArray(payload.names) ? payload.names : [])
+    .map((name) => toTrimmedString(name))
+    .filter(Boolean)
+  const txtValue = toTrimmedString(payload.value)
+  if (!names.length || !txtValue) return null
+  return { names, value: txtValue }
+}
+
+function normalizeCheck(value: unknown, fallbackOk: boolean): ListingCustomDomainCheck {
+  if (!value || typeof value !== 'object') return { ok: fallbackOk, reason: null }
+  const payload = value as Record<string, unknown>
+  return {
+    ok: Boolean(payload.ok),
+    reason: toTrimmedString(payload.reason) || null,
   }
 }
 
 function normalizeVerification(data: Record<string, unknown> | null | undefined): ListingCustomDomainVerification {
   const payload = data ?? {}
   const addresses = Array.isArray(payload.resolvedAddresses) ? payload.resolvedAddresses : []
+  const ok = Boolean(payload.ok)
+  const checks = (payload.checks && typeof payload.checks === 'object' ? payload.checks : {}) as Record<string, unknown>
 
   return {
-    ok: Boolean(payload.ok),
+    ok,
     resolvedAddresses: addresses.map((value) => toTrimmedString(value)).filter(Boolean),
     reason: toTrimmedString(payload.reason) || null,
+    checks: {
+      address: normalizeCheck(checks.address, ok),
+      ownership: normalizeCheck(checks.ownership, ok),
+    },
   }
 }
 
@@ -313,18 +365,28 @@ export async function fetchListingSubdomainAvailability(slug: string, excludeLis
   return normalizeAvailability(data)
 }
 
-export async function fetchListingDomain(listingId: string): Promise<ListingDomainRecord> {
-  const axios = await getAxios()
-  const url = resolveUrl(buildListingDomainUrl(listingId))
-  const data = await requestWithAuth<Record<string, unknown>>((headers) => axios.get(url, {
-    withCredentials: false,
-    timeout: API_REQUEST_TIMEOUT_MS,
-    headers,
-  }), {
-    fallbackErrorMessage: 'Impossible de charger le sous-domaine actuel.',
-    requiresAuth: true,
-  })
-  return normalizeDomainRecord(data)
+// Partagé entre les panneaux sous-domaine, domaine personnalisé et l'aperçu, qui le demandent
+// tous à la sélection d'une annonce ; chaque écriture ci-dessous invalide l'entrée.
+export function fetchListingDomain(listingId: string): Promise<ListingDomainRecord> {
+  return sharedRequest(buildListingDomainKey(listingId), async () => {
+    const axios = await getAxios()
+    const url = resolveUrl(buildListingDomainUrl(listingId))
+    const data = await requestWithAuth<Record<string, unknown>>((headers) => axios.get(url, {
+      withCredentials: false,
+      timeout: API_REQUEST_TIMEOUT_MS,
+      headers,
+    }), {
+      fallbackErrorMessage: 'Impossible de charger le sous-domaine actuel.',
+      requiresAuth: true,
+    })
+    return normalizeDomainRecord(data)
+  }, { ttlMs: LISTING_DOMAIN_TTL_MS })
+}
+
+// Le sous-domaine et l'adresse publique figurent aussi sur les cartes de la liste d'annonces.
+function invalidateDomainCaches(listingId: string) {
+  invalidateListingDomain(listingId)
+  invalidateListingLists()
 }
 
 export async function saveListingDomain(listingId: string, slug: string): Promise<ListingDomainRecord> {
@@ -338,6 +400,7 @@ export async function saveListingDomain(listingId: string, slug: string): Promis
     fallbackErrorMessage: 'Impossible d’enregistrer ce sous-domaine.',
     requiresAuth: true,
   })
+  invalidateDomainCaches(listingId)
   return normalizeDomainRecord(data)
 }
 
@@ -352,6 +415,7 @@ export async function removeListingDomain(listingId: string): Promise<ListingDom
     fallbackErrorMessage: 'Impossible de libérer ce sous-domaine.',
     requiresAuth: true,
   })
+  invalidateDomainCaches(listingId)
   return normalizeDomainRecord(data)
 }
 
@@ -366,6 +430,7 @@ export async function saveListingCustomDomain(listingId: string, domain: string)
     fallbackErrorMessage: 'Impossible de rattacher ce nom de domaine.',
     requiresAuth: true,
   })
+  invalidateDomainCaches(listingId)
   return normalizeDomainRecord(data)
 }
 
@@ -380,6 +445,7 @@ export async function verifyListingCustomDomain(listingId: string): Promise<List
     fallbackErrorMessage: 'Impossible de vérifier la configuration DNS.',
     requiresAuth: true,
   })
+  invalidateDomainCaches(listingId)
   const payload = data ?? {}
   return {
     record: normalizeDomainRecord(payload.record as Record<string, unknown> | undefined),
@@ -398,5 +464,6 @@ export async function removeListingCustomDomain(listingId: string): Promise<List
     fallbackErrorMessage: 'Impossible de détacher ce nom de domaine.',
     requiresAuth: true,
   })
+  invalidateDomainCaches(listingId)
   return normalizeDomainRecord(data)
 }

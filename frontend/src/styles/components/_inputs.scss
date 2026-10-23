@@ -277,9 +277,9 @@ input[type='number'] {
   }
 
   >.action {
-    @include buttons.primary($theme: $action-theme, $icon-only: true);
     flex: 0 0 auto;
     align-self: center;
+    @include buttons.primary($theme: $action-theme, $icon-only: true);
 
     >* {
       width: 42px;

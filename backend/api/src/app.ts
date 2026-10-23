@@ -13,6 +13,7 @@ import { listingsPlugin } from './domains/listings/listings.plugin.js';
 import { mediasPlugin } from './domains/medias/medias.plugin.js';
 import { messagingPlugin } from './domains/messaging/messaging.plugin.js';
 import { paymentsPlugin } from './domains/payments/payments.plugin.js';
+import { privacyPlugin } from './domains/privacy/privacy.plugin.js';
 import { usersPlugin } from './domains/users/users.plugin.js';
 import { authPlugin } from './plugins/auth.js';
 import { prismaPlugin } from './plugins/prisma.js';
@@ -54,10 +55,33 @@ function isOriginAllowed(origin: string, allowedOrigins: readonly string[]): boo
   return false;
 }
 
+// Les URL journalisées ne doivent pas révéler les secrets qu'elles transportent : jetons passés en
+// `?token=` et clés de guide d'arrivée `rg.…` (segment de chemin ou paramètre).
+export function maskSensitiveUrl(url: string | undefined): string | undefined {
+  if (typeof url !== 'string') return url;
+  return url
+    .replace(/([?&](?:token|key|guideKey|secret)=)[^&#]*/gi, '$1[masqué]')
+    .replace(/rg\.[A-Za-z0-9._~-]+/g, 'rg.[masqué]');
+}
+
 export async function buildApp() {
   const app = Fastify({
     logger: {
       level: env.LOG_LEVEL,
+      redact: {
+        paths: ['req.headers.authorization', 'req.headers.cookie', 'res.headers["set-cookie"]'],
+        censor: '[masqué]',
+      },
+      serializers: {
+        req(request) {
+          return {
+            method: request.method,
+            url: maskSensitiveUrl(request.url),
+            host: request.host,
+            remoteAddress: request.ip,
+          };
+        },
+      },
     },
     bodyLimit: env.API_BODY_LIMIT_BYTES,
   });
@@ -117,6 +141,7 @@ export async function buildApp() {
   await app.register(async (v1) => {
     await v1.register(aiPlugin);
     await v1.register(usersPlugin);
+    await v1.register(privacyPlugin);
     await v1.register(listingsPlugin);
     await v1.register(bookingsPlugin);
     await v1.register(mediasPlugin);

@@ -449,6 +449,27 @@
     }
   }
 
+  // Avis déjà déposé pour cette réservation : affiché à la place du formulaire.
+  .guide-review-existing {
+    display: grid;
+    gap: var(--layout-gap-xs);
+    padding: var(--layout-gap-sm);
+    border-radius: borders.$rounded-md;
+    border: 1px solid rgba($accent, 0.12);
+    background: rgba($accent, 0.04);
+
+    > .guide-review-existing__meta {
+      margin: 0;
+      @include little-text($color: rgba($accent, 0.75), $thin: false);
+    }
+
+    > .guide-review-existing__text {
+      margin: 0;
+      white-space: pre-line;
+      @include base-text($color: $accent);
+    }
+  }
+
   .guide-loading {
     position: fixed;
     bottom: calc(var(--layout-gap-sm) + var(--safe-area-bottom));
@@ -461,4 +482,12 @@
     @include little-text($color: $accent, $thin: false);
     @include effects.soft-shadow(rgba(0, 0, 0, 0.2));
   }
+}
+
+// Mentions légales en pied de guide, après la dernière section ; repoussées en bas de
+// l'écran quand le contenu est plus court que la fenêtre.
+.listing-guide>.legal-links-compact {
+  margin-top: auto;
+  padding-top: var(--layout-gap-md);
+  padding-bottom: calc(var(--layout-gap) + var(--safe-area-bottom));
 }

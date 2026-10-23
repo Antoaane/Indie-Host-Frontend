@@ -42,27 +42,21 @@ export function isDeprecatedHostIdentity(value: unknown): boolean {
   return normalized === 'hote' || normalized === 'host';
 }
 
-function readEmailLocalPart(value: string | null | undefined): string | null {
-  if (typeof value !== 'string') return null;
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-  const localPart = trimmed.split('@')[0]?.trim() ?? '';
-  return localPart || null;
-}
-
+// Nom public de l'hôte : jamais tiré de l'adresse e-mail (la partie locale est une donnée
+// personnelle qui n'a rien à faire sur une page publique). Sans nom, la chaîne reste vide et le
+// front affiche « votre hôte ».
 function resolveIdentityLabel(input: {
   displayName?: string | null;
   firstName?: string | null;
   lastName?: string | null;
   username?: string | null;
-  email?: string | null;
 }): string {
   const fullName = [input.firstName, input.lastName].filter(Boolean).join(' ').trim();
   const candidates = [
     input.displayName,
     fullName,
+    input.firstName,
     input.username,
-    readEmailLocalPart(input.email),
   ];
 
   for (const candidate of candidates) {
@@ -122,12 +116,12 @@ function toHostProfile(user: Partial<User>) {
     displayName: user.displayName ?? null,
     firstName: user.firstName ?? null,
     lastName: user.lastName ?? null,
-    email: user.email ?? null,
   });
 
   return {
     name: displayName,
-    status: 'Host',
+    // Pas de libellé par défaut : « Host » (en anglais) s'affichait sous le nom de l'hôte.
+    status: '',
     seniority: 0,
     'global-note': 5,
     avatar: user.avatarUrl ?? '',
@@ -149,7 +143,6 @@ export async function upsertUserFromAuth(prisma: PrismaClient, auth: RequestAuth
     firstName,
     lastName,
     username,
-    email,
   }) || null;
   const avatarUrl =
     readString(payload, 'picture') ??

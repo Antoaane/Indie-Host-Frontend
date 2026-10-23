@@ -88,8 +88,8 @@
           pointer-events: none;
 
           text-align: center;
-          @include lp-h4-title($accent);
           @include animations.transition(750ms);
+          @include lp-h4-title($accent);
 
           @include animations.reduced-motion {
             transform: none;

@@ -20,12 +20,12 @@ div:has(> .step-section) {
 
       gap: 1rem;
 
+      padding-left: var(--layout-gap-4xl);
+      padding-right: var(--layout-gap-4xl);
+
       @include min-width(sm) {
         gap: 2.5rem;
       }
-
-      padding-left: var(--layout-gap-4xl);
-      padding-right: var(--layout-gap-4xl);
 
       @include min-width(lg) {
         height: 100svh;

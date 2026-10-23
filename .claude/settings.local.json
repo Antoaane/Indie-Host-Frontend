@@ -34,5 +34,6 @@
       "Read(//f/Dev/IndieHost/**)",
       "Bash(docker info *)"
     ]
-  }
+  },
+  "enableAllProjectMcpServers": true
 }

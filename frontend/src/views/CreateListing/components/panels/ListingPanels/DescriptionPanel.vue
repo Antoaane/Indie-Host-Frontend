@@ -312,8 +312,8 @@ onMounted(() => {
       color: $secondary;
       @include little-text($thin: false);
       @include animations.transition(animations.$duration-fast);
-      @include animations.press();
       white-space: nowrap;
+      @include animations.press();
 
       @include on-hover(':not(:disabled)') {
         background: $accent-surface-3;
@@ -431,10 +431,14 @@ onMounted(() => {
     }
 
     > .ql-container {
-      @include inputs.richtext($theme: base);
-      min-height: 0;
       display: flex;
       flex-direction: column;
+      @include inputs.richtext($theme: base);
+
+      // Surcharge émise après le mixin : conserve l'ordre actuel de Sass
+      & {
+        min-height: 0;
+      }
 
       > .ql-editor {
         flex: 1 1 auto;

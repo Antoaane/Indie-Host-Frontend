@@ -1,3 +1,11 @@
+# Rotation des journaux Docker (nginx écrit sur stdout/stderr, donc couvert aussi) :
+# 10 Mo par fichier, 5 fichiers par conteneur au maximum.
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
 services:
   preflight:
     image: alpine:3.20
@@ -13,6 +21,7 @@ services:
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
+    logging: *default-logging
     depends_on:
       preflight:
         condition: service_completed_successfully
@@ -48,6 +57,7 @@ services:
     build:
       context: ./backend/api
     restart: unless-stopped
+    logging: *default-logging
     depends_on:
       preflight:
         condition: service_completed_successfully
@@ -83,6 +93,7 @@ services:
     build:
       context: ./backend/microservices/microservice-scraping-py
     restart: unless-stopped
+    logging: *default-logging
     depends_on:
       preflight:
         condition: service_completed_successfully
@@ -119,6 +130,7 @@ services:
         VITE_PUBLIC_LISTING_ROOT_DOMAIN: ${VITE_PUBLIC_LISTING_ROOT_DOMAIN:-localhost}
         VITE_SCRAPING_API_URL: ${VITE_SCRAPING_API_URL:-/scraping}
     restart: unless-stopped
+    logging: *default-logging
     depends_on:
       preflight:
         condition: service_completed_successfully
@@ -135,6 +147,7 @@ services:
     image: nginx:alpine
     container_name: indiehost-nginx
     restart: unless-stopped
+    logging: *default-logging
     env_file: .env
     environment:
       SSL_DOMAIN: ${SSL_DOMAIN}
@@ -174,6 +187,7 @@ services:
   certbot:
     image: certbot/dns-cloudflare:latest
     restart: unless-stopped
+    logging: *default-logging
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot

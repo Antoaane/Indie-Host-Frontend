@@ -7,7 +7,10 @@ import { readRoleFromAuthPayload } from '../lib/authRole.js';
 import type { RequestAuth } from '../types/auth.js';
 
 const CLERK_API_BASE_URL = 'https://api.clerk.com/v1';
+// Aucun webhook Clerk ne prévient l'API d'un retrait de rôle : un rôle admin n'est donc gardé en
+// cache que 60 s (le retrait prend effet au plus tard une minute après), l'absence de rôle 5 min.
 const CLERK_ROLE_CACHE_TTL_MS = 5 * 60 * 1000;
+const CLERK_PRIVILEGED_ROLE_CACHE_TTL_MS = 60 * 1000;
 
 type ClerkRoleCacheEntry = {
   role: string | null;
@@ -15,6 +18,16 @@ type ClerkRoleCacheEntry = {
 };
 
 const clerkRoleCache = new Map<string, ClerkRoleCacheEntry>();
+
+function cacheClerkRole(userId: string, role: string | null): void {
+  const ttl = role ? CLERK_PRIVILEGED_ROLE_CACHE_TTL_MS : CLERK_ROLE_CACHE_TTL_MS;
+  clerkRoleCache.set(userId, { role, expiresAt: Date.now() + ttl });
+}
+
+// À appeler quand l'API apprend qu'un rôle a changé (par exemple depuis une route d'administration).
+export function invalidateClerkRoleCache(userId: string): void {
+  clerkRoleCache.delete(userId);
+}
 
 function resolveBearerToken(request: FastifyRequest): string | null {
   const header = request.headers.authorization;
@@ -123,10 +136,7 @@ async function enrichPayloadWithClerkRole(payload: Record<string, unknown>): Pro
 
   const roleFromToken = readRoleFromAuthPayload(payload);
   if (roleFromToken) {
-    clerkRoleCache.set(userId, {
-      role: roleFromToken,
-      expiresAt: Date.now() + CLERK_ROLE_CACHE_TTL_MS,
-    });
+    cacheClerkRole(userId, roleFromToken);
     return mergeRoleIntoPayload(payload, roleFromToken);
   }
 
@@ -136,10 +146,7 @@ async function enrichPayloadWithClerkRole(payload: Record<string, unknown>): Pro
   }
 
   const fetchedRole = await fetchClerkRole(userId);
-  clerkRoleCache.set(userId, {
-    role: fetchedRole,
-    expiresAt: Date.now() + CLERK_ROLE_CACHE_TTL_MS,
-  });
+  cacheClerkRole(userId, fetchedRole);
 
   return mergeRoleIntoPayload(payload, fetchedRole);
 }

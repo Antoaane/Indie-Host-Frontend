@@ -10,6 +10,7 @@ const props = defineProps<{
   medias?: Partial<RawMedias> | null
   listingId?: string | null
   listingStatus?: string | null
+  listingTitle?: string | null
   validationError?: string | null
 }>()
 
@@ -28,6 +29,7 @@ const emit = defineEmits<{
       :medias="props.medias"
       :listing-id="props.listingId"
       :listing-status="props.listingStatus"
+      :listing-title="props.listingTitle"
       @patch="emit('patch', $event)"
     />
   </CreateWizardStepShell>

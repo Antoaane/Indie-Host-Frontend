@@ -1,4 +1,5 @@
 import { env } from '../../config/env.js';
+import { sanitizePlainText, sanitizeRichText } from '../../lib/sanitizeHtml.js';
 import type { ScrapeListingInput } from './imports.schemas.js';
 
 // Au-delà, nginx (300 s) et Cloudflare (100 s) coupent de toute façon la requête.
@@ -58,6 +59,36 @@ export function toCanonicalListingUrl(rawUrl: string): string | null {
   return null;
 }
 
+// Clés dont la valeur est une URL (gardée si http(s), vidée sinon) ; `description` est le seul HTML
+// riche de la réponse, toute autre chaîne est du texte brut (titre, équipements, règles, adresse…).
+const SCRAPED_URL_KEYS = new Set(['url', 'listing_url', 'src', 'href']);
+const SCRAPED_URL_PATTERN = /^https?:\/\//i;
+const SCRAPED_MAX_DEPTH = 12;
+
+function sanitizeScrapedValue(value: unknown, key: string, depth: number): unknown {
+  if (depth > SCRAPED_MAX_DEPTH) return undefined;
+  if (typeof value === 'string') {
+    if (SCRAPED_URL_KEYS.has(key)) return SCRAPED_URL_PATTERN.test(value.trim()) ? value.trim() : '';
+    if (key === 'description') return sanitizeRichText(value);
+    return sanitizePlainText(value, { multiline: true });
+  }
+  if (Array.isArray(value)) return value.map((item) => sanitizeScrapedValue(item, key, depth + 1));
+  if (value && typeof value === 'object') {
+    const out: Record<string, unknown> = {};
+    for (const [childKey, childValue] of Object.entries(value)) {
+      out[childKey] = sanitizeScrapedValue(childValue, childKey, depth + 1);
+    }
+    return out;
+  }
+  return value;
+}
+
+// Le scraper lit du HTML tiers : rien de ce qu'il renvoie n'est considéré sûr avant d'être renvoyé
+// au client (qui l'enregistre ensuite dans l'annonce via l'API, nettoyé une seconde fois).
+export function sanitizeScrapedListing(payload: Record<string, unknown>): Record<string, unknown> {
+  return sanitizeScrapedValue(payload, '', 0) as Record<string, unknown>;
+}
+
 export class ImportsService {
   private activeScrapes = 0;
 
@@ -90,7 +121,7 @@ export class ImportsService {
       }
 
       const payload = await response.json().catch(() => null) as Record<string, unknown> | null;
-      if (response.ok && payload) return payload;
+      if (response.ok && payload) return sanitizeScrapedListing(payload);
 
       // Seuls les messages de validation du scraper (400) sont rédigés pour l'utilisateur ; les
       // autres contiennent l'erreur technique brute et restent dans les logs.

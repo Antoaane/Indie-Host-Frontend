@@ -11,6 +11,12 @@ import {
   type GuideConversationMessagePayload,
   type ReservationGuideAccessPayload,
 } from '@/domain/api/bookings'
+import {
+  fetchGuideReviewStatus,
+  GuideReviewError,
+  submitGuideReview,
+  type GuideReviewStatus,
+} from '@/domain/api/listingReviews'
 import { toUtcDay } from '@/domain/listings/bookings'
 import { getListingsController } from '@/domain/listings/controller'
 import { isListingIdLike, normalizeListingSlug } from '@/domain/listings/slug'
@@ -18,6 +24,7 @@ import type { RawArrival, RawBookingReservation, RawBookings, RawComments, RawCo
 import { vp } from '@/utils/viewport'
 import { sanitizeHtml } from '@/utils/sanitizeHtml'
 import { loadArrival, loadBookings, loadComments, loadCore, loadHost } from '@/views/Listing/utils/fetchListingRaw'
+import LegalLinksCompact from '@/components/layouts/LegalLinksCompact.vue'
 
 type PracticalKey = keyof RawArrival['practical']
 type PracticalTextKey = 'savings' | 'access' | 'services'
@@ -38,20 +45,8 @@ type PracticalHtmlEntry = {
   html: string
 }
 type PracticalSectionEntry = PracticalFieldsEntry | PracticalHtmlEntry
-type StayDates = {
-  start: string
-  end: string
-}
-type TravelerCommentEntry = {
-  'profile-pic': string
-  name: string
-  note: number
-  comment: string
-  'stay-dates': StayDates
-}
 
 const DAY_MS = 24 * 60 * 60 * 1000
-const COMMENT_PAGE_SIZE = 10
 
 const PRACTICAL_TITLE = 'Informations pratiques'
 const PRACTICAL_DESCRIPTION = 'Des informations claires et rapides pour un séjour sans stress.'
@@ -137,6 +132,8 @@ const isLoading = ref(false)
 const isSubmittingComment = ref(false)
 const commentErrorMessage = ref('')
 const commentSuccessMessage = ref('')
+// Statut de l'avis côté API (clé de guide) : avis déjà déposé pour cette réservation, date d'ouverture.
+const guideReviewStatus = ref<GuideReviewStatus | null>(null)
 const isConversationLoading = ref(false)
 const isConversationSending = ref(false)
 const conversationErrorMessage = ref('')
@@ -345,55 +342,6 @@ function mergeArrival(base: RawArrival, override?: Partial<RawArrival> | null): 
   return mergeDeep(base, override) as RawArrival
 }
 
-function resolveStayEndISO(startISO: string, rawEndISO?: string | null): string {
-  const endISO = normalizeIsoDate(rawEndISO)
-  if (endISO) {
-    const startMs = toUtcDay(startISO)
-    const endMs = toUtcDay(endISO)
-    if (startMs !== null && endMs !== null && endMs > startMs) {
-      return endISO
-    }
-  }
-
-  return addUtcDays(startISO, 1) ?? startISO
-}
-
-function cloneCommentPages(raw: RawComments | null): unknown[][] {
-  const pages = Array.isArray(raw?.comments) ? raw.comments : []
-  return pages.map((page) =>
-    Array.isArray(page)
-      ? [
-          ...page,
-        ]
-      : [],
-  )
-}
-
-function prependCommentToPages(pages: unknown[][], entry: TravelerCommentEntry): unknown[][] {
-  const nextPages = pages.map((page) => [
-    ...page,
-  ])
-
-  if (!nextPages.length) nextPages.push([])
-  nextPages[0].unshift(entry)
-
-  for (let index = 0; index < nextPages.length; index += 1) {
-    const page = nextPages[index] ?? []
-    if (page.length <= COMMENT_PAGE_SIZE) continue
-
-    const overflow = page.splice(COMMENT_PAGE_SIZE)
-    if (!overflow.length) continue
-
-    if (!nextPages[index + 1]) {
-      nextPages[index + 1] = []
-    }
-
-    nextPages[index + 1].unshift(...overflow)
-  }
-
-  return nextPages
-}
-
 async function resolveWritableListingId(key: string): Promise<string> {
   const normalizedKey = key.trim()
   if (!normalizedKey) return 'default-listing'
@@ -518,10 +466,8 @@ const matchedReservation = computed<RawBookingReservation | null>(() => {
 })
 
 const reservationArrivalISO = computed(() => normalizeIsoDate(matchedReservation.value?.start))
-const reservationDepartureISO = computed(() => normalizeIsoDate(matchedReservation.value?.end))
 const autoArrivalISO = computed(() => reservationArrivalISO.value ?? queryArrivalISO.value)
 const stayArrivalISO = computed(() => autoArrivalISO.value ?? normalizeIsoDate(commentForm.arrivalDate))
-const stayDepartureISO = computed(() => reservationDepartureISO.value ?? queryDepartureISO.value)
 const localGuideActiveAfterISO = computed(() => {
   if (!isReservationGuideKey(listingKey.value)) return ''
   return resolveGuideActiveAfterFromArrivalISO(reservationArrivalISO.value ?? queryArrivalISO.value)
@@ -556,7 +502,15 @@ const firstNightUnlockISO = computed(() => {
   return addUtcDays(arrivalISO, 1)
 })
 
+// Seul le voyageur muni de sa clé de guide peut déposer un avis (route API protégée par cette clé).
+const hasReviewAccess = computed(() => isReservationGuideKey(listingKey.value))
+const existingReview = computed(() => guideReviewStatus.value?.review ?? null)
+const hasExistingReview = computed(() => Boolean(existingReview.value))
+
 const canSubmitComment = computed(() => {
+  if (!hasReviewAccess.value || hasExistingReview.value) return false
+  if (guideReviewStatus.value) return guideReviewStatus.value.canReview
+
   const unlockISO = firstNightUnlockISO.value
   if (!unlockISO) return false
 
@@ -567,16 +521,32 @@ const canSubmitComment = computed(() => {
 })
 
 const commentAvailabilityMessage = computed(() => {
+  if (!hasReviewAccess.value) {
+    return 'Pour laisser un avis, ouvrez le guide depuis le lien reçu avec votre confirmation de réservation.'
+  }
+
+  if (hasExistingReview.value) {
+    return 'Vous avez déjà laissé un avis pour ce séjour. Merci !'
+  }
+
   if (!stayArrivalISO.value) {
-    return 'Indiquez votre date d’arrivée pour déverrouiller l’ajout de commentaire après la première nuit.'
+    return 'Indiquez votre date d’arrivée pour déverrouiller l’ajout d’un avis après la première nuit.'
   }
 
   if (canSubmitComment.value) {
-    return 'Vous pouvez laisser votre commentaire dès maintenant.'
+    return 'Vous pouvez laisser votre avis dès maintenant.'
   }
 
   const unlockLabel = formatDateFr(firstNightUnlockISO.value)
-  return unlockLabel ? `Vous pourrez laisser votre commentaire à partir du ${unlockLabel}, après votre première nuit sur place.` : 'Vous pourrez laisser votre commentaire après votre première nuit sur place.'
+  return unlockLabel ? `Vous pourrez laisser votre avis à partir du ${unlockLabel}, après votre première nuit sur place.` : 'Vous pourrez laisser votre avis après votre première nuit sur place.'
+})
+
+const existingReviewDateLabel = computed(() => {
+  const createdAt = existingReview.value?.createdAt
+  if (!createdAt) return ''
+  const createdMs = Date.parse(createdAt)
+  if (Number.isNaN(createdMs)) return ''
+  return formatDateFr(new Date(createdMs).toISOString().slice(0, 10))
 })
 
 const practicalSections = computed<PracticalSectionEntry[]>(() => {
@@ -689,9 +659,29 @@ async function submitGuideConversationMessage() {
   }
 }
 
+async function loadGuideReviewStatus() {
+  if (!hasReviewAccess.value) {
+    guideReviewStatus.value = null
+    return
+  }
+
+  try {
+    guideReviewStatus.value = await fetchGuideReviewStatus({ guideKey: listingKey.value })
+  } catch (error) {
+    // Sans statut, le formulaire se rabat sur la règle locale (première nuit) ; l'API tranche à l'envoi.
+    console.warn('[ListingGuide] load guide review status failed', error)
+    guideReviewStatus.value = null
+  }
+}
+
 async function submitTravelerComment() {
   commentErrorMessage.value = ''
   commentSuccessMessage.value = ''
+
+  if (!hasReviewAccess.value || hasExistingReview.value) {
+    commentErrorMessage.value = commentAvailabilityMessage.value
+    return
+  }
 
   if (!stayArrivalISO.value) {
     commentErrorMessage.value = 'La date d’arrivée est nécessaire pour vérifier la première nuit.'
@@ -703,12 +693,6 @@ async function submitTravelerComment() {
     return
   }
 
-  const listingId = writableListingId.value.trim()
-  if (!listingId) {
-    commentErrorMessage.value = 'Impossible d’identifier le logement pour enregistrer le commentaire.'
-    return
-  }
-
   const author = cleanText(commentForm.name)
   if (author.length < 2) {
     commentErrorMessage.value = 'Ajoutez votre prénom ou un nom (2 caractères minimum).'
@@ -717,40 +701,55 @@ async function submitTravelerComment() {
 
   const body = cleanText(commentForm.comment)
   if (body.length < 10) {
-    commentErrorMessage.value = 'Ajoutez un commentaire un peu plus détaillé (10 caractères minimum).'
+    commentErrorMessage.value = 'Ajoutez un avis un peu plus détaillé (10 caractères minimum).'
     return
   }
 
-  const arrivalISO = stayArrivalISO.value
-  const departureISO = resolveStayEndISO(arrivalISO, stayDepartureISO.value)
-  const entry: TravelerCommentEntry = {
-    'profile-pic': '',
-    name: author,
-    note: clampNote(commentForm.note),
-    comment: body,
-    'stay-dates': {
-      start: arrivalISO,
-      end: departureISO,
-    },
-  }
-
-  const currentPages = cloneCommentPages(rawComments.value)
-  const nextPages = prependCommentToPages(currentPages, entry)
-  const nextComments = { comments: nextPages } as Partial<RawComments>
-
   isSubmittingComment.value = true
   try {
-    await listingsController.patchListingDraft(listingId, {
-      comments: nextComments,
+    const review = await submitGuideReview({
+      guideKey: listingKey.value,
+      rating: clampNote(commentForm.note),
+      text: body,
+      author,
     })
 
-    rawComments.value = nextComments as RawComments
+    guideReviewStatus.value = {
+      reservationId: review.reservationId,
+      listingId: guideReviewStatus.value?.listingId ?? writableListingId.value,
+      availableFromISO: guideReviewStatus.value?.availableFromISO ?? '',
+      canReview: false,
+      review,
+    }
     commentForm.comment = ''
     commentForm.note = 5
-    commentSuccessMessage.value = 'Merci, votre commentaire a bien été ajouté.'
+    commentSuccessMessage.value = 'Merci, votre avis a bien été ajouté.'
   } catch (error) {
-    console.error('[ListingGuide] submit traveler comment failed', error)
-    commentErrorMessage.value = 'Impossible d’enregistrer votre commentaire pour le moment. Réessayez dans quelques instants.'
+    console.error('[ListingGuide] submit traveler review failed', error)
+
+    if (error instanceof GuideReviewError && error.code === 'REVIEW_ALREADY_EXISTS') {
+      // Un avis existe déjà pour cette réservation : on recharge le statut pour l'afficher et masquer le formulaire.
+      await loadGuideReviewStatus()
+      commentErrorMessage.value = 'Vous avez déjà laissé un avis pour ce séjour.'
+      return
+    }
+
+    if (error instanceof GuideReviewError && error.code === 'REVIEW_LOCKED') {
+      commentErrorMessage.value = 'Vous pourrez laisser votre avis après votre première nuit sur place.'
+      return
+    }
+
+    if (error instanceof GuideReviewError && error.code === 'RATE_LIMITED') {
+      commentErrorMessage.value = 'Trop de tentatives. Réessayez dans quelques minutes.'
+      return
+    }
+
+    if (error instanceof GuideReviewError && error.code === 'INVALID_GUIDE_KEY') {
+      commentErrorMessage.value = 'Ce lien de guide n’est plus valide. Ouvrez le guide depuis votre confirmation de réservation.'
+      return
+    }
+
+    commentErrorMessage.value = 'Impossible d’enregistrer votre avis pour le moment. Réessayez dans quelques instants.'
   } finally {
     isSubmittingComment.value = false
   }
@@ -791,6 +790,7 @@ watch(
     conversationDraft.value = ''
     guideConversationMessages.value = []
     guideAccess.value = null
+    guideReviewStatus.value = null
 
     try {
       const currentKey = listingKey.value.trim()
@@ -868,7 +868,10 @@ watch(
         : bookings
       rawComments.value = comments
       writableListingId.value = resolvedListingId
-      await loadGuideConversationThread()
+      await Promise.all([
+        loadGuideConversationThread(),
+        loadGuideReviewStatus(),
+      ])
     } catch (error) {
       console.warn('[ListingGuide] failed to resolve guide', error)
       commentErrorMessage.value = 'Impossible de charger le guide pour cette réservation.'
@@ -1101,19 +1104,32 @@ watch(
         </template>
 
         <div class="section-header is-local">
-          <h2>Votre commentaire</h2>
+          <h2>Votre avis</h2>
           <p>Partagez votre expérience directement depuis ce guide d’accueil.</p>
         </div>
 
         <article class="guide-panel guide-panel--comment">
           <p
             class="comment-availability"
-            :class="{ 'is-unlocked': canSubmitComment, 'is-locked': !canSubmitComment }"
+            :class="{ 'is-unlocked': canSubmitComment || hasExistingReview, 'is-locked': !canSubmitComment && !hasExistingReview }"
+            aria-live="polite"
           >
             {{ commentAvailabilityMessage }}
           </p>
 
+          <div
+            v-if="existingReview"
+            class="guide-review-existing"
+          >
+            <p class="guide-review-existing__meta">
+              <strong>{{ existingReview.author || 'Vous' }}</strong>
+              · {{ existingReview.rating }} / 5<template v-if="existingReviewDateLabel"> · {{ existingReviewDateLabel }}</template>
+            </p>
+            <p class="guide-review-existing__text">{{ existingReview.text }}</p>
+          </div>
+
           <form
+            v-else-if="hasReviewAccess"
             class="comment-form"
             @submit.prevent="submitTravelerComment"
           >
@@ -1154,12 +1170,12 @@ watch(
             </label>
 
             <label class="comment-field">
-              <span>Commentaire</span>
+              <span>Votre avis</span>
               <textarea
                 v-model="commentForm.comment"
                 rows="4"
                 minlength="10"
-                maxlength="800"
+                maxlength="2000"
                 placeholder="Décrivez votre expérience sur place…"
                 required
               />
@@ -1169,24 +1185,35 @@ watch(
               type="submit"
               class="comment-submit"
               :disabled="isSubmittingComment || !canSubmitComment"
+              :aria-busy="isSubmittingComment"
             >
-              {{ isSubmittingComment ? 'Envoi…' : 'Ajouter mon commentaire' }}
+              {{ isSubmittingComment ? 'Envoi…' : 'Publier mon avis' }}
             </button>
 
             <p
               v-if="commentErrorMessage"
               class="comment-feedback is-error"
+              role="alert"
             >
               {{ commentErrorMessage }}
             </p>
-
-            <p
-              v-if="commentSuccessMessage"
-              class="comment-feedback is-success"
-            >
-              {{ commentSuccessMessage }}
-            </p>
           </form>
+
+          <p
+            v-if="commentSuccessMessage"
+            class="comment-feedback is-success"
+            aria-live="polite"
+          >
+            {{ commentSuccessMessage }}
+          </p>
+
+          <p
+            v-if="!hasReviewAccess && commentErrorMessage"
+            class="comment-feedback is-error"
+            role="alert"
+          >
+            {{ commentErrorMessage }}
+          </p>
         </article>
       </section>
 
@@ -1197,6 +1224,8 @@ watch(
         Chargement…
       </div>
     </template>
+
+    <LegalLinksCompact />
   </main>
 </template>
 

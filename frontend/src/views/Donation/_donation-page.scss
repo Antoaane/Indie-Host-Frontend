@@ -31,9 +31,9 @@
   align-items: center;
   gap: 0.75rem;
 
-  @include container(xl);
   padding-left: var(--layout-gap-4xl);
   padding-right: var(--layout-gap-4xl);
+  @include container(xl);
 
   .donation-page__subtitle {
     margin: 0;

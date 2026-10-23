@@ -72,7 +72,7 @@ function normalizeText(value?: string): string {
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, ' ')
-    .trim() ?? ''
+    .trim() || ''
 }
 
 function escapeHtml(value: string): string {
@@ -94,11 +94,11 @@ function textsLooselyMatch(a?: string, b?: string): boolean {
 function parseLocationFromTitle(title?: string): { city?: string; region?: string; country?: string } | null {
   if (!title) return null
   const parts = title.split(' - ')
-  const last = parts[parts.length - 1] ?? ''
+  const last = parts[parts.length - 1] || ''
   const locParts = last.split(',').map((s) => s.trim())
-  const city = locParts[0] ?? ''
-  const region = locParts[1] ?? ''
-  const country = locParts[2] ?? 'France'
+  const city = locParts[0] || ''
+  const region = locParts[1] || ''
+  const country = locParts[2] || 'France'
   return { city: city || undefined, region: region || undefined, country }
 }
 
@@ -107,9 +107,9 @@ function parseLocationFromDescriptions(descriptions?: Array<{ title?: string }>)
   if (!first) return null
   const parts = first.split(',').map((s) => s.trim())
   return {
-    city: parts[0] ?? undefined,
-    region: parts[1] ?? undefined,
-    country: parts[2] ?? 'France',
+    city: parts[0] || undefined,
+    region: parts[1] || undefined,
+    country: parts[2] || 'France',
   }
 }
 
@@ -218,8 +218,8 @@ function buildAmenities(scraped: AirbnbScrapedData): RawAmenity[] {
       amenities.push({
         id,
         name: item.title,
-        description: item.subtitle ?? '',
-        category: group.title ?? '',
+        description: item.subtitle || '',
+        category: group.title || '',
         relevance: isHighlighted ? 95 : undefined,
         pinned: isHighlighted || undefined,
         perkEligible: isHighlighted || perkDefaults?.perkEligible || undefined,
@@ -308,8 +308,8 @@ function buildArrivalFromHouseRules(rules?: { general?: Array<{ title: string; v
       savings: { message: 'Réservez en direct pour éviter les commissions.' },
       access: {
         address: '',
-        checkIn: checkIn ?? 'À préciser.',
-        checkOut: checkOut ?? 'À préciser.',
+        checkIn: checkIn || 'À préciser.',
+        checkOut: checkOut || 'À préciser.',
         parking: '',
       },
       services: {
@@ -348,6 +348,13 @@ function dedupeImportedImages(images?: Array<{ title?: string; url: string }>) {
   })
 }
 
+// Légende renvoyée par le scraper gardée en texte alternatif ; un « Photo N » générique est écarté
+// pour laisser le repli « <titre de l'annonce> — photo N » de l'annonce publique.
+function importedImageAlt(title?: string): string {
+  const caption = (title || '').trim()
+  return /^photo\s*\d+$/i.test(caption) ? '' : caption
+}
+
 function buildEmptyRatingDistribution() {
   return {
     1: 0,
@@ -366,9 +373,9 @@ function amenitiesFromScraped(scraped: AirbnbScrapedData): RawAmenity[] {
       const catalogItem = getKnownAmenityCatalogItem(a.id)
       return [{
         id: a.id,
-        name: catalogItem?.name ?? a.name,
-        description: a.description ?? catalogItem?.description ?? '',
-        category: a.category ?? catalogItem?.category,
+        name: catalogItem?.name || a.name,
+        description: a.description || catalogItem?.description || '',
+        category: a.category || catalogItem?.category,
         relevance: a.relevance,
         pinned: a.pinned,
         perkEligible: a.perkEligible,
@@ -413,9 +420,9 @@ export function transformAirbnbToRawListingBundle(scraped: AirbnbScrapedData): P
   const locFromSub = parseLocationFromTitle(scraped.sub_description?.title)
   const locFromDesc = parseLocationFromDescriptions(scraped.location_descriptions)
   const location = {
-    city: scraped.city ?? locFromSub?.city ?? locFromDesc?.city,
-    region: scraped.region ?? locFromSub?.region ?? locFromDesc?.region,
-    country: scraped.country ?? locFromSub?.country ?? locFromDesc?.country ?? 'France',
+    city: scraped.city || locFromSub?.city || locFromDesc?.city,
+    region: scraped.region || locFromSub?.region || locFromDesc?.region,
+    country: scraped.country || locFromSub?.country || locFromDesc?.country || 'France',
   }
 
   const description = buildDescriptionHtml(scraped)
@@ -423,7 +430,7 @@ export function transformAirbnbToRawListingBundle(scraped: AirbnbScrapedData): P
 
   const arrival = buildArrivalFromHouseRules(scraped.house_rules)
   if (arrival?.practical?.access) {
-    arrival.practical.access.address = scraped.precise_address ?? [
+    arrival.practical.access.address = scraped.precise_address || [
       location.city,
       location.region,
       location.country,
@@ -440,7 +447,7 @@ export function transformAirbnbToRawListingBundle(scraped: AirbnbScrapedData): P
       lng: scraped.coordinates?.longitude,
       zoom: 13,
       guest_capacity: scraped.person_capacity ?? roomCounts.guest_capacity ?? 1,
-      precise_address: scraped.precise_address ?? '',
+      precise_address: scraped.precise_address || '',
       city: location.city,
       region: location.region,
       country: location.country,
@@ -454,7 +461,7 @@ export function transformAirbnbToRawListingBundle(scraped: AirbnbScrapedData): P
     medias: {
       images: dedupeImportedImages(scraped.images).map((img, i) => ({
         src: img.url,
-        alt: img.title ?? `Photo ${i + 1}`,
+        alt: importedImageAlt(img.title),
         position: i,
       })),
       videos: [],

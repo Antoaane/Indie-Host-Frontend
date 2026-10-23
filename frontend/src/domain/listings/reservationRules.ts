@@ -2,6 +2,11 @@
 
 import { nightsBetween, toUtcDay } from '@/domain/listings/bookings'
 import { computeNightlyPriceBreakdown, type DurationDiscountTier, type WeekendPricingConfig } from '@/domain/listings/pricing'
+import {
+  resolveCancellationPolicy,
+  type CancellationPolicyCode,
+  type ResolvedCancellationPolicy,
+} from '@/domain/listings/cancellationPolicy'
 import type { RawBookings, RawCore, RawPricingSettings } from '@/domain/listings/types'
 
 export type CheckoutPaymentChoice = 'full' | 'split' | 'cash'
@@ -51,16 +56,9 @@ export type ListingPaymentRules = {
   blockedReasons: Partial<Record<CheckoutPaymentChoice, string>>
 }
 
-export type ListingCancellationPolicy = 'flexible' | 'moderate' | 'strict' | 'custom'
-
-export type ListingCancellationRules = {
-  policy: ListingCancellationPolicy
-  // Remboursements autorisés par l'hôte dans ses préférences ; sinon la réservation est non remboursable.
-  refundsEnabled: boolean
-  fullRefundDays: number
-  feePercent: number
-  lateFeePercent: number
-}
+// Barème d'annulation : défini une seule fois dans cancellationPolicy.ts (miroir de l'API).
+export type ListingCancellationPolicy = CancellationPolicyCode
+export type ListingCancellationRules = ResolvedCancellationPolicy
 
 export type ListingReservationRules = {
   occupancy: ListingOccupancyRules
@@ -112,15 +110,6 @@ const STAY_DISCOUNT_TIERS_MAX = 24
 const PAYMENT_DEPOSIT_PERCENT_MIN = 10
 const PAYMENT_DEPOSIT_PERCENT_MAX = 90
 const PAYMENT_BALANCE_DAYS_MAX = 365
-const CANCELLATION_DAYS_MAX = 365
-const CANCELLATION_FEE_MAX = 100
-const CANCELLATION_LATE_FEE_STEP = 20
-// Mêmes barèmes que l'API (bookings.service.ts) : ce qui est annoncé avant le paiement est ce qui sera appliqué.
-const CANCELLATION_PRESETS: Record<Exclude<ListingCancellationPolicy, 'custom'>, { days: number; feePercent: number }> = {
-  flexible: { days: 3, feePercent: 10 },
-  moderate: { days: 7, feePercent: 20 },
-  strict: { days: 14, feePercent: 35 },
-}
 
 const DEFAULT_OCCUPANTS: OccupantCounts = {
   adults: 1,
@@ -429,26 +418,8 @@ export function resolveListingReservationRules({
 }
 
 function resolveCancellationRules(pricing: RawPricingSettings): ListingCancellationRules {
-  const rawPolicy = pricing.cancellation?.policy
-  const policy: ListingCancellationPolicy = rawPolicy === 'moderate' || rawPolicy === 'strict' || rawPolicy === 'custom'
-    ? rawPolicy
-    : 'flexible'
-  const preset = CANCELLATION_PRESETS[policy === 'custom' ? 'moderate' : policy]
-  const custom = pricing.cancellation?.custom
-  const fullRefundDays = policy === 'custom'
-    ? clampInteger(custom?.days, 0, CANCELLATION_DAYS_MAX, preset.days)
-    : preset.days
-  const feePercent = policy === 'custom'
-    ? clampInteger(custom?.feePercent, 0, CANCELLATION_FEE_MAX, preset.feePercent)
-    : preset.feePercent
-
-  return {
-    policy,
-    refundsEnabled: pricing.cancellation?.refundsEnabled === true,
-    fullRefundDays,
-    feePercent,
-    lateFeePercent: Math.min(CANCELLATION_FEE_MAX, feePercent + CANCELLATION_LATE_FEE_STEP),
-  }
+  // Même résolution que l'API : ce qui est annoncé avant le paiement est ce qui sera appliqué.
+  return resolveCancellationPolicy(pricing.cancellation)
 }
 
 export function normalizeOccupantCounts(input: Partial<OccupantCounts> | null | undefined): OccupantCounts {

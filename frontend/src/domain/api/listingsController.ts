@@ -22,6 +22,16 @@ import { normalizeListingSlug } from '@/domain/listings/slug'
 import { filterDeletedListings } from '@/domain/listings/status'
 import { getCanonicalHost } from '@/domain/listings/host'
 import { ensurePublishedMediasStoredInImageKit } from '@/domain/api/imagekit'
+import {
+  LISTING_LIST_TTL_MS,
+  LISTING_SECTION_TTL_MS,
+  buildListingListKey,
+  buildListingSectionKey,
+  invalidateListing,
+  invalidateListingLists,
+  invalidateListingSections,
+} from '@/domain/api/listingsCache'
+import { sharedRequest } from '@/domain/api/requestCache'
 
 const RAW_BASE_API_URL = (import.meta.env.VITE_API_BASE_URL ?? '').trim()
 const BASE_API_URL = normalizeApiBaseUrl(RAW_BASE_API_URL)
@@ -227,11 +237,31 @@ async function fetchRemote<T>(url: string): Promise<T> {
   return fetchRemoteWithToken<T>(url, token)
 }
 
-// Écrans de l'hôte : sans jeton, l'API renvoie la version publique (réservations retirées)
-// et l'enregistrer ensuite écraserait les données. On attend donc Clerk avant de lire.
-async function fetchRemoteAsOwner<T>(url: string): Promise<T> {
-  const token = await getAuthToken({ waitForReady: true })
-  return fetchRemoteWithToken<T>(url, token)
+// Liste d'annonces : partagée entre les composants qui la demandent en même temps
+// (éditeur, barre de navigation…) et gardée quelques secondes (`listingsCache.ts`).
+function fetchListingListWithToken(url: string, token: string | null): Promise<UserListingCard[]> {
+  return sharedRequest(
+    buildListingListKey(url, Boolean(token)),
+    () => fetchRemoteWithToken<UserListingCard[]>(url, token),
+    { ttlMs: LISTING_LIST_TTL_MS },
+  )
+}
+
+// Section d'une annonce (`core`, `bookings`…). Écrans de l'hôte (`asOwner`) : sans jeton,
+// l'API renvoie la version publique (réservations retirées) et l'enregistrer ensuite écraserait
+// les données. On attend donc Clerk avant de lire. La clé de cache distingue lecture
+// authentifiée et anonyme pour ne jamais servir la version publique à l'hôte.
+async function fetchListingSection<T>(
+  section: ListingResourceKey,
+  listingId: string,
+  options?: { asOwner?: boolean },
+): Promise<T> {
+  const token = await getAuthToken(options?.asOwner ? { waitForReady: true } : undefined)
+  return sharedRequest(
+    buildListingSectionKey(listingId, section, Boolean(token)),
+    () => fetchRemoteWithToken<T>(resolveUrl(buildListingUrl(section, listingId)), token),
+    { ttlMs: LISTING_SECTION_TTL_MS },
+  )
 }
 
 async function patchRemoteWithToken<T>(url: string, payload: unknown, token: string | null): Promise<T> {
@@ -400,10 +430,7 @@ export function createApiListingsController(): ListingsController {
 
       if (adminViewAll) {
         try {
-          const listings = await fetchRemoteWithToken<UserListingCard[]>(
-            resolveUrl(buildAdminListingsUrl()),
-            token,
-          )
+          const listings = await fetchListingListWithToken(resolveUrl(buildAdminListingsUrl()), token)
           return filterDeletedListings(normalizeListingCardsMedia(listings), options?.includeDeleted)
         } catch (error) {
           const status = readHttpStatus(error)
@@ -414,7 +441,7 @@ export function createApiListingsController(): ListingsController {
       }
 
       try {
-        const listings = await fetchRemoteWithToken<UserListingCard[]>(resolveUrl(buildMyListingsUrl()), token)
+        const listings = await fetchListingListWithToken(resolveUrl(buildMyListingsUrl()), token)
         return filterDeletedListings(normalizeListingCardsMedia(listings), options?.includeDeleted)
       } catch (error) {
         const status = readHttpStatus(error)
@@ -422,10 +449,7 @@ export function createApiListingsController(): ListingsController {
           const fallbackUserId = userId ?? readJwtSubject(token)
           if (fallbackUserId) {
             try {
-              const listings = await fetchRemoteWithToken<UserListingCard[]>(
-                resolveUrl(buildUserListingsUrl(fallbackUserId)),
-                token,
-              )
+              const listings = await fetchListingListWithToken(resolveUrl(buildUserListingsUrl(fallbackUserId)), token)
               return filterDeletedListings(normalizeListingCardsMedia(listings), options?.includeDeleted)
             } catch (fallbackByUserIdError) {
               const fallbackByUserIdStatus = readHttpStatus(fallbackByUserIdError)
@@ -436,10 +460,7 @@ export function createApiListingsController(): ListingsController {
           }
 
           try {
-            const listings = await fetchRemoteWithToken<UserListingCard[]>(
-              resolveUrl(buildLegacyMyListingsUrl()),
-              token,
-            )
+            const listings = await fetchListingListWithToken(resolveUrl(buildLegacyMyListingsUrl()), token)
             return filterDeletedListings(normalizeListingCardsMedia(listings), options?.includeDeleted)
           } catch (legacyError) {
             const legacyStatus = readHttpStatus(legacyError)
@@ -484,10 +505,10 @@ export function createApiListingsController(): ListingsController {
       assertApiEnabled('charger le brouillon de cette annonce')
 
       const [core, bookings, medias, arrival] = await Promise.all([
-        fetchRemoteAsOwner<RawCore>(resolveUrl(buildListingUrl('core', listingId))),
-        fetchRemoteAsOwner<RawBookings>(resolveUrl(buildListingUrl('bookings', listingId))),
-        fetchRemoteAsOwner<RawMedias>(resolveUrl(buildListingUrl('medias', listingId))),
-        fetchRemoteAsOwner<RawArrival>(resolveUrl(buildListingUrl('arrival', listingId))),
+        fetchListingSection<RawCore>('core', listingId, { asOwner: true }),
+        fetchListingSection<RawBookings>('bookings', listingId, { asOwner: true }),
+        fetchListingSection<RawMedias>('medias', listingId, { asOwner: true }),
+        fetchListingSection<RawArrival>('arrival', listingId, { asOwner: true }),
       ])
 
       return { core, bookings, medias, arrival }
@@ -497,10 +518,10 @@ export function createApiListingsController(): ListingsController {
       assertApiEnabled('charger les données de réservation')
 
       const [bookings, notes, comments, host] = await Promise.all([
-        fetchRemoteAsOwner<RawBookings>(resolveUrl(buildListingUrl('bookings', listingId))),
-        fetchRemote<RawNotes>(resolveUrl(buildListingUrl('notes', listingId))),
-        fetchRemote<RawComments>(resolveUrl(buildListingUrl('comments', listingId))),
-        fetchRemote<RawHost>(resolveUrl(buildListingUrl('host', listingId))),
+        fetchListingSection<RawBookings>('bookings', listingId, { asOwner: true }),
+        fetchListingSection<RawNotes>('notes', listingId),
+        fetchListingSection<RawComments>('comments', listingId),
+        fetchListingSection<RawHost>('host', listingId),
       ])
 
       return { bookings, notes, comments, host: host ?? getCanonicalHost() }
@@ -509,10 +530,13 @@ export function createApiListingsController(): ListingsController {
       console.log('[Domain][api] syncListingAvailability', { listingId })
       assertApiEnabled('synchroniser les disponibilites')
 
-      return postRemotePublic<ListingAvailabilitySyncResult>(
+      const result = await postRemotePublic<ListingAvailabilitySyncResult>(
         resolveUrl(buildListingAvailabilityRefreshUrl(listingId)),
         {},
       )
+      // Les jours importés changent la section `bookings`.
+      invalidateListingSections(listingId)
+      return result
     },
     patchListingDraft: async (listingId: string, patch: DraftPatch): Promise<void> => {
       console.log('[Domain][api] patchListingDraft', { listingId, patch })
@@ -546,7 +570,12 @@ export function createApiListingsController(): ListingsController {
       }
 
       if (requests.length) {
-        await Promise.all(requests)
+        try {
+          await Promise.all(requests)
+        } finally {
+          // Même en cas d'échec partiel, une section a pu être écrite : on ne garde rien de l'ancien état.
+          invalidateListing(listingId)
+        }
       }
     },
     publishListingDraft: async (listingId: string, draft: RawListingBundle): Promise<void> => {
@@ -581,7 +610,11 @@ export function createApiListingsController(): ListingsController {
       }
 
       if (requests.length) {
-        await Promise.all(requests)
+        try {
+          await Promise.all(requests)
+        } finally {
+          invalidateListing(listingId)
+        }
       }
     },
     createListing: async (payload?: Partial<RawListingBundle>, options?: { ownerId?: string | null }): Promise<{ listingId: string }> => {
@@ -591,7 +624,9 @@ export function createApiListingsController(): ListingsController {
       const url = resolveUrl(buildCreateListingUrl())
       // ownerId : un admin crée l'annonce au nom d'un client ; ignoré par l'API pour les autres rôles.
       const ownerId = options?.ownerId?.trim()
-      return postRemote<{ listingId: string }>(url, ownerId ? { ...(payload ?? {}), ownerId } : (payload ?? {}))
+      const created = await postRemote<{ listingId: string }>(url, ownerId ? { ...(payload ?? {}), ownerId } : (payload ?? {}))
+      invalidateListingLists()
+      return created
     },
   }
 }

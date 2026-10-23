@@ -478,8 +478,8 @@
       margin-top: var(--layout-gap-xs);
 
       > .input.action {
-        @include inputs.action($theme: accent, $compact: true);
         padding-right: 0.3rem;
+        @include inputs.action($theme: accent, $compact: true);
 
         > .action > * {
           width: auto;

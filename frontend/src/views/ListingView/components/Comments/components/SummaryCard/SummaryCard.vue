@@ -76,10 +76,15 @@ const importedScoreCards = computed(() => (
     <!-- <h3>{{ overallLabel }}</h3> -->
     <div class="summary-main">
       <h3 v-html="scoreLabel"></h3>
+      <span
+        v-if="hasScore"
+        class="sr-only"
+      >sur 5</span>
 
       <Star
         v-if="props.showStars !== false"
         :size="24"
+        aria-hidden="true"
       />
       <svg
         v-if="props.showStars !== false"
@@ -135,7 +140,11 @@ const importedScoreCards = computed(() => (
           class="score-value"
           v-html="score.scoreLabel"
         ></span>
-        <Star :size="16" />
+        <span class="sr-only">sur 5</span>
+        <Star
+          :size="16"
+          aria-hidden="true"
+        />
       </article>
     </div>
   </section>

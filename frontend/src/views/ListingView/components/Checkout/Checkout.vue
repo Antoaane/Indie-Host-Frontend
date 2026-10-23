@@ -2,12 +2,14 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { useUser } from '@clerk/vue'
 import {
   CalendarCheck,
   ChevronDown,
   ChevronLeft,
   Lock,
   MessageCircle,
+  ScrollText,
   ShieldCheck,
   Star,
   UserRound,
@@ -31,15 +33,20 @@ import {
 import {
   resolveCheckoutPaymentChoice,
   validateReservationAgainstRules,
-  type ListingCancellationPolicy,
 } from '@/domain/listings/reservationRules'
+import { describeCancellationPolicy, summarizeCancellationPolicy } from '@/domain/listings/cancellationPolicy'
 import {
   getStripePublishableKey,
   isStripeCheckoutOfflineModeEnabled,
   loadStripeClient,
 } from '@/domain/payments/stripeClient'
+import { sanitizeHtml } from '@/utils/sanitizeHtml'
 
 type ProgressSectionKey = 'information' | 'reminder' | 'final'
+
+// Au-delà de cette longueur, le règlement est replié derrière « Voir le règlement » avec un aperçu.
+const HOUSE_RULES_EXCERPT_LENGTH = 140
+const HOUSE_RULES_CONTENT_ID = 'checkout-house-rules-content'
 
 const ACCEPTED_PAYMENT_INTENT_STATUSES = new Set([
   'succeeded',
@@ -48,6 +55,10 @@ const ACCEPTED_PAYMENT_INTENT_STATUSES = new Set([
 ])
 const OFFLINE_CONNECTED_ACCOUNT_ID = 'acct_offline_demo'
 const OFFLINE_PAYMENT_INTENT_STATUS = 'succeeded'
+// Vérification volontairement simple : l'adresse reçoit la confirmation de réservation (support durable).
+const TRAVELER_EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
+const TRAVELER_EMAIL_HELP_ID = 'traveler-email-help'
+const TRAVELER_EMAIL_ERROR_ID = 'traveler-email-error'
 
 function normalizeIdentityToken(value: string): string {
   return value
@@ -89,6 +100,8 @@ const travelerMessage = ref('')
 const travelerFirstName = ref('')
 const travelerLastName = ref('')
 const travelerPhone = ref('')
+const travelerEmail = ref('')
+const hasTravelerEmailBlurred = ref(false)
 const paymentIntentError = ref<string | null>(null)
 const isPreparingPayment = ref(false)
 const isConfirmingPayment = ref(false)
@@ -235,6 +248,18 @@ const listingLocation = computed(() => {
   const title = props.listing.title
   return `${title.type} - ${title.location.city}, ${title.location.country}`
 })
+// Qualité du loueur (art. L111-7 Code de la consommation, CGV art. 3) : affichée seulement si l'hôte l'a déclarée.
+const hostLegalStatusLine = computed(() => {
+  const host = props.listing.hostProfile
+  if (host?.legalStatus === 'individual') return 'Vous réservez auprès d’un hôte particulier.'
+  if (host?.legalStatus === 'professional') {
+    const companyName = host.companyName?.trim()
+    return companyName
+      ? `Vous réservez auprès d’un hôte professionnel (${companyName}).`
+      : 'Vous réservez auprès d’un hôte professionnel.'
+  }
+  return ''
+})
 const listingRating = computed(() => props.listing.notes?.overall ?? props.listing.hostProfile?.globalNote ?? null)
 const listingImage = computed(() => {
   const images = props.listing.medias?.images ?? []
@@ -333,10 +358,33 @@ const isPaymentStepComplete = computed(() => (
 ))
 const shouldRevealPostPaymentSections = computed(() => isPaymentStepComplete.value)
 const canAccessInformationStep = computed(() => isPaymentStepComplete.value)
+// E-mail du voyageur : normalisé (trim + minuscules), pré-rempli depuis le compte Clerk s'il est vide.
+const normalizedTravelerEmail = computed(() => travelerEmail.value.trim().toLowerCase())
+const isTravelerEmailValid = computed(() => TRAVELER_EMAIL_PATTERN.test(normalizedTravelerEmail.value))
+// L'erreur n'apparaît qu'après une première sortie du champ, pour ne pas crier pendant la saisie.
+const travelerEmailError = computed(() => {
+  if (!hasTravelerEmailBlurred.value || isTravelerEmailValid.value) return null
+  return 'Saisissez une adresse e-mail valide.'
+})
+const travelerEmailDescribedBy = computed(() => (
+  travelerEmailError.value ? `${TRAVELER_EMAIL_HELP_ID} ${TRAVELER_EMAIL_ERROR_ID}` : TRAVELER_EMAIL_HELP_ID
+))
+
+const { user: clerkUser } = useUser()
+watch(
+  () => clerkUser.value?.primaryEmailAddress?.emailAddress ?? null,
+  (primaryEmail) => {
+    if (!primaryEmail || travelerEmail.value.trim()) return
+    travelerEmail.value = primaryEmail.trim().toLowerCase()
+  },
+  { immediate: true },
+)
+
 const isInformationStepComplete = computed(() => Boolean(
   travelerFirstName.value.trim() &&
   travelerLastName.value.trim() &&
-  travelerPhone.value.trim(),
+  travelerPhone.value.trim() &&
+  isTravelerEmailValid.value,
 ))
 const canAccessReminderStep = computed(() => canAccessInformationStep.value && isInformationStepComplete.value)
 const canAccessFinalStep = computed(() => canAccessReminderStep.value && hasAcknowledgedReminder.value)
@@ -356,40 +404,33 @@ const canSubmit = computed(() =>
   !paymentIntentError.value,
 )
 
-const CANCELLATION_POLICY_LABELS: Record<ListingCancellationPolicy, string> = {
-  flexible: 'flexible',
-  moderate: 'modérée',
-  strict: 'stricte',
-  custom: 'personnalisée',
-}
-
-// Information précontractuelle : le barème appliqué par l'API à l'annulation, annoncé avant le paiement.
+// Information précontractuelle : le barème appliqué par l'API à l'annulation, annoncé avant le paiement
+// (phrases et libellés partagés avec l'éditeur : domain/listings/cancellationPolicy.ts).
 const cancellationRules = computed(() => props.listing.bookings.rules.cancellation)
-const cancellationPolicyLabel = computed(() => (cancellationRules.value.refundsEnabled
-  ? `politique ${CANCELLATION_POLICY_LABELS[cancellationRules.value.policy]}`
-  : 'réservation non remboursable'))
-const cancellationRuleLines = computed(() => {
-  const { refundsEnabled, fullRefundDays, feePercent, lateFeePercent } = cancellationRules.value
-  if (!refundsEnabled) {
-    return [
-      'L\'hôte n\'accepte pas de remboursement : en cas d\'annulation de votre part, les sommes versées ne sont pas remboursées.',
-      'Si l\'hôte annule le séjour, vous êtes remboursé intégralement.',
-    ]
-  }
+const cancellationPolicyLabel = computed(() => summarizeCancellationPolicy(cancellationRules.value))
+const cancellationRuleLines = computed(() => describeCancellationPolicy(cancellationRules.value))
 
-  const lines = fullRefundDays > 1
-    ? [
-        `Remboursement intégral jusqu'à ${fullRefundDays} jours avant l'arrivée.`,
-        `Ensuite, ${feePercent} % des sommes versées sont retenus.`,
-      ]
-    : ['Remboursement intégral jusqu\'à 24 h avant l\'arrivée.']
-
-  return [
-    ...lines,
-    `À moins de 24 h de l'arrivée, ${lateFeePercent} % sont retenus.`,
-    'À partir du jour d\'arrivée, l\'annulation en ligne n\'est plus possible.',
-  ]
+// Règlement intérieur de l'hôte (`arrival.practical.rules`, HTML Quill) : information précontractuelle,
+// lue avant le paiement. La case de l'étape 4 (`hasAcknowledgedReminder`) conditionne déjà l'étape 5 et
+// le bouton de paiement : quand un règlement existe, c'est lui que le voyageur accepte.
+const houseRules = computed(() => props.listing.houseRules)
+const hasHouseRules = computed(() => Boolean(houseRules.value.text))
+const houseRulesHtml = computed(() => (hasHouseRules.value ? sanitizeHtml(houseRules.value.html) : ''))
+const isHouseRulesShort = computed(() => houseRules.value.text.length <= HOUSE_RULES_EXCERPT_LENGTH)
+const houseRulesExcerpt = computed(() => {
+  const text = houseRules.value.text
+  if (text.length <= HOUSE_RULES_EXCERPT_LENGTH) return text
+  const cut = text.slice(0, HOUSE_RULES_EXCERPT_LENGTH)
+  const lastSpace = cut.lastIndexOf(' ')
+  return `${(lastSpace > HOUSE_RULES_EXCERPT_LENGTH / 2 ? cut.slice(0, lastSpace) : cut).trimEnd()}…`
 })
+const isHouseRulesExpanded = ref(false)
+const showHouseRulesContent = computed(() => isHouseRulesShort.value || isHouseRulesExpanded.value)
+const houseRulesContentId = HOUSE_RULES_CONTENT_ID
+
+function toggleHouseRules() {
+  isHouseRulesExpanded.value = !isHouseRulesExpanded.value
+}
 
 const submitLabel = computed(() => {
   if (reservationError.value) return 'Réservation invalide'
@@ -630,6 +671,7 @@ async function confirmCheckout() {
           firstName: travelerFirstName.value.trim(),
           lastName: travelerLastName.value.trim(),
           phone: travelerPhone.value.trim(),
+          email: normalizedTravelerEmail.value,
         },
         cardholder: {
           firstName: cardholderFirstName.value.trim(),
@@ -693,6 +735,7 @@ async function confirmCheckout() {
         firstName: travelerFirstName.value.trim(),
         lastName: travelerLastName.value.trim(),
         phone: travelerPhone.value.trim(),
+        email: normalizedTravelerEmail.value,
       },
       cardholder: {
         firstName: cardholderFirstName.value.trim(),
@@ -821,8 +864,11 @@ onBeforeUnmount(() => {
           v-if="listingRating"
           class="rating"
         >
-          <Star :size="14" />
-          <span>{{ listingRating.toFixed(2) }}</span>
+          <Star
+            :size="14"
+            aria-hidden="true"
+          />
+          <span>{{ listingRating.toFixed(2) }}<span class="sr-only"> sur 5</span></span>
         </div>
       </div>
     </div>
@@ -1184,6 +1230,37 @@ onBeforeUnmount(() => {
               />
               <p class="field-help">Pour vous transmettre des informations complémentaires si besoin.</p>
             </div>
+            <div class="email-input-field">
+              <label for="traveler-email">Adresse e-mail</label>
+              <input
+                id="traveler-email"
+                v-model="travelerEmail"
+                :disabled="!canAccessInformationStep"
+                type="email"
+                inputmode="email"
+                autocomplete="email"
+                required
+                autocapitalize="off"
+                spellcheck="false"
+                placeholder="Ex : antoine.dupont@exemple.fr"
+                :aria-invalid="travelerEmailError ? 'true' : undefined"
+                :aria-describedby="travelerEmailDescribedBy"
+                @blur="hasTravelerEmailBlurred = true"
+              />
+              <p
+                :id="TRAVELER_EMAIL_HELP_ID"
+                class="field-help"
+              >
+                Votre confirmation de réservation et le lien du guide d'arrivée y seront envoyés.
+              </p>
+              <p
+                :id="TRAVELER_EMAIL_ERROR_ID"
+                class="field-error"
+                aria-live="polite"
+              >
+                {{ travelerEmailError ?? '' }}
+              </p>
+            </div>
           </div>
         </div>
       </transition>
@@ -1211,12 +1288,19 @@ onBeforeUnmount(() => {
           >
             {{ canAccessFinalStep ? '✓' : '4' }}
           </span>
-          <MessageCircle
+          <ScrollText
+            v-if="hasHouseRules"
             :size="16"
             class="section-title-icon"
             aria-hidden="true"
           />
-          <span class="section-title-label">Un petit rappel</span>
+          <MessageCircle
+            v-else
+            :size="16"
+            class="section-title-icon"
+            aria-hidden="true"
+          />
+          <span class="section-title-label">{{ hasHouseRules ? 'Règlement intérieur' : 'Un petit rappel' }}</span>
           <ChevronDown
             :size="16"
             class="progress-step-chevron"
@@ -1230,19 +1314,75 @@ onBeforeUnmount(() => {
           class="progress-section-body"
           :class="{ 'is-disabled': !canAccessReminderStep }"
         >
-          <p class="section-text">
-            Votre hôte a mis tout son coeur pour que vous passiez un bon moment. De votre côté, un petit geste :
-            <strong>veillez à prendre soin du lieu et respectez les consignes.</strong>
-            De cette façon, l'expérience reste top pour tout le monde.
-          </p>
-          <label class="progress-check-field">
-            <input
-              v-model="hasAcknowledgedReminder"
-              :disabled="!canAccessReminderStep"
-              type="checkbox"
-            />
-            <span>J'ai lu ce rappel et je m'engage à respecter les consignes.</span>
-          </label>
+          <template v-if="hasHouseRules">
+            <p class="section-text">
+              Votre hôte a fixé un règlement intérieur pour son logement.
+              <strong>Lisez-le avant de payer :</strong> en réservant, vous vous engagez à le respecter.
+            </p>
+            <div
+              class="house-rules"
+              :class="{ 'is-expanded': showHouseRulesContent }"
+            >
+              <p class="house-rules-title">Règlement intérieur de l'hôte</p>
+              <p
+                v-if="!showHouseRulesContent"
+                class="house-rules-excerpt"
+              >
+                {{ houseRulesExcerpt }}
+              </p>
+              <div
+                :id="houseRulesContentId"
+                class="house-rules-content"
+                :aria-hidden="!showHouseRulesContent"
+              >
+                <div class="house-rules-content-inner">
+                  <div
+                    class="house-rules-html"
+                    v-html="houseRulesHtml"
+                  />
+                </div>
+              </div>
+              <button
+                v-if="!isHouseRulesShort"
+                type="button"
+                class="house-rules-toggle"
+                :aria-expanded="isHouseRulesExpanded"
+                :aria-controls="houseRulesContentId"
+                @click="toggleHouseRules"
+              >
+                <span>{{ isHouseRulesExpanded ? 'Masquer le règlement' : 'Voir le règlement' }}</span>
+                <ChevronDown
+                  :size="16"
+                  class="house-rules-chevron"
+                  :class="{ 'is-open': isHouseRulesExpanded }"
+                  aria-hidden="true"
+                />
+              </button>
+            </div>
+            <label class="progress-check-field">
+              <input
+                v-model="hasAcknowledgedReminder"
+                :disabled="!canAccessReminderStep"
+                type="checkbox"
+              />
+              <span>J'ai lu le règlement intérieur de l'hôte et je m'engage à le respecter.</span>
+            </label>
+          </template>
+          <template v-else>
+            <p class="section-text">
+              Votre hôte a mis tout son coeur pour que vous passiez un bon moment. De votre côté, un petit geste :
+              <strong>veillez à prendre soin du lieu et respectez les consignes.</strong>
+              De cette façon, l'expérience reste top pour tout le monde.
+            </p>
+            <label class="progress-check-field">
+              <input
+                v-model="hasAcknowledgedReminder"
+                :disabled="!canAccessReminderStep"
+                type="checkbox"
+              />
+              <span>J'ai lu ce rappel et je m'engage à respecter les consignes.</span>
+            </label>
+          </template>
         </div>
       </transition>
     </section>
@@ -1287,6 +1427,12 @@ onBeforeUnmount(() => {
           class="progress-section-body"
           :class="{ 'is-disabled': !canAccessFinalStep }"
         >
+          <p
+            v-if="hostLegalStatusLine"
+            class="section-text host-legal-status"
+          >
+            {{ hostLegalStatusLine }}
+          </p>
           <div class="cancellation-summary">
             <p class="cancellation-summary-title">
               Conditions d'annulation de l'hôte ({{ cancellationPolicyLabel }})
@@ -1304,7 +1450,7 @@ onBeforeUnmount(() => {
             Vous concluez le contrat de location directement avec l'hôte, qui reste responsable du logement et du séjour. IndieHost fournit la page de réservation et le paiement en ligne. Une réservation pour des dates déterminées n'ouvre pas droit à rétractation.
           </p>
           <p class="section-text">
-            En cliquant sur le bouton ci-dessous, j'accepte les conditions d'annulation de l'hôte et les
+            En cliquant sur le bouton ci-dessous, j'accepte les conditions d'annulation de l'hôte<template v-if="hasHouseRules">, son règlement intérieur</template> et les
             <a
               class="link"
               href="/legal/cgu-voyageurs"

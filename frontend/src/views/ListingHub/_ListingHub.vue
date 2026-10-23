@@ -7,6 +7,7 @@ import { MapPin, Users } from 'lucide-vue-next'
 
 import { fetchHubChildrenPublic, type ListingHubChildCard } from '@/domain/api/listingHubs'
 import type { RawListingBundle } from '@/domain/listings/types'
+import LegalLinksCompact from '@/components/layouts/LegalLinksCompact.vue'
 
 const props = defineProps<{
   rawListing: RawListingBundle
@@ -181,6 +182,8 @@ onMounted(() => { void loadChildren() })
         </li>
       </ul>
     </section>
+
+    <LegalLinksCompact />
   </article>
 </template>
 
