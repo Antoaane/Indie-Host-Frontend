@@ -185,15 +185,27 @@ export async function setListingParent(listingId: string, parentListingId: strin
   }
 }
 
-/** Logements en ligne d'une page principale (page publique, sans authentification). */
-export async function fetchHubChildrenPublic(hubId: string): Promise<ListingHubChildCard[]> {
+export type ListingHubPublicPage = {
+  /** Logements en ligne, affichés sur la page. */
+  children: ListingHubChildCard[]
+  /** Lieu (mer ou terres) de tous les logements rattachés, en pause compris : sert au thème d'office. */
+  placeSettings: PlaceSetting[]
+}
+
+/** Logements en ligne d'une page principale et lieu de ses logements (page publique, sans authentification). */
+export async function fetchHubPublicPage(hubId: string): Promise<ListingHubPublicPage> {
   const axios = await getAxios()
   try {
-    const { data } = await axios.get<{ children?: Array<Record<string, unknown>> }>(buildUrl(`/listings/${encodeURIComponent(hubId.trim())}/children`), {
+    const { data } = await axios.get<{ children?: Array<Record<string, unknown>>; placeSettings?: unknown[] }>(buildUrl(`/listings/${encodeURIComponent(hubId.trim())}/children`), {
       withCredentials: false,
       timeout: API_REQUEST_TIMEOUT_MS,
     })
-    return (Array.isArray(data?.children) ? data.children : []).map((child) => normalizeChildCard(child))
+    return {
+      children: (Array.isArray(data?.children) ? data.children : []).map((child) => normalizeChildCard(child)),
+      placeSettings: (Array.isArray(data?.placeSettings) ? data.placeSettings : [])
+        .map((setting) => toPlaceSetting(setting))
+        .filter((setting): setting is PlaceSetting => setting !== null),
+    }
   } catch (error) {
     throw new Error(toApiErrorMessage(error, 'Impossible de charger les logements.'))
   }

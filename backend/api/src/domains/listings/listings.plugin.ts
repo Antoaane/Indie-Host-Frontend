@@ -235,7 +235,8 @@ export const listingsPlugin = fp(async (fastify) => {
       return;
     }
 
-    reply.send({ children });
+    // `placeSettings` : lieu des logements rattachés, en pause compris, pour le thème d'office de la page.
+    reply.send({ children, placeSettings: await service.listHubPlaceSettings(params.listingId) });
   });
 
   fastify.get('/listings/:listingId/children/manage', {

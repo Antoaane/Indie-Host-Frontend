@@ -1523,6 +1523,22 @@ export class ListingsService {
    * Logements rattachés à une page principale.
    * `publicOnly` : uniquement les annonces en ligne (page publique) ; sinon toutes sauf supprimées (éditeur).
    */
+  /**
+   * Cadre (mer ou terres) de chaque logement rattaché à une page principale, pour son thème d'office.
+   * Les logements en pause comptent aussi : la page ne doit pas changer d'allure quand un logement
+   * est mis en pause. Les brouillons et les annonces supprimées ne comptent pas.
+   */
+  async listHubPlaceSettings(hubId: string): Promise<PlaceSetting[]> {
+    const children = await this.prisma.listing.findMany({
+      where: { parentListingId: hubId, status: { in: ['published', 'paused', 'blocked'] } },
+      select: { core: true },
+    });
+
+    return children
+      .map((child) => resolvePlaceSetting(asObject(child.core)))
+      .filter((setting): setting is PlaceSetting => setting !== null);
+  }
+
   async listHubChildren(args: { hubId: string; auth: RequestAuth | null; publicOnly: boolean }) {
     const hub = await this.prisma.listing.findUnique({
       where: { id: args.hubId },

@@ -1,11 +1,12 @@
 <!-- File: src/views/ListingHub/_ListingHub.vue -->
+
 <!-- Page principale d'un hôte : son domaine présente tous ses logements rattachés. -->
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { MapPin, Users } from 'lucide-vue-next'
 
-import { fetchHubChildrenPublic, type ListingHubChildCard } from '@/domain/api/listingHubs'
+import { fetchHubPublicPage, type ListingHubChildCard } from '@/domain/api/listingHubs'
 import type { RawListingBundle } from '@/domain/listings/types'
 import LegalLinksCompact from '@/components/layouts/LegalLinksCompact.vue'
 
@@ -54,7 +55,7 @@ async function loadChildren() {
   isLoading.value = true
   loadError.value = null
   try {
-    children.value = await fetchHubChildrenPublic(hubId.value)
+    children.value = (await fetchHubPublicPage(hubId.value)).children
   } catch (error) {
     loadError.value = error instanceof Error ? error.message : 'Impossible de charger les logements.'
   } finally {
