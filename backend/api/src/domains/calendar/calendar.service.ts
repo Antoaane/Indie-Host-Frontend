@@ -1,7 +1,10 @@
 import type { CalendarSync, PrismaClient } from '@prisma/client';
 import ical from 'ical-generator';
 import { ICalCalendarMethod, ICalEventStatus } from 'ical-generator';
-import * as nodeIcal from 'node-ical';
+// node-ical est un paquet CommonJS : depuis un module ES, `import * as` n'expose pas ses fonctions
+// (« nodeIcal.parseICS is not a function » sur l'API compilée). Passer par l'export par défaut.
+import nodeIcal from 'node-ical';
+import type { VEvent } from 'node-ical';
 
 import { env } from '../../config/env.js';
 import { asObject } from '../../lib/json.js';
@@ -435,7 +438,7 @@ export class CalendarService {
   }
 
   private async replaceSyncEvents(listingId: string, syncId: string, sourceIcal: string): Promise<ReplaceSyncEventsResult> {
-    const parsed = nodeIcal.parseICS(sourceIcal);
+    const parsed = nodeIcal.sync.parseICS(sourceIcal);
 
     const previousEvents = await this.prisma.calendarEvent.findMany({
       where: {
@@ -465,7 +468,7 @@ export class CalendarService {
       if (!value || typeof value !== 'object') continue;
       if ((value as { type?: string }).type !== 'VEVENT') continue;
 
-      const event = value as nodeIcal.VEvent;
+      const event = value as VEvent;
       const startDate = safeDate(event.start);
       const rawEndDate = safeDate(event.end);
       if (!startDate || !rawEndDate) continue;
