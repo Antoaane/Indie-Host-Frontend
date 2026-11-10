@@ -82,6 +82,21 @@ export const calendarPlugin = fp(async (fastify) => {
     });
   });
 
+  fastify.delete('/calendar/listings/:listingId/sources/:syncId', {
+    preHandler: fastify.authenticate,
+  }, async (request, reply) => {
+    const { listingId, syncId } = syncParamsSchema.parse(request.params);
+    if (!await ensureListingOwner(request, reply, listingId)) return;
+
+    const result = await service.deleteCalendarSource(listingId, syncId);
+    if (!result) {
+      reply.code(404).send({ message: 'Sync source not found.' });
+      return;
+    }
+
+    reply.send(result);
+  });
+
   fastify.post('/calendar/listings/:listingId/sources/:syncId/sync', {
     preHandler: fastify.authenticate,
   }, async (request, reply) => {

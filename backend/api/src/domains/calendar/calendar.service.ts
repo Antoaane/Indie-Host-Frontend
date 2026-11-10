@@ -170,6 +170,12 @@ function toIcalStatus(status?: string | null): ICalEventStatus {
 }
 
 function normalizeErrorMessage(error: unknown): string {
+  // Contrainte unique (listingId, externalUid, source) : les mêmes réservations sont déjà importées
+  // par une autre source de l'annonce (typiquement un ancien et un nouveau lien du même calendrier).
+  if (error && typeof error === 'object' && (error as { code?: unknown }).code === 'P2002') {
+    return 'Ce calendrier est déjà importé par une autre source de ce logement. Supprimez l’une des deux sources.';
+  }
+
   if (error instanceof Error) {
     const message = error.message.trim();
     if (message) return message.slice(0, 500);
@@ -897,6 +903,30 @@ export class CalendarService {
       skippedSources: outcomes.filter((item) => item.status === 'skipped').length,
       sources: outcomes,
     };
+  }
+
+  /**
+   * Supprime une source iCal et les jours qu'elle bloquait. Les événements doivent être retirés à la
+   * main : la relation `CalendarEvent.calendarSync` est en `onDelete: SetNull`, ils resteraient sinon
+   * en base, détachés, et continueraient de bloquer le calendrier.
+   */
+  async deleteCalendarSource(listingId: string, syncId: string) {
+    const sync = await this.prisma.calendarSync.findFirst({
+      where: { id: syncId, listingId },
+      select: { id: true },
+    });
+
+    if (!sync) return null;
+
+    await this.prisma.$transaction([
+      this.prisma.calendarEvent.deleteMany({
+        where: { listingId, calendarSyncId: syncId, source: EXTERNAL_SOURCE },
+      }),
+      this.prisma.calendarSync.delete({ where: { id: syncId } }),
+    ]);
+
+    const availabilityUpdated = await this.rebuildListingBookedDaysFromCalendarEvents(listingId);
+    return { syncId, availabilityUpdated };
   }
 
   async listCalendarSyncSources(listingId: string) {

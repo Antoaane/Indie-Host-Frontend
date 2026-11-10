@@ -3,8 +3,10 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 
+import ConfirmationDialog from '@/components/overlays/ConfirmationDialog.vue'
 import {
   buildListingCalendarExportUrl,
+  deleteListingCalendarSource,
   fetchListingCalendarSyncSources,
   importListingCalendarSource,
   isListingCalendarApiConfigured,
@@ -26,6 +28,14 @@ const sources = ref<ListingCalendarSyncSource[]>([])
 const isLoadingSources = ref(false)
 const isImporting = ref(false)
 const refreshingSyncId = ref<string | null>(null)
+const deletingSyncId = ref<string | null>(null)
+const pendingDeleteSource = ref<ListingCalendarSyncSource | null>(null)
+const isSourceBusy = computed(() => Boolean(refreshingSyncId.value || deletingSyncId.value))
+
+const deleteConfirmMessage = computed(() => panelContent.sources.deleteConfirmMessage.replace(
+  '{name}',
+  pendingDeleteSource.value?.name || panelContent.sources.defaultName,
+))
 
 const errorMessage = ref<string | null>(null)
 const successMessage = ref<string | null>(null)
@@ -142,8 +152,40 @@ async function addIcalSource() {
   }
 }
 
+function askDeleteSource(source: ListingCalendarSyncSource) {
+  if (isSourceBusy.value) return
+  pendingDeleteSource.value = source
+}
+
+function closeDeleteDialog() {
+  pendingDeleteSource.value = null
+}
+
+async function confirmDeleteSource() {
+  const source = pendingDeleteSource.value
+  pendingDeleteSource.value = null
+  if (!source?.id || isSourceBusy.value) return
+
+  resetFeedback()
+  deletingSyncId.value = source.id
+
+  try {
+    await deleteListingCalendarSource({
+      listingId: props.listingId,
+      syncId: source.id,
+    })
+    sources.value = sources.value.filter((item) => item.id !== source.id)
+    successMessage.value = panelContent.sources.deleteSuccess
+    await loadSources()
+  } catch (error) {
+    errorMessage.value = normalizeErrorMessage(error, panelContent.sources.deleteError)
+  } finally {
+    deletingSyncId.value = null
+  }
+}
+
 async function refreshSource(syncId: string) {
-  if (!syncId || refreshingSyncId.value) return
+  if (!syncId || isSourceBusy.value) return
 
   resetFeedback()
 
@@ -358,10 +400,20 @@ onMounted(() => {
               <div class="manage">
                 <button
                   type="button"
-                  :disabled="Boolean(refreshingSyncId)"
+                  :disabled="isSourceBusy"
                   @click="refreshSource(source.id)"
                 >
                   {{ refreshingSyncId === source.id ? panelContent.sources.syncing : panelContent.sources.syncCta }}
+                </button>
+              </div>
+
+              <div class="danger">
+                <button
+                  type="button"
+                  :disabled="isSourceBusy"
+                  @click="askDeleteSource(source)"
+                >
+                  {{ deletingSyncId === source.id ? panelContent.sources.deleting : panelContent.sources.deleteCta }}
                 </button>
               </div>
             </div>
@@ -382,6 +434,17 @@ onMounted(() => {
         {{ errorMessage }}
       </p>
     </div>
+
+    <ConfirmationDialog
+      :open="Boolean(pendingDeleteSource)"
+      :title="panelContent.sources.deleteConfirmTitle"
+      :message="deleteConfirmMessage"
+      :confirm-label="panelContent.sources.deleteConfirmCta"
+      :cancel-label="panelContent.sources.deleteCancelCta"
+      @close="closeDeleteDialog"
+      @cancel="closeDeleteDialog"
+      @confirm="confirmDeleteSource"
+    />
   </section>
 </template>
 
@@ -480,6 +543,35 @@ onMounted(() => {
             margin: 0;
             @include little-text($thin: false);
             color: $bad-ink;
+          }
+
+          // Les boutons de chaque source n'étaient pas stylés (bouton natif du navigateur).
+          > .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--layout-gap-xs);
+            margin-top: calc(var(--layout-gap-xs) / 2);
+
+            > .manage,
+            > .danger {
+              flex: 1 1 10rem;
+              @include buttons.primary($theme: white, $fullwidth: true, $little: true);
+            }
+
+            // Action destructive signalée en rouge dès le repos : le survol n'existe pas au doigt.
+            > .danger {
+              > * {
+                color: $bad-ink;
+                outline-color: rgba($bad-ink, 0.25);
+              }
+
+              @include on-hover {
+                > * {
+                  color: $accent !important;
+                  background-color: $bad-ink !important;
+                }
+              }
+            }
           }
         }
       }

@@ -185,6 +185,26 @@ export async function importListingCalendarSource(input: {
   return normalizeSyncResult(data)
 }
 
+export async function deleteListingCalendarSource(input: {
+  listingId: string
+  syncId: string
+}): Promise<void> {
+  const listingId = input.listingId.trim()
+  const syncId = input.syncId.trim()
+
+  const axios = await getAxios()
+  await axios.delete(
+    resolveUrl(joinUrl(BASE_API_URL, `/calendar/listings/${encodeSegment(listingId)}/sources/${encodeSegment(syncId)}`)),
+    {
+      withCredentials: false,
+      headers: await buildAuthHeaders(),
+    },
+  )
+
+  // Les jours que bloquait la source sont retirés de la section `bookings`.
+  invalidateListingSections(listingId)
+}
+
 export async function syncListingCalendarSource(input: {
   listingId: string
   syncId: string
