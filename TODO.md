@@ -104,6 +104,8 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ### Produit et technique
 
+- [ ] Scraping : épingler les versions de `backend/microservices/microservice-scraping-py/requirements.txt` (toutes en `>=`, donc une reconstruction sans cache prend les dernières versions). Le 2026-11-10, Playwright 1.65 a cassé le build de l’image en production (`libatomic.so.1` manquante). `libatomic1` est ajoutée au Dockerfile (`9af9903`) : l’erreur est reproduite puis corrigée dans un conteneur, mais le build complet de l’image n’a pas été mené au bout (arrêté à la demande de Nathan, scraping jugé non prioritaire). En attendant, ne pas reconstruire `scraping` au déploiement (`docker compose build migrate api frontend && docker compose up -d --wait`).
+
 - [ ] Webhook Stripe `account.updated` des comptes connectés : mettre à jour l’état du compte de l’hôte dès que Stripe a fini sa vérification, et lui envoyer un e-mail « vos paiements sont activés ». Aujourd’hui l’état n’est relu qu’à l’ouverture de l’éditeur ou de la page d’activation (`refreshPendingConnectState`, `payments.service.ts`). Fichier : `payments.webhooks.ts`.
 
 - [ ] (après votre accord) Ajouter un SPF et un DMARC à la racine `indiehost.fr` dans Cloudflare. Les e-mails Google Workspace (contact@, dev@) n’ont ni l’un ni l’autre, ce qui les expose au classement en spam. Valeurs : `v=spf1 include:_spf.google.com ~all`, et `v=DMARC1; p=none` sur `_dmarc`. Constaté le 2026-10-23 en préparant Brevo.
