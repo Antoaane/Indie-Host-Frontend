@@ -4,4 +4,4 @@ export const arrivalListingParamsSchema = z.object({
   listingId: z.string().min(1),
 });
 
-export const patchArrivalSchema = z.record(z.any());
+export const patchArrivalSchema = z.record(z.string(), z.any());

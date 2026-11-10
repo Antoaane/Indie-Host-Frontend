@@ -23,5 +23,5 @@ export const updateMeSchema = z.object({
   lastName: z.string().trim().min(1).max(120).optional(),
   displayName: z.string().trim().min(1).max(120).optional(),
   avatarUrl: z.string().url().optional(),
-  hostProfile: z.record(z.any()).optional(),
+  hostProfile: z.record(z.string(), z.any()).optional(),
 });

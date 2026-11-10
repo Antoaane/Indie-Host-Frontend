@@ -37,14 +37,14 @@
     "ical-generator": "^9.0.0",
     "jose": "^6.0.11",
     "node-ical": "^0.26.0",
-    "nodemailer": "^7.0.13",
+    "nodemailer": "^10.5.0",
     "sanitize-html": "^2.18.1",
     "stripe": "^17.7.0",
-    "zod": "^3.24.2"
+    "world-atlas": "^2.0.2",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/node": "^22.13.13",
-    "@types/nodemailer": "^7.0.12",
     "prisma": "^6.6.0",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2"

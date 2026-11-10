@@ -24,8 +24,8 @@ const reservationSchema = z.object({
     animals: z.coerce.number().int().nonnegative().optional(),
     pmr: z.coerce.number().int().nonnegative().optional(),
   }).optional(),
-  fees: z.array(z.record(z.any())).optional(),
-  pricing: z.record(z.any()).optional(),
+  fees: z.array(z.record(z.string(), z.any())).optional(),
+  pricing: z.record(z.string(), z.any()).optional(),
 });
 
 const paymentSchema = z.object({
@@ -43,7 +43,7 @@ export const createPaymentIntentSchema = z.object({
   currency: z.string().trim().default('eur'),
   reservation: reservationSchema,
   payment: paymentSchema,
-  metadata: z.record(z.string()).optional(),
+  metadata: z.record(z.string(), z.string()).optional(),
 });
 
 export const createConnectOnboardingLinkSchema = z.object({

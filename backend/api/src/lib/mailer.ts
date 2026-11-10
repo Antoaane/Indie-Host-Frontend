@@ -57,7 +57,10 @@ export function resolvePublicBaseUrl(preferred?: string | null): string {
 
 function createTransporter(): Transporter {
   if (env.SMTP_URL) {
-    return nodemailer.createTransport(env.SMTP_URL, {
+    // L'URL passe dans les options : le second argument de `createTransport` porte les valeurs par
+    // défaut des messages, pas celles de la connexion (les délais y étaient ignorés).
+    return nodemailer.createTransport({
+      url: env.SMTP_URL,
       connectionTimeout: SEND_TIMEOUT_MS,
       greetingTimeout: SEND_TIMEOUT_MS,
       socketTimeout: SEND_TIMEOUT_MS,

@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import { LISTING_RESOURCES } from './listings.constants.js';
 
-const rawJsonSchema = z.record(z.any());
+const rawJsonSchema = z.record(z.string(), z.any());
 const nullableRawJsonSchema = rawJsonSchema.nullable();
 const subdomainSlugSchema = z.string().trim().toLowerCase()
   .min(3)

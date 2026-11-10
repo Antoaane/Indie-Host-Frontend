@@ -14,8 +14,8 @@ const paymentSchema = z.object({
   balance: z.coerce.number().nonnegative().default(0),
   status: z.string().trim().min(1).default('pending'),
   method: z.string().trim().min(1).default('Carte'),
-  manual: z.record(z.any()).optional(),
-  stripe: z.record(z.any()).optional(),
+  manual: z.record(z.string(), z.any()).optional(),
+  stripe: z.record(z.string(), z.any()).optional(),
 });
 
 export const listingBookingsParamsSchema = z.object({
@@ -34,9 +34,9 @@ export const createBookingSchema = z.object({
   internalNote: z.string().optional(),
   guests: guestsSchema,
   payment: paymentSchema,
-  contact: z.record(z.any()).optional(),
+  contact: z.record(z.string(), z.any()).optional(),
   createdAt: z.string().optional(),
-  messaging: z.record(z.any()).optional(),
+  messaging: z.record(z.string(), z.any()).optional(),
 });
 
 export const updateBookingParamsSchema = z.object({
@@ -45,7 +45,7 @@ export const updateBookingParamsSchema = z.object({
 
 export const updateBookingSchema = z.object({
   listingId: z.string().trim().min(1),
-  patch: z.record(z.any()),
+  patch: z.record(z.string(), z.any()),
 });
 
 export const bookingConfirmationParamsSchema = z.object({
