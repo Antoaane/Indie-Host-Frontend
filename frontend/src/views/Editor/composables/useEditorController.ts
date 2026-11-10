@@ -37,8 +37,6 @@ export function useEditorController(options: EditorControllerOptions) {
   const selectionToken = ref(0)
   const sourceToken = ref(0)
   const isStripeConnectPublishLocked = ref(false)
-  // Inscription Stripe terminée, vérification en cours chez Stripe : la carte ne dit plus « Configurer mon compte ».
-  const isStripeConnectUnderReview = ref(false)
   const domainRevision = ref(0)
 
   const listingState = useEditorListingState({
@@ -75,22 +73,24 @@ export function useEditorController(options: EditorControllerOptions) {
   })
 
   function isStripeConnectConfiguredFromBillingState(input: Awaited<ReturnType<typeof fetchMyStripeSubscriptionState>>): boolean {
+    // Une inscription Stripe terminée suffit : l'annonce n'est plus verrouillée pendant que Stripe
+    // vérifie les pièces de l'hôte (`paymentsUnderReview`, état `verifying`).
     const readiness = input.publicationReadiness
     if (readiness) {
       return Boolean(
         readiness.hasConnectAccount
         && readiness.connectOnboardingCompleted
-        && readiness.chargesEnabled
-        && readiness.payoutsEnabled,
+        && ((readiness.chargesEnabled && readiness.payoutsEnabled) || readiness.paymentsUnderReview),
       )
     }
 
     const connect = input.connect
+    if (!connect?.accountId) return false
+    if (connect.onboardingStatus === 'verifying') return true
     return Boolean(
-      connect?.accountId
-      && connect?.onboardingStatus === 'completed'
-      && connect?.chargesEnabled
-      && connect?.payoutsEnabled,
+      connect.onboardingStatus === 'completed'
+      && connect.chargesEnabled
+      && connect.payoutsEnabled,
     )
   }
 
@@ -98,7 +98,6 @@ export function useEditorController(options: EditorControllerOptions) {
     try {
       const billingState = await fetchMyStripeSubscriptionState({ sync })
       isStripeConnectPublishLocked.value = !isStripeConnectConfiguredFromBillingState(billingState)
-      isStripeConnectUnderReview.value = isStripeConnectPublishLocked.value && billingState.connect?.onboardingStatus === 'verifying'
       return billingState
     } catch (error) {
       console.warn('[Editor] failed to refresh stripe connect publication lock state', { error })
@@ -520,7 +519,6 @@ export function useEditorController(options: EditorControllerOptions) {
     selectedListingId,
     selectedListingHasPendingChanges,
     isStripeConnectPublishLocked,
-    isStripeConnectUnderReview,
     showListings,
     showPreview,
     stage,

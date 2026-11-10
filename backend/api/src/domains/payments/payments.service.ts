@@ -185,6 +185,8 @@ type PublicationReadiness = {
   connectOnboardingCompleted: boolean;
   chargesEnabled: boolean;
   payoutsEnabled: boolean;
+  /** Inscription Stripe terminée, vérification en cours : publication permise, paiement en ligne pas encore ouvert. */
+  paymentsUnderReview: boolean;
   missingRequirements: string[];
 };
 
@@ -1205,6 +1207,7 @@ export class PaymentsService {
         connectOnboardingCompleted: true,
         chargesEnabled: true,
         payoutsEnabled: true,
+        paymentsUnderReview: false,
         missingRequirements: [],
       };
     }
@@ -1213,7 +1216,11 @@ export class PaymentsService {
     const connect = this.readConnectState(user);
     const hasActiveSubscription = this.hasPublicationEligibleSubscription(billing.status);
     const hasConnectAccount = Boolean(connect.accountId);
-    const connectOnboardingCompleted = connect.onboardingStatus === 'completed';
+    // Inscription Stripe terminée, vérification en cours chez Stripe : l'hôte peut publier sans
+    // attendre (décision du 2026-11-10). Le paiement en ligne, lui, ne s'ouvre qu'à la fin de la
+    // vérification : c'est Stripe qui le refuse d'ici là (voir createPaymentIntent).
+    const paymentsUnderReview = connect.onboardingStatus === 'verifying';
+    const connectOnboardingCompleted = connect.onboardingStatus === 'completed' || paymentsUnderReview;
     const chargesEnabled = connect.chargesEnabled;
     const payoutsEnabled = connect.payoutsEnabled;
 
@@ -1221,8 +1228,8 @@ export class PaymentsService {
     if (!hasActiveSubscription) missingRequirements.push('active_subscription');
     if (!hasConnectAccount) missingRequirements.push('stripe_connect_account');
     if (!connectOnboardingCompleted) missingRequirements.push('stripe_connect_onboarding');
-    if (!chargesEnabled) missingRequirements.push('stripe_connect_charges_enabled');
-    if (!payoutsEnabled) missingRequirements.push('stripe_connect_payouts_enabled');
+    if (!chargesEnabled && !paymentsUnderReview) missingRequirements.push('stripe_connect_charges_enabled');
+    if (!payoutsEnabled && !paymentsUnderReview) missingRequirements.push('stripe_connect_payouts_enabled');
 
     return {
       canPublish: missingRequirements.length === 0,
@@ -1231,6 +1238,7 @@ export class PaymentsService {
       connectOnboardingCompleted,
       chargesEnabled,
       payoutsEnabled,
+      paymentsUnderReview,
       missingRequirements,
     };
   }
@@ -3005,7 +3013,28 @@ export class PaymentsService {
         createParams.application_fee_amount = applicationFee;
       }
 
-      const intent = await this.stripe.paymentIntents.create(createParams, { stripeAccount: connectedAccountId });
+      let intent: Stripe.PaymentIntent;
+      try {
+        intent = await this.stripe.paymentIntents.create(createParams, { stripeAccount: connectedAccountId });
+      } catch (error) {
+        // Une annonce peut être en ligne alors que Stripe vérifie encore le compte de l'hôte : Stripe
+        // refuse alors le paiement. Le voyageur reçoit une explication, pas l'erreur brute de Stripe.
+        const ownerProfile = asObject(listing.owner?.stripeConnectProfile);
+        if (error instanceof Stripe.errors.StripeError && ownerProfile.chargesEnabled !== true) {
+          console.warn('[payments] payment refused: host account not yet enabled by Stripe', {
+            listingId: input.listingId,
+            connectedAccountId,
+            stripeCode: error.code ?? null,
+          });
+          const notReady = createBadRequestError(
+            'Le paiement en ligne n’est pas encore ouvert pour ce logement : le compte de l’hôte est en cours de vérification. Réessayez un peu plus tard ou contactez l’hôte.',
+            'HOST_PAYMENTS_NOT_READY',
+          );
+          notReady.statusCode = 409;
+          throw notReady;
+        }
+        throw error;
+      }
 
       if (!intent.client_secret) {
         throw new Error('Stripe did not return a client_secret.');

@@ -80,6 +80,8 @@ export type StripePublicationReadiness = {
   connectOnboardingCompleted: boolean
   chargesEnabled: boolean
   payoutsEnabled: boolean
+  /** Inscription Stripe terminée, vérification en cours : publication permise, paiement en ligne pas encore ouvert. */
+  paymentsUnderReview?: boolean
   missingRequirements: string[]
 }
 

@@ -27,7 +27,6 @@ const props = defineProps<{
   error?: unknown
   selectedListingId: string | null
   isStripeConnectPublishLocked?: boolean
-  isStripeConnectUnderReview?: boolean
   canPreview?: boolean
   isAdmin?: boolean
   isCreatingHub?: boolean
@@ -599,7 +598,6 @@ onBeforeUnmount(() => {
           :statusOptions="STATUS_OPTIONS"
           :listingContent="listingContent"
           :isStripeConnectPublishLocked="!isAdminUser && props.isStripeConnectPublishLocked"
-          :isStripeConnectUnderReview="props.isStripeConnectUnderReview"
           :canPreview="props.canPreview !== false"
           :canTransfer="isAdminUser"
           @select="handleSelect"

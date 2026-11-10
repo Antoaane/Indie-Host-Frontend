@@ -629,7 +629,10 @@ export class ListingsService {
     const accountIdFromProfile = readString(profile.accountId);
     const hasConnectAccount = Boolean(user?.stripeConnectAccountId ?? accountIdFromProfile);
     const onboardingStatus = readString(profile.onboardingStatus) ?? 'not_started';
-    const connectOnboardingCompleted = onboardingStatus === 'completed';
+    // Même règle que `toPublicationReadiness` (payments.service.ts) : une inscription Stripe terminée
+    // et en cours de vérification suffit pour publier.
+    const paymentsUnderReview = onboardingStatus === 'verifying';
+    const connectOnboardingCompleted = onboardingStatus === 'completed' || paymentsUnderReview;
     const chargesEnabled = readBoolean(profile.chargesEnabled, false);
     const payoutsEnabled = readBoolean(profile.payoutsEnabled, false);
 
@@ -638,8 +641,8 @@ export class ListingsService {
     if (!hasActiveSubscription) missingRequirements.push('active_subscription');
     if (!hasConnectAccount) missingRequirements.push('stripe_connect_account');
     if (!connectOnboardingCompleted) missingRequirements.push('stripe_connect_onboarding');
-    if (!chargesEnabled) missingRequirements.push('stripe_connect_charges_enabled');
-    if (!payoutsEnabled) missingRequirements.push('stripe_connect_payouts_enabled');
+    if (!chargesEnabled && !paymentsUnderReview) missingRequirements.push('stripe_connect_charges_enabled');
+    if (!payoutsEnabled && !paymentsUnderReview) missingRequirements.push('stripe_connect_payouts_enabled');
 
     return {
       canPublish: missingRequirements.length === 0,
