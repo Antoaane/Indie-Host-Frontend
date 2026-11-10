@@ -121,17 +121,14 @@ const listingViewContainerWidth = ref<number | null>(null)
 let listingViewResizeObserver: ResizeObserver | null = null
 
 function updateListingViewContainerWidth() {
+  // Passer du bureau au mobile (ou l'inverse) démonte un bloc avant de monter l'autre : la ref est un
+  // instant vide. Revenir alors à « largeur inconnue », c'est-à-dire au mode mobile par défaut, relançait
+  // le changement de mise en page sans fin (page figée sur « Chargement… »). On garde la dernière largeur mesurée.
   const element = listingView.value
-  if (!element) {
-    listingViewContainerWidth.value = null
-    return
-  }
+  if (!element) return
 
   const width = Number(element.clientWidth)
-  if (!Number.isFinite(width) || width <= 0) {
-    listingViewContainerWidth.value = null
-    return
-  }
+  if (!Number.isFinite(width) || width <= 0) return
 
   listingViewContainerWidth.value = width
 }
