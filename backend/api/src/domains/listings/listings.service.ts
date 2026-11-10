@@ -30,6 +30,7 @@ import { parseGuideAccessKey, toIsoDay, verifyGuideAccessKey } from '../../lib/g
 import { resolvePublicBaseUrl } from '../../lib/mailer.js';
 import { hostNotifications } from '../notifications/hostNotifications.js';
 import { sanitizeListingSection, sanitizePlainText } from '../../lib/sanitizeHtml.js';
+import { resolvePlaceSetting, type PlaceSetting } from './placeSetting.js';
 
 type ListingRecord = Listing & { owner: User | null };
 type OwnerIdentitySource = {
@@ -139,6 +140,8 @@ export type ListingHubChildCard = {
   guestCapacity: number | null;
   roomsCount: number | null;
   publicPath: string;
+  /** Près de la mer ou dans les terres, d'après l'adresse : sert au thème d'office de la page. */
+  setting: PlaceSetting | null;
 };
 
 function normalizeListingKind(value: unknown): ListingKind {
@@ -1412,6 +1415,7 @@ export class ListingsService {
       guestCapacity: toNumber(core.guest_capacity, 0) || null,
       roomsCount: rooms,
       publicPath: `/${slug}`,
+      setting: resolvePlaceSetting(core),
     };
   }
 

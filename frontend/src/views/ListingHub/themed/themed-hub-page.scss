@@ -1,0 +1,918 @@
+/* File: src/views/ListingHub/themed/themed-hub-page.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
+@use '@/views/ListingHub/themed/page-theme-fonts.scss';
+
+// Page de présentation à thème. Les couleurs et les polices arrivent en variables CSS depuis
+// `domain/listings/pageThemes.ts` (`--page-bg`, `--page-ink`, `--page-font-display`…) : aucune
+// couleur n'est écrite ici. Ce fichier porte la structure commune, puis ce qui change d'un thème
+// à l'autre (échelle typographique, formes, mise en page de l'en-tête).
+//
+// Les tailles de texte sont locales à la page : les mixins `base-text` / `main-title` imposent
+// Fustat et Outfit, qui sont l'identité d'IndieHost, pas celle du site de l'hôte.
+
+@mixin page-container {
+  margin-inline: auto;
+  padding-inline: var(--layout-gap);
+  @include container($max: xl);
+}
+
+.themed-hub-page {
+  // Traits et voiles dérivés de l'encre du thème.
+  --page-line: color-mix(in srgb, var(--page-ink) 14%, transparent);
+  --page-wash: color-mix(in srgb, var(--page-accent) 9%, transparent);
+  // Couleur des cadres du mode édition : la couleur d'action, sauf là où le fond l'est déjà.
+  --page-edit-outline: var(--page-accent);
+
+  // Formes et échelle par défaut, surchargées par thème plus bas.
+  --page-radius: #{borders.$rounded-sm};
+  --page-radius-lg: #{borders.$rounded-md};
+  --page-button-radius: #{borders.$rounded-sm};
+  --page-title-size: clamp(2.5rem, 7vw, 4.5rem);
+  --page-title-weight: 600;
+  --page-title-tracking: -0.02em;
+  --page-heading-size: clamp(1.75rem, 3.6vw, 2.5rem);
+  --page-heading-weight: 600;
+  --page-card-title-size: 1.25rem;
+  --page-card-title-weight: 600;
+  --page-text-size: 1.0625rem;
+  --page-section-gap: calc(var(--layout-gap) * 5);
+
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  gap: var(--page-section-gap);
+  background: var(--page-bg);
+  color: var(--page-ink);
+  font-family: var(--page-font-body);
+  font-size: var(--page-text-size);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+
+  // La règle globale d'IndieHost pose Outfit et son encre sur chaque élément (`typography/_texts.scss`) :
+  // ici, tout hérite du thème de la page.
+  :where(*) {
+    box-sizing: border-box;
+    font-family: inherit;
+    color: inherit;
+  }
+
+  h1,
+  h2,
+  p {
+    margin: 0;
+  }
+
+  h1 {
+    font-family: var(--page-font-display);
+    font-size: var(--page-title-size);
+    font-weight: var(--page-title-weight);
+    letter-spacing: var(--page-title-tracking);
+    line-height: 1.02;
+    text-wrap: balance;
+  }
+
+  h2 {
+    font-family: var(--page-font-display);
+    font-size: var(--page-heading-size);
+    font-weight: var(--page-heading-weight);
+    letter-spacing: var(--page-title-tracking);
+    line-height: 1.1;
+    text-wrap: balance;
+  }
+
+  // --- En-tête ---------------------------------------------------------------------------
+
+  > .page-hero {
+    display: grid;
+    gap: calc(var(--layout-gap) * 2);
+    padding-top: calc(var(--layout-gap) * 3);
+    @include page-container;
+
+    > .hero-text {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--layout-gap);
+
+      > h1 {
+        max-width: 16ch;
+      }
+
+      > .hero-location {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--layout-gap-xs);
+        color: var(--page-muted);
+        font-size: 0.9375rem;
+
+        > svg {
+          flex-shrink: 0;
+        }
+      }
+
+      > .hero-tagline {
+        max-width: 46ch;
+        color: var(--page-muted);
+        font-size: 1.1875rem;
+        line-height: 1.5;
+      }
+    }
+
+    > .hero-media {
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--page-radius-lg);
+      background: var(--page-surface);
+      aspect-ratio: 4 / 3;
+
+      > img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+  }
+
+  .page-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2.75rem;
+    padding: 0.7em 1.5em;
+    border-radius: var(--page-button-radius);
+    background: var(--page-accent);
+    color: var(--page-on-accent);
+    font-family: var(--page-font-body);
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    @include animations.transition();
+    @include animations.press();
+
+    @include on-hover {
+      background: color-mix(in srgb, var(--page-accent) 86%, var(--page-ink));
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--page-ink);
+      outline-offset: 3px;
+    }
+  }
+
+  // --- Présentation ----------------------------------------------------------------------
+
+  > .page-about {
+    display: grid;
+    gap: calc(var(--layout-gap) * 2);
+    align-items: center;
+    @include page-container;
+
+    @include min-width(md) {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: calc(var(--layout-gap) * 3);
+    }
+
+    > .about-text {
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap);
+
+      > .about-body {
+        max-width: 58ch;
+        white-space: pre-line;
+      }
+
+      > .about-signature {
+        font-family: var(--page-font-display);
+        font-size: 1.25rem;
+        color: var(--page-muted);
+      }
+    }
+
+    > .about-media {
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--page-radius-lg);
+      background: var(--page-surface);
+      aspect-ratio: 4 / 3;
+
+      > img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+    }
+  }
+
+  // Une section « texte et photo » sur deux passe la photo de l'autre côté.
+  > .page-about.is-flipped > .about-media {
+    @include min-width(md) {
+      order: -1;
+    }
+  }
+
+  // --- Texte seul ------------------------------------------------------------------------
+
+  > .page-text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap);
+    @include page-container;
+
+    > .text-body {
+      max-width: 62ch;
+      white-space: pre-line;
+    }
+  }
+
+  // --- Photos ----------------------------------------------------------------------------
+
+  > .page-gallery {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--layout-gap) * 1.75);
+    @include page-container;
+
+    > .gallery-grid {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      @include responsive-grid-columns(14rem);
+      gap: var(--layout-gap);
+
+      > .gallery-item {
+        position: relative;
+        overflow: hidden;
+        border-radius: var(--page-radius-lg);
+        background: var(--page-surface);
+        aspect-ratio: 4 / 5;
+
+        > img {
+          display: block;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+      }
+    }
+  }
+
+  // --- Logements -------------------------------------------------------------------------
+
+  > .page-listings {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--layout-gap) * 1.75);
+    scroll-margin-top: var(--layout-gap);
+    @include page-container;
+
+    > .listing-grid {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      @include responsive-grid-columns(17rem);
+      gap: calc(var(--layout-gap) * 1.5);
+    }
+  }
+
+  .listing-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    color: inherit;
+    text-decoration: none;
+    border-radius: var(--page-radius-lg);
+    @include animations.transition();
+
+    &:focus-visible {
+      outline: 2px solid var(--page-accent);
+      outline-offset: 4px;
+    }
+
+    > .card-media {
+      display: block;
+      overflow: hidden;
+      border-radius: var(--page-radius);
+      background: var(--page-surface);
+      aspect-ratio: 4 / 3;
+
+      > img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        @include animations.transition(animations.$duration-overlay, animations.$ease-out, (transform));
+      }
+    }
+
+    @include on-hover {
+      > .card-media > img {
+        transform: scale(1.04);
+      }
+    }
+
+    > .card-body {
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-xs);
+      padding-top: var(--layout-gap-md);
+
+      > .card-title {
+        font-family: var(--page-font-display);
+        font-size: var(--page-card-title-size);
+        font-weight: var(--page-card-title-weight);
+        line-height: 1.2;
+      }
+
+      > .card-facts {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--layout-gap-xs) var(--layout-gap-md);
+        color: var(--page-muted);
+        font-size: 0.9375rem;
+
+        > .card-fact {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--layout-gap-2xs);
+        }
+      }
+
+      > .card-price {
+        margin-top: var(--layout-gap-2xs);
+        color: var(--page-accent);
+        font-weight: 600;
+      }
+    }
+  }
+
+  // --- Pied de page ----------------------------------------------------------------------
+
+  > .page-footer {
+    margin-top: auto;
+    padding-block: calc(var(--layout-gap) * 1.5);
+    border-top: 1px solid var(--page-line);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--layout-gap);
+    color: var(--page-muted);
+    font-size: 0.9375rem;
+    @include page-container;
+  }
+
+  // ======================================================================================
+  // Thème « Maison » : centré, calme, titres à empattements.
+  // ======================================================================================
+
+  &[data-theme='maison'] {
+    --page-radius: #{borders.$rounded-xs};
+    --page-radius-lg: #{borders.$rounded-xs};
+    --page-button-radius: #{borders.$rounded-xs};
+    --page-title-size: clamp(3rem, 8vw, 5.75rem);
+    --page-title-weight: 500;
+    --page-title-tracking: -0.015em;
+    --page-heading-size: clamp(2.125rem, 4.4vw, 3.25rem);
+    --page-heading-weight: 500;
+    --page-card-title-size: 1.625rem;
+    --page-card-title-weight: 600;
+    --page-text-size: 1rem;
+
+    > .page-hero {
+      > .hero-text {
+        align-items: center;
+        text-align: center;
+
+        > h1 {
+          max-width: 18ch;
+        }
+
+        > .hero-tagline {
+          font-family: var(--page-font-display);
+          font-style: italic;
+          font-size: clamp(1.375rem, 2.6vw, 1.75rem);
+          line-height: 1.35;
+          color: var(--page-ink);
+        }
+      }
+
+      > .hero-media {
+        aspect-ratio: 4 / 3;
+
+        @include min-width(md) {
+          aspect-ratio: 21 / 9;
+        }
+      }
+    }
+
+    > .page-about {
+      > .about-media {
+        aspect-ratio: 4 / 5;
+
+        @include min-width(md) {
+          order: -1;
+        }
+      }
+
+      > .about-text > .about-signature {
+        font-style: italic;
+        font-size: 1.5rem;
+      }
+    }
+
+    > .page-about.is-flipped > .about-media {
+      @include min-width(md) {
+        order: 0;
+      }
+    }
+
+    > .page-text {
+      align-items: center;
+      text-align: center;
+    }
+
+    > .page-listings > h2,
+    > .page-gallery > h2 {
+      text-align: center;
+    }
+  }
+
+  // ======================================================================================
+  // Thème « Rivage » : aplat de bleu, titre d'affiche, photo en arche. Une seule police.
+  // ======================================================================================
+
+  &[data-theme='rivage'] {
+    --page-radius: #{borders.$rounded-lg};
+    --page-radius-lg: #{borders.$rounded-xxl};
+    --page-button-radius: #{borders.$rounded};
+    --page-title-size: clamp(3rem, 9vw, 6.5rem);
+    --page-title-weight: 800;
+    --page-title-tracking: -0.055em;
+    --page-heading-size: clamp(2.125rem, 4.6vw, 3.5rem);
+    --page-heading-weight: 800;
+    --page-card-title-size: 1.3125rem;
+    --page-card-title-weight: 700;
+    // De combien la photo en arche déborde sous l'aplat de couleur.
+    --page-arch-overflow: calc(var(--layout-gap) * 4);
+
+    h1 {
+      line-height: 0.94;
+    }
+
+    // L'en-tête est un aplat pleine largeur à la couleur d'action ; son contenu garde la largeur
+    // du reste de la page grâce à la marge intérieure calculée.
+    > .page-hero {
+      --page-edit-outline: var(--page-on-accent);
+      --page-wash: color-mix(in srgb, var(--page-on-accent) 14%, transparent);
+
+      width: 100%;
+      max-width: none;
+      align-items: center;
+      margin-bottom: var(--page-arch-overflow);
+      padding-block: calc(var(--layout-gap) * 3) 0;
+      padding-inline: max(var(--layout-gap), calc((100% - #{$xl}) / 2 + var(--layout-gap)));
+      background: var(--page-accent);
+      color: var(--page-on-accent);
+
+      @include min-width(lg) {
+        grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+        gap: calc(var(--layout-gap) * 3);
+        padding-top: calc(var(--layout-gap) * 4);
+      }
+
+      > .hero-text {
+        @include min-width(lg) {
+          padding-bottom: calc(var(--layout-gap) * 4);
+        }
+
+        > h1 {
+          max-width: 11ch;
+        }
+
+        > .hero-location,
+        > .hero-tagline {
+          color: color-mix(in srgb, var(--page-on-accent) 88%, transparent);
+        }
+
+        > .hero-tagline {
+          font-size: clamp(1.1875rem, 2vw, 1.4375rem);
+        }
+
+        > .page-button {
+          background: var(--page-highlight);
+          color: var(--page-on-highlight);
+          font-weight: 700;
+
+          @include on-hover {
+            background: color-mix(in srgb, var(--page-highlight) 86%, var(--page-on-highlight));
+          }
+
+          &:focus-visible {
+            outline-color: var(--page-on-accent);
+          }
+        }
+      }
+
+      // Arche : coins hauts en plein cintre, la photo dépasse sous l'aplat.
+      > .hero-media {
+        justify-self: center;
+        width: min(100%, 30rem);
+        aspect-ratio: 4 / 5;
+        margin-bottom: calc(var(--page-arch-overflow) * -1);
+        // Les deux coins hauts au maximum donnent un demi-cercle ; la base reste droite.
+        border-radius: #{borders.$rounded} #{borders.$rounded} 0 0;
+      }
+    }
+
+    // Photo de présentation en hublot.
+    > .page-about {
+      > .about-media {
+        justify-self: center;
+        width: min(100%, 26rem);
+        aspect-ratio: 1 / 1;
+        border-radius: #{borders.$rounded};
+      }
+
+      > .about-text > .about-signature {
+        color: var(--page-accent);
+        font-weight: 700;
+      }
+    }
+
+    .listing-card {
+      padding: var(--layout-gap-sm);
+      border-radius: var(--page-radius-lg);
+      background: var(--page-surface);
+
+      @include on-hover {
+        transform: translateY(-4px);
+        @include big-shadow(color-mix(in srgb, var(--page-accent) 30%, transparent));
+      }
+
+      > .card-media {
+        border-radius: #{borders.$rounded-xl};
+      }
+
+      > .card-body {
+        padding: var(--layout-gap-md) var(--layout-gap-sm) var(--layout-gap-sm);
+
+        > .card-price {
+          align-self: flex-start;
+          margin-top: var(--layout-gap-xs);
+          padding: 0.3em 0.9em;
+          border-radius: #{borders.$rounded};
+          background: var(--page-highlight);
+          color: var(--page-on-highlight);
+          font-size: 0.9375rem;
+          font-weight: 700;
+        }
+      }
+    }
+  }
+
+  // ======================================================================================
+  // Thème « Nocturne » : fond sombre, photo plein cadre, titres en Fraunces.
+  // ======================================================================================
+
+  &[data-theme='nocturne'] {
+    --page-radius: #{borders.$rounded-sm};
+    --page-radius-lg: #{borders.$rounded-md};
+    --page-button-radius: #{borders.$rounded-sm};
+    --page-title-size: clamp(2.875rem, 8vw, 6rem);
+    --page-title-weight: 400;
+    --page-title-tracking: -0.025em;
+    --page-heading-size: clamp(2rem, 4.2vw, 3.125rem);
+    --page-heading-weight: 400;
+    --page-card-title-size: 1.4375rem;
+    --page-card-title-weight: 500;
+    --page-text-size: 1rem;
+
+    // La photo occupe tout l'écran, le titre se pose en bas sur un fondu vers le fond de page.
+    > .page-hero {
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      width: 100%;
+      max-width: none;
+      min-height: clamp(30rem, 88svh, 54rem);
+      padding: 0;
+
+      > .hero-media {
+        position: absolute;
+        inset: 0;
+        aspect-ratio: auto;
+        border-radius: 0;
+
+        &::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          background: linear-gradient(
+            to top,
+            var(--page-bg) 0%,
+            color-mix(in srgb, var(--page-bg) 72%, transparent) 34%,
+            color-mix(in srgb, var(--page-bg) 12%, transparent) 70%,
+            color-mix(in srgb, var(--page-bg) 34%, transparent) 100%
+          );
+        }
+      }
+
+      > .hero-text {
+        position: relative;
+        z-index: 1;
+        padding-block: calc(var(--layout-gap) * 4) calc(var(--layout-gap) * 2);
+        @include page-container;
+
+        > h1 {
+          max-width: 14ch;
+        }
+
+        > .hero-location,
+        > .hero-tagline {
+          color: color-mix(in srgb, var(--page-ink) 84%, transparent);
+        }
+      }
+    }
+
+    > .page-about {
+      align-items: start;
+
+      > .about-text > .about-signature {
+        color: var(--page-accent);
+      }
+    }
+
+    .listing-card {
+      overflow: hidden;
+      border-radius: var(--page-radius-lg);
+      background: var(--page-surface);
+
+      > .card-media {
+        border-radius: 0;
+      }
+
+      > .card-body {
+        padding: var(--layout-gap) var(--layout-gap) calc(var(--layout-gap) * 1.1);
+      }
+    }
+  }
+
+  // ======================================================================================
+  // Mode édition : ce qui se modifie se voit, sans mode d'emploi.
+  // ======================================================================================
+
+  .editable-text {
+    border-radius: #{borders.$rounded-xs};
+
+    // Champ vidé : son nom reste affiché pour qu'il ne disparaisse pas de la page.
+    &.is-editable:empty::before {
+      content: attr(data-placeholder);
+      opacity: 0.45;
+    }
+
+    &.is-editable {
+      cursor: text;
+      outline: 1.5px dashed color-mix(in srgb, var(--page-edit-outline) 60%, transparent);
+      // Décalage fixe : en `em`, les cadres d'un grand titre et de la ligne voisine se chevauchaient.
+      outline-offset: var(--layout-gap-xs);
+      @include animations.transition(animations.$duration-fast, animations.$ease-out, (background-color, outline-color));
+
+      @include on-hover {
+        outline-style: solid;
+        outline-color: var(--page-edit-outline);
+        background: var(--page-wash);
+      }
+
+      &:focus {
+        outline: 2px solid var(--page-edit-outline);
+        background: var(--page-wash);
+      }
+    }
+  }
+
+  .media-edit {
+    // En haut à droite de la photo : jamais sous la barre d'édition fixée en bas de l'écran.
+    position: absolute;
+    top: var(--layout-gap-md);
+    right: var(--layout-gap-md);
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--layout-gap-xs);
+    min-height: 2.75rem;
+    padding: 0.5em 1em;
+    border-radius: #{borders.$rounded};
+    background: var(--page-accent);
+    color: var(--page-on-accent);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    cursor: pointer;
+    @include big-shadow(color-mix(in srgb, var(--page-ink) 30%, transparent));
+    @include animations.transition();
+    @include animations.press();
+
+    @include on-hover {
+      background: color-mix(in srgb, var(--page-accent) 86%, var(--page-ink));
+    }
+
+    &:focus-within {
+      outline: 2px solid var(--page-ink);
+      outline-offset: 3px;
+    }
+  }
+
+  // « + » entre deux sections. L'élément n'a pas de hauteur et annule la moitié de l'écart de chaque
+  // côté : la page garde exactement la même mise en page avec ou sans lui.
+  > .section-inserter {
+    position: relative;
+    z-index: 3;
+    height: 0;
+    margin-block: calc(var(--page-section-gap) / -2);
+    @include page-container;
+
+    > .inserter-line {
+      position: absolute;
+      top: 0;
+      right: var(--layout-gap);
+      left: var(--layout-gap);
+      border-top: 1.5px dashed color-mix(in srgb, var(--page-accent) 45%, transparent);
+    }
+
+    > .inserter-add,
+    > .inserter-menu {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      translate: -50% -50%;
+    }
+
+    > .inserter-add {
+      display: grid;
+      place-items: center;
+      width: 2.75rem;
+      height: 2.75rem;
+      padding: 0;
+      border: 0;
+      border-radius: #{borders.$rounded};
+      background: var(--page-accent);
+      color: var(--page-on-accent);
+      cursor: pointer;
+      @include big-shadow(color-mix(in srgb, var(--page-ink) 26%, transparent));
+      @include animations.transition();
+      @include animations.press(0.94);
+
+      @include on-hover {
+        background: color-mix(in srgb, var(--page-accent) 86%, var(--page-ink));
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--page-ink);
+        outline-offset: 3px;
+      }
+    }
+
+    > .inserter-menu {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: var(--layout-gap-xs);
+      width: max-content;
+      max-width: calc(100% - 2 * var(--layout-gap));
+      padding: var(--layout-gap-xs);
+      border: 1px solid var(--page-line);
+      border-radius: #{borders.$rounded-lg};
+      background: var(--page-surface);
+      @include big-shadow(color-mix(in srgb, var(--page-ink) 26%, transparent));
+
+      > .inserter-option,
+      > .inserter-close {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--layout-gap-xs);
+        min-height: 2.75rem;
+        padding: 0.4em 0.9em;
+        border: 0;
+        border-radius: #{borders.$rounded-md};
+        background: none;
+        font-size: 0.9375rem;
+        font-weight: 600;
+        cursor: pointer;
+        @include animations.transition();
+        @include animations.press();
+
+        @include on-hover {
+          background: var(--page-wash);
+        }
+
+        &:focus-visible {
+          outline: 2px solid var(--page-accent);
+          outline-offset: 2px;
+        }
+      }
+
+      > .inserter-close {
+        padding-inline: 0.7em;
+        color: var(--page-muted);
+      }
+    }
+  }
+
+  // Supprimer une section : posé sur le trait du « + » qui la précède, à droite, hors de son contenu.
+  > .page-about,
+  > .page-text,
+  > .page-gallery {
+    position: relative;
+  }
+
+  .section-remove {
+    position: absolute;
+    top: calc(var(--page-section-gap) / -2);
+    right: var(--layout-gap);
+    z-index: 4;
+    translate: 0 -50%;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--layout-gap-xs);
+    min-height: 2.25rem;
+    padding: 0.3em 0.8em;
+    border: 1px solid var(--page-line);
+    border-radius: #{borders.$rounded};
+    background: var(--page-bg);
+    color: var(--page-muted);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    @include animations.transition();
+    @include animations.press();
+
+    @include on-hover {
+      border-color: var(--page-ink);
+      color: var(--page-ink);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--page-accent);
+      outline-offset: 2px;
+    }
+
+    @media (pointer: coarse) {
+      min-height: 2.75rem;
+    }
+
+    // Sur téléphone, le libellé recouvrait le « + » centré sur le même trait : il ne reste que
+    // l'icône, le libellé restant lu par les lecteurs d'écran.
+    > .remove-label {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+
+      @include min-width(md) {
+        position: static;
+        width: auto;
+        height: auto;
+        overflow: visible;
+        clip-path: none;
+      }
+    }
+  }
+
+  // Rivage : dans l'arche et le hublot, les coins sont rognés. Le bouton se centre en haut de la photo.
+  &[data-theme='rivage'] .media-edit {
+    top: calc(var(--layout-gap) * 1.5);
+    right: 0;
+    left: 0;
+    width: fit-content;
+    margin-inline: auto;
+  }
+
+  // La barre d'édition est fixée en bas : la fin de page reste atteignable.
+  &.is-editing {
+    padding-bottom: calc(var(--layout-gap) * 6);
+  }
+
+  @include animations.reduced-motion {
+    .listing-card {
+      transition: none;
+
+      @include on-hover {
+        transform: none;
+
+        > .card-media > img {
+          transform: none;
+        }
+      }
+    }
+  }
+}

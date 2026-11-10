@@ -399,6 +399,12 @@ const router = createRouter({
           name: 'dev-editor',
           component: () => import('@/views/Editor/dev/DevEditorRoute.vue'),
           meta: { navVariant: 'host', hideNav: true, title: 'Éditeur (dev)' },
+        }, {
+          // Thèmes de la page de présentation et mode édition, sur du faux contenu (docs/editeur-de-page.md).
+          path: '/dev/page-themes',
+          name: 'dev-page-themes',
+          component: () => import('@/views/ListingHub/dev/DevPageThemesRoute.vue'),
+          meta: { navVariant: 'public', hideNav: true, title: 'Thèmes de page (dev)' },
         }]
       : []),
     {

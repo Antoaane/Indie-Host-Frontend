@@ -4,6 +4,13 @@
 
 import { getFreshAuthToken } from '@/utils/authToken'
 import { invalidateListing } from '@/domain/api/listingsCache'
+import type { PlaceSetting } from '@/domain/listings/pageThemes'
+
+const PLACE_SETTINGS: readonly PlaceSetting[] = ['sea', 'inland']
+
+function toPlaceSetting(value: unknown): PlaceSetting | null {
+  return PLACE_SETTINGS.find((setting) => setting === value) ?? null
+}
 
 export type ListingHubSummary = {
   listingId: string
@@ -25,6 +32,8 @@ export type ListingHubChildCard = {
   guestCapacity: number | null
   roomsCount: number | null
   publicPath: string
+  /** Près de la mer ou dans les terres, calculé par l'API d'après l'adresse du logement. */
+  setting: PlaceSetting | null
 }
 
 export type ListingParentRecord = {
@@ -107,6 +116,7 @@ function normalizeChildCard(data: Record<string, unknown> | null | undefined): L
     guestCapacity: toNullableNumber(payload.guestCapacity),
     roomsCount: toNullableNumber(payload.roomsCount),
     publicPath: toTrimmedString(payload.publicPath) || (slug ? `/${slug}` : '/'),
+    setting: toPlaceSetting(payload.setting),
   }
 }
 
