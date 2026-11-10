@@ -109,7 +109,8 @@ cd backend/api && npm run prisma:studio  # UI Prisma
 | Framework | Fastify 5.2 + TypeScript 5.8 |
 | ORM | Prisma 6.6 + PostgreSQL |
 | Auth | Clerk JWT via `jose` 6 (JWKS) |
-| Validation | Zod 3.24 |
+| Validation | Zod 4.6 (`z.record` prend toujours deux arguments : clé puis valeur) |
+| E-mails (secours SMTP) | nodemailer 10 (types fournis par le paquet) |
 | Paiements | stripe 17.7 |
 | Dates | date-fns 4.1 |
 | Calendrier | ical-generator + node-ical |
@@ -363,7 +364,7 @@ Limites abonnement : max **6 annonces actives** par défaut.
 - **Token injection** : `utils/clerkToken.ts` → `getToken()` → header `Authorization: Bearer`
 - **Rôles admin** : `utils/clerkRole.ts` + `composables/useAdminAccess.ts`
 - **JWKS** : Backend vérifie JWT via `CLERK_JWKS_URL`
-- **Connexion par lien à jeton** (jeton de connexion, « Impersonate » du Clerk Dashboard, invitation acceptée sur le portail Clerk) : Clerk renvoie vers l'URL d'accueil de l'instance (`paths.home = "/"` en prod), donc la landing. `utils/authEntry.ts` (importé en tête de `main.ts` pour lire les paramètres `__clerk_*` avant que Clerk ne les retire) + `composables/useDashboardEntryRedirect.ts` (appelé par la landing) ouvrent alors `/dashboard/editor` : arrivée directe sur `/` avec une session de moins de 5 min, une session « actor » ou des paramètres Clerk, une seule fois par session. Un `__clerk_ticket` présent sur `/` part vers `/sign-in` (ou `/sign-up` si `__clerk_status=sign_up`) avec `redirect_url=/dashboard/editor` (garde du routeur).
+- **Connexion par lien à jeton** (jeton de connexion, « Impersonate » du Clerk Dashboard, invitation acceptée sur le portail Clerk) : Clerk renvoie vers l'URL d'accueil de l'instance (`paths.home = "/"` en prod), donc la landing. `utils/authEntry.ts` (importé en tête de `main.ts` pour lire les paramètres `__clerk_*` avant que Clerk ne les retire) + `composables/useDashboardEntryRedirect.ts` (appelé par la landing) ouvrent alors `/dashboard/editor` : arrivée directe sur `/` avec une session de moins de 5 min, une session « actor » ou des paramètres Clerk, une seule fois par session. Un `__clerk_ticket` présent sur `/` part vers `/sign-in` (ou `/sign-up` si `__clerk_status=sign_up`) avec `redirect_url=/dashboard/editor` (garde du routeur). Le logo de la navigation (`NavShell.vue`, variantes hôte et publique) ouvre `/dashboard/editor` pour un utilisateur connecté et `/` sinon ; la landing reste accessible par son adresse.
 
 ### Problème connu — page grise sur accès par IP
 
@@ -718,7 +719,16 @@ Les domaines personnalisés pointent **directement** sur le VPS (pas via Cloudfl
 
 ---
 
-## Dernières modifications (mis à jour 2026-10-23)
+## Dernières modifications (mis à jour 2026-11-10)
+
+- **Passe du 2026-11-10** (détail dans `TODO.md`, section « Fait ») :
+  - Jeton Clerk : tout appel authentifié du front passe par `getFreshAuthToken()` (`frontend/src/utils/authToken.ts`), qui vérifie l’expiration du jeton gardé en mémoire (60 s de vie) et en redemande un à Clerk. Ne plus lire `clerkToken.value` directement pour un en-tête `Authorization`.
+  - Navigation : masquée sur tout hôte d’annonce, sous-domaine IndieHost **et** domaine personnalisé (`isListingHostname` dans `Nav.vue`).
+  - Dépendances API : zod 4 et nodemailer 10 (voir « Stack technique »). `npm audit fix` tel quel est à éviter : il rétrograde Prisma et ajoute un `undici` vulnérable au front ; mettre à jour paquet par paquet.
+  - Réservations annulées : `rebuildListingBookedDaysFromCalendarEvents` (`calendar.service.ts`) ignore les réservations dont `payment.cancellation.status` vaut `canceled`.
+  - **Éditeur de page à la volée et thèmes** : conception, journal et décisions dans `docs/editeur-de-page.md`, à lire avant toute reprise. Trois thèmes validés (Maison, Rivage, Nocturne) dans `frontend/src/domain/listings/pageThemes.ts`, page à thème et mode édition dans `frontend/src/views/ListingHub/themed/`, polices auto-hébergées dans `frontend/public/assets/fonts/themes/`. **Prototype seulement** : visible sur la route de développement `/dev/page-themes`, pas encore branché sur la page publique (`_ListingHub.vue`) ni sur l’API.
+  - Lieu d’un logement : `resolvePlaceSetting` (`backend/api/src/domains/listings/placeSetting.ts`) classe chaque annonce « mer » (côte à moins de 10 km) ou « terres » d’après `core.latitude` / `core.longitude` et le tracé des côtes embarqué (`lib/coastline.ts`, paquet `world-atlas`), sans service extérieur. Renvoyé dans `GET /listings/:id/children` (`setting`). Contrôle : `npx tsx backend/api/scripts/place-setting-smoke.ts`.
+
 
 - **E-mails automatiques aux hôtes via Brevo** : 14 e-mails (réservations, messages, avis, litiges, annonce en ligne, limite de l'offre, rappels planifiés), anti-doublon `HostNotification`, désinscription des rappels, migration `20261023000004_host_notifications`. Détail dans « E-mails automatiques (Brevo) ».
 
