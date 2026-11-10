@@ -1,7 +1,8 @@
 // File: src/domain/api/listingHubs.ts
+
 // Pages principales (annonces mères) : une page au domaine du propriétaire qui présente ses logements.
 
-import clerkToken from '@/utils/clerkToken'
+import { getFreshAuthToken } from '@/utils/authToken'
 import { invalidateListing } from '@/domain/api/listingsCache'
 
 export type ListingHubSummary = {
@@ -51,21 +52,8 @@ async function getAxios() {
   return axios
 }
 
-async function readSessionToken(): Promise<string | null> {
-  const stored = (clerkToken.value ?? '').trim()
-  if (stored) return stored
-
-  if (typeof window === 'undefined') return null
-  const clerk = (window as Window & {
-    Clerk?: { session?: { getToken?: () => Promise<string | null> } }
-  }).Clerk
-  try {
-    const token = (await clerk?.session?.getToken?.())?.trim() ?? ''
-    if (token) clerkToken.value = token
-    return token || null
-  } catch {
-    return null
-  }
+function readSessionToken(): Promise<string | null> {
+  return getFreshAuthToken()
 }
 
 async function buildAuthHeaders(): Promise<{ Authorization: string }> {

@@ -1,9 +1,10 @@
 // File: src/domain/api/listingHost.ts
+
 // Section `host` d'une annonce : mentions légales du loueur (qualité particulier / professionnel,
 // raison sociale, SIRET). Enregistrées directement, hors du brouillon local de l'éditeur : l'API
 // fusionne le correctif avec la section existante puis réapplique l'identité Clerk (nom, avatar).
 
-import clerkToken from '@/utils/clerkToken'
+import { getFreshAuthToken } from '@/utils/authToken'
 import { invalidateListingSections } from '@/domain/api/listingsCache'
 import type { HostLegalStatus } from '@/domain/listings/types'
 
@@ -27,21 +28,8 @@ function buildUrl(path: string): string {
   return new URL(url, window.location.origin).toString()
 }
 
-async function readSessionToken(): Promise<string | null> {
-  const stored = (clerkToken.value ?? '').trim()
-  if (stored) return stored
-
-  if (typeof window === 'undefined') return null
-  const clerk = (window as Window & {
-    Clerk?: { session?: { getToken?: () => Promise<string | null> } }
-  }).Clerk
-  try {
-    const token = (await clerk?.session?.getToken?.())?.trim() ?? ''
-    if (token) clerkToken.value = token
-    return token || null
-  } catch {
-    return null
-  }
+function readSessionToken(): Promise<string | null> {
+  return getFreshAuthToken()
 }
 
 function toApiErrorMessage(error: unknown, fallback: string): string {

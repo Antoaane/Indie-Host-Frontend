@@ -1,6 +1,6 @@
 // File: src/domain/api/listingCalendar.ts
 
-import clerkToken from '@/utils/clerkToken'
+import { getFreshAuthToken } from '@/utils/authToken'
 import { invalidateListingSections } from '@/domain/api/listingsCache'
 
 export type ListingCalendarSyncSource = {
@@ -53,8 +53,8 @@ function resolveUrl(url: string) {
   return new URL(url, window.location.origin).toString()
 }
 
-function buildAuthHeaders() {
-  const token = (clerkToken.value ?? '').trim()
+async function buildAuthHeaders() {
+  const token = await getFreshAuthToken()
   return token ? { Authorization: `Bearer ${token}` } : undefined
 }
 
@@ -149,7 +149,7 @@ export async function fetchListingCalendarSyncSources(listingId: string): Promis
     resolveUrl(buildListingCalendarSourcesUrl(listingId)),
     {
       withCredentials: false,
-      headers: buildAuthHeaders(),
+      headers: await buildAuthHeaders(),
     },
   )
 
@@ -176,7 +176,7 @@ export async function importListingCalendarSource(input: {
     },
     {
       withCredentials: false,
-      headers: buildAuthHeaders(),
+      headers: await buildAuthHeaders(),
     },
   )
 
@@ -198,7 +198,7 @@ export async function syncListingCalendarSource(input: {
     {},
     {
       withCredentials: false,
-      headers: buildAuthHeaders(),
+      headers: await buildAuthHeaders(),
     },
   )
 

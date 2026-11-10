@@ -13,6 +13,7 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 ### Bloquant : paiements des hôtes
 
 - [ ] Terminer l’inscription Stripe du compte de démonstration (`acct_1UTgHiBxC9MDMaAf`). L’onglet Chrome est ouvert sur l’écran « Démarrer sur Stripe », sinon cliquez sur « Configurer Stripe Connect » depuis la page d’activation. Étapes : identifiant Stripe (e-mail et mot de passe), type d’activité « Particulier », identité, adresse, date de naissance et IBAN. Ce compte n’est pas pré-rempli : Stripe verrouille certains champs après le premier lien d’inscription, créé avant l’ajout du pré-remplissage. Les nouveaux hôtes sont pré-remplis dès la création de leur compte. Claude ne remplit pas ces informations.
+- [ ] Valider le correctif « Invalid authentication token. » de la page d’activation (non committé, non déployé au 2026-11-10) : dire à Claude de committer, redéployer, puis rester plus d’une minute sur la page avant de cliquer sur « Configurer Stripe Connect ». En attendant, recharger la page puis cliquer dans la minute contourne l’erreur.
 - [ ] Décider si la validation par SMS sans mot de passe Stripe (Dashboard Express) vaut une migration. En Accounts v1, Stripe ne l’accepte que si IndieHost encaisse les frais et porte les pertes. Avec Stripe qui garde le risque, il faut l’API Accounts v2 : Stripe → Paramètres → Connect → Configuration de la plateforme → « Demander un accès ». Une fois l’accès accordé, Claude migre (voir « À faire par Claude »).
 - [ ] Première vraie réservation : vérifier dans le Dashboard Stripe de l’hôte que le paiement y apparaît (et pas sur le compte IndieHost), puis tester une annulation remboursée.
 
@@ -115,6 +116,8 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 - [ ] `ListingView/components/Core/components/Title/TitleSk.vue` importe un `title.scss` inexistant ; le composant n'est importé nulle part. Supprimer le fichier ou le corriger.
 
 ## Fait
+
+- [x] 2026-11-10 — Erreur « Invalid authentication token. » au clic sur « Configurer Stripe Connect » (non committé). Le jeton Clerk vit 60 secondes et plusieurs clients API renvoyaient celui gardé en mémoire sans regarder son expiration. Nouveau `frontend/src/utils/authToken.ts` (`getFreshAuthToken`), utilisé par `stripeSubscriptions`, `stripePayments`, `bookings`, `listingCalendar`, `listingHubs`, `listingHost`, `privacy` et `aiDescription`. Un 401 sur les appels d’abonnement affiche « Votre session a expiré. Rechargez la page, puis réessayez. ». Type-check passé, parcours non rejoué dans un navigateur.
 
 - [x] 2026-10-23 — E-mails Brevo en production : clé posée et redéploiement fait par l’utilisateur.
   - Vérifié par Claude : la désinscription répond, la politique de confidentialité mentionne Brevo, l’API est en bonne santé, et le jeton MCP est accepté par Brevo.

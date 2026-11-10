@@ -2,7 +2,7 @@
 
 import type { ReservationPayload } from '@/views/ListingView/types/reservation'
 import type { CheckoutPaymentBreakdown } from '@/domain/payments/checkoutPayment'
-import clerkToken from '@/utils/clerkToken'
+import { getFreshAuthToken } from '@/utils/authToken'
 
 type ParsedEndpoint = {
   origin?: string
@@ -99,30 +99,13 @@ function toStringValue(value: unknown): string {
   return ''
 }
 
-function waitForClerkToken({ timeoutMs, pollEveryMs }: { timeoutMs: number; pollEveryMs: number }): Promise<string | null> {
-  const startedAt = Date.now()
-
-  return new Promise((resolve) => {
-    const tick = () => {
-      const token = (clerkToken.value ?? '').trim()
-      if (token) return resolve(token)
-      if (Date.now() - startedAt >= timeoutMs) return resolve(null)
-      setTimeout(tick, pollEveryMs)
-    }
-
-    tick()
-  })
-}
-
 async function getAxios() {
   const { default: axios } = await import('axios')
   return axios
 }
 
-async function getAuthToken(): Promise<string | null> {
-  const token = (clerkToken.value ?? '').trim()
-  if (token) return token
-  return waitForClerkToken({ timeoutMs: 2000, pollEveryMs: 50 })
+function getAuthToken(): Promise<string | null> {
+  return getFreshAuthToken({ waitMs: 2000 })
 }
 
 function resolveErrorMessage(error: unknown): string {

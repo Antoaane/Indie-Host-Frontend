@@ -1,6 +1,6 @@
 // File: src/domain/api/stripeSubscriptions.ts
 
-import clerkToken from '@/utils/clerkToken'
+import { getFreshAuthToken } from '@/utils/authToken'
 import { invalidateSharedRequests, invalidateSharedRequestsByPrefix, sharedRequest } from '@/domain/api/requestCache'
 
 export type SubscriptionPlanCode = 'indiehost' | 'superhost'
@@ -251,54 +251,13 @@ function buildApiUrl(path: string): string {
   return joinUrl(BASE_API_URL, normalizedPath)
 }
 
-function waitForClerkToken({ timeoutMs, pollEveryMs }: { timeoutMs: number; pollEveryMs: number }): Promise<string | null> {
-  const startedAt = Date.now()
-
-  return new Promise((resolve) => {
-    const tick = () => {
-      const token = (clerkToken.value ?? '').trim()
-      if (token) return resolve(token)
-      if (Date.now() - startedAt >= timeoutMs) return resolve(null)
-      setTimeout(tick, pollEveryMs)
-    }
-
-    tick()
-  })
-}
-
 async function getAxios() {
   const { default: axios } = await import('axios')
   return axios
 }
 
-// Jeton frais depuis le runtime Clerk (quand le store n'a pas encore été alimenté par la navigation).
-async function readFreshTokenFromClerkRuntime(): Promise<string | null> {
-  if (typeof window === 'undefined') return null
-
-  const clerk = (window as Window & {
-    Clerk?: { session?: { getToken?: () => Promise<string | null> } }
-  }).Clerk
-  const getSessionToken = clerk?.session?.getToken
-  if (typeof getSessionToken !== 'function') return null
-
-  try {
-    const token = (await getSessionToken())?.trim() ?? ''
-    if (!token) return null
-    clerkToken.value = token
-    return token
-  } catch {
-    return null
-  }
-}
-
-async function getAuthToken(): Promise<string | null> {
-  const token = (clerkToken.value ?? '').trim()
-  if (token) return token
-
-  const fresh = await readFreshTokenFromClerkRuntime()
-  if (fresh) return fresh
-
-  return waitForClerkToken({ timeoutMs: 2500, pollEveryMs: 60 })
+function getAuthToken(): Promise<string | null> {
+  return getFreshAuthToken({ waitMs: 2500 })
 }
 
 /** Erreur d'API qui garde le code renvoyé par le serveur (ex. `STRIPE_CONNECT_PLATFORM_PROFILE_REQUIRED`). */
@@ -325,7 +284,8 @@ function toStripeApiError(error: unknown, fallback: string): StripeApiError {
 
 function toApiErrorMessage(error: unknown, fallback: string): string {
   if (error && typeof error === 'object') {
-    const response = (error as { response?: { data?: { message?: unknown } } }).response
+    const response = (error as { response?: { status?: unknown; data?: { message?: unknown } } }).response
+    if (response?.status === 401) return 'Votre session a expiré. Rechargez la page, puis réessayez.'
     const responseMessage = response?.data?.message
     if (typeof responseMessage === 'string' && responseMessage.trim()) return responseMessage.trim()
 

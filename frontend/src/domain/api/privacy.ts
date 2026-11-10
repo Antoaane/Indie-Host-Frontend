@@ -1,7 +1,8 @@
 // File: src/domain/api/privacy.ts
+
 // Droits RGPD du compte : export des données et suppression du compte.
 
-import clerkToken from '@/utils/clerkToken'
+import { getFreshAuthToken } from '@/utils/authToken'
 
 const RAW_BASE_API_URL = (import.meta.env.VITE_API_BASE_URL ?? '').trim()
 const BASE_API_URL = RAW_BASE_API_URL.replace(/\/+$/, '')
@@ -41,28 +42,8 @@ async function getAxios() {
   return axios
 }
 
-async function readFreshTokenFromClerkRuntime(): Promise<string | null> {
-  if (typeof window === 'undefined') return null
-
-  const clerk = (window as Window & {
-    Clerk?: { session?: { getToken?: () => Promise<string | null> } }
-  }).Clerk
-  const getSessionToken = clerk?.session?.getToken
-  if (typeof getSessionToken !== 'function') return null
-
-  try {
-    const token = (await getSessionToken())?.trim() ?? ''
-    if (!token) return null
-    clerkToken.value = token
-    return token
-  } catch {
-    return null
-  }
-}
-
 async function buildAuthHeaders(): Promise<{ Authorization: string }> {
-  const stored = (clerkToken.value ?? '').trim()
-  const token = stored || (await readFreshTokenFromClerkRuntime())
+  const token = await getFreshAuthToken()
   if (!token) {
     throw new Error('Session utilisateur absente. Veuillez vous reconnecter.')
   }

@@ -1,7 +1,7 @@
 // File: src/domain/api/bookings.ts
 
 import type { RawBookingReservation } from '@/domain/listings/types'
-import clerkToken from '@/utils/clerkToken'
+import { getFreshAuthToken } from '@/utils/authToken'
 import { invalidateListingSections } from '@/domain/api/listingsCache'
 
 type ParsedEndpoint = {
@@ -223,30 +223,13 @@ function buildGuideConversationMessagesResourceUrl(guideKey: string): string {
   return `${buildGuideConversationResourceUrl(guideKey)}/messages`
 }
 
-function waitForClerkToken({ timeoutMs, pollEveryMs }: { timeoutMs: number; pollEveryMs: number }): Promise<string | null> {
-  const startedAt = Date.now()
-
-  return new Promise((resolve) => {
-    const tick = () => {
-      const token = (clerkToken.value ?? '').trim()
-      if (token) return resolve(token)
-      if (Date.now() - startedAt >= timeoutMs) return resolve(null)
-      setTimeout(tick, pollEveryMs)
-    }
-
-    tick()
-  })
-}
-
 async function getAxios() {
   const { default: axios } = await import('axios')
   return axios
 }
 
-async function getAuthToken(): Promise<string | null> {
-  const token = (clerkToken.value ?? '').trim()
-  if (token) return token
-  return waitForClerkToken({ timeoutMs: 2000, pollEveryMs: 50 })
+function getAuthToken(): Promise<string | null> {
+  return getFreshAuthToken({ waitMs: 2000 })
 }
 
 function base64UrlEncode(value: string): string {

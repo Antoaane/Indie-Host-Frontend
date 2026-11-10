@@ -3,15 +3,14 @@
 import axios from 'axios'
 
 import type { RawCore } from '@/domain/listings/types'
-import clerkToken from '@/utils/clerkToken'
+import { getFreshAuthToken } from '@/utils/authToken'
 
 export async function generateAiDescription(
   core: Partial<RawCore>,
   lengthLevel: number = 2,
   getToken?: (() => Promise<string | null>) | null,
 ): Promise<string> {
-  const fromStore = (clerkToken.value ?? '').trim()
-  const token = fromStore || (getToken ? ((await getToken())?.trim() ?? '') : '')
+  const token = (await getFreshAuthToken()) || (getToken ? ((await getToken())?.trim() ?? '') : '')
 
   const { data } = await axios.post<{ html: string }>(
     '/api/v1/ai/description',
