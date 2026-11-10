@@ -421,7 +421,7 @@ export function useListingCheckout(options: UseListingCheckoutOptions) {
     checkoutStatus.error = null
 
     if (!targetListingId) {
-      checkoutStatus.error = 'Impossible de déterminer l annonce à réserver.'
+      checkoutStatus.error = 'Impossible de déterminer l’annonce à réserver.'
       return
     }
 

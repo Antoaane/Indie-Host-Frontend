@@ -361,7 +361,7 @@ async function saveDomain() {
   resetFeedback()
 
   if (!canManageDomain.value) {
-    errorMessage.value = 'Sélectionnez un plan d abonnement pour rattacher un nom de domaine.'
+    errorMessage.value = 'Sélectionnez un plan d’abonnement pour rattacher un nom de domaine.'
     return
   }
 
@@ -379,7 +379,7 @@ async function saveDomain() {
     applyRecord(domain)
     successMessage.value = domain.customDomainStatus === 'verified'
       ? `${domain.customDomain} est rattaché et déjà actif.`
-      : `${domain.customDomain} est rattaché. Créez les deux enregistrements DNS ci-dessous puis vérifiez la configuration.`
+      : `${domain.customDomain} est rattaché. Créez les deux enregistrements DNS ci-dessus, puis vérifiez la configuration.`
   } catch (error) {
     console.error('[EditorCustomDomainPanel] failed to save custom domain', error)
     errorMessage.value = resolveErrorMessage(error, 'Impossible de rattacher ce nom de domaine.')
@@ -404,8 +404,8 @@ async function verifyDomain() {
     // Le détail par enregistrement est affiché dans la liste des contrôles ; ici, le résumé.
     const failing = [verification.checks.address, verification.checks.ownership].filter((check) => !check.ok).length
     errorMessage.value = failing === 2
-      ? 'Aucun des deux enregistrements n’est encore en place. Vérifiez chaque ligne ci-dessous.'
-      : 'Un enregistrement manque encore. Vérifiez la ligne signalée ci-dessous.'
+      ? 'Aucun des deux enregistrements n’est encore en place. Vérifiez chaque ligne ci-dessus.'
+      : 'Un enregistrement manque encore. Vérifiez la ligne signalée ci-dessus.'
   } catch (error) {
     console.error('[EditorCustomDomainPanel] failed to verify custom domain', error)
     errorMessage.value = resolveErrorMessage(error, 'Impossible de vérifier la configuration DNS.')
@@ -717,7 +717,7 @@ onBeforeUnmount(() => {
         v-if="!isLoadingSubscription && !props.isAdmin && !hasSelectedPlan"
         class="meta is-error"
       >
-        Sélectionnez d abord un plan d abonnement pour rattacher un nom de domaine.
+        Sélectionnez d’abord un plan d’abonnement pour rattacher un nom de domaine.
       </p>
       <p
         v-if="isLoadingSubscription"
@@ -1039,6 +1039,13 @@ onBeforeUnmount(() => {
 
         th {
           background: rgba($secondary, 0.04);
+        }
+
+        // Colonne « Type » (A, CNAME, TXT) : jamais coupée en deux lignes.
+        th:first-child,
+        td:first-child {
+          white-space: nowrap;
+          word-break: normal;
         }
 
         tr:last-child > td {

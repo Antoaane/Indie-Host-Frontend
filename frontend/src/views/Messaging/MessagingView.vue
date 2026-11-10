@@ -211,7 +211,7 @@ async function handleSendMessage(payload: { conversationId: string; body: string
     }))
   } catch (error) {
     console.error('[Messaging] send message failed', error)
-    actionStatus.error = messagingStatic.errors?.send ?? 'Impossible d envoyer le message.'
+    actionStatus.error = messagingStatic.errors?.send ?? 'Impossible d’envoyer le message.'
   } finally {
     actionStatus.isPending = false
   }

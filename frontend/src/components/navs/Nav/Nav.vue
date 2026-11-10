@@ -17,7 +17,7 @@ import type { NavItem, NavVariant } from '@/components/navs/Nav/navTypes'
 import { closeMobileMenu, isMobileMenuOpen, isNavForcedHidden } from '@/components/navs/navUtils'
 import { clearSharedRequests } from '@/domain/api/requestCache'
 import { createMyStripeConnectDashboardLink, fetchMyStripeSubscriptionState } from '@/domain/api/stripeSubscriptions'
-import { isManagedListingHostname } from '@/domain/listings/publicDomain'
+import { isListingHostname } from '@/domain/listings/publicDomain'
 import { useAdminAccess } from '@/composables/useAdminAccess'
 import { useBootLoader } from '@/composables/useBootLoader'
 import { readActiveUserId } from '@/router/backOfficeUser'
@@ -80,7 +80,9 @@ const navVariant = computed<NavVariant>(() => {
   if (variant === 'landing' || variant === 'host' || variant === 'public') return variant
   return 'public'
 })
-const isPublicListingHost = computed(() => typeof window !== 'undefined' && isManagedListingHostname(window.location.hostname))
+// Hôte d'une annonce : sous-domaine IndieHost ou domaine personnalisé d'un client. La page y est celle du
+// client, jamais la navigation IndieHost (le domaine personnalisé était oublié et affichait le menu de la landing).
+const isPublicListingHost = computed(() => typeof window !== 'undefined' && isListingHostname(window.location.hostname))
 const isNavHidden = computed(() => Boolean(route.meta?.hideNav) || isPublicListingHost.value)
 const isNavVisible = computed(() => !isNavHidden.value)
 const isNavActuallyHidden = computed(() => isNavForcedHidden.value || isNavHiddenByScroll.value)

@@ -636,7 +636,7 @@ async function cancelCurrentReservation() {
     }
     cancelSuccess.value = 'Réservation annulée avec succès.'
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Impossible d annuler la réservation.'
+    const message = error instanceof Error ? error.message : 'Impossible d’annuler la réservation.'
     cancelError.value = message
   } finally {
     isCanceling.value = false

@@ -11,6 +11,7 @@ import RelativeOverlay from '@/components/overlays/RelativeOverlay.vue'
 import type { NavItem } from '@/components/navs/Nav/navTypes'
 import { closeMobileMenu, isMobileMenuOpen, scrollToTarget, toggleMobileMenu } from '@/components/navs/navUtils'
 import { clearSharedRequests } from '@/domain/api/requestCache'
+import { DASHBOARD_ENTRY_PATH } from '@/utils/authEntry'
 import { vp } from '@/utils/viewport'
 
 import { icons } from '@/components/svgs'
@@ -41,6 +42,18 @@ const router = useRouter()
 const { isSignedIn, user } = useUser()
 const { signOut } = useAuth()
 const clerk = useClerk()
+
+// Un hôte connecté n’a plus rien à faire sur la page marketing : le logo le ramène à « Mes annonces ».
+const logoLinkHref = computed(() => (isSignedIn.value ? DASHBOARD_ENTRY_PATH : props.logoHref))
+const logoLinkLabel = computed(() => (isSignedIn.value ? 'IndieHost - Aller à mes annonces' : 'IndieHost - Aller à l’accueil'))
+
+// Navigation interne (sans rechargement) vers le tableau de bord ; Ctrl/Cmd+clic et clic molette gardent le lien natif.
+function onLogoLinkClick(event: MouseEvent) {
+  if (!isSignedIn.value) return
+  if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+  event.preventDefault()
+  void router.push(DASHBOARD_ENTRY_PATH)
+}
 
 const signedOutAnchor = ref<HTMLElement | null>(null)
 const authMenuPanel = ref<HTMLElement | null>(null)
@@ -342,10 +355,11 @@ onBeforeUnmount(() => {
 
     <a
       v-else
-      :href="logoHref"
+      :href="logoLinkHref"
       class="logo"
-      aria-label="IndieHost - Aller à l'accueil"
-      title="IndieHost - Aller à l'accueil"
+      :aria-label="logoLinkLabel"
+      :title="logoLinkLabel"
+      @click="onLogoLinkClick"
     >
       <component
         :is="icons.logoFull.adapt"

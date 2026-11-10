@@ -20,10 +20,10 @@ import {
 import { toUtcDay } from '@/domain/listings/bookings'
 import { getListingsController } from '@/domain/listings/controller'
 import { isListingIdLike, normalizeListingSlug } from '@/domain/listings/slug'
-import type { RawArrival, RawBookingReservation, RawBookings, RawComments, RawCore, RawHost } from '@/domain/listings/types'
+import type { RawArrival, RawBookingReservation, RawBookings, RawCore, RawHost } from '@/domain/listings/types'
 import { vp } from '@/utils/viewport'
 import { sanitizeHtml } from '@/utils/sanitizeHtml'
-import { loadArrival, loadBookings, loadComments, loadCore, loadHost } from '@/views/Listing/utils/fetchListingRaw'
+import { loadArrival, loadBookings, loadCore, loadHost } from '@/views/Listing/utils/fetchListingRaw'
 import LegalLinksCompact from '@/components/layouts/LegalLinksCompact.vue'
 
 type PracticalKey = keyof RawArrival['practical']
@@ -125,7 +125,6 @@ const rawArrival = ref<RawArrival | null>(null)
 const rawCore = ref<RawCore | null>(null)
 const rawHost = ref<RawHost | null>(null)
 const rawBookings = ref<RawBookings | null>(null)
-const rawComments = ref<RawComments | null>(null)
 const guideAccess = ref<ReservationGuideAccessPayload | null>(null)
 const writableListingId = ref('')
 const isLoading = ref(false)
@@ -653,7 +652,7 @@ async function submitGuideConversationMessage() {
     conversationDraft.value = ''
   } catch (error) {
     console.error('[ListingGuide] send guide conversation message failed', error)
-    conversationErrorMessage.value = 'Impossible d envoyer votre message pour le moment.'
+    conversationErrorMessage.value = 'Impossible d’envoyer votre message pour le moment.'
   } finally {
     isConversationSending.value = false
   }
@@ -825,9 +824,6 @@ watch(
               'booked-days': [],
               'external-booked-days': [],
             } as RawBookings
-            rawComments.value = {
-              comments: [],
-            } as RawComments
             guideConversationMessages.value = []
             return
           }
@@ -847,14 +843,12 @@ watch(
         core,
         host,
         bookings,
-        comments,
         resolvedListingId,
       ] = await Promise.all([
         loadArrival(listingLookupKey),
         loadCore(listingLookupKey),
         loadHost(listingLookupKey),
         loadBookings(listingLookupKey),
-        loadComments(listingLookupKey),
         resolveWritableListingId(listingLookupKey),
       ])
 
@@ -866,7 +860,6 @@ watch(
       rawBookings.value = activeAccess
         ? { ...bookings, reservations: [buildGuideReservation(activeAccess)] } as RawBookings
         : bookings
-      rawComments.value = comments
       writableListingId.value = resolvedListingId
       await Promise.all([
         loadGuideConversationThread(),
@@ -880,7 +873,6 @@ watch(
       rawCore.value = null
       rawHost.value = null
       rawBookings.value = null
-      rawComments.value = null
       guideConversationMessages.value = []
       writableListingId.value = ''
     } finally {

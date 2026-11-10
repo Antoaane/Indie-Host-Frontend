@@ -624,7 +624,7 @@ export async function cancelBookingReservation(input: {
     )
     return normalizeBookingConfirmation(data)
   } catch (error) {
-    throw new Error(resolveErrorMessage(error, 'Impossible d annuler la réservation.'))
+    throw new Error(resolveErrorMessage(error, 'Impossible d’annuler la réservation.'))
   }
 }
 
@@ -749,6 +749,6 @@ export async function sendGuideConversationMessage(input: {
     )
     return normalizeGuideConversationSendPayload(data)
   } catch (error) {
-    throw new Error(resolveErrorMessage(error, 'Impossible d envoyer le message.'))
+    throw new Error(resolveErrorMessage(error, 'Impossible d’envoyer le message.'))
   }
 }

@@ -117,7 +117,7 @@ async function checkAvailability() {
   availability.value = null
 
   if (!canManageSubdomain.value) {
-    errorMessage.value = 'Sélectionnez un plan d abonnement pour réserver un sous-domaine.'
+    errorMessage.value = 'Sélectionnez un plan d’abonnement pour réserver un sous-domaine.'
     return
   }
 
@@ -316,7 +316,7 @@ onMounted(() => {
         v-if="!isLoadingSubscription && !props.isAdmin && !hasSelectedPlan"
         class="meta is-error"
       >
-        Sélectionnez d abord un plan d abonnement pour réserver un sous-domaine.
+        Sélectionnez d’abord un plan d’abonnement pour réserver un sous-domaine.
       </p>
       <p
         v-if="isLoadingSubscription"

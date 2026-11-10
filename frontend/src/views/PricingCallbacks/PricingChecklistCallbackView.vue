@@ -2,7 +2,8 @@
 
 <script setup lang="ts">
 import { SignInButton, SignUpButton, SignedIn, SignedOut, useAuth, useUser } from '@clerk/vue'
-import { computed, ref, watch } from 'vue'
+import { Loader2 } from 'lucide-vue-next'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter, type RouteLocationRaw } from 'vue-router'
 
 import {
@@ -455,6 +456,13 @@ type PrimaryAction = {
   label: string
 }
 
+// Action principale en cours : le bouton affiche un indicateur de chargement.
+const isPrimaryActionBusy = computed(() => (
+  isLaunchingConnect.value
+  || isPublishingFromOnboarding.value
+  || Boolean(actionPlanCode.value)
+))
+
 const primaryAction = computed<PrimaryAction>(() => {
   if (selectedPlan.value && !isSubscriptionActive.value) {
     return {
@@ -473,7 +481,7 @@ const primaryAction = computed<PrimaryAction>(() => {
   if (isSubscriptionActive.value && !isOnboardingConnectReady.value) {
     return {
       id: 'connect',
-      label: isLaunchingConnect.value ? 'Ouverture de Stripe...' : 'Configurer Stripe Connect',
+      label: isLaunchingConnect.value ? 'Ouverture de Stripe…' : 'Configurer Stripe Connect',
     }
   }
 
@@ -778,13 +786,22 @@ async function launchConnectOnboardingWithListingId(listingId?: string | null) {
       updateOnboardingPublishDecision(listingOnboardingState.value.publishDecision ?? 'keep_blocked')
     }
 
+    // Le bouton reste en chargement jusqu'à ce que la page Stripe remplace celle-ci : la navigation
+    // prend encore une à deux secondes après la réponse de l'API.
     window.location.assign(onboardingLink.url)
   } catch (error) {
     errorMessage.value = resolveConnectLaunchErrorMessage(error)
-  } finally {
     isLaunchingConnect.value = false
   }
 }
+
+// Retour arrière depuis Stripe : le navigateur peut restaurer la page telle qu'elle était, bouton en chargement.
+function resetConnectLaunchOnPageRestore(event: PageTransitionEvent) {
+  if (event.persisted) isLaunchingConnect.value = false
+}
+
+onMounted(() => window.addEventListener('pageshow', resetConnectLaunchOnPageRestore))
+onBeforeUnmount(() => window.removeEventListener('pageshow', resetConnectLaunchOnPageRestore))
 
 // Profil plateforme Stripe Connect non validé : c'est à IndieHost d'agir dans son propre
 // Dashboard Stripe, pas à l'hôte. L'hôte reçoit un message qui le concerne ; l'admin garde
@@ -1396,8 +1413,15 @@ watch(
               type="button"
               class="action-btn"
               :disabled="isOnboardingActionBusy"
+              :aria-busy="isPrimaryActionBusy"
               @click="handlePrimaryAction"
             >
+              <Loader2
+                v-if="isPrimaryActionBusy"
+                class="action-btn-spinner"
+                :size="16"
+                aria-hidden="true"
+              />
               {{ primaryAction.label }}
             </button>
 
@@ -1835,7 +1859,13 @@ watch(
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 0.5rem;
     @include animations.press();
+
+    > .action-btn-spinner {
+      flex-shrink: 0;
+      animation: pricing-callback-spin 0.9s linear infinite;
+    }
 
     @include on-hover(':not(:disabled)') {
       transform: translateY(-1px);
@@ -1995,6 +2025,16 @@ watch(
     .checklist-items > .checklist-item > .content > .title-row > .state-chip {
       font-size: 0.68rem;
     }
+  }
+}
+
+@keyframes pricing-callback-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
   }
 }
 </style>

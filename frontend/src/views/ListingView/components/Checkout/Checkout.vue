@@ -1009,7 +1009,7 @@ onBeforeUnmount(() => {
           <span>{{ selectedChargeNowLabel }} débité maintenant</span>
           <span v-if="selectedBreakdown.deferredAmount > 0">
             · {{ selectedDeferredLabel }}
-            <template v-if="selectedBreakdown.deferredMode === 'cash'"> en espèces à l arrivée</template>
+            <template v-if="selectedBreakdown.deferredMode === 'cash'"> en espèces à l’arrivée</template>
             <template v-else> à payer le {{ selectedDueDateLabel }}</template>
           </span>
         </p>

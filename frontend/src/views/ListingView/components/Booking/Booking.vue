@@ -250,7 +250,7 @@ const guestRows = computed(() => [
   {
     key: 'pmr' as const,
     label: 'Personnes PMR',
-    description: 'Besoin d amenagement',
+    description: 'Besoin d’aménagement',
     value: occupants.pmr,
     min: 0,
     max: occupancyRules.value.pmrMax,

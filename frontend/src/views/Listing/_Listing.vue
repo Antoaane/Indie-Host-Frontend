@@ -83,7 +83,7 @@ const canonicalSlug = computed(() => buildListingSlug({
 function resolveFetchErrorMessage(error: unknown): string {
   const status = (error as { response?: { status?: unknown } })?.response?.status
   if (status === 404) return 'Cette annonce est introuvable ou a été retirée.'
-  if (status === 403) return 'Cette annonce n est pas accessible depuis votre session.'
+  if (status === 403) return 'Cette annonce n’est pas accessible depuis votre session.'
   if (typeof status === 'number' && status >= 500) return 'Le service est temporairement indisponible. Réessayez dans quelques instants.'
   return 'Cette annonce ne peut pas être affichée pour le moment.'
 }

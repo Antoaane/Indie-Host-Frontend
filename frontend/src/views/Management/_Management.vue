@@ -583,7 +583,7 @@ async function saveInternalNote() {
     return true
   } catch (error) {
     console.error('[Management] save internal note failed', error)
-    noteEditor.error = 'Impossible d enregistrer la note interne.'
+    noteEditor.error = 'Impossible d’enregistrer la note interne.'
     return false
   } finally {
     noteEditor.isSaving = false
