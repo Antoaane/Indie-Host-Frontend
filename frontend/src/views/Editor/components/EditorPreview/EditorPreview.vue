@@ -188,6 +188,7 @@ onBeforeUnmount(() => {
         v-if="isHubListing"
         :key="`hub-${props.rawListing.core?.id ?? 'hub'}`"
         :rawListing="props.rawListing"
+        embedded
       />
       <ListingView
         v-else-if="aspectRatio"

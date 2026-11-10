@@ -226,4 +226,6 @@ export type HubPageListing = {
   href: string
   /** Cadre du logement, pour le thème appliqué d'office. Absent si l'adresse ne permet pas de le dire. */
   setting?: PlaceSetting | null
+  /** Mention sous le prix (par exemple « Réservations momentanément fermées »). */
+  note?: string | null
 }

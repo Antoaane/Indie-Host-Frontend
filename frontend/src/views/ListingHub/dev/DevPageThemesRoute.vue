@@ -5,6 +5,8 @@
        /dev/page-themes?theme=maison|rivage|nocturne   thème choisi par l'hôte
        /dev/page-themes?lieu=mer|terre                 thème appliqué d'office d'après le lieu (sans rien : pas d'adresse)
        &edit=1                                         arrivée directe en mode édition
+       &photo=0                                        page sans photo d'en-tête
+       &logements=0|1                                  page sans logement, ou avec un seul
      Rien n'est enregistré : les modifications vivent en mémoire jusqu'au rechargement. -->
 
 <script setup lang="ts">
@@ -41,7 +43,12 @@ const placeSetting = computed<PlaceSetting | null>(() => {
   const value = typeof route.query.lieu === 'string' ? route.query.lieu : ''
   return PLACE_BY_QUERY[value] ?? null
 })
-const listings = computed(() => buildDevPageListings(placeSetting.value))
+const listings = computed(() => {
+  const all = buildDevPageListings(placeSetting.value)
+  if (route.query.logements === '0') return []
+  if (route.query.logements === '1') return all.slice(0, 1)
+  return all
+})
 
 // Le choix de l'hôte prime ; sans choix, le thème suit le lieu des logements.
 const suggestedThemeId = computed(() => suggestPageThemeId(listings.value.map((listing) => listing.setting)))
@@ -49,7 +56,10 @@ const chosenThemeId = computed(() => readPageThemeId(route.query.theme))
 const theme = computed(() => resolvePageTheme(chosenThemeId.value ?? suggestedThemeId.value))
 
 const editing = ref(route.query.edit === '1')
-const content = ref<HubPageContent>(buildDevPageContent())
+const content = ref<HubPageContent>({
+  ...buildDevPageContent(),
+  ...(route.query.photo === '0' ? { coverSrc: null } : {}),
+})
 const status = ref('')
 const removed = ref<{ section: PageSection; index: number } | null>(null)
 
@@ -146,6 +156,7 @@ onBeforeUnmount(() => {
     :content="content"
     :listings="listings"
     :editing="editing"
+    :listings-message="listings.length ? null : 'Aucun logement en ligne pour le moment. Revenez bientôt !'"
     @update="onUpdate"
     @update-section="onUpdateSection"
     @add-section="onAddSection"

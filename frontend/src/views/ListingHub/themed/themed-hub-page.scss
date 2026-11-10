@@ -51,6 +51,11 @@
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
 
+  // Dans un cadre (aperçu de l'éditeur), la page prend la hauteur de son contenu.
+  &.is-embedded {
+    min-height: 0;
+  }
+
   // La règle globale d'IndieHost pose Outfit et son encre sur chaque élément (`typography/_texts.scss`) :
   // ici, tout hérite du thème de la page.
   :where(*) {
@@ -272,13 +277,19 @@
     scroll-margin-top: var(--layout-gap);
     @include page-container;
 
+    // Une carte ne dépasse jamais 26rem : un logement seul ne s'étire pas sur toute la largeur.
     > .listing-grid {
       margin: 0;
       padding: 0;
       list-style: none;
       display: grid;
-      @include responsive-grid-columns(17rem);
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 26rem));
+      justify-content: start;
       gap: calc(var(--layout-gap) * 1.5);
+    }
+
+    > .listings-message {
+      color: var(--page-muted);
     }
   }
 
@@ -349,6 +360,11 @@
         margin-top: var(--layout-gap-2xs);
         color: var(--page-accent);
         font-weight: 600;
+      }
+
+      > .card-note {
+        color: var(--page-muted);
+        font-size: 0.9375rem;
       }
     }
   }
@@ -443,6 +459,14 @@
     > .page-gallery > h2 {
       text-align: center;
     }
+
+    > .page-listings > .listing-grid {
+      justify-content: center;
+    }
+
+    > .page-listings > .listings-message {
+      text-align: center;
+    }
   }
 
   // ======================================================================================
@@ -518,6 +542,17 @@
           &:focus-visible {
             outline-color: var(--page-on-accent);
           }
+        }
+      }
+
+      // Sans photo : l'aplat se referme sous le texte, rien ne déborde.
+      &:not(.has-media) {
+        grid-template-columns: minmax(0, 1fr);
+        margin-bottom: 0;
+        padding-bottom: calc(var(--layout-gap) * 3);
+
+        > .hero-text {
+          padding-bottom: 0;
         }
       }
 
@@ -624,6 +659,11 @@
             color-mix(in srgb, var(--page-bg) 34%, transparent) 100%
           );
         }
+      }
+
+      // Sans photo : pas de plein écran vide, le titre ouvre simplement la page.
+      &:not(.has-media) {
+        min-height: 0;
       }
 
       > .hero-text {

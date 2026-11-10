@@ -26,8 +26,9 @@ function toCoordinate(value: unknown): number | null {
 
 /** `null` quand l'annonce n'a pas d'adresse exploitable : la page garde alors son thème par défaut. */
 export function resolvePlaceSetting(core: Record<string, unknown>): PlaceSetting | null {
-  const latitude = toCoordinate(core.latitude);
-  const longitude = toCoordinate(core.longitude);
+  // Le panneau « Localisation » écrit `latitude` / `longitude` ; `lat` / `lng` existent sur d'anciennes annonces.
+  const latitude = toCoordinate(core.latitude ?? core.lat);
+  const longitude = toCoordinate(core.longitude ?? core.lng);
   if (latitude === null || longitude === null) return null;
   if (Math.abs(latitude) > 90 || Math.abs(longitude) > 180) return null;
   // (0, 0) est la valeur d'une annonce dont l'adresse n'a jamais été renseignée, pas le golfe de Guinée.

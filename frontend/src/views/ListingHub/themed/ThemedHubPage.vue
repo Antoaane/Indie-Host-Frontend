@@ -32,8 +32,13 @@ const props = withDefaults(
     content: HubPageContent
     listings: HubPageListing[]
     editing?: boolean
+    /** Rendue dans un cadre (aperçu de l'éditeur) : ne repeint pas le document, ne force pas la hauteur d'écran. */
+    embedded?: boolean
+    /** Affiché à la place de la grille quand il n'y a pas de logement à montrer (chargement, erreur, aucun en ligne). */
+    listingsMessage?: string | null
+    listingsMessageIsError?: boolean
   }>(),
-  { editing: false },
+  { editing: false, embedded: false, listingsMessage: null, listingsMessageIsError: false },
 )
 
 const emit = defineEmits<{
@@ -42,6 +47,8 @@ const emit = defineEmits<{
   (e: 'add-section', index: number, type: AddablePageSectionType): void
   (e: 'remove-section', sectionId: string): void
   (e: 'pick-image', target: PageImageTarget, file: File): void
+  /** Clic sur une carte hors édition : le parent décide de la navigation (routeur, nouvel onglet…). */
+  (e: 'open-listing', listing: HubPageListing, event: MouseEvent): void
 }>()
 
 const root = ref<HTMLElement | null>(null)
@@ -50,7 +57,7 @@ const themeStyle = computed(() => buildPageThemeStyle(props.theme))
 // Le fond du thème déborde de la page : sans lui, la marge de la barre de défilement et le rebond
 // de fin de page restent à la couleur d'IndieHost (visible surtout avec un thème sombre).
 function paintDocument(background: string, colorScheme: string) {
-  if (typeof document === 'undefined') return
+  if (typeof document === 'undefined' || props.embedded) return
   document.body.style.backgroundColor = background
   document.documentElement.style.colorScheme = colorScheme
 }
@@ -142,20 +149,29 @@ function guestsLabel(count: number | null): string | null {
 }
 
 // En édition, les cartes ne naviguent pas : un clic sert à modifier, pas à quitter la page.
-function onCardClick(event: MouseEvent) {
-  if (props.editing) event.preventDefault()
+function onCardClick(event: MouseEvent, listing: HubPageListing) {
+  if (props.editing) {
+    event.preventDefault()
+    return
+  }
+  emit('open-listing', listing, event)
 }
+
+const hasHeroMedia = computed(() => Boolean(props.content.coverSrc) || props.editing)
 </script>
 
 <template>
   <article
     ref="root"
     class="themed-hub-page"
-    :class="{ 'is-editing': editing }"
+    :class="{ 'is-editing': editing, 'is-embedded': embedded }"
     :data-theme="theme.id"
     :style="themeStyle"
   >
-    <header class="page-hero">
+    <header
+      class="page-hero"
+      :class="{ 'has-media': hasHeroMedia }"
+    >
       <div class="hero-text">
         <p
           v-if="showText(content.location)"
@@ -193,6 +209,7 @@ function onCardClick(event: MouseEvent) {
           @update:model-value="updateHeader('tagline', $event)"
         />
         <a
+          v-if="listings.length"
           class="page-button"
           href="#logements"
         >
@@ -200,7 +217,10 @@ function onCardClick(event: MouseEvent) {
         </a>
       </div>
 
-      <div class="hero-media">
+      <div
+        v-if="hasHeroMedia"
+        class="hero-media"
+      >
         <img
           v-if="content.coverSrc"
           :src="content.coverSrc"
@@ -437,7 +457,18 @@ function onCardClick(event: MouseEvent) {
           @update:model-value="emit('update-section', section.id, { title: $event })"
         />
 
-        <ul class="listing-grid">
+        <p
+          v-if="!listings.length && listingsMessage"
+          class="listings-message"
+          :role="listingsMessageIsError ? 'alert' : undefined"
+        >
+          {{ listingsMessage }}
+        </p>
+
+        <ul
+          v-else
+          class="listing-grid"
+        >
           <li
             v-for="listing in listings"
             :key="listing.id"
@@ -445,7 +476,7 @@ function onCardClick(event: MouseEvent) {
             <a
               class="listing-card"
               :href="listing.href"
-              @click="onCardClick"
+              @click="onCardClick($event, listing)"
             >
               <span class="card-media">
                 <img
@@ -484,6 +515,12 @@ function onCardClick(event: MouseEvent) {
                   class="card-price"
                 >
                   À partir de {{ formatPrice(listing.pricePerNight) }} / nuit
+                </span>
+                <span
+                  v-if="listing.note"
+                  class="card-note"
+                >
+                  {{ listing.note }}
                 </span>
               </span>
             </a>

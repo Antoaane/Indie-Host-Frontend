@@ -2,7 +2,7 @@
 
 Document de conception de la fonctionnalité « modifier ma page de présentation directement dessus ». Il sert de référence pour l'implémentation et de journal : toute idée, décision ou modification sur ce sujet s'ajoute ici (section 11).
 
-- **État au 2026-11-10** : étude faite, trois thèmes maquettés sur du faux contenu, prototype du mode édition. Les trois thèmes sont validés par Nathan (Rivage dans sa version 2). Rien n'est branché sur les vraies pages ni sur l'API.
+- **État au 2026-11-10** : les trois thèmes sont validés par Nathan et **branchés sur la page principale publique** (`_ListingHub.vue`), avec le thème d'office selon le lieu des logements. Le mode édition à la volée (crayon, « + », changement de thème par l'hôte) reste un prototype sur la route de développement : l'hôte ne peut pas encore choisir son thème lui-même.
 - **Voir les maquettes** : `cd frontend && npm run dev`, puis ouvrir
   - `http://127.0.0.1:5179/dev/page-themes?theme=maison`
   - `http://127.0.0.1:5179/dev/page-themes?theme=rivage`
@@ -251,6 +251,24 @@ Pistes écartées : le service public Overpass d'OpenStreetMap (testé le 2026-1
 5. **Photos.** « Changer la photo » passe par l'envoi ImageKit existant, avec la progression.
 6. **Titre d'onglet, SEO, Open Graph** : inchangés, ils restent dans `_Listing.vue`.
 
+### La page publique (fait le 2026-11-10)
+
+`_ListingHub.vue` fait le lien entre les données réelles et `ThemedHubPage` :
+
+| Élément de la page | Vient de |
+|---|---|
+| Titre | `core.title` |
+| Photo d'en-tête | première photo de la page principale ; sans photo, l'en-tête se réduit au titre |
+| Lieu | `core.page.location` s'il existe, sinon la ville des logements quand ils sont tous au même endroit |
+| Présentation | `core.description`, ramenée à du texte (paragraphes gardés, mise en forme retirée), avec la deuxième photo |
+| Logements | les logements rattachés et en ligne ; sans aucun, « Aucun logement en ligne pour le moment » |
+| Thème | `core.page.theme` s'il existe, sinon le thème d'office : `placeSettings` renvoyé par `GET /listings/:id/children` (lieu de tous les logements rattachés, en pause compris) |
+
+- Une carte de logement ne dépasse pas 26rem : un logement seul ne s'étire pas sur toute la largeur.
+- Dans l'aperçu de l'éditeur, la page est rendue « dans un cadre » (`embedded`) : elle ne repeint pas le fond du tableau de bord et ses cartes ne naviguent pas.
+- Le cadre `#listing-page` est fixé à la hauteur de l'écran pour les annonces (qui défilent dans leurs colonnes) ; il est relâché pour la page principale, sinon tout ce qui dépassait l'écran était coupé. Ce défaut existait déjà avec l'ancienne page, masqué tant que les pages étaient courtes.
+- Vérifié en local sur une page principale de test rattachée à deux logements à Saint-François (un en ligne, un en pause) : thème Rivage appliqué d'office, lieu repris des logements, page sans barre de navigation. Les variantes sans photo et sans logement ont été regardées sur la route de développement (`&photo=0`, `&logements=0`).
+
 ### Points d'attention
 
 - **Pas d'édition sur le domaine personnalisé.** Sans session Clerk sur ces domaines, le crayon ne peut pas y apparaître. L'édition se fait depuis le tableau de bord, sur un aperçu fidèle.
@@ -266,7 +284,8 @@ Pistes écartées : le service public Overpass d'OpenStreetMap (testé le 2026-1
 |---|---|---|
 | 0 | Étude, trois thèmes maquettés, prototype du mode édition sur faux contenu | Fait le 2026-11-10 |
 | 1 | Validation des thèmes par Nathan, un par un, sur les maquettes | Fait le 2026-11-10 |
-| 2 | Page publique à thème, sans édition : `core.page`, API, `_ListingHub.vue`, choix du thème dans le panneau de l'éditeur actuel | À faire |
+| 2 | Page publique à thème, sans édition : `_ListingHub.vue` rend la page à thème, thème d'office selon le lieu | Fait le 2026-11-10 |
+| 2 bis | Choix du thème par l'hôte et textes propres à la page (`core.page` : validation et nettoyage côté API, réglage dans l'éditeur actuel) | À faire |
 | 3 | Mode édition : route du tableau de bord, enregistrement, photos | À faire |
 | 4 | Finitions : annuler la dernière modification, aide au premier passage, essais sur téléphone réel | À faire |
 | 5 | Étendre aux pages d'annonce simples, si le besoin se confirme | À décider |
@@ -278,7 +297,7 @@ L'étape 2 est livrable seule : les hôtes ont déjà de beaux thèmes avant que
 | | Question | Recommandation de Claude |
 |---|---|---|
 | D1 | Les trois thèmes conviennent-ils ? | **Tranché le 2026-11-10** : Maison, Rivage (version 2) et Nocturne sont validés |
-| D2 | Quel thème par défaut pour les pages existantes ? | Maison : depuis que Rivage est devenu le plus marqué des trois, Maison est le plus neutre. À revoir si vous préférez garder l'apparence actuelle d'IndieHost comme quatrième option « sans thème » |
+| D2 | Quel thème par défaut pour les pages existantes ? | **Appliqué le 2026-11-10** faute d'objection : Maison, pour une page dont aucun logement n'a d'adresse. L'ancienne apparence IndieHost de la page principale n'existe plus |
 | D3 | Le texte de présentation devient-il du texte brut ? | Oui pour la page principale : c'est la condition de l'édition sur place sans barre de mise en forme. La description des annonces garde son éditeur riche |
 | D4 | Enregistrement immédiat en ligne, ou brouillon puis « Appliquer » comme dans l'éditeur ? | Immédiat, avec « Annuler » : le brouillon ajoute une étape que la règle de simplicité n'autorise pas. À confirmer, car c'est différent de l'éditeur actuel |
 | D5 | Les pages d'annonce simples reçoivent-elles aussi les thèmes ? | Plus tard : la page d'annonce a un tunnel de réservation à habiller, c'est un chantier à part |
@@ -302,4 +321,5 @@ L'étape 2 est livrable seule : les hôtes ont déjà de beaux thèmes avant que
 - **2026-11-10** – Demande de Nathan : le thème s'adapte tout seul au lieu des logements (mer : Rivage ; montagne ou terres : Maison ; le reste : thème par défaut). Règle écrite et testable sur les maquettes avec `?lieu=` ; la détection du lieu reste à construire côté serveur (section 7 bis).
 - **2026-11-10** – Remarque de Nathan : le lieu se connaît par l'adresse de l'annonce. Fait : l'API classe chaque logement « mer » ou « terres » à partir de ses coordonnées et du tracé des côtes embarqué, sans service extérieur, et le renvoie dans la liste des logements d'une page principale. Le cadre passe de quatre valeurs (mer, montagne, terres, ville) à deux : montagne et terres donnent le même thème, et la ville n'est plus un cas à part.
 - **2026-11-10** – Décisions de Nathan : Rivage version 2 validé, donc les trois thèmes le sont ; seuil « à proximité de la mer » porté de 5 à 10 km. Effet mesuré du nouveau seuil : Bordeaux-centre et Bayonne passent en « mer », Montpellier-centre reste en « terres » à 20 mètres près.
+- **2026-11-10** – Demande de Nathan : « branche les thèmes en production ». Fait pour la page principale publique (détail en section 8). La description riche de la page est affichée en texte simple ; rien n'est modifié dans les données. Reste hors de ce branchement : le choix du thème par l'hôte, le mode édition, les pages d'annonce simples.
 - **2026-11-10** – Idées notées, non retenues pour l'instant : bulle d'aide au premier passage sur le crayon ; aperçu « téléphone » dans la barre ; annulation de la dernière modification ; section « Avis » et section « Nous trouver » ; duplication du contenu d'un thème à l'autre (inutile : le contenu est indépendant du thème).

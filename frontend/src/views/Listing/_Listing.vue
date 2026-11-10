@@ -248,5 +248,12 @@ watch(
   > .sub-container {
     height: 100dvh;
   }
+
+  // Page principale : c'est une page ordinaire, qui défile avec le document. Le cadre fixé à la
+  // hauteur de l'écran (pensé pour l'annonce, qui défile dans ses colonnes) coupait tout ce qui dépassait.
+  &:has(> .themed-hub-page) {
+    height: auto;
+    overflow: visible;
+  }
 }
 </style>
