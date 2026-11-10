@@ -154,6 +154,11 @@ function isBlockingEventStatus(status?: string | null): boolean {
   return normalized !== 'cancelled' && normalized !== 'canceled';
 }
 
+// Même lecture que `readReservationCancellationState` (bookings.service.ts).
+function isCanceledReservationPayment(payment: unknown): boolean {
+  return asObject(asObject(payment).cancellation).status === 'canceled';
+}
+
 function toIcalStatus(status?: string | null): ICalEventStatus {
   const normalized = normalizeEventStatus(status).toLowerCase();
   if (normalized === 'cancelled' || normalized === 'canceled') return ICalEventStatus.CANCELLED;
@@ -548,6 +553,7 @@ export class CalendarService {
         select: {
           startDate: true,
           endDate: true,
+          payment: true,
         },
       }),
       this.prisma.calendarEvent.findMany({
@@ -563,9 +569,13 @@ export class CalendarService {
       }),
     ]);
 
+    // Une réservation annulée garde sa ligne (`payment.cancellation.status`) mais ne bloque plus ses dates :
+    // la recompter les rendait de nouveau indisponibles à la synchronisation iCal suivante.
+    const activeReservations = persistedReservations.filter((reservation) => !isCanceledReservationPayment(reservation.payment));
+
     const reservationRanges = persistedReservations.length
       ? uniqueSortedRanges(
-        persistedReservations
+        activeReservations
           .map((reservation) => normalizeDayRange(reservation.startDate, reservation.endDate, true))
           .filter((range): range is DayRange => range !== null),
       )
