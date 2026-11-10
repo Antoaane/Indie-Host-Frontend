@@ -1,6 +1,8 @@
 import type { PrismaClient, User } from '@prisma/client';
 import Stripe from 'stripe';
 
+import { isStripeAccountUnderReview } from './connectStatus.js';
+
 import { env } from '../../config/env.js';
 import {
   EXTRA_LISTING_TEMPLATE,
@@ -2355,6 +2357,42 @@ export class PaymentsService {
     return this.buildSubscriptionStateForUser(user, { allowAdmin: false, sync: Boolean(options?.sync) });
   }
 
+  /**
+   * Relit chez Stripe l'état d'un compte connecté qui n'est pas encore noté « complet ».
+   *
+   * Stripe active les encaissements quand il a fini de vérifier les pièces de l'hôte, sans nous
+   * prévenir (aucun webhook `account.updated` n'est traité). Sans cette relecture, l'éditeur et la
+   * page d'activation restaient sur l'ancien état jusqu'à ce que l'hôte relance l'inscription Stripe.
+   * Un appel par synchronisation, et plus aucun une fois le compte complet.
+   */
+  private async refreshPendingConnectState(user: User): Promise<User> {
+    if (!this.stripe) return user;
+
+    const connect = this.readConnectState(user);
+    const accountId = connect.accountId;
+    if (!accountId || accountId.startsWith('acct_mock_')) return user;
+    if (connect.onboardingStatus === 'completed' && connect.chargesEnabled && connect.payoutsEnabled) return user;
+
+    try {
+      const account = await this.stripe.accounts.retrieve(accountId);
+      return await this.updateUserStripeState({
+        user,
+        stripeConnectAccountId: accountId,
+        connectPatch: {
+          accountId,
+          onboardingStatus: this.resolveConnectOnboardingStatusFromStripeAccount(account),
+          chargesEnabled: Boolean(account.charges_enabled),
+          payoutsEnabled: Boolean(account.payouts_enabled),
+          defaultCurrency: (account.default_currency ?? 'eur').toLowerCase(),
+          transferSchedule: readString(account.settings?.payouts?.schedule?.interval) ?? 'manual',
+        },
+      });
+    } catch (error) {
+      console.warn('[payments] Stripe Connect state refresh failed', { userId: user.id, error });
+      return user;
+    }
+  }
+
   private async buildSubscriptionStateForUser(
     initialUser: User,
     options: { allowAdmin: boolean; sync: boolean },
@@ -2384,6 +2422,10 @@ export class PaymentsService {
           });
         }
       }
+    }
+
+    if (shouldSync) {
+      user = await this.refreshPendingConnectState(user);
     }
 
     const currentBilling = this.readBillingSnapshot(user);
@@ -3280,6 +3322,11 @@ export class PaymentsService {
 
     if (chargesEnabled && payoutsEnabled && !disabledReason && currentlyDue === 0) {
       return 'completed';
+    }
+
+    // Tout est fourni, Stripe vérifie : l'hôte n'a rien à faire, il ne faut pas lui redemander de s'inscrire.
+    if (isStripeAccountUnderReview(account)) {
+      return 'verifying';
     }
 
     if (disabledReason || currentlyDue > 0) {

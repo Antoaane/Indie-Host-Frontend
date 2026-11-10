@@ -24,6 +24,8 @@
       "externalLink": "Ouvrir l’annonce publique",
       "connectCta": "Configurer mon compte",
       "connectCtaAria": "Finaliser la configuration du compte pour activer la publication de cette annonce",
+      "connectReviewCta": "Vérification Stripe en cours",
+      "connectReviewCtaAria": "Stripe vérifie votre compte, vous n’avez rien à faire. Ouvrir le suivi de l’activation",
       "status": {
         "published": "Publiée",
         "archived": "Archivée",

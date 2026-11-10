@@ -2,6 +2,8 @@ import type { PrismaClient } from '@prisma/client';
 import type { FastifyBaseLogger } from 'fastify';
 import Stripe from 'stripe';
 
+import { isStripeAccountUnderReview } from '../domains/payments/connectStatus.js';
+
 import { env } from '../config/env.js';
 import { CalendarService } from '../domains/calendar/calendar.service.js';
 import {
@@ -174,21 +176,24 @@ async function deliver(ctx: Context, input: DeliverHostEmailInput): Promise<void
 
 // --- Compte de paiement Stripe ---------------------------------------------------------------
 
-type ConnectState = { ready: boolean; started: boolean };
+// `underReview` : l'hôte a tout fourni, Stripe vérifie. Le relancer pour « activer ses paiements » serait faux.
+type ConnectState = { ready: boolean; started: boolean; underReview: boolean };
 
 async function readConnectState(ctx: Context, host: HostRow): Promise<ConnectState> {
   const profile = asObject(host.stripeConnectProfile);
   const accountId = host.stripeConnectAccountId ?? readString(profile.accountId);
-  if (profile.chargesEnabled === true) return { ready: true, started: true };
-  if (!accountId) return { ready: false, started: false };
+  if (profile.chargesEnabled === true) return { ready: true, started: true, underReview: false };
+  if (!accountId) return { ready: false, started: false, underReview: false };
   // Le profil n'est rafraîchi que lorsque l'hôte passe sur la page d'activation : Stripe fait foi.
-  if (!ctx.stripe || accountId.startsWith('acct_mock_')) return { ready: false, started: true };
+  if (!ctx.stripe || accountId.startsWith('acct_mock_')) {
+    return { ready: false, started: true, underReview: profile.onboardingStatus === 'verifying' };
+  }
   try {
     const account = await ctx.stripe.accounts.retrieve(accountId);
-    return { ready: account.charges_enabled === true, started: true };
+    return { ready: account.charges_enabled === true, started: true, underReview: isStripeAccountUnderReview(account) };
   } catch (error) {
     ctx.logger.warn({ err: error, userId: host.id }, '[host-reminders] Stripe account lookup failed');
-    return { ready: true, started: true };
+    return { ready: true, started: true, underReview: false };
   }
 }
 
@@ -304,7 +309,7 @@ async function remindAccountSetup(ctx: Context, hosts: HostRow[]): Promise<void>
       continue;
     }
 
-    if (connectStep && !connect.ready) {
+    if (connectStep && !connect.ready && !connect.underReview) {
       await deliver(ctx, {
         host,
         kind: 'connect_incomplete',
@@ -383,7 +388,7 @@ async function remindDrafts(ctx: Context): Promise<void> {
       accountSteps.push('Choisir votre offre : les 30 premiers jours sont gratuits.');
     }
     const connect = await readConnectState(ctx, host);
-    if (!connect.ready) accountSteps.push('Activer les paiements : un compte Stripe à votre nom, environ 5 minutes.');
+    if (!connect.ready && !connect.underReview) accountSteps.push('Activer les paiements : un compte Stripe à votre nom, environ 5 minutes.');
 
     await deliver(ctx, {
       host,

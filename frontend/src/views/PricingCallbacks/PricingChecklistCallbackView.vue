@@ -304,6 +304,13 @@ const isOnboardingConnectReady = computed(() => {
   return isConnectReadyFromState(subscriptionState.value)
 })
 
+// L'hôte a terminé son inscription Stripe et Stripe vérifie ses pièces : il n'a plus rien à faire,
+// il ne faut ni lui dire que c'est incomplet, ni lui proposer de recommencer.
+const isConnectUnderReview = computed(() => (
+  !isOnboardingConnectReady.value && subscriptionState.value?.connect?.onboardingStatus === 'verifying'
+))
+const CONNECT_UNDER_REVIEW_DETAIL = 'Stripe a bien reçu vos informations et les vérifie. Vous n’avez rien à faire : les encaissements s’activeront tout seuls dès la vérification terminée, le plus souvent en quelques minutes, parfois en quelques jours.'
+
 const isOnboardingReadyForPublish = computed(() => Boolean(subscriptionState.value?.publicationReadiness?.canPublish))
 const onboardingMissingRequirements = computed(() => subscriptionState.value?.publicationReadiness?.missingRequirements ?? [])
 
@@ -335,6 +342,8 @@ type ChecklistItem = {
   title: string
   detail: string
   state: ChecklistState
+  /** Remplace le libellé de l'état (« À faire ») quand l'étape n'attend rien de l'hôte. */
+  stateLabel?: string
 }
 
 const checklistStateLabels: Record<ChecklistState, string> = {
@@ -363,6 +372,7 @@ function resolveListingStepDetail({
     if (isOnboardingReadyForPublish.value) return 'Tout est prêt. Vous pouvez publier maintenant.'
     if (onboardingListingId.value) {
       if (!isOnboardingConnectMandatory.value || connectDone) return 'Finalisez la mise en ligne de votre annonce.'
+      if (isConnectUnderReview.value) return 'Vous pourrez mettre en ligne dès que Stripe aura terminé sa vérification.'
       return 'Activez Stripe Connect pour terminer la mise en ligne.'
     }
     if (subscriptionDone) return 'Votre annonce est en cours de préparation.'
@@ -419,10 +429,13 @@ const checklistItems = computed<ChecklistItem[]>(() => {
       title: 'Stripe Connect',
       detail: connectDone
         ? 'Paiements configurés pour recevoir vos revenus.'
-        : isOnboardingConnectMandatory.value
-          ? 'Configurez Stripe Connect pour activer les encaissements.'
-          : 'Configuration recommandée pour activer les paiements.',
+        : isConnectUnderReview.value
+          ? CONNECT_UNDER_REVIEW_DETAIL
+          : isOnboardingConnectMandatory.value
+            ? 'Configurez Stripe Connect pour activer les encaissements.'
+            : 'Configuration recommandée pour activer les paiements.',
       state: connectDone ? 'done' : subscriptionDone ? 'active' : 'upcoming',
+      stateLabel: isConnectUnderReview.value ? 'Vérification' : undefined,
     },
     {
       id: 'listing',
@@ -475,6 +488,14 @@ const primaryAction = computed<PrimaryAction>(() => {
     return {
       id: 'choose-plan',
       label: 'Choisir mon abonnement',
+    }
+  }
+
+  // Stripe vérifie : le seul geste utile est de regarder si c'est terminé.
+  if (isSubscriptionActive.value && isConnectUnderReview.value) {
+    return {
+      id: 'refresh',
+      label: 'Vérifier où en est Stripe',
     }
   }
 
@@ -1076,6 +1097,8 @@ async function runConnectCallbackFlow() {
 
   if (syncResult.ready || isOnboardingConnectReady.value) {
     infoMessage.value = 'Stripe Connect synchronisé avec succès.'
+  } else if (isConnectUnderReview.value) {
+    infoMessage.value = 'Votre inscription Stripe est terminée. Stripe vérifie maintenant vos informations : vous n’avez rien à faire.'
   } else {
     const missingConnectRequirements = onboardingMissingRequirements.value
       .filter((item) => item.startsWith('stripe_connect_'))
@@ -1295,7 +1318,7 @@ watch(
           <div class="content">
             <div class="title-row">
               <h2>{{ item.title }}</h2>
-              <span class="state-chip">{{ checklistStateLabels[item.state] }}</span>
+              <span class="state-chip">{{ item.stateLabel ?? checklistStateLabels[item.state] }}</span>
             </div>
             <p>{{ item.detail }}</p>
           </div>

@@ -39,6 +39,7 @@ const {
   isPatchSyncPending,
   lastDraftSavedAt,
   isStripeConnectPublishLocked,
+  isStripeConnectUnderReview,
   listings,
   listingsStatus,
   pendingListingsCount,
@@ -179,6 +180,7 @@ watch(selectedListingId, (listingId) => {
               :error="listingsStatus.error"
               :selectedListingId="selectedListingId"
               :isStripeConnectPublishLocked="isStripeConnectPublishLocked"
+              :isStripeConnectUnderReview="isStripeConnectUnderReview"
               :canPreview="isPreviewAvailable"
               :isAdmin="isAdminUser"
               :isCreatingHub="isCreatingHub"

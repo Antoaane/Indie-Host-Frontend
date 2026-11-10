@@ -32,6 +32,7 @@ const props = defineProps<{
   statusOptions: readonly string[]
   listingContent: ListingContent
   isStripeConnectPublishLocked?: boolean
+  isStripeConnectUnderReview?: boolean
   canPreview?: boolean
   canTransfer?: boolean
   canPublishListing?: boolean
@@ -476,12 +477,12 @@ function goToImageLabel(index: number) {
           <div class="connect-cta">
             <button
               type="button"
-              :aria-label="props.listingContent.connectCtaAria"
-              :title="props.listingContent.connectCta"
+              :aria-label="props.isStripeConnectUnderReview ? props.listingContent.connectReviewCtaAria : props.listingContent.connectCtaAria"
+              :title="props.isStripeConnectUnderReview ? props.listingContent.connectReviewCta : props.listingContent.connectCta"
               @pointerdown.stop
               @click.stop="handleConfigureConnect"
             >
-              {{ props.listingContent.connectCta }}
+              {{ props.isStripeConnectUnderReview ? props.listingContent.connectReviewCta : props.listingContent.connectCta }}
             </button>
           </div>
         </div>

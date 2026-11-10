@@ -37,6 +37,8 @@ export function useEditorController(options: EditorControllerOptions) {
   const selectionToken = ref(0)
   const sourceToken = ref(0)
   const isStripeConnectPublishLocked = ref(false)
+  // Inscription Stripe terminée, vérification en cours chez Stripe : la carte ne dit plus « Configurer mon compte ».
+  const isStripeConnectUnderReview = ref(false)
   const domainRevision = ref(0)
 
   const listingState = useEditorListingState({
@@ -96,6 +98,7 @@ export function useEditorController(options: EditorControllerOptions) {
     try {
       const billingState = await fetchMyStripeSubscriptionState({ sync })
       isStripeConnectPublishLocked.value = !isStripeConnectConfiguredFromBillingState(billingState)
+      isStripeConnectUnderReview.value = isStripeConnectPublishLocked.value && billingState.connect?.onboardingStatus === 'verifying'
       return billingState
     } catch (error) {
       console.warn('[Editor] failed to refresh stripe connect publication lock state', { error })
@@ -517,6 +520,7 @@ export function useEditorController(options: EditorControllerOptions) {
     selectedListingId,
     selectedListingHasPendingChanges,
     isStripeConnectPublishLocked,
+    isStripeConnectUnderReview,
     showListings,
     showPreview,
     stage,

@@ -1,6 +1,7 @@
 // File: src/domain/user/stripeConnect.ts
 
-export type StripeConnectOnboardingStatus = 'not_started' | 'pending' | 'completed' | 'restricted'
+// `verifying` : l'hôte a tout fourni, Stripe vérifie ses pièces. Rien à faire de son côté.
+export type StripeConnectOnboardingStatus = 'not_started' | 'pending' | 'verifying' | 'completed' | 'restricted'
 
 export type OwnerStripeConnectProfile = {
   accountId: string | null
@@ -25,6 +26,7 @@ function parseBoolean(value: unknown, fallback = false): boolean {
 function parseOnboardingStatus(value: unknown): StripeConnectOnboardingStatus {
   if (value === 'pending') return 'pending'
   if (value === 'completed') return 'completed'
+  if (value === 'verifying') return 'verifying'
   if (value === 'restricted') return 'restricted'
   return 'not_started'
 }
