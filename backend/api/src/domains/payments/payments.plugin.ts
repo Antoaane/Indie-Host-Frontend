@@ -58,6 +58,20 @@ export const paymentsPlugin = fp(async (fastify) => {
     reply.code(201).send(result);
   });
 
+  // « Mes revenus » : état du compte d'encaissement, solde, virements et paiements des réservations.
+  fastify.get('/payments/stripe/connect/overview', {
+    preHandler: fastify.authenticate,
+  }, async (request, reply) => {
+    const result = await service.getConnectOverview(request.auth);
+
+    if (!result) {
+      reply.code(401).send({ message: 'Authentication required.' });
+      return;
+    }
+
+    reply.send(result);
+  });
+
   fastify.post('/payments/stripe/connect/dashboard-link', {
     preHandler: fastify.authenticate,
   }, async (request, reply) => {

@@ -16,7 +16,6 @@ import NavPublicVariant from '@/components/navs/Nav/NavPublicVariant.vue'
 import type { NavItem, NavVariant } from '@/components/navs/Nav/navTypes'
 import { closeMobileMenu, isMobileMenuOpen, isNavForcedHidden } from '@/components/navs/navUtils'
 import { clearSharedRequests } from '@/domain/api/requestCache'
-import { createMyStripeConnectDashboardLink, fetchMyStripeSubscriptionState } from '@/domain/api/stripeSubscriptions'
 import { isListingHostname } from '@/domain/listings/publicDomain'
 import { useAdminAccess } from '@/composables/useAdminAccess'
 import { useBootLoader } from '@/composables/useBootLoader'
@@ -34,14 +33,8 @@ const navRoot = ref<HTMLElement | null>(null)
 const reservationAnchor = ref<HTMLElement | null>(null)
 const reservationOpen = ref(false)
 const isNavHiddenByScroll = ref(false)
-const canOpenStripeConnectDashboard = ref(false)
-const stripeConnectAccountId = ref<string | null>(null)
-const isOpeningStripeConnectDashboard = ref(false)
-const stripeConnectAvailabilityRequestId = ref(0)
 const dockOptionsOpen = ref(false)
 const myProfileDialogOpen = ref(false)
-// Connexion au tableau de bord Stripe complet, celui des comptes d'encaissement créés par IndieHost.
-const STRIPE_DASHBOARD_URL = 'https://dashboard.stripe.com/'
 
 let lastScrollY = 0
 const SCROLL_THRESHOLD = 80
@@ -157,75 +150,9 @@ function closeDockOptions() {
   dockOptionsOpen.value = false
 }
 
-function resetStripeConnectDashboardAccess() {
-  canOpenStripeConnectDashboard.value = false
-  stripeConnectAccountId.value = null
-}
-
-async function refreshStripeConnectDashboardAvailability() {
-  const requestId = stripeConnectAvailabilityRequestId.value + 1
-  stripeConnectAvailabilityRequestId.value = requestId
-
-  if (!isHost.value || !isSignedIn.value) {
-    resetStripeConnectDashboardAccess()
-    return
-  }
-
-  try {
-    const token = await getToken.value()
-    if (!token) throw new Error('Session utilisateur absente.')
-
-    clerkToken.value = token
-    const state = await fetchMyStripeSubscriptionState()
-    if (requestId !== stripeConnectAvailabilityRequestId.value) return
-
-    const accountId = state.connect?.accountId ?? null
-    const onboardingCompleted = Boolean(state.publicationReadiness?.connectOnboardingCompleted || state.connect?.onboardingStatus === 'completed')
-
-    stripeConnectAccountId.value = accountId
-    canOpenStripeConnectDashboard.value = Boolean(accountId) && onboardingCompleted
-  } catch {
-    if (requestId !== stripeConnectAvailabilityRequestId.value) return
-    resetStripeConnectDashboardAccess()
-  }
-}
-
-async function handleOpenStripeConnectDashboard(_event?: MouseEvent) {
-  if (!canOpenStripeConnectDashboard.value || isOpeningStripeConnectDashboard.value) return
-
-  isOpeningStripeConnectDashboard.value = true
-
-  // L'onglet est ouvert dès le clic : ouvert après l'appel réseau, le navigateur le bloque comme
-  // une fenêtre surgissante. (Avec `noopener`, `window.open` renvoie toujours `null` : l'ancien
-  // code croyait l'onglet bloqué et emmenait aussi l'onglet courant chez Stripe.)
-  const tab = window.open('', '_blank')
-  const openDashboard = (url: string) => {
-    if (tab && !tab.closed) {
-      tab.opener = null
-      tab.location.replace(url)
-      return
-    }
-    window.location.assign(url)
-  }
-
-  try {
-    const token = await getToken.value()
-    if (!token) throw new Error('Session utilisateur absente.')
-
-    clerkToken.value = token
-    const dashboard = await createMyStripeConnectDashboardLink({
-      accountId: stripeConnectAccountId.value ?? undefined,
-    })
-
-    openDashboard(dashboard.url)
-  } catch (error) {
-    // Le lien n'a pas pu être préparé : l'hôte arrive sur la connexion de son tableau de bord
-    // Stripe (celui des comptes créés par IndieHost), plutôt que sur un clic sans effet.
-    console.warn("[Nav] lien vers les revenus Stripe indisponible, ouverture de la page de connexion Stripe", { error })
-    openDashboard(STRIPE_DASHBOARD_URL)
-  } finally {
-    isOpeningStripeConnectDashboard.value = false
-  }
+function handleOpenRevenues() {
+  closeDockOptions()
+  void router.push('/dashboard/revenues')
 }
 
 function handleOpenMyAccount() {
@@ -256,10 +183,7 @@ watch(isHost, (value) => {
   if (!value) {
     closeReservation()
     closeDockOptions()
-    resetStripeConnectDashboardAccess()
-    return
   }
-  void refreshStripeConnectDashboardAvailability()
 })
 
 watch(vp.lg, (value) => {
@@ -280,16 +204,7 @@ watch(
     closeMobileMenu()
     isNavHiddenByScroll.value = false
     lastScrollY = window.scrollY
-    void refreshStripeConnectDashboardAvailability()
   },
-)
-
-watch(
-  () => isSignedIn.value,
-  () => {
-    void refreshStripeConnectDashboardAvailability()
-  },
-  { immediate: true },
 )
 
 const resolveRouteLink = (
@@ -383,17 +298,8 @@ const hostNavItems = computed<NavItem[]>(() => {
     items.push({ id: 'admin', name: 'Admin', link: '/dashboard/admin' })
   }
 
-  if (canOpenStripeConnectDashboard.value) {
-    items.push({
-      id: 'revenues',
-      name: 'Mes revenus',
-      link: resolveBackOfficeRouteLink('management', '/dashboard/management'),
-      action: handleOpenStripeConnectDashboard,
-      attrs: {
-        disabled: isOpeningStripeConnectDashboard.value,
-      },
-    })
-  }
+  // Toujours présent : la page dit où en est le compte d'encaissement, même avant son activation.
+  items.push({ id: 'revenues', name: 'Mes revenus', link: '/dashboard/revenues' })
 
   return items
 })
@@ -420,10 +326,9 @@ const activeNavComponent = computed(() => navVariantComponentMap[navVariant.valu
 
 const backOfficeDockOptionsItems = computed<BackOfficeDockOptionsItem[]>(() => [
   {
-    id: 'dock-options-stripe-dashboard',
-    label: 'Dashboard Stripe',
-    action: handleOpenStripeConnectDashboard,
-    disabled: !canOpenStripeConnectDashboard.value || isOpeningStripeConnectDashboard.value,
+    id: 'dock-options-revenues',
+    label: 'Mes revenus',
+    action: handleOpenRevenues,
   },
   {
     id: 'dock-options-my-account',
@@ -554,8 +459,6 @@ onMounted(async () => {
   } catch {
     clerkToken.value = null
   }
-
-  void refreshStripeConnectDashboardAvailability()
 })
 
 onBeforeUnmount(() => {

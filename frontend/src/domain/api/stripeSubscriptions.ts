@@ -139,6 +139,37 @@ export type StripeConnectDashboardLinkResponse = {
   mode: 'live' | 'mock'
 }
 
+// Synthèse « Mes revenus » (miroir de `ConnectOverviewResult` côté API).
+export type StripeConnectOverview = {
+  account: {
+    id: string | null
+    status: string
+    chargesEnabled: boolean
+    payoutsEnabled: boolean
+  }
+  // Faux quand Stripe n'a pas répondu : solde et virements sont alors absents, pas à zéro.
+  stripeAvailable: boolean
+  balance: { currency: string; availableMinor: number; pendingMinor: number } | null
+  payouts: Array<{ id: string; amountMinor: number; currency: string; status: string; arrivalDate: string | null }>
+  sales: {
+    currency: string
+    last30Days: { amountMinor: number; count: number }
+    thisYear: { amountMinor: number; count: number }
+  }
+  payments: Array<{
+    id: string
+    listingId: string
+    listingTitle: string
+    amountMinor: number
+    currency: string
+    status: string
+    createdAt: string
+    refundedAmountMinor: number
+    disputeStatus: string | null
+    reservation: { id: string; guestName: string; startDate: string; endDate: string } | null
+  }>
+}
+
 export type StripeConnectSyncResponse = {
   mode: 'live' | 'mock'
   connect: StripeConnectSummary
@@ -159,6 +190,7 @@ const ACTIVATE_PATH = '/payments/stripe/subscriptions/activate'
 const CONFIRM_CHECKOUT_PATH = '/payments/stripe/subscriptions/checkout/confirm'
 const CONNECT_ONBOARDING_LINK_PATH = '/payments/stripe/connect/onboarding-link'
 const CONNECT_DASHBOARD_LINK_PATH = '/payments/stripe/connect/dashboard-link'
+const CONNECT_OVERVIEW_PATH = '/payments/stripe/connect/overview'
 const CONNECT_SYNC_PATH = '/payments/stripe/connect/sync'
 
 // Cache partagé de l'état d'abonnement (`requestCache.ts`) : au chargement d'une page du tableau
@@ -665,6 +697,21 @@ export async function createMyStripeConnectDashboardLink(input?: { accountId?: s
     return data
   } catch (error) {
     throw new Error(toApiErrorMessage(error, 'Impossible de créer un lien vers le dashboard Stripe Connect.'))
+  }
+}
+
+export async function fetchMyStripeConnectOverview(): Promise<StripeConnectOverview> {
+  const axios = await getAxios()
+  const headers = await getHeaders({ requiresAuth: true })
+
+  try {
+    const { data } = await axios.get<StripeConnectOverview>(resolveUrl(buildApiUrl(CONNECT_OVERVIEW_PATH)), {
+      withCredentials: false,
+      headers,
+    })
+    return data
+  } catch (error) {
+    throw new Error(toApiErrorMessage(error, 'Impossible de charger vos revenus pour le moment.'))
   }
 }
 

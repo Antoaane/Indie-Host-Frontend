@@ -211,6 +211,7 @@ secrets/cloudflare.ini           → Credentials Cloudflare DNS-01
 | `/dashboard/messages` | MessagingRoute |
 | `/dashboard/domains` | DomainsRoute |
 | `/dashboard/page/:listingId` | HubPageEditRoute (mode édition de la page de présentation d'une page principale) |
+| `/dashboard/revenues` | RevenuesRoute (« Mes revenus » : état du compte Stripe de l'hôte, solde, virements, paiements des réservations) |
 | `/dashboard/admin` | AdminRoute (super admin uniquement : clients, invitations Clerk, abonnement/logements supplémentaires d'un client, lien de paiement Stripe à lui envoyer) |
 
 **Guards :** Les routes `/dashboard/*` sans `userId` attendent Clerk (2500ms max) puis redirigent vers variante `*-user` avec l'userId, ou vers `sign-in`.
@@ -759,6 +760,18 @@ Les domaines personnalisés pointent **directement** sur le VPS (pas via Cloudfl
   - Calendrier (`DatePicker`, aussi celui de la réservation publique) : le milieu d'une période est un bandeau avec le texte normal ; le fond plein de Nuxt UI recevait la couleur de texte globale (jours invisibles, dans les deux thèmes).
   - « Mes revenus » ouvre le tableau de bord Stripe de l'hôte dans un onglet créé au clic (`Nav.vue`). L'API accepte l'état `verifying` (`createConnectDashboardLink`) : il affichait le lien puis répondait 500.
   - Jeton `--tap-target` (`_layouts.scss`) : côté d'un contrôle carré ou hauteur d'une ligne cliquable, 44 px au moins au doigt.
+
+- **Mes revenus (2026-11-11)** : page `/dashboard/revenues` (`views/Revenues/`), alimentée par `GET /payments/stripe/connect/overview` (`getConnectOverview`) : état du compte d'encaissement, solde et cinq derniers virements lus sur le compte connecté (`{ stripeAccount }`), encaissé sur 30 jours et sur l'année et vingt derniers paiements depuis la table `Payment` (nets des remboursements). Si Stripe ne répond pas, `stripeAvailable` vaut faux et la page affiche quand même les paiements connus. Le bouton « Ouvrir mon tableau de bord Stripe » passe par `domain/payments/stripeDashboard.ts`. La navigation ne prépare plus de lien Stripe. Route d'essai `/dev/revenues?state=verifying|none|empty|offline`.
+  - État du compte connecté : un compte pas encore complet est relu chez Stripe au plus une fois par minute, à chaque lecture de l'état d'abonnement, de la synthèse ou du lien vers le tableau de bord (`refreshPendingConnectState`). Avant, il n'était relu que sur une synchronisation demandée : un compte validé par Stripe restait « en vérification » chez IndieHost.
+
+- **Chargement du tableau de bord (2026-11-11)** : l'écran de chargement (`useBootLoader.ts`) se réarme à chaque passage d'un écran du tableau de bord à un autre (nom de route différent) et attend, en plus du silence de l'API, que la page ne reçoive plus d'éléments (`MutationObserver` sur `#app > main`). Plafond de 3 s pour un changement d'écran, 5 s au chargement de la page.
+
+- **Téléphone, deuxième étape (2026-11-11)** :
+  - Tableau de bord bord à bord sous `lg` : mixin `dashboard-panel-radius` (`_layouts.scss`) pour le panneau principal d'un écran, plus de marge autour de la racine. Ne pas remettre de cadre arrondi avec marge sur téléphone.
+  - Fond du document en thème sombre : `$background` (règle `html[data-theme='dark'] body`), sinon `$secondary` devient clair autour des panneaux.
+  - Écrans en hauteur fixe (`#management-page`, `#messaging-page`, `#create-listing-page`, `#listing-page` hors page principale) : le document est verrouillé (`overflow: hidden`, `overscroll-behavior: none`) par une règle `html:has(…)` de `_global.scss`. Tout nouvel écran de ce type s'y ajoute.
+  - Page d'un logement en disposition téléphone (`.is-mobile-layout`) : écart entre sections `--layout-gap-4xl`, titres de section en `h3-title`, pièces deux par ligne. Calendrier de réservation (`BookingDates.vue`) : un mois sous `md`, fond plein, résumé des dates et bouton « Valider ». Route d'essai `/dev/listing`.
+  - Vérifier le thème sombre dans un cadre `iframe` : poser `color-scheme: dark` sur l'élément `iframe`, sinon `prefers-color-scheme` y suit la page qui l'héberge.
 
 - **Passe téléphone (2026-11-11, première étape)** : la racine vaut 15 px sous `md` (`styles/layouts/_global.scss`), comme sur ordinateur à la souris ; tablette tactile à 16 px. Conséquences à respecter : une zone tactile s'écrit `var(--tap-target)` (86 occurrences de `2.75rem` remplacées) et un champ garde `font-size: max(1rem, 16px)` sous `(pointer: coarse)`. Retouches propres au téléphone : photo des cartes « Mes annonces » en 16/10 (carrée à partir de `sm`), sous-titre de l'annonce publique à la taille d'un intertitre et caractéristiques sans coupure au milieu d'un élément (`Title.vue`), libellés de la barre du bas à 0.7rem et « Ajouter » sur une ligne. Vérification à 360 et 390 px : cadre `iframe` de même origine dans Chrome (une page locale pour les routes `/dev/*`, la production avec la feuille de style injectée pour les écrans à session).
   - Serveur de développement sous Docker : `plugins/file-path-comment` ignore les fichiers `.d.ts` générés. Il réécrivait `components.d.ts` en boucle contre son générateur, et une lecture pendant une écriture arrêtait Vite (`ENODATA`).

@@ -281,6 +281,43 @@ export type ConnectDashboardLinkResult = {
   url: string;
 };
 
+// Synthèse « Mes revenus » : l'état du compte d'encaissement de l'hôte, son solde et ses virements
+// (lus chez Stripe, sur son compte connecté) et les paiements de ses réservations (table Payment).
+export type ConnectOverviewResult = {
+  account: {
+    id: string | null;
+    status: string;
+    chargesEnabled: boolean;
+    payoutsEnabled: boolean;
+  };
+  // Faux quand Stripe n'a pas répondu : solde et virements sont alors absents, pas à zéro.
+  stripeAvailable: boolean;
+  balance: { currency: string; availableMinor: number; pendingMinor: number } | null;
+  payouts: Array<{ id: string; amountMinor: number; currency: string; status: string; arrivalDate: string | null }>;
+  sales: {
+    currency: string;
+    last30Days: { amountMinor: number; count: number };
+    thisYear: { amountMinor: number; count: number };
+  };
+  payments: Array<{
+    id: string;
+    listingId: string;
+    listingTitle: string;
+    amountMinor: number;
+    currency: string;
+    status: string;
+    createdAt: string;
+    refundedAmountMinor: number;
+    disputeStatus: string | null;
+    reservation: { id: string; guestName: string; startDate: string; endDate: string } | null;
+  }>;
+};
+
+// Paiements comptés comme encaissés ou en cours d'encaissement.
+const SETTLED_PAYMENT_STATUSES = ['succeeded', 'processing', 'requires_capture'];
+// Un compte pas encore complet est relu chez Stripe au plus une fois par minute et par hôte.
+const CONNECT_REFRESH_INTERVAL_MS = 60_000;
+
 type StripePlanCandidate = {
   product: Stripe.Product;
   price: Stripe.Price;
@@ -2373,13 +2410,23 @@ export class PaymentsService {
    * page d'activation restaient sur l'ancien état jusqu'à ce que l'hôte relance l'inscription Stripe.
    * Un appel par synchronisation, et plus aucun une fois le compte complet.
    */
-  private async refreshPendingConnectState(user: User): Promise<User> {
+  private readonly connectRefreshedAt = new Map<string, number>();
+
+  // `force` : synchronisation demandée par l'hôte. Sinon, au plus une relecture par minute : sans
+  // elle, un compte validé par Stripe restait « en vérification » chez IndieHost tant que l'hôte
+  // ne repassait pas par la page d'activation.
+  private async refreshPendingConnectState(user: User, options?: { force?: boolean }): Promise<User> {
     if (!this.stripe) return user;
 
     const connect = this.readConnectState(user);
     const accountId = connect.accountId;
     if (!accountId || accountId.startsWith('acct_mock_')) return user;
     if (connect.onboardingStatus === 'completed' && connect.chargesEnabled && connect.payoutsEnabled) return user;
+
+    const now = Date.now();
+    const lastRefresh = this.connectRefreshedAt.get(user.id) ?? 0;
+    if (!options?.force && now - lastRefresh < CONNECT_REFRESH_INTERVAL_MS) return user;
+    this.connectRefreshedAt.set(user.id, now);
 
     try {
       const account = await this.stripe.accounts.retrieve(accountId);
@@ -2432,9 +2479,7 @@ export class PaymentsService {
       }
     }
 
-    if (shouldSync) {
-      user = await this.refreshPendingConnectState(user);
-    }
+    user = await this.refreshPendingConnectState(user, { force: shouldSync });
 
     const currentBilling = this.readBillingSnapshot(user);
     const currentPlan = plans.find((plan) => plan.code === currentBilling.planCode) ?? null;
@@ -3302,6 +3347,7 @@ export class PaymentsService {
     let user = await upsertUserFromAuth(this.prisma, auth);
     if (!user) return null;
     user = await this.enforceAdminListingTransferTrialExpiration(user);
+    user = await this.refreshPendingConnectState(user);
 
     const connect = this.readConnectState(user);
     const profileAccountId = readString(this.readStripeProfile(user).accountId);
@@ -3354,6 +3400,129 @@ export class PaymentsService {
       accountId: requestedAccountId,
       url: 'https://dashboard.stripe.com/',
     };
+  }
+
+  async getConnectOverview(auth: RequestAuth | null): Promise<ConnectOverviewResult | null> {
+    let user = await upsertUserFromAuth(this.prisma, auth);
+    if (!user) return null;
+    user = await this.refreshPendingConnectState(user);
+
+    const connect = this.readConnectState(user);
+    const accountId = connect.accountId ?? null;
+    const currency = (connect.defaultCurrency ?? 'eur').toLowerCase();
+
+    const emptySales = { amountMinor: 0, count: 0 };
+    const result: ConnectOverviewResult = {
+      account: {
+        id: accountId,
+        status: connect.onboardingStatus ?? 'none',
+        chargesEnabled: Boolean(connect.chargesEnabled),
+        payoutsEnabled: Boolean(connect.payoutsEnabled),
+      },
+      stripeAvailable: false,
+      balance: null,
+      payouts: [],
+      sales: { currency, last30Days: { ...emptySales }, thisYear: { ...emptySales } },
+      payments: [],
+    };
+
+    if (!accountId) return result;
+
+    // Paiements des réservations encaissés sur ce compte.
+    const now = new Date();
+    const last30Days = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const yearStart = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
+    const settled = { stripeConnectedAccountId: accountId, status: { in: SETTLED_PAYMENT_STATUSES } };
+
+    const [monthTotals, yearTotals, rows] = await Promise.all([
+      this.prisma.payment.aggregate({
+        where: { ...settled, createdAt: { gte: last30Days } },
+        _sum: { amountMinor: true, refundedAmountMinor: true },
+        _count: { _all: true },
+      }),
+      this.prisma.payment.aggregate({
+        where: { ...settled, createdAt: { gte: yearStart } },
+        _sum: { amountMinor: true, refundedAmountMinor: true },
+        _count: { _all: true },
+      }),
+      this.prisma.payment.findMany({
+        where: settled,
+        orderBy: { createdAt: 'desc' },
+        take: 20,
+        select: {
+          id: true,
+          listingId: true,
+          amountMinor: true,
+          currency: true,
+          status: true,
+          createdAt: true,
+          refundedAmountMinor: true,
+          disputeStatus: true,
+          listing: { select: { core: true } },
+          reservation: { select: { id: true, guestName: true, startDate: true, endDate: true } },
+        },
+      }),
+    ]);
+
+    // Encaissé net des remboursements.
+    const netOf = (totals: { _sum: { amountMinor: number | null; refundedAmountMinor: number | null }; _count: { _all: number } }) => ({
+      amountMinor: Math.max(0, (totals._sum.amountMinor ?? 0) - (totals._sum.refundedAmountMinor ?? 0)),
+      count: totals._count._all,
+    });
+    result.sales.last30Days = netOf(monthTotals);
+    result.sales.thisYear = netOf(yearTotals);
+
+    result.payments = rows.map((row) => ({
+      id: row.id,
+      listingId: row.listingId,
+      listingTitle: readString(asObject(row.listing?.core).title) ?? 'Logement',
+      amountMinor: row.amountMinor,
+      currency: row.currency,
+      status: row.status,
+      createdAt: row.createdAt.toISOString(),
+      refundedAmountMinor: row.refundedAmountMinor ?? 0,
+      disputeStatus: row.disputeStatus ?? null,
+      reservation: row.reservation
+        ? {
+            id: row.reservation.id,
+            guestName: row.reservation.guestName,
+            startDate: row.reservation.startDate.toISOString().slice(0, 10),
+            endDate: row.reservation.endDate.toISOString().slice(0, 10),
+          }
+        : null,
+    }));
+
+    // Solde et virements : lus sur le compte de l'hôte. Une panne de Stripe ne doit pas empêcher
+    // d'afficher les paiements connus d'IndieHost.
+    if (this.stripe && !accountId.startsWith('acct_mock_')) {
+      try {
+        const [balance, payouts] = await Promise.all([
+          this.stripe.balance.retrieve({}, { stripeAccount: accountId }),
+          this.stripe.payouts.list({ limit: 5 }, { stripeAccount: accountId }),
+        ]);
+
+        const sumFor = (entries: Array<{ amount: number; currency: string }>) =>
+          entries.filter((entry) => entry.currency === currency).reduce((total, entry) => total + entry.amount, 0);
+
+        result.balance = {
+          currency,
+          availableMinor: sumFor(balance.available),
+          pendingMinor: sumFor(balance.pending),
+        };
+        result.payouts = payouts.data.map((payout) => ({
+          id: payout.id,
+          amountMinor: payout.amount,
+          currency: payout.currency,
+          status: payout.status,
+          arrivalDate: payout.arrival_date ? new Date(payout.arrival_date * 1000).toISOString().slice(0, 10) : null,
+        }));
+        result.stripeAvailable = true;
+      } catch (error) {
+        console.warn('[payments] Stripe Connect overview unavailable', { userId: user.id, error });
+      }
+    }
+
+    return result;
   }
 
   private resolveConnectOnboardingStatusFromStripeAccount(account: Stripe.Account): string {

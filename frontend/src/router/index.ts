@@ -274,6 +274,14 @@ const router = createRouter({
       meta: { navVariant: 'host', title: 'Domaines' },
     },
     {
+      // Synthèse des revenus : compte d'encaissement, solde, virements, paiements des réservations.
+      path: '/dashboard/revenues',
+      name: 'revenues',
+      component: () => import('@/views/Revenues/RevenuesRoute.vue'),
+      meta: { navVariant: 'host', title: 'Mes revenus' },
+      beforeEnter: resolveBackOfficeAccess,
+    },
+    {
       path: '/dashboard/admin',
       name: 'admin',
       component: AdminRoute,
@@ -415,6 +423,12 @@ const router = createRouter({
           name: 'dev-management',
           component: () => import('@/views/Management/dev/DevManagementRoute.vue'),
           meta: { navVariant: 'host', hideNav: true, title: 'Réservations (dev)' },
+        }, {
+          // « Mes revenus » sur de faux chiffres (`?state=verifying|none|empty|offline`).
+          path: '/dev/revenues',
+          name: 'dev-revenues',
+          component: () => import('@/views/Revenues/dev/DevRevenuesRoute.vue'),
+          meta: { navVariant: 'host', hideNav: true, title: 'Mes revenus (dev)' },
         }, {
           // Page publique d'un logement sur l'annonce en mémoire (rendu téléphone, calendrier de réservation).
           path: '/dev/listing',
