@@ -321,6 +321,11 @@ function toApiErrorMessage(error: unknown, fallback: string): string {
     const response = (error as { response?: { status?: unknown; data?: { message?: unknown } } }).response
     if (response?.status === 401) return 'Votre session a expiré. Rechargez la page, puis réessayez.'
     const responseMessage = response?.data?.message
+    // Route inconnue de l'API : le site a été mis à jour avant le serveur. Le texte technique de
+    // Fastify (« Route GET:/v1/… not found ») ne dit rien à un hôte.
+    if (response?.status === 404 && typeof responseMessage === 'string' && responseMessage.startsWith('Route ')) {
+      return 'Cette page n’est pas encore disponible : le serveur n’a pas reçu la dernière mise à jour. Réessayez dans quelques minutes.'
+    }
     if (typeof responseMessage === 'string' && responseMessage.trim()) return responseMessage.trim()
 
     const message = (error as { message?: unknown }).message

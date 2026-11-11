@@ -12,7 +12,8 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ### À déployer et à vérifier (session du 2026-11-11, jusqu’au commit `424cbe9`)
 
-- [ ] Déployer le site **et l’API** : `cd /opt/indiehost && git pull && docker compose build migrate api frontend && docker compose up -d --wait`. Le 2026-11-11 l’API de production n’avait pas été reconstruite : « Modifier la page » y répondait « Invalid request payload. » et « Mes revenus » une erreur 500. Contrôle : `curl -s -o /dev/null -w "%{http_code}" -X PUT https://indiehost.fr/api/v1/listings/x/page` doit répondre 401 (400 ou 404 : API pas reconstruite), et `curl -s -o /dev/null -w "%{http_code}" https://indiehost.fr/api/v1/payments/stripe/connect/overview` aussi 401.
+- [ ] Déployer le site **et l’API** avec le nouveau script : `cd /opt/indiehost && git pull && ./deploy-indiehost.sh`. Il reconstruit migrations, API et site (pas le scraping) puis vérifie que l’API en ligne est la nouvelle ; s’il affiche « ÉCHEC », m’envoyer la sortie de `docker compose logs --tail 80 api`. Constat du 2026-11-11 au soir : le site en ligne est à jour mais l’API est l’ancienne (« Mes revenus » et « Modifier la page » répondent « Route … not found »).
+- [ ] (après ce déploiement) Éditeur, page « Coeur de Saint François » : « Ouvrir l’annonce publique » doit ouvrir `apparts-saintfrancois.fr` avec le bouton « Modifier ma page » en bas à droite ; pour « Raisins Clairs », `apparts-saintfrancois.fr/appartement-les-raisins-clairs`. Fenêtre « Profil » (Mon profil → Mes informations) : pleine largeur et lisible en thème sombre.
 - [ ] (après ce déploiement) Réservations, sur le compte de Saint-François : plus de « Voyageur 1 / 2 » ; le bloc « 2 périodes bloquées par un calendrier importé » sous la fiche ; « Coeur de Saint François » en titre de groupe et non en logement ; calendrier lisible en clair et en sombre.
 - [ ] (après ce déploiement) « Mes revenus » : la page doit annoncer « Paiements activés » (vu chez Stripe le 2026-11-11 : compte `acct_1UTgHiBxC9MDMaAf` actif, paiements et virements ouverts, rien à fournir ; IndieHost le croyait encore « en vérification »). Vérifier le bouton « Ouvrir mon tableau de bord Stripe » (nouvel onglet).
 - [ ] (après ce déploiement) Sur votre iPhone : écrans Réservations, Messagerie et page d’un logement, la page ne doit plus se décaler dans le vide ; tableau de bord bord à bord, en sombre si l’iPhone est en sombre ; tailles de la page d’un logement ; calendrier de réservation (un mois, résumé, « Valider ») ; barre du bas (libellés lisibles). Claude n’a pu le vérifier que dans Chrome à 360 et 390 px, pas sur un vrai iPhone : dites ce qui reste trop gros ou gênant.
@@ -164,6 +165,8 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 - [ ] Deux titres `h2` de la landing (`FaqSection/faq-section.scss`, `HowSection/how-section.scss`) gardent une marge basse de 0,5 rem au-delà de `lg`, héritée du mixin `lp-h2-title` ; la valeur du site (3 gaps / 1 rem) ne s'appliquait que sur mobile. Rendu conservé à l'identique pendant la passe Sass ; décider si la grande marge doit aussi valoir sur bureau (après votre regard).
 
 ## Fait
+
+- [x] 2026-11-11 — Lien public vers le domaine relié, bouton « Modifier ma page » pour le propriétaire, fenêtre « Profil » de Clerk réparée, script de déploiement qui vérifie l’API (commit à venir dans cette entrée : voir `git log`).
 
 - [x] 2026-11-11 — Réservations corrigées et simplifiées (commit `0918d11`).
   - Les dates bloquées venues du calendrier Booking devenaient de fausses réservations « Voyageur N » avec un acompte inventé : elles sont maintenant listées à part, sans voyageur ni paiement.

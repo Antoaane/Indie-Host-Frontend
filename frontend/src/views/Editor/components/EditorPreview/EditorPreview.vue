@@ -4,18 +4,20 @@
 import { computed, onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { ArrowLeft, ExternalLink, Pencil } from 'lucide-vue-next'
-import { buildPageEditorRoute, readEditorRouteUserId } from '@/views/Editor/utils/pageEditorRoute'
+import { buildPageEditorRoute, readEditorRouteUserId, withOwnerViewMarker } from '@/views/Editor/utils/pageEditorRoute'
 import ListingView from '@/views/ListingView/_ListingView.vue'
 import ListingHubView from '@/views/ListingHub/_ListingHub.vue'
 import type { RawListingBundle } from '@/domain/listings/types'
 import { buildListingSlug, isTransientListingId } from '@/domain/listings/slug'
-import { fetchListingDomain } from '@/domain/api/listingDomains'
+import { resolveListingPublicUrl } from '@/domain/api/listingDomains'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 import type { ListingViewportMode } from '@/views/ListingView/composables/useListingViewport'
 
 const props = defineProps<{
   rawListing: RawListingBundle | null
   listingId?: string | null
+  // Page principale qui présente ce logement : son adresse publique est celle de la page.
+  parentListingId?: string | null
   domainRevision?: number
   isShowed: boolean
   isLoading?: boolean
@@ -64,7 +66,10 @@ const resolvedListingId = computed(() => {
 // Lien « voir en ligne » : adresse publique si elle est connue, sinon la route par slug.
 const publicListingHref = computed(() => {
   if (!resolvedListingId.value || !publicListingSlug.value) return null
-  return publicDomainUrl.value ?? `/${publicListingSlug.value}`
+  const url = publicDomainUrl.value ?? `/${publicListingSlug.value}`
+  // Page principale : la page publique ainsi ouverte propose « Modifier ma page », même sur le
+  // domaine relié où la session IndieHost n'existe pas.
+  return isHubListing.value ? withOwnerViewMarker(url) : url
 })
 
 // Le domaine n'est lu que lorsque l'aperçu est affiché : au chargement de l'éditeur il est caché,
@@ -72,7 +77,7 @@ const publicListingHref = computed(() => {
 // premier affichage. Une fois lue pour une annonce et une révision de domaine, elle n'est pas relue.
 function resolvePublicDomainUrl() {
   const listingId = resolvedListingId.value
-  const marker = listingId ? `${listingId}#${props.domainRevision ?? 0}` : null
+  const marker = listingId ? `${listingId}#${props.parentListingId ?? ''}#${props.domainRevision ?? 0}` : null
 
   if (marker !== publicDomainResolvedFor) {
     publicDomainUrl.value = null
@@ -83,10 +88,11 @@ function resolvePublicDomainUrl() {
 
   publicDomainResolvedFor = marker
   const requestId = ++publicDomainRequestId
-  fetchListingDomain(listingId)
-    .then((domain) => {
+  // Le domaine relié par l'hôte prime sur l'adresse en indiehost.fr : c'est là que la page vit.
+  resolveListingPublicUrl({ listingId, slug: publicListingSlug.value, parentListingId: props.parentListingId })
+    .then((url) => {
       if (requestId !== publicDomainRequestId) return
-      publicDomainUrl.value = domain.publicUrl ?? null
+      publicDomainUrl.value = url
     })
     .catch(() => {
       // Fallback conservé: route slug standard si le domaine n'est pas disponible.
@@ -117,7 +123,7 @@ watch(
 )
 
 watch(
-  [resolvedListingId, () => props.domainRevision, () => props.isShowed],
+  [resolvedListingId, () => props.parentListingId, () => props.domainRevision, () => props.isShowed],
   () => {
     resolvePublicDomainUrl()
   },

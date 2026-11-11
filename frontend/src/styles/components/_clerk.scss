@@ -13,10 +13,16 @@
   font-family: 'Outfit', sans-serif;
 
   .cl-cardBox {
-    width: min(100%, 26rem);
     border: 1px solid rgba($secondary, 0.08);
     border-radius: borders.$rounded-xl;
     @include big-shadow();
+  }
+
+  // Cartes de connexion et d'inscription : étroites. La fenêtre « Profil » de Clerk a une colonne
+  // de navigation et une colonne de contenu : elle garde sa largeur d'origine. Forcée à 26rem
+  // comme les autres, son contenu était rogné et illisible.
+  .cl-cardBox:not(:has(.cl-navbar)) {
+    width: min(100%, 26rem);
   }
 
   .cl-card {

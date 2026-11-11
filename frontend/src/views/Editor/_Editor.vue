@@ -242,6 +242,7 @@ watch(selectedListingId, (listingId) => {
               v-show="stage === 'preview' && isPreviewAvailable"
               :rawListing="previewRawListing"
               :listingId="selectedListingId"
+              :parentListingId="listingContext.parentId ?? null"
               :domainRevision="domainRevision"
               :isLoading="draftStatus.isLoading"
               :isShowed="stage === 'preview' && isPreviewAvailable"

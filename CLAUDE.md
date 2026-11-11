@@ -683,8 +683,10 @@ Aucun MCP ne peut lire les clés secrètes (Stripe `sk_live`, Clerk `sk_live`, I
 
 ```bash
 ssh root@45.93.139.219
-cd /opt/indiehost && git pull && docker compose up -d --build --wait
+cd /opt/indiehost && git pull && ./deploy-indiehost.sh
 ```
+
+`deploy-indiehost.sh` reconstruit migrations, API et site (pas le scraping, sauf `--with-scraping`), redémarre, puis vérifie que l'API en ligne est la nouvelle : deux routes récentes doivent répondre 401 sans session (404 = ancienne API). Le 2026-11-11, le site avait été mis à jour sans l'API : « Modifier la page » et « Mes revenus » répondaient « Route … not found ». Garder ces deux routes de contrôle à jour avec une route récente.
 
 Après un changement de secret : recopier le fichier concerné, puis la même commande.
 
@@ -760,6 +762,9 @@ Les domaines personnalisés pointent **directement** sur le VPS (pas via Cloudfl
   - Calendrier (`DatePicker`, aussi celui de la réservation publique) : le milieu d'une période est un bandeau avec le texte normal ; le fond plein de Nuxt UI recevait la couleur de texte globale (jours invisibles, dans les deux thèmes).
   - « Mes revenus » ouvre le tableau de bord Stripe de l'hôte dans un onglet créé au clic (`Nav.vue`). L'API accepte l'état `verifying` (`createConnectDashboardLink`) : il affichait le lien puis répondait 500.
   - Jeton `--tap-target` (`_layouts.scss`) : côté d'un contrôle carré ou hauteur d'une ligne cliquable, 44 px au moins au doigt.
+
+- **Adresse publique d'une annonce (2026-11-11)** : le lien « Ouvrir l'annonce publique » de l'éditeur passe par `resolveListingPublicUrl` (`domain/api/listingDomains.ts`) : domaine relié et vérifié de l'annonce, sinon adresse de sa page principale suivie du nom du logement, sinon adresse gérée. L'API renvoie `publicUrl: null` pour une annonce sans sous-domaine, même quand elle a un domaine relié. Pour une page principale, le lien porte `?proprietaire=1` : la page publique affiche alors « Modifier ma page » en bas à droite (retenu pour l'onglet, retiré de l'adresse). Sur indiehost.fr, le bouton apparaît aussi pour le propriétaire connecté. Sur un domaine relié la session Clerk n'existe pas : le bouton y mène à `https://indiehost.fr/dashboard/page/:id`.
+  - Fenêtre « Profil » de Clerk : `.cl-rootBox` reçoit la palette claire (`_theme.scss`) et sa largeur n'est plus forcée à 26rem (`_clerk.scss`, seulement les cartes sans `.cl-navbar`). En thème sombre ses textes devenaient clairs sur fond blanc, et forcée étroite elle était rognée.
 
 - **Mes revenus (2026-11-11)** : page `/dashboard/revenues` (`views/Revenues/`), alimentée par `GET /payments/stripe/connect/overview` (`getConnectOverview`) : état du compte d'encaissement, solde et cinq derniers virements lus sur le compte connecté (`{ stripeAccount }`), encaissé sur 30 jours et sur l'année et vingt derniers paiements depuis la table `Payment` (nets des remboursements). Si Stripe ne répond pas, `stripeAvailable` vaut faux et la page affiche quand même les paiements connus. Le bouton « Ouvrir mon tableau de bord Stripe » passe par `domain/payments/stripeDashboard.ts`. La navigation ne prépare plus de lien Stripe. Route d'essai `/dev/revenues?state=verifying|none|empty|offline`.
   - État du compte connecté : un compte pas encore complet est relu chez Stripe au plus une fois par minute, à chaque lecture de l'état d'abonnement, de la synthèse ou du lien vers le tableau de bord (`refreshPendingConnectState`). Avant, il n'était relu que sur une synchronisation demandée : un compte validé par Stripe restait « en vérification » chez IndieHost.

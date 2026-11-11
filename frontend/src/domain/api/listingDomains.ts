@@ -383,6 +383,38 @@ export function fetchListingDomain(listingId: string): Promise<ListingDomainReco
   }, { ttlMs: LISTING_DOMAIN_TTL_MS })
 }
 
+function preferredAddress(domain: ListingDomainRecord): string | null {
+  // Un domaine relié et vérifié prime sur l'adresse en `indiehost.fr`.
+  if (domain.customDomainStatus === 'verified' && domain.customDomainUrl) return domain.customDomainUrl
+  return domain.publicUrl ?? null
+}
+
+/**
+ * Adresse à laquelle les voyageurs voient réellement l'annonce.
+ * - Annonce avec son propre domaine relié : ce domaine.
+ * - Logement présenté par une page principale : l'adresse de la page, suivie du nom du logement.
+ * - Sinon l'adresse gérée en `indiehost.fr` (ou `null` : l'appelant garde alors la route par nom).
+ */
+export async function resolveListingPublicUrl(input: {
+  listingId: string
+  slug?: string | null
+  parentListingId?: string | null
+}): Promise<string | null> {
+  const own = await fetchListingDomain(input.listingId)
+  if (own.customDomainStatus === 'verified' && own.customDomainUrl) return own.customDomainUrl
+
+  if (input.parentListingId && input.slug) {
+    try {
+      const parentAddress = preferredAddress(await fetchListingDomain(input.parentListingId))
+      if (parentAddress) return `${parentAddress.replace(/\/+$/, '')}/${input.slug}`
+    } catch {
+      // Page principale illisible : on retombe sur l'adresse propre du logement.
+    }
+  }
+
+  return own.publicUrl ?? null
+}
+
 // Le sous-domaine et l'adresse publique figurent aussi sur les cartes de la liste d'annonces.
 function invalidateDomainCaches(listingId: string) {
   invalidateListingDomain(listingId)

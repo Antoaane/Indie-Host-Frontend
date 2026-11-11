@@ -34,7 +34,11 @@ html[data-theme='dark'] {
 
 // Îlot toujours clair à l'intérieur du tableau de bord : l'aperçu de la page publique, que les
 // voyageurs voient en clair quel que soit le thème de l'hôte.
-.theme-light {
+// Les composants Clerk (connexion, fenêtre « Profil ») sont dans ce cas : leurs surfaces restent
+// blanches. Sans cela, en thème sombre, les textes habillés par `_clerk.scss` devenaient clairs
+// sur fond blanc (le titre « Compte » de la fenêtre de profil était presque invisible).
+.theme-light,
+.cl-rootBox {
   @include colors.theme-vars(colors.$palette-light);
   color-scheme: light;
 }

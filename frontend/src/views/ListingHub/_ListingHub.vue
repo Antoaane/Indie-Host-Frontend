@@ -7,8 +7,13 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { useUser } from '@clerk/vue'
+import { Pencil } from 'lucide-vue-next'
 
+import { getListingsController } from '@/domain/listings/controller'
+import { getPublicListingRootDomain, isListingHostname } from '@/domain/listings/publicDomain'
+import { OWNER_VIEW_PARAM } from '@/views/Editor/utils/pageEditorRoute'
 import { fetchHubPublicPage, type ListingHubChildCard } from '@/domain/api/listingHubs'
 import { buildHubPageContent, resolveSharedLocation, toHubPageListings } from '@/domain/listings/hubPageContent'
 import {
@@ -89,8 +94,80 @@ function openListing(listing: HubPageListing, event: MouseEvent) {
   void router.push(listing.href)
 }
 
-watch(hubId, () => { void loadPage() })
-onMounted(() => { void loadPage() })
+// Propriétaire connecté (ou administrateur) : la page publique lui propose de la modifier. La
+// session n'existe que sur indiehost.fr, pas sur un domaine relié : là, le bouton n'apparaît pas.
+const { isSignedIn, user } = useUser()
+const route = useRoute()
+const isOwnerBySession = ref(false)
+// Page ouverte depuis l'éditeur (`?proprietaire=1`) : retenu pour cet onglet, puis retiré de l'adresse
+// pour qu'un lien copié ne montre pas le bouton aux voyageurs.
+const isOwnerView = ref(false)
+const canEditPage = computed(() => !props.embedded && (isOwnerBySession.value || isOwnerView.value))
+let ownershipRequestId = 0
+
+function ownerViewStorageKey(id: string) {
+  return `indiehost:owner-view:${id}`
+}
+
+function readOwnerView() {
+  const id = hubId.value
+  if (props.embedded || !id || typeof window === 'undefined') return
+
+  let remembered = false
+  try {
+    remembered = window.sessionStorage.getItem(ownerViewStorageKey(id)) === '1'
+  } catch {
+    // Stockage indisponible : le repère ne vaut que pour cet affichage.
+  }
+
+  if (OWNER_VIEW_PARAM in route.query) {
+    isOwnerView.value = true
+    try {
+      window.sessionStorage.setItem(ownerViewStorageKey(id), '1')
+    } catch {
+      // Voir plus haut.
+    }
+    const query = { ...route.query }
+    delete query[OWNER_VIEW_PARAM]
+    void router.replace({ query, hash: route.hash })
+    return
+  }
+
+  isOwnerView.value = remembered
+}
+
+// Sur un domaine relié ou un sous-domaine, le mode édition vit sur le site principal.
+const editPageHref = computed(() => {
+  if (typeof window === 'undefined' || !isListingHostname(window.location.hostname)) return null
+  return `https://${getPublicListingRootDomain()}/dashboard/page/${encodeURIComponent(hubId.value)}`
+})
+
+watch(
+  () => [hubId.value, Boolean(isSignedIn.value), user.value?.id ?? null] as const,
+  async ([id, signedIn, userId]) => {
+    const requestId = ++ownershipRequestId
+    isOwnerBySession.value = false
+    if (props.embedded || !id || !signedIn || !userId) return
+
+    try {
+      const owned = await getListingsController().fetchListings({ userId, includeDeleted: false })
+      if (requestId !== ownershipRequestId) return
+      isOwnerBySession.value = owned.some((listing) => listing.listingId === id)
+    } catch (error) {
+      console.warn('[ListingHub] impossible de savoir si la page vous appartient', error)
+    }
+  },
+  { immediate: true },
+)
+
+watch(hubId, () => {
+  void loadPage()
+  readOwnerView()
+})
+onMounted(() => {
+  void loadPage()
+  readOwnerView()
+})
 </script>
 
 <template>
@@ -105,6 +182,58 @@ onMounted(() => { void loadPage() })
   >
     <template #footer>
       <LegalLinksCompact />
+
+      <Teleport to="body">
+        <div
+          v-if="canEditPage"
+          class="hub-owner-edit"
+        >
+          <div class="action">
+          <a
+            v-if="editPageHref"
+            :href="editPageHref"
+          >
+            <Pencil
+              :size="18"
+              aria-hidden="true"
+            />
+            Modifier ma page
+          </a>
+          <RouterLink
+            v-else
+            :to="{ name: 'page-editor', params: { listingId: hubId } }"
+          >
+            <Pencil
+              :size="18"
+              aria-hidden="true"
+            />
+            Modifier ma page
+          </RouterLink>
+          </div>
+        </div>
+      </Teleport>
     </template>
   </ThemedHubPage>
 </template>
+
+<style lang="scss">
+/* File: src/views/ListingHub/_ListingHub.vue */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/components/buttons' as buttons;
+
+// Bouton du propriétaire, en bas à droite de sa page publique. Posé sur le document (Teleport) :
+// la page à thème a ses propres couleurs et ses propres polices.
+.hub-owner-edit {
+  position: fixed;
+  right: calc(var(--layout-gap) + var(--safe-area-right));
+  bottom: calc(var(--layout-gap) + var(--safe-area-bottom));
+  z-index: 50;
+
+  // Le style de bouton est porté par une enveloppe intérieure : appliqué au bloc fixe, il en
+  // remplaçait le positionnement.
+  > .action {
+    @include buttons.primary($theme: black);
+  }
+}
+</style>
