@@ -166,7 +166,7 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ## Fait
 
-- [x] 2026-11-11 — Lien public vers le domaine relié, bouton « Modifier ma page » pour le propriétaire, fenêtre « Profil » de Clerk réparée, script de déploiement qui vérifie l’API (commit à venir dans cette entrée : voir `git log`).
+- [x] 2026-11-11 — Lien public vers le domaine relié, bouton « Modifier ma page » pour le propriétaire, fenêtre « Profil » de Clerk réparée, script de déploiement qui vérifie l’API (commit `fb826a1`).
 
 - [x] 2026-11-11 — Réservations corrigées et simplifiées (commit `0918d11`).
   - Les dates bloquées venues du calendrier Booking devenaient de fausses réservations « Voyageur N » avec un acompte inventé : elles sont maintenant listées à part, sans voyageur ni paiement.
