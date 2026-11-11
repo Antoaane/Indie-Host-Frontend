@@ -80,6 +80,9 @@ const nights = computed(() => {
   return Math.round((end.toDate('UTC').getTime() - start.toDate('UTC').getTime()) / 86_400_000)
 })
 
+// Bandeau du séjour seulement quand l'arrivée et le départ sont choisis.
+const hasRange = computed(() => Boolean(draft.value.start && draft.value.end))
+
 const isDraftValid = computed(() => {
   const { start } = draft.value
   if (!start || nights.value < props.minNights) return false
@@ -180,6 +183,7 @@ function confirm() {
         <div
           ref="scroller"
           class="months"
+          :class="{ 'has-range': hasRange }"
         >
           <section
             v-for="month in grid"
@@ -358,31 +362,38 @@ function confirm() {
             table-layout: fixed;
 
             .row>.cell {
+              position: relative;
               padding: 1px 0;
               text-align: center;
 
-              // Bandeau du séjour : porté par la cellule, d'un jour à l'autre sans coupure.
-              &:has(.day[data-selected]) {
+              // Bandeau du séjour, derrière les jours, à la hauteur des cercles : il n'apparaît que
+              // pour un séjour complet (règles `.has-range` plus bas).
+              &::before {
+                content: '';
+                position: absolute;
+                top: 1px;
+                bottom: 1px;
+                left: 0;
+                right: 0;
                 background: rgba($secondary, 0.07);
-              }
-
-              &:has(.day[data-selection-start]) {
-                border-top-left-radius: borders.$rounded;
-                border-bottom-left-radius: borders.$rounded;
-              }
-
-              &:has(.day[data-selection-end]) {
-                border-top-right-radius: borders.$rounded;
-                border-bottom-right-radius: borders.$rounded;
+                opacity: 0;
+                pointer-events: none;
+                @include animations.transition(animations.$duration-fast, animations.$ease-out, opacity);
               }
 
               // Jours des mois voisins : chaque mois n'affiche que les siens.
               &:has(.day[data-outside-view]) {
                 visibility: hidden;
-                background: none;
               }
 
               >.day {
+                // Le mixin de texte d'abord : il remet la marge à 0 et décentrait le jour dans sa case
+                // (cercles collés à gauche, bandeau qui dépassait à droite du départ, chiffres décalés
+                // sous les lettres des jours).
+                @include base-text($bold: true);
+
+                position: relative;
+                z-index: 1;
                 width: 100%;
                 height: var(--tap-target);
                 max-width: var(--tap-target);
@@ -393,11 +404,10 @@ function confirm() {
 
                 border: none;
                 border-radius: borders.$rounded;
-                background: transparent;
-                @include base-text($bold: true);
+                background-color: transparent;
                 font-variant-numeric: tabular-nums;
                 cursor: pointer;
-                @include animations.transition(animations.$duration-press, animations.$ease-out, transform);
+                @include animations.transition(animations.$duration-fast, animations.$ease-out, (background-color, color, transform));
                 @include animations.press();
 
                 &:focus-visible {
@@ -405,8 +415,17 @@ function confirm() {
                   outline-offset: 1px;
                 }
 
-                &[data-today] {
-                  box-shadow: inset 0 0 0 1px rgba($secondary, 0.35);
+                // Aujourd'hui : un point sous le chiffre (l'anneau gris faisait une ombre de plus).
+                &[data-today]::after {
+                  content: '';
+                  position: absolute;
+                  left: 50%;
+                  bottom: 6px;
+                  width: 4px;
+                  height: 4px;
+                  margin-left: -2px;
+                  border-radius: borders.$rounded;
+                  background-color: currentColor;
                 }
 
                 // Indisponible (déjà réservé ou fermé) : barré. Passé : seulement pâle.
@@ -422,12 +441,51 @@ function confirm() {
                 }
 
                 &:is([data-selection-start], [data-selection-end]) {
-                  background: $secondary;
+                  background-color: $secondary;
                   color: $accent;
                   text-decoration: none;
                 }
               }
             }
+          }
+        }
+
+        // Séjour complet : bandeau plein entre l'arrivée et le départ et, sous les deux cercles,
+        // seulement du côté du séjour (du centre du cercle au bord de la case). Après les règles des
+        // cases : même spécificité, c'est l'ordre qui tranche.
+        &.has-range .cell {
+          &:has(.day[data-selected])::before {
+            opacity: 1;
+          }
+
+          &:has(.day[data-selection-start])::before {
+            left: 50%;
+          }
+
+          &:has(.day[data-selection-end])::before {
+            right: 50%;
+          }
+
+          // Bord de rangée (semaine) ou de mois : le bandeau s'y arrondit au lieu d'être coupé net.
+          &:first-child::before,
+          &:has(.day[data-outside-view]) + .cell::before {
+            border-top-left-radius: borders.$rounded;
+            border-bottom-left-radius: borders.$rounded;
+          }
+
+          &:last-child::before,
+          &:has(+ .cell .day[data-outside-view])::before {
+            border-top-right-radius: borders.$rounded;
+            border-bottom-right-radius: borders.$rounded;
+          }
+
+          // Arrivée en fin de rangée, départ en début de rangée : le séjour continue sur l'autre
+          // ligne, rien à relier ici (le demi-bandeau dépassait du cercle).
+          &:last-child:has(.day[data-selection-start])::before,
+          &:has(+ .cell .day[data-outside-view]):has(.day[data-selection-start])::before,
+          &:first-child:has(.day[data-selection-end])::before,
+          &:has(.day[data-outside-view]) + .cell:has(.day[data-selection-end])::before {
+            opacity: 0;
           }
         }
       }

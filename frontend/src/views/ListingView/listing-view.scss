@@ -455,62 +455,115 @@
   &.is-mobile-layout {
     background-color: $accent;
 
+    // Le voile du grand écran (photo floutée) dépassait de 2,5 rem sous la page : 37 px de trop, qui
+    // faisaient du `body` une zone de défilement à part. Ici la page est d'une seule couleur.
     &::before {
-      background-color: $accent;
+      content: none;
     }
 
-    // « Éditer » (propriétaire) à gauche du bouton de partage.
-    >.owner-edit-overlay {
-      top: calc(var(--safe-area-top) + var(--layout-gap-sm));
-      right: calc(var(--layout-gap-sm) + var(--tap-target) + var(--layout-gap-2xs));
-    }
+    // Barre du haut, fixée : retour vers tous les logements, « Éditer » (propriétaire), partager.
+    // Elle défilait avec la photo : plus de retour ni de partage une fois descendu dans la page.
+    // Transparente sur la photo, elle prend le fond de la page dès que la photo est passée dessous
+    // (`is-solid`, posé par `ListingMobileLayout.vue`).
+    >.top-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 40;
 
-    >.main>.gallery {
-      position: relative;
+      display: flex;
+      align-items: center;
+      gap: var(--layout-gap-2xs);
+      padding: calc(var(--safe-area-top) + var(--layout-gap-xs)) calc(var(--layout-gap-sm) + var(--safe-area-right)) var(--layout-gap-xs) calc(var(--layout-gap-sm) + var(--safe-area-left));
 
-      // Boutons posés sur la photo : pastille claire fixe (la photo peut être sombre ou claire),
-      // cible de 44 px, cercle visible de 34 px.
-      >.gallery-actions {
-        position: absolute;
-        top: calc(var(--safe-area-top) + var(--layout-gap-sm));
-        left: var(--layout-gap-sm);
-        right: var(--layout-gap-sm);
-        z-index: 2;
+      background-color: transparent;
+      border-bottom: 1px solid transparent;
+      // Sur la photo, la barre laisse passer le doigt (balayage des photos) : seuls ses boutons le prennent.
+      pointer-events: none;
+      @include animations.transition(animations.$duration-base, animations.$ease-out, (background-color, border-color));
 
+      >.end {
+        margin-left: auto;
         display: flex;
-        justify-content: space-between;
-        pointer-events: none;
+        align-items: center;
+        gap: var(--layout-gap-2xs);
+      }
 
-        >.round-action {
-          width: var(--tap-target);
-          height: var(--tap-target);
-          padding: 5px;
+      // Pastilles claires fixes (la photo peut être sombre ou claire) : cible de 44 px, cercle de 34 px.
+      .round-action {
+        width: var(--tap-target);
+        height: var(--tap-target);
+        padding: 5px;
 
-          display: grid;
-          place-items: center;
+        display: grid;
+        place-items: center;
 
-          border: none;
-          border-radius: borders.$rounded;
-          background: $paper-static;
-          background-clip: content-box;
-          color: $ink-static;
-          filter: drop-shadow(0 1px 3px rgba($ink-static, 0.25));
-          pointer-events: auto;
-          cursor: pointer;
-          @include animations.press();
+        border: none;
+        border-radius: borders.$rounded;
+        background-color: $paper-static;
+        background-clip: content-box;
+        color: $ink-static;
+        filter: drop-shadow(0 1px 3px rgba($ink-static, 0.25));
+        pointer-events: auto;
+        cursor: pointer;
+        @include animations.transition(animations.$duration-base, animations.$ease-out, (background-color, filter, transform));
+        @include animations.press();
 
-          >svg {
-            stroke: $ink-static;
-          }
+        >svg {
+          stroke: $ink-static;
+        }
 
-          &:focus-visible {
-            outline: 2px solid $paper-static;
-            outline-offset: -1px;
-          }
+        &:focus-visible {
+          outline: 2px solid $ink-static;
+          outline-offset: -3px;
+        }
+      }
 
-          &.is-share {
-            margin-left: auto;
-          }
+      // « Éditer » (propriétaire) : même pastille, en longueur.
+      >.end>.owner-edit {
+        position: relative;
+        min-height: 34px;
+        padding: 0 var(--layout-gap-sm);
+
+        display: inline-flex;
+        align-items: center;
+
+        border-radius: borders.$rounded;
+        background-color: $paper-static;
+        filter: drop-shadow(0 1px 3px rgba($ink-static, 0.25));
+        text-decoration: none;
+        pointer-events: auto;
+        @include little-text($ink-static, $bold: true);
+        @include animations.transition(animations.$duration-base, animations.$ease-out, (background-color, filter, transform));
+        @include animations.press();
+
+        // Cible de 44 px de haut sans grossir la pastille.
+        &::after {
+          content: '';
+          position: absolute;
+          inset: -5px 0;
+        }
+
+        &:focus-visible {
+          outline: 2px solid $ink-static;
+          outline-offset: 2px;
+        }
+      }
+
+      &.is-solid {
+        background-color: $accent;
+        border-bottom-color: rgba($secondary, 0.1);
+        pointer-events: auto;
+
+        .round-action {
+          background-color: transparent;
+          filter: drop-shadow(0 1px 3px transparent);
+        }
+
+        >.end>.owner-edit {
+          background-color: rgba($secondary, 0.06);
+          filter: drop-shadow(0 1px 3px transparent);
         }
       }
     }

@@ -49,11 +49,13 @@
     margin-bottom: var(--layout-gap-xl);
     flex: 1 1 auto;
     min-height: 0;
-    overflow-y: auto;
-    overscroll-behavior-y: contain;
 
+    // Défilement propre aux colonnes du grand écran. Sur téléphone la page défile d'un bloc : une zone
+    // qui défile elle-même (et bloque le passage à la page) prenait le doigt posé sur les avis.
     .listing-view:not(.is-mobile-layout) & {
       margin-bottom: 0;
+      overflow-y: auto;
+      overscroll-behavior-y: contain;
     }
   }
 

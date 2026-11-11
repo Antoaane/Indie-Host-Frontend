@@ -66,6 +66,17 @@ async function readTopEdgeColor(src: string): Promise<string | null> {
   return `rgb(${Math.round(red / count)}, ${Math.round(green / count)}, ${Math.round(blue / count)})`
 }
 
+// Couleur déjà lue pour une photo : la teinte revient aussitôt quand on remonte vers la photo.
+const colorCache = new Map<string, string | null>()
+
+async function topEdgeColor(src: string): Promise<string | null> {
+  if (colorCache.has(src)) return colorCache.get(src) ?? null
+  // Photo illisible (hébergée sans en-tête CORS, introuvable) : retenue aussi, sans nouvel essai.
+  const color = await readTopEdgeColor(src).catch(() => null)
+  colorCache.set(src, color)
+  return color
+}
+
 export function useListingStatusBarTint(src: Ref<string | null>, enabled: Ref<boolean>) {
   if (typeof window === 'undefined') return
 
@@ -114,7 +125,7 @@ export function useListingStatusBarTint(src: Ref<string | null>, enabled: Ref<bo
 
       const currentRequest = ++requestId
       try {
-        const color = await readTopEdgeColor(nextSrc)
+        const color = await topEdgeColor(nextSrc)
         if (currentRequest !== requestId) return
         if (color) apply(color)
       } catch {

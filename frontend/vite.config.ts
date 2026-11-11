@@ -209,5 +209,17 @@ export default defineConfig(({ mode }) => {
     esbuild: {
       drop: ['debugger'],
     },
+    build: {
+      rollupOptions: {
+        output: {
+          // Le worker de la carte (MapLibre) est livré en .mjs. nginx ne connaît pas cette extension :
+          // servi en application/octet-stream avec nosniff, le navigateur refusait de l'exécuter et la
+          // carte restait vide en production (2026-11-11). Publié en .js, il est servi en JavaScript.
+          assetFileNames: (asset) => (asset.names.some((name) => name.endsWith('.mjs'))
+            ? 'assets/[name]-[hash].js'
+            : 'assets/[name]-[hash][extname]'),
+        },
+      },
+    },
   }
 })

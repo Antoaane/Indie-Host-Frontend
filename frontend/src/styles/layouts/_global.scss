@@ -96,7 +96,13 @@ select {
 body {
   margin: 0;
   padding: 0;
+  // `clip` et non `hidden` : avec `hidden` sur `html` et sur `body`, le `body` devenait une zone de
+  // défilement à part entière. Le moindre dépassement (37 px sous l'annonce, le 2026-11-11) s'y
+  // faisait défiler en premier : sur iPhone, le doigt posé sur la page faisait glisser ces quelques
+  // pixels puis s'arrêtait, et seule la barre fixe du bas faisait défiler la page. `hidden` reste
+  // pour les navigateurs qui ignorent `clip` (iOS 15).
   overflow-x: hidden;
+  overflow-x: clip;
   min-height: 100dvh;
 
   // Téléphone, thème clair : fond foncé derrière les panneaux clairs.

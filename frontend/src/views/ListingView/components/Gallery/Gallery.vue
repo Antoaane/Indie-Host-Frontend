@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 // DEPS
-import { computed } from 'vue'
+import { computed, reactive } from 'vue'
 import type { SwiperOptions } from 'swiper/types'
 import { Swiper, SwiperSlide } from 'swiper/vue'
 // COMPONENTS
@@ -64,6 +64,14 @@ function openSlideLightbox(startIndexRaw: number) {
 }
 
 const slides = computed(() => orderedImages.value)
+
+// Photos suivantes en fondu à leur arrivée (elles apparaissaient d'un coup en faisant défiler).
+// La première reste immédiate : c'est l'image principale de la page.
+const loadedSlides = reactive(new Set<string>())
+
+function markSlideLoaded(src: string) {
+  loadedSlides.add(src)
+}
 
 const mosaicMinSlots = computed(() => {
   if (isTabletMode.value) return 2
@@ -146,10 +154,13 @@ const swiperParams = swiperBaseParams as unknown as Record<string, unknown>
           <!-- Première photo : l'image principale de la page, chargée tout de suite. -->
           <img
             class="slide-page-svg"
+            :class="{ 'is-loaded': slideIndex === 0 || loadedSlides.has(slide.src) }"
             :loading="slideIndex === 0 ? 'eager' : 'lazy'"
             :fetchpriority="slideIndex === 0 ? 'high' : 'auto'"
             :src="slide.src"
             :alt="slide.alt"
+            @load="markSlideLoaded(slide.src)"
+            @error="markSlideLoaded(slide.src)"
           />
         </button>
       </SwiperSlide>

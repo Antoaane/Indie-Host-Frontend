@@ -80,48 +80,54 @@ function plusLabel(row: GuestRow): string {
       />
     </button>
 
+    <!-- La hauteur glisse à l'ouverture comme à la fermeture (grille 0fr ↔ 1fr) : sans cela, le
+         reste de la fenêtre sautait d'un coup. -->
     <Transition name="guests-inline">
       <div
         v-if="!isWide && open"
         :id="overlayId"
         class="guests-inline"
       >
-        <div
-          v-for="row in visibleRows"
-          :key="row.key"
-          class="item"
-          :class="{ 'is-locked': row.max <= row.min }"
-        >
-          <div class="text">
-            <p>{{ row.label }}</p>
-            <small>{{ row.description }}</small>
-          </div>
-          <div class="counter">
-            <button
-              type="button"
-              :aria-label="minusLabel(row)"
-              :title="minusLabel(row)"
-              :disabled="!canDecrease(row)"
-              @click="props.updateCount(row.key, -1)"
+        <div class="inner">
+          <div class="list">
+            <div
+              v-for="row in visibleRows"
+              :key="row.key"
+              class="item"
+              :class="{ 'is-locked': row.max <= row.min }"
             >
-              <Minus
-                :size="18"
-                aria-hidden="true"
-              />
-            </button>
-            <span aria-live="polite">{{ row.value }}</span>
-            <button
-              type="button"
-              :aria-label="plusLabel(row)"
-              :title="plusLabel(row)"
-              :disabled="!canIncrease(row)"
-              @click="props.updateCount(row.key, 1)"
-            >
-              <Plus
-                :size="18"
-                aria-hidden="true"
-              />
-            </button>
+              <div class="text">
+                <p>{{ row.label }}</p>
+                <small>{{ row.description }}</small>
+              </div>
+              <div class="counter">
+                <button
+                  type="button"
+                  :aria-label="minusLabel(row)"
+                  :title="minusLabel(row)"
+                  :disabled="!canDecrease(row)"
+                  @click="props.updateCount(row.key, -1)"
+                >
+                  <Minus
+                    :size="18"
+                    aria-hidden="true"
+                  />
+                </button>
+                <span aria-live="polite">{{ row.value }}</span>
+                <button
+                  type="button"
+                  :aria-label="plusLabel(row)"
+                  :title="plusLabel(row)"
+                  :disabled="!canIncrease(row)"
+                  @click="props.updateCount(row.key, 1)"
+                >
+                  <Plus
+                    :size="18"
+                    aria-hidden="true"
+                  />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

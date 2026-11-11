@@ -141,27 +141,42 @@ async function mountMap() {
 
     map.on('load', () => {
       if (!map) return
-      map.addSource('listing-area', {
-        type: 'geojson',
-        data: circlePolygon(latitude, longitude, AREA_RADIUS_METERS),
-      })
-      map.addLayer({
-        id: 'listing-area-fill',
-        type: 'fill',
-        source: 'listing-area',
-        paint: { 'fill-color': ink, 'fill-opacity': 0.12 },
-      })
-      map.addLayer({
-        id: 'listing-area-line',
-        type: 'line',
-        source: 'listing-area',
-        paint: { 'line-color': ink, 'line-width': 1.5, 'line-opacity': 0.55 },
-      })
       status.value = 'ready'
+      try {
+        map.addSource('listing-area', {
+          type: 'geojson',
+          data: circlePolygon(latitude, longitude, AREA_RADIUS_METERS),
+        })
+        map.addLayer({
+          id: 'listing-area-fill',
+          type: 'fill',
+          source: 'listing-area',
+          paint: { 'fill-color': ink, 'fill-opacity': 0.12 },
+        })
+        map.addLayer({
+          id: 'listing-area-line',
+          type: 'line',
+          source: 'listing-area',
+          paint: { 'line-color': ink, 'line-width': 1.5, 'line-opacity': 0.55 },
+        })
+      } catch (error) {
+        // Sans la zone, la carte reste utile : elle s'affiche quand même.
+        console.warn('[ListingMap] zone non dessinée', error)
+      }
     })
 
-    map.on('error', () => {
-      if (status.value !== 'ready') status.value = 'error'
+    // Seule une erreur qui empêche la carte de naître (style ou worker introuvable) la remplace par
+    // le message : une tuile ou une icône manquante ne doit pas la masquer.
+    map.on('error', (event) => {
+      if (status.value === 'ready') return
+      const detail = event as { sourceId?: string; tile?: unknown }
+      if (detail.sourceId || detail.tile) return
+      console.warn('[ListingMap] carte indisponible', event.error)
+      status.value = 'error'
+      // Arrêtée après l'événement en cours : MapLibre réessaierait sinon en boucle.
+      const failedMap = map
+      map = null
+      window.setTimeout(() => failedMap?.remove(), 0)
     })
   } catch (error) {
     console.warn('[ListingMap] carte indisponible', error)

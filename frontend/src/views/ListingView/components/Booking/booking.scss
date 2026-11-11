@@ -115,13 +115,23 @@
             transform: rotate(180deg);
           }
 
-          // Téléphone : compteurs ouverts sous le champ, dans le cadre.
+          // Téléphone : compteurs ouverts sous le champ, dans le cadre. Grille à une rangée : sa
+          // hauteur s'anime de 0fr à 1fr (rangée et transition `guests-inline` en bas du fichier).
           >.guests-inline {
-            display: flex;
-            flex-direction: column;
-            padding: 0 var(--layout-gap-md) var(--layout-gap-xs);
+            display: grid;
 
-            >.item {
+            >.inner {
+              min-height: 0;
+              overflow: hidden;
+            }
+
+            >.inner>.list {
+              display: flex;
+              flex-direction: column;
+              padding: 0 var(--layout-gap-md) var(--layout-gap-xs);
+            }
+
+            >.inner>.list>.item {
               display: flex;
               align-items: center;
               justify-content: space-between;
@@ -552,19 +562,26 @@
   opacity: 1;
 }
 
-// Compteurs de voyageurs (téléphone) : ils s'ouvrent sous le champ.
+// Compteurs de voyageurs (téléphone) : ils s'ouvrent sous le champ et se replient en glissant. Avant,
+// seule l'opacité changeait : à la fermeture, tout ce qui suivait remontait d'un coup.
+// La rangée ouverte est posée ici, hors de `#booking` : sous l'identifiant, elle l'emportait sur
+// `guests-inline-enter-from` / `-leave-to` et la hauteur ne glissait pas.
+.guests-inline {
+  grid-template-rows: 1fr;
+}
+
 .guests-inline-enter-active {
-  @include animations.transition(animations.$duration-menu, animations.$ease-out, (opacity, transform));
+  @include animations.transition(animations.$duration-overlay, animations.$ease-drawer, (grid-template-rows, opacity));
 }
 
 .guests-inline-leave-active {
-  @include animations.transition(animations.$duration-exit, animations.$ease-out, (opacity, transform));
+  @include animations.transition(animations.$duration-menu, animations.$ease-drawer, (grid-template-rows, opacity));
 }
 
 .guests-inline-enter-from,
 .guests-inline-leave-to {
+  grid-template-rows: 0fr;
   opacity: 0;
-  transform: translateY(-4px);
 }
 
 .price-toggle-enter-active {
@@ -582,10 +599,13 @@
 }
 
 @include animations.reduced-motion {
+  .guests-inline-enter-active,
+  .guests-inline-leave-active {
+    transition-property: opacity;
+  }
+
   .fade-enter-from,
   .fade-leave-to,
-  .guests-inline-enter-from,
-  .guests-inline-leave-to,
   .price-toggle-enter-from,
   .price-toggle-leave-to {
     transform: none;

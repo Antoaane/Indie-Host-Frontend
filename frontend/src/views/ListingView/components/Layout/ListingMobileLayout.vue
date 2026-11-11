@@ -1,7 +1,7 @@
 <!-- File: src/views/ListingView/components/Layout/ListingMobileLayout.vue -->
 
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import type { RouteLocationRaw } from 'vue-router'
 import { Check, ChevronLeft, Share } from 'lucide-vue-next'
 
@@ -113,10 +113,41 @@ const stayQuote = computed(() => {
   return { total: pricing.total, nights: pricing.nightly.nights }
 })
 
+// Barre du haut (retour, partager) fixée à l'écran : transparente sur la photo, elle prend le fond
+// de la page dès que la photo est passée sous elle.
+const topBar = ref<HTMLElement | null>(null)
+const galleryEl = ref<HTMLElement | null>(null)
+const topBarSolid = ref(false)
+const showTopBar = computed(() => !props.previewOnly && !props.isCheckout)
+let galleryObserver: IntersectionObserver | null = null
+
+function observeGallery() {
+  galleryObserver?.disconnect()
+  galleryObserver = null
+  const bar = topBar.value
+  const gallery = galleryEl.value
+  if (!bar || !gallery || typeof IntersectionObserver === 'undefined') {
+    topBarSolid.value = Boolean(bar && !gallery)
+    return
+  }
+  galleryObserver = new IntersectionObserver(
+    (entries) => {
+      const latest = entries[entries.length - 1]
+      if (latest) topBarSolid.value = !latest.isIntersecting
+    },
+    // La photo compte comme passée quand son bas remonte sous la barre.
+    { rootMargin: `-${Math.round(bar.offsetHeight)}px 0px 0px 0px` },
+  )
+  galleryObserver.observe(gallery)
+}
+
+watch([topBar, galleryEl], observeGallery, { flush: 'post' })
+onBeforeUnmount(() => galleryObserver?.disconnect())
+
 // Bande de la barre d'état (iPhone) : couleur du haut de la première photo, qui semble ainsi
-// se prolonger jusqu'en haut de l'écran.
+// se prolonger jusqu'en haut de l'écran. Barre du haut pleine : fond de la page, comme elle.
 const firstImageSrc = computed(() => orderByIndex(props.listingData?.medias.images ?? [])[0]?.src ?? null)
-useListingStatusBarTint(firstImageSrc, computed(() => !props.previewOnly && !props.isCheckout))
+useListingStatusBarTint(firstImageSrc, computed(() => showTopBar.value && !topBarSolid.value))
 
 function onReserve(payload: ReservationPayload) {
   emit('reserve', payload)
@@ -178,19 +209,61 @@ async function shareListing() {
 </script>
 
 <template>
-  <RouterLink
-    v-if="!props.previewOnly && props.canEditListing && !props.ownershipLoading"
-    class="owner-edit-overlay"
-    :to="props.editListingRoute"
-    aria-label="Éditer cette annonce" title="Éditer cette annonce"
+  <!-- Fixée en haut de l'écran : retour vers tous les logements, « Éditer », partager. -->
+  <div
+    v-if="showTopBar"
+    ref="topBar"
+    class="top-bar"
+    :class="{ 'is-solid': topBarSolid }"
   >
-    Éditer
-  </RouterLink>
+    <a
+      v-if="hubHref"
+      :href="hubHref"
+      class="round-action"
+      aria-label="Voir tous les logements"
+      title="Tous les logements"
+    >
+      <ChevronLeft
+        :size="20"
+        aria-hidden="true"
+      />
+    </a>
+    <div class="end">
+      <RouterLink
+        v-if="props.canEditListing && !props.ownershipLoading"
+        class="owner-edit"
+        :to="props.editListingRoute"
+        aria-label="Éditer cette annonce"
+        title="Éditer cette annonce"
+      >
+        Éditer
+      </RouterLink>
+      <button
+        type="button"
+        class="round-action"
+        :aria-label="shareCopied ? 'Lien copié' : 'Partager ce logement'"
+        :title="shareCopied ? 'Lien copié' : 'Partager'"
+        @click="shareListing"
+      >
+        <Check
+          v-if="shareCopied"
+          :size="18"
+          aria-hidden="true"
+        />
+        <Share
+          v-else
+          :size="18"
+          aria-hidden="true"
+        />
+      </button>
+    </div>
+  </div>
 
   <div class="main">
     <Transition name="listing-fade">
       <div
         v-if="!props.isCheckout"
+        ref="galleryEl"
         class="gallery"
       >
         <Gallery
@@ -200,43 +273,6 @@ async function shareListing() {
           :preview-only="props.previewOnly"
         />
         <template v-else><div class="skeleton">Chargement…</div></template>
-
-        <!-- Sur la photo : retour vers tous les logements, partager. -->
-        <div
-          v-if="!props.previewOnly"
-          class="gallery-actions"
-        >
-          <a
-            v-if="hubHref"
-            :href="hubHref"
-            class="round-action"
-            aria-label="Voir tous les logements"
-            title="Tous les logements"
-          >
-            <ChevronLeft
-              :size="20"
-              aria-hidden="true"
-            />
-          </a>
-          <button
-            type="button"
-            class="round-action is-share"
-            :aria-label="shareCopied ? 'Lien copié' : 'Partager ce logement'"
-            :title="shareCopied ? 'Lien copié' : 'Partager'"
-            @click="shareListing"
-          >
-            <Check
-              v-if="shareCopied"
-              :size="18"
-              aria-hidden="true"
-            />
-            <Share
-              v-else
-              :size="18"
-              aria-hidden="true"
-            />
-          </button>
-        </div>
       </div>
     </Transition>
 

@@ -97,7 +97,8 @@
             padding: 0;
             margin: 0;
             border: 0;
-            background: transparent;
+            // Fond d'attente d'une photo qui n'est pas encore arrivée.
+            background-color: $accent-surface-1;
             cursor: pointer;
 
             >img {
@@ -105,6 +106,12 @@
               width: 100%;
               height: 100%;
               object-fit: cover;
+              opacity: 0;
+              @include animations.transition(animations.$duration-overlay, animations.$ease-out, opacity);
+
+              &.is-loaded {
+                opacity: 1;
+              }
             }
           }
         }
