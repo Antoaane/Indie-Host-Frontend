@@ -12,7 +12,7 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ### À déployer et à vérifier (session du 2026-11-11, jusqu’au commit `424cbe9`)
 
-- [ ] Déployer les corrections de la page d’un logement sur téléphone (commit `COMMIT_A_REMPLIR`) : `cd /opt/indiehost && git pull && ./deploy-indiehost.sh` (le site est reconstruit avec son nouveau `nginx.conf`). Puis, sur l’iPhone, `apparts-saintfrancois.fr/appartement-les-raisins-clairs` :
+- [ ] Déployer les corrections de la page d’un logement sur téléphone (commit `0b9a4ea`) : `cd /opt/indiehost && git pull && ./deploy-indiehost.sh` (le site est reconstruit avec son nouveau `nginx.conf`). Puis, sur l’iPhone, `apparts-saintfrancois.fr/appartement-les-raisins-clairs` :
   - la carte s’affiche (elle restait sur « La carte n’a pas pu s’afficher », dans tous les navigateurs) ;
   - le doigt posé n’importe où fait défiler toute la page, d’une traite ;
   - retour et partager restent en haut de l’écran : barre transparente sur la photo, blanche une fois la photo passée ;
@@ -178,7 +178,7 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ## Fait
 
-- [x] 2026-11-11 — Page d’un logement, retours de l’iPhone (commit `COMMIT_A_REMPLIR`).
+- [x] 2026-11-11 — Page d’un logement, retours de l’iPhone (commit `0b9a4ea`).
   - Carte vide partout en production : le worker de MapLibre (`.mjs`) était servi en `application/octet-stream` avec `nosniff`. Il est publié en `.js` (`vite.config.ts`) et `frontend/nginx.conf` sert aussi les `.mjs` en JavaScript (vérifié dans un conteneur `nginx:alpine` avec le build). Une tuile manquante ne masque plus la carte.
   - Défilement qui se bloquait au milieu de l’écran : avec `overflow-x: hidden` sur `html` et `body`, le `body` défilait à part (37 px, dus au voile décoratif de l’annonce qui dépassait de 2,5 rem) et prenait le doigt ; seule la barre fixe du bas faisait défiler la page. `body` en `overflow-x: clip`, voile retiré sur téléphone, avis sans défilement propre.
   - Retour et partager fixés en haut (barre transparente sur la photo, blanche ensuite, barre d’état assortie).
