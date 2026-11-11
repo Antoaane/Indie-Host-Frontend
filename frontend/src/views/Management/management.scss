@@ -11,13 +11,15 @@
 .management#management-page {
   --editor-mobile-dock-height: calc(60px + (var(--layout-gap-sm) * 2));
 
-  padding-top: var(--layout-gap-sm);
+  // Téléphone : d'un bord à l'autre, sous l'encoche (voir `dashboard-panel-radius`).
+  padding-top: var(--safe-area-top);
+  background: $accent;
   padding-bottom: calc(var(--editor-mobile-dock-height) + env(safe-area-inset-bottom));
   // Hauteur bornée sur mobile : la liste défile dans son conteneur et le détail
   // ouvert (absolu, inset 0) reste dans l'écran au lieu de suivre la liste.
   height: 100vh;
   height: 100dvh;
-  padding-inline: var(--layout-gap-sm);
+  padding-inline: 0;
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
@@ -27,6 +29,7 @@
 
     padding-top: var(--editor-mobile-dock-height);
     padding-bottom: 0;
+    background: $translucent;
     min-height: 0;
     height: 100vh;
     height: 100dvh;
@@ -43,7 +46,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--layout-gap-md);
-    border-radius: borders.$rounded-xl;
+    @include dashboard-panel-radius;
 
     >.management-sidebar {
       flex: 1 1 auto;
@@ -66,7 +69,7 @@
       flex-direction: column;
 
       background: $accent;
-      border-radius: borders.$rounded-xl;
+      @include dashboard-panel-radius;
       overflow: hidden;
       box-shadow: 0 18px 36px -18px rgba($secondary, 0.35);
 
@@ -207,7 +210,7 @@
     min-height: 0;
     overflow: hidden;
     background: $accent;
-    border-radius: borders.$rounded-xl;
+    @include dashboard-panel-radius;
   }
 
   .reservation-panel {

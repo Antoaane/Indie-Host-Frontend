@@ -14,7 +14,7 @@
     min-height: 0;
 
     background: var(--base-sidebar-surface, #{$accent});
-    border-radius: borders.$rounded-xl;
+    @include dashboard-panel-radius;
 
     >.scroll-container {
       flex: 1 1 auto;

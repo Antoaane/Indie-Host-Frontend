@@ -21,7 +21,7 @@
   flex-direction: column;
 
   background: $accent;
-  border-radius: borders.$rounded-xl;
+  @include dashboard-panel-radius;
 
   @include min-width(lg) {
     --editor-listing-card-min-width: 20rem;

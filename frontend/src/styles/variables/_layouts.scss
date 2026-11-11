@@ -74,6 +74,17 @@ $breakpoints: (
   }
 }
 
+// Panneau principal d'un écran du tableau de bord. Sur téléphone il va d'un bord à l'autre : le
+// cadre arrondi et sa marge prenaient 16 px de largeur sans rien apporter (presque invisibles en
+// thème sombre). À partir de `lg`, où plusieurs panneaux se côtoient, il retrouve son arrondi.
+@mixin dashboard-panel-radius {
+  border-radius: 0;
+
+  @include min-width(lg) {
+    border-radius: borders.$rounded-xl;
+  }
+}
+
 @function responsive-grid-track($min-card-width) {
   @return minmax(min(100%, #{$min-card-width}), 1fr);
 }
