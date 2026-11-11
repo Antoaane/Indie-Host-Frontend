@@ -114,9 +114,10 @@ function getRoomDisplayName(roomName: string, index: number) {
 
   > ul {
     display: grid;
-    gap: var(--layout-gap-md);
+    gap: var(--layout-gap-sm);
 
-    grid-template-columns: repeat(1, 1fr);
+    // Deux pièces par ligne dès le téléphone : une par ligne, la liste prenait un écran entier.
+    grid-template-columns: repeat(2, minmax(0, 1fr));
 
     @include min-width(md) {
       .listing-view:not(.is-mobile-layout) & {
@@ -135,6 +136,7 @@ function getRoomDisplayName(roomName: string, index: number) {
     }
 
     > li {
+      min-width: 0;
       padding: var(--layout-gap-md);
 
       flex-grow: 1;
@@ -142,7 +144,7 @@ function getRoomDisplayName(roomName: string, index: number) {
 
       display: flex;
       flex-direction: column;
-      gap: var(--layout-gap-md);
+      gap: var(--layout-gap-sm);
 
       border: solid 1px $quaternary;
       border-radius: borders.$rounded-lg;

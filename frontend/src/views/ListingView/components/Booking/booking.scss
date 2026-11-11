@@ -313,19 +313,57 @@
   >.calendar {
     width: 100%;
     padding: var(--layout-gap-sm);
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-sm);
 
-    background: rgba($accent, 0.5);
-    backdrop-filter: blur(12px);
-    border-bottom-left-radius: borders.$rounded-xxl;
-    border-bottom-right-radius: borders.$rounded-xxl;
-    border-top-right-radius: borders.$rounded-xl;
-    border-top-right-radius: borders.$rounded-xl;
+    // Téléphone : fond plein. Translucide, le calendrier laissait voir le texte de la page à
+    // travers les jours et devenait difficile à lire.
+    background: $accent;
+    border-radius: borders.$rounded-xl;
     @include big-shadow($color: rgba(0, 0, 0, 0.25));
+
+    @include min-width(md) {
+      background: rgba($accent, 0.5);
+      backdrop-filter: blur(12px);
+      border-radius: 0 borders.$rounded-xl borders.$rounded-xxl borders.$rounded-xxl;
+    }
 
     >.date-picker {
       >.body {
         margin-top: 0.5rem;
         background: rgba($accent, 0.75);
+      }
+    }
+
+    // Sous le calendrier : ce qui est choisi, la légende et le bouton qui referme.
+    >.calendar-footer {
+      padding: var(--layout-gap-xs) var(--layout-gap-xs) 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--layout-gap-sm) var(--layout-gap);
+
+      >.text {
+        flex: 1 1 12rem;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: var(--layout-gap-2xs);
+
+        >.summary {
+          @include base-text($secondary-text, $bold: true);
+        }
+
+        >.legend {
+          @include little-text(rgba($secondary-text, 0.72), $thin: false);
+        }
+      }
+
+      >.confirm {
+        flex: 0 0 auto;
+        @include buttons.primary($theme: black);
       }
     }
   }

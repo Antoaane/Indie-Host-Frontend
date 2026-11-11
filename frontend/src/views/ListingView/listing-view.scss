@@ -375,16 +375,26 @@
         border-radius: borders.$rounded-xl;
         overflow: hidden;
 
+        // Marge intérieure réduite : avec la marge du panneau, le texte commençait à 30 px du
+        // bord d'un écran de 390 px.
         >#core {
           background-color: $translucent !important;
-          padding: var(--layout-gap-2xl) !important;
+          padding: var(--layout-gap-xl) var(--layout-gap) !important;
+
+          // Titres de section à la taille d'un intertitre : à celle d'un titre de page, ils
+          // pesaient autant que le nom du logement.
+          > section > h2,
+          > section > .header > h2 {
+            @include h3-title($gradiant: true);
+            font-weight: 700;
+          }
         }
 
         >#comments {
           background-color: $translucent !important;
-          padding-left: var(--layout-gap-2xl) !important;
-          padding-right: var(--layout-gap-2xl) !important;
-          padding-top: var(--layout-gap-2xl) !important;
+          padding-left: var(--layout-gap) !important;
+          padding-right: var(--layout-gap) !important;
+          padding-top: var(--layout-gap-xl) !important;
         }
 
         &.is-checkout {

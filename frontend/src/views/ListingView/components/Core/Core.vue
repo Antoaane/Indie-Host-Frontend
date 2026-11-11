@@ -159,7 +159,9 @@ const descriptionStatic = {
 
   display: flex;
   flex-direction: column;
-  gap: calc(var(--layout-gap-2xl) * 2);
+  // Téléphone : les sections s'empilent. L'écart valait le double de celui de l'ordinateur et
+  // allongeait la page pour rien.
+  gap: var(--layout-gap-4xl);
 
   background-color: $accent;
   border-radius: borders.$rounded-lg;

@@ -416,6 +416,12 @@ const router = createRouter({
           component: () => import('@/views/Management/dev/DevManagementRoute.vue'),
           meta: { navVariant: 'host', hideNav: true, title: 'Réservations (dev)' },
         }, {
+          // Page publique d'un logement sur l'annonce en mémoire (rendu téléphone, calendrier de réservation).
+          path: '/dev/listing',
+          name: 'dev-listing',
+          component: () => import('@/views/Listing/dev/DevListingRoute.vue'),
+          meta: { hideNav: true, title: 'Annonce (dev)' },
+        }, {
           // Thèmes de la page de présentation et mode édition, sur du faux contenu (docs/editeur-de-page.md).
           path: '/dev/page-themes',
           name: 'dev-page-themes',
