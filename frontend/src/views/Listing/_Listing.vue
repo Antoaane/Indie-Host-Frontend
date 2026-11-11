@@ -8,7 +8,7 @@ import { useRoute, useRouter } from 'vue-router'
 import ListingView from '@/views/ListingView/_ListingView.vue'
 import ListingHubView from '@/views/ListingHub/_ListingHub.vue'
 import ListingUnavailable from '@/views/Listing/ListingUnavailable.vue'
-import { loadBookings, loadComments, loadCore, loadHost, loadMedias, loadNotes, refreshListingAvailability } from '@/views/Listing/utils/fetchListingRaw'
+import { loadBookings, loadBookingsById, loadComments, loadCore, loadHost, loadMedias, loadNotes, refreshListingAvailability } from '@/views/Listing/utils/fetchListingRaw'
 import type { RawListingBundle } from '@/domain/listings/types'
 import { getListingStatusFlags } from '@/domain/listings/status'
 import { isListingHostname } from '@/domain/listings/publicDomain'
@@ -152,7 +152,7 @@ async function refreshAvailabilityInBackground(listingId: string, fetchId: numbe
     if (!syncResult?.hasSources) return
     if (!syncResult.availabilityUpdated && syncResult.syncedSources === 0) return
 
-    const refreshedBookings = await loadBookings(listingId)
+    const refreshedBookings = await loadBookingsById(listingId)
     if (fetchId !== activeFetchId) return
     if (!rawListing.value) return
 
@@ -234,26 +234,5 @@ watch(
 </template>
 
 <style lang="scss">
-/* File: src/views/Listing/listing.scss */
-
-@use '@/styles/variables/globals' as *;
-
-.listing#listing-page {
-  height: 100dvh;
-
-  @include min-width(lg) {
-    overflow: hidden;
-  }
-
-  > .sub-container {
-    height: 100dvh;
-  }
-
-  // Page principale : c'est une page ordinaire, qui défile avec le document. Le cadre fixé à la
-  // hauteur de l'écran (pensé pour l'annonce, qui défile dans ses colonnes) coupait tout ce qui dépassait.
-  &:has(> .themed-hub-page) {
-    height: auto;
-    overflow: visible;
-  }
-}
+@use '@/views/Listing/listing.scss';
 </style>

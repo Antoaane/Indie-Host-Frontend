@@ -6,151 +6,165 @@
 @use '@/styles/components/buttons' as buttons;
 @use '@/styles/components/overlays' as overlays;
 
+// Barre du bas : fond, filet et marges sont portés par son conteneur (`.listing-view > .footer`).
 .listing-booking-min {
   width: 100%;
-  max-width: 760px;
-  position: relative;
 
   >.bar {
-    width: 100%;
-    display: grid;
-    grid-template-columns: 1fr auto;
+    display: flex;
     align-items: center;
-    gap: var(--layout-gap-md);
-
-    padding: var(--layout-gap-md);
-    background: $accent;
-    border: 1px solid rgba($secondary, 0.08);
-    border-radius: borders.$rounded-xl;
-    @include big-shadow($color: rgba($secondary, 0.3));
-
-    cursor: pointer;
-    @include animations.transition(animations.$duration-fast);
-    @include animations.press(0.98);
-
-    @include on-hover {
-      transform: translateY(-1px);
-      box-shadow: 0px 12px 32px -14px rgba($secondary, 0.5);
-    }
-
-    &:focus-visible {
-      outline: 2px solid rgba($secondary, 0.35);
-      outline-offset: 3px;
-    }
-
-    &.is-disabled {
-      cursor: not-allowed;
-      opacity: 0.8;
-      box-shadow: none;
-      transform: none;
-
-      @include on-hover {
-        transform: none;
-        box-shadow: none;
-      }
-    }
+    justify-content: space-between;
+    gap: var(--layout-gap);
 
     >.info {
+      flex: 1 1 auto;
       min-width: 0;
-      display: flex;
-      align-items: center;
-      gap: var(--layout-gap-sm);
-    }
-
-    >.info>.price {
-      flex-grow: 1;
-      flex-shrink: 0;
-      padding: 0.6rem 0.8rem;
+      min-height: var(--tap-target);
+      margin: 0;
+      padding: 0;
 
       display: flex;
-      align-items: center;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      gap: var(--layout-gap-2xs);
 
-      background: $accent-surface-1;
-      border-radius: borders.$rounded-md;
+      border: none;
+      background: transparent;
+      text-align: left;
+      cursor: pointer;
+      @include animations.press(0.98);
 
-      >.amount {
-        @include base-text($thin: false);
-        font-weight: 800;
+      &:disabled {
+        cursor: not-allowed;
+      }
+
+      &:focus-visible {
+        outline: 2px solid $secondary;
+        outline-offset: 2px;
+        border-radius: borders.$rounded-xs;
+      }
+
+      >.price {
+        @include base-text($bigger: true, $thin: false);
         white-space: nowrap;
+      }
+
+      // Séjour choisi : souligné, on comprend qu'on peut le changer.
+      >.stay {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        @include little-text($secondary-text, $underline: true, $thin: false);
       }
     }
 
     >.cta {
-      @include buttons.primary($cta: true, $fullwidth: true);
+      flex: 0 0 auto;
+      @include buttons.primary($cta: true);
+
+      >button {
+        min-height: var(--tap-target);
+        padding-inline: var(--layout-gap-xl);
+      }
     }
-  }
 
-  >.price-indicative {
-    position: absolute;
-    left: var(--layout-gap-md);
-    top: calc(100% - 0.15rem);
-    opacity: 0.5;
-    pointer-events: none;
-    font-size: 0.75rem !important;
-
-    @include little-text($color: $accent);
+    &.is-disabled>.cta>button {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
   }
 }
 
+// Fenêtre de réservation : sheet posée en bas, ajustée à son contenu (modale centrée dès lg).
 .booking-min-overlay {
+  &.absolute-overlay--centered {
+    align-items: flex-end;
+    padding-left: 0;
+    padding-right: 0;
+
+    @include min-width(lg) {
+      align-items: center;
+    }
+  }
+
   >.panel {
     @extend %overlay-panel;
+    width: 100%;
+    height: auto;
+    max-height: 100%;
+    padding: var(--layout-gap-xl) var(--layout-gap-xl) calc(var(--layout-gap) + var(--safe-area-bottom));
 
     >.close {
       position: absolute;
-      top: var(--layout-gap-md);
-      right: var(--layout-gap-md);
+      top: var(--layout-gap-sm);
+      right: var(--layout-gap-sm);
+      z-index: 1;
+
+      width: var(--tap-target);
+      height: var(--tap-target);
+      display: grid;
+      place-items: center;
 
       border: none;
-      background: $translucent;
+      border-radius: borders.$rounded;
+      background: transparent;
       color: $secondary-text;
-      font-size: 1.1rem;
       cursor: pointer;
-      padding: 0.5rem;
-      @include animations.transition(animations.$duration-fast);
+      @include animations.transition(animations.$duration-fast, animations.$ease-out, background-color);
       @include animations.press();
 
-      @media (pointer: coarse) {
-        min-width: 44px;
-        min-height: 44px;
+      @include on-hover {
+        background: rgba($secondary, 0.06);
+      }
+
+      &:focus-visible {
+        outline: 2px solid $secondary;
+        outline-offset: 2px;
       }
     }
 
     >.content {
-      margin-top: var(--layout-gap-xs);
+      min-height: 0;
       overflow-y: auto;
+      // Le halo du bouton « Réserver » dépasse de quelques pixels : pas de barre de défilement horizontale.
+      overflow-x: hidden;
       overscroll-behavior: contain;
 
       // Le module de réservation est déjà dans la sheet : pas de carte dans la carte.
-      // Le padding bas compense le `top` relatif de la mention sous le bouton.
-      .listing-booking#booking > .card {
-        padding: 0 0 calc(var(--layout-gap-xs) * 2);
+      .listing-booking#booking>.card {
+        padding: 0;
+        gap: var(--layout-gap);
         background: transparent;
         box-shadow: none;
+
+        // Titre à la taille d'un intertitre, prix par nuit dessous (la croix occupe le coin).
+        >.header {
+          padding-right: var(--tap-target);
+
+          >h2 {
+            @include h3-title($colorful: false, $bigger: false);
+            margin: 0;
+          }
+
+          >.price {
+            position: static;
+            align-self: flex-start;
+            padding: 0;
+            border: none;
+            background: none;
+            @include little-text(rgba($secondary-text, 0.72), $thin: false);
+          }
+        }
+
+        // La mention sous le bouton n'a plus besoin de son décalage.
+        >.listing-booking-cta>.hint {
+          height: auto;
+          top: 0;
+          justify-content: center;
+        }
       }
-    }
-  }
-
-  // Sheet ajustée à son contenu et posée en bas d'écran (modale centrée dès lg).
-  &.absolute-overlay--centered {
-    align-items: flex-end;
-  }
-
-  >.panel {
-    height: auto;
-    padding-bottom: calc(var(--layout-gap-xl) + var(--safe-area-bottom));
-
-    @include min-width(lg) {
-      align-self: center;
-    }
-
-    >.content>.placeholder {
-      @include little-text($color: rgba($secondary-text, 0.65));
-      text-align: center;
-
-      padding: var(--layout-gap);
-      border: 1px dashed rgba($secondary, 0.15);
-      border-radius: borders.$rounded-lg;
     }
   }
 }

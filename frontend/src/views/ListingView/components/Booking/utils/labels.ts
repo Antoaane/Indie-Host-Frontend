@@ -15,18 +15,53 @@ export function buildOccupantLabel(occupants: OccupantCounts, travelerCount: num
   return parts.length ? parts.join(', ') : 'Ajouter des voyageurs'
 }
 
+// Un jour « AAAA-MM-JJ » est une date de calendrier, pas un instant : lu et écrit en UTC. Lu dans le
+// fuseau du téléphone, « 2026-11-11 » s'affichait « 10/11/2026 » pour un voyageur aux Antilles.
+function parseDay(iso?: string | null): Date | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso ?? '').trim())
+  if (!match) return null
+  const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])))
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
 export function formatDateLabel(iso?: string | null) {
-  if (!iso) return 'Ajouter une date'
-  const date = new Date(iso)
-  if (Number.isNaN(date.getTime())) return 'Ajouter une date'
-  return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(date)
+  const date = parseDay(iso)
+  if (!date) return 'Ajouter une date'
+  return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'UTC' }).format(date)
 }
 
 export function formatShortDateLabel(iso?: string | null) {
-  if (!iso) return 'Ajouter une date'
-  const date = new Date(iso)
-  if (Number.isNaN(date.getTime())) return 'Ajouter une date'
-  return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit' }).format(date)
+  const date = parseDay(iso)
+  if (!date) return 'Ajouter une date'
+  return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit', timeZone: 'UTC' }).format(date)
+}
+
+/** « mer. 11 nov. » (avec l'année quand ce n'est pas l'année en cours). */
+export function formatStayDay(iso?: string | null): string | null {
+  const date = parseDay(iso)
+  if (!date) return null
+  const sameYear = date.getUTCFullYear() === new Date().getFullYear()
+  return new Intl.DateTimeFormat('fr-FR', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+    ...(sameYear ? {} : { year: 'numeric' }),
+    timeZone: 'UTC',
+  }).format(date)
+}
+
+/** « 11 – 13 nov. », « 28 nov. – 2 déc. » : le séjour en une ligne courte. */
+export function formatStayRange(range: RangeISO | null): string | null {
+  const start = parseDay(range?.start)
+  const end = parseDay(range?.end)
+  if (!start || !end || end <= start) return null
+
+  const dayMonth = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', timeZone: 'UTC' })
+  const dayOnly = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', timeZone: 'UTC' })
+  const sameMonth = start.getUTCFullYear() === end.getUTCFullYear() && start.getUTCMonth() === end.getUTCMonth()
+  return sameMonth
+    ? `${dayOnly.format(start)} – ${dayMonth.format(end)}`
+    : `${dayMonth.format(start)} – ${dayMonth.format(end)}`
 }
 
 export function buildRangeLabel(selection: RangeISO | null, nights: number) {

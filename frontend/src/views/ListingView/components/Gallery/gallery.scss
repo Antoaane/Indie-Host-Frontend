@@ -75,27 +75,14 @@
     flex-direction: column;
   }
 
+  // Téléphone : photo en 3:2 (comme Airbnb ; en 4:3 elle prenait un tiers de l'écran), la fiche
+  // blanche, arrondie en haut, se pose sur son bas. Ce ratio sert aussi à lire la couleur du haut
+  // de la photo pour la barre d'état (`useListingStatusBarTint.ts`).
   &:has(.swiper-initialized) {
-    aspect-ratio: 4 / 3;
-    margin-bottom: - borders.$rounded-lg;
+    aspect-ratio: 3 / 2;
+    margin-bottom: - borders.$rounded-xl;
     position: relative;
     z-index: 0;
-
-    &::after {
-      content: '';
-      display: block;
-
-      width: 100%;
-      height: calc(borders.$rounded-lg * 2);
-
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      z-index: 1;
-      pointer-events: none;
-
-      background: linear-gradient(0deg, rgba($secondary, 1) 0%, rgba($secondary, 0) 100%);
-    }
 
     >.swiper {
       width: 100%;
@@ -123,21 +110,22 @@
         }
       }
 
-      .swiper-pagination {
-        bottom: 2rem !important;
+      // Compteur « 1 / 12 » en pastille, au-dessus de l'arrondi de la fiche. Sur la photo : couleurs fixes.
+      .swiper-pagination-fraction {
+        left: auto;
+        right: var(--layout-gap);
+        bottom: calc(#{borders.$rounded-xl} + var(--layout-gap-sm)) !important;
+        width: auto;
 
-        // @include min-width(lg) {
-        //   bottom: 1.5rem !important;
-        // }
+        padding: var(--layout-gap-2xs) var(--layout-gap-sm);
+        border-radius: borders.$rounded;
+        background: rgba($dark, 0.55);
+        @include little-text($paper-static, $bold: true);
+        font-variant-numeric: tabular-nums;
+        pointer-events: none;
 
-        .swiper-pagination-bullet {
-          background-color: transparent;
-          border: 1px solid $accent;
-          opacity: 1 !important;
-
-          &-active {
-            background-color: $accent;
-          }
+        >span {
+          color: $paper-static;
         }
       }
     }

@@ -132,14 +132,17 @@ const currency = new Intl.NumberFormat('fr-FR', {
   maximumFractionDigits: 0,
 })
 
+// Date de calendrier « AAAA-MM-JJ » : lue et écrite en UTC, sinon un voyageur aux Antilles voyait
+// la date du solde un jour plus tôt.
 function formatDateLabel(iso?: string | null): string {
   if (!iso) return "le jour d'arrivée"
-  const parsed = new Date(iso)
+  const parsed = new Date(`${iso.slice(0, 10)}T00:00:00.000Z`)
   if (Number.isNaN(parsed.getTime())) return "le jour d'arrivée"
   return new Intl.DateTimeFormat('fr-FR', {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
+    timeZone: 'UTC',
   }).format(parsed)
 }
 

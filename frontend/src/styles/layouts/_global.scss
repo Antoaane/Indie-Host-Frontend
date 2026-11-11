@@ -99,7 +99,7 @@ body {
   overflow-x: hidden;
   min-height: 100dvh;
 
-  // Téléphone, thème clair : fond foncé derrière les panneaux clairs de l'annonce publique.
+  // Téléphone, thème clair : fond foncé derrière les panneaux clairs.
   background-color: $secondary;
 
   @include min-width(lg) {
@@ -128,13 +128,27 @@ html[data-theme='dark'] body {
 // occupent 100dvh et défilent dans leurs panneaux. Le document, lui, n'a rien à faire défiler,
 // mais iOS le laissait quand même tirer et rebondir : la page se décalait dans le vide. Sur ces
 // écrans le document est verrouillé (pas de défilement, pas de rebond).
-html:has(main > :is(#management-page, #messaging-page, #create-listing-page, #listing-page:not(:has(> .themed-hub-page)))) {
+// L'annonce publique n'en fait pas partie : sur téléphone elle défile avec le document
+// (`listing.scss`), au-delà elle tient dans l'écran. (Elle y figurait sous la forme
+// `#listing-page:not(:has(…))`, ignorée par les navigateurs : un `:has()` ne peut pas être placé
+// dans un autre.)
+html:has(main > :is(#management-page, #messaging-page, #create-listing-page)) {
   overflow: hidden;
   overscroll-behavior: none;
 
   > body {
     overflow: hidden;
     overscroll-behavior: none;
+  }
+}
+
+// Logement sur téléphone : page claire jusque sous les barres de Safari, qui prennent la couleur du
+// fond (une bande noire apparaissait au-dessus de la photo et autour de la barre de réservation).
+html:has(main > #listing-page > .listing-view.is-mobile-layout) {
+  background-color: $accent;
+
+  > body {
+    background-color: $accent;
   }
 }
 

@@ -440,7 +440,10 @@ Envoi par l'API HTTP de Brevo (`BREVO_API_KEY`, gratuit jusqu'à 300 e-mails/jou
 - Sources iCal externes (Airbnb, Booking) configurées dans l'éditeur (Réglages, puis iCal)
 - Synchronisées à la consultation de l'annonce publique (`syncListingSourcesForPublicView`), pas par une tâche périodique ; les sources en erreur sont relancées par les rappels aux hôtes avant d'alerter → `CalendarEvent` créés automatiquement
 - `bookings['external-booked-days']` (et leur part de `booked-days`) n'est écrit que par la synchronisation. Une mise à jour de `bookings` venue du site ne peut pas les remplacer (`domains/listings/syncedBookedDays.ts`, appelé par `patchListingResource` ; contrôle : `npx tsx backend/api/scripts/synced-days-smoke.ts`), et « Appliquer » de l'éditeur n'envoie plus ni jours bloqués ni réservations (`withoutServerManagedBookings`). Le 2026-11-11, un brouillon ancien renvoyé par « Appliquer » avait effacé les jours Booking du calendrier public.
-- Flux exporté (`exportListingCalendar`) : une période importée y sort sous un identifiant IndieHost stable (`import-…@indiehost.fr`), jamais sous celui d'origine. Booking importe ce flux et y retrouvait ses propres événements.
+- Flux exporté (`exportListingCalendar`) : une période importée y sort sous un identifiant IndieHost stable (`import-…@indiehost.fr`), jamais sous celui d'origine. Booking importe ce flux et y retrouvait ses propres événements. Les jours fermés à la main sortent toujours (`block-…@indiehost.fr`, même quand l'annonce a des réservations), les réservations annulées ne sortent plus.
+- La page publique synchronise le logement **par son identifiant** (`refreshListingAvailability(core.id)`, `fetchListingRaw.ts`) : sur un domaine relié, l'hôte seul désigne la page principale, et la synchronisation partait vers elle (2026-11-11).
+- Flux arrivé **vide** alors que la source fermait encore des dates à venir : il n'est pas appliqué (`domains/calendar/emptyFeedGuard.ts`), la source passe en erreur avec un message pour l'hôte (supprimer puis rajouter le calendrier s'il a vraiment rouvert ses dates). Contrôle : `npx tsx backend/api/scripts/calendar-guard-smoke.ts`. Le 2026-11-11, le flux Booking de « Raisins Clairs » était vide alors que 17 mois restaient fermés.
+- `rebuildListingBookedDaysFromCalendarEvents` tourne à chaque consultation et à chaque synchronisation, même en échec : `booked-days` (lu par le calendrier public **et** par le contrôle du paiement, `isReservationRangeAvailable`) se reconstruit depuis les événements en base.
 
 ---
 
@@ -737,10 +740,22 @@ Les domaines personnalisés pointent **directement** sur le VPS (pas via Cloudfl
 - `frontend` : `npm run build` lance `vue-tsc --build` en parallèle de `vite build` → **toute erreur TS fait échouer l'image Docker**. Lancer `cd frontend && npm run type-check` avant de déployer.
 - Le build de l'image `scraping` (Playwright + Chromium, ~2 Go) prend ~15 min sur le VPS ; les autres rebuilds sont rapides grâce au cache.
 - Vérifications post-déploiement : `https://indiehost.fr`, `/api/health`, `docker compose ps scraping` (healthy ; `/scraping/*` n'est plus routé publiquement), un sous-domaine `*.indiehost.fr`, `http://` → 301 ; `docker compose logs migrate` doit afficher « All migrations have been successfully applied ».
+- Ne pas nommer une classe comme un utilitaire Tailwind (`grid`, `flex`, `hidden`, `table`, `container`…) : @nuxt/ui charge Tailwind et la règle s'applique (un tableau `class="grid"` passait en `display: grid`).
+- Un `:has()` placé dans un autre `:has()` est invalide : le navigateur ignore le sélecteur (ou l'élément de liste dans un `:is()`), sans erreur.
+- Greffon de développement `plugins/file-path-comment` : il ajoute l'en-tête « File: » aux fichiers modifiés. Il ignore désormais un fichier vide ou encore en train de changer, et les pages légales (`views/Legal/content/`) : le 2026-11-11, il avait vidé `cookies.html` en le lisant pendant son écriture. Après une écriture par script, vérifier `git diff --numstat`.
 
 ---
 
 ## Dernières modifications (mis à jour 2026-11-10)
+
+- **Page d'un logement sur téléphone, refonte (2026-11-11)** (étude d'Airbnb, Vrbo, Booking, Baymard et NN/g ; route d'essai `/dev/listing`) :
+  - La page défile avec le document (plus de cadre de la hauteur de l'écran) : Safari réduit ses barres au défilement. Barre de réservation `position: fixed` en bas, pleine largeur, opaque (Safari 26 reprend sa couleur sous sa barre d'outils) ; la page lui laisse sa hauteur (`#listing-page > .listing-view.is-mobile-layout`, `listing-view.scss`). Fond clair partout (`html:has(… .is-mobile-layout)` dans `_global.scss`).
+  - Barre d'état : Safari 26 ne laisse pas dessiner dessous (portrait, onglet) et la colore avec le fond du `body` (`theme-color` n'y vaut que pour les applications installées). `useListingStatusBarTint.ts` donne au `body` la couleur du bord haut de la première photo (miniature ImageKit lue sur un canvas, `Access-Control-Allow-Origin: *`) et à `theme-color` pour Android.
+  - Photo en 3:2, compteur « 1 / N », boutons sur la photo (retour vers la page principale quand la racine du domaine en est une, Partager) ; fiche blanche arrondie posée dessus ; sections séparées par un filet (`Core.vue`, `> * + *`), équipements en lignes simples, pied de page légal compact (`LegalLinksCompact.vue`, 0,75 rem, cible 2rem).
+  - Barre du bas : **total du séjour** frais compris et dates (premières dates libres proposées d'office), calculé par `computeReservationPricing` avec les voyageurs gardés par la page (`ListingMobileLayout.vue`, prop `occupants` de `Booking.vue`). Plus de « Prix indicatif ».
+  - Fenêtre de réservation : un cadre Arrivée | Départ / Voyageurs, compteurs de voyageurs ouverts dans le cadre (téléphone), détail du prix affiché d'emblée (`alwaysShowSummary`). Calendrier plein écran du téléphone : `StayCalendarSheet.vue` (reka `RangeCalendar`, 12 mois défilant de haut en bas, « Effacer » / « Valider »). Ne pas passer `weekStartsOn` : avec `locale="fr"`, reka compte déjà le lundi comme premier jour (`1` décalait au mardi).
+  - Carte (`Map.vue`) : OpenFreeMap style « liberty » via MapLibre GL 6.16 (chargé à l'approche, `setWorkerUrl` obligatoire sous Vite), zone approximative de 300 m au centre légèrement décalé, sans geste au doigt, lien « Ouvrir dans Plans / Google Maps ». CSP : `https://tiles.openfreemap.org` en `connect-src`. Pages cookies et confidentialité mises à jour.
+  - Dates « AAAA-MM-JJ » lues et affichées en UTC (`labels.ts`, `Checkout.vue`) : un voyageur aux Antilles voyait la veille.
 
 - **Passe du 2026-11-10** (détail dans `TODO.md`, section « Fait ») :
   - Jeton Clerk : tout appel authentifié du front passe par `getFreshAuthToken()` (`frontend/src/utils/authToken.ts`), qui vérifie l’expiration du jeton gardé en mémoire (60 s de vie) et en redemande un à Clerk. Ne plus lire `clerkToken.value` directement pour un en-tête `Authorization`.
@@ -814,7 +829,7 @@ Les domaines personnalisés pointent **directement** sur le VPS (pas via Cloudfl
 
 - **Pages légales, traceurs, remboursements** (`94d6974`) :
   - **Pages légales** : documents dans `frontend/src/views/Legal/` (registre `legalPages.json`, un fragment HTML par document dans `content/`), route `/legal/:page`, pré-rendus en HTML statique au build (`frontend/plugins/legal-prerender/`).
-  - **Traceurs** : aucun avant consentement (pas de GTM ni GA4 ; hCaptcha, Stripe.js et Google Maps chargés seulement à la demande), donc pas de bandeau cookies. Toute nouvelle balise tierce doit garder cette règle ou ajouter un consentement.
+  - **Traceurs** : aucun avant consentement (pas de GTM ni GA4 ; hCaptcha et Stripe.js chargés seulement à la demande), donc pas de bandeau cookies. La carte de l'annonce publique est OpenFreeMap + MapLibre (sans cookie, affichée d'emblée, voir « Page d'un logement sur téléphone ») ; Google Maps ne reste que dans les panneaux « Localisation » de l'éditeur et de l'assistant (voir `TODO.md`). Toute nouvelle balise tierce doit garder cette règle ou ajouter un consentement.
   - **Remboursements voyageurs** : seulement si l'hôte active `bookings.pricing.cancellation.refundsEnabled` (désactivé par défaut, sinon réservation non remboursable). Une annulation par l'hôte (`POST /bookings/:id/host-cancel`) rembourse intégralement. Les remboursements sont débités du compte Stripe de l'hôte (paiement direct, voir « Paiements des réservations »).
   - **Abonnements** : résiliation et reprise depuis Mon profil (`POST /payments/stripe/subscriptions/cancellation`), fin de période sans remboursement ; remboursement uniquement en cas de rétractation dans les 14 jours, sur demande par e-mail.
   - **Restes à faire** : voir `TODO.md`.

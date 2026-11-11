@@ -16,7 +16,7 @@ import BookingCta from '@/views/ListingView/components/Booking/components/Bookin
 import BookingDates from '@/views/ListingView/components/Booking/components/BookingDates.vue'
 import BookingGuests from '@/views/ListingView/components/Booking/components/BookingGuests.vue'
 import BookingSummary from '@/views/ListingView/components/Booking/components/BookingSummary.vue'
-import { buildOccupantLabel, buildRangeLabel, type OccupantCounts } from '@/views/ListingView/components/Booking/utils/labels'
+import { buildOccupantLabel, type OccupantCounts } from '@/views/ListingView/components/Booking/utils/labels'
 import { findNextRange as findNextAvailableRange, isSelectedRangeValid as isSelectedRangeValidUtil } from '@/views/ListingView/components/Booking/utils/range'
 import type { BookedRange, FeeItem, WeekendPricingModel } from '@/views/ListingView/types/listing'
 
@@ -52,6 +52,14 @@ const props = withDefaults(
     disabledLabel?: string
     disabledHint?: string
     rules?: ListingReservationRules
+    /** Détail du prix affiché d'emblée (fenêtre de réservation du téléphone), sans attendre l'ouverture du calendrier. */
+    alwaysShowSummary?: boolean
+    /**
+     * Voyageurs tenus par la page (téléphone) : la fenêtre de réservation est démontée à sa
+     * fermeture, et la barre du bas calcule le total avec les mêmes voyageurs. Sans eux, le module
+     * garde les siens.
+     */
+    occupants?: OccupantCounts
   }>(),
   {
     pricePerNight: 0,
@@ -63,6 +71,7 @@ const props = withDefaults(
     disabledLabel: undefined,
     disabledHint: undefined,
     rules: () => resolveListingReservationRules({}),
+    alwaysShowSummary: false,
   },
 )
 
@@ -109,7 +118,7 @@ const stayRules = computed(() => props.rules.stay)
 const extraGuestRules = computed(() => props.rules.extraGuests)
 const minNights = computed(() => Math.max(1, Number(stayRules.value.minNights) || 1))
 
-const occupants = reactive<OccupantCounts>(
+const occupants = props.occupants ?? reactive<OccupantCounts>(
   clampOccupantsToRules(
     {
       adults: 2,
@@ -217,7 +226,7 @@ const guestRows = computed(() => [
   {
     key: 'children' as const,
     label: 'Enfants',
-    description: '2 a 12 ans',
+    description: '2 à 12 ans',
     value: occupants.children,
     min: 0,
     max: childrenDynamicMax.value,
@@ -227,7 +236,7 @@ const guestRows = computed(() => [
   },
   {
     key: 'babies' as const,
-    label: 'Bebes',
+    label: 'Bébés',
     description: 'Moins de 2 ans',
     value: occupants.babies,
     min: 0,
@@ -299,21 +308,23 @@ function updateCount(key: OccupantKey, delta: number) {
 }
 
 const occupantLabel = computed(() => buildOccupantLabel(occupants, travelerCount.value))
-const rangeLabel = computed(() => buildRangeLabel(selection.value, nights.value))
 
-const travelerHint = computed(() =>
-  `Capacité : ${occupancyRules.value.capacity} voyageurs max (adultes + enfants).`,
-)
+// Règles du logement en une ligne courte, sous les champs.
+const travelerHint = computed(() => {
+  const capacity = occupancyRules.value.capacity
+  return `${capacity} voyageur${capacity > 1 ? 's' : ''} maximum`
+})
 
-const stayHint = computed(() =>
-  stayRules.value.maxNights === null
-    ? `Séjour minimum : ${stayRules.value.minNights} nuit${stayRules.value.minNights > 1 ? 's' : ''}.`
-    : `Séjour : ${stayRules.value.minNights}-${stayRules.value.maxNights} nuits.`,
-)
+const stayHint = computed(() => {
+  const min = stayRules.value.minNights
+  const max = stayRules.value.maxNights
+  if (max !== null) return `séjour de ${min} à ${max} nuits`
+  return min > 1 ? `${min} nuits minimum` : null
+})
 
 const extraGuestHint = computed(() =>
   extraGuestRules.value.enabled
-    ? `Voyageur supplementaire: ${currency.format(extraGuestRules.value.price)} / pers / nuit au dela de ${extraGuestRules.value.threshold}.`
+    ? `${currency.format(extraGuestRules.value.price)} par voyageur et par nuit au-delà de ${extraGuestRules.value.threshold}`
     : null,
 )
 
@@ -321,7 +332,7 @@ const bookingRuleHint = computed(() => [
   travelerHint.value,
   stayHint.value,
   extraGuestHint.value,
-].filter(Boolean).join(' '))
+].filter(Boolean).join(' · '))
 
 const priceBreakdown = computed(() => {
   const list: Array<{ label: string; amount: string }> = []
@@ -367,7 +378,7 @@ const priceBreakdown = computed(() => {
 
   if (pricingBreakdown.value.extraGuestsTotal > 0) {
     list.push({
-      label: `${pricingBreakdown.value.extraGuestsCount} voyageur${pricingBreakdown.value.extraGuestsCount > 1 ? 's' : ''} supplementaire${pricingBreakdown.value.extraGuestsCount > 1 ? 's' : ''}`,
+      label: `${pricingBreakdown.value.extraGuestsCount} voyageur${pricingBreakdown.value.extraGuestsCount > 1 ? 's' : ''} supplémentaire${pricingBreakdown.value.extraGuestsCount > 1 ? 's' : ''}`,
       amount: currency.format(pricingBreakdown.value.extraGuestsTotal),
     })
   }
@@ -468,23 +479,26 @@ function reserve() {
       </div>
 
       <div class="fields">
-        <BookingDates
-          v-model:model-value="selection"
-          :booked-ranges="bookedRanges"
-          :open="calendarOpen"
-          :range-label="rangeLabel"
-          @close="calendarOpen = false"
-          @open="openCalendar"
-        />
+        <!-- Arrivée | Départ, puis Voyageurs : un seul cadre partagé en cases. -->
+        <div class="stay-box">
+          <BookingDates
+            v-model:model-value="selection"
+            :booked-ranges="bookedRanges"
+            :open="calendarOpen"
+            :min-nights="minNights"
+            @close="calendarOpen = false"
+            @open="openCalendar"
+          />
 
-        <BookingGuests
-          :occupant-label="occupantLabel"
-          :rows="guestRows"
-          :open="guestsOpen"
-          :update-count="updateCount"
-          @close="guestsOpen = false"
-          @toggle="toggleGuests"
-        />
+          <BookingGuests
+            :occupant-label="occupantLabel"
+            :rows="guestRows"
+            :open="guestsOpen"
+            :update-count="updateCount"
+            @close="guestsOpen = false"
+            @toggle="toggleGuests"
+          />
+        </div>
 
         <p class="booking-rules-hint">
           {{ bookingRuleHint }}
@@ -493,7 +507,7 @@ function reserve() {
 
       <BookingSummary
         :currency="currency"
-        :expanded="expanded"
+        :expanded="expanded || (props.alwaysShowSummary && nights > 0)"
         :price-breakdown="priceBreakdown"
         :total="total"
       />

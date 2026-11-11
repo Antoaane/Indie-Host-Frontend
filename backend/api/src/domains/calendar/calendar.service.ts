@@ -11,6 +11,7 @@ import { env } from '../../config/env.js';
 import { asObject } from '../../lib/json.js';
 import { toPrismaJson } from '../../lib/prisma.js';
 import { assertPublicHttpsUrl, fetchPublicText, RemoteFetchError } from '../../lib/safeRemoteFetch.js';
+import { EMPTY_FEED_ERROR_MESSAGE, isSuspiciousEmptyFeed } from './emptyFeedGuard.js';
 
 // Un export iCal Airbnb/Booking pèse quelques dizaines de Ko.
 const ICAL_MAX_BYTES = 5 * 1024 * 1024;
@@ -138,6 +139,14 @@ function buildExportedImportUid(listingId: string, event: { externalUid: string 
   const origin = event.externalUid ?? `${event.startDate.toISOString()}__${event.endDate.toISOString()}`;
   const digest = createHash('sha256').update(`${listingId}:${origin}`).digest('hex').slice(0, 32);
   return `import-${digest}@indiehost.fr`;
+}
+
+// Jours fermés à la main par l'hôte (`booked-days` hors réservations et calendriers importés) : publiés
+// eux aussi, sous un identifiant tiré de la période. Avant le 2026-11-11, ils ne sortaient que pour une
+// annonce sans aucune réservation, sous un identifiant qui changeait avec leur rang dans la liste.
+function buildExportedBlockUid(listingId: string, range: DayRange): string {
+  const digest = createHash('sha256').update(`${listingId}:block:${rangeKey(range)}`).digest('hex').slice(0, 32);
+  return `block-${digest}@indiehost.fr`;
 }
 
 function uniqueSortedRanges(ranges: DayRange[]): DayRange[] {
@@ -288,7 +297,8 @@ export class CalendarService {
     });
   }
 
-  private parseReservationEventsFromBookings(listingId: string, bookings: Record<string, unknown>) {
+  // Réservations gardées dans le JSON de l'annonce (ajoutées par l'hôte, anciennes données).
+  private parseReservationEventsFromBookings(bookings: Record<string, unknown>) {
     const events: Array<{
       id: string;
       start: Date;
@@ -322,29 +332,9 @@ export class CalendarService {
           status: 'confirmed',
         });
       }
-
-      return events;
     }
 
-    const bookedDays = Array.isArray(bookings['booked-days'])
-      ? bookings['booked-days'].filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object')
-      : [];
-
-    for (const [index, period] of bookedDays.entries()) {
-      const start = normalizeDayValue(period.start);
-      const end = normalizeDayValue(period.end);
-      if (!start || !end || end <= start) continue;
-
-      events.push({
-        id: `booked-${listingId}-${index}`,
-        start: new Date(`${start}T00:00:00.000Z`),
-        end: new Date(`${end}T00:00:00.000Z`),
-        summary: 'Reserve',
-        description: '',
-        status: 'confirmed',
-      });
-    }
-
+    // Les jours fermés à la main sont publiés par `exportListingCalendar`, à part.
     return events;
   }
 
@@ -372,9 +362,10 @@ export class CalendarService {
       }),
     ]);
 
+    // Une réservation annulée garde sa ligne mais libère ses dates : elle ne sort plus dans le flux.
     const reservationEvents = persistedReservations.length
       ? persistedReservations
-        .filter((reservation) => reservation.endDate > reservation.startDate)
+        .filter((reservation) => reservation.endDate > reservation.startDate && !isCanceledReservationPayment(reservation.payment))
         .map((reservation) => ({
           id: reservation.id,
           start: reservation.startDate,
@@ -383,7 +374,7 @@ export class CalendarService {
           description: reservation.message ?? '',
           status: 'confirmed',
         }))
-      : this.parseReservationEventsFromBookings(listingId, bookings);
+      : this.parseReservationEventsFromBookings(bookings);
 
     const calendar = ical({
       name: `IndieHost ${listingId}`,
@@ -407,15 +398,36 @@ export class CalendarService {
       });
     }
 
-    for (const event of importedEvents) {
-      if (!isBlockingEventStatus(event.status)) continue;
+    const blockingImportedEvents = importedEvents.filter((event) => isBlockingEventStatus(event.status));
 
+    for (const event of blockingImportedEvents) {
       calendar.createEvent({
         id: buildExportedImportUid(listingId, event),
         start: event.startDate,
         end: event.endDate,
         summary: 'Indisponible',
         status: toIcalStatus(event.status),
+      });
+    }
+
+    // Jours fermés à la main : ceux de `booked-days` qui ne sont ni une réservation ni une période
+    // importée (déjà publiées ci-dessus).
+    const publishedKeys = new Set<string>([
+      ...reservationEvents.map((event) => normalizeDayRange(event.start, event.end, true)),
+      ...blockingImportedEvents.map((event) => normalizeDayRange(event.startDate, event.endDate, true)),
+      ...this.extractBookedRanges(bookings['external-booked-days']),
+    ].filter((range): range is DayRange => range !== null).map((range) => rangeKey(range)));
+
+    const manualBlocks = uniqueSortedRanges(this.extractBookedRanges(bookings['booked-days']))
+      .filter((range) => !publishedKeys.has(rangeKey(range)));
+
+    for (const range of manualBlocks) {
+      calendar.createEvent({
+        id: buildExportedBlockUid(listingId, range),
+        start: new Date(`${range.start}T00:00:00.000Z`),
+        end: new Date(`${range.end}T00:00:00.000Z`),
+        summary: 'Indisponible',
+        status: ICalEventStatus.CONFIRMED,
       });
     }
 
@@ -519,6 +531,13 @@ export class CalendarService {
     }
 
     const nextEvents = Array.from(deduped.values());
+
+    // Flux vide alors que la source fermait encore des dates : on garde les jours bloqués (voir
+    // `emptyFeedGuard.ts`). L'erreur est enregistrée sur la source et affichée à l'hôte.
+    if (isSuspiciousEmptyFeed(previousEvents, nextEvents.length)) {
+      throw new Error(EMPTY_FEED_ERROR_MESSAGE);
+    }
+
     const previousSignatures = previousEvents.map((item) => eventSignature(item)).sort();
     const nextSignatures = nextEvents.map((item) => eventSignature(item)).sort();
     const changed = !areStringListsEqual(previousSignatures, nextSignatures);
@@ -851,9 +870,8 @@ export class CalendarService {
       force: options?.force ?? true,
     });
 
-    if (outcome.status === 'synced') {
-      await this.rebuildListingBookedDaysFromCalendarEvents(listingId);
-    }
+    // Recalculé même après un échec (voir `syncListingSourcesForPublicView`).
+    await this.rebuildListingBookedDaysFromCalendarEvents(listingId);
 
     return outcome;
   }
@@ -899,10 +917,11 @@ export class CalendarService {
       outcomes.push(await this.syncExistingSource(source, { force: false }));
     }
 
-    const shouldRebuildAvailability = outcomes.some((item) => item.status === 'synced');
-    const availabilityUpdated = shouldRebuildAvailability
-      ? await this.rebuildListingBookedDaysFromCalendarEvents(listingId)
-      : false;
+    // Toujours recalculer, même sans nouvelle synchronisation : la liste des jours bloqués gardée dans
+    // l'annonce peut avoir été vidée alors que les périodes importées sont toujours en base. Le
+    // 2026-11-11, elle l'avait été par « Appliquer » : le logement était réservable sur des dates
+    // fermées chez Booking, et le serveur l'acceptait (il contrôle cette même liste).
+    const availabilityUpdated = await this.rebuildListingBookedDaysFromCalendarEvents(listingId);
 
     return {
       listingId,

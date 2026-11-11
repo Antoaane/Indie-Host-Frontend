@@ -143,6 +143,7 @@ const descriptionStatic = {
       :longitude="props.data.map.longitude"
       :zoom="props.data.map.zoom"
       :query="props.data.map.query"
+      :place-label="[props.data.title.location.city, props.data.title.location.country].filter(Boolean).join(', ')"
       :static-content="staticContent.listing.headings"
     />
   </section>
@@ -159,20 +160,24 @@ const descriptionStatic = {
 
   display: flex;
   flex-direction: column;
-  // Téléphone : les sections s'empilent. L'écart valait le double de celui de l'ordinateur et
-  // allongeait la page pour rien.
-  gap: var(--layout-gap-4xl);
 
   background-color: $accent;
   border-radius: borders.$rounded-lg;
 
   padding: var(--layout-gap);
 
+  // Chaque section est séparée de la précédente par un filet et le même espace de part et
+  // d'autre (comme sur Airbnb). Avec un simple grand blanc, les parties se confondaient.
+  > * + * {
+    margin-top: var(--layout-gap-2xl);
+    padding-top: var(--layout-gap-2xl);
+    border-top: 1px solid rgba($secondary, 0.1);
+  }
+
   .listing-view:not(.is-mobile-layout) & {
     overflow: hidden;
     overflow-y: scroll;
     border-radius: borders.$rounded-lg;
-    gap: var(--layout-gap-2xl);
   }
 }
 </style>

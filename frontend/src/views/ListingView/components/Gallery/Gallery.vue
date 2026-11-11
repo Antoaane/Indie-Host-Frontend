@@ -77,13 +77,15 @@ const mosaicMaxSlots = computed(() => {
 
 const mosaicMinTileH = computed(() => (isTabletMode.value ? 60 : 20))
 
+// Téléphone : un compteur « 1 / 12 » sur la photo plutôt qu'une rangée de points, illisible
+// au-delà de quelques photos.
 const swiperBaseParams = createListingMediaSwiperParams({
   autoplay: false,
   slidesPerView: 1,
   spaceBetween: 0,
   centeredSlides: true,
   pagination: {
-    clickable: true,
+    type: 'fraction',
   },
   navigation: false,
 }) satisfies SwiperOptions
@@ -141,9 +143,11 @@ const swiperParams = swiperBaseParams as unknown as Record<string, unknown>
           :aria-label="`Agrandir la photo : ${slide.alt}`"
           @click="openSlideLightbox(slideIndex)"
         >
+          <!-- Première photo : l'image principale de la page, chargée tout de suite. -->
           <img
             class="slide-page-svg"
-            loading="lazy"
+            :loading="slideIndex === 0 ? 'eager' : 'lazy'"
+            :fetchpriority="slideIndex === 0 ? 'high' : 'auto'"
             :src="slide.src"
             :alt="slide.alt"
           />

@@ -88,8 +88,12 @@ const currentYear = new Date().getFullYear()
     display: inline-flex;
     align-items: center;
     @include little-text(var(--ui-legal-links-text), $thin: false);
+    // Pied de page discret : plus petit que le texte de la page.
+    font-size: 0.75rem;
   }
 
+  // Cible de 2rem (30 px au téléphone, au-delà du minimum de 24 px des règles d'accessibilité) :
+  // à 44 px, les liens empilés en trois lignes hautes occupaient un demi-écran sous l'annonce.
   >ul>li>a {
     display: inline-flex;
     align-items: center;
@@ -107,13 +111,6 @@ const currentYear = new Date().getFullYear()
       outline: 2px solid var(--ui-legal-links-text-strong);
       outline-offset: 2px;
       border-radius: borders.$rounded-xs;
-    }
-
-    // Cible tactile : la hauteur de ligne ne suffit pas au doigt.
-    @media (pointer: coarse) {
-      min-height: 44px;
-      min-width: 44px;
-      justify-content: center;
     }
   }
 }

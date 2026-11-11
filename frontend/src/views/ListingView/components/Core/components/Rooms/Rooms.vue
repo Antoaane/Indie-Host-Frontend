@@ -149,12 +149,23 @@ function getRoomDisplayName(roomName: string, index: number) {
       border: solid 1px $quaternary;
       border-radius: borders.$rounded-lg;
 
+      // Téléphone : carte plus serrée, nom de la pièce à la taille du texte.
+      .listing-view.is-mobile-layout & {
+        padding: var(--layout-gap-sm) var(--layout-gap-md);
+        gap: var(--layout-gap-xs);
+        border-radius: borders.$rounded-md;
+      }
+
       > div {
         display: flex;
         justify-content: space-between;
 
         > h3 {
           @include base-text($bigger: true, $bold: true);
+
+          .listing-view.is-mobile-layout & {
+            @include base-text($bold: true);
+          }
         }
 
         > .icons {

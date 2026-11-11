@@ -58,6 +58,21 @@
       >.name {
         @include base-text($thin: false);
       }
+
+      // Téléphone : une simple ligne icône + nom. Encadré, chaque équipement prenait la hauteur
+      // d'une carte et six d'entre eux remplissaient l'écran.
+      .listing-view.is-mobile-layout & {
+        gap: var(--layout-gap-md);
+        padding: var(--layout-gap-xs) 0;
+        border: none;
+        border-radius: 0;
+        background: none;
+
+        >.icon {
+          height: 1.375rem;
+          width: 1.375rem;
+        }
+      }
     }
   }
 

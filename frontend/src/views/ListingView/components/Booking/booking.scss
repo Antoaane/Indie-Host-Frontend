@@ -77,132 +77,182 @@
       flex-direction: column;
       gap: var(--layout-gap-sm);
 
-      >.listing-booking-dates,
-      >.listing-booking-guests {
-        position: relative;
-      }
-
       >.booking-rules-hint {
         margin: 0;
-        @include little-text($thin: false);
-        color: rgba($secondary-text, 0.72);
-        line-height: 1.35;
+        @include little-text(rgba($secondary-text, 0.72), $thin: false);
       }
 
-      >.listing-booking-dates {
-        >.group {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: var(--layout-gap-sm);
+      // Un seul cadre partagé en cases : Arrivée | Départ, puis Voyageurs (comme Airbnb). Avant,
+      // deux boutons flottants aux bords inégaux (ombre en haut et en bas, rien sur les côtés).
+      >.stay-box {
+        border: 1px solid rgba($secondary, 0.22);
+        border-radius: borders.$rounded-md;
+        background: $accent;
 
-          &.is-single {
-            grid-template-columns: 1fr;
+        >.listing-booking-dates {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+
+          >.stay-field.is-start {
+            border-right: 1px solid rgba($secondary, 0.22);
+            border-top-left-radius: borders.inner(borders.$rounded-md, 1px);
           }
 
-          >.btn-primary__white__full {
-            >.field {
-              width: 100%;
-              text-align: left;
+          >.stay-field.is-end {
+            border-top-right-radius: borders.inner(borders.$rounded-md, 1px);
+          }
+        }
 
+        >.listing-booking-guests {
+          border-top: 1px solid rgba($secondary, 0.22);
+
+          >.stay-field {
+            border-bottom-left-radius: borders.inner(borders.$rounded-md, 1px);
+            border-bottom-right-radius: borders.inner(borders.$rounded-md, 1px);
+          }
+
+          &.is-open>.stay-field>.chevron {
+            transform: rotate(180deg);
+          }
+
+          // Téléphone : compteurs ouverts sous le champ, dans le cadre.
+          >.guests-inline {
+            display: flex;
+            flex-direction: column;
+            padding: 0 var(--layout-gap-md) var(--layout-gap-xs);
+
+            >.item {
               display: flex;
-              justify-content: space-evenly;
-              // gap: 0.35rem;
+              align-items: center;
+              justify-content: space-between;
+              gap: var(--layout-gap-sm);
+              padding: var(--layout-gap-sm) 0;
 
-              // border: none;
-              // border-radius: borders.$rounded-md;
-              // background: $tertiary;
-              // @include inputs.text($tertiary, borders.$rounded-md);
+              &+.item {
+                border-top: 1px solid rgba($secondary, 0.08);
+              }
 
-              // button {
-              //   display: flex;
-              //   justify-content: space-evenly;
+              &.is-locked {
+                opacity: 0.6;
+              }
 
-              >span {
-                display: block !important;
+              >.text {
+                min-width: 0;
 
-                &.line {
-                  transform: translateY(-4%) scaleY(1.65);
+                >p {
+                  @include base-text($bold: true);
+                }
+
+                >small {
+                  display: block;
+                  @include little-text(rgba($secondary-text, 0.65), $thin: false);
                 }
               }
 
-              // }
+              >.counter {
+                flex: 0 0 auto;
+                display: inline-flex;
+                align-items: center;
+                gap: var(--layout-gap-xs);
 
-              >span {
-                // font-size: 0.95rem;
-                // font-weight: 400;
-                // color: rgba($secondary, 0.7);
-              }
+                >span {
+                  min-width: 1.75rem;
+                  text-align: center;
+                  font-variant-numeric: tabular-nums;
+                  @include base-text($bold: true);
+                }
 
-              >strong {
-                // font-size: 1.1rem;
-                // font-weight: 700;
-                // color: $secondary;
-              }
+                >button {
+                  width: var(--tap-target);
+                  height: var(--tap-target);
+                  display: grid;
+                  place-items: center;
 
-              // &:hover {
-              //   background: $quaternary;
-              // }
+                  border: 1px solid rgba($secondary, 0.25);
+                  border-radius: borders.$rounded;
+                  background: $accent;
+                  color: $secondary-text;
+                  cursor: pointer;
+                  @include animations.transition(animations.$duration-fast, animations.$ease-out, (border-color, opacity));
+                  @include animations.press();
 
-              &.is-full {
-                width: 100%;
+                  @include on-hover(':not(:disabled)') {
+                    border-color: $secondary;
+                  }
+
+                  &:disabled {
+                    opacity: 0.35;
+                    cursor: not-allowed;
+                  }
+
+                  &:focus-visible {
+                    outline: 2px solid $secondary;
+                    outline-offset: 2px;
+                  }
+                }
               }
             }
           }
         }
 
-      }
+        .stay-field {
+          width: 100%;
+          min-width: 0;
+          min-height: calc(var(--tap-target) + var(--layout-gap-sm));
+          margin: 0;
+          padding: var(--layout-gap-sm) var(--layout-gap-md);
 
-      >.listing-booking-guests {
-        >.btn-primary__white__full {
-          >.field {
-            width: 100%;
-            text-align: left;
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          gap: var(--layout-gap-2xs);
 
-            display: flex;
-            justify-content: space-evenly;
-            // gap: 0.35rem;
+          border: none;
+          border-radius: 0;
+          background: transparent;
+          text-align: left;
+          cursor: pointer;
+          @include animations.transition(animations.$duration-fast, animations.$ease-out, background-color);
 
-            // border: none;
-            // border-radius: borders.$rounded-md;
-            // background: $tertiary;
-            // @include inputs.text($tertiary, borders.$rounded-md);
+          @include on-hover {
+            background: rgba($secondary, 0.04);
+          }
 
-            // button {
-            //   display: flex;
-            //   justify-content: space-evenly;
+          &:focus-visible {
+            outline: 2px solid $secondary;
+            outline-offset: -2px;
+          }
 
-            >span {
-              display: block !important;
+          // Pas de capitales (DESIGN.md) : libellé discret au-dessus de la valeur.
+          >.label {
+            @include little-text(rgba($secondary-text, 0.7), $thin: false);
+          }
 
-              &.line {
-                transform: translateY(-4%) scaleY(1.65);
-              }
+          >.value {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            @include base-text($bold: true);
+
+            &.is-empty {
+              color: rgba($secondary-text, 0.6);
             }
+          }
 
-            // }
+          &.is-guests {
+            padding-right: calc(var(--layout-gap-md) + 1.5rem);
 
-            >span {
-              // font-size: 0.95rem;
-              // font-weight: 400;
-              // color: rgba($secondary, 0.7);
-            }
-
-            >strong {
-              // font-size: 1.1rem;
-              // font-weight: 700;
-              // color: $secondary;
-            }
-
-            // &:hover {
-            //   background: $quaternary;
-            // }
-
-            &.is-full {
-              width: 100%;
+            >.chevron {
+              position: absolute;
+              right: var(--layout-gap-md);
+              top: 50%;
+              margin-top: -9px;
+              stroke: $secondary-text;
+              @include animations.transition(animations.$duration-menu, animations.$ease-out, transform);
             }
           }
         }
-
       }
     }
 
@@ -293,8 +343,7 @@
 
     >.booking-error {
       margin: 0;
-      @include little-text($thin: false);
-      color: #a42828;
+      @include little-text($bad-ink, $thin: false);
     }
   }
 
@@ -503,6 +552,21 @@
   opacity: 1;
 }
 
+// Compteurs de voyageurs (téléphone) : ils s'ouvrent sous le champ.
+.guests-inline-enter-active {
+  @include animations.transition(animations.$duration-menu, animations.$ease-out, (opacity, transform));
+}
+
+.guests-inline-leave-active {
+  @include animations.transition(animations.$duration-exit, animations.$ease-out, (opacity, transform));
+}
+
+.guests-inline-enter-from,
+.guests-inline-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
 .price-toggle-enter-active {
   @include animations.transition(animations.$duration-fast, animations.$ease-out, (opacity, transform));
 }
@@ -520,6 +584,8 @@
 @include animations.reduced-motion {
   .fade-enter-from,
   .fade-leave-to,
+  .guests-inline-enter-from,
+  .guests-inline-leave-to,
   .price-toggle-enter-from,
   .price-toggle-leave-to {
     transform: none;

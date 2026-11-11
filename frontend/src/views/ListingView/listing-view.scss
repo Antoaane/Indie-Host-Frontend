@@ -437,69 +437,136 @@
     padding-bottom: var(--safe-area-bottom);
   }
 
+  // Barre de réservation du téléphone : pleine largeur, fond de la page, filet au-dessus.
   >.footer {
-    padding-top: var(--layout-gap-sm);
-    padding-bottom: calc(var(--layout-gap) + var(--safe-area-bottom));
-
     display: flex;
     justify-content: center;
-
     position: relative;
 
-    padding-left: var(--layout-gap);
-    padding-right: var(--layout-gap);
-
-    background-color: $secondary;
-
-    >.shape-container {
-      width: borders.$rounded-xl;
-      height: borders.$rounded-xl;
-
-      position: absolute;
-      z-index: 5;
-      top: 1px;
-      transform: translateY(-100%);
-
-      display: block;
-
-      >.shape {
-        width: 100%;
-        height: 100%;
-
-        position: relative;
-        display: block;
-
-        >path {
-          fill: $secondary-text;
-        }
-      }
-
-      &.is-right {
-        right: calc(var(--layout-gap-sm) - 0.5px);
-      }
-
-      &.is-left {
-        left: calc(var(--layout-gap-sm) - 0.5px);
-
-        >.shape {
-          transform: scaleX(-1);
-        }
-      }
-    }
+    padding: var(--layout-gap-sm) var(--layout-gap-xl) calc(var(--layout-gap-sm) + var(--safe-area-bottom));
+    background-color: $accent;
+    border-top: 1px solid rgba($secondary, 0.1);
   }
 
-  &.preview-only {
-    @media (max-width: 1024px) {
-      >.footer {
-        >.shape-container {
-          >.shape {
-            >path {
-              fill: $background;
-            }
+  // Téléphone : une page claire d'un seul tenant. La photo occupe le haut, la fiche blanche
+  // arrondie se pose dessus, les sections sont séparées par un filet, et le pied de page est
+  // discret. Avant : cadre noir autour d'une carte blanche, bande noire sous la barre d'état et
+  // autour de la barre de réservation.
+  &.is-mobile-layout {
+    background-color: $accent;
+
+    &::before {
+      background-color: $accent;
+    }
+
+    // « Éditer » (propriétaire) à gauche du bouton de partage.
+    >.owner-edit-overlay {
+      top: calc(var(--safe-area-top) + var(--layout-gap-sm));
+      right: calc(var(--layout-gap-sm) + var(--tap-target) + var(--layout-gap-2xs));
+    }
+
+    >.main>.gallery {
+      position: relative;
+
+      // Boutons posés sur la photo : pastille claire fixe (la photo peut être sombre ou claire),
+      // cible de 44 px, cercle visible de 34 px.
+      >.gallery-actions {
+        position: absolute;
+        top: calc(var(--safe-area-top) + var(--layout-gap-sm));
+        left: var(--layout-gap-sm);
+        right: var(--layout-gap-sm);
+        z-index: 2;
+
+        display: flex;
+        justify-content: space-between;
+        pointer-events: none;
+
+        >.round-action {
+          width: var(--tap-target);
+          height: var(--tap-target);
+          padding: 5px;
+
+          display: grid;
+          place-items: center;
+
+          border: none;
+          border-radius: borders.$rounded;
+          background: $paper-static;
+          background-clip: content-box;
+          color: $ink-static;
+          filter: drop-shadow(0 1px 3px rgba($ink-static, 0.25));
+          pointer-events: auto;
+          cursor: pointer;
+          @include animations.press();
+
+          >svg {
+            stroke: $ink-static;
+          }
+
+          &:focus-visible {
+            outline: 2px solid $paper-static;
+            outline-offset: -1px;
+          }
+
+          &.is-share {
+            margin-left: auto;
           }
         }
       }
     }
+
+    >.main {
+      >.core {
+        padding-left: 0;
+        padding-right: 0;
+
+        >.panel {
+          border-radius: borders.$rounded-xl borders.$rounded-xl 0 0;
+
+          >#core {
+            padding: var(--layout-gap-2xl) var(--layout-gap-xl) 0 !important;
+          }
+
+          >#comments {
+            margin-top: var(--layout-gap-2xl);
+            padding: var(--layout-gap-2xl) var(--layout-gap-xl) 0 !important;
+            border-top: 1px solid rgba($secondary, 0.1);
+          }
+        }
+      }
+
+      >.legal-links-compact {
+        margin: var(--layout-gap-2xl) var(--layout-gap-xl) 0;
+        padding: var(--layout-gap-sm) 0;
+        border-top: 1px solid rgba($secondary, 0.1);
+      }
+    }
+  }
+}
+
+// Page publique sur téléphone (pas l'aperçu de l'éditeur, qui garde son cadre) : le document
+// défile, la barre de réservation est fixée en bas de l'écran et la page laisse sa place dessous.
+#listing-page>.listing-view.is-mobile-layout {
+  height: auto;
+  min-height: 100dvh;
+  overflow: visible;
+
+  >.main {
+    height: auto;
+    overflow: visible;
+    overscroll-behavior-y: auto;
+  }
+
+  &:not(.is-checkout)>.main {
+    padding-bottom: calc(var(--tap-target) + var(--layout-gap) + 1px + var(--safe-area-bottom));
+  }
+
+  >.footer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
   }
 }
 

@@ -25,14 +25,21 @@ function getComment(filePath: string): string {
 // tombant pendant une de ces écritures arrêtait le serveur de développement (ENODATA).
 const GENERATED_DECLARATIONS = /\.d\.ts$/;
 
+// Fragments des pages légales : leur texte est publié tel quel (pré-rendu), on n'y ajoute rien.
+const CONTENT_FRAGMENTS = /\/views\/Legal\/content\//;
+
 function shouldIgnore(filePath: string): boolean {
+    const normalized = filePath.replace(/\\/g, '/');
     return (
-        GENERATED_DECLARATIONS.test(filePath) ||
-        !INCLUDED_EXTENSIONS.test(filePath) ||
-        EXCLUDED_DIRS.some((dir) => filePath.includes(dir)) ||
+        GENERATED_DECLARATIONS.test(normalized) ||
+        CONTENT_FRAGMENTS.test(normalized) ||
+        !INCLUDED_EXTENSIONS.test(normalized) ||
+        EXCLUDED_DIRS.some((dir) => normalized.includes(dir)) ||
         !fs.existsSync(filePath)
     );
 }
+
+const STABLE_READ_DELAY_MS = 200;
 
 /* -------------------------------------------------------------------------- */
 /*                                   plugin                                   */
@@ -45,8 +52,17 @@ export default function injectFileComment(): Plugin {
         async handleHotUpdate({ file }) {
             if (shouldIgnore(file)) return;
 
+            // Fichier en cours d'écriture : on n'y touche pas, la mise à jour suivante s'en chargera.
+            // Le 2026-11-11, une page légale lue au moment où un script la réécrivait (donc vide) a
+            // été remplacée par le seul en-tête « File: » : tout son texte avait disparu.
+            const first = fs.readFileSync(file, 'utf-8');
+            if (!first.trim()) return;
+            await new Promise((resolve) => setTimeout(resolve, STABLE_READ_DELAY_MS));
+            if (!fs.existsSync(file)) return;
+
             // 1️⃣ — on garde la version brute + EOL d’origine
             const raw = fs.readFileSync(file, 'utf-8');
+            if (raw !== first) return;
             const eol = raw.includes('\r\n') ? '\r\n' : '\n';
             const lf = raw.replace(/\r\n/g, '\n');
 

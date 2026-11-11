@@ -2,37 +2,31 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { X } from 'lucide-vue-next'
 import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'
-import { formatDateLabel } from '@/views/ListingView/components/Booking/utils/labels'
+import { formatStayRange } from '@/views/ListingView/components/Booking/utils/labels'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
-import type { BookedRange, FeeItem } from '@/views/ListingView/types/listing'
 
+// Barre de réservation du téléphone, collée au bas de l'écran : total du séjour choisi (frais
+// compris) et ses dates à gauche, « Réserver » à droite (comme Airbnb). Elle ouvre la fenêtre de
+// réservation (dates, voyageurs, détail du prix), qui reprend le module de réservation du bureau.
+// Avant : un prix par nuit sans les frais, suivi de « Prix indicatif » sous la barre.
 const props = withDefaults(
   defineProps<{
     modelValue?: RangeISO | null
     pricePerNight: number
-    fees?: FeeItem[]
-    bookedDays?: BookedRange[]
+    /** Total du séjour choisi, calculé comme dans le module de réservation et sur le serveur. */
+    quote?: { total: number; nights: number } | null
     disabled?: boolean
     disabledLabel?: string
   }>(),
   {
     modelValue: null,
-    fees: () => [],
-    bookedDays: () => [],
+    quote: null,
     disabled: false,
     disabledLabel: undefined,
   },
 )
-
-const emit = defineEmits<{
-  (e: 'update:modelValue', value: RangeISO | null): void
-}>()
-
-const selection = computed<RangeISO | null>({
-  get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value),
-})
 
 const overlayOpen = ref(false)
 
@@ -42,13 +36,15 @@ const currency = new Intl.NumberFormat('fr-FR', {
   maximumFractionDigits: 0,
 })
 
-const pricePerNightLabel = computed(() => `${currency.format(props.pricePerNight)} / nuit`)
+const amountLabel = computed(() => currency.format(props.quote ? props.quote.total : props.pricePerNight))
+const amountSuffix = computed(() => (props.quote ? 'au total' : '/ nuit'))
 
-const rangeLabel = computed(() => {
-  if (selection.value?.start && selection.value?.end) {
-    return `Du ${formatDateLabel(selection.value.start)} au ${formatDateLabel(selection.value.end)}`
-  }
-  return 'Sélectionnez vos dates'
+// Le séjour choisi (dates proposées d'office : les premières disponibles), sinon une invitation.
+const stayLabel = computed(() => {
+  const range = formatStayRange(props.modelValue)
+  if (!range || !props.quote) return 'Choisissez vos dates'
+  const { nights } = props.quote
+  return `${range} · ${nights} ${nights > 1 ? 'nuits' : 'nuit'}`
 })
 
 function openOverlay() {
@@ -67,46 +63,38 @@ function closeOverlay() {
   <div class="listing-booking-min">
     <div
       class="bar"
-      role="button"
-      :tabindex="props.disabled ? -1 : 0"
-      aria-haspopup="dialog"
-      :aria-expanded="overlayOpen"
-      :aria-controls="'booking-min-dialog'"
       :class="{ 'is-disabled': props.disabled }"
-      :aria-disabled="props.disabled"
-      @click="openOverlay"
-      @keydown.enter.prevent="openOverlay"
-      @keydown.space.prevent="openOverlay"
     >
-      <div class="info">
-        <div class="price">
-          <span class="amount">{{ pricePerNightLabel }}</span>
-        </div>
-
-        <!-- <div class="dates">
-          <span class="label">{{ rangeLabel }}</span>
-        </div> -->
-      </div>
+      <button
+        type="button"
+        class="info"
+        aria-haspopup="dialog"
+        :aria-expanded="overlayOpen"
+        aria-controls="booking-min-dialog"
+        :disabled="props.disabled"
+        @click="openOverlay"
+      >
+        <span class="price"><strong>{{ amountLabel }}</strong> {{ amountSuffix }}</span>
+        <span class="stay">{{ stayLabel }}</span>
+      </button>
 
       <div class="cta">
         <button
           type="button"
-          class="button"
           :disabled="props.disabled"
-          @click.stop="openOverlay"
+          aria-haspopup="dialog"
+          @click="openOverlay"
         >
           {{ props.disabled && props.disabledLabel ? props.disabledLabel : 'Réserver' }}
         </button>
       </div>
     </div>
 
-    <small class="price-indicative">Prix indicatif</small>
-
     <AbsoluteOverlay
       id="booking-min-dialog"
       class="booking-min-overlay"
       :open="overlayOpen"
-      aria-label="R&eacute;servation"
+      aria-label="Réservation"
       @close="closeOverlay"
     >
       <div class="panel">
@@ -114,15 +102,17 @@ function closeOverlay() {
           type="button"
           class="close"
           aria-label="Fermer"
-          @click="closeOverlay" title="Fermer"
+          title="Fermer"
+          @click="closeOverlay"
         >
-          ✕
+          <X
+            :size="20"
+            aria-hidden="true"
+          />
         </button>
 
         <div class="content">
-          <slot>
-            <p class="placeholder"> Les détails du booking arriveront ici. </p>
-          </slot>
+          <slot />
         </div>
       </div>
     </AbsoluteOverlay>

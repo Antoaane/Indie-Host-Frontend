@@ -70,10 +70,10 @@ const registrationLabel = computed(() => props.staticContent.registrationNumber 
   }
 
   // Sous-titre (type et lieu) : sur téléphone il prenait deux lignes à la taille d'un titre de
-  // section, juste sous le nom. Il y passe à la taille d'un intertitre ; inchangé au-delà.
+  // section, juste sous le nom. Il y passe à la taille du texte courant ; inchangé au-delà.
   > h2 {
-    @include h4-title($colorful: false, $bigger: false);
-    font-weight: 400;
+    margin: 0 0 var(--layout-gap-2xs);
+    @include base-text($bigger: true, $thin: false);
 
     @include min-width(md) {
       @include h2-title;
@@ -82,12 +82,18 @@ const registrationLabel = computed(() => props.staticContent.registrationNumber 
   }
 
   // Les caractéristiques passent à la ligne entre deux éléments, jamais au milieu de l'un d'eux.
+  // Téléphone : en petit, comme une légende.
   > ul {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
 
     opacity: 0.65;
+
+    .listing-view.is-mobile-layout & {
+      opacity: 1;
+      @include little-text(rgba($secondary-text, 0.72), $thin: false);
+    }
 
     > li {
       display: inline-flex;

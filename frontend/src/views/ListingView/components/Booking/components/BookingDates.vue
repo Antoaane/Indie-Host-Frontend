@@ -4,16 +4,21 @@
 import { computed, ref } from 'vue'
 import DatePicker from '@/components/DatePicker/DatePicker.vue'
 import RelativeOverlay from '@/components/overlays/RelativeOverlay.vue'
+import StayCalendarSheet from '@/views/ListingView/components/Booking/components/StayCalendarSheet.vue'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
 import { nightsBetween } from '@/domain/listings/bookings'
+import { formatStayDay } from '@/views/ListingView/components/Booking/utils/labels'
 import { vp } from '@/utils/viewport'
 
-const props = defineProps<{
-  open: boolean
-  rangeLabel: string
-  bookedRanges: RangeISO[]
-  modelValue: RangeISO | null
-}>()
+const props = withDefaults(
+  defineProps<{
+    open: boolean
+    bookedRanges: RangeISO[]
+    modelValue: RangeISO | null
+    minNights?: number
+  }>(),
+  { minNights: 1 },
+)
 
 const emit = defineEmits<{
   (e: 'open'): void
@@ -29,25 +34,18 @@ const selection = computed<RangeISO | null>({
 const calendarLayer = ref<HTMLElement | null>(null)
 const overlayId = `booking-dates-overlay-${Math.random().toString(36).slice(2, 10)}`
 
-// Téléphone : un seul mois à la fois. Deux mois empilés dépassaient la hauteur de l'écran.
-const monthsCount = computed(() => (vp.md.value ? 2 : 1))
+// Téléphone : calendrier plein écran, mois défilant de haut en bas. À partir de md : deux mois
+// côte à côte sous les champs.
+const isWide = computed(() => vp.md.value)
+
+const startLabel = computed(() => formatStayDay(props.modelValue?.start))
+const endLabel = computed(() => formatStayDay(props.modelValue?.end))
 
 function formatDay(iso: string) {
-  const [
-    year,
-    month,
-    day,
-  ] = iso.split('-').map(Number)
-  if (!year || !month || !day) return ''
-  return new Intl.DateTimeFormat('fr-FR', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    timeZone: 'UTC',
-  }).format(new Date(Date.UTC(year, month - 1, day)))
+  return formatStayDay(iso) ?? ''
 }
 
-// Ce que le voyageur a choisi, redit en clair sous le calendrier.
+// Ce que le voyageur a choisi, redit en clair sous le calendrier (bureau).
 const summary = computed(() => {
   const range = props.modelValue
   if (!range?.start || !range.end) return 'Choisissez votre date d’arrivée, puis celle de départ.'
@@ -63,21 +61,47 @@ const summary = computed(() => {
     ref="calendarLayer"
     class="listing-booking-dates"
   >
-    <div class="group is-single">
-      <div class="btn-primary__white__full">
-        <button
-          type="button"
-          class="field is-full"
-          aria-haspopup="dialog"
-          :aria-expanded="open ? 'true' : 'false'"
-          :aria-controls="overlayId"
-          @click="emit('open')"
-          v-html="rangeLabel"
-        />
-      </div>
-    </div>
+    <button
+      type="button"
+      class="stay-field is-start"
+      aria-haspopup="dialog"
+      :aria-expanded="open ? 'true' : 'false'"
+      :aria-controls="isWide ? overlayId : undefined"
+      @click="emit('open')"
+    >
+      <span class="label">Arrivée</span>
+      <span
+        class="value"
+        :class="{ 'is-empty': !startLabel }"
+      >{{ startLabel ?? 'Ajouter' }}</span>
+    </button>
+    <button
+      type="button"
+      class="stay-field is-end"
+      aria-haspopup="dialog"
+      :aria-expanded="open ? 'true' : 'false'"
+      :aria-controls="isWide ? overlayId : undefined"
+      @click="emit('open')"
+    >
+      <span class="label">Départ</span>
+      <span
+        class="value"
+        :class="{ 'is-empty': !endLabel }"
+      >{{ endLabel ?? 'Ajouter' }}</span>
+    </button>
+
+    <StayCalendarSheet
+      v-if="!isWide"
+      :open="open"
+      :model-value="modelValue"
+      :booked-ranges="bookedRanges"
+      :min-nights="props.minNights"
+      @update:model-value="selection = $event"
+      @close="emit('close')"
+    />
 
     <RelativeOverlay
+      v-else
       class="listing-booking-dates-overlay"
       :open="open"
       :anchor="calendarLayer"
@@ -92,7 +116,7 @@ const summary = computed(() => {
         <DatePicker
           v-model:model-value="selection"
           :disabled-dates="bookedRanges"
-          :numberOfMonths="monthsCount"
+          :numberOfMonths="2"
         />
 
         <div class="calendar-footer">

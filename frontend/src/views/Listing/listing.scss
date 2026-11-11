@@ -2,20 +2,33 @@
 
 @use '@/styles/variables/globals' as *;
 
+// Une seule feuille pour la page publique (`_Listing.vue`) et sa route de développement
+// (`/dev/listing`) : elles divergeaient (marge de navigation sur l'une seulement).
 .listing#listing-page {
   height: 100dvh;
 
   @include min-width(lg) {
-    padding-top: $nav-height;
-    height: calc(100dvh - $nav-height);
     overflow: hidden;
   }
 
   > .sub-container {
     height: 100dvh;
+  }
 
-    @include min-width(lg) {
-      height: calc(100dvh - $nav-height);
-    }
+  // Page principale : c'est une page ordinaire, qui défile avec le document. Le cadre fixé à la
+  // hauteur de l'écran (pensé pour l'annonce, qui défile dans ses colonnes) coupait tout ce qui dépassait.
+  &:has(> .themed-hub-page) {
+    height: auto;
+    overflow: visible;
+  }
+
+  // Logement sur téléphone : la page défile avec le document, comme sur Airbnb ou Booking. Safari
+  // réduit alors ses barres au défilement, et la barre de réservation reste posée en bas
+  // (`listing-view.scss`). Enfermée dans un cadre de la hauteur de l'écran, la page gardait les
+  // barres de Safari toujours déployées et une bande sombre au-dessus de la photo.
+  &:has(> .listing-view.is-mobile-layout) {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
   }
 }

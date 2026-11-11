@@ -1,9 +1,10 @@
 <!-- File: src/views/ListingView/components/Booking/components/BookingGuests.vue -->
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { Minus, Plus } from 'lucide-vue-next'
+import { computed, ref } from 'vue'
+import { ChevronDown, Minus, Plus } from 'lucide-vue-next'
 import RelativeOverlay from '@/components/overlays/RelativeOverlay.vue'
+import { vp } from '@/utils/viewport'
 
 type OccupantKey = 'adults' | 'children' | 'babies' | 'animals' | 'pmr'
 type GuestRow = {
@@ -31,6 +32,14 @@ const emit = defineEmits<{
 const guestsLayer = ref<HTMLElement | null>(null)
 const overlayId = `booking-guests-overlay-${Math.random().toString(36).slice(2, 10)}`
 
+// Téléphone : les compteurs s'ouvrent dans la fenêtre de réservation, sous le champ (une liste
+// déroulante par-dessus une fenêtre se lisait mal). À partir de md : liste déroulante.
+const isWide = computed(() => vp.md.value)
+
+// Les catégories que l'annonce n'accepte pas ne sont pas proposées (elles restaient affichées,
+// bloquées à 0, avec « Non autorisé pour cette annonce »).
+const visibleRows = computed(() => props.rows.filter((row) => row.max > 0 || row.value > 0))
+
 function canDecrease(row: GuestRow): boolean {
   return row.value > row.min
 }
@@ -40,11 +49,11 @@ function canIncrease(row: GuestRow): boolean {
 }
 
 function minusLabel(row: GuestRow): string {
-  return `Retirer ${row.label.toLowerCase()}`
+  return `Retirer : ${row.label.toLowerCase()}`
 }
 
 function plusLabel(row: GuestRow): string {
-  return `Ajouter ${row.label.toLowerCase()}`
+  return `Ajouter : ${row.label.toLowerCase()}`
 }
 </script>
 
@@ -52,22 +61,74 @@ function plusLabel(row: GuestRow): string {
   <div
     ref="guestsLayer"
     class="listing-booking-guests"
+    :class="{ 'is-open': open }"
   >
-    <div class="btn-primary__white__full">
-      <button
-        type="button"
-        class="field is-full"
-        aria-haspopup="dialog"
-        :aria-expanded="open ? 'true' : 'false'"
-        :aria-controls="overlayId"
-        @click="emit('toggle')"
+    <button
+      type="button"
+      class="stay-field is-guests"
+      :aria-haspopup="isWide ? 'dialog' : undefined"
+      :aria-expanded="open ? 'true' : 'false'"
+      :aria-controls="overlayId"
+      @click="emit('toggle')"
+    >
+      <span class="label">Voyageurs</span>
+      <span class="value">{{ occupantLabel }}</span>
+      <ChevronDown
+        class="chevron"
+        :size="18"
+        aria-hidden="true"
+      />
+    </button>
+
+    <Transition name="guests-inline">
+      <div
+        v-if="!isWide && open"
+        :id="overlayId"
+        class="guests-inline"
       >
-        <span>pour</span>
-        <strong>{{ occupantLabel }}</strong>
-      </button>
-    </div>
+        <div
+          v-for="row in visibleRows"
+          :key="row.key"
+          class="item"
+          :class="{ 'is-locked': row.max <= row.min }"
+        >
+          <div class="text">
+            <p>{{ row.label }}</p>
+            <small>{{ row.description }}</small>
+          </div>
+          <div class="counter">
+            <button
+              type="button"
+              :aria-label="minusLabel(row)"
+              :title="minusLabel(row)"
+              :disabled="!canDecrease(row)"
+              @click="props.updateCount(row.key, -1)"
+            >
+              <Minus
+                :size="18"
+                aria-hidden="true"
+              />
+            </button>
+            <span aria-live="polite">{{ row.value }}</span>
+            <button
+              type="button"
+              :aria-label="plusLabel(row)"
+              :title="plusLabel(row)"
+              :disabled="!canIncrease(row)"
+              @click="props.updateCount(row.key, 1)"
+            >
+              <Plus
+                :size="18"
+                aria-hidden="true"
+              />
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
 
     <RelativeOverlay
+      v-if="isWide"
       class="listing-booking-guests-overlay"
       :open="open"
       :anchor="guestsLayer"
@@ -80,7 +141,7 @@ function plusLabel(row: GuestRow): string {
     >
       <div class="dropdown">
         <div
-          v-for="row in props.rows"
+          v-for="row in visibleRows"
           :key="row.key"
           class="item"
           :class="{ 'is-locked': row.max <= row.min }"

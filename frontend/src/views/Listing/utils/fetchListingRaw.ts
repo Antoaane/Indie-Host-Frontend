@@ -176,24 +176,31 @@ export async function loadHost(listingId?: string): Promise<RawHost> {
   return (bundle.host ?? { name: '', status: '', avatar: '' }) as RawHost
 }
 
-export async function refreshListingAvailability(listingId?: string): Promise<ListingAvailabilitySyncResult | null> {
-  const resolved = await resolveListingId(listingId)
-
-  if (inflightAvailabilitySync.has(resolved)) {
-    return inflightAvailabilitySync.get(resolved) as Promise<ListingAvailabilitySyncResult>
+// Les deux fonctions suivantes prennent l'identifiant de l'annonce déjà affichée (`core.id`), sans le
+// résoudre de nouveau : sur un domaine relié, l'hôte seul désigne la page principale, et la
+// synchronisation partait vers elle au lieu du logement affiché (son calendrier Booking n'était jamais
+// relu depuis la page publique, 2026-11-11).
+export async function refreshListingAvailability(listingId: string): Promise<ListingAvailabilitySyncResult | null> {
+  if (inflightAvailabilitySync.has(listingId)) {
+    return inflightAvailabilitySync.get(listingId) as Promise<ListingAvailabilitySyncResult>
   }
 
-  const promise = controller.syncListingAvailability(resolved)
+  const promise = controller.syncListingAvailability(listingId)
     .finally(() => {
-      inflightAvailabilitySync.delete(resolved)
+      inflightAvailabilitySync.delete(listingId)
     })
 
-  inflightAvailabilitySync.set(resolved, promise)
+  inflightAvailabilitySync.set(listingId, promise)
 
   try {
     return await promise
   } catch (error) {
-    console.warn('[fetchListingRaw] refresh availability failed', { listingId: resolved, error })
+    console.warn('[fetchListingRaw] refresh availability failed', { listingId, error })
     return null
   }
+}
+
+export async function loadBookingsById(listingId: string): Promise<RawBookings> {
+  const bundle = await fetchBundle(listingId)
+  return (bundle.bookings ?? { price: 0, fees: [], 'booked-days': [] }) as RawBookings
 }
