@@ -168,7 +168,7 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ## Fait
 
-- [x] 2026-11-11 — Jours Booking effacés par « Appliquer », identifiants Booking renvoyés à Booking, icônes invisibles (poubelle des photos, « + », lecture des vidéos de l’accueil) (commit à venir dans cette entrée : voir `git log`).
+- [x] 2026-11-11 — Jours Booking effacés par « Appliquer », identifiants Booking renvoyés à Booking, icônes invisibles (poubelle des photos, « + », lecture des vidéos de l’accueil) (commit `71ce72d`).
 
 - [x] 2026-11-11 — Lien public vers le domaine relié, bouton « Modifier ma page » pour le propriétaire, fenêtre « Profil » de Clerk réparée, script de déploiement qui vérifie l’API (commit `fb826a1`).
 
