@@ -546,6 +546,21 @@ Installés le 2026-10-21 et versionnés dans le repo. Claude les charge selon la
 | `_buttons.scss` | `@use '@/styles/components/buttons' as buttons` | mixins `buttons.primary()`, `buttons.secondary()`, `buttons.low-btn()` |
 | `_inputs.scss` | `@use '@/styles/components/inputs' as inputs` | mixin `inputs.action()` |
 
+### Thème clair et thème sombre (2026-11-11)
+
+Les jetons de couleur de thème (`$accent`, `$secondary`, `$tertiary`, surfaces, `$bad-ink`, `$good-ink`, `$warn-ink`…) ne sont plus des couleurs figées : ce sont des variables CSS `--ih-*`, dont les valeurs sont posées une fois par `styles/layouts/_theme.scss` à partir des deux palettes de `_colors.scss` (`$palette-light`, `$palette-dark`).
+
+- **Rien ne change dans les composants** : on écrit toujours `color: $secondary` et `rgba($secondary, 0.08)`. `rgba()` est redéfinie dans `_colors.scss` (chargée par `globals`) et produit un `color-mix()` pour un jeton de thème.
+- **Interdit sur un jeton de thème** : `color.scale`, `color.mix`, `color.adjust`, `rgb($jeton, …)` (ce n'est pas une couleur pour Sass). Une nuance dérivée s'ajoute dans les deux palettes.
+- **Texte sur un aplat de couleur fixe** (pastille jaune ou verte, bouton rouge, photo) : `$ink-static` / `$paper-static`, qui ne changent pas avec le thème. Un mixin de texte pose lui-même la couleur : la lui passer (`little-text($ink-static)`), une ligne `color:` avant lui est écrasée.
+- **Thème sombre** : `html[data-theme='dark']` (plus la classe `dark` pour @nuxt/ui), uniquement sur les routes du tableau de bord (`meta.navVariant === 'host'`). Il suit le système par défaut ; l'hôte peut forcer clair ou sombre dans « Mon profil » → Apparence (`components/navs/Nav/HostAppearanceSettings.vue`), choix gardé dans `localStorage` (`indiehost:color-scheme`). Pilotage : `composables/useColorScheme.ts`, installé dans `App.vue`. Le magasin `stores/theme.ts` (logos) est tenu à jour par ce composable.
+- **Îlot toujours clair** : classe `.theme-light` sur ce qui montre la page publique dans le tableau de bord (aperçu de l'éditeur, page à thème). L'accueil garde son propre mode sombre, indépendant.
+- **Vérifier la lisibilité dans les deux thèmes** de tout nouvel écran du tableau de bord (texte ≥ 4,5:1). Aucune couleur en dur : elle resterait claire en mode sombre.
+
+### Arrondis emboîtés
+
+Un élément posé dans un autre prend l'arrondi du contenant moins la marge qui les sépare : `borders.inner(borders.$rounded-xl, var(--layout-gap-sm))`. Ne pas empiler trois boîtes arrondies : entre un panneau (`xl`) et des cartes (`lg`), il n'y a pas de place pour une boîte intermédiaire.
+
 ### Ce qui est interdit
 
 ```scss
@@ -734,10 +749,12 @@ Les domaines personnalisés pointent **directement** sur le VPS (pas via Cloudfl
 
 - **E-mails automatiques aux hôtes via Brevo** : 14 e-mails (réservations, messages, avis, litiges, annonce en ligne, limite de l'offre, rappels planifiés), anti-doublon `HostNotification`, désinscription des rappels, migration `20261023000004_host_notifications`. Détail dans « E-mails automatiques (Brevo) ».
 
+- **Thème sombre du tableau de bord et arrondis (2026-11-11)** : voir « Thème clair et thème sombre » et « Arrondis emboîtés » dans les conventions SCSS. Il n'existait pas de thème sombre pour le tableau de bord (seulement celui de l'accueil et un magasin `theme` que rien ne pilotait). Les deux plugins de pré-rendu (`frontend/plugins/*-prerender/`) ne s'exécutent plus quand le build a échoué : ils lisaient l'ancien `dist/index.html`, plantaient et leur message cachait la vraie erreur.
+
 - **Éditeur, deuxième passe UX (2026-11-11, audit de la production)** :
   - **Sections repliables** : chaque section d'un groupe est une ligne (nom, résumé d'une ligne, « À compléter ») qui s'ouvre sur son panneau, une seule à la fois. Les puces de sections et le suivi du défilement ont disparu. `EditorSection.vue` rend la ligne et ne monte le panneau qu'à sa première ouverture ; l'état et les résumés viennent de `EditorSidebar.vue` par `provide` (`EDITOR_SECTIONS_KEY`). Résumés dans `computeEditorSectionSummaries` (`editorSections.ts`, d'après le brouillon seul). Une nouvelle section = une entrée dans le registre, un résumé, un `EditorSection`.
   - **En-tête de colonne** : nom de l'annonce et sa place (« Logement de la page … », « Page principale · présente N logements », « Logement indépendant »). Pour une page principale, bouton « Modifier la page » (mode édition sur la page) toujours visible ; la section « Page » repliée a été supprimée.
-  - **« Mes annonces »** : une page principale est le bandeau d'un bloc (`EditorSiteHeader.vue`) qui contient ses logements, avec « Modifier la page », « Voir l'aperçu », l'état et « Ajouter un logement à cette page » ; les autres annonces sont sous « Logements indépendants ». Regroupement côté site d'après `UserListingCard.parentListingId`. Route du mode édition : `views/Editor/utils/pageEditorRoute.ts`.
+  - **« Mes annonces »** : une page principale est un bandeau (`EditorSiteHeader.vue` : vignette, nom, état, « Aperçu », « Modifier la page ») suivi de ses logements, en retrait derrière un filet, et d'une barre « Ajouter un logement à cette page ». Pas de boîte autour du groupe (voir « Arrondis emboîtés ») ; les autres annonces sont sous « Logements indépendants ». Regroupement côté site d'après `UserListingCard.parentListingId`. Route du mode édition : `views/Editor/utils/pageEditorRoute.ts`.
   - **Logements d'une page** : le panneau « Logements » de la page principale (groupe Essentiel) ajoute ou retire un logement d'un clic (`HubChildrenPanel.vue`, `attachableListings`).
   - **Contrôles communs** dans `panels/panel.scss` : `%panel-option` (choix avec bouton radio du design system), `%panel-select`, `%panel-action`, `%panel-add`. Ne plus dessiner ces contrôles panneau par panneau.
   - **Photos** : la copie de l'annonce gardée dans le navigateur perd ses photos en data URL ; `useEditorDraftLifecycle.ts` prend désormais la galerie du serveur dès que la copie locale a moins de photos (sinon l'éditeur affichait 0 photo et « Appliquer » aurait vidé la galerie en ligne).

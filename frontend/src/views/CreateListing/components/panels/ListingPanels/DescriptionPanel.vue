@@ -454,11 +454,11 @@ onMounted(() => {
       color: rgba($secondary-text, 0.58);
 
       &.is-warning {
-        color: #9c6b00;
+        color: $warn-ink;
       }
 
       &.is-error {
-        color: #b3261e;
+        color: $bad-ink;
       }
     }
   }

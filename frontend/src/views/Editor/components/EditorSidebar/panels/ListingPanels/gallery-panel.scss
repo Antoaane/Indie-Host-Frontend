@@ -60,10 +60,10 @@
     }
 
     >.feedback {
-      color: #0f8f4f;
+      color: $good-ink;
 
       &.is-error {
-        color: #b3261e;
+        color: $bad-ink;
       }
     }
 

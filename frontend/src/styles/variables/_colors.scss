@@ -1,73 +1,218 @@
 /* File: src/styles/variables/_colors.scss */
 
 @use "sass:color";
+@use "sass:list";
+@use "sass:map";
+@use "sass:math";
+@use "sass:meta";
+@use "sass:string";
 
-// MAIN
-$accent: #fcfafa;
-$secondary: #111117;
-$tertiary: #ece8e8;
-$quaternary: #e2dede;
-$quinary: #343339;
+// =============================================================================================
+// Couleurs du design system, en deux thèmes.
+//
+// Les jetons ($accent, $secondary, $tertiary…) ne sont plus des couleurs figées à la compilation :
+// ce sont des variables CSS (`--ih-*`). Leurs valeurs sont posées une seule fois par
+// `styles/layouts/_theme.scss` : thème clair par défaut, thème sombre sous `html[data-theme='dark']`
+// (tableau de bord, voir `composables/useColorScheme.ts`). Rien ne change dans les composants :
+// ils continuent d'écrire `color: $secondary` et `rgba($secondary, 0.08)`.
+//
+// Conséquence : un jeton de thème n'est pas une couleur pour Sass. `color.scale($accent, …)` ou
+// `color.mix($secondary, …)` ne compilent plus ; dériver une nuance se fait ici, dans les deux
+// palettes. `rgba($jeton, alpha)` reste permis partout grâce à la fonction en bas de ce fichier.
+// =============================================================================================
+
+// Couleurs fixes, identiques dans les deux thèmes.
 $dark: #000000; // Utility dark background reference (contrast/readability layers only)
+// Encre et papier qui ne changent pas avec le thème : pour un texte posé sur un aplat de couleur
+// fixe (pastille jaune ou verte, bouton rouge, photo). Sur un fond de thème, utiliser $secondary et $accent.
+$ink-static: #111117;
+$paper-static: #fcfafa;
 $translucent: rgba(255, 255, 255, 0);
-
-// SURFACES (derived from main colors)
-$accent-surface-0: color.adjust($tertiary, $lightness: 2.5%);
-$accent-surface-1: $tertiary;
-$accent-surface-2: color.scale($tertiary, $lightness: -2.5%);
-$accent-surface-3: color.scale($tertiary, $lightness: -7.5%);
-$accent-surface-4: color.scale($tertiary, $lightness: -15%);
-
-$secondary-surface-0: color.adjust(#111117, $lightness: 90%);
-$secondary-surface-1: color.adjust(#111117, $lightness: 85%);
-$secondary-surface-2: color.adjust(#111117, $lightness: 80%);
-$secondary-surface-3: color.adjust(#111117, $lightness: 70%);
-
-$translucent-surface-0: rgba(#111117, 0.1);
-$translucent-surface-1: rgba(#111117, 0.15);
-$translucent-surface-2: rgba(#111117, 0.2);
-$translucent-surface-3: rgba(#111117, 0.3);
-
-$background: $accent-surface-3;
-$secondary-text: $secondary;
-$secondary-button-reference: $secondary;
 
 // GRADIENTS
 $primary_gradiant_first: rgb(163, 153, 255);
 $primary_gradiant_second: rgb(223, 153, 255);
 $primary_gradiant_third: rgb(255, 196, 197);
 
-// Encre de marque : le dégradé signature mêlé au $secondary pour les fonds
-// clairs (lavande ≈ 6:1, orchidée ≈ 5:1 sur $accent). Le dégradé pastel
-// d'origine tombe à 2.4:1 sur blanc.
-$primary_gradiant_ink_first: color.mix($primary_gradiant_first, $secondary, 52%);
-$primary_gradiant_ink_second: color.mix($primary_gradiant_second, $secondary, 56%);
-
 $secondary_gradiant_first: rgb(254, 251, 153);
 $secondary_gradiant_second: rgb(153, 255, 226);
-
-// TEXT GRADIANTS
-$accent_text_gradiant_first: rgba($accent, 1);
-$accent_text_gradiant_second: rgba($accent, 0.75);
-$secondary_text_gradiant_first: rgba($secondary-text, 1);
-$secondary_text_gradiant_second: rgba($secondary-text, 0.75);
 
 // STATUS
 $airbnb: rgb(255, 82, 82);
 $bad: rgb(255, 82, 82);
-// Rouge lisible sur fond clair (≈ 5.9:1) pour les textes d'erreur et d'action
-// destructive ; $bad seul tombe à 3:1 sur blanc.
-$bad-ink: color.scale($bad, $lightness: -40%);
 $good: rgb(0, 255, 166);
-// Vert lisible sur fond clair pour les textes de succès ; le menthe de $good
-// tombe à 1.4:1 sur blanc et reste réservé aux fonds sombres et aux pastilles.
-$good-ink: color.scale($good, $lightness: -56%);
 // $coussi_coussa: #ffc87a;
 // $obsolete: #FF7A7A;
 $progressing: rgb(255, 216, 119);
 // $finished: #7dc6fb;
 
-:root {
-  --ui-primary: var(--secondary);
-  --ui-text-inverted: var(--accent);
+// ---------------------------------------------------------------------------------------------
+// Palettes. Chaque clé devient la variable CSS `--ih-<clé>`.
+
+$-light-accent: #fcfafa;
+$-light-secondary: #111117;
+$-light-tertiary: #ece8e8;
+
+$palette-light: (
+  accent: $-light-accent,
+  secondary: $-light-secondary,
+  tertiary: $-light-tertiary,
+  quaternary: #e2dede,
+  quinary: #343339,
+
+  // Surfaces dérivées des couleurs principales.
+  accent-surface-0: color.adjust($-light-tertiary, $lightness: 2.5%),
+  accent-surface-1: $-light-tertiary,
+  accent-surface-2: color.scale($-light-tertiary, $lightness: -2.5%),
+  accent-surface-3: color.scale($-light-tertiary, $lightness: -7.5%),
+  accent-surface-4: color.scale($-light-tertiary, $lightness: -15%),
+
+  secondary-surface-0: color.adjust($-light-secondary, $lightness: 90%),
+  secondary-surface-1: color.adjust($-light-secondary, $lightness: 85%),
+  secondary-surface-2: color.adjust($-light-secondary, $lightness: 80%),
+  secondary-surface-3: color.adjust($-light-secondary, $lightness: 70%),
+
+  // Encre de marque : le dégradé signature mêlé à l'encre pour les fonds clairs (lavande ≈ 6:1,
+  // orchidée ≈ 5:1 sur le fond). Le dégradé pastel d'origine tombe à 2.4:1 sur blanc.
+  gradiant-ink-first: color.mix($primary_gradiant_first, $-light-secondary, 52%),
+  gradiant-ink-second: color.mix($primary_gradiant_second, $-light-secondary, 56%),
+
+  // Rouge lisible sur fond clair (≈ 5.9:1) pour les textes d'erreur et d'action destructive ;
+  // $bad seul tombe à 3:1 sur blanc.
+  bad-ink: color.scale($bad, $lightness: -40%),
+  // Vert lisible sur fond clair pour les textes de succès ; le menthe de $good tombe à 1.4:1 sur
+  // blanc et reste réservé aux fonds sombres et aux pastilles.
+  good-ink: color.scale($good, $lightness: -56%),
+  // Ambre lisible sur fond clair pour les avertissements (≈ 4.9:1).
+  warn-ink: #9c6b00,
+);
+
+// Thème sombre : bâti sur l'encre de marque (#111117). Le fond de page est plus sombre que les
+// panneaux, comme en clair ; les champs sont un cran plus clairs que le panneau qui les porte.
+// Contrastes (norme AA, 4.5:1 pour le texte) : encre sur panneau 15:1, encre à 72 % sur panneau 8:1.
+$-dark-accent: #1a1a21;
+$-dark-secondary: #f1eeee;
+
+$palette-dark: (
+  accent: $-dark-accent,
+  secondary: $-dark-secondary,
+  tertiary: #27272f,
+  quaternary: #31313b,
+  quinary: #cbc8d2,
+
+  accent-surface-0: #23232a,
+  accent-surface-1: #27272f,
+  accent-surface-2: #2d2d36,
+  accent-surface-3: #0d0d12,
+  accent-surface-4: #060608,
+
+  secondary-surface-0: #24242c,
+  secondary-surface-1: #2a2a33,
+  secondary-surface-2: #31313b,
+  secondary-surface-3: #3e3e4a,
+
+  // Sur fond sombre, le dégradé pastel se lit tel quel (≈ 8:1) : pas besoin de le mêler à l'encre.
+  gradiant-ink-first: color.scale($primary_gradiant_first, $lightness: 12%),
+  gradiant-ink-second: color.scale($primary_gradiant_second, $lightness: 10%),
+
+  // Rouge et vert éclaircis pour rester lisibles sur les panneaux sombres (≈ 7:1 et 11:1).
+  bad-ink: rgb(255, 138, 138),
+  good-ink: rgb(71, 235, 173),
+  warn-ink: $progressing,
+);
+
+/// Pose les variables CSS d'une palette (appelé par `styles/layouts/_theme.scss` uniquement).
+@mixin theme-vars($palette) {
+  @each $name, $value in $palette {
+    --ih-#{$name}: #{$value};
+  }
+}
+
+// ---------------------------------------------------------------------------------------------
+// Jetons utilisés par les composants.
+
+// MAIN
+$accent: var(--ih-accent);
+$secondary: var(--ih-secondary);
+$tertiary: var(--ih-tertiary);
+$quaternary: var(--ih-quaternary);
+$quinary: var(--ih-quinary);
+
+// SURFACES
+$accent-surface-0: var(--ih-accent-surface-0);
+$accent-surface-1: var(--ih-accent-surface-1);
+$accent-surface-2: var(--ih-accent-surface-2);
+$accent-surface-3: var(--ih-accent-surface-3);
+$accent-surface-4: var(--ih-accent-surface-4);
+
+$secondary-surface-0: var(--ih-secondary-surface-0);
+$secondary-surface-1: var(--ih-secondary-surface-1);
+$secondary-surface-2: var(--ih-secondary-surface-2);
+$secondary-surface-3: var(--ih-secondary-surface-3);
+
+$translucent-surface-0: color-mix(in srgb, var(--ih-secondary) 10%, transparent);
+$translucent-surface-1: color-mix(in srgb, var(--ih-secondary) 15%, transparent);
+$translucent-surface-2: color-mix(in srgb, var(--ih-secondary) 20%, transparent);
+$translucent-surface-3: color-mix(in srgb, var(--ih-secondary) 30%, transparent);
+
+$background: $accent-surface-3;
+$secondary-text: $secondary;
+$secondary-button-reference: $secondary;
+
+// Encre de marque (voir les palettes).
+$primary_gradiant_ink_first: var(--ih-gradiant-ink-first);
+$primary_gradiant_ink_second: var(--ih-gradiant-ink-second);
+
+// TEXT GRADIANTS
+$accent_text_gradiant_first: $accent;
+$accent_text_gradiant_second: color-mix(in srgb, var(--ih-accent) 75%, transparent);
+$secondary_text_gradiant_first: $secondary-text;
+$secondary_text_gradiant_second: color-mix(in srgb, var(--ih-secondary) 75%, transparent);
+
+// Textes d'erreur et de succès (voir les palettes).
+$bad-ink: var(--ih-bad-ink);
+$good-ink: var(--ih-good-ink);
+$warn-ink: var(--ih-warn-ink);
+
+// ---------------------------------------------------------------------------------------------
+// `rgba($jeton, alpha)` avec un jeton de thème.
+//
+// Sass ne sait pas rendre transparente une variable CSS. Cette fonction prend la place de `rgba`
+// dans tous les fichiers qui chargent ce module (via `globals`) : pour un jeton de thème elle écrit
+// un `color-mix()` résolu par le navigateur, pour une vraie couleur elle se comporte comme avant.
+@function rgba($args...) {
+  // Arguments nommés acceptés comme par la fonction d'origine : rgba($couleur, $alpha: 0.5).
+  $named: meta.keywords($args);
+  $values: ();
+  @if map.has-key($named, color) {
+    $values: list.append($values, map.get($named, color));
+  }
+  @each $value in $args {
+    $values: list.append($values, $value);
+  }
+  @if map.has-key($named, alpha) {
+    $values: list.append($values, map.get($named, alpha));
+  }
+  $count: list.length($values);
+
+  @if $count == 2 {
+    $color: list.nth($values, 1);
+    $alpha: list.nth($values, 2);
+
+    @if meta.type-of($color) == color {
+      @return color.change($color, $alpha: $alpha);
+    }
+
+    @if meta.type-of($alpha) == number and math.is-unitless($alpha) {
+      $alpha: $alpha * 100%;
+    }
+    @return color-mix(in srgb, #{$color} #{$alpha}, transparent);
+  }
+
+  @if $count == 4 {
+    @return color.change(rgb(list.nth($values, 1), list.nth($values, 2), list.nth($values, 3)), $alpha: list.nth($values, 4));
+  }
+
+  // Autre forme (syntaxe CSS moderne, valeur déjà calculée) : laissée telle quelle au navigateur.
+  @return string.unquote("rgba(#{$values})");
 }

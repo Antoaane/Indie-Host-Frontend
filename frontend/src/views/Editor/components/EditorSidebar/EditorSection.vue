@@ -93,7 +93,7 @@ watch(isOpen, (open) => {
   scroll-margin-top: var(--editor-section-scroll-margin, 0px);
 
   &.is-collapsible {
-    border-radius: borders.$rounded-md;
+    border-radius: borders.$rounded-lg;
     border: 1px solid rgba($secondary, 0.06);
     background: $accent;
 

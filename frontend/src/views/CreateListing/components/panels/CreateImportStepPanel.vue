@@ -291,7 +291,7 @@ function handleCreateManually() {
 
         &.import-icon {
           background: rgba($primary_gradiant_first, 0.14);
-          color: $primary_gradiant_first;
+          color: $primary_gradiant_ink_first;
         }
 
         &.manual-icon {

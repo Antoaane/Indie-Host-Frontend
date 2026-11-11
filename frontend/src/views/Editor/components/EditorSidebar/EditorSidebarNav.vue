@@ -193,7 +193,8 @@ function handleGroupKeydown(event: KeyboardEvent, index: number) {
           }
 
           border: none;
-          border-radius: borders.$rounded-md;
+          // Emboîté dans l'en-tête de colonne (arrondi xl, marge 0.5rem).
+          border-radius: borders.inner(borders.$rounded-xl, 0.5rem);
           background: transparent;
           color: rgba($secondary-text, 0.8);
           cursor: pointer;

@@ -18,10 +18,10 @@
   &__header,
   &__section {
     padding: 1.1rem;
-    border: 1px solid rgba(10, 21, 41, 0.08);
+    border: 1px solid rgba($secondary, 0.08);
     border-radius: 16px;
-    background: #fff;
-    box-shadow: 0 10px 24px rgba(8, 15, 35, 0.06);
+    background: $accent;
+    @include soft-shadow();
   }
 
   &__header {
@@ -29,12 +29,12 @@
       margin: 0 0 0.45rem;
       font-size: clamp(1.2rem, 2.5vw, 1.65rem);
       line-height: 1.2;
-      color: #0b1220;
+      color: $secondary;
     }
 
     > p {
       margin: 0;
-      color: #41506b;
+      color: rgba($secondary-text, 0.72);
     }
   }
 
@@ -42,7 +42,7 @@
     > h2 {
       margin: 0;
       font-size: 1.05rem;
-      color: #0b1220;
+      color: $secondary;
     }
 
     > label {
@@ -50,19 +50,19 @@
       margin-top: 0.75rem;
       margin-bottom: 0.35rem;
       font-weight: 600;
-      color: #0b1220;
+      color: $secondary;
     }
 
     > select {
       width: 100%;
       max-width: 540px;
-      border: 1px solid #c6d0e3;
+      border: 1px solid rgba($secondary, 0.18);
       border-radius: 10px;
       min-height: 42px;
       padding: 0 0.65rem;
       font-size: 0.95rem;
-      background: #fff;
-      color: #0b1220;
+      background: $accent;
+      color: $secondary;
 
       @media (pointer: coarse) {
         font-size: max(1rem, 16px);
@@ -72,33 +72,33 @@
 
   &__hint {
     margin: 0.35rem 0 0;
-    color: #41506b;
+    color: rgba($secondary-text, 0.72);
   }
 
   &__feedback {
     margin: 0.65rem 0 0;
-    color: #1f2d43;
+    color: $secondary;
 
     &.is-success {
-      color: #147d4f;
+      color: $good-ink;
     }
 
     &.is-error {
-      color: #c02237;
+      color: $bad-ink;
     }
   }
 
   &__legacy {
     &.is-disabled {
       border-style: dashed;
-      background: #f9fbff;
+      background: $accent-surface-0;
     }
 
     code {
       font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       font-size: 0.85em;
-      color: #223655;
-      background: #eef4ff;
+      color: $secondary;
+      background: $tertiary;
       border-radius: 6px;
       padding: 0.15rem 0.35rem;
     }
@@ -108,11 +108,11 @@
 .domain-custom-purchase {
   margin-top: 0.75rem;
   padding-top: 0.75rem;
-  border-top: 1px solid #e6ebf4;
+  border-top: 1px solid rgba($secondary, 0.08);
 
   &__intro {
     margin: 0;
-    color: #41506b;
+    color: rgba($secondary-text, 0.72);
   }
 
   &__form {
@@ -123,18 +123,18 @@
 
     > label {
       font-weight: 600;
-      color: #0b1220;
+      color: $secondary;
     }
 
     > input {
-      border: 1px solid #c6d0e3;
+      border: 1px solid rgba($secondary, 0.18);
       border-radius: 10px;
       min-height: 42px;
       padding: 0 0.75rem;
       font-size: 0.95rem;
 
       &:focus-visible {
-        outline: 2px solid #4f7ef7;
+        outline: 2px solid $secondary;
         outline-offset: 1px;
       }
     }
@@ -146,8 +146,8 @@
       min-height: 40px;
       padding: 0 1rem;
       font-weight: 600;
-      color: #fff;
-      background: #2758f4;
+      color: $accent;
+      background: $secondary;
       cursor: pointer;
 
       &:disabled {
@@ -159,25 +159,25 @@
 
   &__feedback {
     margin: 0 0 0.85rem;
-    color: #1f2d43;
+    color: $secondary;
 
     &.is-success {
-      color: #147d4f;
+      color: $good-ink;
     }
 
     &.is-error {
-      color: #c02237;
+      color: $bad-ink;
     }
   }
 
   &__result {
     margin-top: 0.75rem;
     padding-top: 0.75rem;
-    border-top: 1px solid #e6ebf4;
+    border-top: 1px solid rgba($secondary, 0.08);
 
     p {
       margin: 0.2rem 0;
-      color: #1f2d43;
+      color: $secondary;
     }
   }
 
@@ -188,8 +188,8 @@
     min-height: 40px;
     padding: 0 1rem;
     font-weight: 600;
-    color: #fff;
-    background: #06a56b;
+    color: $accent;
+    background: $secondary;
     cursor: pointer;
 
     &:disabled {

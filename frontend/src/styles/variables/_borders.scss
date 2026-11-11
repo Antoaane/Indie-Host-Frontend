@@ -9,6 +9,12 @@ $rounded-xl: 1.5rem;
 $rounded-xxl: 2rem;
 $rounded: 9999px;
 
+/// Arrondi d'un élément posé à l'intérieur d'un autre : celui du contenant moins la marge qui les
+/// sépare, pour que les deux courbes restent parallèles. Ex. : `borders.inner(borders.$rounded-xl, var(--layout-gap-sm))`.
+@function inner($outer, $inset) {
+  @return calc(#{$outer} - #{$inset});
+}
+
 /* ─────────────  squircle.scss  ───────────── */
 // super-ellipse n≈4 générée pour un carré 100×100 puis mise en %
 // (Source : squircley.app, radius = 0.24)

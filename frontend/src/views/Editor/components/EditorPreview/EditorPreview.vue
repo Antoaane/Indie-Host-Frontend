@@ -199,7 +199,7 @@ onBeforeUnmount(() => {
 
     <div
       v-if="props.rawListing"
-      class="content"
+      class="content theme-light"
       :class="{ 'is-hub': isHubListing }"
       ref="wrapper"
     >

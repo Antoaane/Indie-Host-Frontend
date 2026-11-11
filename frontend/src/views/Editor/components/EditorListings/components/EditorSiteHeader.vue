@@ -29,8 +29,6 @@ const emit = defineEmits<{
   (e: 'select', listingId: string): void
   (e: 'preview', listingId: string): void
   (e: 'transfer', listingId: string): void
-  /** Ouvre le réglage de visibilité de la page. */
-  (e: 'open-visibility', listingId: string): void
 }>()
 
 const listingContent = editorStatic.listings
@@ -48,12 +46,13 @@ const statusTone = computed(() => {
   return 'is-draft'
 })
 
-const summary = computed(() => {
+// Ligne d'information : l'adresse de la page, puis ce qu'elle présente.
+const details = computed(() => {
   const total = props.childrenCount
   const presented = total
     ? `${total} logement${total > 1 ? 's' : ''}`
     : 'aucun logement pour le moment'
-  return props.hostname ? `${props.hostname} · ${presented}` : presented
+  return [props.hostname, presented].filter(Boolean)
 })
 
 const route = useRoute()
@@ -78,7 +77,7 @@ function select() {
       role="button"
       tabindex="0"
       :aria-pressed="props.isSelected"
-      :aria-label="`Modifier la page principale ${title}`"
+      :aria-label="`Régler la page principale ${title}`"
       @click="select"
       @keydown.enter.prevent="select"
       @keydown.space.prevent="select"
@@ -102,52 +101,48 @@ function select() {
       <span class="text">
         <span class="kind">Page principale</span>
         <span class="title">{{ title }}</span>
-        <span class="summary">{{ summary }}</span>
+        <span class="details">
+          <span
+            class="status"
+            :class="statusTone"
+          >
+            <span
+              class="dot"
+              aria-hidden="true"
+            />
+            {{ statusLabel }}
+          </span>
+          <span
+            v-for="detail in details"
+            :key="detail"
+            class="detail"
+          >{{ detail }}</span>
+        </span>
       </span>
     </div>
 
     <div class="actions">
       <button
+        v-if="props.canTransfer"
         type="button"
-        class="status"
-        :class="statusTone"
-        title="Modifier la visibilité de la page"
-        @click="emit('open-visibility', props.hub.listingId)"
+        class="quiet"
+        @click="emit('transfer', props.hub.listingId)"
       >
-        <span
-          class="dot"
-          aria-hidden="true"
-        />
-        {{ statusLabel }}
+        Transférer
       </button>
 
-      <div
-        v-if="props.canTransfer"
-        class="transfer"
-      >
-        <button
-          type="button"
-          @click="emit('transfer', props.hub.listingId)"
-        >
-          Transférer
-        </button>
-      </div>
-
-      <div
+      <button
         v-if="props.canPreview !== false"
-        class="preview"
+        type="button"
+        class="quiet"
+        @click="emit('preview', props.hub.listingId)"
       >
-        <button
-          type="button"
-          @click="emit('preview', props.hub.listingId)"
-        >
-          Voir l’aperçu
-          <Eye
-            :size="18"
-            aria-hidden="true"
-          />
-        </button>
-      </div>
+        <Eye
+          :size="18"
+          aria-hidden="true"
+        />
+        Aperçu
+      </button>
 
       <div class="edit">
         <RouterLink :to="pageEditorRoute">
@@ -170,6 +165,9 @@ function select() {
 @use '@/styles/components/buttons' as buttons;
 
 .editor-site-header {
+  // Une seule hauteur pour les deux actions : elles se lisent comme un groupe.
+  --ui-site-header-action-height: 2.5rem;
+
   min-width: 0;
   padding: var(--layout-gap-sm);
   display: flex;
@@ -196,7 +194,7 @@ function select() {
     display: flex;
     align-items: center;
     gap: var(--layout-gap-md);
-    border-radius: borders.$rounded-md;
+    border-radius: borders.inner(borders.$rounded-lg, var(--layout-gap-sm));
     cursor: pointer;
 
     &:focus-visible {
@@ -211,7 +209,8 @@ function select() {
       overflow: hidden;
       display: grid;
       place-items: center;
-      border-radius: borders.$rounded-md;
+      // Emboîtée dans le bandeau.
+      border-radius: borders.inner(borders.$rounded-lg, var(--layout-gap-sm));
       background: $accent-surface-2;
 
       > img {
@@ -241,11 +240,45 @@ function select() {
         @include h4-title($secondary);
       }
 
-      > .summary {
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-        @include little-text(rgba($secondary-text, 0.72), $thin: false);
+      // État, adresse et nombre de logements sur une ligne, séparés par un point médian.
+      > .details {
+        min-width: 0;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        column-gap: var(--layout-gap-xs);
+
+        > .status,
+        > .detail {
+          @include little-text(rgba($secondary-text, 0.72), $thin: false);
+        }
+
+        > .detail::before {
+          content: '·';
+          margin-right: var(--layout-gap-xs);
+        }
+
+        > .status {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
+          color: $secondary;
+
+          > .dot {
+            width: 0.5rem;
+            height: 0.5rem;
+            border-radius: borders.$rounded;
+            background: rgba($secondary, 0.35);
+          }
+
+          &.is-online > .dot {
+            background: $good-ink;
+          }
+
+          &.is-paused > .dot {
+            background: $bad;
+          }
+        }
       }
     }
   }
@@ -257,57 +290,40 @@ function select() {
     align-items: center;
     gap: var(--layout-gap-xs);
 
-    > .status {
-      min-height: 2.25rem;
+    // Action secondaire : texte et icône, sans cadre. Elle ne doit pas concurrencer « Modifier la page ».
+    > .quiet {
+      min-height: var(--ui-site-header-action-height);
       padding: 0 var(--layout-gap-sm);
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
 
-      border: 1px solid rgba($secondary, 0.1);
-      border-radius: borders.$rounded;
-      background: $accent;
+      border: 0;
+      border-radius: borders.inner(borders.$rounded-lg, var(--layout-gap-sm));
+      background: none;
       cursor: pointer;
-      @include little-text($secondary, $thin: false);
-      @include animations.transition(animations.$duration-fast, animations.$ease-out, border-color);
+      @include base-text($secondary);
+      @include animations.transition(animations.$duration-fast, animations.$ease-out, background-color);
       @include animations.press();
 
       @include on-hover {
-        border-color: rgba($secondary, 0.3);
+        background: rgba($secondary, 0.06);
       }
 
       &:focus-visible {
         outline: 2px solid $secondary;
         outline-offset: 2px;
       }
-
-      > .dot {
-        width: 0.5rem;
-        height: 0.5rem;
-        border-radius: borders.$rounded;
-        background: rgba($secondary, 0.35);
-      }
-
-      &.is-online > .dot {
-        background: $good-ink;
-      }
-
-      &.is-paused > .dot {
-        background: $bad;
-      }
-    }
-
-    > .transfer {
-      @include buttons.primary($theme: white, $little: true);
-    }
-
-    > .preview {
-      @include buttons.primary($theme: white);
     }
 
     // Action principale du bandeau : ouvrir la page pour la modifier dessus.
     > .edit {
       @include buttons.primary($theme: black);
+
+      > a {
+        min-height: var(--ui-site-header-action-height);
+        border-radius: borders.inner(borders.$rounded-lg, var(--layout-gap-sm));
+      }
     }
   }
 }

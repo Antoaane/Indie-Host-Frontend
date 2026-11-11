@@ -720,7 +720,7 @@
         }
 
         &.is-pending {
-          color: rgba($progressing, 0.92);
+          color: $warn-ink;
         }
       }
 

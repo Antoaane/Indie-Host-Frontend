@@ -519,11 +519,11 @@ async function maybeResolvePreciseAddress(rawAddress?: string) {
         @include little-text($thin: false);
 
         &.is-error {
-          color: #b3261e;
+          color: $bad-ink;
         }
 
         &.is-success {
-          color: #0f8f4f;
+          color: $good-ink;
         }
       }
     }

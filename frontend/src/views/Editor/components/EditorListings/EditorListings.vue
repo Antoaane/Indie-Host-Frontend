@@ -679,7 +679,6 @@ onBeforeUnmount(() => {
             @select="handleSelect"
             @preview="handlePreview"
             @transfer="openTransferDialog"
-            @open-visibility="emit('open-section', { listingId: $event, section: 'visibility' })"
           />
 
           <div class="site-body">

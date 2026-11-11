@@ -110,7 +110,7 @@ const titleCounter = computed(() =>
       color: rgba($secondary-text, 0.58);
 
       &.is-error {
-        color: #b3261e;
+        color: $bad-ink;
       }
     }
   }

@@ -127,7 +127,7 @@ $button-themes: (
 
     color: map.get($colors, text-color);
     background-color: map.get($colors, bg-color);
-    outline: 3px solid rgb(map.get($colors, outline-color), map.get($colors, outline-opacity));
+    outline: 3px solid rgba(map.get($colors, outline-color), map.get($colors, outline-opacity));
     @include press;
 
     &>* {

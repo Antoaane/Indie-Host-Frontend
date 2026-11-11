@@ -607,11 +607,11 @@ onMounted(async () => {
     color: rgba($secondary, 0.7);
 
     &.is-warning {
-      color: #9c6b00;
+      color: $warn-ink;
     }
 
     &.is-error {
-      color: #b3261e;
+      color: $bad-ink;
     }
   }
 }

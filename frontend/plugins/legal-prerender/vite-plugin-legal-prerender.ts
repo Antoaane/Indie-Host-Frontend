@@ -1,3 +1,5 @@
+// File: plugins/legal-prerender/vite-plugin-legal-prerender.ts
+
 import fs from 'node:fs'
 import path from 'node:path'
 import type { Plugin, ResolvedConfig } from 'vite'
@@ -52,6 +54,7 @@ function buildPageMarkup(registry: LegalRegistry, page: LegalRegistry['pages'][n
 
 export default function legalPrerender(): Plugin {
   let config: ResolvedConfig
+  let buildFailed = false
 
   return {
     name: 'indiehost-legal-prerender',
@@ -59,7 +62,16 @@ export default function legalPrerender(): Plugin {
     configResolved(resolvedConfig) {
       config = resolvedConfig
     },
+    // Un build en échec appelle quand même closeBundle : sans cette garde, le pré-rendu lit l'ancien
+    // dist/index.html, plante à son tour et son message cache la vraie erreur de compilation.
+    buildEnd(error) {
+      if (error) buildFailed = true
+    },
+    renderError() {
+      buildFailed = true
+    },
     closeBundle() {
+      if (buildFailed) return
       const outDir = path.resolve(config.root, config.build.outDir)
       const template = fs.readFileSync(path.join(outDir, 'index.html'), 'utf-8')
       const registry = JSON.parse(

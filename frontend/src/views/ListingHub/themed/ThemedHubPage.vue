@@ -163,7 +163,7 @@ const hasHeroMedia = computed(() => Boolean(props.content.coverSrc) || props.edi
 <template>
   <article
     ref="root"
-    class="themed-hub-page"
+    class="themed-hub-page theme-light"
     :class="{ 'is-editing': editing, 'is-embedded': embedded }"
     :data-theme="theme.id"
     :style="themeStyle"

@@ -1,0 +1,40 @@
+/* File: src/styles/layouts/_theme.scss */
+
+// Valeurs des couleurs du design system (`--ih-*`), posées une seule fois pour toute l'application.
+// Les palettes sont dans `styles/variables/_colors.scss` ; le choix du thème dans
+// `composables/useColorScheme.ts` (attribut `data-theme` sur <html>, tableau de bord uniquement).
+
+@use '@/styles/variables/colors' as colors;
+
+:root {
+  @include colors.theme-vars(colors.$palette-light);
+  color-scheme: light;
+
+  // @nuxt/ui (calendrier, composants `U*`) suit les couleurs d'IndieHost.
+  --secondary: var(--ih-secondary);
+  --accent: var(--ih-accent);
+  --ui-primary: var(--ih-secondary);
+  --ui-text-inverted: var(--ih-accent);
+}
+
+html[data-theme='dark'] {
+  @include colors.theme-vars(colors.$palette-dark);
+  color-scheme: dark;
+}
+
+// Écran de chargement du tableau de bord (`html.is-booting`, posé par le script de `index.html`
+// avant le premier affichage) : il suit déjà le système, le temps que l'application choisisse le
+// thème. Sans cela un écran clair clignoterait à chaque ouverture en mode sombre.
+@media (prefers-color-scheme: dark) {
+  html.is-booting:not([data-theme]) {
+    @include colors.theme-vars(colors.$palette-dark);
+    color-scheme: dark;
+  }
+}
+
+// Îlot toujours clair à l'intérieur du tableau de bord : l'aperçu de la page publique, que les
+// voyageurs voient en clair quel que soit le thème de l'hôte.
+.theme-light {
+  @include colors.theme-vars(colors.$palette-light);
+  color-scheme: light;
+}

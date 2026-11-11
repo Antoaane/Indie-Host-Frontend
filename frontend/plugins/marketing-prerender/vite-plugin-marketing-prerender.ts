@@ -1,3 +1,5 @@
+// File: plugins/marketing-prerender/vite-plugin-marketing-prerender.ts
+
 import fs from 'node:fs'
 import path from 'node:path'
 import { transformWithEsbuild, type Plugin, type ResolvedConfig } from 'vite'
@@ -602,6 +604,7 @@ function applyMeta(html: string, meta: PageMeta, warn: (message: string) => void
 
 export default function marketingPrerender(): Plugin {
   let config: ResolvedConfig
+  let buildFailed = false
 
   return {
     name: 'indiehost-marketing-prerender',
@@ -609,7 +612,16 @@ export default function marketingPrerender(): Plugin {
     configResolved(resolvedConfig) {
       config = resolvedConfig
     },
+    // Un build en échec appelle quand même closeBundle : sans cette garde, le pré-rendu lit l'ancien
+    // dist/index.html, plante à son tour et son message cache la vraie erreur de compilation.
+    buildEnd(error) {
+      if (error) buildFailed = true
+    },
+    renderError() {
+      buildFailed = true
+    },
     async closeBundle() {
+      if (buildFailed) return
       const warn = (message: string) => config.logger.warn(message)
       const outDir = path.resolve(config.root, config.build.outDir)
       const templatePath = path.join(outDir, 'index.html')

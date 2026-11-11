@@ -42,7 +42,7 @@
 
       color: $secondary-text;
       background-color: $accent;
-      outline: 3px solid rgb($secondary-button-reference, 0.1);
+      outline: 3px solid rgba($secondary-button-reference, 0.1);
 
       cursor: pointer;
       @include animations.transition(animations.$duration-fast);

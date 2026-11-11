@@ -6,6 +6,7 @@ import { UserRound, X } from 'lucide-vue-next'
 import { computed, reactive, ref, watch } from 'vue'
 
 import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'
+import HostAppearanceSettings from '@/components/navs/Nav/HostAppearanceSettings.vue'
 import HostDataSettings from '@/components/navs/Nav/HostDataSettings.vue'
 import HostSubscriptionSettings from '@/components/navs/Nav/HostSubscriptionSettings.vue'
 import { fetchMyUser, updateMyUser } from '@/domain/api/users'
@@ -332,6 +333,8 @@ watch(
           </div>
         </footer>
       </form>
+
+      <HostAppearanceSettings />
 
       <HostSubscriptionSettings :active="open" />
 

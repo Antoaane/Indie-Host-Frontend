@@ -556,8 +556,7 @@ onBeforeUnmount(() => {
 
       border-radius: borders.$rounded-sm;
       background-color: rgba($good, 0.92);
-      color: $secondary;
-      @include little-text($bold: true);
+      @include little-text($ink-static, $bold: true);
       line-height: 1.2;
 
       pointer-events: none;
@@ -577,7 +576,7 @@ onBeforeUnmount(() => {
         height: 2.25rem;
         display: grid;
         place-items: center;
-        border-radius: borders.$rounded-sm;
+        border-radius: borders.inner(borders.$rounded-xl, 0.75rem);
         background: rgba($secondary, 0.06);
         color: $secondary;
       }
@@ -628,6 +627,10 @@ onBeforeUnmount(() => {
 
       > .link {
         @include buttons.primary($theme: black, $fullwidth: true);
+
+        > a {
+          border-radius: borders.inner(borders.$rounded-xl, 0.75rem);
+        }
       }
 
       > p {

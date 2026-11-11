@@ -33,6 +33,8 @@
 
     > .search {
       @include inputs.search($theme: accent);
+      // Emboîté dans le panneau : son arrondi suit celui du panneau, à la marge près.
+      border-radius: borders.inner(borders.$rounded-xl, var(--layout-gap-sm));
     }
   }
 
@@ -65,19 +67,16 @@
       > .site {
         grid-column: 1 / -1;
         min-width: 0;
-        padding: var(--layout-gap-sm);
         display: flex;
         flex-direction: column;
         gap: var(--layout-gap-md);
 
-        border-radius: borders.$rounded-xl;
-        border: 1px solid rgba($secondary, 0.08);
-        background: $accent-surface-1;
-
+        // Pas de boîte autour du groupe : le bandeau et les cartes ont le même arrondi, et le filet
+        // à gauche suffit à dire que ces logements appartiennent à la page.
         > .site-body {
           min-width: 0;
           margin-left: var(--layout-gap-md);
-          padding: 0 var(--layout-gap-xs) var(--layout-gap-xs) var(--layout-gap-md);
+          padding: 0 0 0 var(--layout-gap-md);
           display: flex;
           flex-direction: column;
           gap: var(--layout-gap-sm);
@@ -107,7 +106,7 @@
 
               border: 1.5px dashed rgba($secondary, 0.25);
               border-radius: borders.$rounded-lg;
-              background: rgba($accent, 0.6);
+              background: none;
               text-align: left;
               cursor: pointer;
               @include animations.transition(animations.$duration-fast, animations.$ease-out, (border-color, background-color));
@@ -115,7 +114,7 @@
 
               @include on-hover {
                 border-color: rgba($secondary, 0.5);
-                background: $accent;
+                background: rgba($secondary, 0.03);
               }
 
               &:focus-visible {
@@ -545,12 +544,11 @@
 
               padding: 0.45rem 0.7rem;
               border-radius: borders.$rounded-sm;
-              border: 1px solid rgba($secondary, 0.18);
+              border: 1px solid rgba($ink-static, 0.18);
               background: rgba($progressing, 0.94);
-              color: rgba($secondary-text, 0.9);
-              box-shadow: 0 8px 18px rgba($secondary, 0.16);
+              box-shadow: 0 8px 18px rgba($ink-static, 0.16);
 
-              @include little-text($thin: false);
+              @include little-text($ink-static, $thin: false);
               white-space: nowrap;
 
               &.status-overlay {
