@@ -185,24 +185,86 @@ export type PageSection =
   | { id: string; type: 'text-image'; title: string; text: string; imageSrc: string | null }
   | { id: string; type: 'text'; title: string; text: string }
   | { id: string; type: 'gallery'; title: string; images: Array<string | null> }
+  | PageRatingSection
   | { id: string; type: 'listings'; title: string }
+
+/**
+ * Note des voyageurs sur Booking ou Airbnb, recopiée par l'hôte : la plateforme, sa note dans son
+ * propre format (sur 10 pour Booking, sur 5 pour Airbnb), le nombre de commentaires et l'appréciation
+ * que la plateforme affiche (« Exceptionnel »). Booking ne publie pas le barème de ses appréciations :
+ * elle n'est pas déduite de la note, l'hôte écrit le mot qu'il voit.
+ */
+export type PageRatingSection = {
+  id: string
+  type: 'rating'
+  title: string
+  platform: RatingPlatform
+  /** `null` tant que l'hôte n'a pas saisi de note : la section n'est alors pas montrée au voyageur. */
+  score: number | null
+  reviewCount: number | null
+  label: string
+}
 
 export type PageSectionType = PageSection['type']
 
-/** Types qu'un « + » propose : volontairement trois, pas une bibliothèque de blocs. */
+/** Modification d'une section en mode édition : seuls les champs qui changent. */
+export type PageSectionPatch = Partial<{
+  title: string
+  text: string
+  platform: RatingPlatform
+  score: number | null
+  reviewCount: number | null
+  label: string
+}>
+
+/** Types qu'un « + » propose : peu de choix, pas une bibliothèque de blocs. */
 export type AddablePageSectionType = Exclude<PageSectionType, 'listings'>
 
 export const ADDABLE_PAGE_SECTIONS: ReadonlyArray<{ type: AddablePageSectionType; label: string }> = [
   { type: 'text-image', label: 'Texte et photo' },
   { type: 'text', label: 'Texte' },
   { type: 'gallery', label: 'Photos' },
+  { type: 'rating', label: 'Note Booking ou Airbnb' },
 ]
 
 export const PAGE_GALLERY_SIZE = 3
 
+export type RatingPlatform = 'booking' | 'airbnb'
+
+/** Plateformes de la note, avec leur échelle et le nombre de décimales qu'elles affichent. */
+export const RATING_PLATFORMS: ReadonlyArray<{ id: RatingPlatform; name: string; scale: number; decimals: number }> = [
+  { id: 'booking', name: 'Booking.com', scale: 10, decimals: 1 },
+  { id: 'airbnb', name: 'Airbnb', scale: 5, decimals: 2 },
+]
+
+export function resolveRatingPlatform(id: unknown) {
+  return RATING_PLATFORMS.find((platform) => platform.id === id) ?? RATING_PLATFORMS[0]
+}
+
+/** Note valable pour la plateforme (de 1 à son échelle), arrondie comme elle l'affiche ; sinon `null`. */
+export function normalizeRatingScore(value: unknown, platformId: RatingPlatform): number | null {
+  const score = typeof value === 'number' ? value : Number.NaN
+  const platform = resolveRatingPlatform(platformId)
+  if (!Number.isFinite(score) || score < 1 || score > platform.scale) return null
+  const factor = 10 ** platform.decimals
+  return Math.round(score * factor) / factor
+}
+
+export const MAX_REVIEW_COUNT = 1_000_000
+
+/** Nombre de commentaires entier, de 0 à un million ; sinon `null`. */
+export function normalizeReviewCount(value: unknown): number | null {
+  const count = typeof value === 'number' ? value : Number.NaN
+  if (!Number.isFinite(count) || count < 0 || count > MAX_REVIEW_COUNT) return null
+  return Math.round(count)
+}
+
 export function createPageSection(type: AddablePageSectionType, id: string): PageSection {
   if (type === 'text-image') return { id, type, title: '', text: '', imageSrc: null }
   if (type === 'gallery') return { id, type, title: '', images: Array.from({ length: PAGE_GALLERY_SIZE }, () => null) }
+  if (type === 'rating') {
+    return { id, type, title: 'Ce qu’en disent nos voyageurs', platform: 'booking', score: null, reviewCount: null, label: '' }
+  }
   return { id, type, title: '', text: '' }
 }
 

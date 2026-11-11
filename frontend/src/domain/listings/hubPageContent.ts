@@ -11,6 +11,8 @@
 import type { ListingHubChildCard } from '@/domain/api/listingHubs'
 import {
   PAGE_GALLERY_SIZE,
+  normalizeRatingScore,
+  normalizeReviewCount,
   readPageThemeId,
   type HubPageContent,
   type HubPageListing,
@@ -26,6 +28,8 @@ export const PAGE_LIMITS = {
   location: 80,
   sectionTitle: 80,
   sectionText: 1200,
+  /** Appréciation d'une note (« Exceptionnel »). */
+  ratingLabel: 40,
   /** Sections ajoutées par l'hôte, sans compter celle des logements. */
   maxSections: 12,
 } as const
@@ -61,6 +65,18 @@ function readSection(value: unknown, index: number): PageSection | null {
   if (raw.type === 'gallery') {
     const images = Array.isArray(raw.images) ? raw.images : []
     return { id, type: 'gallery', title, images: Array.from({ length: PAGE_GALLERY_SIZE }, (_, slot) => readImage(images[slot])) }
+  }
+  if (raw.type === 'rating') {
+    const platform = raw.platform === 'airbnb' ? 'airbnb' : 'booking'
+    return {
+      id,
+      type: 'rating',
+      title,
+      platform,
+      score: normalizeRatingScore(raw.score, platform),
+      reviewCount: normalizeReviewCount(raw.reviewCount),
+      label: readText(raw.label),
+    }
   }
   return null
 }

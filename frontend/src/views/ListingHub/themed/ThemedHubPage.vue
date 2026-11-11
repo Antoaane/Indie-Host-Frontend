@@ -6,16 +6,25 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
-import { ImagePlus, MapPin, Trash2, Users } from 'lucide-vue-next'
+import { ImagePlus, MapPin, Star, Trash2, Users } from 'lucide-vue-next'
 
 import {
+  RATING_PLATFORMS,
   buildPageThemeStyle,
+  normalizeRatingScore,
+  normalizeReviewCount,
+  resolveRatingPlatform,
   type AddablePageSectionType,
   type HubPageContent,
   type HubPageListing,
+  type PageRatingSection,
   type PageSection,
+  type PageSectionPatch,
   type PageTheme,
+  type RatingPlatform,
 } from '@/domain/listings/pageThemes'
+import AirbnbLogo from '@/components/svgs/icons/AirbnbLogo.vue'
+import BookingLogo from '@/components/svgs/icons/BookingLogo.vue'
 import EditableText from '@/views/ListingHub/themed/EditableText.vue'
 import SectionInserter from '@/views/ListingHub/themed/SectionInserter.vue'
 
@@ -43,7 +52,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (e: 'update', patch: Partial<Pick<HubPageContent, HeaderField>>): void
-  (e: 'update-section', sectionId: string, patch: { title?: string; text?: string }): void
+  (e: 'update-section', sectionId: string, patch: PageSectionPatch): void
   (e: 'add-section', index: number, type: AddablePageSectionType): void
   (e: 'remove-section', sectionId: string): void
   (e: 'pick-image', target: PageImageTarget, file: File): void
@@ -82,9 +91,10 @@ const flippedSectionIds = computed(() => {
 // La signature de l'hôte suit le premier bloc « texte et photo » uniquement.
 const signedSectionId = computed(() => props.content.sections.find((section) => section.type === 'text-image')?.id ?? null)
 
-/** Hors édition, une section vide n'existe pas pour le voyageur. */
+/** Hors édition, une section vide n'existe pas pour le voyageur. Une note sans chiffre non plus. */
 function isSectionVisible(section: PageSection): boolean {
   if (props.editing || section.type === 'listings') return true
+  if (section.type === 'rating') return section.score !== null
   if (section.title.trim()) return true
   if (section.type === 'gallery') return section.images.some(Boolean)
   if (section.text.trim()) return true
@@ -118,7 +128,9 @@ watch(() => props.content.sections.length, async () => {
   await nextTick()
   const section = root.value?.querySelector<HTMLElement>(`[data-section-index="${index}"]`)
   section?.scrollIntoView({ block: 'center', behavior: 'smooth' })
-  section?.querySelector<HTMLElement>('.editable-text')?.focus({ preventScroll: true })
+  // Une note a déjà un titre : le curseur va dans le chiffre.
+  const field = section?.querySelector<HTMLElement>('[data-autofocus]') ?? section?.querySelector<HTMLElement>('.editable-text')
+  field?.focus({ preventScroll: true })
 })
 
 watch(() => props.editing, (editing) => {
@@ -136,6 +148,77 @@ function onImagePicked(target: PageImageTarget, event: Event) {
   const file = input.files?.[0]
   if (file) emit('pick-image', target, file)
   input.value = ''
+}
+
+// --- Note Booking ou Airbnb -------------------------------------------------------------
+
+/** Note telle que la plateforme l'écrit : « 9,6 » et « 10 » chez Booking, « 4,92 » et « 5,0 » chez Airbnb. */
+function formatRatingScore(score: number | null, platformId: RatingPlatform): string {
+  if (score === null) return ''
+  const platform = resolveRatingPlatform(platformId)
+  const minimumFractionDigits = platformId === 'booking' && score === platform.scale ? 0 : 1
+  return new Intl.NumberFormat('fr-FR', { minimumFractionDigits, maximumFractionDigits: platform.decimals }).format(score)
+}
+
+/** Note saisie : un nombre dans l'échelle de la plateforme (« 9,6 », « 9.6/10 ») ; `null` : effacée ; `undefined` : refusée. */
+function parseRatingInput(typed: string, platformId: RatingPlatform): number | null | undefined {
+  if (!typed.trim()) return null
+  const match = typed.replace(',', '.').match(/\d+(?:\.\d+)?/)
+  if (!match) return undefined
+  return normalizeRatingScore(Number(match[0]), platformId) ?? undefined
+}
+
+function ratingScoreFormatter(platformId: RatingPlatform) {
+  return (typed: string): string | null => {
+    const score = parseRatingInput(typed, platformId)
+    return score === undefined ? null : formatRatingScore(score, platformId)
+  }
+}
+
+function formatReviewCount(count: number | null): string {
+  return count === null ? '' : new Intl.NumberFormat('fr-FR').format(count)
+}
+
+/** Nombre saisi (« 7 », « 1 234 », « 7 commentaires ») ; `null` : effacé ; `undefined` : refusé. */
+function parseReviewCountInput(typed: string): number | null | undefined {
+  if (!typed.trim()) return null
+  const match = typed.match(/\d[\d\s.  ]*/)
+  if (!match) return undefined
+  return normalizeReviewCount(Number(match[0].replace(/\D/g, ''))) ?? undefined
+}
+
+function reviewCountFormatter(typed: string): string | null {
+  const count = parseReviewCountInput(typed)
+  return count === undefined ? null : formatReviewCount(count)
+}
+
+function reviewsWord(count: number | null): string {
+  return count !== null && count > 1 ? 'commentaires' : 'commentaire'
+}
+
+/** Phrase lue par les lecteurs d'écran à la place du bloc visuel. */
+function ratingSummary(section: PageRatingSection): string {
+  const platform = resolveRatingPlatform(section.platform)
+  const parts = [`${platform.name} : ${formatRatingScore(section.score, section.platform)} sur ${platform.scale}`]
+  if (section.label.trim()) parts.push(section.label.trim())
+  if (section.reviewCount !== null) parts.push(`${formatReviewCount(section.reviewCount)} ${reviewsWord(section.reviewCount)}`)
+  return `${parts.join(', ')}.`
+}
+
+function updateRatingScore(section: PageRatingSection, typed: string) {
+  const score = parseRatingInput(typed, section.platform)
+  if (score !== undefined) emit('update-section', section.id, { score })
+}
+
+function updateReviewCount(section: PageRatingSection, typed: string) {
+  const reviewCount = parseReviewCountInput(typed)
+  if (reviewCount !== undefined) emit('update-section', section.id, { reviewCount })
+}
+
+// Les échelles diffèrent (sur 10, sur 5) : changer de plateforme efface la note, à ressaisir.
+function setRatingPlatform(section: PageRatingSection, platform: RatingPlatform) {
+  if (section.platform === platform) return
+  emit('update-section', section.id, { platform, score: null })
 }
 
 function formatPrice(value: number | null): string | null {
@@ -439,6 +522,146 @@ const hasHeroMedia = computed(() => Boolean(props.content.coverSrc) || props.edi
             </li>
           </template>
         </ul>
+      </section>
+
+      <!-- Note Booking ou Airbnb : recopiée par l'hôte, avec le logo de la plateforme -->
+      <section
+        v-else-if="section.type === 'rating' && isSectionVisible(section)"
+        class="page-rating"
+        :data-platform="section.platform"
+        :data-section-index="index"
+      >
+        <button
+          v-if="editing"
+          type="button"
+          class="section-remove"
+          @click="emit('remove-section', section.id)"
+        >
+          <Trash2
+            :size="16"
+            aria-hidden="true"
+          />
+          <span class="remove-label">Supprimer la section</span>
+        </button>
+
+        <EditableText
+          v-if="showText(section.title)"
+          tag="h2"
+          label="Titre de la section"
+          :model-value="section.title"
+          :editing="editing"
+          :max-length="80"
+          @update:model-value="emit('update-section', section.id, { title: $event })"
+        />
+
+        <div
+          v-if="editing"
+          class="rating-platforms"
+          role="radiogroup"
+          aria-label="Plateforme de la note"
+        >
+          <button
+            v-for="platform in RATING_PLATFORMS"
+            :key="platform.id"
+            type="button"
+            role="radio"
+            class="platform-option"
+            :aria-checked="section.platform === platform.id"
+            @click="setRatingPlatform(section, platform.id)"
+          >
+            <BookingLogo
+              v-if="platform.id === 'booking'"
+              class="platform-logo"
+            />
+            <AirbnbLogo
+              v-else
+              class="platform-logo"
+            />
+            {{ platform.name }}
+          </button>
+        </div>
+
+        <p
+          v-if="!editing"
+          class="sr-only"
+        >
+          {{ ratingSummary(section) }}
+        </p>
+
+        <div
+          class="rating-card"
+          :aria-hidden="editing ? undefined : 'true'"
+        >
+          <p class="rating-score">
+            <Star
+              v-if="section.platform === 'airbnb'"
+              class="score-star"
+              aria-hidden="true"
+            />
+            <EditableText
+              tag="span"
+              class="score-value"
+              data-autofocus
+              label="Note"
+              inputmode="decimal"
+              :model-value="formatRatingScore(section.score, section.platform)"
+              :format="ratingScoreFormatter(section.platform)"
+              :editing="editing"
+              :max-length="8"
+              @update:model-value="updateRatingScore(section, $event)"
+            />
+            <span class="score-scale">/{{ resolveRatingPlatform(section.platform).scale }}</span>
+          </p>
+
+          <div class="rating-details">
+            <EditableText
+              v-if="showText(section.label)"
+              tag="p"
+              class="rating-label"
+              label="Appréciation (ex. Exceptionnel)"
+              :model-value="section.label"
+              :editing="editing"
+              :max-length="40"
+              @update:model-value="emit('update-section', section.id, { label: $event })"
+            />
+            <p
+              v-if="editing || section.reviewCount !== null"
+              class="rating-count"
+            >
+              <EditableText
+                tag="span"
+                label="Nombre de commentaires"
+                inputmode="numeric"
+                :model-value="formatReviewCount(section.reviewCount)"
+                :format="reviewCountFormatter"
+                :editing="editing"
+                :max-length="16"
+                @update:model-value="updateReviewCount(section, $event)"
+              />
+              <!-- Espace insécable : Vue retire l'espace en tête d'un élément, et « 7 commentaires » ne se coupe pas. -->
+              <span v-if="section.reviewCount !== null">&nbsp;{{ reviewsWord(section.reviewCount) }}</span>
+            </p>
+            <p class="rating-source">
+              <BookingLogo
+                v-if="section.platform === 'booking'"
+                class="source-logo"
+              />
+              <AirbnbLogo
+                v-else
+                class="source-logo"
+              />
+              Note des voyageurs sur {{ resolveRatingPlatform(section.platform).name }}
+            </p>
+          </div>
+        </div>
+
+        <p
+          v-if="editing"
+          class="rating-hint"
+        >
+          Recopiez la note, l’appréciation et le nombre de commentaires affichés sur
+          {{ resolveRatingPlatform(section.platform).name }}. Sans note, la section n’apparaît pas aux voyageurs.
+        </p>
       </section>
 
       <!-- Logements : toujours présente, jamais supprimable -->

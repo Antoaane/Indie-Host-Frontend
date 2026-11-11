@@ -60,7 +60,7 @@ Sources :
 5. **Le style se choisit en un clic.** Trois vignettes de thème dans la barre du bas ; le clic applique le thème à toute la page, immédiatement.
 6. **Pas de bouton « Enregistrer ».** Une modification est gardée dès qu'on sort du champ (ou Entrée) ; la barre répond « Enregistré ». Échap annule la saisie en cours.
 7. **On sort par « Terminé »**, et la page redevient exactement ce que voit un voyageur.
-8. **On ajoute une section là où on la veut.** En mode édition, un « + » est posé sur un trait entre deux sections. Un clic propose trois types, pas une bibliothèque de blocs : « Texte et photo », « Texte », « Photos ». La section apparaît à cet endroit, le curseur déjà dans son titre.
+8. **On ajoute une section là où on la veut.** En mode édition, un « + » est posé sur un trait entre deux sections. Un clic propose quatre types, pas une bibliothèque de blocs : « Texte et photo », « Texte », « Photos », « Note Booking ou Airbnb » (ajoutée le 2026-11-11). La section apparaît à cet endroit, le curseur déjà dans son titre (dans le chiffre pour une note, qui a déjà un titre).
 9. **On supprime sans confirmation, mais on peut se raviser.** « Supprimer la section » agit tout de suite ; la barre propose « Annuler » pendant quelques secondes.
 10. **Le thème est choisi d'office d'après le lieu.** L'hôte arrive sur une page déjà habillée ; il ne change de thème que s'il le veut (section 7 bis).
 
@@ -111,6 +111,7 @@ Sections que l'hôte peut ajouter et supprimer :
 | Texte et photo | titre (80), texte brut (1 200), une photo | Une section sur deux inverse ses colonnes. La première porte la signature de l'hôte. La présentation d'origine (`core.description`, `medias.images[1]`) devient la première section de ce type (voir décision D3) |
 | Texte | titre (80), texte brut (1 200) | |
 | Photos | titre (80), trois photos | Un emplacement vide ne s'affiche pas au voyageur |
+| Note Booking ou Airbnb | titre (80, proposé : « Ce qu’en disent nos voyageurs »), plateforme, note, nombre de commentaires (entier, jusqu'à un million), appréciation (40) | Recopiée par l'hôte depuis la plateforme : Booking sur 10 à une décimale (« 9,6 »), Airbnb sur 5 à deux décimales (« 4,92 », avec une étoile). Une note hors de l'échelle est refusée et le champ reprend l'ancienne ; changer de plateforme efface la note. Sans note, la section n'est pas montrée au voyageur. La plateforme est dite par son logo officiel (`BookingLogo.vue`, `AirbnbLogo.vue`), jamais par un badge recoloré à ses couleurs : le chiffre prend celles du thème. L'appréciation (« Exceptionnel ») n'est pas déduite de la note : Booking ne publie pas son barème |
 | Logements | titre (80) | Toujours présente, une seule fois, jamais supprimable |
 
 Une section entièrement vide n'est pas montrée au voyageur.
@@ -241,6 +242,7 @@ Pistes écartées : le service public Overpass d'OpenStreetMap (testé le 2026-1
 | `frontend/src/views/ListingHub/edit/HubPageEditRoute.vue` | Route du tableau de bord : branche la logique sur l'API et sur ImageKit |
 | `frontend/src/views/Editor/…/ListingPanels/HubPagePanel.vue` | Panneau « Page de présentation » de l'éditeur, avec le bouton « Modifier ma page » |
 | `backend/api/src/domains/listings/hubPage.ts` | Schéma, nettoyage et limites de `core.page` côté API |
+| `backend/api/scripts/hub-page-rating-smoke.ts` | Contrôle du nettoyage de la section « Note » (bornes de chaque plateforme, texte, limite de sections) : `npx tsx backend/api/scripts/hub-page-rating-smoke.ts` |
 
 ### Le mode édition (fait le 2026-11-11)
 
@@ -360,4 +362,5 @@ L'étape 2 est livrable seule : les hôtes ont déjà de beaux thèmes avant que
 - **2026-11-10** – Décisions de Nathan : Rivage version 2 validé, donc les trois thèmes le sont ; seuil « à proximité de la mer » porté de 5 à 10 km. Effet mesuré du nouveau seuil : Bordeaux-centre et Bayonne passent en « mer », Montpellier-centre reste en « terres » à 20 mètres près.
 - **2026-11-10** – Demande de Nathan : « branche les thèmes en production ». Fait pour la page principale publique (détail en section 8). La description riche de la page est affichée en texte simple ; rien n'est modifié dans les données. Reste hors de ce branchement : le choix du thème par l'hôte, le mode édition, les pages d'annonce simples.
 - **2026-11-11** – Nathan constate qu'il voit sa page « comme un client classique », sans pouvoir la modifier, puis demande de mettre le mode édition en ligne. Étapes 2 bis et 3 écrites : `core.page`, deux routes d'API, route `/dashboard/page/:listingId`, panneau « Page de présentation » dans l'éditeur. Décisions D3, D4 et D9 appliquées selon les recommandations. Le mode édition s'ouvre depuis le tableau de bord et non depuis le domaine de l'hôte, qui n'a pas de session de connexion. La route de développement fait maintenant tourner le vrai mode édition.
+- **2026-11-11** – Demande de Nathan : pouvoir ajouter sur la page la note Booking ou Airbnb d'un logement, adaptée au style de chaque thème (note réelle de « Raisins Clairs » sur Booking : 9,6 « Exceptionnel », 7 commentaires). Fait : section « Note Booking ou Airbnb » (type `rating`), quatrième choix du « + ». Mise en scène par thème : Maison centre la note entre deux filets, l'appréciation en italique ; Rivage la pose dans un disque jaune soleil sur une carte blanche, comme ses étiquettes de prix ; Nocturne l'écrit en Fraunces ambre sur une carte sombre. En mode édition : choix de la plateforme, chiffre, appréciation et nombre modifiables sur place (clavier numérique sur téléphone), consigne sous la carte. La note n'est pas lue dans l'annonce : les avis de « Raisins Clairs » n'ont jamais été importés (`notes` vide en production). Vérifié sur `/dev/page-themes` (trois thèmes, 390 px et grand écran, saisies refusées, Airbnb) et par `hub-page-rating-smoke.ts` ; pas encore en production.
 - **2026-11-10** – Idées notées, non retenues pour l'instant : bulle d'aide au premier passage sur le crayon ; aperçu « téléphone » dans la barre ; annulation de la dernière modification ; section « Avis » et section « Nous trouver » ; duplication du contenu d'un thème à l'autre (inutile : le contenu est indépendant du thème).

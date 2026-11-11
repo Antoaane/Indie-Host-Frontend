@@ -26,6 +26,16 @@ export function buildDevPageContent(): HubPageContent {
         imageSrc: `${PHOTOS}/image4.jpg`,
       },
       {
+        // Note réelle d'« Appartement les Raisins Clairs » sur Booking (relevée par Nathan le 2026-11-11).
+        id: 'note',
+        type: 'rating',
+        title: 'Ce qu’en disent nos voyageurs',
+        platform: 'booking',
+        score: 9.6,
+        reviewCount: 7,
+        label: 'Exceptionnel',
+      },
+      {
         id: 'logements',
         type: 'listings',
         title: 'Nos cabanes',

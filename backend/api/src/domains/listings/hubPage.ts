@@ -19,15 +19,34 @@ export const PAGE_LIMITS = {
   location: 80,
   sectionTitle: 80,
   sectionText: 1200,
+  /** Appréciation d'une note (« Exceptionnel »). */
+  ratingLabel: 40,
+  maxReviewCount: 1_000_000,
   /** Sections ajoutées par l'hôte, sans compter celle des logements (décision D9). */
   maxSections: 12,
   gallerySize: 3,
 } as const;
 
+/** Plateforme d'une note : échelle et décimales affichées par la plateforme elle-même. */
+export const RATING_PLATFORMS = {
+  booking: { scale: 10, decimals: 1 },
+  airbnb: { scale: 5, decimals: 2 },
+} as const;
+export type RatingPlatform = keyof typeof RATING_PLATFORMS;
+
 export type PageSection =
   | { id: string; type: 'text-image'; title: string; text: string; imageSrc: string | null }
   | { id: string; type: 'text'; title: string; text: string }
   | { id: string; type: 'gallery'; title: string; images: Array<string | null> }
+  | {
+    id: string;
+    type: 'rating';
+    title: string;
+    platform: RatingPlatform;
+    score: number | null;
+    reviewCount: number | null;
+    label: string;
+  }
   | { id: string; type: 'listings'; title: string };
 
 export type HubPageSettings = {
@@ -50,6 +69,17 @@ const sectionSchema = z.discriminatedUnion('type', [
     type: z.literal('gallery'),
     title: looseText,
     images: z.array(imageSrc).max(PAGE_LIMITS.gallerySize).optional().default([]),
+  }),
+  z.object({
+    id: sectionId,
+    type: z.literal('rating'),
+    title: looseText,
+    platform: z.enum(['booking', 'airbnb']).optional().default('booking'),
+    // Bornées au nettoyage (échelle de la plateforme) : ici, seulement un nombre ou rien (zod 4
+    // refuse déjà l'infini).
+    score: z.number().nullable().optional().default(null),
+    reviewCount: z.number().nullable().optional().default(null),
+    label: looseText,
   }),
   z.object({ id: sectionId, type: z.literal('listings'), title: looseText }),
 ]);
@@ -133,6 +163,20 @@ export function collectPageImageSources(page: unknown, galleryImages: unknown): 
   return sources;
 }
 
+/** Note de 1 à l'échelle de la plateforme, arrondie comme elle l'affiche ; sinon `null`. */
+export function cleanRatingScore(value: number | null, platform: RatingPlatform): number | null {
+  const { scale, decimals } = RATING_PLATFORMS[platform];
+  if (value === null || !Number.isFinite(value) || value < 1 || value > scale) return null;
+  const factor = 10 ** decimals;
+  return Math.round(value * factor) / factor;
+}
+
+/** Nombre de commentaires entier, de 0 à un million ; sinon `null`. */
+export function cleanReviewCount(value: number | null): number | null {
+  if (value === null || !Number.isFinite(value) || value < 0 || value > PAGE_LIMITS.maxReviewCount) return null;
+  return Math.round(value);
+}
+
 function cleanSectionId(value: string, index: number, used: Set<string>): string {
   const base = value.toLowerCase().replace(/[^a-z0-9-]/g, '').slice(0, 40) || `section-${index + 1}`;
   let id = base;
@@ -175,6 +219,19 @@ export function normalizeHubPage(input: UpdateHubPageInput['page'], knownImages:
         (_, slot) => cleanImageSrc(section.images[slot], knownImages),
       );
       sections.push({ id, type: 'gallery', title, images });
+      return;
+    }
+
+    if (section.type === 'rating') {
+      sections.push({
+        id,
+        type: 'rating',
+        title,
+        platform: section.platform,
+        score: cleanRatingScore(section.score, section.platform),
+        reviewCount: cleanReviewCount(section.reviewCount),
+        label: cleanLine(section.label, PAGE_LIMITS.ratingLabel),
+      });
       return;
     }
 

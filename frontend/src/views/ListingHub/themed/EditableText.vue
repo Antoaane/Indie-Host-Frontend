@@ -19,6 +19,13 @@ const props = withDefaults(
     maxLength?: number
     /** Le texte ne peut pas être vidé : une saisie vide rend l'ancien texte. */
     required?: boolean
+    /** Clavier proposé sur téléphone (`decimal`, `numeric`…). */
+    inputmode?: 'text' | 'decimal' | 'numeric'
+    /**
+     * Met la saisie au propre (une note « 9.6 » devient « 9,6 ») ; `null` la refuse et le champ reprend
+     * l'ancien texte.
+     */
+    format?: (typed: string) => string | null
   }>(),
   {
     tag: 'p',
@@ -26,6 +33,8 @@ const props = withDefaults(
     multiline: false,
     maxLength: 2000,
     required: false,
+    inputmode: undefined,
+    format: undefined,
   },
 )
 
@@ -53,7 +62,8 @@ function render() {
 function commit() {
   if (!element.value) return
   const typed = normalize(element.value.innerText ?? '')
-  const next = props.required && !typed ? props.modelValue : typed
+  let next = props.required && !typed ? props.modelValue : typed
+  if (props.format) next = props.format(next) ?? props.modelValue
   element.value.textContent = next
   if (next !== props.modelValue) emit('update:modelValue', next)
 }
@@ -101,7 +111,8 @@ watch(() => props.editing, render)
     :aria-label="editing ? label : undefined"
     :aria-multiline="editing ? multiline : undefined"
     :data-placeholder="label"
-    :spellcheck="editing"
+    :inputmode="editing ? inputmode : undefined"
+    :spellcheck="editing && !inputmode"
     @blur="commit"
     @keydown="onKeydown"
     @paste="onPaste"

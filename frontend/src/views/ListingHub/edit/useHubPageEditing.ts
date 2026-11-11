@@ -13,6 +13,7 @@ import {
   type AddablePageSectionType,
   type HubPageContent,
   type PageSection,
+  type PageSectionPatch,
   type PageThemeId,
 } from '@/domain/listings/pageThemes'
 import type { PageImageTarget } from '@/views/ListingHub/themed/ThemedHubPage.vue'
@@ -155,7 +156,7 @@ export function useHubPageEditing(options: UseHubPageEditingOptions) {
     commit()
   }
 
-  function onUpdateSection(sectionId: string, patch: { title?: string; text?: string }) {
+  function onUpdateSection(sectionId: string, patch: PageSectionPatch) {
     setSections(content.value.sections.map((section) => (
       section.id === sectionId ? { ...section, ...patch } as PageSection : section
     )))

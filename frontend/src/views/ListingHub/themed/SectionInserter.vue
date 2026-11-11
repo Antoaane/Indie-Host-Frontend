@@ -1,9 +1,10 @@
 <!-- File: src/views/ListingHub/themed/SectionInserter.vue -->
-<!-- Le « + » entre deux sections, en mode édition : un clic propose trois types de section, un
-     second clic l'ajoute à cet endroit. Rendu par `ThemedHubPage`, stylé dans `themed-hub-page.scss`. -->
+
+<!-- Le « + » entre deux sections, en mode édition : un clic propose les types de section, un second
+     clic l'ajoute à cet endroit. Rendu par `ThemedHubPage`, stylé dans `themed-hub-page.scss`. -->
 
 <script setup lang="ts">
-import { AlignLeft, Columns2, Images, Plus, X } from 'lucide-vue-next'
+import { AlignLeft, Columns2, Images, Plus, Star, X } from 'lucide-vue-next'
 import type { Component } from 'vue'
 
 import { ADDABLE_PAGE_SECTIONS, type AddablePageSectionType } from '@/domain/listings/pageThemes'
@@ -21,6 +22,7 @@ const icons: Record<AddablePageSectionType, Component> = {
   'text-image': Columns2,
   text: AlignLeft,
   gallery: Images,
+  rating: Star,
 }
 </script>
 

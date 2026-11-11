@@ -268,6 +268,92 @@
     }
   }
 
+  // --- Note Booking ou Airbnb -------------------------------------------------------------
+  // Le chiffre en grand, dans la police des titres et aux couleurs du thème ; la plateforme n'est
+  // dite que par son logo officiel (jamais un badge recoloré à ses couleurs). Chaque thème met la
+  // note en scène à sa façon plus bas.
+
+  > .page-rating {
+    --page-rating-size: clamp(3rem, 8vw, 4.25rem);
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: calc(var(--layout-gap) * 1.25);
+    @include page-container;
+
+    > .rating-card {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--layout-gap) calc(var(--layout-gap) * 1.5);
+
+      > .rating-score {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 0.12em;
+        font-family: var(--page-font-display);
+        font-weight: var(--page-heading-weight);
+        line-height: 1;
+        font-variant-numeric: lining-nums tabular-nums;
+
+        > .score-value {
+          font-size: var(--page-rating-size);
+          letter-spacing: var(--page-title-tracking);
+        }
+
+        > .score-scale {
+          color: var(--page-muted);
+          font-size: 1.125rem;
+        }
+
+        > .score-star {
+          align-self: center;
+          width: calc(var(--page-rating-size) * 0.5);
+          height: calc(var(--page-rating-size) * 0.5);
+          color: var(--page-accent);
+          fill: currentColor;
+        }
+      }
+
+      // À côté de la note dès qu'il reste 12rem : sur téléphone, le texte passe à la ligne plutôt que
+      // de tomber sous la note.
+      > .rating-details {
+        flex: 1 1 12rem;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: var(--layout-gap-2xs);
+
+        > .rating-label {
+          font-family: var(--page-font-display);
+          font-size: 1.5rem;
+          font-weight: var(--page-heading-weight);
+          line-height: 1.2;
+        }
+
+        > .rating-count {
+          color: var(--page-muted);
+        }
+
+        > .rating-source {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--layout-gap-xs);
+          margin-top: var(--layout-gap-2xs);
+          color: var(--page-muted);
+          font-size: 0.9375rem;
+
+          > .source-logo {
+            flex-shrink: 0;
+            width: 1.75rem;
+            height: 1.75rem;
+          }
+        }
+      }
+    }
+  }
+
   // --- Logements -------------------------------------------------------------------------
 
   > .page-listings {
@@ -467,6 +553,32 @@
     > .page-listings > .listings-message {
       text-align: center;
     }
+
+    // Note : centrée entre deux filets, comme une citation ; l'appréciation en italique.
+    > .page-rating {
+      --page-rating-size: clamp(3.75rem, 10vw, 5.5rem);
+
+      align-items: center;
+      text-align: center;
+
+      > .rating-card {
+        flex-direction: column;
+        gap: var(--layout-gap-sm);
+        width: min(100%, 30rem);
+        padding-block: calc(var(--layout-gap) * 1.5);
+        border-block: 1px solid var(--page-line);
+
+        > .rating-details {
+          flex: 0 0 auto;
+          align-items: center;
+
+          > .rating-label {
+            font-style: italic;
+            font-size: 1.75rem;
+          }
+        }
+      }
+    }
   }
 
   // ======================================================================================
@@ -611,6 +723,45 @@
         }
       }
     }
+
+    // Note : carte blanche, le chiffre dans un disque jaune soleil, comme les étiquettes de prix.
+    > .page-rating {
+      --page-rating-size: clamp(2.5rem, 7vw, 3.25rem);
+
+      > .rating-card {
+        padding: var(--layout-gap) calc(var(--layout-gap) * 2) var(--layout-gap) var(--layout-gap);
+        border-radius: var(--page-radius-lg);
+        background: var(--page-surface);
+
+        > .rating-score {
+          flex: 0 0 auto;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 0;
+          width: clamp(6.5rem, 22vw, 8rem);
+          aspect-ratio: 1 / 1;
+          border-radius: #{borders.$rounded};
+          background: var(--page-highlight);
+          color: var(--page-on-highlight);
+
+          > .score-scale {
+            color: color-mix(in srgb, var(--page-on-highlight) 72%, transparent);
+            font-size: 1rem;
+          }
+
+          > .score-star {
+            width: 1.25rem;
+            height: 1.25rem;
+            color: var(--page-on-highlight);
+          }
+        }
+
+        > .rating-details > .rating-label {
+          letter-spacing: -0.02em;
+        }
+      }
+    }
   }
 
   // ======================================================================================
@@ -702,6 +853,21 @@
 
       > .card-body {
         padding: var(--layout-gap) var(--layout-gap) calc(var(--layout-gap) * 1.1);
+      }
+    }
+
+    // Note : carte sombre, le chiffre en Fraunces à la couleur ambre du thème.
+    > .page-rating {
+      --page-rating-size: clamp(3.5rem, 9vw, 5rem);
+
+      > .rating-card {
+        padding: calc(var(--layout-gap) * 1.25) calc(var(--layout-gap) * 1.5);
+        border-radius: var(--page-radius-lg);
+        background: var(--page-surface);
+
+        > .rating-score {
+          color: var(--page-accent);
+        }
       }
     }
   }
@@ -866,10 +1032,64 @@
     }
   }
 
+  // Note : choix de la plateforme, puis la consigne sous la carte.
+  .rating-platforms {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: var(--layout-gap-2xs);
+    padding: var(--layout-gap-2xs);
+    border: 1px solid var(--page-line);
+    border-radius: #{borders.$rounded-lg};
+    background: var(--page-surface);
+
+    > .platform-option {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--layout-gap-xs);
+      min-height: var(--tap-target);
+      padding: 0.3em 1em 0.3em 0.45em;
+      border: 0;
+      border-radius: #{borders.$rounded-md};
+      background: none;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      cursor: pointer;
+      @include animations.transition();
+      @include animations.press();
+
+      > .platform-logo {
+        flex-shrink: 0;
+        width: 1.75rem;
+        height: 1.75rem;
+      }
+
+      @include on-hover {
+        background: var(--page-wash);
+      }
+
+      &[aria-checked='true'] {
+        background: var(--page-accent);
+        color: var(--page-on-accent);
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--page-accent);
+        outline-offset: 2px;
+      }
+    }
+  }
+
+  .rating-hint {
+    max-width: 46ch;
+    color: var(--page-muted);
+    font-size: 0.875rem;
+  }
+
   // Supprimer une section : posé sur le trait du « + » qui la précède, à droite, hors de son contenu.
   > .page-about,
   > .page-text,
-  > .page-gallery {
+  > .page-gallery,
+  > .page-rating {
     position: relative;
   }
 
