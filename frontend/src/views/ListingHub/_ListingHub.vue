@@ -10,13 +10,11 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { fetchHubPublicPage, type ListingHubChildCard } from '@/domain/api/listingHubs'
+import { buildHubPageContent, resolveSharedLocation, toHubPageListings } from '@/domain/listings/hubPageContent'
 import {
-  readPageThemeId,
   resolvePageTheme,
   suggestPageThemeId,
-  type HubPageContent,
   type HubPageListing,
-  type PageSection,
   type PlaceSetting,
 } from '@/domain/listings/pageThemes'
 import type { RawListingBundle } from '@/domain/listings/types'
@@ -41,107 +39,21 @@ const loadError = ref<string | null>(null)
 
 const hubId = computed(() => (props.rawListing.core?.id ?? '').trim())
 
-// Réglages de page enregistrés dans l'annonce (`core.page`). Tout y est facultatif.
-const pageSettings = computed<Record<string, unknown>>(() => {
-  const value = (props.rawListing.core as Record<string, unknown> | null | undefined)?.page
-  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {}
-})
+// Contenu de la page : ce que l'hôte a enregistré en modifiant sa page (`core.page`), sinon la
+// présentation de l'annonce (description et deuxième photo) suivie des logements.
+const page = computed(() => buildHubPageContent(props.rawListing, {
+  listingsCount: children.value.length,
+  // Sans lieu saisi par l'hôte, celui des logements s'ils sont tous au même endroit.
+  fallbackLocation: resolveSharedLocation(children.value),
+}))
+const content = computed(() => page.value.content)
 
-function readText(value: unknown): string {
-  return typeof value === 'string' ? value.trim() : ''
-}
-
-// La description vient de l'éditeur riche : on garde les paragraphes, pas la mise en forme.
-function htmlToPlainText(value: unknown): string {
-  if (typeof value !== 'string') return ''
-  return value
-    .replace(/<\s*br\s*\/?>/gi, '\n')
-    .replace(/<\/\s*(p|div|li|h[1-6])\s*>/gi, '\n\n')
-    .replace(/<[^>]+>/g, '')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&#39;|&apos;/g, '’')
-    .replace(/&quot;/g, '"')
-    .replace(/[ \t]+\n/g, '\n')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim()
-}
-
-const images = computed(() => {
-  const list = Array.isArray(props.rawListing.medias?.images) ? props.rawListing.medias.images : []
-  return list
-    .map((image) => (typeof image?.src === 'string' ? image.src.trim() : ''))
-    .filter(Boolean)
-})
-
-const hostName = computed(() => {
-  const host = props.rawListing.host as Record<string, unknown> | null | undefined
-  for (const value of [host?.displayName, host?.name, host?.pseudo, host?.firstName]) {
-    if (typeof value === 'string' && value.trim()) return value.trim()
-  }
-  return ''
-})
-
-// Sans lieu saisi par l'hôte, celui des logements s'ils sont tous au même endroit.
-const location = computed(() => {
-  const saved = readText(pageSettings.value.location)
-  if (saved) return saved
-
-  const places = new Set(
-    children.value
-      .filter((child) => child.city)
-      .map((child) => (child.region ? `${child.city}, ${child.region}` : `${child.city}`)),
-  )
-  return places.size === 1 ? [...places][0] ?? '' : ''
-})
-
-const content = computed<HubPageContent>(() => {
-  const sections: PageSection[] = []
-  const description = htmlToPlainText(props.rawListing.core?.description)
-  const secondImage = images.value[1] ?? null
-
-  if (description || secondImage) {
-    sections.push({ id: 'presentation', type: 'text-image', title: '', text: description, imageSrc: secondImage })
-  }
-  sections.push({
-    id: 'logements',
-    type: 'listings',
-    title: children.value.length > 1 ? 'Nos logements' : 'Notre logement',
-  })
-
-  return {
-    title: readText(props.rawListing.core?.title) || 'Nos logements',
-    tagline: readText(pageSettings.value.tagline),
-    location: location.value,
-    coverSrc: images.value[0] ?? null,
-    hostName: hostName.value,
-    sections,
-  }
-})
-
-function formatCity(child: ListingHubChildCard): string {
-  if (!child.city) return ''
-  return child.region ? `${child.city}, ${child.region}` : child.city
-}
-
-const listings = computed<HubPageListing[]>(() => children.value.map((child) => ({
-  id: child.listingId,
-  title: child.title,
-  city: formatCity(child),
-  guestCapacity: child.guestCapacity,
-  pricePerNight: child.pricePerNight,
-  coverSrc: child.coverSrc,
-  href: child.publicPath,
-  setting: child.setting,
-  note: child.status === 'blocked' ? 'Réservations momentanément fermées' : null,
-})))
+const listings = computed(() => toHubPageListings(children.value))
 
 // Le thème choisi par l'hôte prime ; sinon il suit le lieu des logements rattachés (mer : Rivage,
 // terres : Maison), et le thème par défaut quand aucun logement n'a d'adresse.
 const theme = computed(() => resolvePageTheme(
-  readPageThemeId(pageSettings.value.theme) ?? suggestPageThemeId(placeSettings.value),
+  page.value.settings.themeId ?? suggestPageThemeId(placeSettings.value),
 ))
 
 const listingsMessage = computed(() => {

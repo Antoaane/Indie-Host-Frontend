@@ -1,4 +1,5 @@
 <!-- File: src/views/ListingHub/themed/EditableText.vue -->
+
 <!-- Texte de la page, modifiable sur place quand la page est en mode édition : on clique, on tape,
      on sort du champ (ou Entrée) et c'est enregistré. Texte brut uniquement, jamais de mise en forme. -->
 
@@ -16,12 +17,15 @@ const props = withDefaults(
     /** Plusieurs lignes : Entrée insère un saut de ligne au lieu de valider. */
     multiline?: boolean
     maxLength?: number
+    /** Le texte ne peut pas être vidé : une saisie vide rend l'ancien texte. */
+    required?: boolean
   }>(),
   {
     tag: 'p',
     editing: false,
     multiline: false,
     maxLength: 2000,
+    required: false,
   },
 )
 
@@ -48,7 +52,8 @@ function render() {
 
 function commit() {
   if (!element.value) return
-  const next = normalize(element.value.innerText ?? '')
+  const typed = normalize(element.value.innerText ?? '')
+  const next = props.required && !typed ? props.modelValue : typed
   element.value.textContent = next
   if (next !== props.modelValue) emit('update:modelValue', next)
 }

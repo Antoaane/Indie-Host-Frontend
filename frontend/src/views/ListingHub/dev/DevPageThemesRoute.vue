@@ -7,26 +7,26 @@
        &edit=1                                         arrivée directe en mode édition
        &photo=0                                        page sans photo d'en-tête
        &logements=0|1                                  page sans logement, ou avec un seul
-     Rien n'est enregistré : les modifications vivent en mémoire jusqu'au rechargement. -->
+       &erreur=1                                       chaque enregistrement échoue (message et « Réessayer »)
+     Le mode édition est le vrai (`edit/useHubPageEditing.ts`) ; seuls l'enregistrement et l'envoi
+     des photos sont simulés : rien ne quitte le navigateur, tout disparaît au rechargement. -->
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import {
-  createPageSection,
   readPageThemeId,
   resolvePageTheme,
   suggestPageThemeId,
-  type AddablePageSectionType,
   type HubPageContent,
-  type PageSection,
   type PageThemeId,
   type PlaceSetting,
 } from '@/domain/listings/pageThemes'
 import LegalLinksCompact from '@/components/layouts/LegalLinksCompact.vue'
+import { useHubPageEditing, type HubPageSnapshot } from '@/views/ListingHub/edit/useHubPageEditing'
 import PageEditBar from '@/views/ListingHub/themed/PageEditBar.vue'
-import ThemedHubPage, { type PageImageTarget } from '@/views/ListingHub/themed/ThemedHubPage.vue'
+import ThemedHubPage from '@/views/ListingHub/themed/ThemedHubPage.vue'
 import { buildDevPageContent, buildDevPageListings } from '@/views/ListingHub/dev/devPageContent'
 
 // `montagne` reste accepté : pour le thème, la montagne fait partie des terres.
@@ -52,7 +52,7 @@ const listings = computed(() => {
 
 // Le choix de l'hôte prime ; sans choix, le thème suit le lieu des logements.
 const suggestedThemeId = computed(() => suggestPageThemeId(listings.value.map((listing) => listing.setting)))
-const chosenThemeId = computed(() => readPageThemeId(route.query.theme))
+const chosenThemeId = ref<PageThemeId | null>(readPageThemeId(route.query.theme))
 const theme = computed(() => resolvePageTheme(chosenThemeId.value ?? suggestedThemeId.value))
 
 const editing = ref(route.query.edit === '1')
@@ -60,92 +60,32 @@ const content = ref<HubPageContent>({
   ...buildDevPageContent(),
   ...(route.query.photo === '0' ? { coverSrc: null } : {}),
 })
-const status = ref('')
-const removed = ref<{ section: PageSection; index: number } | null>(null)
 
-let statusTimer: ReturnType<typeof setTimeout> | null = null
-let sectionCounter = 0
 const objectUrls: string[] = []
 
-function flash(message: string, keepUndo = false) {
-  status.value = message
-  if (!keepUndo) removed.value = null
-  if (statusTimer) clearTimeout(statusTimer)
-  statusTimer = setTimeout(() => {
-    status.value = ''
-    removed.value = null
-  }, keepUndo ? 6000 : 2000)
+// Enregistrement simulé : un court délai, puis l'état est gardé en mémoire (lisible depuis la console).
+async function save(snapshot: HubPageSnapshot) {
+  await new Promise((resolve) => setTimeout(resolve, 250))
+  if (route.query.erreur === '1') throw new Error('Enregistrement impossible. Vérifiez votre connexion.')
+  const store = window as unknown as { __devPageSaves?: HubPageSnapshot[] }
+  store.__devPageSaves = [...(store.__devPageSaves ?? []), JSON.parse(JSON.stringify(snapshot)) as HubPageSnapshot]
 }
 
-function setSections(sections: PageSection[]) {
-  content.value = { ...content.value, sections }
-}
-
-function selectTheme(id: PageThemeId) {
-  void router.replace({ query: { ...route.query, theme: id } })
-  flash('Enregistré')
-}
-
-function onUpdate(patch: Partial<HubPageContent>) {
-  content.value = { ...content.value, ...patch }
-  flash('Enregistré')
-}
-
-function onUpdateSection(sectionId: string, patch: { title?: string; text?: string }) {
-  setSections(content.value.sections.map((section) => (
-    section.id === sectionId ? { ...section, ...patch } as PageSection : section
-  )))
-  flash('Enregistré')
-}
-
-function onAddSection(index: number, type: AddablePageSectionType) {
-  sectionCounter += 1
-  const sections = [...content.value.sections]
-  sections.splice(index, 0, createPageSection(type, `section-${sectionCounter}`))
-  setSections(sections)
-  flash('Section ajoutée')
-}
-
-function onRemoveSection(sectionId: string) {
-  const index = content.value.sections.findIndex((section) => section.id === sectionId)
-  const section = content.value.sections[index]
-  if (!section) return
-  setSections(content.value.sections.filter((item) => item.id !== sectionId))
-  removed.value = { section, index }
-  flash('Section supprimée.', true)
-}
-
-function onUndo() {
-  if (!removed.value) return
-  const sections = [...content.value.sections]
-  sections.splice(removed.value.index, 0, removed.value.section)
-  setSections(sections)
-  flash('Section rétablie')
-}
-
-// Ici la photo reste dans le navigateur ; dans l'éditeur réel elle part sur ImageKit.
-function onPickImage(target: PageImageTarget, file: File) {
+// Ici la photo reste dans le navigateur ; dans le tableau de bord elle part sur ImageKit.
+async function uploadImage(file: File): Promise<string> {
+  await new Promise((resolve) => setTimeout(resolve, 250))
   const url = URL.createObjectURL(file)
   objectUrls.push(url)
-
-  if (target.kind === 'cover') {
-    onUpdate({ coverSrc: url })
-    return
-  }
-
-  setSections(content.value.sections.map((section) => {
-    if (section.id !== target.sectionId) return section
-    if (section.type === 'text-image') return { ...section, imageSrc: url }
-    if (section.type === 'gallery') {
-      return { ...section, images: section.images.map((image, index) => (index === target.index ? url : image)) }
-    }
-    return section
-  }))
-  flash('Enregistré')
+  return url
 }
 
+const page = useHubPageEditing({ content, themeId: chosenThemeId, save, uploadImage })
+
+watch(chosenThemeId, (id) => {
+  if (id) void router.replace({ query: { ...route.query, theme: id } })
+})
+
 onBeforeUnmount(() => {
-  if (statusTimer) clearTimeout(statusTimer)
   objectUrls.forEach((url) => URL.revokeObjectURL(url))
 })
 </script>
@@ -157,11 +97,11 @@ onBeforeUnmount(() => {
     :listings="listings"
     :editing="editing"
     :listings-message="listings.length ? null : 'Aucun logement en ligne pour le moment. Revenez bientôt !'"
-    @update="onUpdate"
-    @update-section="onUpdateSection"
-    @add-section="onAddSection"
-    @remove-section="onRemoveSection"
-    @pick-image="onPickImage"
+    @update="page.onUpdate"
+    @update-section="page.onUpdateSection"
+    @add-section="page.onAddSection"
+    @remove-section="page.onRemoveSection"
+    @pick-image="page.onPickImage"
   >
     <template #footer>
       <LegalLinksCompact />
@@ -172,11 +112,15 @@ onBeforeUnmount(() => {
     :editing="editing"
     :theme-id="theme.id"
     :suggested-theme-id="placeSetting ? suggestedThemeId : null"
-    :status="status"
-    :can-undo="Boolean(removed)"
+    :status="page.status.value"
+    :can-undo="page.canUndo.value"
+    :can-retry="page.canRetry.value"
+    back-label="Mes annonces"
     @start="editing = true"
     @finish="editing = false"
-    @undo="onUndo"
-    @select-theme="selectTheme"
+    @undo="page.onUndo"
+    @retry="page.retry"
+    @back="editing = true"
+    @select-theme="page.selectTheme"
   />
 </template>

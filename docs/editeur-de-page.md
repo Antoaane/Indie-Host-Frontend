@@ -2,13 +2,15 @@
 
 Document de conception de la fonctionnalité « modifier ma page de présentation directement dessus ». Il sert de référence pour l'implémentation et de journal : toute idée, décision ou modification sur ce sujet s'ajoute ici (section 11).
 
-- **État au 2026-11-10** : les trois thèmes sont validés par Nathan et **branchés sur la page principale publique** (`_ListingHub.vue`), avec le thème d'office selon le lieu des logements. Le mode édition à la volée (crayon, « + », changement de thème par l'hôte) reste un prototype sur la route de développement : l'hôte ne peut pas encore choisir son thème lui-même.
+- **État au 2026-11-11** : les trois thèmes sont en ligne sur la page principale publique, et **le mode édition est écrit** : depuis le tableau de bord (`/dashboard/page/:listingId`), l'hôte modifie sa page dessus (textes, photos, thème, sections), chaque modification est enregistrée et en ligne aussitôt. Vérifié en local de bout en bout, pas encore en production. Restent l'étape 4 (finitions) et l'extension aux annonces simples.
 - **Voir les maquettes** : `cd frontend && npm run dev`, puis ouvrir
   - `http://127.0.0.1:5179/dev/page-themes?theme=maison`
   - `http://127.0.0.1:5179/dev/page-themes?theme=rivage`
   - `http://127.0.0.1:5179/dev/page-themes?theme=nocturne`
   - ajouter `&edit=1` pour arriver directement en mode édition ;
-  - remplacer `theme=…` par `lieu=mer` ou `lieu=terre` pour voir le thème appliqué d'office selon le lieu (sans rien : annonce sans adresse).
+  - remplacer `theme=…` par `lieu=mer` ou `lieu=terre` pour voir le thème appliqué d'office selon le lieu (sans rien : annonce sans adresse) ;
+  - ajouter `&erreur=1` pour voir un enregistrement qui échoue (message et « Réessayer »).
+  Cette route fait tourner le vrai mode édition (`edit/useHubPageEditing.ts`) ; seuls l'enregistrement et l'envoi des photos y sont simulés.
 
 ---
 
@@ -84,6 +86,7 @@ Tableau de bord → « Voir ma page »
 └──────────────────────────────────────────────┘
 ```
 
+- **Entrée réelle (2026-11-11)** : dans « Mes annonces », la page principale a un panneau « Page de présentation » avec le bouton « Modifier ma page ». Il ouvre la page directement en mode édition (l'hôte vient de dire qu'il veut modifier). « Terminé » montre la page telle qu'un voyageur la voit, avec deux boutons en bas à droite : « Mes annonces » et le crayon.
 - Sur téléphone, la barre passe sur deux lignes : la consigne et « Terminé », puis les trois thèmes sur toute la largeur.
 - En mode édition, les cartes des logements ne naviguent plus : un clic sert à modifier, pas à quitter la page.
 - Entre deux sections, un trait pointillé porte un « + » en son milieu et, à droite, « Supprimer la section » pour celle qui suit (sur téléphone, seulement l'icône de corbeille). Le « + » n'occupe aucune hauteur : la page a exactement la même mise en page avec ou sans lui.
@@ -221,7 +224,7 @@ Pistes écartées : le service public Overpass d'OpenStreetMap (testé le 2026-1
 
 ## 8. Architecture technique
 
-### Ce qui est déjà écrit (prototype, non branché)
+### Les fichiers
 
 | Fichier | Rôle |
 |---|---|
@@ -233,23 +236,57 @@ Pistes écartées : le service public Overpass d'OpenStreetMap (testé le 2026-1
 | `frontend/src/views/ListingHub/themed/SectionInserter.vue` | Le « + » entre deux sections et son choix de trois types |
 | `frontend/src/views/ListingHub/themed/PageEditBar.vue` | Le bouton crayon et la barre du bas, aux couleurs d'IndieHost : consigne, thèmes, « Annuler », « Terminé » |
 | `frontend/src/views/ListingHub/dev/` | Route `/dev/page-themes` et faux contenu (développement uniquement) |
+| `frontend/src/domain/listings/hubPageContent.ts` | Lecture de `core.page`, contenu par défaut, limites. Partagé par la page publique et le mode édition |
+| `frontend/src/views/ListingHub/edit/useHubPageEditing.ts` | Logique du mode édition : applique la modification, l'enregistre, gère « Annuler », « Réessayer » et l'envoi des photos. Ne sait pas où vont les données |
+| `frontend/src/views/ListingHub/edit/HubPageEditRoute.vue` | Route du tableau de bord : branche la logique sur l'API et sur ImageKit |
+| `frontend/src/views/Editor/…/ListingPanels/HubPagePanel.vue` | Panneau « Page de présentation » de l'éditeur, avec le bouton « Modifier ma page » |
+| `backend/api/src/domains/listings/hubPage.ts` | Schéma, nettoyage et limites de `core.page` côté API |
 
-### Ce qui reste à construire
+### Le mode édition (fait le 2026-11-11)
 
-1. **Données.** Un objet `core.page` dans le JSON de l'annonce, sans migration :
-   ```ts
-   core.page = {
-     theme?: 'maison' | 'rivage' | 'nocturne',   // absent : thème d'office selon le lieu
-     tagline, location,
-     sections: PageSection[],                    // types dans pageThemes.ts
-   }
-   ```
-   Le titre et la photo d'en-tête restent où ils sont. Sans `core.page`, la page s'affiche avec le thème d'office, la présentation existante comme première section et la liste des logements.
-2. **API.** `core.page` passe par les routes d'annonce existantes (`PATCH /listings/:id/draft`, puis application). Ajouter la validation zod (thème parmi trois, types de section connus, longueurs, nombre maximal de sections) et le nettoyage en texte brut côté serveur (`lib/sanitizeHtml.ts`). Le cadre de chaque logement (section 7 bis) est déjà calculé et renvoyé par l'API.
-3. **Page publique.** `_ListingHub.vue` rend `ThemedHubPage` à partir du contenu réel et des logements rattachés (`fetchHubChildrenPublic`). Les cartes deviennent des `RouterLink`.
-4. **Mode édition.** Une route du tableau de bord (par exemple `/dashboard/page/:listingId`) affiche la même page avec `PageEditBar`. C'est elle que « Voir ma page » ouvre. Le code d'édition n'est jamais chargé sur la page publique.
-5. **Photos.** « Changer la photo » passe par l'envoi ImageKit existant, avec la progression.
-6. **Titre d'onglet, SEO, Open Graph** : inchangés, ils restent dans `_Listing.vue`.
+**Données.** Un objet `core.page` dans le JSON de l'annonce, sans migration :
+```ts
+core.page = {
+  theme?: 'maison' | 'rivage' | 'nocturne',   // absent : thème d'office selon le lieu
+  tagline, location,                          // location vide : le lieu des logements
+  sections: PageSection[],                    // types dans pageThemes.ts
+}
+```
+Le titre reste `core.title` et la photo d'en-tête la première photo de l'annonce. Tant que l'hôte n'a rien modifié sur sa page, `core.page` n'existe pas : la page affiche la présentation de l'annonce (description et deuxième photo), puis les logements. À la première modification, toute la page est enregistrée, présentation comprise, en texte brut (décision D3).
+
+**API.** Deux routes, réservées au propriétaire et à l'admin, pour une page principale uniquement :
+
+| Route | Rôle |
+|---|---|
+| `GET /listings/:listingId/page` | Ouvre le mode édition : contrôle d'accès et réglages enregistrés |
+| `PUT /listings/:listingId/page` | Enregistre la page entière, plus le titre et la nouvelle photo d'en-tête s'ils sont fournis |
+
+- Le schéma zod refuse un thème ou un type de section inconnu. Les textes sont ramenés à du texte brut et coupés aux limites de la section 6. Au plus douze sections ajoutées ; la section des logements existe toujours, une seule fois.
+- Une photo n'est acceptée que si elle est hébergée sur ImageKit, ou si l'annonce l'affichait déjà.
+- `core.page` ne s'écrit **que** par cette route. La route générique de l'éditeur (`PATCH /listings/core/:id`) le conserve tel quel, et `POST /listings` l'ignore : un brouillon de l'éditeur chargé avant ne peut pas remplacer la page.
+- `core.description` suit le premier texte de la page. Elle ne sert plus à l'affichage, seulement aux aperçus de partage et aux moteurs de recherche.
+
+**Côté site.**
+- Route `/dashboard/page/:listingId` (`page-editor`), chargée à part : le code d'édition n'arrive jamais avec la page publique.
+- Enregistrement immédiat (décision D4) : un seul envoi à la fois, et une modification faite pendant un envoi en déclenche un autre aussitôt après, avec l'état le plus récent. La barre affiche « Enregistrement… » puis « Enregistré ». En cas d'échec, le message reste, avec « Réessayer ». Fermer l'onglet pendant un envoi demande confirmation.
+- Photos : envoi ImageKit existant (`uploadGalleryImageToImageKit`), sans attendre que la page soit en ligne.
+- Le titre ne peut pas être vidé : le champ reprend l'ancien texte.
+- Dans l'éditeur, la page principale n'a plus de panneau « Description » : sa présentation se modifie sur la page.
+- Après chaque enregistrement, la copie de l'annonce que l'éditeur garde dans le navigateur est effacée, sinon il rouvrirait l'ancien titre et « Appliquer » le remettrait en ligne.
+
+**Vérifié en local le 2026-11-11.**
+- Service : 32 contrôles (accès, nettoyage, limites, photos, protection contre l'éditeur).
+- Routes, par HTTP : 401 sans session, 403 pour un autre compte, 400 pour un logement simple ou un thème inconnu, 404 pour une annonce inconnue.
+- Parcours réel dans le navigateur, sur une page de test avec un logement : chargement, titre, accroche, thème, ajout d'une section, suppression puis « Annuler », lecture en base, page publique à jour, retour à l'éditeur.
+- Route de développement : erreur d'enregistrement et « Réessayer », limite de douze sections, photo, fichier qui n'est pas une image, rendu à 320, 360 et 390 px.
+
+**Pas vérifié.** L'envoi réel d'une photo vers ImageKit depuis la page (pour ne pas laisser de fichier de test sur le compte ; la fonction d'envoi est celle de la galerie). Le parcours avec une vraie session Clerk, et en production.
+
+**Limites connues.**
+- L'éditeur ouvert dans un autre onglet garde son ancienne copie : « Appliquer » y remettrait l'ancien titre et l'ancienne photo d'en-tête. La page (`core.page`) est protégée, pas ces deux champs.
+- Un lieu vidé par l'hôte reprend celui des logements : on ne peut pas afficher une page sans lieu si tous les logements sont au même endroit.
+- Une photo remplacée reste sur ImageKit.
+- Pas de retour au thème « automatique » dans la barre une fois un thème choisi (l'API l'accepte, avec `theme: null`).
 
 ### La page publique (fait le 2026-11-10)
 
@@ -285,8 +322,8 @@ Pistes écartées : le service public Overpass d'OpenStreetMap (testé le 2026-1
 | 0 | Étude, trois thèmes maquettés, prototype du mode édition sur faux contenu | Fait le 2026-11-10 |
 | 1 | Validation des thèmes par Nathan, un par un, sur les maquettes | Fait le 2026-11-10 |
 | 2 | Page publique à thème, sans édition : `_ListingHub.vue` rend la page à thème, thème d'office selon le lieu | Fait le 2026-11-10 |
-| 2 bis | Choix du thème par l'hôte et textes propres à la page (`core.page` : validation et nettoyage côté API, réglage dans l'éditeur actuel) | À faire |
-| 3 | Mode édition : route du tableau de bord, enregistrement, photos | À faire |
+| 2 bis | Choix du thème par l'hôte et textes propres à la page (`core.page` : validation et nettoyage côté API) | Fait le 2026-11-11, dans le mode édition (pas de réglage séparé dans l'éditeur) |
+| 3 | Mode édition : route du tableau de bord, enregistrement, photos | Fait le 2026-11-11, vérifié en local, pas en production |
 | 4 | Finitions : annuler la dernière modification, aide au premier passage, essais sur téléphone réel | À faire |
 | 5 | Étendre aux pages d'annonce simples, si le besoin se confirme | À décider |
 
@@ -298,13 +335,13 @@ L'étape 2 est livrable seule : les hôtes ont déjà de beaux thèmes avant que
 |---|---|---|
 | D1 | Les trois thèmes conviennent-ils ? | **Tranché le 2026-11-10** : Maison, Rivage (version 2) et Nocturne sont validés |
 | D2 | Quel thème par défaut pour les pages existantes ? | **Appliqué le 2026-11-10** faute d'objection : Maison, pour une page dont aucun logement n'a d'adresse. L'ancienne apparence IndieHost de la page principale n'existe plus |
-| D3 | Le texte de présentation devient-il du texte brut ? | Oui pour la page principale : c'est la condition de l'édition sur place sans barre de mise en forme. La description des annonces garde son éditeur riche |
-| D4 | Enregistrement immédiat en ligne, ou brouillon puis « Appliquer » comme dans l'éditeur ? | Immédiat, avec « Annuler » : le brouillon ajoute une étape que la règle de simplicité n'autorise pas. À confirmer, car c'est différent de l'éditeur actuel |
+| D3 | Le texte de présentation devient-il du texte brut ? | **Appliqué le 2026-11-11** (« mets ça en ligne » de Nathan, sur la recommandation de Claude). Oui pour la page principale : c'est la condition de l'édition sur place sans barre de mise en forme. La description des annonces garde son éditeur riche |
+| D4 | Enregistrement immédiat en ligne, ou brouillon puis « Appliquer » comme dans l'éditeur ? | **Appliqué le 2026-11-11**, même accord. Immédiat, avec « Annuler » : le brouillon ajoute une étape que la règle de simplicité n'autorise pas. À confirmer, car c'est différent de l'éditeur actuel |
 | D5 | Les pages d'annonce simples reçoivent-elles aussi les thèmes ? | Plus tard : la page d'annonce a un tunnel de réservation à habiller, c'est un chantier à part |
 | D6 | L'hôte peut-il changer la couleur d'action de son thème ? | Non au départ. Si la demande revient, proposer trois ou quatre variantes vérifiées par thème, pas un sélecteur libre |
 | D7 | Que recouvre « le reste » dans la règle du lieu ? | Avec l'adresse, tout logement est soit près de la mer, soit dans les terres. « Le reste » ne peut donc être que l'annonce sans adresse, qui reçoit le thème par défaut de D2. À confirmer |
 | D8 | Le thème « Maison » doit-il s'appeler « Montagne » ? | Non : il sert aussi aux logements dans les terres, où « Montagne » sonnerait faux. À vous de dire |
-| D9 | Combien de sections au maximum par page ? | Douze, pour borner la longueur de la page et la taille des données |
+| D9 | Combien de sections au maximum par page ? | Douze, pour borner la longueur de la page et la taille des données. **Appliqué le 2026-11-11** faute d'objection, modifiable (`PAGE_LIMITS.maxSections`, des deux côtés) |
 | D10 | À quelle distance de la côte un logement est-il « à proximité de la mer » ? | **Tranché le 2026-11-10** : 10 km |
 
 ## 11. Journal
@@ -322,4 +359,5 @@ L'étape 2 est livrable seule : les hôtes ont déjà de beaux thèmes avant que
 - **2026-11-10** – Remarque de Nathan : le lieu se connaît par l'adresse de l'annonce. Fait : l'API classe chaque logement « mer » ou « terres » à partir de ses coordonnées et du tracé des côtes embarqué, sans service extérieur, et le renvoie dans la liste des logements d'une page principale. Le cadre passe de quatre valeurs (mer, montagne, terres, ville) à deux : montagne et terres donnent le même thème, et la ville n'est plus un cas à part.
 - **2026-11-10** – Décisions de Nathan : Rivage version 2 validé, donc les trois thèmes le sont ; seuil « à proximité de la mer » porté de 5 à 10 km. Effet mesuré du nouveau seuil : Bordeaux-centre et Bayonne passent en « mer », Montpellier-centre reste en « terres » à 20 mètres près.
 - **2026-11-10** – Demande de Nathan : « branche les thèmes en production ». Fait pour la page principale publique (détail en section 8). La description riche de la page est affichée en texte simple ; rien n'est modifié dans les données. Reste hors de ce branchement : le choix du thème par l'hôte, le mode édition, les pages d'annonce simples.
+- **2026-11-11** – Nathan constate qu'il voit sa page « comme un client classique », sans pouvoir la modifier, puis demande de mettre le mode édition en ligne. Étapes 2 bis et 3 écrites : `core.page`, deux routes d'API, route `/dashboard/page/:listingId`, panneau « Page de présentation » dans l'éditeur. Décisions D3, D4 et D9 appliquées selon les recommandations. Le mode édition s'ouvre depuis le tableau de bord et non depuis le domaine de l'hôte, qui n'a pas de session de connexion. La route de développement fait maintenant tourner le vrai mode édition.
 - **2026-11-10** – Idées notées, non retenues pour l'instant : bulle d'aide au premier passage sur le crayon ; aperçu « téléphone » dans la barre ; annulation de la dernière modification ; section « Avis » et section « Nous trouver » ; duplication du contenu d'un thème à l'autre (inutile : le contenu est indépendant du thème).

@@ -31,6 +31,16 @@ import { resolvePublicBaseUrl } from '../../lib/mailer.js';
 import { hostNotifications } from '../notifications/hostNotifications.js';
 import { sanitizeListingSection, sanitizePlainText } from '../../lib/sanitizeHtml.js';
 import { resolvePlaceSetting, type PlaceSetting } from './placeSetting.js';
+import {
+  buildDescriptionFromPage,
+  cleanImageSrc,
+  cleanLine,
+  collectPageImageSources,
+  normalizeHubPage,
+  PAGE_LIMITS,
+  replaceCoverImage,
+  type UpdateHubPageInput,
+} from './hubPage.js';
 
 type ListingRecord = Listing & { owner: User | null };
 type OwnerIdentitySource = {
@@ -1132,6 +1142,8 @@ export class ListingsService {
     const comments = sanitizeListingSection('comments', payload.comments ? deepMerge(defaults.comments, payload.comments) : defaults.comments);
     const host = sanitizeListingSection('host', payload.host ? deepMerge(buildHostProfileFromUser(owner), payload.host) : buildHostProfileFromUser(owner));
     core.id = listingId;
+    // La page de présentation ne s'écrit que par `updateHubPage`.
+    delete (core as Record<string, unknown>).page;
     const requestedSlug = buildListingSlugFromCore(core, listingId);
     core.slug = await this.buildUniqueListingSlug(requestedSlug);
     const listingStatus = this.extractStatus(core);
@@ -1477,6 +1489,82 @@ export class ListingsService {
       listingId,
       parentListingId: parent ? parent.id : null,
       parent: parent ? this.toHubSummary(parent) : null,
+    };
+  }
+
+  /** Accès au mode édition de la page de présentation : propriétaire ou admin, page principale uniquement. */
+  private async resolveHubPageTarget(listingId: string, auth: RequestAuth | null) {
+    const listing = await this.prisma.listing.findUnique({
+      where: { id: listingId },
+      select: { id: true, ownerId: true, kind: true, core: true, medias: true },
+    });
+    if (!listing) return null;
+
+    const access = await resolveListingAccessForOwner(this.prisma, listing.ownerId, auth);
+    if (!access.canWrite) return 'forbidden' as const;
+    if (listing.kind !== 'hub') {
+      return { type: 'invalid' as const, reason: 'Seule une page principale a une page de présentation.' };
+    }
+    return { type: 'ok' as const, listing };
+  }
+
+  /** Réglages de page enregistrés, pour l'ouverture du mode édition (sert aussi de contrôle d'accès). */
+  async getHubPage(args: { listingId: string; auth: RequestAuth | null }) {
+    const target = await this.resolveHubPageTarget(args.listingId, args.auth);
+    if (!target || target === 'forbidden' || target.type === 'invalid') return target;
+
+    const page = asObject(target.listing.core).page;
+    return { type: 'ok' as const, listingId: args.listingId, page: isObject(page) ? page : null };
+  }
+
+  /**
+   * Page de présentation d'une page principale, enregistrée dès la modification (mode édition sur la
+   * page, décision D4 de docs/editeur-de-page.md). C'est la seule écriture de `core.page` : la route
+   * générique de `core` le conserve tel quel, pour qu'un brouillon de l'éditeur resté ouvert ne
+   * l'écrase pas. Écrit aussi le titre et la photo d'en-tête quand ils sont fournis.
+   */
+  async updateHubPage(args: { listingId: string; input: UpdateHubPageInput; auth: RequestAuth | null }) {
+    const target = await this.resolveHubPageTarget(args.listingId, args.auth);
+    if (!target || target === 'forbidden' || target.type === 'invalid') return target;
+
+    const currentCore = asObject(target.listing.core);
+    const medias = asObject(target.listing.medias, { images: [], videos: [] });
+    // Photos déjà sur la page ou dans la galerie : gardées telles quelles, où qu'elles soient hébergées.
+    const knownImages = collectPageImageSources(currentCore.page, medias.images);
+
+    const page = normalizeHubPage(args.input.page, knownImages);
+    const core: Record<string, unknown> = {
+      ...currentCore,
+      page,
+      // La description de l'annonce suit le premier texte de la page : aperçus de partage et moteurs de recherche.
+      description: buildDescriptionFromPage(page),
+    };
+
+    if (args.input.title !== undefined) {
+      const title = cleanLine(args.input.title, PAGE_LIMITS.title);
+      if (!title) return { type: 'invalid' as const, reason: 'Le titre de la page ne peut pas être vide.' };
+      core.title = title;
+    }
+
+    const data: Prisma.ListingUpdateInput = { core: toPrismaJson(core), updatedAt: new Date() };
+    let coverSrc: string | null = null;
+
+    if (args.input.coverSrc !== undefined) {
+      coverSrc = cleanImageSrc(args.input.coverSrc, knownImages);
+      if (!coverSrc) {
+        return { type: 'invalid' as const, reason: 'Photo refusée : envoyez-la avec le bouton « Changer la photo » de la page.' };
+      }
+      data.medias = toPrismaJson({ ...medias, images: replaceCoverImage(medias.images, coverSrc) });
+    }
+
+    await this.prisma.listing.update({ where: { id: args.listingId }, data });
+
+    return {
+      type: 'ok' as const,
+      listingId: args.listingId,
+      title: typeof core.title === 'string' ? core.title : '',
+      coverSrc,
+      page,
     };
   }
 
@@ -2091,6 +2179,17 @@ export class ListingsService {
 
     if (resource === 'core') {
       normalizedMerged.id = listingId;
+      // La page de présentation ne s'écrit que par `updateHubPage` (validée, nettoyée, enregistrée à
+      // chaque modification) : un brouillon de l'éditeur chargé avant ne doit pas la remplacer.
+      if (currentValue.page === undefined) {
+        delete normalizedMerged.page;
+      } else {
+        normalizedMerged.page = currentValue.page;
+        // La description suit alors le premier texte de la page (voir `updateHubPage`).
+        if (isObject(currentValue.page) && Array.isArray(currentValue.page.sections)) {
+          normalizedMerged.description = currentValue.description ?? '';
+        }
+      }
       const currentSlug = normalizePublicListingSlug(currentValue.slug);
       if (currentSlug && !isTransientListingSlug(currentSlug)) {
         normalizedMerged.slug = currentSlug;

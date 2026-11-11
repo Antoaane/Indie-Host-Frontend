@@ -107,6 +107,7 @@
         "title": "Titre",
         "gallery": "Photos",
         "description": "Description",
+        "hubPage": "Page",
         "capacity": "Capacité",
         "rooms": "Pièces",
         "amenities": "Équipements",
@@ -174,6 +175,12 @@
           "importLoading": "Récupération de l’annonce en cours…",
           "importLoadingA11y": "Import de l’annonce en cours",
           "bookingNotSupported": "L’import Booking n’est pas encore disponible. Utilisez un lien Airbnb ou créez manuellement."
+        },
+        "hubPage": {
+          "title": "Page de présentation",
+          "subtitle": "Les textes, les photos, le thème et les sections se modifient directement sur votre page.",
+          "cta": "Modifier ma page",
+          "hint": "Chaque modification est enregistrée et en ligne aussitôt, sans passer par « Appliquer »."
         },
         "calendar": {
           "title": "Synchronisation iCal",

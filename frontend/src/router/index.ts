@@ -30,6 +30,8 @@ const MessagingRoute = () => import('@/views/Messaging/MessagingRoute.vue')
 const ManagementRoute = () => import('@/views/Management/ManagementRoute.vue')
 const DomainsRoute = () => import('@/views/Domains/DomainsRoute.vue')
 const AdminRoute = () => import('@/views/Admin/AdminRoute.vue')
+// Mode édition de la page de présentation : chargé seulement depuis le tableau de bord, jamais avec la page publique.
+const HubPageEditRoute = () => import('@/views/ListingHub/edit/HubPageEditRoute.vue')
 
 declare module 'vue-router' {
   interface RouteMeta {
@@ -236,6 +238,14 @@ const router = createRouter({
       name: 'editor-user',
       component: EditorRoute,
       meta: { navVariant: 'host', title: 'Mes annonces' },
+    },
+    {
+      // Page de présentation d'une page principale, modifiable sur place (docs/editeur-de-page.md).
+      path: '/dashboard/page/:listingId',
+      name: 'page-editor',
+      component: HubPageEditRoute,
+      meta: { navVariant: 'host', hideNav: true, title: 'Modifier ma page' },
+      beforeEnter: resolveBackOfficeAccess,
     },
     {
       path: '/dashboard/management',

@@ -2,6 +2,7 @@ import fp from 'fastify-plugin';
 
 import { asObject } from '../../lib/json.js';
 import { rateLimitByIp } from '../../lib/rateLimit.js';
+import { updateHubPageSchema } from './hubPage.js';
 import { ListingsService } from './listings.service.js';
 import {
   createGuideReviewSchema,
@@ -224,6 +225,52 @@ export const listingsPlugin = fp(async (fastify) => {
     }
 
     reply.send(result);
+  });
+
+  // Page de présentation d'une page principale (mode édition sur la page) : propriétaire ou admin.
+  fastify.get('/listings/:listingId/page', {
+    preHandler: fastify.authenticate,
+  }, async (request, reply) => {
+    const params = listingIdParamsSchema.parse(request.params);
+    const result = await service.getHubPage({ listingId: params.listingId, auth: request.auth });
+
+    if (!result) {
+      reply.code(404).send({ message: 'Listing not found.' });
+      return;
+    }
+    if (result === 'forbidden') {
+      reply.code(403).send({ message: 'Vous ne pouvez pas modifier cette page.' });
+      return;
+    }
+    if (result.type === 'invalid') {
+      reply.code(400).send({ message: result.reason });
+      return;
+    }
+
+    reply.send({ listingId: result.listingId, page: result.page });
+  });
+
+  fastify.put('/listings/:listingId/page', {
+    preHandler: fastify.authenticate,
+  }, async (request, reply) => {
+    const params = listingIdParamsSchema.parse(request.params);
+    const input = updateHubPageSchema.parse(asObject(request.body));
+    const result = await service.updateHubPage({ listingId: params.listingId, input, auth: request.auth });
+
+    if (!result) {
+      reply.code(404).send({ message: 'Listing not found.' });
+      return;
+    }
+    if (result === 'forbidden') {
+      reply.code(403).send({ message: 'Vous ne pouvez pas modifier cette page.' });
+      return;
+    }
+    if (result.type === 'invalid') {
+      reply.code(400).send({ message: result.reason });
+      return;
+    }
+
+    reply.send({ listingId: result.listingId, title: result.title, coverSrc: result.coverSrc, page: result.page });
   });
 
   fastify.get('/listings/:listingId/children', async (request, reply) => {

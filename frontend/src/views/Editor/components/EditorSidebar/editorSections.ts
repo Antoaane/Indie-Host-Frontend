@@ -13,6 +13,7 @@ export type EditorSectionId =
   | 'title'
   | 'gallery'
   | 'description'
+  | 'hubPage'
   | 'capacity'
   | 'rooms'
   | 'amenities'
@@ -68,7 +69,9 @@ export const EDITOR_GROUPS: EditorGroupDefinition[] = [
     sections: [
       { id: 'title', label: sectionLabels.title },
       { id: 'gallery', label: sectionLabels.gallery },
-      { id: 'description', label: sectionLabels.description },
+      { id: 'description', label: sectionLabels.description, listingOnly: true },
+      // Page principale : textes, photos et thème se modifient directement sur la page.
+      { id: 'hubPage', label: sectionLabels.hubPage, hubOnly: true },
       { id: 'capacity', label: sectionLabels.capacity, listingOnly: true },
       { id: 'rooms', label: sectionLabels.rooms, listingOnly: true },
       { id: 'amenities', label: sectionLabels.amenities, listingOnly: true },
@@ -182,10 +185,11 @@ export function computeEditorSectionCompletion(
   const completion: Partial<Record<EditorSectionId, boolean>> = {
     title: hasText(core.title, 3),
     gallery: hasItems(medias.images),
-    description: hasText(core.description, 20),
   }
 
   if (isHub) return completion
+
+  completion.description = hasText(core.description, 20)
 
   completion.capacity = Number(core.guest_capacity ?? 0) > 0
   completion.rooms = hasItems(core.rooms)

@@ -36,6 +36,11 @@ type UploadImageOptions = {
   listingStatus?: string | null
   folder?: string
   fileName?: string
+  /**
+   * Envoi immédiat quel que soit le statut de l'annonce. Réservé à la page de présentation, qui
+   * s'enregistre à chaque modification : elle ne peut pas garder une photo en attente dans le navigateur.
+   */
+  allowUnpublished?: boolean
 }
 
 const RAW_BASE_API_URL = (import.meta.env.VITE_API_BASE_URL ?? '').trim()
@@ -108,6 +113,7 @@ function isPublishedStatus(status?: string | null): boolean {
 }
 
 function assertCanUploadToImageKit(options?: UploadImageOptions) {
+  if (options?.allowUnpublished) return
   if (!isPublishedStatus(options?.listingStatus)) {
     throw new Error("ImageKit est disponible uniquement après une première publication de l'annonce.")
   }

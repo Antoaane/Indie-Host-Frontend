@@ -196,6 +196,7 @@ const hasHeroMedia = computed(() => Boolean(props.content.coverSrc) || props.edi
           :model-value="content.title"
           :editing="editing"
           :max-length="80"
+          required
           @update:model-value="updateHeader('title', $event)"
         />
         <EditableText

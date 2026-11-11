@@ -5,7 +5,7 @@
      et « Terminé ». Voir `docs/editeur-de-page.md`. -->
 
 <script setup lang="ts">
-import { Check, Pencil, Undo2 } from 'lucide-vue-next'
+import { ArrowLeft, Check, Pencil, RotateCw, Undo2 } from 'lucide-vue-next'
 
 import { PAGE_THEMES, type PageThemeId } from '@/domain/listings/pageThemes'
 
@@ -16,35 +16,56 @@ defineProps<{
   status?: string
   /** Vrai juste après une suppression : la barre propose de la défaire. */
   canUndo?: boolean
+  /** Vrai après un enregistrement raté : la barre propose de le relancer. */
+  canRetry?: boolean
   /** Thème conseillé d'après le lieu des logements : il porte une mention dans la liste. */
   suggestedThemeId?: PageThemeId | null
+  /** Libellé du retour au tableau de bord, montré hors édition à côté du crayon. Absent : pas de retour. */
+  backLabel?: string
 }>()
 
 const emit = defineEmits<{
   (e: 'start'): void
   (e: 'finish'): void
   (e: 'undo'): void
+  (e: 'retry'): void
+  (e: 'back'): void
   (e: 'select-theme', id: PageThemeId): void
 }>()
 </script>
 
 <template>
   <div class="page-edit-bar">
-    <div
-      v-if="!editing"
-      class="start"
-    >
-      <button
-        type="button"
-        @click="emit('start')"
+    <template v-if="!editing">
+      <div
+        v-if="backLabel"
+        class="back"
       >
-        <Pencil
-          :size="20"
-          aria-hidden="true"
-        />
-        <span class="label">Modifier ma page</span>
-      </button>
-    </div>
+        <button
+          type="button"
+          @click="emit('back')"
+        >
+          <ArrowLeft
+            :size="18"
+            aria-hidden="true"
+          />
+          <span class="label">{{ backLabel }}</span>
+        </button>
+      </div>
+
+      <div class="start">
+        <button
+          type="button"
+          @click="emit('start')"
+        >
+          <Pencil
+            :size="20"
+            aria-hidden="true"
+          />
+          <span class="label">Modifier ma page</span>
+        </button>
+      </div>
+    </template>
 
     <div
       v-else
@@ -70,6 +91,18 @@ const emit = defineEmits<{
             aria-hidden="true"
           />
           Annuler
+        </button>
+        <button
+          v-if="canRetry"
+          type="button"
+          class="undo"
+          @click="emit('retry')"
+        >
+          <RotateCw
+            :size="14"
+            aria-hidden="true"
+          />
+          Réessayer
         </button>
       </p>
 
@@ -142,9 +175,22 @@ const emit = defineEmits<{
   inset: auto 0 0;
   z-index: 60;
   display: flex;
+  // Sur un écran très étroit, « Mes annonces » passe au-dessus du crayon au lieu de déborder.
+  flex-wrap: wrap;
   justify-content: flex-end;
+  gap: var(--layout-gap-sm);
   padding: 0 var(--layout-gap) var(--ui-edit-bar-offset);
   pointer-events: none;
+
+  // Retour au tableau de bord, à côté du crayon tant qu'on regarde la page.
+  > .back {
+    pointer-events: auto;
+    @include buttons.primary($theme: white, $deep: true);
+
+    > button {
+      border-radius: borders.$rounded;
+    }
+  }
 
   // Bouton d'entrée : rond avec son libellé, toujours au même endroit.
   > .start {

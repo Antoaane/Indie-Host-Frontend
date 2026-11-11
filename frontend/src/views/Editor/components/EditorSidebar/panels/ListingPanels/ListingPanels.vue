@@ -15,6 +15,7 @@ import DomainPanel from '@/views/Editor/components/EditorSidebar/panels/ListingP
 import CustomDomainPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/CustomDomainPanel.vue'
 import ParentListingPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/ParentListingPanel.vue'
 import HubChildrenPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/HubChildrenPanel.vue'
+import HubPagePanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/HubPagePanel.vue'
 import CalendarPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/CalendarPanel.vue'
 import VisibilityPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/VisibilityPanel.vue'
 import GalleryPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/GalleryPanel.vue'
@@ -67,7 +68,19 @@ const isHub = computed(() => props.draft.core?.kind === 'hub')
           @patch="emit('patch', $event)"
         />
       </EditorSection>
-      <EditorSection section="description">
+      <EditorSection
+        v-if="isHub"
+        section="hubPage"
+      >
+        <HubPagePanel
+          :listing-id="props.listingId"
+          :owner-id="props.ownerId"
+        />
+      </EditorSection>
+      <EditorSection
+        v-else
+        section="description"
+      >
         <DescriptionPanel
           :core="props.draft.core"
           @patch="emit('patch', $event)"

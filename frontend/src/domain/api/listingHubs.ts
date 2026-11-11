@@ -4,7 +4,7 @@
 
 import { getFreshAuthToken } from '@/utils/authToken'
 import { invalidateListing } from '@/domain/api/listingsCache'
-import type { PlaceSetting } from '@/domain/listings/pageThemes'
+import type { PageSection, PageThemeId, PlaceSetting } from '@/domain/listings/pageThemes'
 
 const PLACE_SETTINGS: readonly PlaceSetting[] = ['sea', 'inland']
 
@@ -224,5 +224,58 @@ export async function fetchHubChildrenForOwner(hubId: string): Promise<ListingHu
     return (Array.isArray(data?.children) ? data.children : []).map((child) => normalizeChildCard(child))
   } catch (error) {
     throw new Error(toApiErrorMessage(error, 'Impossible de charger les logements rattachés.'))
+  }
+}
+
+// --- Page de présentation (mode édition sur la page) ----------------------------------------
+
+export type HubPageSave = {
+  /** Titre de la page. Absent : inchangé. */
+  title?: string
+  /** Nouvelle photo d'en-tête (adresse ImageKit). Absent : inchangée. */
+  coverSrc?: string
+  page: {
+    /** `null` : thème d'office selon le lieu des logements. */
+    theme: PageThemeId | null
+    tagline: string
+    location: string
+    sections: PageSection[]
+  }
+}
+
+function buildHubPageUrl(listingId: string): string {
+  return buildUrl(`/listings/${encodeURIComponent(listingId.trim())}/page`)
+}
+
+/** Vérifie que le compte connecté peut modifier cette page (propriétaire ou admin, page principale). */
+export async function assertCanEditHubPage(listingId: string): Promise<void> {
+  const axios = await getAxios()
+  const headers = await buildAuthHeaders()
+  try {
+    await axios.get(buildHubPageUrl(listingId), {
+      withCredentials: false,
+      timeout: API_REQUEST_TIMEOUT_MS,
+      headers,
+    })
+  } catch (error) {
+    throw new Error(toApiErrorMessage(error, 'Impossible d’ouvrir cette page en modification.'))
+  }
+}
+
+/** Enregistre la page de présentation : elle est en ligne aussitôt, sans étape « Appliquer ». */
+export async function saveHubPage(listingId: string, update: HubPageSave): Promise<void> {
+  const axios = await getAxios()
+  const headers = await buildAuthHeaders()
+  try {
+    await axios.put(buildHubPageUrl(listingId), update, {
+      withCredentials: false,
+      timeout: API_REQUEST_TIMEOUT_MS,
+      headers,
+    })
+  } catch (error) {
+    throw new Error(toApiErrorMessage(error, 'Enregistrement impossible. Vérifiez votre connexion.'))
+  } finally {
+    // Titre, photo d'en-tête et page figurent dans les sections `core` et `medias` de l'annonce.
+    invalidateListing(listingId)
   }
 }
