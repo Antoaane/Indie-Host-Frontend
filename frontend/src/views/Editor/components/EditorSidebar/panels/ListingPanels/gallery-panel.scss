@@ -183,8 +183,9 @@
               @include animations.transition(animations.$duration-fast);
               @include animations.press();
 
+              // Fond noir fixe sur une photo : icône claire fixe (un jeton de thème devient noir en sombre).
               * {
-                stroke: rgba($accent, 0.95);
+                stroke: $paper-static;
               }
 
               @include on-hover {
@@ -344,7 +345,7 @@
             }
 
             >svg {
-              stroke: rgba($accent, 0.9);
+              stroke: rgba($paper-static, 0.9);
             }
           }
 
@@ -372,7 +373,7 @@
             @include animations.press();
 
             * {
-              stroke: rgba($accent, 0.95);
+              stroke: $paper-static;
             }
 
             @include on-hover(':not(:disabled)') {

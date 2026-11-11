@@ -353,6 +353,22 @@ export function deriveBookedDaysFromReservations(reservations: RawBookingReserva
   )
 }
 
+/**
+ * Section `bookings` telle que l'éditeur peut la renvoyer : sans les jours bloqués, les jours
+ * importés des calendriers externes ni la liste des réservations. La synchronisation iCal et les
+ * écrans Réservations les tiennent à jour ; la copie de l'éditeur date de l'ouverture de l'annonce,
+ * et la renvoyer effaçait ce qui avait changé depuis (jours Booking disparus le 2026-11-11).
+ */
+export function withoutServerManagedBookings<T extends Record<string, unknown>>(bookings: T): Omit<T, 'booked-days' | 'external-booked-days' | 'reservations'> {
+  const {
+    'booked-days': _bookedDays,
+    'external-booked-days': _externalBookedDays,
+    reservations: _reservations,
+    ...editable
+  } = bookings
+  return editable
+}
+
 export function getSynchronizedBookedDays(bookings?: Partial<RawBookings> | null): RawBookedDay[] {
   const normalizedReservations = normalizeReservations(bookings?.reservations)
   const fromBookedDays = normalizeBookedDays(bookings?.['booked-days'])

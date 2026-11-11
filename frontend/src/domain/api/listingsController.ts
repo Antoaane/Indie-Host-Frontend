@@ -17,6 +17,7 @@ import type {
   VolatileBundle,
 } from '@/domain/listings/types'
 import type { FetchListingsOptions, ListingsController } from '@/domain/listings/controller'
+import { withoutServerManagedBookings } from '@/domain/listings/bookings'
 import { normalizeListingCardsMedia } from '@/domain/listings/cards'
 import { normalizeListingSlug } from '@/domain/listings/slug'
 import { filterDeletedListings } from '@/domain/listings/status'
@@ -593,8 +594,9 @@ export function createApiListingsController(): ListingsController {
         requests.push(patchRemoteWithToken(resolveUrl(buildListingUrl('core', listingId)), draft.core, token))
       }
 
+      // Tarifs et règles seulement : jours bloqués et réservations sont tenus par le serveur.
       if (draft.bookings) {
-        requests.push(patchRemoteWithToken(resolveUrl(buildListingUrl('bookings', listingId)), draft.bookings, token))
+        requests.push(patchRemoteWithToken(resolveUrl(buildListingUrl('bookings', listingId)), withoutServerManagedBookings(draft.bookings), token))
       }
 
       if (medias) {

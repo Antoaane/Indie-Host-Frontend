@@ -439,6 +439,8 @@ Envoi par l'API HTTP de Brevo (`BREVO_API_KEY`, gratuit jusqu'à 300 e-mails/jou
 ### Synchronisation calendrier
 - Sources iCal externes (Airbnb, Booking) configurées dans l'éditeur (Réglages, puis iCal)
 - Synchronisées à la consultation de l'annonce publique (`syncListingSourcesForPublicView`), pas par une tâche périodique ; les sources en erreur sont relancées par les rappels aux hôtes avant d'alerter → `CalendarEvent` créés automatiquement
+- `bookings['external-booked-days']` (et leur part de `booked-days`) n'est écrit que par la synchronisation. Une mise à jour de `bookings` venue du site ne peut pas les remplacer (`domains/listings/syncedBookedDays.ts`, appelé par `patchListingResource` ; contrôle : `npx tsx backend/api/scripts/synced-days-smoke.ts`), et « Appliquer » de l'éditeur n'envoie plus ni jours bloqués ni réservations (`withoutServerManagedBookings`). Le 2026-11-11, un brouillon ancien renvoyé par « Appliquer » avait effacé les jours Booking du calendrier public.
+- Flux exporté (`exportListingCalendar`) : une période importée y sort sous un identifiant IndieHost stable (`import-…@indiehost.fr`), jamais sous celui d'origine. Booking importe ce flux et y retrouvait ses propres événements.
 
 ---
 
@@ -762,6 +764,8 @@ Les domaines personnalisés pointent **directement** sur le VPS (pas via Cloudfl
   - Calendrier (`DatePicker`, aussi celui de la réservation publique) : le milieu d'une période est un bandeau avec le texte normal ; le fond plein de Nuxt UI recevait la couleur de texte globale (jours invisibles, dans les deux thèmes).
   - « Mes revenus » ouvre le tableau de bord Stripe de l'hôte dans un onglet créé au clic (`Nav.vue`). L'API accepte l'état `verifying` (`createConnectDashboardLink`) : il affichait le lien puis répondait 500.
   - Jeton `--tap-target` (`_layouts.scss`) : côté d'un contrôle carré ou hauteur d'une ligne cliquable, 44 px au moins au doigt.
+
+- **Icônes SVG (2026-11-11)** : la règle globale de `styles/typography/_texts.scss` (police et couleur sur chaque élément) exclut `svg` et son contenu : une icône prend la couleur de son conteneur. Avant, toute icône recevait la couleur du texte, et une icône claire sur un rond foncé disparaissait. Sur une photo ou un fond noir fixe (`$dark`), une icône s'écrit en `$paper-static`, jamais en `$accent` (qui devient foncé en thème sombre).
 
 - **Adresse publique d'une annonce (2026-11-11)** : le lien « Ouvrir l'annonce publique » de l'éditeur passe par `resolveListingPublicUrl` (`domain/api/listingDomains.ts`) : domaine relié et vérifié de l'annonce, sinon adresse de sa page principale suivie du nom du logement, sinon adresse gérée. L'API renvoie `publicUrl: null` pour une annonce sans sous-domaine, même quand elle a un domaine relié. Pour une page principale, le lien porte `?proprietaire=1` : la page publique affiche alors « Modifier ma page » en bas à droite (retenu pour l'onglet, retiré de l'adresse). Sur indiehost.fr, le bouton apparaît aussi pour le propriétaire connecté. Sur un domaine relié la session Clerk n'existe pas : le bouton y mène à `https://indiehost.fr/dashboard/page/:id`.
   - Fenêtre « Profil » de Clerk : `.cl-rootBox` reçoit la palette claire (`_theme.scss`) et sa largeur n'est plus forcée à 26rem (`_clerk.scss`, seulement les cartes sans `.cl-navbar`). En thème sombre ses textes devenaient clairs sur fond blanc, et forcée étroite elle était rognée.

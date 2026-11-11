@@ -178,8 +178,9 @@
                 height: var(--tap-target);
               }
 
+              // Fond noir fixe sur une photo : icône claire fixe.
               * {
-                stroke: rgba($accent, 0.95);
+                stroke: $paper-static;
               }
 
               @include on-hover {

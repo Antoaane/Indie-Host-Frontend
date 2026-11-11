@@ -12,6 +12,8 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ### À déployer et à vérifier (session du 2026-11-11, jusqu’au commit `424cbe9`)
 
+- [ ] Calendrier Booking de « Raisins Clairs » : vérifier dans l’extranet Booking si les périodes du 13 au 22 novembre 2026 et du 7 décembre 2026 au 11 mai 2028 sont fermées **directement dans Booking**, ou seulement par le calendrier IndieHost que Booking importe. Le 2026-11-11 vers 11 h 45, le flux iCal exporté par Booking était vide (vos deux liens). Tant qu’il l’est, IndieHost considère ces dates libres : s’il faut les fermer, les fermer dans Booking (elles reviendront dans le flux), ou me demander de les bloquer à la main dans IndieHost. Claude n’a lancé aucune synchronisation en production.
+
 - [ ] Déployer le site **et l’API** avec le nouveau script : `cd /opt/indiehost && git pull && ./deploy-indiehost.sh`. Il reconstruit migrations, API et site (pas le scraping) puis vérifie que l’API en ligne est la nouvelle ; s’il affiche « ÉCHEC », m’envoyer la sortie de `docker compose logs --tail 80 api`. Constat du 2026-11-11 au soir : le site en ligne est à jour mais l’API est l’ancienne (« Mes revenus » et « Modifier la page » répondent « Route … not found »).
 - [ ] (après ce déploiement) Éditeur, page « Coeur de Saint François » : « Ouvrir l’annonce publique » doit ouvrir `apparts-saintfrancois.fr` avec le bouton « Modifier ma page » en bas à droite ; pour « Raisins Clairs », `apparts-saintfrancois.fr/appartement-les-raisins-clairs`. Fenêtre « Profil » (Mon profil → Mes informations) : pleine largeur et lisible en thème sombre.
 - [ ] (après ce déploiement) Réservations, sur le compte de Saint-François : plus de « Voyageur 1 / 2 » ; le bloc « 2 périodes bloquées par un calendrier importé » sous la fiche ; « Coeur de Saint François » en titre de groupe et non en logement ; calendrier lisible en clair et en sombre.
@@ -165,6 +167,8 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 - [ ] Deux titres `h2` de la landing (`FaqSection/faq-section.scss`, `HowSection/how-section.scss`) gardent une marge basse de 0,5 rem au-delà de `lg`, héritée du mixin `lp-h2-title` ; la valeur du site (3 gaps / 1 rem) ne s'appliquait que sur mobile. Rendu conservé à l'identique pendant la passe Sass ; décider si la grande marge doit aussi valoir sur bureau (après votre regard).
 
 ## Fait
+
+- [x] 2026-11-11 — Jours Booking effacés par « Appliquer », identifiants Booking renvoyés à Booking, icônes invisibles (poubelle des photos, « + », lecture des vidéos de l’accueil) (commit à venir dans cette entrée : voir `git log`).
 
 - [x] 2026-11-11 — Lien public vers le domaine relié, bouton « Modifier ma page » pour le propriétaire, fenêtre « Profil » de Clerk réparée, script de déploiement qui vérifie l’API (commit `fb826a1`).
 

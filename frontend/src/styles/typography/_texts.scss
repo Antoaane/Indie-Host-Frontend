@@ -6,7 +6,12 @@
 // (classes `cl-*`) qui reposent sur l'héritage : sans cette exception, le texte
 // du bouton « Continuer » sortait foncé sur fond foncé. `:where()` garde une
 // spécificité nulle, comme le `*` d'origine.
-:where(*:not([class^="cl-"], [class^="cl-"] *)) {
+//
+// Les icônes SVG en sont exclues aussi : elles prennent la couleur de leur conteneur
+// (`currentColor`). Forcées à la couleur du texte, une icône claire posée sur un rond
+// foncé restait foncée, donc invisible (« + » d'ajout de logement, lecture des vidéos
+// de l'accueil, 2026-11-11).
+:where(*:not([class^="cl-"], [class^="cl-"] *, svg, svg *)) {
   font-family: 'outfit', sans-serif;
   color: $secondary-text;
 }

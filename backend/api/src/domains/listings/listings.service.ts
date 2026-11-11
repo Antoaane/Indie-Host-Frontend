@@ -31,6 +31,7 @@ import { resolvePublicBaseUrl } from '../../lib/mailer.js';
 import { hostNotifications } from '../notifications/hostNotifications.js';
 import { sanitizeListingSection, sanitizePlainText } from '../../lib/sanitizeHtml.js';
 import { resolvePlaceSetting, type PlaceSetting } from './placeSetting.js';
+import { preserveSyncedBookedDays } from './syncedBookedDays.js';
 import {
   buildDescriptionFromPage,
   cleanImageSrc,
@@ -2167,7 +2168,12 @@ export class ListingsService {
     const currentValue = asObject(rawValue, fallback);
     // Nettoyage à l'écriture sur la valeur fusionnée : un enregistrement assainit aussi le contenu
     // déjà stocké de la section (le front assainit par ailleurs au rendu).
-    const merged = sanitizeListingSection(resource, deepMerge(currentValue, patch));
+    const sanitizedMerged = sanitizeListingSection(resource, deepMerge(currentValue, patch));
+    // Jours bloqués par les calendriers importés : tenus par la synchronisation iCal, jamais
+    // remplacés par la copie envoyée par le site (voir `syncedBookedDays.ts`).
+    const merged = resource === 'bookings'
+      ? preserveSyncedBookedDays(currentValue, asObject(patch, {}), sanitizedMerged)
+      : sanitizedMerged;
     let normalizedMerged = resource === 'bookings'
       ? await this.normalizeBookingsResourceValue(listingId, merged)
       : merged;

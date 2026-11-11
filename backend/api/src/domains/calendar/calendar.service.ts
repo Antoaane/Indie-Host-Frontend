@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import type { CalendarSync, PrismaClient } from '@prisma/client';
 import ical from 'ical-generator';
 import { ICalCalendarMethod, ICalEventStatus } from 'ical-generator';
@@ -126,6 +127,17 @@ function sortRanges(ranges: DayRange[]): DayRange[] {
     if (a.start !== b.start) return a.start.localeCompare(b.start);
     return a.end.localeCompare(b.end);
   });
+}
+
+// Identifiant d'une période importée (Airbnb, Booking…) dans le flux qu'IndieHost publie. Jamais
+// l'identifiant d'origine : Booking importe ce flux, et y retrouvait ses propres événements sous
+// leur identifiant, comme s'ils venaient d'ailleurs (le 2026-11-11, il avait cessé d'exporter ses
+// fermetures). Stable d'une synchronisation à l'autre, sinon chaque import créerait de nouveaux
+// événements chez les plateformes abonnées.
+function buildExportedImportUid(listingId: string, event: { externalUid: string | null; startDate: Date; endDate: Date }): string {
+  const origin = event.externalUid ?? `${event.startDate.toISOString()}__${event.endDate.toISOString()}`;
+  const digest = createHash('sha256').update(`${listingId}:${origin}`).digest('hex').slice(0, 32);
+  return `import-${digest}@indiehost.fr`;
 }
 
 function uniqueSortedRanges(ranges: DayRange[]): DayRange[] {
@@ -399,7 +411,7 @@ export class CalendarService {
       if (!isBlockingEventStatus(event.status)) continue;
 
       calendar.createEvent({
-        id: event.externalUid ?? event.id,
+        id: buildExportedImportUid(listingId, event),
         start: event.startDate,
         end: event.endDate,
         summary: 'Indisponible',
