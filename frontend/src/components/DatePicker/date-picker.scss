@@ -205,6 +205,14 @@
                 color: $accent !important;
               }
 
+              // Milieu de la période : le bandeau est porté par la cellule (`td`), le jour garde
+              // son texte. Sans cette règle, le fond plein posé par Nuxt UI recevait la couleur
+              // de texte globale : jours écrits foncé sur foncé (clair sur clair en thème sombre).
+              &[data-selected]:not([data-selection-start], [data-selection-end]) {
+                background-color: transparent;
+                color: $secondary-text;
+              }
+
               &[data-disabled] {
                 color: rgba($secondary-text, 0.4);
                 text-decoration: line-through;
@@ -212,8 +220,13 @@
                 cursor: not-allowed;
               }
 
+              // Jour indisponible pris dans la période affichée : il se lit comme les autres.
               &[data-highlighted][data-disabled],
-              &[data-selected][data-disabled],
+              &[data-selected][data-disabled] {
+                color: $secondary-text;
+                text-decoration: none;
+              }
+
               &:is([data-selection-start="true"], [data-selection-start], [data-selection-end="true"], [data-selection-end])[data-disabled] {
                 color: $accent !important;
                 text-decoration: none;

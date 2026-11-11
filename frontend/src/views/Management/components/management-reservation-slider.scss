@@ -159,8 +159,10 @@
       transform: translateY(-1px);
     }
 
+    // Réservation affichée : anneau dans la couleur du texte, lisible dans les deux thèmes
+    // (`$accent` est la couleur du fond en thème sombre, l'anneau y disparaissait).
     &.is-active {
-      border: 1px rgba($accent, 1) solid;
+      border: 1px rgba($secondary, 0.7) solid;
 
       // &::after {
       //   content: "";

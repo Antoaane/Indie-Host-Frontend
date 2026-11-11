@@ -243,6 +243,20 @@ export type HubPageSave = {
   }
 }
 
+// Site et API se déploient séparément : tant que l'API n'a pas reçu la mise à jour, la route de la
+// page n'existe pas chez elle et la requête tombe sur une autre route (400 « Invalid request
+// payload ») ou sur aucune (404 « Route … not found »). On le dit en clair plutôt que d'afficher ce message.
+function isHubPageRouteMissing(error: unknown): boolean {
+  const response = (error as { response?: { status?: unknown; data?: unknown } } | null)?.response
+  const data = (response?.data ?? {}) as { message?: unknown; issues?: unknown; error?: unknown }
+  if (response?.status === 400 && Array.isArray(data.issues)) {
+    return data.issues.some((issue) => (issue as { path?: unknown } | null)?.path === 'resource')
+  }
+  return response?.status === 404 && typeof data.message === 'string' && data.message.startsWith('Route ')
+}
+
+const HUB_PAGE_UNAVAILABLE = 'La modification de la page n’est pas encore disponible : le serveur n’a pas reçu la dernière mise à jour. Réessayez dans quelques minutes.'
+
 function buildHubPageUrl(listingId: string): string {
   return buildUrl(`/listings/${encodeURIComponent(listingId.trim())}/page`)
 }
@@ -258,6 +272,7 @@ export async function assertCanEditHubPage(listingId: string): Promise<void> {
       headers,
     })
   } catch (error) {
+    if (isHubPageRouteMissing(error)) throw new Error(HUB_PAGE_UNAVAILABLE)
     throw new Error(toApiErrorMessage(error, 'Impossible d’ouvrir cette page en modification.'))
   }
 }
@@ -273,6 +288,7 @@ export async function saveHubPage(listingId: string, update: HubPageSave): Promi
       headers,
     })
   } catch (error) {
+    if (isHubPageRouteMissing(error)) throw new Error(HUB_PAGE_UNAVAILABLE)
     throw new Error(toApiErrorMessage(error, 'Enregistrement impossible. Vérifiez votre connexion.'))
   } finally {
     // Titre, photo d'en-tête et page figurent dans les sections `core` et `medias` de l'annonce.

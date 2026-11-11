@@ -3,7 +3,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowLeft, ArrowUpRight, Calendar, Pen, Plus } from 'lucide-vue-next'
+import { ArrowLeft, ArrowUpRight, CalendarOff, Pen, Trash2 } from 'lucide-vue-next'
 
 import DatePicker from '@/components/DatePicker/DatePicker.vue'
 import ConfirmationDialog from '@/components/overlays/ConfirmationDialog.vue'
@@ -15,7 +15,7 @@ import type { UserListingCard } from '@/views/Editor/utils/listingApi'
 import { deriveBookedDaysFromReservations, normalizeBookedDays, normalizeReservations } from '@/domain/listings/bookings'
 import type { RawBookingReservation, RawBookings } from '@/domain/listings/types'
 import type {
-  LatestVisitForListing,
+  ImportedBlock,
   Reservation,
   ReservationPaymentManualEntry,
   ReservationPaymentManualMethod,
@@ -26,11 +26,10 @@ import ManagementReservationSlider from '@/views/Management/components/Managemen
 import ManagementScheduleCard from '@/views/Management/components/ManagementScheduleCard.vue'
 import {
   MANUAL_PAYMENT_METHODS,
+  buildImportedBlocksForListing,
   buildReservationsForListing,
   findClosestReservation,
   findClosestReservationForListing,
-  findLatestReservationForListing,
-  findLatestVisitForListing,
   normalizeManualPaymentEntries,
   resolveReservationPayment,
   resolveReservationPaymentSchedule,
@@ -52,9 +51,11 @@ const selectedListingId = ref<string | null>(null)
 const selectedReservationId = ref<string | null>(null)
 const isDeleteOverlayOpen = ref(false)
 const isMobileStageOpen = ref(false)
-const isDevBuild = import.meta.env.DEV
 
+// Logements uniquement : une page principale présente des logements, elle n'a ni calendrier ni
+// réservations. Elle sert de titre de groupe dans la colonne (`pages`).
 const listings = ref<UserListingCard[]>([])
+const pages = ref<UserListingCard[]>([])
 const listingsStatus = reactive({
   isLoading: false,
   error: null as unknown,
@@ -106,6 +107,8 @@ const noteEditor = reactive({
 const internalNoteTextareaRef = ref<HTMLTextAreaElement | null>(null)
 
 const reservationsByListingId = reactive<Record<string, Reservation[]>>({})
+// Périodes bloquées par un calendrier importé (Airbnb, Booking…), montrées à part des réservations.
+const importedBlocksByListingId = reactive<Record<string, ImportedBlock[]>>({})
 const liveSyncState = reactive({
   inFlight: false,
   timerId: null as number | null,
@@ -140,40 +143,51 @@ const selectedReservation = computed(() => {
   return items[0] ?? null
 })
 
+const importedBlocksForListing = computed<ImportedBlock[]>(() => {
+  if (!selectedListingId.value) return []
+  return importedBlocksByListingId[selectedListingId.value] ?? []
+})
+
+const importedBlocksTitle = computed(() => {
+  const count = importedBlocksForListing.value.length
+  return count > 1 ? `${count} périodes bloquées par un calendrier importé` : 'Une période bloquée par un calendrier importé'
+})
+
 const blockedRangesForListing = computed<RangeISO[]>(() => {
-  return normalizeBookedDays(
-    reservationsForListing.value.map((reservation) => ({
+  return normalizeBookedDays([
+    ...reservationsForListing.value.map((reservation) => ({
       start: reservation.start,
       end: reservation.end,
     })),
-  )
+    ...importedBlocksForListing.value.map((block) => ({
+      start: block.start,
+      end: block.end,
+    })),
+  ])
 })
 
 const disabledStayRanges = computed<RangeISO[]>(() => {
   const activeReservation = selectedReservation.value
   if (!activeReservation) return blockedRangesForListing.value
-  return normalizeBookedDays(
-    reservationsForListing.value
+  return normalizeBookedDays([
+    ...reservationsForListing.value
       .filter((reservation) => reservation.id !== activeReservation.id)
       .map((reservation) => ({
         start: reservation.start,
         end: reservation.end,
       })),
-  )
+    ...importedBlocksForListing.value.map((block) => ({
+      start: block.start,
+      end: block.end,
+    })),
+  ])
 })
 
-const latestReservationByListingId = computed(() => {
+// Séjour mis en avant sur la carte de chaque logement : celui en cours, sinon le plus proche d'aujourd'hui.
+const closestReservationByListingId = computed(() => {
   const map: Record<string, Reservation | null> = {}
   for (const listing of listings.value) {
-    map[listing.listingId] = findLatestReservationForListing(reservationsByListingId[listing.listingId] ?? [])
-  }
-  return map
-})
-
-const latestVisitByListingId = computed(() => {
-  const map: Record<string, LatestVisitForListing | null> = {}
-  for (const listing of listings.value) {
-    map[listing.listingId] = findLatestVisitForListing(reservationsByListingId[listing.listingId] ?? [])
+    map[listing.listingId] = findClosestReservationForListing(reservationsByListingId[listing.listingId] ?? [])
   }
   return map
 })
@@ -182,6 +196,14 @@ function resetReservationsMap() {
   for (const key of Object.keys(reservationsByListingId)) {
     delete reservationsByListingId[key]
   }
+  for (const key of Object.keys(importedBlocksByListingId)) {
+    delete importedBlocksByListingId[key]
+  }
+}
+
+function areSameImportedBlocks(a: ImportedBlock[], b: ImportedBlock[]): boolean {
+  if (a.length !== b.length) return false
+  return a.every((block, index) => block.start === b[index]?.start && block.end === b[index]?.end)
 }
 
 function normalizeQueryParam(value: unknown): string | null {
@@ -247,10 +269,13 @@ async function loadListings() {
   listingsStatus.error = null
 
   try {
-    listings.value = await props.source.fetchListings()
+    const fetched = await props.source.fetchListings()
+    listings.value = fetched.filter((listing) => listing.kind !== 'hub')
+    pages.value = fetched.filter((listing) => listing.kind === 'hub')
   } catch (err) {
     listingsStatus.error = err
     listings.value = []
+    pages.value = []
   } finally {
     listingsStatus.isLoading = false
   }
@@ -268,6 +293,7 @@ async function loadReservations(sourceListings: UserListingCard[]) {
         bookings: volatile.bookings ?? null,
       })
       reservationsByListingId[listing.listingId] = reservations
+      importedBlocksByListingId[listing.listingId] = buildImportedBlocksForListing(volatile.bookings ?? null)
     }),
   )
 
@@ -331,6 +357,7 @@ async function refreshReservationsInBackground() {
             listing,
             bookings: volatile.bookings ?? null,
           }),
+          importedBlocks: buildImportedBlocksForListing(volatile.bookings ?? null),
         }
       }),
     )
@@ -341,7 +368,11 @@ async function refreshReservationsInBackground() {
       const {
         listingId,
         reservations,
+        importedBlocks,
       } = snapshot.value
+      if (!areSameImportedBlocks(importedBlocksByListingId[listingId] ?? [], importedBlocks)) {
+        importedBlocksByListingId[listingId] = importedBlocks
+      }
       const previousReservations = reservationsByListingId[listingId] ?? []
       const nextReservations = withStableReservationReferences(previousReservations, reservations)
       if (!areSameReservationList(previousReservations, nextReservations)) {
@@ -434,9 +465,6 @@ function handleBackToListings() {
   stage.value = 'reservations'
 }
 
-function toggleCalendarMode() {
-  stage.value = stage.value === 'calendar' ? 'reservations' : 'calendar'
-}
 
 function handleReplyToTraveler() {
   const listingId = selectedListingId.value
@@ -940,6 +968,7 @@ watch(
     selectedReservationId.value = null
     stage.value = 'reservations'
     listings.value = []
+    pages.value = []
     resetReservationsMap()
     void bootstrap()
   },
@@ -1077,19 +1106,52 @@ const guestLines = computed(() => {
   if (guests.adults) lines.push(`${guests.adults} adulte${guests.adults > 1 ? 's' : ''}`)
   if (guests.children) lines.push(`${guests.children} enfant${guests.children > 1 ? 's' : ''}`)
   if (guests.infants) lines.push(`${guests.infants} b\u00e9b\u00e9${guests.infants > 1 ? 's' : ''}`)
-  if (guests.pets) lines.push(`${guests.pets} animal${guests.pets > 1 ? 's' : ''}`)
+  if (guests.pets) lines.push(`${guests.pets} ${guests.pets > 1 ? 'animaux' : 'animal'}`)
   if (guests.pmr) lines.push(`${guests.pmr} personne${guests.pmr > 1 ? 's' : ''} PMR`)
 
   return lines
 })
 
-const totalGuests = computed(() => {
-  const guests = selectedReservation.value?.guests
-  if (!guests) return 0
-  return guests.adults + guests.children + guests.infants + guests.pets + guests.pmr
-})
+function formatDateLong(iso?: string | null) {
+  if (!iso) return ''
+  const [
+    year,
+    month,
+    day,
+  ] = iso.split('-').map(Number)
+  if (!year || !month || !day) return ''
+  return new Intl.DateTimeFormat('fr-FR', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(Date.UTC(year, month - 1, day)))
+}
 
-const guestLabel = computed(() => (totalGuests.value > 1 ? 'voyageurs' : 'voyageur'))
+function formatNights(nights: number) {
+  return `${nights} ${nights > 1 ? 'nuits' : 'nuit'}`
+}
+
+// Mêmes initiales que dans la barre des réservations (prénom + nom).
+function guestInitials(name: string) {
+  const parts = (name ?? '').trim().split(/\s+/).filter(Boolean)
+  if (!parts.length) return 'IH'
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
+}
+
+// L'essentiel du séjour, en quatre lignes.
+const stayFacts = computed(() => {
+  const reservation = selectedReservation.value
+  if (!reservation) return []
+  return [
+    { label: 'Arrivée', value: formatDateLong(reservation.start) },
+    { label: 'Départ', value: formatDateLong(reservation.end) },
+    { label: 'Durée', value: formatNights(reservation.nights) },
+    { label: 'Voyageurs', value: guestLines.value.join(', ') || 'Non précisé' },
+  ]
+})
 
 const paymentPreview = computed(() => {
   const reservation = selectedReservation.value
@@ -1114,24 +1176,6 @@ const paymentSchedule = computed(() => {
 
 const paymentScheduleProgressWidth = computed(() => `${paymentSchedule.value?.completionPercent ?? 0}%`)
 const paymentScheduleProgressClass = computed(() => (paymentSchedule.value?.completionPercent ?? 0) >= 100 ? 'is-complete' : 'is-incomplete')
-const paymentScheduleExpectedCount = computed(() => paymentSchedule.value?.entries.length ?? 0)
-const paymentScheduleRemainingCount = computed(() => paymentSchedule.value?.entries.filter((entry) => entry.status === 'pending').length ?? 0)
-
-const paymentSubtitle = computed(() => {
-  const payment = paymentPreview.value
-  if (!payment) return ''
-
-  if (!payment.isStripeBacked) {
-    return `Paiement en ${payment.method.toLowerCase()}`
-  }
-
-  if (payment.canEditManualPayments) {
-    return `Stripe synchronis\u00e9 + part manuelle en ${payment.method.toLowerCase()}`
-  }
-
-  return 'Paiement en ligne synchronis\u00e9 avec Stripe'
-})
-
 const canEditManualPayments = computed(() => Boolean(paymentPreview.value?.canEditManualPayments))
 
 const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !normalizeInternalNote(noteEditor.value))
@@ -1148,11 +1192,11 @@ const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !nor
     >
       <ManagementSidebar
         :listings="listings"
+        :pages="pages"
         :isLoading="listingsStatus.isLoading"
         :error="listingsStatus.error"
         :selectedListingId="selectedListingId"
-        :latestVisitByListingId="latestVisitByListingId"
-        :latestReservationByListingId="latestReservationByListingId"
+        :closestReservationByListingId="closestReservationByListingId"
         @select="handleSelectListing"
       />
 
@@ -1165,7 +1209,7 @@ const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !nor
             <!-- Sur mobile, la barre porte le retour aux annonces : elle reste
                  affichée même sans réservation, sinon le panneau est une impasse. -->
             <div
-              v-if="reservationsForListing.length || isMobileViewport"
+              v-if="reservationsForListing.length > 1 || isMobileViewport"
               class="reservation-toolbar"
             >
               <div
@@ -1182,40 +1226,13 @@ const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !nor
                 </button>
               </div>
 
-              <!-- Calendrier et ajout rapide : en cours de développement (panneau vide,
-                   bouton sans action), donc absents des builds de production. -->
-              <div
-                v-if="isDevBuild"
-                class="icon-btn calendar in-dev-hide"
-                :class="{ 'is-active': stage === 'calendar' }"
-              >
-                <button
-                  type="button"
-                  aria-label="Basculer vers le calendrier"
-                  @click="toggleCalendarMode" title="Basculer vers le calendrier"
-                >
-                  <Calendar :size="20" />
-                </button>
-              </div>
-
               <ManagementReservationSlider
-                v-if="reservationsForListing.length"
+                v-if="reservationsForListing.length > 1"
                 :reservations="reservationsForListing"
                 :activeReservationId="selectedReservationId"
                 @select="handleSelectReservation"
               />
 
-              <div
-                v-if="isDevBuild"
-                class="icon-btn add in-dev-hide"
-              >
-                <button
-                  type="button"
-                  aria-label="Ajouter une r&eacute;servation" title="Ajouter une r&eacute;servation"
-                >
-                  <Plus :size="20" />
-                </button>
-              </div>
             </div>
 
             <div class="reservation-body">
@@ -1225,81 +1242,54 @@ const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !nor
                   class="reservation-panel"
                 >
                   <template v-if="selectedReservation">
-                    <div class="reservation-heading">
+                    <header class="reservation-heading">
                       <div class="avatar">
                         <img
                           v-if="selectedReservation.guestAvatar"
                           :src="selectedReservation.guestAvatar"
-                          :alt="selectedReservation.guestName"
+                          alt=""
                           loading="lazy"
                         />
-                        <span v-else>{{ selectedReservation.guestName.slice(0, 2).toUpperCase() }}</span>
+                        <span v-else>{{ guestInitials(selectedReservation.guestName) }}</span>
                       </div>
                       <div class="title">
                         <h2>{{ selectedReservation.guestName }}</h2>
                         <p>{{ selectedListing?.title }}</p>
                       </div>
-                    </div>
-
-                    <section class="message-card">
-                      <div class="section-title">
-                        <h3>Message du voyageur</h3>
+                      <div class="reply">
                         <button
                           type="button"
-                          class="reply"
                           @click="handleReplyToTraveler"
                         >
-                          R&eacute;pondre
-                          <ArrowUpRight :size="20" />
+                          &Eacute;crire au voyageur
+                          <ArrowUpRight
+                            :size="16"
+                            aria-hidden="true"
+                          />
                         </button>
                       </div>
+                    </header>
+
+                    <section
+                      v-if="selectedReservation.message.trim()"
+                      class="detail-section message-section"
+                    >
+                      <h3>Message du voyageur</h3>
                       <p class="message">{{ selectedReservation.message }}</p>
                     </section>
 
-                    <section class="internal-note-card">
-                      <div class="section-title">
-                        <h3>Note interne h&ocirc;te</h3>
-                        <p>Visible uniquement par l&apos;h&ocirc;te.</p>
-                      </div>
-
-                      <template v-if="shouldShowInternalNoteEditor">
-                        <textarea
-                          ref="internalNoteTextareaRef"
-                          v-model="noteEditor.value"
-                          class="internal-note-input"
-                          rows="4"
-                          :disabled="noteEditor.isSaving"
-                          placeholder="Ajoutez une note interne sur ce voyageur (préférences, rappels, points de vigilance)."
-                          @input="handleInternalNoteInput"
-                          @blur="handleInternalNoteBlur"
-                        />
-                      </template>
-                      <div
-                        v-else
-                        class="internal-note-preview"
-                      >
-                        <p>{{ selectedReservation.internalNote }}</p>
-                        <button
-                          type="button"
-                          class="edit-note-btn"
-                          aria-label="Modifier la note interne"
-                          @click="openInternalNoteEditor" title="Modifier la note interne"
-                        >
-                          <Pen :size="16" />
-                        </button>
-                      </div>
-
-                      <p
-                        v-if="noteEditor.error"
-                        class="feedback error"
-                      >
-                        {{ noteEditor.error }}
-                      </p>
-                    </section>
-
-                    <section class="stay-section">
+                    <section class="detail-section stay-section">
                       <h3>S&eacute;jour</h3>
                       <div class="stay-container">
+                        <dl class="stay-facts">
+                          <div
+                            v-for="fact in stayFacts"
+                            :key="fact.label"
+                          >
+                            <dt>{{ fact.label }}</dt>
+                            <dd>{{ fact.value }}</dd>
+                          </div>
+                        </dl>
                         <div class="stay-calendar">
                           <DatePicker
                             :model-value="stayRange"
@@ -1311,79 +1301,50 @@ const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !nor
                             :exclude-model-value-from-disabled="true"
                             :restrict-to-future="false"
                           />
-                        </div>
-                        <div class="stay-cards">
-                          <div>
-                            <div class="value">{{ selectedReservation.nights }}</div>
-                            <div class="label">nuits</div>
-                            <div class="meta">{{ formatDateRange(selectedReservation.start, selectedReservation.end) }}</div>
-                          </div>
-                          <div>
-                            <div class="value">{{ totalGuests }}</div>
-                            <div class="label">{{ guestLabel }}</div>
-                            <ul class="guest-list">
-                              <li
-                                v-for="line in guestLines"
-                                :key="line"
-                              >
-                                {{ line }}
-                              </li>
-                            </ul>
-                          </div>
+                          <p class="legend">Les jours barr&eacute;s sont d&eacute;j&agrave; pris ou bloqu&eacute;s.</p>
                         </div>
                       </div>
                     </section>
 
-                    <section class="schedule-section">
+                    <section class="detail-section schedule-section">
                       <h3>Paiements</h3>
                       <template v-if="paymentPreview && paymentSchedule">
                         <div class="schedule-overview">
+                          <div class="amounts">
+                            <p class="paid">
+                              <strong>{{ formatCurrency(paymentSchedule.paidTotal) }}</strong>
+                              encaiss&eacute; sur {{ formatCurrency(paymentPreview.total) }}
+                            </p>
+                            <p
+                              class="balance"
+                              :class="{ 'is-complete': paymentSchedule.balance <= 0 }"
+                            >
+                              <template v-if="paymentSchedule.balance > 0">
+                                Reste &agrave; r&eacute;gler&nbsp;: <strong>{{ formatCurrency(paymentSchedule.balance) }}</strong>
+                              </template>
+                              <template v-else>S&eacute;jour enti&egrave;rement r&eacute;gl&eacute;</template>
+                            </p>
+                          </div>
                           <div
-                            class="progress-box"
+                            class="progress-track"
                             role="progressbar"
-                            aria-label="Progression totale du paiement"
+                            aria-label="Part du s&eacute;jour d&eacute;j&agrave; encaiss&eacute;e"
                             :aria-valuenow="paymentSchedule.completionPercent"
                             aria-valuemin="0"
-                            aria-valuemax="100" title="Progression totale du paiement"
+                            aria-valuemax="100"
                           >
-                            <div class="progress-track">
-                              <span
-                                class="progress-fill"
-                                :class="paymentScheduleProgressClass"
-                                :style="{ width: paymentScheduleProgressWidth }"
-                              />
-                            </div>
-                          </div>
-
-                          <div class="reference-grid">
-                            <p class="reference-item">
-                              <span>Type de paiement</span>
-                              <strong>{{ paymentSubtitle }}</strong>
-                            </p>
-                            <p class="reference-item">
-                              <span>Montant total</span>
-                              <strong>{{ formatCurrency(paymentPreview.total) }}</strong>
-                            </p>
-                            <p class="reference-item">
-                              <span>Acompte initial</span>
-                              <strong>{{ formatCurrency(paymentPreview.baseDeposit) }}</strong>
-                            </p>
-                            <p class="reference-item">
-                              <span>Paiements restants</span>
-                              <strong>{{ paymentScheduleRemainingCount }} / {{ paymentScheduleExpectedCount }}</strong>
-                            </p>
-                            <p class="reference-item">
-                              <span>Reste a regler</span>
-                              <strong>{{ formatCurrency(paymentSchedule.balance) }}</strong>
-                            </p>
+                            <span
+                              class="progress-fill"
+                              :class="paymentScheduleProgressClass"
+                              :style="{ width: paymentScheduleProgressWidth }"
+                            />
                           </div>
                         </div>
 
                         <ManagementScheduleCard
                           :schedule="paymentSchedule"
                           :method-label="paymentPreview.method"
-                          :issue-date-iso="selectedReservation.start"
-                          :fallback-payment-date-iso="selectedReservation.end"
+                          :is-stripe-backed="paymentPreview.isStripeBacked"
                           :can-remove-manual-entries="canEditManualPayments"
                           :is-saving="paymentEditor.isSaving"
                           :format-currency="formatCurrency"
@@ -1399,6 +1360,7 @@ const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !nor
                           :manual-payment-methods="MANUAL_PAYMENT_METHODS"
                           :is-saving="paymentEditor.isSaving"
                           :can-edit-manual-payments="canEditManualPayments"
+                          :reset-key="selectedReservation.id"
                           :error="paymentEditor.error"
                           :success="paymentEditor.success"
                           @update:draft-amount="updatePaymentEditorDraftAmount"
@@ -1410,6 +1372,50 @@ const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !nor
                       </template>
                     </section>
 
+                    <section class="detail-section note-section">
+                      <div class="section-head">
+                        <h3>Note interne</h3>
+                        <p>Vous seul la voyez.</p>
+                      </div>
+
+                      <template v-if="shouldShowInternalNoteEditor">
+                        <textarea
+                          ref="internalNoteTextareaRef"
+                          v-model="noteEditor.value"
+                          class="internal-note-input"
+                          rows="3"
+                          aria-label="Note interne sur cette r&eacute;servation"
+                          :disabled="noteEditor.isSaving"
+                          placeholder="Préférences, rappels, points de vigilance…"
+                          @input="handleInternalNoteInput"
+                          @blur="handleInternalNoteBlur"
+                        />
+                      </template>
+                      <div
+                        v-else
+                        class="internal-note-preview"
+                      >
+                        <p>{{ selectedReservation.internalNote }}</p>
+                        <button
+                          type="button"
+                          class="edit-note-btn"
+                          aria-label="Modifier la note interne"
+                          title="Modifier la note interne"
+                          @click="openInternalNoteEditor"
+                        >
+                          <Pen :size="16" />
+                        </button>
+                      </div>
+
+                      <p
+                        v-if="noteEditor.error"
+                        class="feedback error"
+                        role="alert"
+                      >
+                        {{ noteEditor.error }}
+                      </p>
+                    </section>
+
                     <section class="delete-reservation">
                       <div class="danger">
                         <button
@@ -1417,12 +1423,17 @@ const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !nor
                           :disabled="deleteStatus.isDeleting"
                           @click="openDeleteOverlay"
                         >
+                          <Trash2
+                            :size="16"
+                            aria-hidden="true"
+                          />
                           {{ isSelectedReservationPaidOnline ? 'Annuler et rembourser' : 'Supprimer la réservation' }}
                         </button>
                       </div>
                       <p
                         v-if="deleteStatus.error"
                         class="error"
+                        role="alert"
                       >
                         {{ deleteStatus.error }}
                       </p>
@@ -1436,20 +1447,48 @@ const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !nor
                     <template v-if="reservationsForListing.length">
                       S&eacute;lectionnez une r&eacute;servation pour afficher le d&eacute;tail.
                     </template>
+                    <template v-else-if="selectedListing">
+                      Aucune r&eacute;servation pour ce logement pour le moment.
+                    </template>
                     <template v-else>
-                      Aucune r&eacute;servation pour cette annonce pour le moment.
+                      Aucun logement &agrave; afficher pour le moment.
                     </template>
                   </div>
+
+                  <!-- Dates venues d'Airbnb ou de Booking : elles bloquent le calendrier, mais ce ne
+                       sont pas des réservations IndieHost (ni voyageur, ni montant, ni paiement). -->
+                  <section
+                    v-if="importedBlocksForListing.length"
+                    class="imported-blocks"
+                    aria-labelledby="management-imported-blocks-title"
+                  >
+                    <div class="heading">
+                      <CalendarOff
+                        :size="18"
+                        aria-hidden="true"
+                      />
+                      <div>
+                        <h3 id="management-imported-blocks-title">{{ importedBlocksTitle }}</h3>
+                        <p>
+                          Ces dates viennent d&rsquo;Airbnb, de Booking ou d&rsquo;un autre calendrier que vous avez
+                          import&eacute;. Elles sont indisponibles sur votre page ; la r&eacute;servation et son paiement
+                          se g&egrave;rent sur la plateforme d&rsquo;origine.
+                        </p>
+                      </div>
+                    </div>
+                    <ul>
+                      <li
+                        v-for="block in importedBlocksForListing"
+                        :key="`${block.start}__${block.end}`"
+                      >
+                        <span class="dates">{{ formatDateRange(block.start, block.end) }}</span>
+                        <span class="nights">{{ block.nights }} {{ block.nights > 1 ? 'nuits' : 'nuit' }}</span>
+                      </li>
+                    </ul>
+                  </section>
                 </div>
               </Transition>
 
-              <Transition name="editor-stage">
-                <div
-                  v-show="stage === 'calendar'"
-                  class="calendar-panel"
-                  aria-hidden="true"
-                />
-              </Transition>
             </div>
           </div>
         </section>

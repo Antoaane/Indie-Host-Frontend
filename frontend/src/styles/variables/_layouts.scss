@@ -126,6 +126,15 @@ $gap-4xl-mltpler : 2;
   --layout-gap-3xl: calc(#{map.get($layout-gap, base)} * #{$gap-3xl-mltpler});
   --layout-gap-4xl: calc(#{map.get($layout-gap, base)} * #{$gap-4xl-mltpler});
   --container-size: #{map.get($max-widths, xxs)};
+  // Côté d'un contrôle carré et hauteur minimale d'une ligne cliquable. Au doigt, jamais moins de
+  // 44 px, quelle que soit la taille de base du texte.
+  --tap-target: 2.75rem;
+}
+
+@media (pointer: coarse) {
+  :root {
+    --tap-target: max(2.75rem, 44px);
+  }
 }
 
 @include min-width(xxs) {

@@ -3308,11 +3308,24 @@ export class PaymentsService {
     const requestedAccountId = readString(input.accountId) ?? connect.accountId ?? profileAccountId;
 
     if (!requestedAccountId) {
-      throw new Error('Aucun compte Stripe Connect trouvé pour cet utilisateur.');
+      const missing = createBadRequestError(
+        'Aucun compte Stripe n’est encore rattaché à votre profil : activez d’abord vos paiements.',
+        'STRIPE_CONNECT_ACCOUNT_MISSING',
+      );
+      missing.statusCode = 409;
+      throw missing;
     }
 
-    if (connect.onboardingStatus !== 'completed') {
-      throw new Error("Le compte Stripe Connect doit terminer l'onboarding avant d'ouvrir le dashboard.");
+    // Inscription terminée, vérification Stripe en cours (`verifying`) : l'hôte a déjà son identifiant
+    // Stripe et y suit l'avancement. Ce cas compte comme prêt pour publier (`paymentsUnderReview`),
+    // donc le lien « Mes revenus » est affiché : il doit s'ouvrir, pas renvoyer une erreur 500.
+    if (connect.onboardingStatus !== 'completed' && connect.onboardingStatus !== 'verifying') {
+      const notReady = createBadRequestError(
+        'Terminez d’abord l’activation de vos paiements : votre tableau de bord Stripe s’ouvrira ensuite ici.',
+        'STRIPE_CONNECT_ONBOARDING_INCOMPLETE',
+      );
+      notReady.statusCode = 409;
+      throw notReady;
     }
 
     if (!this.stripe) {

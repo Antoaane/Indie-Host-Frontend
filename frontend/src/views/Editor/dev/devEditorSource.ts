@@ -42,11 +42,54 @@ function buildApartment(): RawListingBundle {
       ],
       videos: [],
     } as RawListingBundle['medias'],
+    // Une vraie réservation et deux périodes venues d'un calendrier importé (Booking), dont une
+    // fermeture de plus d'un an : le cas réel qui produisait de fausses réservations.
     bookings: {
       price: 45,
-      fees: [],
-      'booked-days': [],
-      reservations: [],
+      fees: [{ code: 'custom', name: 'Frais de ménage', amount: 25 }],
+      'booked-days': [
+        { start: '2026-10-03', end: '2026-10-10' },
+        { start: '2026-11-13', end: '2026-11-22' },
+        { start: '2026-11-24', end: '2026-11-28' },
+        { start: '2026-12-07', end: '2028-05-11' },
+      ],
+      'external-booked-days': [
+        { start: '2026-11-13', end: '2026-11-22' },
+        { start: '2026-12-07', end: '2028-05-11' },
+      ],
+      reservations: [
+        {
+          id: 'dev-reservation-1',
+          start: '2026-11-24',
+          end: '2026-11-28',
+          nights: 4,
+          guestName: 'Camille Durand',
+          message: 'Bonjour, nous arriverons vers 17 h. Est-il possible de laisser les valises plus tôt ?',
+          guests: { adults: 2, children: 1, infants: 0, pets: 0, pmr: 0 },
+          payment: { total: 205, deposit: 62, balance: 143, status: 'pending', method: 'Carte' },
+          createdAt: '2026-11-02T10:00:00.000Z',
+        },
+        // Séjour passé, soldé, avec un paiement saisi à la main, une note et un nom très long.
+        {
+          id: 'dev-reservation-2',
+          start: '2026-10-03',
+          end: '2026-10-10',
+          nights: 7,
+          guestName: 'Jean-Baptiste de La Rochefoucauld-Montmorency',
+          message: '',
+          internalNote: 'Arrive tard le soir : laisser les clés dans la boîte à code.',
+          guests: { adults: 2, children: 0, infants: 0, pets: 2, pmr: 0 },
+          payment: {
+            total: 340,
+            deposit: 340,
+            balance: 0,
+            status: 'paid',
+            method: 'Carte',
+            manual: { entries: [{ id: 'dev-manual-1', amount: 100, date: '2026-10-03', method: 'cash', comment: 'Remis à l’arrivée' }] },
+          },
+          createdAt: '2026-09-12T08:30:00.000Z',
+        },
+      ],
       pricing: {},
     } as RawListingBundle['bookings'],
     arrival: {
@@ -92,7 +135,7 @@ function buildStudio(): RawListingBundle {
       guest_capacity: 2,
       rooms: [],
     } as RawListingBundle['core'],
-    bookings: { ...base.bookings, price: 60 } as RawListingBundle['bookings'],
+    bookings: { price: 60, fees: [], 'booked-days': [], reservations: [], pricing: {} } as RawListingBundle['bookings'],
   }
 }
 

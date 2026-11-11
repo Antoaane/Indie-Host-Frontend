@@ -1,6 +1,6 @@
 // File: src/views/Management/utils/managementReservations.ts
 
-import { getSynchronizedBookedDays, normalizeReservations, nightsBetween } from '@/domain/listings/bookings'
+import { getSynchronizedBookedDays, normalizeBookedDays, normalizeReservations, nightsBetween } from '@/domain/listings/bookings'
 import type { RawBookingReservation, RawBookings, RawReservationMessaging, RawReservationPayment, UserListingCard } from '@/domain/listings/types'
 
 const STRIPE_SETTLED_STATUSES = new Set([
@@ -31,9 +31,9 @@ export type ReservationPaymentManualEntry = {
 
 export const MANUAL_PAYMENT_METHODS = [
   { value: 'tpe_manual', label: 'TPE manuel' },
-  { value: 'cash', label: 'Especes' },
+  { value: 'cash', label: 'Espèces' },
   { value: 'bank_transfer', label: 'Virement' },
-  { value: 'check', label: 'Cheque' },
+  { value: 'check', label: 'Chèque' },
   { value: 'other', label: 'Autre' },
 ] as const
 
@@ -116,6 +116,13 @@ export type Reservation = {
   contact?: RawBookingReservation['contact']
   createdAt?: string
   messaging?: RawReservationMessaging
+}
+
+/** Période bloquée par un calendrier importé (Airbnb, Booking…) : ce n'est pas une réservation IndieHost. */
+export type ImportedBlock = {
+  start: string
+  end: string
+  nights: number
 }
 
 export type LatestVisitForListing = {
@@ -458,8 +465,8 @@ function resolveCheckoutChoiceLabel(choice: ReservationPaymentChoice): string {
 
 function resolveDeferredModeLabel(mode: ReservationPaymentDeferredMode): string {
   if (mode === 'none') return 'Aucun différé'
-  if (mode === 'cash') return "Solde en espèces à l'arrivée"
-  return 'Solde différé en ligne'
+  if (mode === 'cash') return "En espèces à l'arrivée"
+  return 'Prélevé en ligne'
 }
 
 function resolveScheduleCompletionLabel({ completionPercent, paidTotal, total }: { completionPercent: number; paidTotal: number; total: number }): string {
@@ -469,9 +476,19 @@ function resolveScheduleCompletionLabel({ completionPercent, paidTotal, total }:
   return `${completionPercent} % complété`
 }
 
+const STRIPE_STATUS_LABELS: Record<string, string> = {
+  succeeded: 'encaissé en ligne',
+  processing: 'en cours de traitement',
+  requires_capture: 'autorisé, pas encore encaissé',
+  requires_action: 'validation du voyageur attendue',
+  requires_confirmation: 'validation du voyageur attendue',
+  requires_payment_method: 'paiement refusé ou incomplet',
+  canceled: 'paiement annulé',
+}
+
 function resolveStripeStatusLabel(status: string): string {
-  if (!status) return 'Statut Stripe inconnu'
-  return `Stripe ${status}`
+  if (!status) return 'état du paiement en ligne inconnu'
+  return STRIPE_STATUS_LABELS[status] ?? `état Stripe : ${status}`
 }
 
 export function resolveReservationPaymentSchedule(
@@ -490,7 +507,9 @@ export function resolveReservationPaymentSchedule(
 
   const onlineTargetAmount = Math.max(payment.baseDeposit, payment.onlinePaid)
   const onlineStatus: ReservationPaymentScheduleEntryStatus = onlineTargetAmount <= 0 ? 'paid' : payment.onlinePaid >= onlineTargetAmount ? 'paid' : 'pending'
-  const onlineLabel = checkoutChoice === 'full' ? 'Paiement en ligne' : 'Acompte en ligne'
+  const onlineLabel = payment.isStripeBacked
+    ? (checkoutChoice === 'full' ? 'Paiement en ligne' : 'Acompte en ligne')
+    : (payment.balance <= 0 && !payment.manual.entries.length ? 'Paiement reçu' : 'Acompte reçu')
   const onlineDetail = payment.isStripeBacked ? resolveStripeStatusLabel(payment.stripeStatus) : 'Montant encaissé'
 
   if (onlineTargetAmount > 0 || payment.isStripeBacked) {
@@ -604,8 +623,25 @@ function mapReservation(reservation: RawBookingReservation, listingId: string, p
   }
 }
 
+function rangeKey(range: { start: string; end: string }): string {
+  return `${range.start}__${range.end}`
+}
+
+// Périodes posées par un calendrier importé (`external-booked-days`, tenu par l'API à chaque
+// synchronisation iCal). Elles bloquent les dates mais ne sont pas des réservations : pas de
+// voyageur, pas de montant, pas de paiement.
+function importedRangeKeys(bookings?: Partial<RawBookings> | null): Set<string> {
+  return new Set(normalizeBookedDays(bookings?.['external-booked-days']).map(rangeKey))
+}
+
+// Dates bloquées sans fiche de réservation (anciennes données) : le montant est une estimation
+// et rien n'est compté comme encaissé.
+function resolveFallbackPayment(fallbackTotal: number): ReservationPayment {
+  return resolveReservationPayment({ total: fallbackTotal, deposit: 0, balance: fallbackTotal }, fallbackTotal)
+}
+
 function buildRawFallbackReservation({ listingId, start, end, index, fallbackTotal }: { listingId: string; start: string; end: string; index: number; fallbackTotal: number }): RawBookingReservation {
-  const payment = toRawReservationPayment(resolveReservationPayment(undefined, fallbackTotal))
+  const payment = toRawReservationPayment(resolveFallbackPayment(fallbackTotal))
 
   return {
     id: `${listingId}-${start}-${end}-${index}`,
@@ -629,14 +665,15 @@ function mergeReservationsWithBookedDays({ listingId, reservations, bookings, pr
   const bookedDays = getSynchronizedBookedDays(bookings)
   if (!bookedDays.length) return reservations
 
-  const knownRanges = new Set(reservations.map((reservation) => `${reservation.start}__${reservation.end}`))
+  const knownRanges = new Set(reservations.map(rangeKey))
+  const importedRanges = importedRangeKeys(bookings)
   const merged = [
     ...reservations,
   ]
 
   bookedDays.forEach((range, index) => {
-    const key = `${range.start}__${range.end}`
-    if (knownRanges.has(key)) return
+    const key = rangeKey(range)
+    if (knownRanges.has(key) || importedRanges.has(key)) return
 
     const nights = Math.max(1, nightsBetween(range.start, range.end))
     const fallbackTotal = Math.max(0, Math.round(pricePerNight * nights + feesTotal))
@@ -656,7 +693,8 @@ function mergeReservationsWithBookedDays({ listingId, reservations, bookings, pr
 }
 
 function buildFallbackReservationsFromBookedDays(listingId: string, bookings?: Partial<RawBookings> | null): Reservation[] {
-  const bookedDays = getSynchronizedBookedDays(bookings)
+  const importedRanges = importedRangeKeys(bookings)
+  const bookedDays = getSynchronizedBookedDays(bookings).filter((range) => !importedRanges.has(rangeKey(range)))
   const pricePerNight = Number(bookings?.price ?? 0) || 0
   const feesTotal = sumFees(bookings)
 
@@ -678,9 +716,26 @@ function buildFallbackReservationsFromBookedDays(listingId: string, bookings?: P
         pets: 0,
         pmr: 0,
       },
-      payment: resolveReservationPayment(undefined, fallbackTotal),
+      payment: resolveFallbackPayment(fallbackTotal),
     }
   })
+}
+
+/**
+ * Périodes bloquées par les calendriers importés de l'annonce, hors celles qui correspondent à une
+ * réservation connue. Affichées à part dans « Réservations » : l'hôte voit pourquoi ces dates sont
+ * indisponibles, sans fausse fiche de voyageur ni faux paiement.
+ */
+export function buildImportedBlocksForListing(bookings?: Partial<RawBookings> | null): ImportedBlock[] {
+  const reservationRanges = new Set(normalizeReservations(bookings?.reservations).map(rangeKey))
+
+  return normalizeBookedDays(bookings?.['external-booked-days'])
+    .filter((range) => !reservationRanges.has(rangeKey(range)))
+    .map((range) => ({
+      start: range.start,
+      end: range.end,
+      nights: Math.max(1, nightsBetween(range.start, range.end)),
+    }))
 }
 
 export function sortReservationsByDate(reservations: Reservation[]): Reservation[] {

@@ -40,6 +40,8 @@ const isOpeningStripeConnectDashboard = ref(false)
 const stripeConnectAvailabilityRequestId = ref(0)
 const dockOptionsOpen = ref(false)
 const myProfileDialogOpen = ref(false)
+// Connexion au tableau de bord Stripe complet, celui des comptes d'encaissement créés par IndieHost.
+const STRIPE_DASHBOARD_URL = 'https://dashboard.stripe.com/'
 
 let lastScrollY = 0
 const SCROLL_THRESHOLD = 80
@@ -193,6 +195,19 @@ async function handleOpenStripeConnectDashboard(_event?: MouseEvent) {
 
   isOpeningStripeConnectDashboard.value = true
 
+  // L'onglet est ouvert dès le clic : ouvert après l'appel réseau, le navigateur le bloque comme
+  // une fenêtre surgissante. (Avec `noopener`, `window.open` renvoie toujours `null` : l'ancien
+  // code croyait l'onglet bloqué et emmenait aussi l'onglet courant chez Stripe.)
+  const tab = window.open('', '_blank')
+  const openDashboard = (url: string) => {
+    if (tab && !tab.closed) {
+      tab.opener = null
+      tab.location.replace(url)
+      return
+    }
+    window.location.assign(url)
+  }
+
   try {
     const token = await getToken.value()
     if (!token) throw new Error('Session utilisateur absente.')
@@ -202,12 +217,12 @@ async function handleOpenStripeConnectDashboard(_event?: MouseEvent) {
       accountId: stripeConnectAccountId.value ?? undefined,
     })
 
-    const opened = window.open(dashboard.url, '_blank', 'noopener,noreferrer')
-    if (!opened) {
-      window.location.assign(dashboard.url)
-    }
+    openDashboard(dashboard.url)
   } catch (error) {
-    console.warn("[Nav] impossible d'ouvrir les revenus Stripe Connect", { error })
+    // Le lien n'a pas pu être préparé : l'hôte arrive sur la connexion de son tableau de bord
+    // Stripe (celui des comptes créés par IndieHost), plutôt que sur un clic sans effet.
+    console.warn("[Nav] lien vers les revenus Stripe indisponible, ouverture de la page de connexion Stripe", { error })
+    openDashboard(STRIPE_DASHBOARD_URL)
   } finally {
     isOpeningStripeConnectDashboard.value = false
   }

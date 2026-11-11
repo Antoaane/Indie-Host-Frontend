@@ -100,6 +100,8 @@ export type RawReservationPayment = {
     deferredMode?: 'none' | 'online' | 'cash'
     deferredDueDateISO?: string | null
   }
+  // Posé par l'API à l'annulation (statut, montants remboursés) : conservé tel quel par le site.
+  cancellation?: Record<string, unknown>
 }
 export type RawReservationMessageState = 'sent' | 'delivered' | 'read'
 export type RawReservationMessageAuthor = 'host' | 'guest'

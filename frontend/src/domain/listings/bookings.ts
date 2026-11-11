@@ -147,6 +147,28 @@ function normalizeStripePayment(input: unknown): RawReservationPayment['stripe']
   }
 }
 
+// Paiements saisis à la main par l'hôte (espèces, virement…) : on garde les lignes valides.
+function normalizeManualPaymentEntries(input: unknown): NonNullable<NonNullable<RawReservationPayment['manual']>['entries']> {
+  if (!Array.isArray(input)) return []
+
+  const entries: NonNullable<NonNullable<RawReservationPayment['manual']>['entries']> = []
+  for (const item of input) {
+    if (!item || typeof item !== 'object') continue
+    const raw = item as Record<string, unknown>
+    const amount = Number(raw.amount)
+    if (!Number.isFinite(amount) || amount <= 0 || !isNonEmptyString(raw.date)) continue
+
+    entries.push({
+      ...(isNonEmptyString(raw.id) ? { id: raw.id.trim() } : {}),
+      amount: Math.round(amount),
+      date: raw.date.trim(),
+      ...(isNonEmptyString(raw.method) ? { method: raw.method.trim() } : {}),
+      ...(isNonEmptyString(raw.comment) ? { comment: raw.comment.trim() } : {}),
+    })
+  }
+  return entries
+}
+
 function normalizePayment(input: Partial<RawReservationPayment> | null | undefined, fallbackTotal: number): RawReservationPayment {
   const total = Math.max(0, Number.isFinite(Number(input?.total)) ? Number(input?.total) : fallbackTotal)
   const fallbackDeposit = Math.round(total * 0.3)
@@ -157,6 +179,10 @@ function normalizePayment(input: Partial<RawReservationPayment> | null | undefin
   const status = input?.status === 'paid' ? 'paid' : 'pending'
   const method = isNonEmptyString(input?.method) ? input.method.trim() : 'Carte'
   const stripe = normalizeStripePayment(input?.stripe)
+  // Sans ces deux champs, chaque enregistrement depuis « Réservations » effaçait les paiements
+  // saisis à la main et l'état d'annulation posé par l'API.
+  const manualEntries = normalizeManualPaymentEntries(input?.manual?.entries)
+  const cancellation = input?.cancellation && typeof input.cancellation === 'object' ? input.cancellation : undefined
 
   return {
     total: Math.round(total),
@@ -164,7 +190,9 @@ function normalizePayment(input: Partial<RawReservationPayment> | null | undefin
     balance: Math.round(balance),
     status,
     method,
+    ...(manualEntries.length ? { manual: { entries: manualEntries } } : {}),
     ...(stripe ? { stripe } : {}),
+    ...(cancellation ? { cancellation } : {}),
   }
 }
 
@@ -255,6 +283,8 @@ export function normalizeReservation(input: Partial<RawBookingReservation> | nul
   const guestName = isNonEmptyString(input.guestName) ? input.guestName.trim() : `Voyageur ${index + 1}`
   const guestAvatar = isNonEmptyString(input.guestAvatar) ? input.guestAvatar.trim() : undefined
   const message = isNonEmptyString(input.message) ? input.message.trim() : ''
+  // Note interne de l'hôte : elle doit survivre à chaque lecture et à chaque enregistrement.
+  const internalNote = isNonEmptyString(input.internalNote) ? input.internalNote.trim() : undefined
   const guests = normalizeGuests(input.guests)
   const payment = normalizePayment(input.payment, 0)
   const id = isNonEmptyString(input.id) ? input.id.trim() : `reservation-${range.start}-${range.end}-${index + 1}`
@@ -283,6 +313,7 @@ export function normalizeReservation(input: Partial<RawBookingReservation> | nul
     guestName,
     guestAvatar,
     message,
+    ...(internalNote ? { internalNote } : {}),
     guests,
     payment,
     ...(contact ? { contact } : {}),

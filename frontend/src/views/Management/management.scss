@@ -6,6 +6,7 @@
 @use '@/styles/variables/effects' as effects;
 @use '@/styles/variables/animations' as animations;
 @use '@/styles/components/buttons' as buttons;
+@use '@/styles/components/inputs' as inputs;
 
 .management#management-page {
   --editor-mobile-dock-height: calc(60px + (var(--layout-gap-sm) * 2));
@@ -158,7 +159,7 @@
     padding: var(--layout-gap-sm);
 
     @include min-width(lg) {
-      padding: 0 0 var(--layout-gap-sm);
+      padding: var(--layout-gap-xs) var(--layout-gap-xs) var(--layout-gap-sm);
     }
 
     >.mobile-back-shell {
@@ -201,29 +202,6 @@
     }
   }
 
-  .icon-btn {
-    height: max-content;
-    @include buttons.primary($theme: white, $icon-only: true, $deep: true);
-
-    > * {
-      width: 40px;
-      height: 40px;
-    }
-
-    &.is-active {
-      > button {
-        background: $background;
-        color: $accent;
-        outline-color: rgba($secondary-button-reference, 0.9);
-
-        > svg {
-          color: $accent;
-          stroke: $accent;
-        }
-      }
-    }
-  }
-
   .reservation-body {
     flex: 1 1 auto;
     min-height: 0;
@@ -239,24 +217,33 @@
     padding: var(--layout-gap);
     display: flex;
     flex-direction: column;
-    gap: var(--layout-gap);
+    gap: var(--layout-gap-2xl);
   }
+
+  // -------------------------------------------------------------------------------------------
+  // Fiche d'une réservation : un en-tête, puis des sections (titre + contenu). Une seule boîte
+  // par section au plus ; pas de carte dans une carte.
+  // -------------------------------------------------------------------------------------------
 
   .reservation-heading {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     gap: var(--layout-gap-sm);
 
     > .avatar {
-      width: 52px;
-      height: 52px;
-      border-radius: 50%;
+      flex: 0 0 auto;
+      width: 3rem;
+      height: 3rem;
+      border-radius: borders.$rounded;
       overflow: hidden;
       background: $accent-surface-2;
       display: grid;
       place-items: center;
-      font-weight: 700;
-      color: rgba($secondary-text, 0.7);
+
+      > span {
+        @include base-text(rgba($secondary-text, 0.72), $bold: true);
+      }
 
       > img {
         width: 100%;
@@ -267,115 +254,406 @@
     }
 
     > .title {
+      flex: 1 1 12rem;
+      min-width: 0;
       display: flex;
       flex-direction: column;
-      gap: 0.25rem;
+      gap: var(--layout-gap-2xs);
 
       > h2 {
         margin: 0;
-        font-size: 1.6rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        color: rgba($secondary-text, 0.95);
+        @include h2-title($color: $secondary-text, $colorful: false, $bigger: false, $layout-gap: false, $gradiant: false);
+        overflow-wrap: anywhere;
       }
 
       > p {
-        margin: 0;
-        font-size: 0.85rem;
-        color: rgba($secondary-text, 0.6);
+        @include little-text(rgba($secondary-text, 0.72), $thin: false);
       }
+    }
+
+    > .reply {
+      flex: 0 0 auto;
+      @include buttons.primary($theme: white, $little: true);
     }
   }
 
-  .message-card {
-    padding: var(--layout-gap-md);
-    border-radius: borders.$rounded-lg;
-    border: 1px solid rgba($secondary, 0.08);
-    background: $accent-surface-0;
+  .detail-section {
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: var(--layout-gap-sm);
 
-    .section-title {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: var(--layout-gap-sm);
-
-      > h3 {
-        margin: 0;
-        font-size: 1.1rem;
-      }
-
-      > .reply {
-        background: none;
-        border: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-        color: rgba($secondary-text, 0.8);
-        font-weight: 600;
-        cursor: pointer;
-        @include animations.transition(animations.$duration-fast);
-        @include animations.press();
-      }
-    }
-
-    .message {
+    > h3,
+    > .section-head > h3 {
       margin: 0;
-      font-size: 0.95rem;
-      color: rgba($secondary-text, 0.8);
-      line-height: 1.5;
+      @include h4-title($color: $secondary-text, $colorful: false, $bigger: false);
     }
-  }
 
-  .internal-note-card {
-    padding: var(--layout-gap-md);
-    border-radius: borders.$rounded-lg;
-    border: 1px solid rgba($secondary, 0.08);
-    background: $accent-surface-0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--layout-gap-sm);
-
-    .section-title {
+    > .section-head {
       display: flex;
       flex-wrap: wrap;
-      align-items: center;
+      align-items: baseline;
       justify-content: space-between;
-      gap: var(--layout-gap-xs);
-
-      > h3 {
-        margin: 0;
-        font-size: 1.1rem;
-      }
+      gap: var(--layout-gap-2xs) var(--layout-gap);
 
       > p {
-        margin: 0;
-        font-size: 0.8rem;
-        color: rgba($secondary-text, 0.6);
+        @include little-text(rgba($secondary-text, 0.72), $thin: false);
       }
     }
 
-    .internal-note-input {
+    .feedback {
+      @include little-text($secondary-text, $bold: true);
+
+      &.error {
+        color: $bad-ink;
+      }
+
+      &.success {
+        color: $good-ink;
+      }
+    }
+  }
+
+  .message-section > .message {
+    @include base-text(rgba($secondary-text, 0.9), $thin: false);
+    padding: var(--layout-gap-md);
+    border-radius: borders.$rounded-lg;
+    border: 1px solid rgba($secondary, 0.08);
+    background: $accent-surface-0;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .stay-section > .stay-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--layout-gap);
+
+    // Arrivée, départ, durée, voyageurs : une ligne chacun. Largeur bornée : étirées sur tout
+    // l'écran, l'étiquette et sa valeur ne se lisaient plus ensemble.
+    > .stay-facts {
+      flex: 1 1 16rem;
+      max-width: 30rem;
+      min-width: 0;
+      margin: 0;
+      padding: 0 var(--layout-gap-md);
+      border-radius: borders.$rounded-lg;
+      border: 1px solid rgba($secondary, 0.08);
+      background: $accent-surface-0;
+
+      > div {
+        padding: var(--layout-gap-sm) 0;
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: var(--layout-gap);
+
+        & + div {
+          border-top: 1px solid rgba($secondary, 0.08);
+        }
+
+        > dt {
+          flex: 0 0 auto;
+          @include little-text(rgba($secondary-text, 0.72), $thin: false);
+        }
+
+        > dd {
+          @include base-text($secondary-text, $bold: true);
+          text-align: right;
+        }
+      }
+    }
+
+    > .stay-calendar {
+      flex: 0 1 20rem;
+      min-width: min(100%, 16rem);
+
+      // Deux mois côte à côte sur très grand écran (`stayMonthsCount`).
+      @include min-width(xxxl) {
+        flex-basis: 36rem;
+      }
+
+      > .date-picker {
+        width: 100%;
+        max-width: none;
+      }
+
+      > .legend {
+        padding-top: var(--layout-gap-xs);
+        @include little-text(rgba($secondary-text, 0.72), $thin: false);
+      }
+    }
+  }
+
+  .schedule-section {
+    > .schedule-overview {
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-xs);
+
+      > .amounts {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: var(--layout-gap-2xs) var(--layout-gap);
+
+        > .paid {
+          @include base-text(rgba($secondary-text, 0.72), $thin: false);
+
+          > strong {
+            @include base-text($secondary-text, $bold: true, $bigger: true);
+            font-variant-numeric: tabular-nums;
+          }
+        }
+
+        > .balance {
+          @include base-text($warn-ink, $bold: true);
+          font-variant-numeric: tabular-nums;
+
+          &.is-complete {
+            color: $good-ink;
+          }
+        }
+      }
+
+      > .progress-track {
+        width: 100%;
+        height: var(--layout-gap-xs);
+        border-radius: borders.$rounded;
+        overflow: hidden;
+        background: rgba($secondary, 0.1);
+
+        > .progress-fill {
+          display: block;
+          height: 100%;
+          border-radius: inherit;
+          background: $progressing;
+          // Remplissage voulu : la largeur reste animée explicitement.
+          @include animations.transition(animations.$duration-menu, animations.$ease-out, (width, background-color));
+
+          &.is-complete {
+            background: $good;
+          }
+        }
+      }
+    }
+
+    // Une ligne par paiement : libellé et précision, montant, état.
+    > .schedule-card {
+      margin: 0;
+      padding: 0 var(--layout-gap-md);
+      list-style: none;
+      border-radius: borders.$rounded-lg;
+      border: 1px solid rgba($secondary, 0.08);
+      background: $accent-surface-0;
+
+      // Téléphone : le montant et son état l'un sous l'autre, à droite du libellé. Dès qu'il y a
+      // la place, tout tient sur une ligne (libellé, montant, état, action).
+      > .payment-item {
+        padding: var(--layout-gap-sm) 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas:
+          'main amount'
+          'main state';
+        align-items: center;
+        gap: var(--layout-gap-2xs) var(--layout-gap);
+
+        &:has(> .action) {
+          grid-template-columns: minmax(0, 1fr) auto var(--tap-target);
+          grid-template-areas:
+            'main amount action'
+            'main state action';
+        }
+
+        @include min-width(sm) {
+          grid-template-columns: minmax(0, 1fr) auto 6.5rem;
+          grid-template-areas: 'main amount state';
+
+          &:has(> .action) {
+            grid-template-columns: minmax(0, 1fr) auto 6.5rem var(--tap-target);
+            grid-template-areas: 'main amount state action';
+          }
+        }
+
+        & + .payment-item {
+          border-top: 1px solid rgba($secondary, 0.08);
+        }
+
+        > .main {
+          grid-area: main;
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: var(--layout-gap-2xs);
+
+          > .label {
+            @include base-text($secondary-text, $bold: true);
+          }
+
+          > .meta {
+            @include little-text(rgba($secondary-text, 0.72), $thin: false);
+            overflow-wrap: anywhere;
+          }
+        }
+
+        > .amount {
+          grid-area: amount;
+          justify-self: end;
+          @include base-text($secondary-text, $bold: true);
+          font-variant-numeric: tabular-nums;
+        }
+
+        > .entry-state {
+          grid-area: state;
+          justify-self: end;
+          display: inline-flex;
+          align-items: center;
+          gap: var(--layout-gap-xs);
+          @include little-text($warn-ink, $bold: true);
+
+          &::before {
+            content: '';
+            width: var(--layout-gap-sm);
+            height: var(--layout-gap-sm);
+            border-radius: borders.$rounded;
+            background: currentColor;
+          }
+
+          &.is-paid {
+            color: $good-ink;
+          }
+        }
+
+        // Emplacement de l'action, de la même largeur sur chaque ligne.
+        > .action {
+          grid-area: action;
+          display: flex;
+          justify-content: flex-end;
+
+          > .remove-manual-entry {
+            @include buttons.low-btn($icon-only: true);
+
+            @include on-hover(':not(:disabled)') {
+              color: $bad-ink;
+            }
+          }
+        }
+      }
+    }
+
+    > .schedule-empty {
+      @include little-text(rgba($secondary-text, 0.72), $thin: false);
+    }
+
+    > .payment-editor {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--layout-gap-sm);
+
+      > .open-editor {
+        @include buttons.primary($theme: white, $little: true);
+      }
+
+      > .hint {
+        @include little-text(rgba($secondary-text, 0.72), $thin: false);
+      }
+
+      > .manual-add {
+        width: 100%;
+        box-sizing: border-box;
+        padding: var(--layout-gap-md);
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        align-items: end;
+        gap: var(--layout-gap-sm);
+        border-radius: borders.$rounded-lg;
+
+        // Moyen, montant, date sur une ligne dès qu'il y a la place ; la note dessous.
+        @include min-width(sm) {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+        border: 1px solid rgba($secondary, 0.08);
+        background: $accent-surface-0;
+
+        > .form-title {
+          grid-column: 1 / -1;
+          @include base-text($secondary-text, $bold: true);
+        }
+
+        > .field {
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: var(--layout-gap-xs);
+
+          &.is-wide {
+            grid-column: 1 / -1;
+          }
+
+          > span:first-child {
+            @include little-text(rgba($secondary-text, 0.72), $thin: false);
+          }
+
+          // Champs et liste de même hauteur : étiquettes et bas des contrôles alignés sur la ligne.
+          > .control {
+            @include inputs.field($theme: accent, $compact: true);
+            min-height: var(--tap-target);
+            padding-block: 0;
+            box-sizing: border-box;
+          }
+
+          > .select {
+            @include inputs.select($theme: accent, $compact: true);
+            min-height: var(--tap-target);
+            box-sizing: border-box;
+          }
+        }
+
+        > .actions {
+          grid-column: 1 / -1;
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: flex-end;
+          gap: var(--layout-gap-sm);
+
+          > .cancel {
+            @include buttons.primary($theme: white, $little: true);
+          }
+
+          > .submit {
+            @include buttons.primary($theme: black, $little: true);
+          }
+        }
+      }
+    }
+  }
+
+  .note-section {
+    > .internal-note-input {
       width: 100%;
-      min-width: 100%;
-      max-width: 100%;
       box-sizing: border-box;
-      min-height: 7rem;
+      min-height: 5rem;
       resize: vertical;
-      padding: 0.8rem;
-      border-radius: borders.$rounded-md;
+      padding: var(--layout-gap-sm) var(--layout-gap-md);
+      border-radius: borders.$rounded-lg;
       border: 1px solid rgba($secondary, 0.16);
-      background: $accent;
-      color: rgba($secondary-text, 0.9);
+      background: $accent-surface-0;
       font-family: inherit;
-      font-size: 0.95rem;
-      line-height: 1.45;
+      @include base-text($secondary-text, $thin: false);
+      line-height: 1.5;
       @include animations.transition(animations.$duration-fast);
 
       @media (pointer: coarse) {
         font-size: max(1rem, 16px);
+      }
+
+      &::placeholder {
+        color: rgba($secondary-text, 0.55);
       }
 
       &:focus {
@@ -390,471 +668,28 @@
       }
     }
 
-    .internal-note-preview {
+    > .internal-note-preview {
+      padding: var(--layout-gap-sm) var(--layout-gap-md);
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
       gap: var(--layout-gap-sm);
+      border-radius: borders.$rounded-lg;
+      border: 1px solid rgba($secondary, 0.08);
+      background: $accent-surface-0;
 
       > p {
-        margin: 0;
         flex: 1 1 auto;
-        font-size: 0.95rem;
+        min-width: 0;
+        @include base-text(rgba($secondary-text, 0.9), $thin: false);
         line-height: 1.5;
-        color: rgba($secondary-text, 0.82);
         white-space: pre-wrap;
+        overflow-wrap: anywhere;
       }
 
       > .edit-note-btn {
         flex: 0 0 auto;
-        @include buttons.low-btn($color: $secondary, $hover: $accent, $text-color: $accent, $text-hover-color: $secondary, $icon-only: true);
-      }
-    }
-
-    .feedback {
-      margin: 0;
-      font-size: 0.85rem;
-    }
-
-    .feedback.error {
-      color: $bad-ink;
-    }
-  }
-
-  .stay-section {
-    display: flex;
-    flex-direction: column;
-    gap: var(--layout-gap-sm);
-
-    > h3 {
-      @include h2-title($color: $secondary-text, $colorful: false, $bigger: false, $layout-gap: false, $gradiant: false);
-    }
-
-    .stay-container {
-      display: flex;
-      gap: var(--layout-gap-md);
-      align-items: start;
-    }
-
-    .stay-calendar {
-      flex: 0 0 16rem;
-
-      @include min-width(xl) {
-        flex: 0 0 18rem;
-      }
-
-      @include min-width(xxl) {
-        flex: 0 0 24rem;
-      }
-
-      @include min-width(xxxl) {
-        flex: 0 0 36rem;
-      }
-
-      > .date-picker {
-        width: 100%;
-        max-width: none !important;
-      }
-    }
-
-    .stay-cards {
-      flex: 1 1 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: var(--layout-gap-md);
-
-      & > div {
-        width: 100%;
-        padding: var(--layout-gap);
-        border-radius: borders.$rounded-lg;
-        border: 1px solid rgba($secondary, 0.08);
-        background: $accent;
-        display: flex;
-        flex-direction: column;
-        gap: 0.35rem;
-        @include effects.soft-shadow(rgba(0, 0, 0, 0.08), 12px, -4px);
-
-        .value {
-          font-size: 2rem;
-          font-weight: 700;
-        }
-
-        .label {
-          font-size: 0.85rem;
-          text-transform: uppercase;
-          letter-spacing: 0.04em;
-          color: rgba($secondary-text, 0.55);
-        }
-
-        .meta {
-          font-size: 0.85rem;
-          color: rgba($secondary-text, 0.75);
-        }
-
-        .guest-list {
-          margin: 0.35rem 0 0;
-          padding: 0;
-          list-style: none;
-          display: flex;
-          flex-direction: column;
-          gap: 0.15rem;
-          font-size: 0.85rem;
-          color: rgba($secondary-text, 0.75);
-        }
-      }
-    }
-  }
-
-  .schedule-section {
-    display: flex;
-    flex-direction: column;
-    gap: var(--layout-gap-sm);
-
-    > h3 {
-      @include h2-title($color: $secondary-text, $colorful: false, $bigger: false, $layout-gap: false, $gradiant: false);
-    }
-
-    > .subtitle {
-      margin: 0;
-      font-size: 0.85rem;
-      color: rgba($secondary-text, 0.6);
-    }
-
-    .schedule-overview {
-      padding: var(--layout-gap-xs) 0;
-      display: flex;
-      flex-direction: column;
-      gap: 0.55rem;
-
-      .progress-box {
-        display: flex;
-        flex-direction: column;
-        gap: 0.2rem;
-      }
-
-      .progress-track {
-        width: 100%;
-        height: 0.38rem;
-        border-radius: 999px;
-        overflow: hidden;
-        background: rgba($secondary, 0.1);
-      }
-
-      .progress-fill {
-        display: block;
-        height: 100%;
-        border-radius: inherit;
-        // Remplissage voulu : la largeur reste animée explicitement.
-        @include animations.transition(animations.$duration-menu, animations.$ease-out, (width, background-color));
-        background: rgba($progressing, 0.95);
-
-        &.is-complete {
-          background: rgba($good, 0.95);
-        }
-      }
-
-      .reference-grid {
-        display: grid;
-        gap: 0.15rem 0.9rem;
-        grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-      }
-
-      .reference-item {
-        display: flex;
-        align-items: baseline;
-        gap: 0.35rem;
-        margin: 0;
-        font-size: 0.83rem;
-        color: rgba($secondary-text, 0.62);
-
-        > span {
-          font-size: inherit;
-          color: inherit;
-        }
-
-        > strong {
-          color: rgba($secondary-text, 0.95);
-          font-size: 0.9rem;
-          font-weight: 700;
-        }
-      }
-    }
-
-    .schedule-card {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      .list-entries {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-      }
-
-      .payment-item {
-        display: flex;
-        flex-direction: column;
-        gap: 0.55rem;
-        padding: var(--layout-gap-md);
-        border-radius: borders.$rounded-lg;
-        border: 1px solid rgba($secondary, 0.08);
-        background: $accent;
-        @include effects.soft-shadow(rgba(0, 0, 0, 0.08), 12px, -4px);
-
-        &.is-online {
-          border-left: 3px solid rgba($secondary, 0.42);
-        }
-
-        &.is-manual {
-          border-left: 3px solid rgba($progressing, 0.7);
-        }
-
-        &.is-deferred {
-          border-left: 3px solid rgba($good, 0.7);
-        }
-      }
-
-      .payment-item-head {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        gap: var(--layout-gap-sm);
-
-        > h4 {
-          margin: 0;
-          font-size: 1.22rem;
-          line-height: 1.25;
-          font-weight: 600;
-        }
-
-        > .payment-item-actions {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-end;
-          gap: 0.4rem;
-
-          > strong {
-            font-size: 2rem;
-            line-height: 1;
-            font-weight: 700;
-            color: rgba($secondary-text, 0.98);
-          }
-
-          > .remove-manual-entry {
-            border: 1px solid rgba($secondary, 0.2);
-            border-radius: borders.$rounded;
-            background: $accent-surface-0;
-            color: rgba($secondary-text, 0.84);
-            font-size: 0.76rem;
-            font-weight: 600;
-            padding: 0.28rem 0.55rem;
-            cursor: pointer;
-            position: relative;
-            @include animations.transition(animations.$duration-fast);
-            @include animations.press();
-
-            @include on-hover(':not(:disabled)') {
-              border-color: rgba($bad, 0.5);
-              color: $bad-ink;
-            }
-
-            // Zone tactile élargie à 44 px sans grossir la puce.
-            @media (pointer: coarse) {
-              &::after {
-                content: '';
-                position: absolute;
-                inset: -0.6rem -0.25rem;
-              }
-            }
-
-            &:disabled {
-              opacity: 0.6;
-              cursor: not-allowed;
-            }
-          }
-        }
-      }
-
-      .payment-item-rows {
-        display: grid;
-        gap: 0.35rem;
-
-        .row {
-          display: flex;
-          justify-content: space-between;
-          gap: var(--layout-gap-sm);
-          font-size: 0.9rem;
-          color: rgba($secondary-text, 0.85);
-
-          > strong {
-            color: rgba($secondary-text, 0.96);
-            font-weight: 600;
-          }
-        }
-      }
-
-      .status-row {
-        padding-top: 0.25rem;
-        border-top: 1px solid rgba($secondary, 0.08);
-      }
-
-      .entry-state {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.35rem;
-        font-size: 0.9rem;
-        font-weight: 700;
-
-        &::after {
-          content: '';
-          width: 0.9rem;
-          height: 0.9rem;
-          border-radius: 999px;
-          background: currentColor;
-          opacity: 0.9;
-        }
-
-        &.is-paid {
-          color: $good-ink;
-        }
-
-        &.is-pending {
-          color: $warn-ink;
-        }
-      }
-
-      .list-empty {
-        margin: 0;
-        font-size: 0.82rem;
-        color: rgba($secondary-text, 0.56);
-        text-align: center;
-        padding: var(--layout-gap-sm);
-        border-radius: borders.$rounded;
-        border: 1px solid rgba($secondary, 0.08);
-        background: $accent-surface-0;
-      }
-    }
-
-    .payment-editor-card {
-      padding: var(--layout-gap-md);
-      border-radius: borders.$rounded-lg;
-      border: 1px solid rgba($secondary, 0.08);
-      background: $accent;
-      display: flex;
-      flex-direction: column;
-      gap: var(--layout-gap-sm);
-      @include effects.soft-shadow(rgba(0, 0, 0, 0.08), 12px, -4px);
-
-      .section-title {
-        display: flex;
-        flex-direction: column;
-        gap: 0.2rem;
-
-        > h4 {
-          margin: 0;
-          font-size: 1rem;
-        }
-
-        > p {
-          margin: 0;
-          font-size: 0.82rem;
-          color: rgba($secondary-text, 0.6);
-        }
-      }
-
-      .payment-editor {
-        display: flex;
-        flex-direction: column;
-        gap: var(--layout-gap-sm);
-
-        .hint {
-          margin: 0;
-          font-size: 0.8rem;
-          color: rgba($secondary-text, 0.62);
-        }
-
-        .manual-editor {
-          display: flex;
-          flex-direction: column;
-          gap: var(--layout-gap-xs);
-        }
-
-        .manual-add {
-          display: grid;
-          grid-template-columns: minmax(0, 1fr);
-          gap: 0.45rem;
-
-          @include min-width(md) {
-            grid-template-columns: 1fr 0.85fr 1fr 1.4fr auto;
-          }
-
-          > input,
-          > select {
-            border: 1px solid rgba($secondary, 0.22);
-            border-radius: borders.$rounded;
-            padding: 0.5rem 0.6rem;
-            font-size: 0.85rem;
-            background: $accent-surface-0;
-            color: rgba($secondary-text, 0.92);
-
-            @media (pointer: coarse) {
-              font-size: max(1rem, 16px);
-            }
-
-            &:focus {
-              outline: 2px solid rgba($secondary, 0.2);
-              border-color: rgba($secondary, 0.45);
-            }
-
-            &:disabled {
-              background: rgba($secondary, 0.08);
-              color: rgba($secondary-text, 0.55);
-              cursor: not-allowed;
-            }
-          }
-        }
-
-        .manual-add > button {
-          border: 1px solid rgba($secondary, 0.22);
-          border-radius: borders.$rounded;
-          background: $accent-surface-0;
-          color: rgba($secondary-text, 0.86);
-          font-size: 0.8rem;
-          font-weight: 600;
-          padding: 0.5rem 0.7rem;
-          cursor: pointer;
-          @include animations.transition(animations.$duration-fast);
-          @include animations.press();
-
-          @include on-hover(':not(:disabled)') {
-            background: rgba($secondary, 0.08);
-            border-color: rgba($secondary, 0.36);
-          }
-
-          @media (pointer: coarse) {
-            min-height: 2.75rem;
-          }
-
-          &:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-          }
-        }
-
-        .feedback {
-          margin: 0;
-          font-size: 0.82rem;
-          font-weight: 600;
-
-          &.error {
-            color: $bad-ink;
-          }
-
-          &.success {
-            color: $good-ink;
-          }
-        }
+        @include buttons.low-btn($icon-only: true);
       }
     }
   }
@@ -862,41 +697,110 @@
   .reservation-empty {
     padding: var(--layout-gap-md);
     text-align: center;
-    color: rgba($secondary-text, 0.6);
+    color: rgba($secondary-text, 0.72);
   }
 
-  .calendar-panel {
-    flex: 1 1 auto;
-    min-height: 100%;
+  // Dates venues d'un calendrier importé : une information, pas une réservation. Bloc discret,
+  // sans ombre, sous le détail.
+  .imported-blocks {
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-sm);
+    padding: var(--layout-gap-md);
+    border-radius: borders.$rounded-lg;
+    border: 1px dashed rgba($secondary, 0.2);
+
+    > .heading {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--layout-gap-sm);
+
+      > svg {
+        flex: 0 0 auto;
+        margin-top: var(--layout-gap-2xs);
+        color: rgba($secondary-text, 0.72);
+      }
+
+      > div {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: var(--layout-gap-xs);
+
+        > h3 {
+          margin: 0;
+          @include base-text($secondary-text, $bold: true);
+        }
+
+        > p {
+          max-width: 68ch;
+          @include little-text(rgba($secondary-text, 0.72), $thin: false);
+        }
+      }
+    }
+
+    > ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+
+      > li {
+        padding: var(--layout-gap-sm) 0;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: var(--layout-gap-2xs) var(--layout-gap);
+        border-top: 1px solid rgba($secondary, 0.08);
+
+        > .dates {
+          @include little-text($secondary-text, $bold: true);
+          font-variant-numeric: tabular-nums;
+        }
+
+        > .nights {
+          @include little-text(rgba($secondary-text, 0.72), $thin: false);
+          font-variant-numeric: tabular-nums;
+        }
+      }
+    }
   }
 
+  // Action destructive : en bas de fiche, discrète, jamais sur toute la largeur.
   .delete-reservation {
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
     gap: var(--layout-gap-xs);
-    padding: var(--layout-gap-sm);
 
     > .danger {
-      @include buttons.primary($theme: dark, $fullwidth: true);
+      @include buttons.primary($theme: white, $little: true);
+
+      > button {
+        color: $bad-ink;
+
+        > svg {
+          color: inherit;
+          stroke: currentColor;
+        }
+      }
 
       @include on-hover {
-        & > * {
-          color: $accent !important;
-          background-color: $bad !important;
-          outline: 3px solid rgba($accent, 0.75) !important;
+        > button:not(:disabled) {
+          color: $paper-static;
+          background-color: $bad;
 
-          & > * {
-            color: $accent !important;
-            stroke: $accent !important;
+          > svg {
+            stroke: currentColor;
           }
         }
       }
     }
 
     > .error {
-      margin: 0;
-      font-size: 0.875rem;
-      color: $bad-ink;
+      @include little-text($bad-ink, $bold: true);
     }
   }
 }

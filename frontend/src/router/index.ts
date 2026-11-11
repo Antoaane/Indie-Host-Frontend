@@ -410,6 +410,12 @@ const router = createRouter({
           component: () => import('@/views/Editor/dev/DevEditorRoute.vue'),
           meta: { navVariant: 'host', hideNav: true, title: 'Éditeur (dev)' },
         }, {
+          // Réservations sur les mêmes annonces en mémoire (une réservation, des dates importées).
+          path: '/dev/management',
+          name: 'dev-management',
+          component: () => import('@/views/Management/dev/DevManagementRoute.vue'),
+          meta: { navVariant: 'host', hideNav: true, title: 'Réservations (dev)' },
+        }, {
           // Thèmes de la page de présentation et mode édition, sur du faux contenu (docs/editeur-de-page.md).
           path: '/dev/page-themes',
           name: 'dev-page-themes',
