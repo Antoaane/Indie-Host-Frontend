@@ -146,7 +146,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 2.75rem;
+    min-height: var(--tap-target);
     padding: 0.7em 1.5em;
     border-radius: var(--page-button-radius);
     background: var(--page-accent);
@@ -748,7 +748,7 @@
     display: inline-flex;
     align-items: center;
     gap: var(--layout-gap-xs);
-    min-height: 2.75rem;
+    min-height: var(--tap-target);
     padding: 0.5em 1em;
     border-radius: #{borders.$rounded};
     background: var(--page-accent);
@@ -798,8 +798,8 @@
     > .inserter-add {
       display: grid;
       place-items: center;
-      width: 2.75rem;
-      height: 2.75rem;
+      width: var(--tap-target);
+      height: var(--tap-target);
       padding: 0;
       border: 0;
       border-radius: #{borders.$rounded};
@@ -838,7 +838,7 @@
         display: inline-flex;
         align-items: center;
         gap: var(--layout-gap-xs);
-        min-height: 2.75rem;
+        min-height: var(--tap-target);
         padding: 0.4em 0.9em;
         border: 0;
         border-radius: #{borders.$rounded-md};
@@ -905,7 +905,7 @@
     }
 
     @media (pointer: coarse) {
-      min-height: 2.75rem;
+      min-height: var(--tap-target);
     }
 
     // Sur téléphone, le libellé recouvrait le « + » centré sur le même trait : il ne reste que

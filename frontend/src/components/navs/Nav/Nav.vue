@@ -466,15 +466,17 @@ const backOfficeDockItems = computed(() => {
     },
     {
       id: 'dock-add-reservation',
-      label: 'Ajouter une<br>réservation',
+      // Un mot sous l'icône, comme les autres onglets ; le nom complet reste lu par les lecteurs d'écran.
+      label: 'Ajouter',
       icon: Plus,
       isPrimary: true,
       action: toggleReservation,
       attrs: {
+        'aria-label': 'Ajouter une réservation',
         'aria-expanded': reservationOpen.value,
         'aria-controls': 'host-reservation-overlay',
         'aria-haspopup': 'dialog',
-      },
+      } as Record<string, string | boolean>,
     },
     {
       id: 'dock-messaging',

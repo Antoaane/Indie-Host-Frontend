@@ -119,7 +119,7 @@
     cursor: pointer;
 
     >svg {
-      height: 2.75rem;
+      height: var(--tap-target);
 
       @include min-width(lg) {
         height: 3.125rem;

@@ -324,17 +324,17 @@ onMounted(() => {
       // Cibles tactiles de 44 px : boutons et sélecteur de titre.
       @media (pointer: coarse) {
         button {
-          width: 2.75rem;
-          height: 2.75rem;
+          width: var(--tap-target);
+          height: var(--tap-target);
           padding: 0.7rem;
         }
 
         .ql-picker {
-          height: 2.75rem;
+          height: var(--tap-target);
         }
 
         .ql-picker-label::before {
-          line-height: calc(2.75rem - 2px);
+          line-height: calc(var(--tap-target) - 2px);
         }
       }
     }

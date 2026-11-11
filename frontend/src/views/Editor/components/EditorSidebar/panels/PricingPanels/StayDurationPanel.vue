@@ -466,8 +466,8 @@ function stepDurationDiscount(index: number, delta: number) {
           @include animations.press();
 
           @media (pointer: coarse) {
-            min-width: 2.75rem;
-            min-height: 2.75rem;
+            min-width: var(--tap-target);
+            min-height: var(--tap-target);
           }
         }
       }

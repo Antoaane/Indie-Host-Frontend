@@ -65,7 +65,7 @@ Mobile-first via `@include min-width(bp)`. Un `@media` doit changer un **comport
 - Erreurs : dire ce qui s'est passé et quoi faire. États vides : inviter à l'action. Prix : TTC, symbole après le montant avec espace insécable (« 29 €/mois »).
 
 ## Socle accessibilité et UX (non négociable)
-- Cibles tactiles d'au moins 44 px sur mobile (compteurs, nav, chips).
+- Cibles tactiles d'au moins 44 px sur mobile (compteurs, nav, chips) : écrire `var(--tap-target)` pour le côté d'un contrôle ou la hauteur d'une ligne cliquable, jamais `2.75rem` (la racine vaut 15 px sur téléphone, 2.75rem n'y fait que 41 px).
 - `:focus-visible` visible sur tout élément interactif ; jamais `outline: none` sans remplacement.
 - Contraste d'au moins 4.5:1 pour le texte ; `rgba($secondary, 0.45)` convient à un placeholder, pas à du texte à lire.
 - `prefers-reduced-motion` respecté pour toute animation ajoutée hors `sr()`.

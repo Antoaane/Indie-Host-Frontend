@@ -198,7 +198,7 @@ const emit = defineEmits<{
     @include animations.press();
 
     @media (pointer: coarse) {
-      min-height: 2.75rem;
+      min-height: var(--tap-target);
     }
   }
 }

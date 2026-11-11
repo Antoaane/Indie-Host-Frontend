@@ -493,7 +493,7 @@
           white-space: nowrap;
 
           @media (pointer: coarse) {
-            height: 2.75rem;
+            height: var(--tap-target);
           }
 
           > .icon {

@@ -11,7 +11,8 @@
   display: grid;
   grid-template-columns: repeat(var(--dock-columns, 5), minmax(0, 1fr));
   align-items: stretch;
-  gap: 0.35rem;
+  // Colonnes serrées : chaque libellé doit tenir en entier à 360 px de large.
+  gap: 0.2rem;
 
   padding: var(--layout-gap-xs);
   border-radius: borders.$rounded-xl;
@@ -37,7 +38,7 @@
     justify-content: center;
     gap: 0.2rem;
 
-    padding: 0.1rem 0.2rem;
+    padding: 0.1rem 0;
     @include animations.transition(animations.$duration-fast);
     @include animations.press();
 
@@ -55,7 +56,9 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      font-size: 0.55rem;
+      // Environ 10,5 px : la plus petite taille lisible sous une icône d'onglet (0.55rem
+      // donnait 8 px). Au-delà, « Réservations » ne tient plus dans sa colonne à 360 px.
+      font-size: 0.7rem;
       font-weight: 500;
     }
 

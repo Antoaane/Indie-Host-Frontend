@@ -20,8 +20,14 @@ function getComment(filePath: string): string {
     return `// File: ${rel}`;
 }
 
+// Fichiers de déclarations générés (`components.d.ts`, `auto-imports.d.ts`) : leur générateur les
+// réécrit sans l'en-tête, ce plugin le remettait, et ainsi de suite. Sous Docker, une lecture
+// tombant pendant une de ces écritures arrêtait le serveur de développement (ENODATA).
+const GENERATED_DECLARATIONS = /\.d\.ts$/;
+
 function shouldIgnore(filePath: string): boolean {
     return (
+        GENERATED_DECLARATIONS.test(filePath) ||
         !INCLUDED_EXTENSIONS.test(filePath) ||
         EXCLUDED_DIRS.some((dir) => filePath.includes(dir)) ||
         !fs.existsSync(filePath)

@@ -192,7 +192,7 @@ function parseOptionalAmount(raw: string): number | null {
         @include animations.press();
 
         @media (pointer: coarse) {
-          min-height: 2.75rem;
+          min-height: var(--tap-target);
         }
       }
     }
@@ -244,8 +244,8 @@ function parseOptionalAmount(raw: string): number | null {
           @include animations.press();
 
           @media (pointer: coarse) {
-            min-width: 2.75rem;
-            min-height: 2.75rem;
+            min-width: var(--tap-target);
+            min-height: var(--tap-target);
           }
         }
       }

@@ -188,11 +188,11 @@
 
       // Cible tactile de 44 px.
       @media (pointer: coarse) {
-        width: 2.75rem;
-        min-width: 2.75rem;
+        width: var(--tap-target);
+        min-width: var(--tap-target);
 
         >button {
-          height: 2.75rem;
+          height: var(--tap-target);
         }
       }
 

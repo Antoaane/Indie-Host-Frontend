@@ -111,7 +111,7 @@
         @include buttons.low-btn($fullwidth: true, $color: $accent, $hover: $secondary, $text-color: $secondary, $text-hover-color: $accent, $borders: true, $stroke: false);
 
         @media (pointer: coarse) {
-          min-height: 2.75rem;
+          min-height: var(--tap-target);
         }
       }
     }

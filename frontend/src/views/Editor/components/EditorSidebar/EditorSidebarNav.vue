@@ -118,8 +118,8 @@ function handleGroupKeydown(event: KeyboardEvent, index: number) {
 
     > .mobile-back-shell {
       flex: 0 0 auto;
-      width: 2.75rem;
-      min-width: 2.75rem;
+      width: var(--tap-target);
+      min-width: var(--tap-target);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -127,7 +127,7 @@ function handleGroupKeydown(event: KeyboardEvent, index: number) {
       > .mobile-back-btn {
         width: 100%;
         height: 100%;
-        min-height: 2.75rem;
+        min-height: var(--tap-target);
 
         border: 1px solid rgba($secondary, 0.1);
         border-radius: borders.$rounded-md;
@@ -212,7 +212,7 @@ function handleGroupKeydown(event: KeyboardEvent, index: number) {
           }
 
           @media (pointer: coarse) {
-            min-height: 2.75rem;
+            min-height: var(--tap-target);
           }
         }
 

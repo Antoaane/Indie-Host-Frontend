@@ -28,7 +28,7 @@ $input-themes: (
 );
 
 $input-sizes: (
-  default: (min-height: 2.75rem,
+  default: (min-height: var(--tap-target),
     padding-x: 0.9rem,
     padding-y: 0.55rem,
     gap: 0.5rem,

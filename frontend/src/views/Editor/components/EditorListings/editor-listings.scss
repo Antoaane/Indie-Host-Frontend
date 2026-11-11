@@ -208,10 +208,16 @@
 
           > .media {
             position: relative;
-            aspect-ratio: 1 / 1;
+            // Téléphone : une carte par ligne. La photo en bandeau laisse le nom, le prix et
+            // la carte suivante à l'écran ; carrée, elle occupait l'écran à elle seule.
+            aspect-ratio: 16 / 10;
             background: $accent-surface-2;
             overflow: hidden;
             border-radius: borders.$rounded-md;
+
+            @include min-width(sm) {
+              aspect-ratio: 1 / 1;
+            }
 
             &::after {
               content: '';

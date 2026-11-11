@@ -143,8 +143,8 @@
         }
 
         @media (pointer: coarse) {
-          width: 2.75rem;
-          height: 2.75rem;
+          width: var(--tap-target);
+          height: var(--tap-target);
         }
       }
     }
@@ -193,8 +193,8 @@
         height: 36px;
 
         @media (pointer: coarse) {
-          width: 2.75rem;
-          height: 2.75rem;
+          width: var(--tap-target);
+          height: var(--tap-target);
         }
       }
     }
@@ -260,8 +260,8 @@
         height: 36px;
 
         @media (pointer: coarse) {
-          width: 2.75rem;
-          height: 2.75rem;
+          width: var(--tap-target);
+          height: var(--tap-target);
         }
       }
     }
@@ -327,8 +327,8 @@
       }
 
       @media (pointer: coarse) {
-        width: 2.75rem;
-        height: 2.75rem;
+        width: var(--tap-target);
+        height: var(--tap-target);
       }
 
       &.is-selected {

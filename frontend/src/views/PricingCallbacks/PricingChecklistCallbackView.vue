@@ -1775,7 +1775,7 @@ watch(
         gap: var(--layout-gap-xs);
 
         > .host-status-option {
-          min-height: 2.75rem;
+          min-height: var(--tap-target);
           padding: var(--layout-gap-sm) var(--layout-gap-md);
 
           display: flex;
@@ -1884,7 +1884,7 @@ watch(
     }
 
     @media (pointer: coarse) {
-      min-height: 2.75rem;
+      min-height: var(--tap-target);
     }
 
     &:disabled {

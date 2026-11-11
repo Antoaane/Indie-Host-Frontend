@@ -321,7 +321,7 @@ onMounted(() => {
       }
 
       @media (pointer: coarse) {
-        min-height: 2.75rem;
+        min-height: var(--tap-target);
       }
 
       &:disabled {

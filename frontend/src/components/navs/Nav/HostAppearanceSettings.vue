@@ -89,7 +89,7 @@ const hint = computed(() => {
     background: $tertiary;
 
     > .choice {
-      min-height: 2.75rem;
+      min-height: var(--tap-target);
       padding: 0 var(--layout-gap-xs);
       display: inline-flex;
       align-items: center;

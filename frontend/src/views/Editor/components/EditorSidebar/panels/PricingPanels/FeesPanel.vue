@@ -286,7 +286,7 @@ function removeCustomFee(index: number) {
 
       // Au doigt, le stepper passe en ligne avec des boutons de 44 px : sa colonne suit son contenu.
       @media (pointer: coarse) {
-        grid-template-columns: minmax(0, 1fr) auto 2.75rem;
+        grid-template-columns: minmax(0, 1fr) auto var(--tap-target);
       }
 
       > .input {
@@ -303,8 +303,8 @@ function removeCustomFee(index: number) {
         }
 
         @media (pointer: coarse) {
-          width: 2.75rem;
-          height: 2.75rem;
+          width: var(--tap-target);
+          height: var(--tap-target);
         }
 
         > * {

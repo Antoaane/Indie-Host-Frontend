@@ -69,13 +69,22 @@ const registrationLabel = computed(() => props.staticContent.registrationNumber 
     @include h1-title($gradiant: true);
   }
 
+  // Sous-titre (type et lieu) : sur téléphone il prenait deux lignes à la taille d'un titre de
+  // section, juste sous le nom. Il y passe à la taille d'un intertitre ; inchangé au-delà.
   > h2 {
-    @include h2-title;
+    @include h4-title($colorful: false, $bigger: false);
     font-weight: 400;
+
+    @include min-width(md) {
+      @include h2-title;
+      font-weight: 400;
+    }
   }
 
+  // Les caractéristiques passent à la ligne entre deux éléments, jamais au milieu de l'un d'eux.
   > ul {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
 
     opacity: 0.65;
@@ -83,6 +92,7 @@ const registrationLabel = computed(() => props.staticContent.registrationNumber 
     > li {
       display: inline-flex;
       align-items: center;
+      white-space: nowrap;
 
       > span {
         height: 5px;

@@ -792,8 +792,8 @@ onBeforeUnmount(() => {
           height: 2.5rem;
 
           @media (pointer: coarse) {
-            width: 2.75rem;
-            height: 2.75rem;
+            width: var(--tap-target);
+            height: var(--tap-target);
           }
         }
 
@@ -1086,8 +1086,8 @@ onBeforeUnmount(() => {
               height: 2rem;
 
               @media (pointer: coarse) {
-                width: 2.75rem;
-                height: 2.75rem;
+                width: var(--tap-target);
+                height: var(--tap-target);
               }
             }
           }

@@ -165,7 +165,7 @@ Mobile-first. Breakpoints (`$max-widths`, `variables/_layouts.scss`) : xxs 360, 
 - **Rythme** : une seule échelle d'espacement, `--layout-gap` (1rem → 1.125rem à md → 1.25rem à lg → 1.5rem à xxl) et ses multiples `--layout-gap-2xs` (×0.15), `-xs` (×0.25), `-sm` (×0.5), `-md` (×0.75), `-xl` (×1.25), `-2xl` (×1.5), `-3xl` (×1.75), `-4xl` (×2). Sections landing : `padding-block: calc(var(--layout-gap) * 4)`.
 - **Grilles** : `@include responsive-grid-columns($min-card-width)` → `repeat(auto-fit, minmax(min(100%, X), 1fr))` ; jamais de nombre de colonnes figé par breakpoint.
 - **Navigation** : barre de `$nav-bar-height` (3.75rem, source unique de tous les décalages d'en-tête), bloc `$nav-height` ; barre mobile fixe `BottomNav` avec `env(safe-area-inset-bottom)` ; hauteurs plein écran en `100dvh`.
-- **Densité** : tailles en rem ; sur desktop à la souris (`lg` + `can-hover`) la racine passe à 93,75 % (15 px) et les gaps sont plafonnés à leur valeur `lg` : l'interface ne grossit plus sur grand écran. Dashboard compact (`$compact: true` sur les champs, `$little: true` sur les boutons, gaps `-sm`/`-md`) ; landing et page annonce aérées (gaps `-2xl`/`-4xl`).
+- **Densité** : tailles en rem ; la racine vaut 93,75 % (15 px) sur téléphone (sous `md`) comme sur desktop à la souris (`lg` + `can-hover`), 16 px sur tablette tactile. Une zone tactile s'écrit `var(--tap-target)` (2.75rem à la souris, 44 px au moins au doigt), jamais `2.75rem` en dur ; un champ garde un texte de 16 px au doigt. Sur desktop à la souris la racine passe à 93,75 % (15 px) et les gaps sont plafonnés à leur valeur `lg` : l'interface ne grossit plus sur grand écran. Dashboard compact (`$compact: true` sur les champs, `$little: true` sur les boutons, gaps `-sm`/`-md`) ; landing et page annonce aérées (gaps `-2xl`/`-4xl`).
 - **Media queries** : un `@media` ne sert qu'à changer un comportement (row → column, grille qui déborde, cible tactile trop petite, sticky). `clamp()`, `min()` et les grilles fluides remplacent les ajustements cosmétiques.
 
 ## Elevation & Depth
@@ -237,7 +237,7 @@ Révélations au scroll via `sr()` (`@/utils/scrollReveal`, GSAP ScrollTrigger, 
 **Do**
 - Importer les tokens (`globals`, `borders`, `animations`, `buttons`, `inputs`) et ne composer qu'avec eux.
 - Un `<strong>` en dégradé par titre, titres Fustat, corps Outfit léger, labels `little-text`.
-- Mobile-first avec `min-width()`, `clamp()` et grilles fluides ; cibles tactiles d'au moins 44 px ; `100dvh` et safe areas.
+- Mobile-first avec `min-width()`, `clamp()` et grilles fluides ; cibles tactiles d'au moins 44 px via `var(--tap-target)` ; `100dvh` et safe areas.
 - Réutiliser `ConfirmationDialog`, `StepperInput`, `BottomNav`, les overlays et les mixins avant de créer un composant.
 - Copie française vouvoyée, verbes d'action sur les boutons, prix TTC explicites, erreurs qui disent quoi faire.
 

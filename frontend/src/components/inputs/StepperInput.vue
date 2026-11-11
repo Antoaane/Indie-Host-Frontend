@@ -241,7 +241,7 @@ watch([measurementText, () => props.autoWidth], () => {
   --ui-stepper-input-focus-bg: #{rgba($secondary-text, 0.09)};
   --ui-stepper-input-disabled-text: #{rgba($secondary-text, 0.48)};
   --ui-stepper-input-suffix-color: #{rgba($secondary-text, 0.62)};
-  --ui-stepper-input-min-height: 2.75rem;
+  --ui-stepper-input-min-height: var(--tap-target);
 
   display: inline-flex;
   align-items: center;
