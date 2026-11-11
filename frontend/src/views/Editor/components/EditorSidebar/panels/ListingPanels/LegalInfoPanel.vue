@@ -20,6 +20,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'patch', patch: DraftPatch): void
+  /** Le statut du loueur est enregistré à part du brouillon : la barre latérale met son résumé à jour. */
+  (e: 'host-updated', patch: ListingHostLegalPatch): void
 }>()
 
 const panelContent = editorStatic.panels.listing.legal
@@ -89,6 +91,7 @@ async function persistHost(patch: ListingHostLegalPatch) {
   hasSaved.value = false
   try {
     await saveListingHostLegalInfo(props.listingId, patch)
+    emit('host-updated', patch)
     hasSaved.value = true
   } catch (error) {
     saveError.value = error instanceof Error && error.message ? error.message : panelContent.feedback.error
@@ -300,42 +303,7 @@ const registrationNumber = computed({
         gap: var(--layout-gap-xs);
 
         > .option {
-          display: grid;
-          grid-template-columns: 20px 1fr;
-          align-items: start;
-          gap: var(--layout-gap-xs);
-          padding: var(--layout-gap-xs);
-          border: 1px solid rgba($secondary, 0.08);
-          border-radius: borders.$rounded-md;
-          cursor: pointer;
-          -webkit-user-select: none;
-          user-select: none;
-          @include animations.transition(animations.$duration-fast, animations.$ease-out, (border-color, background-color));
-          @include animations.press(0.99);
-
-          &:has(> input:checked) {
-            border-color: rgba($secondary, 0.35);
-          }
-
-          &:has(> input:focus-visible) {
-            outline: 2px solid $secondary;
-            outline-offset: 2px;
-          }
-
-          > input {
-            margin-top: 4px;
-          }
-
-          .title {
-            display: block;
-            font-weight: 600;
-          }
-
-          .desc {
-            display: block;
-            @include little-text();
-            color: rgba($secondary-text, 0.65);
-          }
+          @extend %panel-option;
         }
       }
     }

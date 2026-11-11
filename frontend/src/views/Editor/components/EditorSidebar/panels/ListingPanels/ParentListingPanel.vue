@@ -193,7 +193,7 @@ onMounted(() => { void load() })
     @extend %panel-body;
 
     > .select {
-      @include inputs.field($theme: base);
+      @extend %panel-select;
     }
 
     > .actions > .save {

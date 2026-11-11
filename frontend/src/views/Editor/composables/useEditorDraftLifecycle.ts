@@ -27,6 +27,11 @@ type DraftLifecycleOptions = {
   syncListingPendingChanges: (listingId: string) => void
 }
 
+function countDraftImages(snapshot: RawListingBundle | null | undefined): number {
+  const images = (snapshot?.medias as { images?: unknown } | null | undefined)?.images
+  return Array.isArray(images) ? images.length : 0
+}
+
 export function useEditorDraftLifecycle(options: DraftLifecycleOptions) {
   const draft = ref<RawListingBundle | null>(null)
   const draftStatus = reactive({
@@ -75,8 +80,16 @@ export function useEditorDraftLifecycle(options: DraftLifecycleOptions) {
       // en contient, les médias du serveur font foi : sinon la galerie paraît vide
       // et « Appliquer » publierait une galerie amputée.
       const keepServerMedias = shouldPreferCompactStorage(fetchedSnapshot)
+      // Même règle quand la copie locale a moins de photos que le serveur : elle a été enregistrée
+      // quand les photos étaient encore des data URL, retirées du stockage, puis l'annonce a été
+      // publiée et ses photos envoyées sur ImageKit. Sans cela l'éditeur montre « 0 photo » pour une
+      // annonce qui en a six en ligne, et « Appliquer » viderait la galerie publiée. Une photo
+      // supprimée par l'hôte l'est aussi sur le serveur (file de brouillon) : ce cas n'est pas concerné.
+      const serverImageCount = countDraftImages(fetchedSnapshot)
       const withServerMedias = (snapshot: RawListingBundle | null): RawListingBundle | null =>
-        snapshot && keepServerMedias ? { ...snapshot, medias: fetchedSnapshot.medias } : snapshot
+        snapshot && (keepServerMedias || countDraftImages(snapshot) < serverImageCount)
+          ? { ...snapshot, medias: fetchedSnapshot.medias }
+          : snapshot
       const localDraft = withServerMedias(fetchListingDraft(listingId))
       const localSnapshot = localDraft ? snapshotListingDraft(localDraft) : null
       const localPublished = withServerMedias(fetchListingPublishedSnapshot(listingId))

@@ -3,6 +3,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { Plus } from 'lucide-vue-next'
 
 import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'
 import ConfirmationDialog from '@/components/overlays/ConfirmationDialog.vue'
@@ -19,6 +20,7 @@ import { editorStatic } from '@/views/Editor/utils/editorContent'
 import type { UserListingCard } from '@/views/Editor/utils/listingApi'
 import EditorListingCard from '@/views/Editor/components/EditorListings/components/EditorListingCard.vue'
 import EditorListingsCreateCard from '@/views/Editor/components/EditorListings/components/EditorListingsCreateCard.vue'
+import EditorSiteHeader from '@/views/Editor/components/EditorListings/components/EditorSiteHeader.vue'
 import EditorListingsToolbar from '@/views/Editor/components/EditorListings/components/EditorListingsToolbar.vue'
 
 const props = defineProps<{
@@ -39,6 +41,8 @@ const emit = defineEmits<{
   (e: 'configure-connect', listingId: string): void
   (e: 'listing-transferred', payload: { listingId: string }): void
   (e: 'create-hub'): void
+  /** Ouvre une page principale sur une section précise de la colonne de gauche. */
+  (e: 'open-section', payload: { listingId: string; section: 'hubChildren' | 'visibility' }): void
 }>()
 
 const query = ref('')
@@ -158,6 +162,52 @@ const filtered = computed(() => {
     return ap ? -1 : 1
   })
 })
+
+// ---------------------------------------------------------------------------------------------
+// Une page principale et les logements qu'elle présente forment un groupe encadré : le lien entre
+// les deux se lit d'un coup d'œil. Les logements sans page principale sont « indépendants ».
+type ListingSite = {
+  hub: UserListingCard
+  children: UserListingCard[]
+  /** Nombre de logements rattachés, hors recherche en cours. */
+  childrenCount: number
+  hostname: string
+}
+
+function readHostname(publicUrl?: string): string {
+  if (!publicUrl) return ''
+  try {
+    return new URL(publicUrl, window.location.origin).host
+  } catch {
+    return ''
+  }
+}
+
+const hubIds = computed(() => new Set(props.listings.filter((item) => item.kind === 'hub').map((item) => item.listingId)))
+
+function parentIdOf(listing: UserListingCard): string | null {
+  const parentId = listing.parentListingId ?? null
+  return parentId && hubIds.value.has(parentId) ? parentId : null
+}
+
+const sites = computed<ListingSite[]>(() => {
+  const visibleIds = new Set(filtered.value.map((item) => item.listingId))
+  const isSearching = Boolean(normalizeSearchText(query.value))
+
+  return props.listings
+    .filter((item) => item.kind === 'hub')
+    .map((hub) => {
+      const allChildren = props.listings.filter((item) => parentIdOf(item) === hub.listingId)
+      // Recherche : si la page correspond, tous ses logements restent visibles ; sinon seulement ceux qui correspondent.
+      const children = !isSearching || visibleIds.has(hub.listingId)
+        ? allChildren
+        : allChildren.filter((item) => visibleIds.has(item.listingId))
+      return { hub, children, childrenCount: allChildren.length, hostname: readHostname(hub.publicUrl) }
+    })
+    .filter((site) => !isSearching || visibleIds.has(site.hub.listingId) || site.children.length > 0)
+})
+
+const standaloneListings = computed(() => filtered.value.filter((item) => item.kind !== 'hub' && !parentIdOf(item)))
 
 const openCardMenu = ref<OpenCardMenuState | null>(null)
 const isTransferDialogOpen = ref(false)
@@ -517,6 +567,31 @@ async function confirmTransferFromDialog() {
   await submitTransfer()
 }
 
+function cardProps(listing: UserListingCard) {
+  return {
+    listing,
+    isSelected: listing.listingId === props.selectedListingId,
+    isStatusMenuOpen: isStatusMenuOpen(listing.listingId),
+    isActionsMenuOpen: isActionsMenuOpen(listing.listingId),
+    statusOptions: STATUS_OPTIONS,
+    listingContent,
+    isStripeConnectPublishLocked: !isAdminUser.value && props.isStripeConnectPublishLocked,
+    canPreview: props.canPreview !== false,
+    canTransfer: isAdminUser.value,
+  }
+}
+
+const cardEvents = {
+  select: handleSelect,
+  preview: handlePreview,
+  'toggle-status-menu': toggleStatusMenu,
+  'toggle-actions-menu': toggleActionsMenu,
+  'close-menus': closeCardMenus,
+  'status-change': setListingStatus,
+  'configure-connect': handleConfigureConnect,
+  transfer: openTransferDialog,
+}
+
 function isStatusMenuOpen(listingId: string) {
   return openCardMenu.value?.type === 'status' && openCardMenu.value.listingId === listingId
 }
@@ -588,26 +663,69 @@ onBeforeUnmount(() => {
 
     <div class="scroll-container">
       <div class="grid">
+        <section
+          v-for="site in sites"
+          :key="site.hub.listingId"
+          class="site"
+          :aria-label="`Page principale ${site.hub.title || ''} et ses logements`"
+        >
+          <EditorSiteHeader
+            :hub="site.hub"
+            :childrenCount="site.childrenCount"
+            :hostname="site.hostname"
+            :isSelected="site.hub.listingId === props.selectedListingId"
+            :canPreview="props.canPreview !== false"
+            :canTransfer="isAdminUser"
+            @select="handleSelect"
+            @preview="handlePreview"
+            @transfer="openTransferDialog"
+            @open-visibility="emit('open-section', { listingId: $event, section: 'visibility' })"
+          />
+
+          <div class="site-body">
+            <p class="site-label">
+              {{ site.childrenCount ? 'Logements de cette page' : 'Cette page ne présente encore aucun logement' }}
+            </p>
+
+            <div class="site-listings">
+              <EditorListingCard
+                v-for="listing in site.children"
+                :key="listing.listingId"
+                v-bind="cardProps(listing)"
+                v-on="cardEvents"
+              />
+
+              <button
+                type="button"
+                class="site-add"
+                @click="emit('open-section', { listingId: site.hub.listingId, section: 'hubChildren' })"
+              >
+                <span
+                  class="icon"
+                  aria-hidden="true"
+                >
+                  <Plus :size="18" />
+                </span>
+                <span class="title">Ajouter un logement à cette page</span>
+                <span class="hint">Choisissez parmi vos logements indépendants.</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <header
+          v-if="sites.length"
+          class="group-head"
+        >
+          <h3>Logements indépendants</h3>
+          <p>Ils ne figurent sur aucune page principale : chacun a sa propre adresse.</p>
+        </header>
+
         <EditorListingCard
-          v-for="listing in filtered"
+          v-for="listing in standaloneListings"
           :key="listing.listingId"
-          :listing="listing"
-          :isSelected="listing.listingId === props.selectedListingId"
-          :isStatusMenuOpen="isStatusMenuOpen(listing.listingId)"
-          :isActionsMenuOpen="isActionsMenuOpen(listing.listingId)"
-          :statusOptions="STATUS_OPTIONS"
-          :listingContent="listingContent"
-          :isStripeConnectPublishLocked="!isAdminUser && props.isStripeConnectPublishLocked"
-          :canPreview="props.canPreview !== false"
-          :canTransfer="isAdminUser"
-          @select="handleSelect"
-          @preview="handlePreview"
-          @toggle-status-menu="toggleStatusMenu"
-          @toggle-actions-menu="toggleActionsMenu"
-          @close-menus="closeCardMenus"
-          @status-change="setListingStatus"
-          @configure-connect="handleConfigureConnect"
-          @transfer="openTransferDialog"
+          v-bind="cardProps(listing)"
+          v-on="cardEvents"
         />
 
         <EditorListingsCreateCard

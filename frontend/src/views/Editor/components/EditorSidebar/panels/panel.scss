@@ -2,6 +2,9 @@
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
+@use '@/styles/components/buttons' as buttons;
+@use '@/styles/components/inputs' as inputs;
 
 %panels-stack {
   display: flex;
@@ -76,4 +79,72 @@
     font-size: 0.85rem;
     color: rgba($secondary-text, 0.6);
   }
+}
+// ---------------------------------------------------------------------------------------------
+// Contrôles communs aux panneaux : un seul dessin par type de contrôle dans tout l'éditeur.
+
+// Choix exclusif avec un titre et une explication (visibilité, statut du loueur). Même bouton radio
+// que dans les panneaux de tarifs, jamais celui du navigateur.
+%panel-option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--layout-gap-sm);
+  padding: var(--layout-gap-xs) var(--layout-gap-sm);
+  border: 1px solid rgba($secondary, 0.08);
+  border-radius: borders.$rounded-md;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  @include animations.transition(animations.$duration-fast, animations.$ease-out, (border-color, background-color));
+
+  &:has(> input:checked) {
+    border-color: rgba($secondary, 0.35);
+  }
+
+  &:has(> input:focus-visible) {
+    outline: 2px solid $secondary;
+    outline-offset: 2px;
+  }
+
+  &:has(> input:disabled) {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  // Pas de retour d'appui sur une option désactivée.
+  &:not(:has(> input:disabled)) {
+    @include animations.press(0.99);
+  }
+
+  > input[type='radio'] {
+    @include buttons.checkbox(white);
+    margin: 0.15rem 0 0;
+    border-radius: borders.$rounded;
+  }
+
+  .title {
+    display: block;
+    @include base-text($secondary, $bold: true);
+  }
+
+  .desc {
+    display: block;
+    @include little-text(rgba($secondary-text, 0.72), $thin: false);
+  }
+}
+
+// Liste déroulante : la flèche du design system, jamais celle du navigateur.
+%panel-select {
+  @include inputs.select($theme: base);
+}
+
+// Action secondaire d'un panneau, sur toute la largeur (« Gérer mes équipements », « Déduire la localisation »).
+%panel-action {
+  @include buttons.primary($theme: white, $fullwidth: true);
+}
+
+// « Ajouter … » dans une liste (palier, frais) : petit bouton clair, le même partout.
+%panel-add {
+  @include buttons.primary($theme: white, $little: true);
 }

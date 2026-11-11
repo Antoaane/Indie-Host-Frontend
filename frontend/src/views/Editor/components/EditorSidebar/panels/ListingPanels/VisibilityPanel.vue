@@ -129,7 +129,10 @@ function confirmDelete() {
         </div>
       </div>
 
-      <div class="pause-message">
+      <div
+        v-if="selectedState === 'paused'"
+        class="pause-message"
+      >
         <p class="hint">{{ panelContent.pauseMessage.hint }}</p>
         <textarea
           v-model="pauseMessage"

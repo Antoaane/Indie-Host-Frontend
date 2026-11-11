@@ -1,24 +1,32 @@
 <!-- File: src/views/Editor/components/EditorSidebar/EditorSidebar.vue -->
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, provide, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import { Home, LayoutGrid, Pencil } from 'lucide-vue-next'
 
 import BaseSidebar from '@/components/layouts/BaseSidebar.vue'
 import EditorSidebarNav from '@/views/Editor/components/EditorSidebar/EditorSidebarNav.vue'
 import ListingPanels from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/ListingPanels.vue'
 import PricingPanels from '@/views/Editor/components/EditorSidebar/panels/PricingPanels/PricingPanels.vue'
 import ArrivalPanels from '@/views/Editor/components/EditorSidebar/panels/ArrivalPanels/ArrivalPanels.vue'
+import type { AttachableListing } from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/HubChildrenPanel.vue'
 import {
   computeEditorSectionCompletion,
+  computeEditorSectionSummaries,
+  EDITOR_SECTIONS_KEY,
   findEditorGroupOfSection,
+  findEditorSectionLabel,
   resolveEditorGroups,
   type EditorGroupId,
+  type EditorListingContext,
   type EditorSectionId,
 } from '@/views/Editor/components/EditorSidebar/editorSections'
 import type { RawListingBundle } from '@/domain/listings/types'
 import type { ListingDomainRecord } from '@/domain/api/listingDomains'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
+import { buildPageEditorRoute, readEditorRouteUserId } from '@/views/Editor/utils/pageEditorRoute'
 
 type SuccessFeedback = 'publish' | 'publishAll' | 'cancel' | null
 
@@ -36,6 +44,14 @@ const props = defineProps<{
   pendingListingsCount?: number
   canPublishListing?: boolean
   isAdmin?: boolean
+  /** Profil de l'hôte (statut particulier / professionnel) : il n'est pas dans le brouillon modifiable. */
+  host?: RawListingBundle['host']
+  /** Place de l'annonce : sa page principale, ou les logements qu'elle présente. */
+  context?: EditorListingContext
+  /** Logements du même hôte sans page principale (pour le panneau « Logements présentés »). */
+  attachableListings?: AttachableListing[]
+  /** Section à ouvrir pour une annonce donnée (demandée depuis « Mes annonces »). */
+  focusSection?: { listingId: string; section: EditorSectionId } | null
   publishAllPending: () => Promise<void>
   cancelPendingChanges: () => Promise<void>
   publish: () => Promise<void>
@@ -46,18 +62,52 @@ const emit = defineEmits<{
   (e: 'domain-updated', domain: ListingDomainRecord): void
   (e: 'mobile-back'): void
   (e: 'select-listing', listingId: string): void
+  (e: 'links-changed'): void
+  (e: 'focus-consumed'): void
 }>()
 
 const sidebarContent = editorStatic.sidebar
+const pageContent = editorStatic.panels.listing.hubPage
+const route = useRoute()
+
+// Page principale : son contenu et son thème se modifient sur la page elle-même. L'entrée est en
+// tête de colonne, toujours visible, et non dans une section à déplier.
+const pageEditorRoute = computed(() => buildPageEditorRoute(props.listingId, readEditorRouteUserId(route.params.userId)))
 
 const isHubListing = computed(() => props.draft.core?.kind === 'hub')
 const groups = computed(() => resolveEditorGroups(isHubListing.value))
 
 const group = ref<EditorGroupId>('essentials')
-const activeSection = ref<EditorSectionId | null>(null)
+// Une seule section ouverte à la fois : la colonne reste courte, et se lit comme un sommaire.
+const openSection = ref<EditorSectionId | null>(null)
+
+const listingTitle = computed(() => {
+  const title = typeof props.draft.core?.title === 'string' ? props.draft.core.title.trim() : ''
+  return title || (isHubListing.value ? 'Page principale sans titre' : 'Annonce sans titre')
+})
+
+// Où se situe l'annonce : page principale et ses logements, logement d'une page, ou logement seul.
+const contextLine = computed(() => {
+  if (isHubListing.value) {
+    const total = props.context?.childrenCount ?? 0
+    if (!total) return 'Page principale, sans logement pour le moment'
+    return `Page principale · présente ${total} logement${total > 1 ? 's' : ''}`
+  }
+  return props.context?.parentTitle ? 'Logement de la page' : 'Logement indépendant'
+})
+
+// Le statut du loueur s'enregistre hors brouillon (`listingHost.ts`) : on part du profil chargé avec
+// l'annonce, puis on suit ce que le panneau « Légal » vient d'enregistrer.
+const hostOverride = ref<Record<string, unknown>>({})
+const draftWithHost = computed<RawListingBundle>(() => ({
+  ...props.draft,
+  host: { ...(props.host ?? {}), ...(props.draft.host ?? {}), ...hostOverride.value },
+}))
+
+const sectionSummaries = computed(() => computeEditorSectionSummaries(draftWithHost.value, props.context))
 
 const incompleteSections = computed<Partial<Record<EditorSectionId, boolean>>>(() => {
-  const completion = computeEditorSectionCompletion(props.draft)
+  const completion = computeEditorSectionCompletion(draftWithHost.value)
   const result: Partial<Record<EditorSectionId, boolean>> = {}
   for (const [sectionId, isComplete] of Object.entries(completion)) {
     if (isComplete === false) result[sectionId as EditorSectionId] = true
@@ -98,97 +148,81 @@ const saveStateDetail = computed(() => {
 })
 
 // ---------------------------------------------------------------------------
-// Sommaire : défilement vers une section et section active suivant le défilement.
+// Sections repliables.
+const incompleteGroups = computed<Partial<Record<EditorGroupId, boolean>>>(() => {
+  const result: Partial<Record<EditorGroupId, boolean>> = {}
+  for (const candidate of groups.value) {
+    result[candidate.id] = candidate.sections.some((section) => incompleteSections.value[section.id] === true)
+  }
+  return result
+})
+
 const sidebarRef = ref<{ $el?: HTMLElement } | null>(null)
-let scrollFrame: number | null = null
-let autoScrollUntil = 0
 
 function bodyElement(): HTMLElement | null {
   return sidebarRef.value?.$el?.querySelector?.<HTMLElement>(':scope > .base-sidebar__body') ?? null
-}
-
-function sectionElements(): HTMLElement[] {
-  const body = bodyElement()
-  if (!body) return []
-  return Array.from(body.querySelectorAll<HTMLElement>('.editor-section[data-section]'))
 }
 
 function prefersReducedMotion(): boolean {
   return typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
-function updateActiveSectionFromScroll() {
-  scrollFrame = null
-  if (Date.now() < autoScrollUntil) return
+// La section ouverte remonte en haut de la colonne : celle qu'on vient de fermer au-dessus
+// libère de la place, et sans cela le contenu ouvert se retrouverait hors de l'écran.
+async function revealSection(sectionId: EditorSectionId) {
+  await nextTick()
   const body = bodyElement()
-  const elements = sectionElements()
-  if (!body || !elements.length) return
-
-  const bodyTop = body.getBoundingClientRect().top
-  const threshold = bodyTop + body.clientHeight * 0.35
-  const atBottom = body.scrollTop + body.clientHeight >= body.scrollHeight - 2
-
-  let current = elements[0]
-  if (atBottom) {
-    current = elements[elements.length - 1]
-  } else {
-    for (const element of elements) {
-      if (element.getBoundingClientRect().top <= threshold) current = element
-    }
-  }
-
-  const sectionId = current.dataset.section as EditorSectionId | undefined
-  if (sectionId && sectionId !== activeSection.value) activeSection.value = sectionId
+  const element = body?.querySelector<HTMLElement>(`.editor-section[data-section="${sectionId}"]`)
+  if (!body || !element) return
+  const top = element.getBoundingClientRect().top - body.getBoundingClientRect().top + body.scrollTop
+  body.scrollTo({ top: Math.max(0, top - 8), behavior: prefersReducedMotion() ? 'auto' : 'smooth' })
 }
 
-function handleBodyScroll() {
-  if (scrollFrame !== null) return
-  scrollFrame = window.requestAnimationFrame(updateActiveSectionFromScroll)
-}
-
-async function scrollToSection(sectionId: EditorSectionId, { smooth = true }: { smooth?: boolean } = {}) {
+async function openSectionById(sectionId: EditorSectionId) {
   const targetGroup = findEditorGroupOfSection(sectionId)
   if (targetGroup !== group.value) {
     group.value = targetGroup
     await nextTick()
   }
-  await nextTick()
-
-  const body = bodyElement()
-  const element = body?.querySelector<HTMLElement>(`.editor-section[data-section="${sectionId}"]`)
-  activeSection.value = sectionId
-  if (!body || !element) return
-
-  const top = element.getBoundingClientRect().top - body.getBoundingClientRect().top + body.scrollTop
-  const behavior: ScrollBehavior = smooth && !prefersReducedMotion() ? 'smooth' : 'auto'
-  autoScrollUntil = Date.now() + (behavior === 'smooth' ? 600 : 50)
-  body.scrollTo({ top: Math.max(0, top), behavior })
+  openSection.value = sectionId
+  await revealSection(sectionId)
 }
 
-function resetActiveSectionForGroup() {
-  const firstSection = groups.value.find((candidate) => candidate.id === group.value)?.sections[0]
-  activeSection.value = firstSection?.id ?? null
+function toggleSection(sectionId: EditorSectionId) {
+  if (openSection.value === sectionId) {
+    openSection.value = null
+    return
+  }
+  void openSectionById(sectionId)
 }
+
+// Un groupe d'une seule section s'ouvre directement : une ligne repliée seule n'apporterait rien.
+function resetOpenSectionForGroup() {
+  const sections = groups.value.find((candidate) => candidate.id === group.value)?.sections ?? []
+  openSection.value = sections.length === 1 ? sections[0]?.id ?? null : null
+}
+
+provide(EDITOR_SECTIONS_KEY, {
+  isOpen: (sectionId) => openSection.value === sectionId,
+  toggle: toggleSection,
+  labelOf: (sectionId) => findEditorSectionLabel(sectionId),
+  summaryOf: (sectionId) => sectionSummaries.value[sectionId] ?? '',
+  isTodo: (sectionId) => incompleteSections.value[sectionId] === true,
+})
 
 // Un nouveau groupe s'ouvre en haut, pas à la position de défilement du précédent.
-watch(group, async () => {
+watch(group, () => {
   const body = bodyElement()
   if (body) body.scrollTop = 0
-  resetActiveSectionForGroup()
-  await nextTick()
-  updateActiveSectionFromScroll()
+  resetOpenSectionForGroup()
 })
 
 watch(groups, (nextGroups) => {
   if (!nextGroups.some((candidate) => candidate.id === group.value)) {
     group.value = nextGroups[0]?.id ?? 'essentials'
   }
-})
-
-onMounted(() => {
-  bodyElement()?.addEventListener('scroll', handleBodyScroll, { passive: true })
-  resetActiveSectionForGroup()
-})
+  resetOpenSectionForGroup()
+}, { immediate: true })
 
 // ---------------------------------------------------------------------------
 const canPublish = computed(() => {
@@ -238,17 +272,27 @@ function showSuccessFeedback(type: Exclude<SuccessFeedback, null> = 'publish') {
 
 watch(
   () => props.listingId,
-  async () => {
+  () => {
     group.value = 'essentials'
+    hostOverride.value = {}
     error.value = null
     applyToAllPending.value = false
     clearSuccessFeedback()
     const body = bodyElement()
     if (body) body.scrollTop = 0
-    resetActiveSectionForGroup()
-    await nextTick()
-    updateActiveSectionFromScroll()
+    resetOpenSectionForGroup()
   },
+)
+
+watch(
+  () => [props.focusSection, props.listingId] as const,
+  async ([request, listingId]) => {
+    if (!request || request.listingId !== listingId) return
+    emit('focus-consumed')
+    await nextTick()
+    void openSectionById(request.section)
+  },
+  { immediate: true },
 )
 
 watch(showApplyToAllToggle, (enabled) => {
@@ -296,8 +340,6 @@ async function cancelDraftChanges() {
 
 onBeforeUnmount(() => {
   clearSuccessFeedback()
-  bodyElement()?.removeEventListener('scroll', handleBodyScroll)
-  if (scrollFrame !== null) window.cancelAnimationFrame(scrollFrame)
 })
 </script>
 
@@ -320,6 +362,51 @@ onBeforeUnmount(() => {
             {{ successFeedbackText }}
           </p>
         </Transition>
+
+        <div class="identity">
+          <span
+            class="icon"
+            aria-hidden="true"
+          >
+            <LayoutGrid
+              v-if="isHubListing"
+              :size="18"
+            />
+            <Home
+              v-else
+              :size="18"
+            />
+          </span>
+          <div class="text">
+            <h2>{{ listingTitle }}</h2>
+            <p>
+              {{ contextLine }}
+              <button
+                v-if="!isHubListing && props.context?.parentId && props.context?.parentTitle"
+                type="button"
+                @click="emit('select-listing', props.context.parentId)"
+              >
+                {{ props.context.parentTitle }}
+              </button>
+            </p>
+          </div>
+        </div>
+
+        <div
+          v-if="isHubListing"
+          class="page-cta"
+        >
+          <div class="link">
+            <RouterLink :to="pageEditorRoute">
+              <Pencil
+                :size="18"
+                aria-hidden="true"
+              />
+              {{ pageContent.cta }}
+            </RouterLink>
+          </div>
+          <p>{{ pageContent.subtitle }}</p>
+        </div>
 
         <div
           class="save-state"
@@ -394,10 +481,8 @@ onBeforeUnmount(() => {
         <EditorSidebarNav
           v-model="group"
           :groups="groups"
-          :activeSection="activeSection"
-          :incompleteSections="incompleteSections"
+          :incompleteGroups="incompleteGroups"
           :showMobileBack="props.showMobileBack"
-          @select-section="scrollToSection($event)"
           @mobile-back="emit('mobile-back')"
         />
       </div>
@@ -412,12 +497,15 @@ onBeforeUnmount(() => {
         :key="group"
         :group="group"
         :listing-id="props.listingId"
-        :draft="props.draft"
+        :draft="draftWithHost"
         :canPublishListing="props.canPublishListing"
         :isAdmin="props.isAdmin"
+        :attachableListings="props.attachableListings"
         @patch="handlePatch"
         @domain-updated="emit('domain-updated', $event)"
         @select-listing="emit('select-listing', $event)"
+        @links-changed="emit('links-changed')"
+        @host-updated="hostOverride = { ...hostOverride, ...$event }"
       />
       <PricingPanels
         v-else-if="group === 'pricing'"
@@ -473,6 +561,79 @@ onBeforeUnmount(() => {
       line-height: 1.2;
 
       pointer-events: none;
+    }
+
+    // Identité : quelle annonce on modifie, et où elle se situe (page principale, logement d'une page).
+    > .identity {
+      padding: 0.25rem 0.5rem 0;
+      display: flex;
+      align-items: center;
+      gap: var(--layout-gap-sm);
+      min-width: 0;
+
+      > .icon {
+        flex: 0 0 auto;
+        width: 2.25rem;
+        height: 2.25rem;
+        display: grid;
+        place-items: center;
+        border-radius: borders.$rounded-sm;
+        background: rgba($secondary, 0.06);
+        color: $secondary;
+      }
+
+      > .text {
+        min-width: 0;
+
+        > h2 {
+          margin: 0;
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          @include base-text($secondary, $bold: true);
+        }
+
+        > p {
+          margin: 0;
+          overflow: hidden;
+          white-space: nowrap;
+          text-overflow: ellipsis;
+          @include little-text(rgba($secondary-text, 0.72), $thin: false);
+
+          > button {
+            padding: 0;
+            border: 0;
+            background: none;
+            color: $secondary;
+            text-decoration: underline;
+            cursor: pointer;
+            @include little-text($secondary, $bold: true);
+
+            &:focus-visible {
+              outline: 2px solid $secondary;
+              outline-offset: 2px;
+            }
+          }
+        }
+      }
+    }
+
+    // Page principale : entrée du mode édition sur la page (textes, photos, thème).
+    > .page-cta {
+      padding: 0.25rem 0.5rem 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-2xs);
+      border-bottom: 1px solid rgba($secondary, 0.06);
+
+      > .link {
+        @include buttons.primary($theme: black, $fullwidth: true);
+      }
+
+      > p {
+        margin: 0;
+        @include little-text(rgba($secondary-text, 0.72), $thin: false);
+      }
     }
 
     // Bandeau d'état : ce qui est enregistré, ce qui est en ligne, et le bouton pour appliquer.

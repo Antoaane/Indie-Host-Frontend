@@ -29,9 +29,12 @@ function buildApartment(): RawListingBundle {
       latitude: 16.25,
       longitude: -61.27,
       guest_capacity: 3,
-      rooms: [],
+      rooms: [
+        { type: 'bedroom', 'room-name': 'Chambre', beds: [{ type: 'double', capacity: 2, quantity: 1 }] },
+        { type: 'livingroom', 'room-name': 'Salon', beds: [{ type: 'sofa-bed', capacity: 2, quantity: 1 }] },
+      ],
       amenities: [],
-    } as RawListingBundle['core'],
+    } as unknown as RawListingBundle['core'],
     medias: {
       images: [
         { src: SAMPLE_IMAGE, alt: '', position: 0 },
@@ -62,11 +65,11 @@ function buildHub(): RawListingBundle {
       id: 'dev-hub',
       kind: 'hub',
       slug: 'coeur-de-saint-francois',
-      status: 'blocked',
+      status: 'published',
       title: 'Coeur de Saint François',
       description: '',
     } as RawListingBundle['core'],
-    medias: { images: [], videos: [] } as RawListingBundle['medias'],
+    medias: { images: [{ src: SAMPLE_IMAGE, alt: '', position: 0 }], videos: [] } as RawListingBundle['medias'],
     bookings: { price: 0, fees: [], 'booked-days': [], reservations: [], pricing: {} } as RawListingBundle['bookings'],
     arrival: {} as RawListingBundle['arrival'],
     host: null,
@@ -75,11 +78,35 @@ function buildHub(): RawListingBundle {
   }
 }
 
+// Logement indépendant, en brouillon : sert à voir le groupe « Logements indépendants » et l'ajout à une page.
+function buildStudio(): RawListingBundle {
+  const base = buildApartment()
+  return {
+    ...base,
+    core: {
+      ...base.core,
+      id: 'dev-studio',
+      slug: 'studio-du-port',
+      status: 'draft',
+      title: 'Studio du Port',
+      guest_capacity: 2,
+      rooms: [],
+    } as RawListingBundle['core'],
+    bookings: { ...base.bookings, price: 60 } as RawListingBundle['bookings'],
+  }
+}
+
+// Rattachements de démonstration : l'appartement est présenté par la page principale.
+const DEV_PARENT_BY_LISTING_ID: Record<string, string> = {
+  'dev-apartment': 'dev-hub',
+}
+
 function toCard(bundle: RawListingBundle): UserListingCard {
   const core = (bundle.core ?? {}) as Record<string, unknown>
   const images = Array.isArray(bundle.medias?.images) ? bundle.medias.images : []
   return {
     kind: core.kind === 'hub' ? 'hub' : 'listing',
+    parentListingId: DEV_PARENT_BY_LISTING_ID[String(core.id)] ?? null,
     listingId: String(core.id),
     slug: typeof core.slug === 'string' ? core.slug : undefined,
     title: typeof core.title === 'string' ? core.title : undefined,
@@ -98,7 +125,7 @@ function delay(ms: number): Promise<void> {
 
 export function createDevEditorSource(): EditorSource {
   const bundles = new Map<string, RawListingBundle>()
-  for (const bundle of [buildHub(), buildApartment()]) {
+  for (const bundle of [buildHub(), buildApartment(), buildStudio()]) {
     bundles.set(String(bundle.core?.id), bundle)
   }
 

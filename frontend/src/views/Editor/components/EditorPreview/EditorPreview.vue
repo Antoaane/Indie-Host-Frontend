@@ -2,7 +2,9 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue'
-import { ArrowLeft, ExternalLink } from 'lucide-vue-next'
+import { useRoute } from 'vue-router'
+import { ArrowLeft, ExternalLink, Pencil } from 'lucide-vue-next'
+import { buildPageEditorRoute, readEditorRouteUserId } from '@/views/Editor/utils/pageEditorRoute'
 import ListingView from '@/views/ListingView/_ListingView.vue'
 import ListingHubView from '@/views/ListingHub/_ListingHub.vue'
 import type { RawListingBundle } from '@/domain/listings/types'
@@ -34,6 +36,10 @@ let publicDomainResolvedFor: string | null = null
 let publicDomainRequestId = 0
 // Page principale : même rendu que la page publique (_Listing.vue), pas une fiche logement.
 const isHubListing = computed(() => props.rawListing?.core?.kind === 'hub')
+
+const route = useRoute()
+// Page principale : de l'aperçu, on passe directement à la modification sur la page.
+const pageEditorRoute = computed(() => buildPageEditorRoute(props.listingId ?? '', readEditorRouteUserId(route.params.userId)))
 const publicListingSlug = computed(() => {
   const fromSelection = typeof props.listingId === 'string' ? props.listingId.trim() : ''
   const fromCore = typeof props.rawListing?.core?.id === 'string' ? props.rawListing.core.id.trim() : ''
@@ -162,6 +168,19 @@ onBeforeUnmount(() => {
         </button>
       </div>
 
+      <div
+        v-if="isHubListing && props.listingId"
+        class="edit-page"
+      >
+        <RouterLink :to="pageEditorRoute">
+          <Pencil
+            :size="18"
+            aria-hidden="true"
+          />
+          Modifier la page
+        </RouterLink>
+      </div>
+
       <div class="show-online">
         <a
           v-if="props.rawListing && publicListingHref"
@@ -245,6 +264,11 @@ onBeforeUnmount(() => {
       a {
         @include buttons.low-btn($icon-only: true);
       }
+    }
+
+    // Page principale : l'aperçu mène au mode édition sur la page.
+    > .edit-page {
+      @include buttons.primary($theme: black);
     }
   }
 

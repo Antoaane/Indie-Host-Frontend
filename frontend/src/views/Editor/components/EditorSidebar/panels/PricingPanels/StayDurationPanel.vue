@@ -421,19 +421,7 @@ function stepDurationDiscount(index: number, delta: number) {
       }
 
       > .add-tier {
-        > button {
-          border: none;
-          background: none;
-          padding: 0;
-          cursor: pointer;
-          font-size: 0.85rem;
-          font-weight: 600;
-          color: $secondary;
-          text-decoration: underline;
-          text-underline-offset: 0.2rem;
-          @include animations.transition(animations.$duration-fast);
-          @include animations.press();
-        }
+        @extend %panel-add;
       }
     }
 

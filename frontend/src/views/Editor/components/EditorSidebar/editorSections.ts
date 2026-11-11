@@ -1,5 +1,7 @@
 // File: src/views/Editor/components/EditorSidebar/editorSections.ts
 
+import type { InjectionKey } from 'vue'
+
 import type { RawListingBundle } from '@/domain/listings/types'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 
@@ -13,7 +15,6 @@ export type EditorSectionId =
   | 'title'
   | 'gallery'
   | 'description'
-  | 'hubPage'
   | 'capacity'
   | 'rooms'
   | 'amenities'
@@ -70,8 +71,8 @@ export const EDITOR_GROUPS: EditorGroupDefinition[] = [
       { id: 'title', label: sectionLabels.title },
       { id: 'gallery', label: sectionLabels.gallery },
       { id: 'description', label: sectionLabels.description, listingOnly: true },
-      // Page principale : textes, photos et thème se modifient directement sur la page.
-      { id: 'hubPage', label: sectionLabels.hubPage, hubOnly: true },
+      // Les logements d'une page principale sont son contenu : ils se voient dès « Essentiel ».
+      { id: 'hubChildren', label: sectionLabels.hubChildren, hubOnly: true },
       { id: 'capacity', label: sectionLabels.capacity, listingOnly: true },
       { id: 'rooms', label: sectionLabels.rooms, listingOnly: true },
       { id: 'amenities', label: sectionLabels.amenities, listingOnly: true },
@@ -114,7 +115,6 @@ export const EDITOR_GROUPS: EditorGroupDefinition[] = [
       { id: 'subdomain', label: sectionLabels.subdomain },
       { id: 'customDomain', label: sectionLabels.customDomain },
       { id: 'parent', label: sectionLabels.parent, listingOnly: true },
-      { id: 'hubChildren', label: sectionLabels.hubChildren, hubOnly: true },
     ],
   },
   {
@@ -202,4 +202,185 @@ export function computeEditorSectionCompletion(
   completion.legal = host.legalStatus === 'individual' || host.legalStatus === 'professional'
 
   return completion
+}
+
+// ---------------------------------------------------------------------------------------------
+// Sections repliables : chaque section est une ligne (nom + résumé) qui s'ouvre sur son panneau.
+
+/** Ce que la barre latérale met à disposition de chaque `EditorSection`. */
+export type EditorSectionsContext = {
+  isOpen: (sectionId: EditorSectionId) => boolean
+  toggle: (sectionId: EditorSectionId) => void
+  labelOf: (sectionId: EditorSectionId) => string
+  summaryOf: (sectionId: EditorSectionId) => string
+  isTodo: (sectionId: EditorSectionId) => boolean
+}
+
+export const EDITOR_SECTIONS_KEY: InjectionKey<EditorSectionsContext> = Symbol('editor-sections')
+
+/** Place de l'annonce parmi les autres : sa page principale, ou les logements qu'elle présente. */
+export type EditorListingContext = {
+  /** Page principale à laquelle ce logement est rattaché. */
+  parentId?: string | null
+  parentTitle?: string | null
+  /** Logements rattachés à cette page principale. */
+  childrenCount?: number
+}
+
+export function findEditorSectionLabel(sectionId: EditorSectionId): string {
+  for (const group of EDITOR_GROUPS) {
+    const section = group.sections.find((candidate) => candidate.id === sectionId)
+    if (section) return section.label
+  }
+  return ''
+}
+
+const euros = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })
+
+function record(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : {}
+}
+
+function list(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : []
+}
+
+function amount(value: unknown): number {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0
+}
+
+function count(total: number, one: string, many: string): string {
+  return `${total} ${total > 1 ? many : one}`
+}
+
+function clip(text: string, max = 64): string {
+  return text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text
+}
+
+function filled(value: unknown): boolean {
+  if (typeof value === 'string') return hasText(value)
+  return Object.values(record(value)).some((item) => hasText(item))
+}
+
+const STATUS_SUMMARY: Record<string, string> = {
+  published: 'En ligne',
+  blocked: 'En ligne, réservations bloquées',
+  paused: 'En pause',
+  draft: 'Brouillon, pas encore en ligne',
+}
+
+/**
+ * Résumé d'une ligne de chaque section, d'après le brouillon seul (pas d'appel API). Il s'affiche
+ * sous le nom de la section repliée : l'hôte voit l'état de son annonce sans rien ouvrir.
+ */
+export function computeEditorSectionSummaries(
+  draft: RawListingBundle | null | undefined,
+  context: EditorListingContext = {},
+): Partial<Record<EditorSectionId, string>> {
+  if (!draft) return {}
+
+  const core = record(draft.core)
+  const medias = record(draft.medias)
+  const bookings = record(draft.bookings)
+  const pricing = record(bookings.pricing)
+  const arrival = record(draft.arrival)
+  const practical = record(arrival.practical)
+  const access = record(practical.access)
+  const host = record(draft.host)
+
+  const images = list(medias.images).length
+  const videos = list(medias.videos).length
+  const description = stripHtml(core.description)
+  const capacity = amount(core.guest_capacity)
+  const rooms = list(core.rooms)
+  const beds = rooms.reduce<number>((total, room) => (
+    total + list(record(room).beds).reduce<number>((sum, bed) => sum + (amount(record(bed).quantity) || 1), 0)
+  ), 0)
+  const amenities = list(core.amenities).length
+  const place = [core.city, core.region].filter((part) => hasText(part)).map((part) => String(part).trim()).join(', ')
+
+  const price = amount(bookings.price)
+  const stay = record(pricing.stay)
+  const minNights = amount(stay.minNights) || 1
+  const tiers = list(stay.durationDiscounts).length
+  const fees = list(bookings.fees)
+    .map((fee) => record(fee))
+    .filter((fee) => amount(fee.amount) > 0)
+    .map((fee) => `${String(fee.name ?? fee.label ?? 'Frais').trim()} ${euros.format(amount(fee.amount))}`)
+  const payment = record(pricing.payment)
+  const methods = record(payment.methods)
+  const methodLabels = [
+    methods.card !== false ? 'Carte' : '',
+    methods.sepa ? 'Virement' : '',
+    methods.cash ? 'Espèces' : '',
+  ].filter(Boolean)
+  const depositPercent = amount(payment.depositPercent)
+  const deposit = amount(record(pricing.deposit).amount)
+
+  const reviews = record(core['reviews-display'])
+  const reviewSources = [
+    reviews.indiehost !== false ? 'IndieHost' : '',
+    reviews.airbnb !== false ? 'Airbnb' : '',
+    reviews.booking !== false ? 'Booking' : '',
+  ].filter(Boolean)
+
+  const checkIn = hasText(access.checkIn) ? String(access.checkIn).trim() : ''
+  const checkOut = hasText(access.checkOut) ? String(access.checkOut).trim() : ''
+  const status = typeof core.status === 'string' ? core.status.trim().toLowerCase() : 'draft'
+  const optional = (isFilled: boolean) => (isFilled ? 'Renseigné' : 'Facultatif')
+
+  return {
+    title: hasText(core.title) ? clip(String(core.title).trim()) : 'Sans titre pour le moment',
+    gallery: images
+      ? [count(images, 'photo', 'photos'), videos ? count(videos, 'vidéo', 'vidéos') : ''].filter(Boolean).join(' · ')
+      : 'Aucune photo',
+    description: description ? clip(description, 72) : 'Pas encore de description',
+    hubChildren: context.childrenCount
+      ? count(context.childrenCount, 'logement présenté', 'logements présentés')
+      : 'Aucun logement rattaché pour le moment',
+    capacity: capacity ? count(capacity, 'voyageur', 'voyageurs') : 'Nombre de voyageurs à indiquer',
+    rooms: rooms.length
+      ? [count(rooms.length, 'pièce', 'pièces'), beds ? count(beds, 'lit', 'lits') : ''].filter(Boolean).join(' · ')
+      : 'Aucune pièce',
+    amenities: amenities ? count(amenities, 'équipement', 'équipements') : 'Aucun équipement',
+    location: place || (hasText(core.precise_address) ? clip(String(core.precise_address).trim()) : 'Adresse à indiquer'),
+
+    pricingBase: price
+      ? [`${euros.format(price)} par nuit`, record(pricing.weekend).enabled ? 'tarif week-end' : ''].filter(Boolean).join(' · ')
+      : 'Prix par nuit à indiquer',
+    stay: [
+      `${count(minNights, 'nuit', 'nuits')} minimum`,
+      tiers ? count(tiers, 'palier de réduction', 'paliers de réduction') : '',
+    ].filter(Boolean).join(' · '),
+    fees: fees.length ? clip(fees.join(' · '), 72) : 'Aucun frais',
+    taxes: record(pricing.taxes).enabled ? 'Taxe de séjour activée' : 'Taxe de séjour non appliquée',
+    payment: [
+      methodLabels.join(', '),
+      payment.mode === 'deposit' ? `acompte${depositPercent ? ` de ${depositPercent} %` : ''}` : 'paiement intégral',
+    ].filter(Boolean).join(' · '),
+    deposit: deposit ? `Caution de ${euros.format(deposit)}` : 'Aucune caution',
+    cancellation: record(pricing.cancellation).refundsEnabled ? 'Remboursement selon vos conditions' : 'Non remboursable',
+    summary: 'Le prix d’un séjour type',
+
+    arrivalIntro: hasText(record(arrival.intro).title) ? clip(String(record(arrival.intro).title).trim()) : 'Message de bienvenue à écrire',
+    savings: optional(filled(practical.savings)),
+    access: checkIn && checkOut ? `Arrivée ${checkIn} · départ ${checkOut}` : 'Heures d’arrivée et de départ à indiquer',
+    services: optional(filled(practical.services)),
+    rules: hasText(practical.rules) ? 'Renseigné' : 'Règlement intérieur à écrire',
+    shops: optional(hasText(practical.shops)),
+    guide: optional(filled(arrival.guide)),
+
+    subdomain: 'Adresse gratuite en .indiehost.fr',
+    customDomain: 'Votre propre nom de domaine',
+    parent: context.parentTitle ? `Présenté sur « ${clip(context.parentTitle, 40)} »` : 'Logement indépendant',
+
+    visibility: STATUS_SUMMARY[status] ?? STATUS_SUMMARY.draft,
+    legal: host.legalStatus === 'professional'
+      ? 'Professionnel'
+      : host.legalStatus === 'individual' ? 'Particulier' : 'Particulier ou professionnel ?',
+    reviews: reviewSources.length ? reviewSources.join(', ') : 'Aucun avis affiché',
+    calendar: 'Calendriers Airbnb, Booking et autres',
+    import: 'Reprendre une annonce Airbnb ou Booking',
+  }
 }

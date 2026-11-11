@@ -58,7 +58,115 @@
 
       @include responsive-grid-columns(var(--editor-listing-card-min-width), auto-fill);
 
-      > .card {
+      // Une page principale et ses logements : un cadre sur toute la largeur, aligné sur les colonnes
+      // de la grille (sous-grille). Le fond est un pseudo-élément pour ne pas décaler les cartes.
+      // Une page principale et ses logements : un bloc sur toute la largeur. Le bandeau de la page en
+      // haut, ses logements dessous, en retrait derrière un filet : la page « contient » les logements.
+      > .site {
+        grid-column: 1 / -1;
+        min-width: 0;
+        padding: var(--layout-gap-sm);
+        display: flex;
+        flex-direction: column;
+        gap: var(--layout-gap-md);
+
+        border-radius: borders.$rounded-xl;
+        border: 1px solid rgba($secondary, 0.08);
+        background: $accent-surface-1;
+
+        > .site-body {
+          min-width: 0;
+          margin-left: var(--layout-gap-md);
+          padding: 0 var(--layout-gap-xs) var(--layout-gap-xs) var(--layout-gap-md);
+          display: flex;
+          flex-direction: column;
+          gap: var(--layout-gap-sm);
+          border-left: 2px solid rgba($secondary, 0.14);
+
+          > .site-label {
+            margin: 0;
+            @include little-text($secondary, $bold: true);
+          }
+
+          > .site-listings {
+            min-width: 0;
+            display: grid;
+            gap: var(--layout-gap-md);
+            align-items: start;
+            @include responsive-grid-columns(var(--editor-listing-card-min-width), auto-fill);
+
+            // Ajout d'un logement : une barre en pointillés sous les cartes, sur toute la largeur.
+            > .site-add {
+              grid-column: 1 / -1;
+              min-height: 3.5rem;
+              padding: var(--layout-gap-xs) var(--layout-gap-md);
+              display: flex;
+              flex-wrap: wrap;
+              align-items: center;
+              gap: var(--layout-gap-2xs) var(--layout-gap-sm);
+
+              border: 1.5px dashed rgba($secondary, 0.25);
+              border-radius: borders.$rounded-lg;
+              background: rgba($accent, 0.6);
+              text-align: left;
+              cursor: pointer;
+              @include animations.transition(animations.$duration-fast, animations.$ease-out, (border-color, background-color));
+              @include animations.press(0.99);
+
+              @include on-hover {
+                border-color: rgba($secondary, 0.5);
+                background: $accent;
+              }
+
+              &:focus-visible {
+                outline: 2px solid $secondary;
+                outline-offset: 2px;
+              }
+
+              > .icon {
+                flex: 0 0 auto;
+                width: 2rem;
+                height: 2rem;
+                display: grid;
+                place-items: center;
+                border-radius: borders.$rounded;
+                background: $secondary;
+
+                > svg {
+                  color: $accent;
+                }
+              }
+
+              > .title {
+                @include base-text($secondary, $bold: true);
+              }
+
+              > .hint {
+                @include little-text(rgba($secondary-text, 0.72), $thin: false);
+              }
+            }
+          }
+        }
+      }
+
+      // Titre du groupe des logements sans page principale.
+      > .group-head {
+        grid-column: 1 / -1;
+        min-width: 0;
+
+        > h3 {
+          margin: 0;
+          @include base-text($secondary, $bold: true);
+        }
+
+        > p {
+          margin: 0;
+          @include little-text(rgba($secondary-text, 0.72), $thin: false);
+        }
+      }
+
+      > .card,
+      > .site > .site-body > .site-listings > .card {
         min-width: 0;
         aspect-ratio: auto;
         position: relative;
@@ -1118,7 +1226,8 @@
   .editor-listings {
     > .scroll-container {
       > .grid {
-        > .card {
+        > .card,
+        > .site > .site-body > .site-listings > .card {
           > .select {
             > .media {
               > .carousel {

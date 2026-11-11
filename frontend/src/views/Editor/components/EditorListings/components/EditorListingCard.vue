@@ -97,6 +97,9 @@ const hasNonPublishedStatus = computed(() => Boolean(normalizedStatus.value) && 
 const nonPublishedOverlayLabel = computed(() => {
   if (!hasNonPublishedStatus.value) return ''
   if (normalizedStatus.value === 'paused') return props.listingContent.statusOverlay.paused
+  if (normalizedStatus.value === 'draft') return props.listingContent.statusOverlay.draft
+  // Une page principale n'a pas de réservations : « bloquées » n'y veut rien dire, elle est en ligne.
+  if (props.listing.kind === 'hub') return ''
   return props.listingContent.statusOverlay.blocked
 })
 const showStatusOverlay = computed(() => Boolean(nonPublishedOverlayLabel.value) && !showConfigureConnectOverlay.value)
@@ -249,6 +252,8 @@ function statusLabel(status?: string) {
   if (!normalized) return ''
 
   switch (normalized) {
+    case 'draft':
+      return props.listingContent.status.draft
     case 'published':
       return props.listingContent.status.published
     case 'archived':
@@ -511,7 +516,7 @@ function goToImageLabel(index: number) {
             v-if="props.listing.kind === 'hub'"
             class="meta"
           >
-            Page principale — présente vos logements rattachés
+            Page principale
           </p>
           <p
             v-if="showOwnerMeta"
@@ -536,7 +541,7 @@ function goToImageLabel(index: number) {
         <div class="footer">
           <div class="pricing">
             <span
-              v-if="typeof props.listing.pricePerNight === 'number'"
+              v-if="props.listing.kind !== 'hub' && typeof props.listing.pricePerNight === 'number'"
               class="price"
             >
               {{ props.listing.pricePerNight }} € <span class="suffix">{{ props.listingContent.priceSuffix }}</span>

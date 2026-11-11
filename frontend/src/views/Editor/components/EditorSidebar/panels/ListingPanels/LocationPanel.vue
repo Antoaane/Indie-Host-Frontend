@@ -273,9 +273,10 @@ async function maybeResolvePreciseAddress(rawAddress?: string) {
 
     <div class="body">
       <div class="field">
-        <div class="input">
+        <div class="select">
           <select
             :value="selectedHousingType"
+            aria-label="Type de logement"
             @change="onHousingTypeChange"
           >
             <option value="">
@@ -349,14 +350,15 @@ async function maybeResolvePreciseAddress(rawAddress?: string) {
         v-if="props.requirePreciseAddress"
         class="address-tools"
       >
-        <button
-          class="resolve-button"
-          type="button"
-          :disabled="isResolvingAddress || preciseAddress.length < geocodeQueryMinLength"
-          @click="resolvePreciseAddress()"
-        >
-          {{ isResolvingAddress ? panelContent.states.resolving : panelContent.actions.resolveAddress }}
-        </button>
+        <div class="resolve">
+          <button
+            type="button"
+            :disabled="isResolvingAddress || preciseAddress.length < geocodeQueryMinLength"
+            @click="resolvePreciseAddress()"
+          >
+            {{ isResolvingAddress ? panelContent.states.resolving : panelContent.actions.resolveAddress }}
+          </button>
+        </div>
         <p class="hint">
           {{ panelContent.hints.preciseAddress }}
         </p>
@@ -486,6 +488,10 @@ async function maybeResolvePreciseAddress(rawAddress?: string) {
         @include inputs.field($theme: base);
       }
 
+      > .select {
+        @extend %panel-select;
+      }
+
       > .meta {
         margin: 0;
         @include little-text($thin: false);
@@ -498,28 +504,8 @@ async function maybeResolvePreciseAddress(rawAddress?: string) {
       flex-direction: column;
       gap: calc(var(--layout-gap-xs) / 2);
 
-      > .resolve-button {
-        width: fit-content;
-        border: 1px solid rgba($secondary, 0.12);
-        border-radius: borders.$rounded-md;
-        background: $accent-surface-0;
-        color: $secondary;
-        font-weight: 600;
-        font-size: 0.875rem;
-        padding: 0.45rem 0.85rem;
-        cursor: pointer;
-        @include animations.transition(animations.$duration-fast);
-        @include animations.press();
-
-        @include on-hover(':enabled') {
-          border-color: rgba($secondary, 0.3);
-          background: rgba($secondary, 0.04);
-        }
-
-        &:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
+      > .resolve {
+        @extend %panel-action;
       }
 
       > .hint {

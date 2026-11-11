@@ -274,13 +274,7 @@ function removeCustomFee(index: number) {
       }
 
       > .add-fee {
-        @include buttons.primary($theme: black, $padding: false);
-
-        > button {
-          padding: 0.4rem 0.8rem;
-          font-size: 0.85rem;
-          font-weight: 600;
-        }
+        @extend %panel-add;
       }
     }
 

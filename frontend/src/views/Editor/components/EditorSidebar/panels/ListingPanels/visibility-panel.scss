@@ -26,8 +26,7 @@
 
     .hint {
       margin: 0 0 var(--layout-gap-xs) 0;
-      color: rgba($secondary-text, 0.6);
-      font-size: 0.9rem;
+      @include little-text(rgba($secondary-text, 0.72), $thin: false);
     }
 
     >.status {
@@ -39,37 +38,7 @@
         gap: var(--layout-gap-xs);
 
         >.option {
-          display: grid;
-          grid-template-columns: 20px 1fr;
-          align-items: start;
-          gap: var(--layout-gap-xs);
-          padding: var(--layout-gap-xs);
-          border: 1px solid rgba($secondary, 0.08);
-          border-radius: borders.$rounded-md;
-          cursor: pointer;
-          -webkit-user-select: none;
-          user-select: none;
-          @include animations.transition(animations.$duration-fast);
-
-          // Pas de retour d'appui sur une option désactivée.
-          &:not(:has(> input:disabled)) {
-            @include animations.press(0.99);
-          }
-
-          input {
-            margin-top: 4px;
-          }
-
-          .title {
-            display: block;
-            font-weight: 600;
-          }
-
-          .desc {
-            display: block;
-            font-size: 0.9rem;
-            color: rgba($secondary-text, 0.65);
-          }
+          @extend %panel-option;
         }
       }
     }
@@ -99,7 +68,6 @@
       padding: var(--layout-gap-sm);
 
       >.danger {
-        margin-top: 5rem;
         @include buttons.primary($theme: white, $fullwidth: true);
 
         // Action destructive signalée en rouge dès le repos : le survol n'existe pas au doigt.

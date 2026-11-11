@@ -35,7 +35,7 @@ function readQueryValue(value: unknown): string | null {
 }
 
 // Statuts traduits (« paused » → « En pause ») ; un statut inconnu reste brut.
-const statusLabels: Record<string, string> = { draft: 'Brouillon', ...editorLocale.editor.listings.status }
+const statusLabels: Record<string, string> = editorLocale.editor.listings.status
 
 function formatListingLabel(listing: UserListingCard): string {
   const title = (listing.title ?? '').trim() || 'Annonce sans titre'

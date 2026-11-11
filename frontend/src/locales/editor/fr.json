@@ -25,6 +25,7 @@
       "connectCta": "Configurer mon compte",
       "connectCtaAria": "Finaliser la configuration du compte pour activer la publication de cette annonce",
       "status": {
+        "draft": "Brouillon",
         "published": "Publiée",
         "archived": "Archivée",
         "blocked": "Réservations bloquées",
@@ -41,6 +42,7 @@
         "label": "Modifications non appliquées"
       },
       "statusOverlay": {
+        "draft": "Brouillon : pas encore en ligne",
         "paused": "Cette annonce est en pause",
         "blocked": "Les réservations de cette annonce sont bloquées"
       },
@@ -107,7 +109,6 @@
         "title": "Titre",
         "gallery": "Photos",
         "description": "Description",
-        "hubPage": "Page",
         "capacity": "Capacité",
         "rooms": "Pièces",
         "amenities": "Équipements",
@@ -177,10 +178,8 @@
           "bookingNotSupported": "L’import Booking n’est pas encore disponible. Utilisez un lien Airbnb ou créez manuellement."
         },
         "hubPage": {
-          "title": "Page de présentation",
-          "subtitle": "Les textes, les photos, le thème et les sections se modifient directement sur votre page.",
-          "cta": "Modifier ma page",
-          "hint": "Chaque modification est enregistrée et en ligne aussitôt, sans passer par « Appliquer »."
+          "cta": "Modifier la page",
+          "subtitle": "Textes, photos, thème et sections : tout se modifie directement sur votre page."
         },
         "calendar": {
           "title": "Synchronisation iCal",

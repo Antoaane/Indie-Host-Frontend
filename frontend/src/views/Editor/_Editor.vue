@@ -10,6 +10,8 @@ import EditorListings from '@/views/Editor/components/EditorListings/EditorListi
 import EditorSidebar from '@/views/Editor/components/EditorSidebar/EditorSidebar.vue'
 import EditorPreview from '@/views/Editor/components/EditorPreview/EditorPreview.vue'
 
+import type { EditorListingContext, EditorSectionId } from '@/views/Editor/components/EditorSidebar/editorSections'
+import type { AttachableListing } from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/HubChildrenPanel.vue'
 import { useEditorController } from '@/views/Editor/composables/useEditorController'
 import type { EditorMode, EditorSource } from '@/views/Editor/types/editor'
 
@@ -56,6 +58,43 @@ const {
   source: toRef(props, 'source'),
   canPublishListings,
 })
+
+const selectedListingCard = computed(() => listings.value.find((item) => item.listingId === selectedListingId.value) ?? null)
+
+// Place de l'annonce ouverte : la page principale qui la présente, ou les logements qu'elle présente.
+const listingContext = computed<EditorListingContext>(() => {
+  const card = selectedListingCard.value
+  if (!card) return {}
+  if (card.kind === 'hub') {
+    return { childrenCount: listings.value.filter((item) => item.parentListingId === card.listingId).length }
+  }
+  const parent = card.parentListingId
+    ? listings.value.find((item) => item.listingId === card.parentListingId && item.kind === 'hub')
+    : null
+  return parent ? { parentId: parent.listingId, parentTitle: parent.title || 'Page principale' } : {}
+})
+
+// Logements que la page principale ouverte peut accueillir : même propriétaire, sans page principale.
+const attachableListings = computed<AttachableListing[]>(() => {
+  const card = selectedListingCard.value
+  if (!card || card.kind !== 'hub') return []
+  return listings.value
+    .filter((item) => item.kind !== 'hub' && !item.parentListingId && (item.ownerId ?? null) === (card.ownerId ?? null))
+    .map((item) => ({
+      listingId: item.listingId,
+      title: item.title || 'Annonce sans titre',
+      coverSrc: item.coverSrc ?? null,
+      status: item.status ?? 'draft',
+    }))
+})
+
+// Demande d'ouverture d'une section de la colonne de gauche (depuis le bloc d'une page principale).
+const focusSection = ref<{ listingId: string; section: EditorSectionId } | null>(null)
+
+function handleOpenSection(payload: { listingId: string; section: EditorSectionId }) {
+  focusSection.value = payload
+  handleListingSelect(payload.listingId)
+}
 
 const isCreatingHub = ref(false)
 
@@ -161,10 +200,16 @@ watch(selectedListingId, (listingId) => {
             :cancelPendingChanges="cancelSelectedDraftChanges"
             :canPublishListing="canPublishListings"
             :isAdmin="isAdminUser"
+            :host="previewRawListing?.host ?? null"
+            :context="listingContext"
+            :attachableListings="attachableListings"
+            :focusSection="focusSection"
+            @focus-consumed="focusSection = null"
             @patch="applyDraftPatch"
             @domain-updated="handleListingDomainUpdated"
             @mobile-back="handleMobileBackToListings"
             @select-listing="handleListingSelect"
+            @links-changed="reloadListings"
           />
         </div>
       </Transition>
@@ -188,6 +233,7 @@ watch(selectedListingId, (listingId) => {
               @configure-connect="handleConfigureStripeConnect"
               @listing-transferred="handleListingTransferred"
               @create-hub="handleCreateHub"
+              @open-section="handleOpenSection"
             />
           </Transition>
 

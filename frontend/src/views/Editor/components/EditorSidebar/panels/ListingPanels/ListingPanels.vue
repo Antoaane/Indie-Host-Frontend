@@ -14,8 +14,7 @@ import TitlePanel from '@/views/Editor/components/EditorSidebar/panels/ListingPa
 import DomainPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/DomainPanel.vue'
 import CustomDomainPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/CustomDomainPanel.vue'
 import ParentListingPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/ParentListingPanel.vue'
-import HubChildrenPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/HubChildrenPanel.vue'
-import HubPagePanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/HubPagePanel.vue'
+import HubChildrenPanel, { type AttachableListing } from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/HubChildrenPanel.vue'
 import CalendarPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/CalendarPanel.vue'
 import VisibilityPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/VisibilityPanel.vue'
 import GalleryPanel from '@/views/Editor/components/EditorSidebar/panels/ListingPanels/GalleryPanel.vue'
@@ -37,12 +36,17 @@ const props = defineProps<{
   canPublishListing?: boolean
   isAdmin?: boolean
   ownerId?: string | null
+  /** Logements du même hôte sans page principale : proposés dans le panneau « Logements présentés ». */
+  attachableListings?: AttachableListing[]
 }>()
 
 const emit = defineEmits<{
   (e: 'patch', patch: DraftPatch): void
   (e: 'domain-updated', domain: ListingDomainRecord): void
   (e: 'select-listing', listingId: string): void
+  /** Un logement a été rattaché à une page principale ou détaché : la liste des annonces change. */
+  (e: 'links-changed'): void
+  (e: 'host-updated', patch: Record<string, unknown>): void
 }>()
 
 // Une page principale (annonce mère) n'a ni tarifs, ni chambres, ni calendrier : seulement
@@ -70,11 +74,13 @@ const isHub = computed(() => props.draft.core?.kind === 'hub')
       </EditorSection>
       <EditorSection
         v-if="isHub"
-        section="hubPage"
+        section="hubChildren"
       >
-        <HubPagePanel
+        <HubChildrenPanel
           :listing-id="props.listingId"
-          :owner-id="props.ownerId"
+          :available-listings="props.attachableListings"
+          @select="emit('select-listing', $event)"
+          @changed="emit('links-changed')"
         />
       </EditorSection>
       <EditorSection
@@ -131,21 +137,13 @@ const isHub = computed(() => props.draft.core?.kind === 'hub')
         />
       </EditorSection>
       <EditorSection
-        v-if="isHub"
-        section="hubChildren"
-      >
-        <HubChildrenPanel
-          :listing-id="props.listingId"
-          @select="emit('select-listing', $event)"
-        />
-      </EditorSection>
-      <EditorSection
-        v-else
+        v-if="!isHub"
         section="parent"
       >
         <ParentListingPanel
           :listing-id="props.listingId"
           :owner-id="props.ownerId"
+          @updated="emit('links-changed')"
         />
       </EditorSection>
     </template>
@@ -165,6 +163,7 @@ const isHub = computed(() => props.draft.core?.kind === 'hub')
             :core="props.draft.core"
             :host="props.draft.host"
             @patch="emit('patch', $event)"
+            @host-updated="emit('host-updated', $event)"
           />
         </EditorSection>
         <EditorSection section="reviews">
