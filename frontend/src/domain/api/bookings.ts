@@ -94,6 +94,8 @@ export type ReservationGuideAccessPayload = {
   }
   listing: {
     id: string
+    /** Adresse précise, donnée seulement au voyageur une fois le guide débloqué (absente de l'annonce publique). */
+    preciseAddress: string | null
   }
   host: {
     name: string
@@ -445,6 +447,7 @@ function normalizeGuideAccessPayload(payload: Record<string, unknown> | null | u
     },
     listing: {
       id: toTrimmedString(listing.id),
+      preciseAddress: toOptionalString(listing.preciseAddress),
     },
     host: {
       name: hostName,

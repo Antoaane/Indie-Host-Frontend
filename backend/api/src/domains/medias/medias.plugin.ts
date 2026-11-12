@@ -6,11 +6,8 @@ import { ImageKitService, VIDEO_EXTENSION_BY_MIME, VIDEO_MAX_BYTES } from './ima
 import {
   imagekitImportSchema,
   imagekitUploadSchema,
-  mediaListingParamsSchema,
-  patchMediaSchema,
   readListingIdFromLegacyFolder,
 } from './medias.schemas.js';
-import { MediasService } from './medias.service.js';
 import { resolveListingAccess } from '../listings/listings.access.js';
 
 // Marge pour les en-têtes : le corps binaire d'une vidéo ne dépasse pas VIDEO_MAX_BYTES.
@@ -30,7 +27,6 @@ function safeDecodeURIComponent(value: string): string {
 }
 
 export const mediasPlugin = fp(async (fastify) => {
-  const service = new MediasService(fastify.prisma);
   const imageKit = new ImageKitService();
 
   // Envoi rattaché à une annonce : seul qui peut la modifier (propriétaire ou admin) dépose dans son dossier ImageKit.
@@ -51,40 +47,8 @@ export const mediasPlugin = fp(async (fastify) => {
     return true;
   }
 
-  fastify.get('/medias/listings/:listingId', async (request, reply) => {
-    const { listingId } = mediaListingParamsSchema.parse(request.params);
-    const medias = await service.getListingMedias(listingId);
-
-    if (!medias) {
-      reply.code(404).send({ message: 'Listing not found.' });
-      return;
-    }
-
-    reply.send(medias);
-  });
-
-  fastify.patch('/medias/listings/:listingId', {
-    preHandler: fastify.authenticate,
-  }, async (request, reply) => {
-    const { listingId } = mediaListingParamsSchema.parse(request.params);
-    const patch = patchMediaSchema.parse(asObject(request.body));
-
-    const access = await resolveListingAccess(fastify.prisma, listingId, request.auth);
-    if (access && !access.canWrite) {
-      reply.code(403).send({ message: 'You cannot edit this listing.' });
-      return;
-    }
-
-    const medias = await service.patchListingMedias(listingId, patch);
-
-    if (!medias) {
-      reply.code(404).send({ message: 'Listing not found.' });
-      return;
-    }
-
-    reply.send(medias);
-  });
-
+  // Les photos d'une annonce se lisent et s'enregistrent avec sa section `medias`
+  // (`/listings/medias/:listingId`, nettoyée à l'écriture) : plus de route à part ici.
   fastify.post('/medias/imagekit/upload', {
     preHandler: fastify.authenticate,
   }, async (request, reply) => {

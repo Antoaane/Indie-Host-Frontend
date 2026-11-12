@@ -1,5 +1,8 @@
+import { createHmac } from 'node:crypto';
+
 import type { PrismaClient } from '@prisma/client';
 
+import { env } from '../../config/env.js';
 import { hasAdminAccess } from '../../lib/authRole.js';
 import { asObject } from '../../lib/json.js';
 import type { RequestAuth } from '../../types/auth.js';
@@ -99,10 +102,68 @@ export function redactArrivalForPublic(arrival: Record<string, unknown>): Record
   };
 }
 
+// Position publique d'un logement : déplacée de 60 à 150 m dans une direction tirée d'une clé
+// secrète, puis arrondie à 4 décimales (≈ 10 m). La carte publique (`Map.vue`) dessine un cercle de
+// 300 m autour d'un point qu'elle décale encore de 120 m au plus : 150 + 10 + 120 < 300, le logement
+// reste dans le cercle. Le décalage dépend de l'annonce seule : déplacer l'épingle ne le révèle pas.
+const PUBLIC_POSITION_MIN_OFFSET_METERS = 60;
+const PUBLIC_POSITION_MAX_OFFSET_METERS = 150;
+const METERS_PER_DEGREE_LATITUDE = 111_320;
+
+function readCoordinate(value: unknown): number | null {
+  const parsed = typeof value === 'string' && value.trim() ? Number(value) : value;
+  return typeof parsed === 'number' && Number.isFinite(parsed) ? parsed : null;
+}
+
+function roundCoordinate(value: number): number {
+  return Math.round(value * 10_000) / 10_000;
+}
+
+export function approximatePublicPosition(
+  listingId: string,
+  latitude: number,
+  longitude: number,
+): { latitude: number; longitude: number } {
+  const digest = createHmac('sha256', env.BOOKING_GUIDE_ACCESS_SECRET)
+    .update(`public-position|${listingId}`)
+    .digest();
+  const angle = (digest.readUInt32BE(0) / 0x1_0000_0000) * 2 * Math.PI;
+  const distance = PUBLIC_POSITION_MIN_OFFSET_METERS
+    + (digest.readUInt32BE(4) / 0x1_0000_0000) * (PUBLIC_POSITION_MAX_OFFSET_METERS - PUBLIC_POSITION_MIN_OFFSET_METERS);
+  const metersPerDegreeLongitude = METERS_PER_DEGREE_LATITUDE * Math.max(Math.cos((latitude * Math.PI) / 180), 0.01);
+
+  return {
+    latitude: roundCoordinate(latitude + (distance * Math.cos(angle)) / METERS_PER_DEGREE_LATITUDE),
+    longitude: roundCoordinate(longitude + (distance * Math.sin(angle)) / metersPerDegreeLongitude),
+  };
+}
+
+/**
+ * Vue publique de `core` : ni l'adresse précise ni la position exacte. Comme sur Airbnb, l'adresse
+ * n'est donnée qu'au voyageur, avec sa clé de guide (`getReservationGuideAccess`).
+ */
+export function redactCoreForPublic(listingId: string, core: Record<string, unknown>): Record<string, unknown> {
+  const {
+    precise_address: _preciseAddress,
+    preciseAddress: _preciseAddressCamel,
+    ...rest
+  } = core;
+
+  const latitude = readCoordinate(rest.latitude);
+  const longitude = readCoordinate(rest.longitude);
+  if (latitude !== null && longitude !== null && !(latitude === 0 && longitude === 0)) {
+    Object.assign(rest, approximatePublicPosition(listingId, latitude, longitude));
+  }
+
+  return { ...rest, [PUBLIC_REDACTION_FLAG]: true };
+}
+
 export function redactListingSectionForPublic(
   resource: string,
   value: Record<string, unknown>,
+  listingId: string,
 ): Record<string, unknown> {
+  if (resource === 'core') return redactCoreForPublic(listingId, value);
   if (resource === 'bookings') return redactBookingsForPublic(value);
   if (resource === 'arrival') return redactArrivalForPublic(value);
   return value;

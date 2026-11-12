@@ -1211,11 +1211,13 @@ export class ListingsService {
     }
 
     const value = asObject(rawValue, fallback);
-    if (resource !== 'bookings' && resource !== 'arrival') return value;
+    // Sections à vue publique réduite : adresse et position exactes (`core`), voyageurs (`bookings`),
+    // accès et Wi-Fi (`arrival`). Le propriétaire et l'admin reçoivent la section entière.
+    if (resource !== 'core' && resource !== 'bookings' && resource !== 'arrival') return value;
 
     const ownerId = (listing as { ownerId?: string | null }).ownerId ?? null;
     const access = await resolveListingAccessForOwner(this.prisma, ownerId, auth);
-    return access.canReadPrivate ? value : redactListingSectionForPublic(resource, value);
+    return access.canReadPrivate ? value : redactListingSectionForPublic(resource, value, listingId);
   }
 
   async getListingBundle(listingId: string, auth: RequestAuth | null = null) {
@@ -1247,8 +1249,9 @@ export class ListingsService {
     if (isOwner) return sections;
     return {
       ...sections,
-      bookings: redactListingSectionForPublic('bookings', sections.bookings),
-      arrival: redactListingSectionForPublic('arrival', sections.arrival),
+      core: redactListingSectionForPublic('core', sections.core, listing.id),
+      bookings: redactListingSectionForPublic('bookings', sections.bookings, listing.id),
+      arrival: redactListingSectionForPublic('arrival', sections.arrival, listing.id),
     };
   }
 

@@ -18,10 +18,6 @@ const paymentSchema = z.object({
   stripe: z.record(z.string(), z.any()).optional(),
 });
 
-export const listingBookingsParamsSchema = z.object({
-  listingId: z.string().min(1),
-});
-
 export const createBookingSchema = z.object({
   id: z.string().trim().min(1).optional(),
   listingId: z.string().trim().min(1),
@@ -37,15 +33,6 @@ export const createBookingSchema = z.object({
   contact: z.record(z.string(), z.any()).optional(),
   createdAt: z.string().optional(),
   messaging: z.record(z.string(), z.any()).optional(),
-});
-
-export const updateBookingParamsSchema = z.object({
-  reservationId: z.string().min(1),
-});
-
-export const updateBookingSchema = z.object({
-  listingId: z.string().trim().min(1),
-  patch: z.record(z.string(), z.any()),
 });
 
 export const bookingConfirmationParamsSchema = z.object({

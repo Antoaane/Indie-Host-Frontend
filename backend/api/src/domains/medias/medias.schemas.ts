@@ -1,11 +1,5 @@
 import { z } from 'zod';
 
-export const mediaListingParamsSchema = z.object({
-  listingId: z.string().min(1),
-});
-
-export const patchMediaSchema = z.record(z.string(), z.any());
-
 // Le dossier ImageKit est imposé par l'API. `folder` n'est lu que pour en extraire l'annonce
 // (ancien format du front : `/listings/<listingId>/<catégorie>`). `useUniqueFileName` est ignoré (toujours vrai).
 const optionalFolderSchema = z.string().trim().min(1).max(255).optional();

@@ -11,9 +11,6 @@ import {
   bookingConfirmationParamsSchema,
   createBookingSchema,
   hostCancelBookingSchema,
-  listingBookingsParamsSchema,
-  updateBookingParamsSchema,
-  updateBookingSchema,
 } from './bookings.schemas.js';
 import { BookingsService } from './bookings.service.js';
 import { PaymentsService } from '../payments/payments.service.js';
@@ -43,21 +40,8 @@ export const bookingsPlugin = fp(async (fastify) => {
   const paymentsService = new PaymentsService(fastify.prisma);
   const service = new BookingsService(fastify.prisma, paymentsService);
 
-  fastify.get('/bookings/listings/:listingId', {
-    preHandler: fastify.authenticateOptional,
-  }, async (request, reply) => {
-    const { listingId } = listingBookingsParamsSchema.parse(request.params);
-    const bookings = await service.getListingBookings(listingId);
-
-    if (!bookings) {
-      reply.code(404).send({ message: 'Listing not found.' });
-      return;
-    }
-
-    const access = await resolveListingAccess(fastify.prisma, listingId, request.auth);
-    reply.send(access?.canReadPrivate ? bookings : redactBookingsForPublic(bookings));
-  });
-
+  // Voyageur sans compte : chaque route ci-dessous exige la clé signée de sa réservation
+  // (`rg.<id>.<signature>`, voir `lib/guideKey.ts`), envoyée dans l'adresse ou le corps.
   fastify.get('/bookings/guides/:guideKey', async (request, reply) => {
     const { guideKey } = bookingGuideParamsSchema.parse(request.params);
     const result = await service.getReservationGuideAccess(guideKey, {
@@ -245,32 +229,5 @@ export const bookingsPlugin = fp(async (fastify) => {
 
     // Le voyageur ne reçoit que sa propre réservation, jamais celles des autres.
     reply.code(201).send({ ...created, bookings: redactBookingsForPublic(created.bookings) });
-  });
-
-  fastify.patch('/bookings/:reservationId', {
-    preHandler: fastify.authenticate,
-  }, async (request, reply) => {
-    const { reservationId } = updateBookingParamsSchema.parse(request.params);
-    const payload = updateBookingSchema.parse(asObject(request.body));
-
-    const access = await resolveListingAccess(fastify.prisma, payload.listingId, request.auth);
-    if (!access) {
-      reply.code(404).send({ message: 'Listing not found.' });
-      return;
-    }
-
-    if (!access.canReadPrivate) {
-      reply.code(403).send({ message: 'You cannot edit this reservation.' });
-      return;
-    }
-
-    const updated = await service.updateBooking(reservationId, payload.listingId, payload.patch);
-
-    if (!updated || updated === 'not_found') {
-      reply.code(404).send({ message: 'Reservation not found.' });
-      return;
-    }
-
-    reply.send(updated);
   });
 });

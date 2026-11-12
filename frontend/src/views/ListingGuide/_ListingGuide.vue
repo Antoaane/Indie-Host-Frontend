@@ -855,7 +855,9 @@ watch(
       // L'annonce publique ne contient ni le guide complet ni les réservations : le voyageur les reçoit avec sa clé.
       const activeAccess = guideAccess.value?.status === 'active' ? guideAccess.value : null
       rawArrival.value = (activeAccess?.arrival as RawArrival | null | undefined) ?? arrival
-      rawCore.value = core
+      // L'annonce publique n'a plus l'adresse précise : elle arrive avec la clé du voyageur.
+      const guestAddress = activeAccess?.listing.preciseAddress ?? null
+      rawCore.value = guestAddress ? { ...core, precise_address: guestAddress } : core
       rawHost.value = host
       rawBookings.value = activeAccess
         ? { ...bookings, reservations: [buildGuideReservation(activeAccess)] } as RawBookings

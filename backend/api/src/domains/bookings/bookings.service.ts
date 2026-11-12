@@ -960,23 +960,6 @@ export class BookingsService {
     return `${buildReservationId(listingId)}-${Date.now().toString(36)}`;
   }
 
-  async getListingBookings(listingId: string) {
-    const listing = await this.prisma.listing.findUnique({
-      where: { id: listingId },
-      select: { id: true, bookings: true },
-    });
-
-    if (!listing) return null;
-
-    return asObject(listing.bookings, {
-      price: 0,
-      fees: [],
-      'booked-days': [],
-      'external-booked-days': [],
-      reservations: [],
-    });
-  }
-
   private async upsertInternalReservationEvent(db: DbClient, listingId: string, reservation: PersistedReservation) {
     const description = this.composeCalendarDescription(reservation.message, reservation.guideUrl);
 
@@ -1366,6 +1349,11 @@ export class BookingsService {
       },
       listing: {
         id: access.listingId,
+        // L'annonce publique ne donne plus l'adresse précise (`redactCoreForPublic`) : le voyageur la
+        // reçoit ici, avec le reste du guide, une fois celui-ci débloqué.
+        preciseAddress: activation.isActive
+          ? readString(access.listingCore.precise_address) ?? readString(access.listingCore.preciseAddress)
+          : null,
       },
       host: {
         name: resolvedHostName,
@@ -2053,181 +2041,5 @@ export class BookingsService {
         : undefined,
       bookings: responseBookings,
     };
-  }
-
-  async updateBooking(reservationId: string, listingId: string, patch: Record<string, unknown>) {
-    const listingExists = await this.prisma.listing.findUnique({
-      where: { id: listingId },
-      select: { id: true },
-    });
-
-    if (!listingExists) return null;
-
-    // Même verrou d'annonce que la création : une modification par l'hôte ne s'entrelace jamais avec
-    // une réservation de voyageur. Pas de contrôle de disponibilité ici (l'hôte gère ses dates).
-    const updated = await this.prisma.$transaction(async (tx) => {
-      await acquireListingBookingLock(tx, listingId);
-
-      const listing = await tx.listing.findUnique({
-        where: { id: listingId },
-        select: {
-          id: true,
-          bookings: true,
-        },
-      });
-
-      if (!listing) return null;
-
-      const bookings = asObject(listing.bookings, emptyBookings());
-
-      const reservations = extractReservations(bookings);
-      const bookedDays = extractBookedDays(bookings);
-      const index = reservations.findIndex((item) => reservationIdFromRow(item) === reservationId);
-
-      if (index < 0) return 'not_found' as const;
-
-      const usedReservationIds = new Set(
-        reservations
-          .filter((_, itemIndex) => itemIndex !== index)
-          .map((reservation) => reservationIdFromRow(reservation))
-          .filter((value): value is string => Boolean(value)),
-      );
-      const safeReservationId = await this.ensureReservationId(tx, reservationId, listingId, usedReservationIds);
-
-      const updatedReservation = deepMerge(reservations[index] ?? {}, patch) as RawReservation;
-      updatedReservation.id = safeReservationId;
-      const updatedContact = asObject(updatedReservation.contact);
-      const updatedConfirmation = this.buildReservationConfirmation(
-        listingId,
-        safeReservationId,
-        parseDate(updatedReservation.start),
-        updatedContact,
-      );
-      updatedReservation.contact = this.buildContactWithConfirmation(updatedContact, updatedConfirmation);
-      updatedReservation.confirmation = {
-        guideAccessKey: updatedConfirmation.guideAccessKey,
-        guideUrl: updatedConfirmation.guideUrl,
-        generatedAt: updatedConfirmation.generatedAt,
-      };
-      reservations[index] = updatedReservation;
-
-      const updatedStart = normalizeDayValue(updatedReservation.start);
-      const updatedEnd = normalizeDayValue(updatedReservation.end);
-      if (updatedStart && updatedEnd) {
-        appendBookedDayIfMissing(bookedDays, updatedStart, updatedEnd);
-      }
-
-      const nextBookings = {
-        ...bookings,
-        reservations,
-        'booked-days': bookedDays,
-      };
-
-      await tx.listing.update({
-        where: { id: listingId },
-        data: {
-          bookings: toPrismaJson(nextBookings),
-        },
-      });
-
-      const persistedReservation = await this.persistReservation(tx, updatedReservation, listingId, {
-        paymentAttachment: 'optional',
-      });
-      let finalConfirmation = updatedConfirmation;
-
-      if (persistedReservation.id !== reservationId) {
-        await this.removeInternalReservationEvent(tx, listingId, reservationId);
-      }
-
-      if (persistedReservation.id !== safeReservationId) {
-        finalConfirmation = this.buildReservationConfirmation(
-          listingId,
-          persistedReservation.id,
-          parseDate(updatedReservation.start),
-          asObject(updatedReservation.contact),
-        );
-        updatedReservation.contact = this.buildContactWithConfirmation(asObject(updatedReservation.contact), finalConfirmation);
-        updatedReservation.confirmation = {
-          guideAccessKey: finalConfirmation.guideAccessKey,
-          guideUrl: finalConfirmation.guideUrl,
-          generatedAt: finalConfirmation.generatedAt,
-        };
-        updatedReservation.id = persistedReservation.id;
-        reservations[index] = updatedReservation;
-
-        const syncedBookings = {
-          ...nextBookings,
-          reservations,
-        };
-
-        await tx.reservation.update({
-          where: {
-            id: persistedReservation.id,
-          },
-          data: {
-            contact: toPrismaJson(asObject(updatedReservation.contact)),
-          },
-        });
-
-        await tx.listing.update({
-          where: { id: listingId },
-          data: {
-            bookings: toPrismaJson(syncedBookings),
-          },
-        });
-      }
-
-      if (updatedReservation.id !== persistedReservation.id) {
-        updatedReservation.id = persistedReservation.id;
-      }
-
-      await this.upsertInternalReservationEvent(tx, listingId, {
-        ...persistedReservation,
-        id: persistedReservation.id,
-        guideUrl: finalConfirmation.guideUrl,
-      });
-
-      return {
-        reservation: updatedReservation,
-        confirmation: finalConfirmation,
-      };
-    }, {
-      maxWait: BOOKING_TRANSACTION_MAX_WAIT_MS,
-      timeout: BOOKING_TRANSACTION_TIMEOUT_MS,
-    });
-
-    if (!updated || updated === 'not_found') return updated;
-
-    const updatedReservation = updated.reservation;
-    const finalConfirmation = updated.confirmation;
-    const finalReservationId = updatedReservation.id as string;
-    const updateAccess = await this.resolveReservationAccessContext(
-      finalReservationId,
-      finalConfirmation.guideAccessKey,
-    );
-    if (updateAccess && updateAccess !== 'forbidden') {
-      const conversation = await this.ensureReservationConversation(updateAccess, {
-        syncListing: true,
-      });
-      updatedReservation.messaging = {
-        ...asObject(updatedReservation.messaging),
-        conversationId: conversation.id,
-        messages: conversation.messages,
-      };
-    }
-
-    if (this.paymentsService) {
-      try {
-        await this.paymentsService.enforceTrialReservationLimitForListing(listingId);
-      } catch (error) {
-        console.error('[bookings] failed to enforce trial reservation limit', {
-          listingId,
-          reservationId: finalReservationId,
-          error,
-        });
-      }
-    }
-
-    return updatedReservation;
   }
 }
