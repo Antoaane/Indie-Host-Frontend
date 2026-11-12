@@ -274,7 +274,7 @@ function devUser(input: {
 }
 
 export const devUsers: AdminUserOverview[] = [
-  devUser({ id: 'usr_admin', clerkUserId: 'user_devadmin01', first: 'IndieHost', last: 'Contact', email: 'contact@indiehost.fr', plan: null, status: null, listings: [0, 0], access: { role: 'super_admin', roleSource: 'config' }, lastSignInDaysAgo: 0 }),
+  devUser({ id: 'usr_admin', clerkUserId: 'user_devadmin01', first: 'IndieHost', last: 'Dev', email: 'dev@indiehost.fr', plan: null, status: null, listings: [0, 0], access: { role: 'super_admin', roleSource: 'config' }, lastSignInDaysAgo: 0 }),
   devUser({ id: 'usr_camille', clerkUserId: 'user_devcamille1', first: 'Camille', last: 'Durand', email: 'camille.durand@exemple.fr', plan: 'superhost', status: 'active', listings: [4, 5], lastSignInDaysAgo: 1 }),
   devUser({ id: 'usr_julien', clerkUserId: 'user_devjulien1', first: 'Julien', last: 'Moreau', email: 'julien.moreau@exemple.fr', plan: 'superhost', status: 'past_due', listings: [3, 3], lastSignInDaysAgo: 6 }),
   devUser({ id: 'usr_sophie', clerkUserId: 'user_devsophie1', first: 'Sophie', last: 'Lefèvre', email: 'sophie.lefevre@exemple.fr', plan: 'indiehost', status: 'trialing', listings: [2, 2], lastSignInDaysAgo: 2 }),

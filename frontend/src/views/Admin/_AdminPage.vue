@@ -1,6 +1,6 @@
 <!-- File: src/views/Admin/_AdminPage.vue -->
 
-<!-- Administration d'IndieHost, réservée aux comptes administrateurs (contact@indiehost.fr) :
+<!-- Administration d'IndieHost, réservée aux comptes administrateurs (dev@indiehost.fr) :
      Aperçu (abonnés, chiffres, points d'attention), Utilisateurs (comptes, droits, abonnements),
      Paiements (réussis et refusés) et Services (santé en direct, carte du code floorplan).
      L'onglet ouvert est gardé dans l'adresse (`?onglet=…` : `?vue=` est pris par Vite en développement). -->

@@ -21,7 +21,7 @@ const access = computed(() => (route.query.acces === 'refuse' ? 'denied' : 'allo
 <template>
   <AdminPage
     :access="access"
-    account-email="contact@indiehost.fr"
+    account-email="dev@indiehost.fr"
     current-clerk-user-id="user_devadmin01"
   />
 </template>

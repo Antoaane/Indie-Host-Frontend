@@ -1,7 +1,7 @@
 <!-- File: src/views/Admin/AdminRoute.vue -->
 
 <!-- `/dashboard/admin` : connexion Clerk exigée par le routeur, puis droits d'administration vérifiés
-     par l'API (`isAdmin` de `/users/me`, accordé à SUPER_ADMIN_EMAILS — contact@indiehost.fr — ou au
+     par l'API (`isAdmin` de `/users/me`, accordé à SUPER_ADMIN_EMAILS — dev@indiehost.fr — ou au
      rôle admin de Clerk). L'API refuse de son côté toute route `/admin/*` sans ces droits. -->
 
 <script setup lang="ts">

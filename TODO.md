@@ -12,10 +12,8 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ### Administration (session du 2026-11-12)
 
-- [ ] Créer le compte `contact@indiehost.fr` chez Clerk en production : il n’existe pas encore (vérifié le 2026-11-12). Sur https://indiehost.fr/sign-up, avec un mot de passe ou « Continuer avec Google » (contact@ est une boîte Google Workspace), puis le code reçu par e-mail.
-- [ ] Ajouter ce compte aux administrateurs du serveur : dans `/opt/indiehost/.env` (et votre `.env.production`), `SUPER_ADMIN_EMAILS=dev@indiehost.fr,contact@indiehost.fr`. `dev@` reste administrateur ; dites-le si vous voulez le retirer.
 - [ ] Déployer l’API et le site : `cd /opt/indiehost && git pull && ./deploy-indiehost.sh`. Contrôle : `curl -s -o /dev/null -w "%{http_code}" https://indiehost.fr/api/v1/admin/overview` doit répondre 401 (404 : l’API n’a pas été reconstruite).
-- [ ] (après le déploiement) Ouvrir https://indiehost.fr/dashboard/admin avec contact@ et vérifier : le nombre d’abonnés et le revenu mensuel contre le Dashboard Stripe, les paiements refusés, l’onglet Services (tout en vert sauf ce qui est réellement en défaut), la carte du code. Claude n’a pu voir la page que sur de fausses données (`/dev/admin`) et l’API locale.
+- [ ] (après le déploiement) Ouvrir https://indiehost.fr/dashboard/admin avec dev@indiehost.fr (seul propriétaire de l’administration, déjà dans `SUPER_ADMIN_EMAILS` en production) et vérifier : le nombre d’abonnés et le revenu mensuel contre le Dashboard Stripe, les paiements refusés, l’onglet Services (tout en vert sauf ce qui est réellement en défaut), la carte du code. Claude n’a pu voir la page que sur de fausses données (`/dev/admin`) et l’API locale.
 - [ ] Les droits d’administration et le blocage d’un compte agissent sur le Clerk de production dès le clic : n’essayez le blocage que sur un compte de test.
 
 ### À déployer et à vérifier (session du 2026-11-11, jusqu’au commit `424cbe9`)
@@ -246,7 +244,7 @@ Défauts visibles :
 
 - [x] 2026-11-12 — Page d’administration complète et carte du code floorplan (commit `c9e23b1`, non déployé).
   - `/dashboard/admin` en quatre onglets : Aperçu (abonnés lus chez Stripe, revenu mensuel, points à surveiller), Utilisateurs (ancienne fiche client + droits : rôle administrateur et connexion bloquée, avec confirmation), Paiements (90 jours, réussis et refusés avec le motif), Services (santé de 14 services mesurée par l’API, historique de 24 h, schéma relié, derniers changements).
-  - Accès : `SUPER_ADMIN_EMAILS` (contact@ à ajouter sur le serveur, voir « Ce que vous devez faire ») ou rôle Clerk ; contrôlé par l’API sur chaque route.
+  - Accès : `SUPER_ADMIN_EMAILS`, qui ne contient que dev@indiehost.fr (décision du 2026-11-12 : contact@ n’ouvre pas l’administration), ou rôle Clerk ; contrôlé par l’API sur chaque route.
   - Floorplan installé comme plugin du projet ; carte d’IndieHost en français (651 fichiers, 97 routes, 4 parcours, visite guidée), exportée dans `backend/api/assets/floorplan/` et affichée dans l’onglet Services.
   - Vérifié : type-checks, `admin-smoke.ts` (12 contrôles), routes sur l’API locale (401 sans session, 403 pour un hôte, ticket de carte valable, retouché refusé), écrans sur `/dev/admin` dans Chrome (clair, sombre, 390 px, panne simulée, accès refusé), carte ouverte et parcourue dans l’administration. Pas vu : la production, une vraie session Clerk, les vrais chiffres Stripe.
 

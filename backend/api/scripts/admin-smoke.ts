@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 
 // Les modules chargent la configuration de l'API, qui exige une base : adresse factice, jamais utilisée.
 process.env.DATABASE_URL ??= 'postgresql://smoke@localhost:5432/smoke';
-process.env.SUPER_ADMIN_EMAILS = 'contact@indiehost.fr, dev@indiehost.fr';
+process.env.SUPER_ADMIN_EMAILS = ' Dev@IndieHost.fr , ';
 
 const { createFloorplanTicket, isFloorplanTicketValid } = await import('../src/domains/admin/floorplanMap.js');
 const { resolveAdminUserAccess } = await import('../src/domains/users/users.service.js');
@@ -77,8 +77,13 @@ check('les valeurs absurdes sont refusées', () => {
 // --- Droits des comptes --------------------------------------------------------------------
 
 check('un e-mail de la configuration est administrateur principal, non modifiable', () => {
-  const access = resolveAdminUserAccess('Contact@IndieHost.fr', clerkUser({ email: 'contact@indiehost.fr' }));
+  const access = resolveAdminUserAccess('dev@indiehost.fr', clerkUser({ email: 'dev@indiehost.fr' }));
   assert.deepEqual([access.role, access.roleSource, access.known], ['super_admin', 'config', true]);
+});
+
+check('une adresse absente de la configuration n’est pas administratrice', () => {
+  const access = resolveAdminUserAccess('contact@indiehost.fr', clerkUser({ email: 'contact@indiehost.fr' }));
+  assert.deepEqual([access.role, access.roleSource], [null, null]);
 });
 
 check('la configuration vaut même sans profil Clerk', () => {
