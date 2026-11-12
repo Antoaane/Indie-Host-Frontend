@@ -24,7 +24,8 @@
     "purge": "tsx src/jobs/retention.cli.ts",
     "purge:prod": "node dist/jobs/retention.cli.js",
     "host-reminders": "tsx src/jobs/hostReminders.cli.ts",
-    "public-sites": "tsx src/jobs/publicSites.cli.ts"
+    "public-sites": "tsx src/jobs/publicSites.cli.ts",
+    "connect-audit": "tsx src/domains/payments/connectAudit.cli.ts"
   },
   "dependencies": {
     "@fastify/cors": "^10.0.2",

@@ -10,9 +10,9 @@ export const STRIPE_DASHBOARD_URL = 'https://dashboard.stripe.com/'
  *
  * L'onglet est créé dès le clic : ouvert après l'appel réseau, le navigateur le bloque comme une
  * fenêtre surgissante. Si le lien ne peut pas être préparé, l'hôte arrive sur la page de connexion
- * de Stripe plutôt que sur un clic sans effet.
+ * de Stripe plutôt que sur un clic sans effet. Le compte est celui du profil, choisi par l'API.
  */
-export async function openStripeDashboard(accountId?: string | null): Promise<void> {
+export async function openStripeDashboard(): Promise<void> {
   const tab = window.open('', '_blank')
   const open = (url: string) => {
     if (tab && !tab.closed) {
@@ -24,7 +24,7 @@ export async function openStripeDashboard(accountId?: string | null): Promise<vo
   }
 
   try {
-    const dashboard = await createMyStripeConnectDashboardLink({ accountId: accountId ?? undefined })
+    const dashboard = await createMyStripeConnectDashboardLink()
     open(dashboard.url)
   } catch (error) {
     console.warn('[stripe] lien vers le tableau de bord indisponible, ouverture de la page de connexion Stripe', { error })

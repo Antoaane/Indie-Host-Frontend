@@ -651,8 +651,9 @@ export async function confirmStripeSubscriptionCheckout(input: {
 
 export type StripeConnectHostStatus = 'individual' | 'professional'
 
+// Les trois appels Connect ci-dessous n'envoient jamais de numéro de compte : l'API prend le compte
+// rattaché au profil de l'hôte connecté et refuse tout autre numéro.
 export async function createStripeConnectOnboardingLink(input: {
-  accountId?: string
   refreshUrl: string
   returnUrl: string
   country?: string
@@ -666,7 +667,6 @@ export async function createStripeConnectOnboardingLink(input: {
     const { data } = await axios.post<StripeConnectOnboardingLinkResponse>(
       resolveUrl(buildApiUrl(CONNECT_ONBOARDING_LINK_PATH)),
       {
-        accountId: input.accountId,
         refreshUrl: input.refreshUrl,
         returnUrl: input.returnUrl,
         country: input.country ?? 'FR',
@@ -683,16 +683,14 @@ export async function createStripeConnectOnboardingLink(input: {
   }
 }
 
-export async function createMyStripeConnectDashboardLink(input?: { accountId?: string }): Promise<StripeConnectDashboardLinkResponse> {
+export async function createMyStripeConnectDashboardLink(): Promise<StripeConnectDashboardLinkResponse> {
   const axios = await getAxios()
   const headers = await getHeaders({ requiresAuth: true })
 
   try {
     const { data } = await axios.post<StripeConnectDashboardLinkResponse>(
       resolveUrl(buildApiUrl(CONNECT_DASHBOARD_LINK_PATH)),
-      {
-        accountId: input?.accountId,
-      },
+      {},
       {
         withCredentials: false,
         headers,
@@ -720,16 +718,14 @@ export async function fetchMyStripeConnectOverview(): Promise<StripeConnectOverv
   }
 }
 
-export async function syncMyStripeConnectState(input?: { accountId?: string }): Promise<StripeConnectSyncResponse> {
+export async function syncMyStripeConnectState(): Promise<StripeConnectSyncResponse> {
   const axios = await getAxios()
   const headers = await getHeaders({ requiresAuth: true })
 
   try {
     const { data } = await axios.post<StripeConnectSyncResponse>(
       resolveUrl(buildApiUrl(CONNECT_SYNC_PATH)),
-      {
-        accountId: input?.accountId,
-      },
+      {},
       {
         withCredentials: false,
         headers,

@@ -6,11 +6,11 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { RefreshCw } from 'lucide-vue-next'
+import { Mail, RefreshCw } from 'lucide-vue-next'
 
-import type { ServiceId, SystemHealth } from '@/domain/api/admin'
+import type { HealthIncident, ServiceId, SystemHealth } from '@/domain/api/admin'
 import { vp } from '@/utils/viewport'
-import { SERVICE_STATUS, formatAgo, formatDateTime, formatEvery, formatPercent, pluralize } from '@/views/Admin/adminFormat'
+import { SERVICE_STATUS, formatAgo, formatDate, formatDateTime, formatEvery, formatPercent, pluralize } from '@/views/Admin/adminFormat'
 import FloorplanMap from '@/views/Admin/components/FloorplanMap.vue'
 import ServiceDiagram from '@/views/Admin/components/ServiceDiagram.vue'
 import UptimeStrip from '@/views/Admin/components/UptimeStrip.vue'
@@ -74,6 +74,47 @@ const uptimeLabel = computed(() => {
   return uptime === null
     ? `${service.label} : pas encore de mesure sur 24 heures.`
     : `${service.label} : disponible ${formatPercent(uptime)} du temps mesuré sur les dernières 24 heures.`
+})
+
+const DAY_MS = 24 * 60 * 60 * 1000
+const BUCKET_MS = 30 * 60 * 1000
+
+/**
+ * Disponibilité sur 7 et 30 jours, avec la vraie période couverte tant que la base n'a pas encore
+ * l'historique complet (les semaines qui suivent la mise en service, ou un service ajouté depuis).
+ */
+const longerUptime = computed(() => {
+  const service = selected.value
+  if (!service?.historySinceISO) return []
+  const since = Date.parse(service.historySinceISO)
+  // Moins de 24 h gardées : ces chiffres répéteraient la bande des dernières 24 heures.
+  if (Number.isNaN(since) || since > now.value - DAY_MS) return []
+  // La première demi-heure gardée commence au plus une demi-heure après le début de la fenêtre.
+  const covers = (days: number) => since <= now.value - days * DAY_MS + BUCKET_MS
+  const sinceLabel = `Depuis le ${formatDate(service.historySinceISO)}`
+  const rows: Array<{ label: string; value: string }> = []
+  if (service.uptime7d !== null) rows.push({ label: covers(7) ? 'Sur 7 jours' : sinceLabel, value: formatPercent(service.uptime7d) })
+  if (service.uptime30d !== null && covers(7)) rows.push({ label: covers(30) ? 'Sur 30 jours' : sinceLabel, value: formatPercent(service.uptime30d) })
+  return rows
+})
+
+function fromLabel(incident: HealthIncident): string {
+  return incident.from === 'unknown' ? 'Au démarrage' : SERVICE_STATUS[incident.from].label
+}
+
+const alertsText = computed(() => {
+  const alerts = props.health?.alerts
+  if (!alerts) return null
+  if (!alerts.enabled) return alerts.reason ?? 'Pas d’alerte par e-mail.'
+  const { confirmSeconds, recoveryMinutes, gapMinutes, maxPerDay } = alerts.rules
+  return `Alertes par e-mail à ${alerts.recipients.join(', ')} quand un service tombe (panne confirmée ${confirmSeconds} s plus tard) ou qu’un certificat ou une tâche planifiée passe « à surveiller », puis quand il fonctionne de nouveau depuis ${recoveryMinutes} min. Au plus un e-mail de panne par service toutes les ${gapMinutes} min, et ${maxPerDay} sur 24 h. Si le serveur lui-même s’arrête, rien ne part.`
+})
+
+const deliveryWarning = computed(() => {
+  const alerts = props.health?.alerts
+  const delivery = alerts?.lastDelivery
+  if (!alerts?.enabled || !delivery || delivery.ok) return null
+  return `Le dernier e-mail d’alerte n’est pas parti (${formatDateTime(delivery.atISO)}) : nouvel essai ${alerts.rules.gapMinutes} min plus tard.`
 })
 
 function selectService(id: ServiceId) {
@@ -261,6 +302,18 @@ function selectService(id: ServiceId) {
               :history="selected.history"
               :label="uptimeLabel"
             />
+            <dl
+              v-if="longerUptime.length"
+              class="longer"
+            >
+              <div
+                v-for="row in longerUptime"
+                :key="row.label"
+              >
+                <dt>{{ row.label }}</dt>
+                <dd>{{ row.value }}</dd>
+              </div>
+            </dl>
           </div>
 
           <p class="meta">
@@ -285,21 +338,49 @@ function selectService(id: ServiceId) {
               <span class="what">
                 <strong>{{ incident.label }}</strong>
                 <span>
-                  {{ SERVICE_STATUS[incident.from].label }} →
+                  {{ fromLabel(incident) }} →
                   <span :class="`is-${SERVICE_STATUS[incident.to].tone}`">{{ SERVICE_STATUS[incident.to].label }}</span>
                 </span>
               </span>
-              <span class="why">{{ incident.summary }}</span>
+              <span class="why">
+                {{ incident.summary }}
+                <span
+                  v-if="incident.alerted"
+                  class="alerted"
+                >
+                  <Mail
+                    :size="14"
+                    aria-hidden="true"
+                  />
+                  E-mail envoyé
+                </span>
+              </span>
             </li>
           </ul>
           <p
             v-else
             class="empty"
           >
-            Aucun changement d’état depuis le début du suivi.
+            Aucun changement d’état enregistré.
+          </p>
+          <p
+            v-if="alertsText"
+            class="alerts"
+            :class="{ 'is-off': !health.alerts.enabled }"
+          >
+            {{ alertsText }}
+          </p>
+          <p
+            v-if="deliveryWarning"
+            class="alerts is-off"
+            role="status"
+          >
+            {{ deliveryWarning }}
           </p>
           <p class="footnote">
-            Suivi depuis le {{ formatDateTime(health.monitoringSinceISO) }} : l’historique repart de zéro à chaque redémarrage du serveur, par exemple à un déploiement.
+            <template v-if="health.historyPersisted">Historique gardé 90 jours en base, journal 180 jours.</template>
+            <template v-else>La base ne répond pas : l’historique n’est gardé qu’en mémoire jusqu’à son retour.</template>
+            Mesures en cours depuis le {{ formatDateTime(health.monitoringSinceISO) }} (dernier démarrage du serveur).
           </p>
         </section>
       </template>

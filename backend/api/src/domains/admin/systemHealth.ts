@@ -2,13 +2,21 @@
 //
 // Une sonde par service (site, serveur, base, robot d'import, Stripe, Clerk, Brevo…) tourne à son
 // rythme dans le processus de l'API : toutes les 30 s pour ce qui est sur le serveur, toutes les
-// quelques minutes pour les services extérieurs (leur quota d'appels n'est pas entamé). Les résultats
-// sont gardés en mémoire 24 h : la page lit l'état courant, l'historique par demi-heure et les
-// changements d'état. Un redémarrage de l'API (déploiement) repart d'un historique vide.
+// quelques minutes pour les services extérieurs (leur quota d'appels n'est pas entamé). Chaque mesure
+// compte dans sa demi-heure, gardée en mémoire (24 h, pour la page) et en base (90 jours,
+// `healthStore.ts`) : l'historique et la disponibilité sur 7 et 30 jours survivent aux redémarrages.
+// Seules les mesures à l'heure prévue comptent pour la disponibilité : les mesures de confirmation
+// d'une panne et les relances à la main la fausseraient (elles se resserrent autour des pannes).
+// Une panne confirmée, puis son retour, partent par e-mail à l'administration (`healthAlerts.ts`).
+//
+// Ordre d'un passage : les sondes, la décision d'alerte, l'envoi de l'e-mail, puis seulement les
+// écritures en base. Une base lente ne retarde ainsi jamais l'alerte qui la concerne. Les passages
+// ne se chevauchent pas.
 //
 // Les sondes ne lisent aucune donnée personnelle et ne renvoient jamais de clé : seulement des
 // états, des délais et des chiffres agrégés.
 
+import { randomUUID } from 'node:crypto';
 import { monitorEventLoopDelay, performance, type IntervalHistogram } from 'node:perf_hooks';
 import tls from 'node:tls';
 
@@ -19,6 +27,17 @@ import Stripe from 'stripe';
 import { env } from '../../config/env.js';
 import { listJobRuns, type JobId } from '../../lib/jobRuns.js';
 import { isMailerConfigured, resolvePublicBaseUrl } from '../../lib/mailer.js';
+import {
+  HealthAlertPlanner,
+  deliverHealthAlert,
+  readHealthAlertSettings,
+  readServiceAlertState,
+  type AlertEvent,
+  type AlertProblem,
+  type HealthAlertSettings,
+  type OpenAlert,
+} from './healthAlerts.js';
+import { HealthStore, type BucketAggregate, type StoredBucket, type StoredIncident, type UptimeTotals } from './healthStore.js';
 
 export type ServiceStatus = 'up' | 'degraded' | 'down' | 'disabled' | 'unknown';
 export type ServiceGroup = 'entry' | 'core' | 'data' | 'external';
@@ -46,6 +65,8 @@ type ProbeResult = {
   /** Une phrase : ce qu'il faut retenir de la dernière mesure. */
   summary: string;
   facts: ServiceFact[];
+  /** Problèmes précis (domaine, tâche) : nommés dans l'e-mail, et un nouveau relance l'alerte. */
+  problems?: AlertProblem[];
 };
 
 type ProbeContext = { prisma: PrismaClient };
@@ -60,23 +81,33 @@ type ServiceDefinition = {
   probe: (ctx: ProbeContext) => Promise<ProbeResult>;
 };
 
-type Sample = { t: number; s: ServiceStatus; l: number | null };
-
 type ServiceRuntime = {
   definition: ServiceDefinition;
   last: (ProbeResult & { checkedAt: number }) | null;
-  samples: Sample[];
+  /** Demi-heures des dernières 24 h (clé : début de la demi-heure, en millisecondes). */
+  buckets: Map<number, BucketAggregate>;
+  /** Demi-heures modifiées depuis la dernière écriture en base. */
+  dirty: Set<number>;
+  /** Dernier état suivi (en service, à surveiller, en panne), retrouvé en base au démarrage. */
+  lastTracked: ServiceStatus | null;
   running: boolean;
+  /** Dernière mesure à l'heure prévue (les mesures de confirmation ne décalent pas le rythme). */
   lastRunAt: number;
+  /** Mesure supplémentaire demandée (confirmer une panne ou un retour avant d'écrire). */
+  probeAt: number | null;
 };
 
 export type HealthIncident = {
+  id: string;
   atISO: string;
   serviceId: ServiceId;
   label: string;
+  /** `unknown` : service trouvé en panne au démarrage de la surveillance. */
   from: ServiceStatus;
   to: ServiceStatus;
   summary: string;
+  /** Un e-mail (panne ou retour) est parti pour ce changement. */
+  alerted: boolean;
 };
 
 export type HealthBucket = {
@@ -98,13 +129,27 @@ export type ServiceHealth = {
   checkedAtISO: string | null;
   everyMs: number;
   uptime24h: number | null;
+  uptime7d: number | null;
+  uptime30d: number | null;
+  /** Première demi-heure gardée en base sur les 30 derniers jours : les fenêtres de 7 et 30 jours peuvent être incomplètes. */
+  historySinceISO: string | null;
   history: HealthBucket[];
+};
+
+export type HealthAlertStatus = HealthAlertSettings & {
+  /** Règles en vigueur, pour la phrase de la page. */
+  rules: { confirmSeconds: number; recoveryMinutes: number; gapMinutes: number; maxPerDay: number };
+  /** Dernier e-mail d'alerte tenté. */
+  lastDelivery: { ok: boolean; atISO: string; reason: string | null } | null;
 };
 
 export type SystemHealthSnapshot = {
   generatedAtISO: string;
   monitoringSinceISO: string;
   environment: 'production' | 'development' | 'test';
+  /** Faux quand la base ne répond pas : l'historique n'est alors gardé qu'en mémoire. */
+  historyPersisted: boolean;
+  alerts: HealthAlertStatus;
   overall: {
     status: ServiceStatus;
     up: number;
@@ -126,6 +171,7 @@ export type JobHealth = {
   lastDurationMs: number | null;
   lastStatus: 'ok' | 'error' | null;
   lastError: string | null;
+  lastWarning: string | null;
   nextRunAtISO: string | null;
   runs: number;
   failures: number;
@@ -138,7 +184,23 @@ const BUCKET_MS = 30 * 60 * 1000;
 const BUCKET_COUNT = HISTORY_MS / BUCKET_MS;
 const MAX_INCIDENTS = 60;
 const FORCED_REFRESH_MIN_GAP_MS = 15_000;
+const LONG_UPTIME_REFRESH_MS = 10 * 60 * 1000;
+const PURGE_EVERY_MS = 24 * 60 * 60 * 1000;
+const BUCKET_RETENTION_MS = 90 * 24 * 60 * 60 * 1000;
+const INCIDENT_RETENTION_MS = 180 * 24 * 60 * 60 * 1000;
+// Alertes : panne confirmée par une seconde mesure 30 s plus tard ; retour annoncé après 5 min sans
+// problème d'affilée ; au plus un e-mail de panne par service et par quart d'heure, et 6 par service
+// sur 24 h glissantes.
+const ALERT_CONFIRM_MS = 30 * 1000;
+const ALERT_RECOVERY_MS = 5 * 60 * 1000;
+const ALERT_MIN_GAP_MS = 15 * 60 * 1000;
+const ALERT_MAX_PER_DAY = 6;
+// Une demi-heure dont l'historique n'a pas encore pu être relu n'est pas réécrite : relecture retentée.
+const BUCKET_RESTORE_RETRY_MS = 30 * 1000;
+const MAX_UNSAVED_INCIDENTS = 200;
 const CERTIFICATE_WARNING_DAYS = 14;
+// Domaine d'hôte vérifié depuis moins longtemps : son certificat est en cours d'émission, pas en défaut.
+const FRESH_DOMAIN_GRACE_MS = 15 * 60 * 1000;
 const STRIPE_API_VERSION = '2025-02-24.acacia';
 const SECOND = 1000;
 const MINUTE = 60 * SECOND;
@@ -146,6 +208,7 @@ const MINUTE = 60 * SECOND;
 const JOB_LABELS: Record<JobId, { label: string; schedule: string }> = {
   retention: { label: 'Purge des données anciennes', schedule: 'une fois par jour' },
   'host-reminders': { label: 'Rappels par e-mail aux hôtes', schedule: 'chaque heure, envois de 9 h à 20 h' },
+  'public-sites': { label: 'Référencement des sites d’hôtes', schedule: 'chaque heure' },
 };
 
 // --- Outils ---------------------------------------------------------------------------------
@@ -180,8 +243,34 @@ function formatMoney(amountMinor: number, currency: string): string {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: currency.toUpperCase() }).format(amountMinor / 100);
 }
 
-function result(status: ServiceStatus, summary: string, facts: ServiceFact[] = [], latencyMs: number | null = null): ProbeResult {
-  return { status, summary, facts, latencyMs };
+function result(
+  status: ServiceStatus,
+  summary: string,
+  facts: ServiceFact[] = [],
+  latencyMs: number | null = null,
+  problems: AlertProblem[] = [],
+): ProbeResult {
+  return { status, summary, facts, latencyMs, problems };
+}
+
+/**
+ * Une sonde qui a besoin de la base ne peut rien dire quand la base ne répond pas : état inconnu, sans
+ * alerte ni retour annoncé à tort. Seule la sonde de la base signale sa panne. Les sondes des services
+ * extérieurs (Stripe, Brevo) continuent de mesurer le service lui-même et taisent les chiffres tirés de
+ * la base.
+ */
+const DATABASE_UNAVAILABLE = 'État inconnu : la base de données ne répond pas.';
+
+async function readDatabase<T>(read: () => Promise<T>): Promise<{ ok: true; value: T } | { ok: false }> {
+  try {
+    return { ok: true, value: await read() };
+  } catch {
+    return { ok: false };
+  }
+}
+
+function lowerFirst(text: string): string {
+  return `${text.charAt(0).toLowerCase()}${text.slice(1)}`;
 }
 
 /** Cause lisible d'une erreur réseau, en minuscules et sans point (« connexion refusée… »). */
@@ -338,46 +427,61 @@ function certificateCovers(altNames: string, domain: string): boolean {
 async function probeCertificates(ctx: ProbeContext): Promise<ProbeResult> {
   if (!isProduction) return result('disabled', 'Pas de certificat en développement.');
 
-  const customDomains = await ctx.prisma.listing.findMany({
+  // Les domaines des hôtes viennent de la base : sans elle, seul celui d'IndieHost est contrôlé.
+  const customDomains = await readDatabase(() => ctx.prisma.listing.findMany({
     where: { customDomain: { not: null }, customDomainVerifiedAt: { not: null }, status: { not: 'deleted' } },
-    select: { customDomain: true },
-  });
-  const domains = [rootDomain, ...customDomains.map((row) => row.customDomain as string)];
+    select: { customDomain: true, customDomainVerifiedAt: true },
+  }));
+  const verifiedAt = new Map(
+    (customDomains.ok ? customDomains.value : []).map((row) => [row.customDomain as string, row.customDomainVerifiedAt?.getTime() ?? 0]),
+  );
+  const domains = [rootDomain, ...verifiedAt.keys()];
   const now = Date.now();
   const facts: ServiceFact[] = [];
+  const problems: AlertProblem[] = [];
   let rootBad = false;
-  let anyWarning = false;
+  let rootWarning = false;
+  let hostWarning = false;
 
   // Lus en parallèle : un domaine d'hôte injoignable ne doit pas retarder les autres.
   const certificates = await Promise.allSettled(domains.map((domain) => readCertificate(domain)));
 
   for (const [index, domain] of domains.entries()) {
     const isRoot = domain === rootDomain;
-    try {
-      const settled = certificates[index];
-      if (!settled || settled.status === 'rejected') throw settled?.reason ?? new Error('NO_CERTIFICATE');
-      const certificate = settled.value;
-      const daysLeft = Math.floor((certificate.validTo.getTime() - now) / (24 * 60 * MINUTE));
-      if (!certificateCovers(certificate.altNames, domain)) {
-        facts.push({ label: domain, value: 'Le certificat présenté est celui d’un autre domaine.', tone: 'bad' });
-        if (isRoot) rootBad = true; else anyWarning = true;
-        continue;
-      }
-      const tone = daysLeft < 0 ? 'bad' : daysLeft < CERTIFICATE_WARNING_DAYS ? 'warn' : 'good';
-      const value = daysLeft < 0
-        ? `Expiré depuis le ${dateFormatter.format(certificate.validTo)}`
-        : `Valide jusqu’au ${dateFormatter.format(certificate.validTo)} (${daysLeft} j)`;
-      facts.push({ label: isRoot ? `${domain} et ses sous-domaines` : domain, value, tone });
-      if (tone === 'bad' && isRoot) rootBad = true;
-      if (tone !== 'good') anyWarning = true;
-    } catch {
-      facts.push({ label: domain, value: isRoot ? 'Aucun certificat lisible.' : 'Pas encore de certificat (émis sous quelques minutes après la vérification).', tone: isRoot ? 'bad' : 'warn' });
-      if (isRoot) rootBad = true; else anyWarning = true;
+    const label = isRoot ? `${domain} et ses sous-domaines` : domain;
+    const report = (value: string, tone: 'warn' | 'bad') => {
+      facts.push({ label, value, tone });
+      problems.push({ key: domain, text: `${label} : ${lowerFirst(value)}` });
+      if (isRoot && tone === 'bad') rootBad = true;
+      else if (isRoot) rootWarning = true;
+      else hostWarning = true;
+    };
+    const settled = certificates[index];
+    if (!settled || settled.status === 'rejected') {
+      if (isRoot) report('Aucun certificat lisible.', 'bad');
+      else if (now - (verifiedAt.get(domain) ?? 0) < FRESH_DOMAIN_GRACE_MS) facts.push({ label, value: 'Certificat en cours d’émission (domaine vérifié il y a moins de 15 min).' });
+      else report('Pas de certificat alors que le domaine est vérifié : son adresse pointe-t-elle encore vers le serveur ?', 'warn');
+      continue;
     }
+    const certificate = settled.value;
+    if (!certificateCovers(certificate.altNames, domain)) {
+      report('Le certificat présenté est celui d’un autre domaine.', 'bad');
+      continue;
+    }
+    const daysLeft = Math.floor((certificate.validTo.getTime() - now) / (24 * 60 * MINUTE));
+    if (daysLeft < 0) report(`Expiré depuis le ${dateFormatter.format(certificate.validTo)}`, 'bad');
+    else if (daysLeft < CERTIFICATE_WARNING_DAYS) report(`Expire le ${dateFormatter.format(certificate.validTo)} (${daysLeft} j)`, 'warn');
+    else facts.push({ label, value: `Valide jusqu’au ${dateFormatter.format(certificate.validTo)} (${daysLeft} j)`, tone: 'good' });
   }
 
-  if (rootBad) return result('down', `Le certificat de ${rootDomain} pose problème : les navigateurs affichent une alerte.`, facts);
-  if (anyWarning) return result('degraded', 'Un certificat expire bientôt ou manque encore.', facts);
+  if (!customDomains.ok) facts.push({ label: 'Domaines des hôtes', value: 'Non contrôlés : la base de données ne répond pas.', tone: 'warn' });
+  if (rootBad) return result('down', `Le certificat de ${rootDomain} pose problème : les navigateurs affichent une alerte.`, facts, null, problems);
+  if (rootWarning || hostWarning) {
+    const summary = problems.length > 1 ? `${problems.length} certificats expirent bientôt ou manquent.` : 'Un certificat expire bientôt ou manque.';
+    return result('degraded', summary, facts, null, problems);
+  }
+  // Sans la liste des domaines des hôtes, l'état d'ensemble n'est pas connu.
+  if (!customDomains.ok) return result('unknown', DATABASE_UNAVAILABLE, facts);
   const count = domains.length;
   return result('up', count > 1 ? `${count} certificats valides.` : 'Certificat valide.', facts);
 }
@@ -436,14 +540,19 @@ async function probeJobs(): Promise<ProbeResult> {
 
   const now = Date.now();
   const facts: ServiceFact[] = [];
+  const problems: AlertProblem[] = [];
   let failed = 0;
   let late = 0;
+  let warnings = 0;
 
   for (const job of jobs) {
     const meta = JOB_LABELS[job.id];
-    if (job.lastStatus === 'error') failed += 1;
+    const errored = job.lastStatus === 'error';
     const overdue = !job.running && job.nextRunAt !== null && now > job.nextRunAt + 15 * MINUTE;
+    const warned = job.lastStatus === 'ok' && Boolean(job.lastWarning);
+    if (errored) failed += 1;
     if (overdue) late += 1;
+    if (warned) warnings += 1;
     const parts: string[] = [];
     if (job.running) parts.push('en cours');
     if (job.lastStartedAt) {
@@ -452,21 +561,26 @@ async function probeJobs(): Promise<ProbeResult> {
       parts.push('pas encore passée');
     }
     if (job.nextRunAt) parts.push(`prochain à ${timeFormatter.format(job.nextRunAt)}`);
-    if (job.lastStatus === 'error' && job.lastError) parts.push(`échec : ${job.lastError}`);
+    if (errored && job.lastError) parts.push(`échec : ${job.lastError}`);
+    if (warned) parts.push(`en partie en échec : ${job.lastWarning}`);
     facts.push({
       label: meta.label,
       value: parts.join(' · '),
-      tone: job.lastStatus === 'error' || overdue ? 'bad' : job.lastStatus === 'ok' ? 'good' : undefined,
+      tone: errored || overdue ? 'bad' : warned ? 'warn' : job.lastStatus === 'ok' ? 'good' : undefined,
     });
+    if (errored) problems.push({ key: job.id, text: `${meta.label} : échec (${job.lastError ?? 'erreur inconnue'})` });
+    else if (overdue) problems.push({ key: job.id, text: `${meta.label} : pas passée à l’heure prévue` });
   }
 
-  if (failed) return result('degraded', failed > 1 ? `${failed} tâches ont échoué à leur dernier passage.` : 'Une tâche a échoué à son dernier passage.', facts);
-  if (late) return result('degraded', 'Une tâche n’est pas passée à l’heure prévue.', facts);
+  if (failed) return result('degraded', failed > 1 ? `${failed} tâches ont échoué à leur dernier passage.` : 'Une tâche a échoué à son dernier passage.', facts, null, problems);
+  if (late) return result('degraded', 'Une tâche n’est pas passée à l’heure prévue.', facts, null, problems);
+  // Une partie seulement en échec (ex. le domaine d'un hôte) : visible ici, sans alerte.
+  if (warnings) return result('up', 'Les tâches passent à l’heure ; une partie du travail a échoué, voir ci-dessous.', facts);
   return result('up', 'Les tâches passent à l’heure.', facts);
 }
 
 async function probeCalendars(ctx: ProbeContext): Promise<ProbeResult> {
-  const syncs = await ctx.prisma.calendarSync.findMany({
+  const read = await readDatabase(() => ctx.prisma.calendarSync.findMany({
     where: { listing: { status: { not: 'deleted' } } },
     select: {
       name: true,
@@ -475,7 +589,9 @@ async function probeCalendars(ctx: ProbeContext): Promise<ProbeResult> {
       lastSyncedAt: true,
       listing: { select: { core: true } },
     },
-  });
+  }));
+  if (!read.ok) return result('unknown', DATABASE_UNAVAILABLE);
+  const syncs = read.value;
   if (!syncs.length) return result('disabled', 'Aucun calendrier Airbnb ou Booking importé pour le moment.');
 
   const failing = syncs.filter((sync) => sync.lastStatus === 'error');
@@ -509,8 +625,13 @@ async function probeStripe(ctx: ProbeContext): Promise<ProbeResult> {
     tone: webhooksReady ? 'good' : 'bad',
   });
 
-  const lastEvent = await ctx.prisma.stripeWebhookEvent.findFirst({ orderBy: { createdAt: 'desc' }, select: { createdAt: true, type: true } });
-  facts.push({ label: 'Dernière nouvelle reçue', value: lastEvent ? `${formatAgo(lastEvent.createdAt.getTime())} (${lastEvent.type})` : 'Aucune pour le moment' });
+  const lastEvent = await readDatabase(() => ctx.prisma.stripeWebhookEvent.findFirst({ orderBy: { createdAt: 'desc' }, select: { createdAt: true, type: true } }));
+  facts.push({
+    label: 'Dernière nouvelle reçue',
+    value: !lastEvent.ok
+      ? 'Inconnue : la base de données ne répond pas'
+      : lastEvent.value ? `${formatAgo(lastEvent.value.createdAt.getTime())} (${lastEvent.value.type})` : 'Aucune pour le moment',
+  });
 
   try {
     const started = performance.now();
@@ -580,10 +701,10 @@ async function probeEmail(ctx: ProbeContext): Promise<ProbeResult> {
   if (!isMailerConfigured()) return result('disabled', 'Aucun service d’envoi configuré : aucun e-mail ne part.');
 
   const since = new Date(Date.now() - 24 * 60 * MINUTE);
-  const hostEmails = await ctx.prisma.hostNotification.count({ where: { createdAt: { gte: since } } });
+  const hostEmails = await readDatabase(() => ctx.prisma.hostNotification.count({ where: { createdAt: { gte: since } } }));
   const facts: ServiceFact[] = [
     { label: 'Expéditeur', value: env.MAIL_FROM },
-    { label: 'E-mails aux hôtes sur 24 h', value: numberFormatter.format(hostEmails) },
+    { label: 'E-mails aux hôtes sur 24 h', value: hostEmails.ok ? numberFormatter.format(hostEmails.value) : 'Inconnu : la base de données ne répond pas' },
   ];
 
   if (!env.BREVO_API_KEY) {
@@ -655,7 +776,7 @@ const SERVICES: ServiceDefinition[] = [
   { id: 'api', group: 'core', label: 'Serveur', role: 'Le cœur d’IndieHost : annonces, réservations, paiements, e-mails.', everyMs: 30 * SECOND, probe: probeApi },
   { id: 'database', group: 'data', label: 'Base de données', role: 'Garde comptes, annonces, réservations, paiements et messages.', everyMs: 30 * SECOND, probe: probeDatabase },
   { id: 'scraping', group: 'data', label: 'Robot d’import', role: 'Lit une annonce Airbnb ou Booking pour la reprendre.', everyMs: 60 * SECOND, probe: probeScraping },
-  { id: 'jobs', group: 'data', label: 'Tâches planifiées', role: 'Rappels aux hôtes et purge des données anciennes, à heure fixe.', everyMs: 60 * SECOND, probe: probeJobs },
+  { id: 'jobs', group: 'data', label: 'Tâches planifiées', role: 'Rappels aux hôtes, purge des données anciennes et référencement des sites d’hôtes, à heure fixe.', everyMs: 60 * SECOND, probe: probeJobs },
   { id: 'calendars', group: 'data', label: 'Calendriers iCal', role: 'Les dates prises sur Airbnb et Booking, bloquées sur IndieHost.', everyMs: 2 * MINUTE, probe: probeCalendars },
   { id: 'stripe', group: 'external', label: 'Stripe', role: 'Paiement des réservations et abonnements des hôtes.', everyMs: 5 * MINUTE, probe: probeStripe },
   { id: 'clerk', group: 'external', label: 'Clerk', role: 'Comptes et connexion au tableau de bord.', everyMs: 5 * MINUTE, probe: probeClerk },
@@ -668,41 +789,106 @@ const SERVICES: ServiceDefinition[] = [
 
 const STATUS_WEIGHT: Record<ServiceStatus, number> = { down: 4, degraded: 3, unknown: 2, up: 1, disabled: 0 };
 const TRACKED_STATUSES = new Set<ServiceStatus>(['up', 'degraded', 'down']);
+// « À surveiller » mérite un e-mail pour ces services : un certificat qui expire bientôt ou qui
+// manque, une tâche planifiée en échec. Ailleurs, seule une panne en déclenche un.
+const DEGRADED_ALERT_SERVICES = new Set<ServiceId>(['certificates', 'jobs']);
+const DAY = 24 * 60 * MINUTE;
+const LONG_UPTIME_RETRY_MS = MINUTE;
+const CAPPED_LOG_EVERY_MS = 60 * MINUTE;
 
 function worstStatus(statuses: ServiceStatus[]): ServiceStatus {
   return statuses.reduce<ServiceStatus>((worst, status) => (STATUS_WEIGHT[status] > STATUS_WEIGHT[worst] ? status : worst), 'disabled');
 }
 
+function bucketStartOf(timestamp: number): number {
+  return Math.floor(timestamp / BUCKET_MS) * BUCKET_MS;
+}
+
+function availability(tracked: number, down: number): number | null {
+  return tracked > 0 ? (tracked - down) / tracked : null;
+}
+
+function isServiceId(value: string): value is ServiceId {
+  return SERVICES.some((service) => service.id === value);
+}
+
+function readStatus(value: string): ServiceStatus {
+  return value === 'up' || value === 'degraded' || value === 'down' || value === 'disabled' ? value : 'unknown';
+}
+
+type UnsavedIncident = { incident: HealthIncident; occurredAt: Date; alertedAt: Date | null };
+
 export class SystemHealthMonitor {
   private readonly runtimes: ServiceRuntime[];
   private readonly incidents: HealthIncident[] = [];
+  private readonly store: HealthStore;
+  private readonly planner = new HealthAlertPlanner({
+    confirmMs: ALERT_CONFIRM_MS,
+    recoveryConfirmMs: ALERT_RECOVERY_MS,
+    minGapMs: ALERT_MIN_GAP_MS,
+    maxAlertsPerDay: ALERT_MAX_PER_DAY,
+    degradedAlerts: DEGRADED_ALERT_SERVICES,
+  });
+  private readonly alertSettings: HealthAlertSettings = readHealthAlertSettings();
+  private pendingAlerts: AlertEvent[] = [];
+  private lastDelivery: HealthAlertStatus['lastDelivery'] = null;
+  private readonly cappedLoggedAt = new Map<ServiceId, number>();
+  /** Changements d'état pas encore écrits en base, et e-mails pas encore notés sur leur changement. */
+  private readonly unsavedIncidents = new Map<string, UnsavedIncident>();
+  private readonly unsavedAlertMarks = new Map<string, Date>();
+  /** Demi-heures des dernières 24 h relues en base : avant, rien n'est réécrit (on écraserait l'historique). */
+  private bucketsLoaded = false;
+  private lastBucketRestoreAt = 0;
   private timer: NodeJS.Timeout | null = null;
+  private initialized: Promise<void> = Promise.resolve();
+  private currentTick: Promise<void> | null = null;
+  private stopped = false;
   private lastForcedAt = 0;
+  private lastPurgeAt = 0;
+  private longUptime: { at: number; week: UptimeTotals; month: UptimeTotals } | null = null;
+  private longUptimeTriedAt = 0;
+  private longUptimeLoading = false;
   private readonly startedAt = Date.now();
 
   constructor(
     private readonly ctx: ProbeContext,
     private readonly log: FastifyBaseLogger,
   ) {
-    this.runtimes = SERVICES.map((definition) => ({ definition, last: null, samples: [], running: false, lastRunAt: 0 }));
+    this.store = new HealthStore(ctx.prisma, log);
+    this.runtimes = SERVICES.map((definition) => ({
+      definition,
+      last: null,
+      buckets: new Map(),
+      dirty: new Set(),
+      lastTracked: null,
+      running: false,
+      lastRunAt: 0,
+      probeAt: null,
+    }));
   }
 
   start(): void {
     if (this.timer) return;
+    this.stopped = false;
     if (!loopDelay) {
       loopDelay = monitorEventLoopDelay({ resolution: 20 });
       loopDelay.enable();
     }
+    this.initialized = this.restore();
     void this.tick(false);
     this.timer = setInterval(() => void this.tick(false), TICK_MS);
     this.timer.unref();
   }
 
-  stop(): void {
+  /** Arrêt de l'API : le passage en cours se termine, puis ce qui n'est pas encore en base y est écrit. */
+  async stop(): Promise<void> {
+    this.stopped = true;
     if (this.timer) clearInterval(this.timer);
     this.timer = null;
+    await this.currentTick?.catch(() => {});
     loopDelay?.disable();
     loopDelay = null;
+    await this.persist();
   }
 
   /** Relance toutes les sondes tout de suite ; faux si une relance vient d'avoir lieu. */
@@ -714,15 +900,113 @@ export class SystemHealthMonitor {
     return true;
   }
 
-  private async tick(force: boolean): Promise<void> {
-    const now = Date.now();
-    const due = this.runtimes.filter((runtime) => !runtime.running && (force || now - runtime.lastRunAt >= runtime.definition.everyMs));
-    await Promise.allSettled(due.map((runtime) => this.runProbe(runtime)));
+  /**
+   * Au démarrage : les demi-heures des dernières 24 h, le journal, le dernier état connu de chaque
+   * service et la mémoire des alertes (pour qu'une panne en cours ne soit pas signalée deux fois, et
+   * que son retour le soit). Chaque lecture a un délai maximal : une base injoignable ne bloque pas la
+   * surveillance, qui part alors de zéro (et relit les demi-heures dès que la base répond).
+   */
+  private async restore(): Promise<void> {
+    const [incidents, latest, alertStates] = await Promise.all([
+      this.store.loadRecentIncidents(MAX_INCIDENTS),
+      this.store.loadLatestStatuses(),
+      this.alertSettings.enabled ? this.store.loadAlertStates() : Promise.resolve(null),
+      this.restoreBuckets(),
+    ]);
+    const byId = new Map(this.runtimes.map((runtime) => [runtime.definition.id, runtime]));
+
+    for (const incident of incidents ?? []) {
+      if (!isServiceId(incident.serviceId)) continue;
+      this.incidents.push({
+        id: incident.id,
+        atISO: incident.occurredAt.toISOString(),
+        serviceId: incident.serviceId,
+        label: byId.get(incident.serviceId)?.definition.label ?? incident.serviceId,
+        from: readStatus(incident.fromStatus),
+        to: readStatus(incident.toStatus),
+        summary: incident.summary,
+        alerted: Boolean(incident.alertedAt),
+      });
+    }
+
+    for (const [serviceId, toStatus] of latest ?? []) {
+      if (!isServiceId(serviceId)) continue;
+      const runtime = byId.get(serviceId);
+      const status = readStatus(toStatus);
+      if (runtime && TRACKED_STATUSES.has(status)) runtime.lastTracked ??= status;
+    }
+
+    for (const [serviceId, raw] of alertStates ?? []) {
+      if (!isServiceId(serviceId)) continue;
+      const state = readServiceAlertState(raw);
+      if (state) this.planner.restore(serviceId, state);
+    }
   }
 
-  private async runProbe(runtime: ServiceRuntime): Promise<void> {
+  /** Demi-heures des dernières 24 h, ajoutées à ce qui a été mesuré depuis le démarrage. */
+  private async restoreBuckets(): Promise<void> {
+    this.lastBucketRestoreAt = Date.now();
+    const rows = await this.store.loadBuckets(new Date(bucketStartOf(Date.now()) - HISTORY_MS));
+    if (!rows) return;
+    const byId = new Map(this.runtimes.map((runtime) => [runtime.definition.id, runtime]));
+    for (const row of rows) {
+      if (!isServiceId(row.serviceId)) continue;
+      const runtime = byId.get(row.serviceId);
+      if (!runtime) continue;
+      const start = row.bucketStart.getTime();
+      // Une mesure prise avant la relecture compte déjà dans cette demi-heure : on additionne.
+      const current = runtime.buckets.get(start);
+      runtime.buckets.set(start, {
+        worstStatus: worstStatus([readStatus(row.worstStatus), current?.worstStatus ?? 'disabled']),
+        samples: row.samples + (current?.samples ?? 0),
+        trackedSamples: row.trackedSamples + (current?.trackedSamples ?? 0),
+        downSamples: row.downSamples + (current?.downSamples ?? 0),
+        latencySumMs: row.latencySumMs + (current?.latencySumMs ?? 0),
+        latencyCount: row.latencyCount + (current?.latencyCount ?? 0),
+      });
+      if (current) runtime.dirty.add(start);
+    }
+    this.bucketsLoaded = true;
+  }
+
+  /** Un passage à la fois : un passage encore en cours fait sauter le suivant (une relance à la main l'attend). */
+  private async tick(force: boolean): Promise<void> {
+    if (this.stopped) return;
+    if (this.currentTick && !force) return;
+    while (this.currentTick) await this.currentTick.catch(() => {});
+    if (this.stopped) return;
+    const run = this.runTick(force);
+    this.currentTick = run;
+    try {
+      await run;
+    } finally {
+      if (this.currentTick === run) this.currentTick = null;
+    }
+  }
+
+  private async runTick(force: boolean): Promise<void> {
+    await this.initialized;
+    const now = Date.now();
+    if (!this.bucketsLoaded && now - this.lastBucketRestoreAt >= BUCKET_RESTORE_RETRY_MS) await this.restoreBuckets();
+
+    // À l'heure prévue (compte pour la disponibilité), ou mesure demandée pour confirmer une panne ou un retour.
+    const due: Array<{ runtime: ServiceRuntime; scheduled: boolean }> = [];
+    for (const runtime of this.runtimes) {
+      if (runtime.running) continue;
+      const scheduled = now - runtime.lastRunAt >= runtime.definition.everyMs;
+      const requested = runtime.probeAt !== null && now >= runtime.probeAt;
+      if (force || scheduled || requested) due.push({ runtime, scheduled });
+    }
+    await Promise.allSettled(due.map(({ runtime, scheduled }) => this.runProbe(runtime, scheduled)));
+    await this.afterProbes();
+  }
+
+  private async runProbe(runtime: ServiceRuntime, scheduled: boolean): Promise<void> {
     runtime.running = true;
-    runtime.lastRunAt = Date.now();
+    // Une mesure de confirmation ou une relance ne décale pas le rythme : les mesures à l'heure
+    // prévue restent régulières, et elles seules comptent pour la disponibilité.
+    if (scheduled) runtime.lastRunAt = Date.now();
+    runtime.probeAt = null;
     let outcome: ProbeResult;
     try {
       outcome = await withTimeout(runtime.definition.probe(this.ctx), PROBE_TIMEOUT_MS);
@@ -732,61 +1016,262 @@ export class SystemHealthMonitor {
     } finally {
       runtime.running = false;
     }
-    this.record(runtime, outcome);
+    this.record(runtime, outcome, scheduled);
   }
 
-  private record(runtime: ServiceRuntime, outcome: ProbeResult): void {
+  private record(runtime: ServiceRuntime, outcome: ProbeResult, scheduled: boolean): void {
     const now = Date.now();
-    const previous = runtime.last?.status ?? null;
+    const { id, label } = runtime.definition;
     runtime.last = { ...outcome, checkedAt: now };
-    runtime.samples.push({ t: now, s: outcome.status, l: outcome.latencyMs });
-    const cutoff = now - HISTORY_MS;
-    while ((runtime.samples[0]?.t ?? Infinity) < cutoff) runtime.samples.shift();
 
-    if (previous && previous !== outcome.status && TRACKED_STATUSES.has(previous) && TRACKED_STATUSES.has(outcome.status)) {
-      this.incidents.unshift({
-        atISO: new Date(now).toISOString(),
-        serviceId: runtime.definition.id,
-        label: runtime.definition.label,
-        from: previous,
-        to: outcome.status,
-        summary: outcome.summary,
-      });
-      if (this.incidents.length > MAX_INCIDENTS) this.incidents.length = MAX_INCIDENTS;
-      const level = outcome.status === 'down' ? 'error' : outcome.status === 'degraded' ? 'warn' : 'info';
-      this.log[level]({ service: runtime.definition.id, from: previous, to: outcome.status, summary: outcome.summary }, '[health] service status changed');
+    // La mesure compte dans sa demi-heure : en mémoire tout de suite, en base en fin de passage.
+    const start = bucketStartOf(now);
+    const aggregate = runtime.buckets.get(start) ?? {
+      worstStatus: outcome.status,
+      samples: 0,
+      trackedSamples: 0,
+      downSamples: 0,
+      latencySumMs: 0,
+      latencyCount: 0,
+    };
+    aggregate.worstStatus = worstStatus([aggregate.worstStatus, outcome.status]);
+    aggregate.samples += 1;
+    if (scheduled && TRACKED_STATUSES.has(outcome.status)) {
+      aggregate.trackedSamples += 1;
+      if (outcome.status === 'down') aggregate.downSamples += 1;
+    }
+    if (outcome.latencyMs !== null) {
+      aggregate.latencySumMs += Math.round(outcome.latencyMs);
+      aggregate.latencyCount += 1;
+    }
+    runtime.buckets.set(start, aggregate);
+    runtime.dirty.add(start);
+    const oldest = start - HISTORY_MS;
+    for (const key of runtime.buckets.keys()) {
+      if (key < oldest) runtime.buckets.delete(key);
+    }
+
+    // Changement d'état suivi : journal en mémoire tout de suite, en base en fin de passage. Premier
+    // état connu d'un service : seul un service trouvé en panne (ou à surveiller) entre au journal.
+    if (TRACKED_STATUSES.has(outcome.status)) {
+      const previous = runtime.lastTracked;
+      runtime.lastTracked = outcome.status;
+      if (previous !== outcome.status && (previous !== null || outcome.status !== 'up')) {
+        const incident: HealthIncident = {
+          id: randomUUID(),
+          atISO: new Date(now).toISOString(),
+          serviceId: id,
+          label,
+          from: previous ?? 'unknown',
+          to: outcome.status,
+          summary: outcome.summary,
+          alerted: false,
+        };
+        this.incidents.unshift(incident);
+        if (this.incidents.length > MAX_INCIDENTS) this.incidents.length = MAX_INCIDENTS;
+        const level = outcome.status === 'down' ? 'error' : outcome.status === 'degraded' ? 'warn' : 'info';
+        this.log[level]({ service: id, from: previous ?? 'unknown', to: outcome.status, summary: outcome.summary }, '[health] service status changed');
+        this.queueIncident(incident, now);
+      }
+    }
+
+    // Alerte par e-mail : décidée tout de suite, envoyée en fin de passage, avant toute écriture en base.
+    if (this.alertSettings.enabled) {
+      const decision = this.planner.observe(id, label, outcome.status, outcome.summary, now, outcome.problems ?? []);
+      this.pendingAlerts.push(...decision.events);
+      if (decision.probeAt !== null) {
+        runtime.probeAt = runtime.probeAt === null ? decision.probeAt : Math.min(runtime.probeAt, decision.probeAt);
+      }
+      if (decision.capped && now - (this.cappedLoggedAt.get(id) ?? 0) >= CAPPED_LOG_EVERY_MS) {
+        this.cappedLoggedAt.set(id, now);
+        this.log.warn({ service: id, maxPerDay: ALERT_MAX_PER_DAY }, '[health] alert not sent: daily limit reached for this service');
+      }
     }
   }
 
-  private buildHistory(samples: Sample[], now: number): HealthBucket[] {
+  private queueIncident(incident: HealthIncident, occurredAt: number): void {
+    this.unsavedIncidents.set(incident.id, { incident, occurredAt: new Date(occurredAt), alertedAt: null });
+    // Base injoignable longtemps : les plus anciens ne seront pas écrits (ils restent affichés jusqu'au redémarrage).
+    while (this.unsavedIncidents.size > MAX_UNSAVED_INCIDENTS) {
+      const oldest = this.unsavedIncidents.keys().next().value;
+      if (oldest === undefined) break;
+      this.unsavedIncidents.delete(oldest);
+    }
+  }
+
+  private markIncidentAlerted(incident: HealthIncident, at: Date): void {
+    incident.alerted = true;
+    const unsaved = this.unsavedIncidents.get(incident.id);
+    if (unsaved) unsaved.alertedAt = at;
+    else this.unsavedAlertMarks.set(incident.id, at);
+  }
+
+  private async afterProbes(): Promise<void> {
+    // L'e-mail d'abord : une base lente ne retarde jamais l'alerte qui la concerne.
+    await this.sendPendingAlerts();
+    await this.persist();
+
+    const now = Date.now();
+    if (now - this.lastPurgeAt >= PURGE_EVERY_MS) {
+      this.lastPurgeAt = now;
+      void this.store.purge(new Date(now - BUCKET_RETENTION_MS), new Date(now - INCIDENT_RETENTION_MS));
+    }
+    const stale = !this.longUptime || now - this.longUptime.at >= LONG_UPTIME_REFRESH_MS;
+    if (stale && now - this.longUptimeTriedAt >= LONG_UPTIME_RETRY_MS) void this.refreshLongUptime();
+  }
+
+  /**
+   * Écrit en base ce qui a changé. Au premier échec, le reste attend le passage suivant : la base ne
+   * répond pas, inutile d'attendre encore le délai de chaque écriture. L'historique passe en premier,
+   * le journal en dernier : une ligne du journal refusée ne bloque jamais le reste.
+   */
+  private async persist(): Promise<void> {
+    if (!(await this.flushBuckets())) return;
+    if (!(await this.flushAlertStates())) return;
+    await this.flushIncidents();
+  }
+
+  private async flushIncidents(): Promise<boolean> {
+    if (this.unsavedIncidents.size) {
+      const entries = [...this.unsavedIncidents.values()];
+      const rows: StoredIncident[] = entries.map(({ incident, occurredAt, alertedAt }) => ({
+        id: incident.id,
+        serviceId: incident.serviceId,
+        fromStatus: incident.from,
+        toStatus: incident.to,
+        summary: incident.summary,
+        occurredAt,
+        alertedAt,
+      }));
+      if (!(await this.store.insertIncidents(rows))) return false;
+      for (const entry of entries) this.unsavedIncidents.delete(entry.incident.id);
+    }
+    if (this.unsavedAlertMarks.size) {
+      // Regroupés par heure d'envoi : un même e-mail couvre souvent plusieurs changements.
+      const byTime = new Map<number, string[]>();
+      for (const [incidentId, at] of this.unsavedAlertMarks) byTime.set(at.getTime(), [...(byTime.get(at.getTime()) ?? []), incidentId]);
+      for (const [time, ids] of byTime) {
+        if (!(await this.store.markAlerted(ids, new Date(time)))) return false;
+        for (const incidentId of ids) this.unsavedAlertMarks.delete(incidentId);
+      }
+    }
+    return true;
+  }
+
+  /** Écrit les demi-heures modifiées ; en cas d'échec, elles seront réécrites au passage suivant. */
+  private async flushBuckets(): Promise<boolean> {
+    // Historique pas encore relu : la demi-heure en base serait écrasée par les seules mesures récentes.
+    if (!this.bucketsLoaded) return true;
+    const rows: StoredBucket[] = [];
+    const taken: Array<[ServiceRuntime, number]> = [];
+    for (const runtime of this.runtimes) {
+      for (const start of runtime.dirty) {
+        const aggregate = runtime.buckets.get(start);
+        if (!aggregate) continue;
+        rows.push({ serviceId: runtime.definition.id, bucketStart: new Date(start), ...aggregate });
+        taken.push([runtime, start]);
+      }
+      runtime.dirty.clear();
+    }
+    if (!rows.length) return true;
+    const saved = await this.store.saveBuckets(rows);
+    if (!saved) {
+      for (const [runtime, start] of taken) runtime.dirty.add(start);
+    }
+    return saved;
+  }
+
+  private async flushAlertStates(): Promise<boolean> {
+    const entries = this.planner.takeDirty();
+    if (!entries.length) return true;
+    const saved = await this.store.saveAlertStates(entries);
+    if (!saved) this.planner.markDirty(entries.map(([serviceId]) => serviceId));
+    return saved;
+  }
+
+  private async sendPendingAlerts(): Promise<void> {
+    if (!this.pendingAlerts.length) return;
+    const events = this.pendingAlerts;
+    this.pendingAlerts = [];
+    const now = Date.now();
+
+    // Pannes signalées qui continuent, rappelées dans un e-mail de retour (« toujours signalé »).
+    const announced = new Set(events.map((event) => event.serviceId));
+    const labels = new Map(this.runtimes.map((runtime) => [runtime.definition.id, runtime.definition.label]));
+    const stillOpen: OpenAlert[] = this.planner.openAlerts()
+      .filter((open) => !announced.has(open.serviceId))
+      .map((open) => ({ label: labels.get(open.serviceId) ?? open.serviceId, kind: open.kind, since: open.since }));
+
+    let delivery: { ok: boolean; reason: string | null } = { ok: false, reason: 'send_failed' };
+    try {
+      delivery = await deliverHealthAlert(events, this.alertSettings, now, stillOpen);
+    } catch (error) {
+      this.log.error({ err: error }, '[health] alert e-mail failed');
+    }
+    this.lastDelivery = { ok: delivery.ok, atISO: new Date(now).toISOString(), reason: delivery.reason };
+    const services = events.map((event) => `${event.serviceId}:${event.kind}`);
+    if (!delivery.ok) {
+      this.planner.markUndelivered(events);
+      this.log.warn({ services, reason: delivery.reason }, '[health] alert e-mail not delivered, retried later');
+      return;
+    }
+    this.log.info({ services, recipients: this.alertSettings.recipients.length }, '[health] alert e-mail sent');
+
+    // Chaque e-mail est noté sur le changement d'état auquel il se rapporte.
+    const sentAt = new Date(now);
+    for (const event of events) {
+      const atISO = new Date(event.statusSince).toISOString();
+      const incident = this.incidents.find((entry) => entry.serviceId === event.serviceId && entry.atISO === atISO);
+      if (incident) this.markIncidentAlerted(incident, sentAt);
+    }
+  }
+
+  private async refreshLongUptime(): Promise<void> {
+    if (this.longUptimeLoading) return;
+    this.longUptimeLoading = true;
+    const now = Date.now();
+    this.longUptimeTriedAt = now;
+    try {
+      const [week, month] = await Promise.all([
+        this.store.availabilitySince(new Date(now - 7 * DAY)),
+        this.store.availabilitySince(new Date(now - 30 * DAY)),
+      ]);
+      if (week && month) this.longUptime = { at: now, week, month };
+    } finally {
+      this.longUptimeLoading = false;
+    }
+  }
+
+  private buildHistory(runtime: ServiceRuntime, now: number): HealthBucket[] {
     // Demi-heures alignées sur l'horloge : la dernière case est la demi-heure en cours.
     const end = Math.ceil(now / BUCKET_MS) * BUCKET_MS;
     const start = end - HISTORY_MS;
-    const buckets = Array.from({ length: BUCKET_COUNT }, (_, index) => ({
-      start: start + index * BUCKET_MS,
-      statuses: [] as ServiceStatus[],
-      latencies: [] as number[],
-    }));
-    for (const sample of samples) {
-      const index = Math.floor((sample.t - start) / BUCKET_MS);
-      const bucket = buckets[index];
-      if (!bucket) continue;
-      bucket.statuses.push(sample.s);
-      if (sample.l !== null) bucket.latencies.push(sample.l);
-    }
-    return buckets.map((bucket) => ({
-      startISO: new Date(bucket.start).toISOString(),
-      status: bucket.statuses.length ? worstStatus(bucket.statuses) : 'none',
-      samples: bucket.statuses.length,
-      avgLatencyMs: bucket.latencies.length ? Math.round(bucket.latencies.reduce((sum, value) => sum + value, 0) / bucket.latencies.length) : null,
-    }));
+    return Array.from({ length: BUCKET_COUNT }, (_, index) => {
+      const key = start + index * BUCKET_MS;
+      const aggregate = runtime.buckets.get(key);
+      const hasSamples = Boolean(aggregate && aggregate.samples > 0);
+      return {
+        startISO: new Date(key).toISOString(),
+        status: hasSamples && aggregate ? aggregate.worstStatus : 'none',
+        samples: aggregate?.samples ?? 0,
+        avgLatencyMs: aggregate && aggregate.latencyCount ? Math.round(aggregate.latencySumMs / aggregate.latencyCount) : null,
+      };
+    });
   }
 
   snapshot(): SystemHealthSnapshot {
     const now = Date.now();
+    const windowStart = Math.ceil(now / BUCKET_MS) * BUCKET_MS - HISTORY_MS;
     const services: ServiceHealth[] = this.runtimes.map((runtime) => {
-      const tracked = runtime.samples.filter((sample) => TRACKED_STATUSES.has(sample.s));
-      const available = tracked.filter((sample) => sample.s !== 'down').length;
+      let tracked = 0;
+      let down = 0;
+      for (const [key, aggregate] of runtime.buckets) {
+        if (key < windowStart) continue;
+        tracked += aggregate.trackedSamples;
+        down += aggregate.downSamples;
+      }
+      const week = this.longUptime?.week.get(runtime.definition.id);
+      const month = this.longUptime?.month.get(runtime.definition.id);
       return {
         id: runtime.definition.id,
         group: runtime.definition.group,
@@ -798,8 +1283,11 @@ export class SystemHealthMonitor {
         facts: runtime.last?.facts ?? [],
         checkedAtISO: runtime.last ? new Date(runtime.last.checkedAt).toISOString() : null,
         everyMs: runtime.definition.everyMs,
-        uptime24h: tracked.length ? available / tracked.length : null,
-        history: this.buildHistory(runtime.samples, now),
+        uptime24h: availability(tracked, down),
+        uptime7d: week ? availability(week.tracked, week.down) : null,
+        uptime30d: month ? availability(month.tracked, month.down) : null,
+        historySinceISO: month?.firstBucketAt ? month.firstBucketAt.toISOString() : null,
+        history: this.buildHistory(runtime, now),
       };
     });
 
@@ -808,6 +1296,17 @@ export class SystemHealthMonitor {
       generatedAtISO: new Date(now).toISOString(),
       monitoringSinceISO: new Date(this.startedAt).toISOString(),
       environment: env.NODE_ENV,
+      historyPersisted: this.store.isAvailable(),
+      alerts: {
+        ...this.alertSettings,
+        rules: {
+          confirmSeconds: ALERT_CONFIRM_MS / SECOND,
+          recoveryMinutes: ALERT_RECOVERY_MS / MINUTE,
+          gapMinutes: ALERT_MIN_GAP_MS / MINUTE,
+          maxPerDay: ALERT_MAX_PER_DAY,
+        },
+        lastDelivery: this.lastDelivery,
+      },
       overall: {
         status: worstStatus(counted.filter((status) => status !== 'unknown')),
         up: counted.filter((status) => status === 'up').length,
@@ -816,7 +1315,7 @@ export class SystemHealthMonitor {
         disabled: counted.filter((status) => status === 'disabled').length,
       },
       services,
-      incidents: [...this.incidents],
+      incidents: this.incidents.map((incident) => ({ ...incident })),
       jobs: listJobRuns().map((job) => ({
         id: job.id,
         label: JOB_LABELS[job.id].label,
@@ -826,6 +1325,7 @@ export class SystemHealthMonitor {
         lastDurationMs: job.lastDurationMs,
         lastStatus: job.lastStatus,
         lastError: job.lastError,
+        lastWarning: job.lastWarning,
         nextRunAtISO: job.nextRunAt ? new Date(job.nextRunAt).toISOString() : null,
         runs: job.runs,
         failures: job.failures,

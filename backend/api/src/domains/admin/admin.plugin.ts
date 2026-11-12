@@ -49,7 +49,7 @@ export const adminPlugin = fp(async (fastify) => {
       monitor.start();
     });
     fastify.addHook('onClose', async () => {
-      monitor.stop();
+      await monitor.stop();
     });
   }
 

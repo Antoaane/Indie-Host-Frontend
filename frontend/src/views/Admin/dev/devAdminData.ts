@@ -82,10 +82,10 @@ function serviceSeeds(outage: boolean): ServiceSeed[] {
       everyMs: 30 * MINUTE,
       status: 'degraded',
       latencyMs: null,
-      summary: 'Un certificat expire bientôt ou manque encore.',
+      summary: 'Un certificat expire bientôt ou manque.',
       facts: [
         { label: 'indiehost.fr et ses sous-domaines', value: 'Valide jusqu’au 9 févr. 2027 (88 j)', tone: 'good' },
-        { label: 'gite-du-moulin.fr', value: 'Valide jusqu’au 21 nov. 2026 (9 j)', tone: 'warn' },
+        { label: 'gite-du-moulin.fr', value: 'Expire le 21 nov. 2026 (9 j)', tone: 'warn' },
       ],
     },
     { id: 'site', group: 'core', label: 'Site', role: 'Les pages : accueil, logements, réservation, tableau de bord.', everyMs: 30_000, status: 'up', latencyMs: 3, summary: 'Pages servies en 3 ms.' },
@@ -113,14 +113,15 @@ function serviceSeeds(outage: boolean): ServiceSeed[] {
       id: 'jobs',
       group: 'data',
       label: 'Tâches planifiées',
-      role: 'Rappels aux hôtes et purge des données anciennes, à heure fixe.',
+      role: 'Rappels aux hôtes, purge des données anciennes et référencement des sites d’hôtes, à heure fixe.',
       everyMs: MINUTE,
       status: 'up',
       latencyMs: null,
-      summary: 'Les tâches passent à l’heure.',
+      summary: 'Les tâches passent à l’heure ; une partie du travail a échoué, voir ci-dessous.',
       facts: [
         { label: 'Purge des données anciennes', value: 'dernier passage à 03:12 (1,4 s) · prochain à 03:12', tone: 'good' },
         { label: 'Rappels par e-mail aux hôtes', value: 'dernier passage à 14:02 (2,1 s) · prochain à 15:02', tone: 'good' },
+        { label: 'Référencement des sites d’hôtes', value: 'dernier passage à 14:05 (3,4 s) · prochain à 15:05 · en partie en échec : 1 site sur 3 en échec (gite-du-moulin.fr : le fichier de validation de Google est introuvable).', tone: 'warn' },
       ],
     },
     {
@@ -163,6 +164,12 @@ export function buildDevHealth(outage: boolean): SystemHealth {
       checkedAtISO: seed.everyMs <= MINUTE ? iso(-4000) : externalCheckedAtISO,
       everyMs: seed.everyMs,
       uptime24h: uptimeOf(history),
+      // Plus long que les 24 h : la base garde l'historique. La base de données a eu une panne il y a 8 h
+      // (une vingtaine de minutes, d'où 97,5 % sur 24 h, 99,7 % sur 7 jours et 99,9 % sur 30 jours).
+      uptime7d: seed.status === 'disabled' ? null : seed.id === 'database' ? 0.9977 : 1,
+      uptime30d: seed.status === 'disabled' ? null : seed.id === 'database' ? 0.9995 : seed.id === 'certificates' ? 0.9987 : 1,
+      // Le robot d'import n'est mesuré que depuis 3 jours : la page dit « Depuis le … » au lieu de 7 et 30 jours.
+      historySinceISO: seed.status === 'disabled' ? null : iso(seed.id === 'scraping' ? -3 * DAY : -40 * DAY),
       history,
     }
   })
@@ -171,6 +178,15 @@ export function buildDevHealth(outage: boolean): SystemHealth {
     generatedAtISO: new Date().toISOString(),
     monitoringSinceISO: iso(-20 * HOUR),
     environment: 'production',
+    historyPersisted: true,
+    alerts: {
+      enabled: true,
+      recipients: ['dev@indiehost.fr'],
+      reason: null,
+      rules: { confirmSeconds: 30, recoveryMinutes: 5, gapMinutes: 15, maxPerDay: 6 },
+      // En panne simulée, le dernier e-mail d'alerte n'est pas parti : la page le signale.
+      lastDelivery: outage ? { ok: false, atISO: iso(-51 * MINUTE), reason: 'send_failed' } : { ok: true, atISO: iso(-3 * HOUR), reason: null },
+    },
     overall: {
       status: count('down') ? 'down' : count('degraded') ? 'degraded' : 'up',
       up: count('up'),
@@ -180,10 +196,11 @@ export function buildDevHealth(outage: boolean): SystemHealth {
     },
     services,
     incidents: [
-      ...(outage ? [{ atISO: iso(-52 * MINUTE), serviceId: 'database' as const, label: 'Base de données', from: 'up' as const, to: 'down' as const, summary: 'La base ne répond pas (connexion refusée, le service ne tourne pas).' }] : []),
-      { atISO: iso(-3 * HOUR), serviceId: 'certificates', label: 'Certificats HTTPS', from: 'up', to: 'degraded', summary: 'Un certificat expire bientôt ou manque encore.' },
-      { atISO: iso(-8 * HOUR + 4 * MINUTE), serviceId: 'database', label: 'Base de données', from: 'down', to: 'up', summary: 'Répond en 2 ms.' },
-      { atISO: iso(-8 * HOUR), serviceId: 'database', label: 'Base de données', from: 'up', to: 'down', summary: 'La base ne répond pas (pas de réponse dans le délai).' },
+      ...(outage ? [{ id: 'inc_dev_4', alerted: true, atISO: iso(-52 * MINUTE), serviceId: 'database' as const, label: 'Base de données', from: 'up' as const, to: 'down' as const, summary: 'La base ne répond pas (connexion refusée, le service ne tourne pas).' }] : []),
+      { id: 'inc_dev_3', alerted: true, atISO: iso(-3 * HOUR), serviceId: 'certificates', label: 'Certificats HTTPS', from: 'up', to: 'degraded', summary: 'Un certificat expire bientôt ou manque.' },
+      { id: 'inc_dev_2', alerted: true, atISO: iso(-8 * HOUR + 22 * MINUTE), serviceId: 'database', label: 'Base de données', from: 'down', to: 'up', summary: 'Répond en 2 ms.' },
+      { id: 'inc_dev_1', alerted: true, atISO: iso(-8 * HOUR), serviceId: 'database', label: 'Base de données', from: 'up', to: 'down', summary: 'La base ne répond pas (pas de réponse dans le délai).' },
+      { id: 'inc_dev_0', alerted: false, atISO: iso(-20 * HOUR), serviceId: 'calendars', label: 'Calendriers iCal', from: 'unknown', to: 'degraded', summary: 'Un calendrier est en erreur.' },
     ],
     jobs: [],
   }
@@ -211,7 +228,7 @@ export const devOverview: AdminOverview = {
   attention: [
     { id: 'past-due-1', tone: 'warn', title: 'Abonnement impayé', detail: 'Julien Moreau : Stripe retente le prélèvement ; sans paiement, l’abonnement s’arrête.', target: { tab: 'users', userId: 'usr_julien' } },
     { id: 'reservation-failures', tone: 'warn', title: '2 paiements de voyageurs refusés cette semaine', detail: 'Carte refusée ou 3-D Secure non validé : le voyageur n’a pas réservé.', target: { tab: 'payments' } },
-    { id: 'service-certificates', tone: 'warn', title: 'Certificats HTTPS : à surveiller', detail: 'Un certificat expire bientôt ou manque encore.', target: { tab: 'services' } },
+    { id: 'service-certificates', tone: 'warn', title: 'Certificats HTTPS : à surveiller', detail: 'Un certificat expire bientôt ou manque.', target: { tab: 'services' } },
   ],
 }
 

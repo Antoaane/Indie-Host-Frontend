@@ -186,6 +186,28 @@
           @include little-text($secondary-text, $bold: true);
         }
       }
+
+      // Disponibilité sur 7 et 30 jours, lue dans l'historique gardé en base.
+      > .longer {
+        margin: 0;
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--layout-gap-2xs) var(--layout-gap);
+
+        > div {
+          display: flex;
+          gap: var(--layout-gap-xs);
+
+          > dt {
+            @include little-text(rgba($secondary-text, 0.64), $thin: false);
+          }
+
+          > dd {
+            margin: 0;
+            @include little-text($secondary-text, $bold: true);
+          }
+        }
+      }
     }
 
     > .meta {
@@ -236,7 +258,26 @@
 
         > .why {
           @include little-text(rgba($secondary-text, 0.72), $thin: false);
+
+          > .alerted {
+            // Le mixin de texte pose `margin: 0` : il passe avant la marge.
+            @include little-text($secondary-text, $bold: true);
+            display: inline-flex;
+            align-items: center;
+            gap: var(--layout-gap-2xs);
+            margin-left: var(--layout-gap-xs);
+            white-space: nowrap;
+          }
         }
+      }
+    }
+
+    > .alerts {
+      max-width: 75ch;
+      @include little-text($secondary-text, $thin: false);
+
+      &.is-off {
+        color: $warn-ink;
       }
     }
 

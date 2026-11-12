@@ -297,3 +297,49 @@ model PublicSite {
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 }
+
+// Santé des services de l'administration (`domains/admin/systemHealth.ts`) : une ligne par service et
+// par demi-heure, mise à jour à chaque mesure. Gardée 90 jours (disponibilité sur 7 et 30 jours,
+// historique qui survit aux redémarrages de l'API).
+model ServiceHealthBucket {
+  serviceId      String
+  bucketStart    DateTime
+  // Pire état mesuré dans la demi-heure : down, degraded, unknown, up ou disabled.
+  worstStatus    String
+  samples        Int      @default(0)
+  // Mesures à l'heure prévue qui comptent pour la disponibilité (en service, à surveiller ou en
+  // panne) : les mesures de confirmation d'une panne et les relances à la main n'y comptent pas.
+  trackedSamples Int      @default(0)
+  downSamples    Int      @default(0)
+  latencySumMs   Int      @default(0)
+  latencyCount   Int      @default(0)
+  updatedAt      DateTime @updatedAt
+
+  @@id([serviceId, bucketStart])
+  @@index([bucketStart])
+}
+
+// Changements d'état d'un service (journal de l'administration) ; `alertedAt` : un e-mail (panne ou
+// retour) est parti pour ce changement (`domains/admin/healthAlerts.ts`). `fromStatus` vaut `unknown`
+// pour un service trouvé en panne au démarrage. Gardés 180 jours.
+model ServiceHealthIncident {
+  id         String    @id @default(cuid())
+  serviceId  String
+  fromStatus String
+  toStatus   String
+  summary    String
+  occurredAt DateTime  @default(now())
+  alertedAt  DateTime?
+
+  @@index([occurredAt])
+  @@index([serviceId, occurredAt])
+}
+
+// Mémoire des alertes par e-mail, une ligne par service (`HealthAlertPlanner`) : panne signalée et pas
+// encore revenue, derniers e-mails (intervalle minimal, plafond sur 24 h). Relue au démarrage de l'API
+// pour ne pas resignaler une panne et bien annoncer son retour.
+model ServiceHealthAlertState {
+  serviceId String   @id
+  state     Json
+  updatedAt DateTime @updatedAt
+}

@@ -237,7 +237,8 @@ const callbackAction = computed(() => parseCallbackAction(route.query.action) ??
 const checkoutStatus = computed(() => parseCheckoutStatus(route.query.checkout))
 const checkoutSessionId = computed(() => readQueryValue(route.query.session_id))
 const connectCallbackState = computed(() => parseConnectCallbackState(route.query.state))
-const accountQuery = computed(() => readQueryValue(route.query.account))
+// Aucun numéro de compte Stripe n'est lu dans l'adresse ni envoyé à l'API : elle prend toujours le
+// compte rattaché au profil (un numéro venu d'un lien ne prouve rien, il est public).
 
 function buildEditorRouteLocation(listingId?: string): RouteLocationRaw {
   const query = listingId ? { listingId } : {}
@@ -535,7 +536,6 @@ const callbackSignature = computed(() => {
     checkout: checkoutStatus.value,
     sessionId: checkoutSessionId.value,
     connectState: connectCallbackState.value,
-    account: accountQuery.value,
     path: route.path,
   })
 })
@@ -785,7 +785,6 @@ async function launchConnectOnboardingWithListingId(listingId?: string | null) {
 
     const targetPlanCode = selectedPlan.value ?? currentPlanCode.value ?? null
     const onboardingLink = await createStripeConnectOnboardingLink({
-      accountId: accountQuery.value ?? subscriptionState.value?.connect?.accountId ?? undefined,
       refreshUrl: buildConnectCallbackUrl('refresh', targetPlanCode, ensuredListingId),
       returnUrl: buildConnectCallbackUrl('return', targetPlanCode, ensuredListingId),
       country: 'FR',
@@ -920,9 +919,7 @@ async function syncConnectAfterReturn(): Promise<{
     try {
       lastError = null
       await refreshAuthToken()
-      await syncMyStripeConnectState({
-        accountId: accountQuery.value ?? undefined,
-      })
+      await syncMyStripeConnectState()
 
       latestState = await fetchMyStripeSubscriptionState({ sync: true })
       if (isConnectReadyFromState(latestState)) {
@@ -957,7 +954,6 @@ async function relaunchConnect() {
   const listingId = onboardingListingId.value
 
   const onboardingLink = await createStripeConnectOnboardingLink({
-    accountId: accountQuery.value ?? state.connect.accountId ?? undefined,
     refreshUrl: buildConnectCallbackUrl('refresh', targetPlanCode, listingId),
     returnUrl: buildConnectCallbackUrl('return', targetPlanCode, listingId),
     country: 'FR',

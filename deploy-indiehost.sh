@@ -71,6 +71,7 @@ check_route() {
 
 check_route GET /api/v1/payments/stripe/connect/overview
 check_route PUT /api/v1/listings/verification/page
+check_route GET /api/v1/admin/system/health
 
 # Sites des hôtes (2026-11-12) : route publique de l'API (404 « Listing not found » ; l'ancienne API
 # répondait 400) et nginx à jour (le shell du site n'est jamais servi au public).

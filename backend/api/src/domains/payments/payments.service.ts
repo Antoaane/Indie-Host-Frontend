@@ -1471,6 +1471,57 @@ export class PaymentsService {
     return null;
   }
 
+  /**
+   * Compte Stripe qu'une demande de l'hôte peut viser (synchronisation, lien d'inscription, lien
+   * du tableau de bord) : toujours celui rattaché à son profil. Le numéro d'un compte connecté n'a
+   * rien de secret (il accompagne chaque paiement d'une annonce publiée) : un numéro envoyé par le
+   * navigateur ne prouve rien, et aucun parcours légitime n'en envoie un autre que celui-ci. Les
+   * comptes à reprendre (remplacement raté) le sont par le serveur seul, d'après le profil.
+   */
+  private resolveOwnedConnectAccountId(user: User, requestedInput: unknown): string | null {
+    const requested = readString(requestedInput);
+    const stored = readString(user.stripeConnectAccountId) ?? readString(this.readStripeProfile(user).accountId);
+    if (!requested || requested === stored) return stored;
+
+    console.warn('[payments] Stripe Connect account not attached to this user refused', {
+      userId: user.id,
+      requestedAccountId: requested,
+    });
+    const error = createBadRequestError(
+      'Ce compte Stripe n’est pas rattaché à votre profil.',
+      'STRIPE_CONNECT_ACCOUNT_NOT_OWNED',
+    );
+    error.statusCode = 403;
+    throw error;
+  }
+
+  /**
+   * Le compte rattaché au profil a-t-il bien été créé pour cet utilisateur ? IndieHost pose
+   * `metadata.userId` à la création. Avant le 2026-11-12, un numéro envoyé par le navigateur pouvait
+   * être rattaché sans contrôle : un compte rattaché ainsi à un autre profil est refusé ici, à chaque
+   * relecture chez Stripe, et signalé dans les journaux (`npm run connect-audit` les liste tous).
+   */
+  private assertConnectAccountOwner(account: Stripe.Account, user: User): void {
+    const ownerId = readString(account.metadata?.userId);
+    if (!ownerId) {
+      console.warn('[payments] Stripe Connect account without owner metadata', { userId: user.id, accountId: account.id });
+      return;
+    }
+    if (ownerId === user.id) return;
+
+    console.error('[payments] Stripe Connect account attached to a user it was not created for', {
+      userId: user.id,
+      accountId: account.id,
+      createdForUserId: ownerId,
+    });
+    const error = createBadRequestError(
+      'Ce compte Stripe a été créé pour un autre compte IndieHost. Écrivez-nous à contact@indiehost.fr pour le rattacher correctement.',
+      'STRIPE_CONNECT_ACCOUNT_NOT_OWNED',
+    );
+    error.statusCode = 403;
+    throw error;
+  }
+
   private async ensureStripeConnectAccount(
     user: User,
     options?: {
@@ -2430,6 +2481,8 @@ export class PaymentsService {
 
     try {
       const account = await this.stripe.accounts.retrieve(accountId);
+      // Compte créé pour un autre profil : rien n'est recopié, l'erreur est journalisée.
+      this.assertConnectAccountOwner(account, user);
       return await this.updateUserStripeState({
         user,
         stripeConnectAccountId: accountId,
@@ -3221,9 +3274,11 @@ export class PaymentsService {
       // fois le nouveau créé : un échec de création ne laisse pas l'hôte sans compte.
       let replacedAccountId: string | null = null;
       let recoveredAccountId: string | null = null;
-      const currentAccountId = readString(input.accountId) ?? user.stripeConnectAccountId;
+      // Jamais le compte d'un autre hôte : son numéro est public (voir resolveOwnedConnectAccountId).
+      const currentAccountId = this.resolveOwnedConnectAccountId(user, input.accountId);
       if (this.stripe && currentAccountId) {
         const current = await this.stripe.accounts.retrieve(currentAccountId);
+        this.assertConnectAccountOwner(current, user);
         const currentDashboard = current.controller?.stripe_dashboard?.type ?? null;
         if (!current.details_submitted && currentDashboard !== CONNECT_DASHBOARD_TYPE) {
           replacedAccountId = currentAccountId;
@@ -3249,7 +3304,7 @@ export class PaymentsService {
 
       const connect = await this.ensureStripeConnectAccount(user, {
         country: input.country,
-        forcedAccountId: replacedAccountId ? null : (recoveredAccountId ?? input.accountId),
+        forcedAccountId: replacedAccountId ? null : (recoveredAccountId ?? currentAccountId),
         prefill,
         forceNew: Boolean(replacedAccountId),
       });
@@ -3350,8 +3405,8 @@ export class PaymentsService {
     user = await this.refreshPendingConnectState(user);
 
     const connect = this.readConnectState(user);
-    const profileAccountId = readString(this.readStripeProfile(user).accountId);
-    const requestedAccountId = readString(input.accountId) ?? connect.accountId ?? profileAccountId;
+    // Un lien de connexion au tableau de bord d'un autre hôte lui donnerait accès à son compte.
+    const requestedAccountId = this.resolveOwnedConnectAccountId(user, input.accountId);
 
     if (!requestedAccountId) {
       const missing = createBadRequestError(
@@ -3385,6 +3440,7 @@ export class PaymentsService {
     // Les liens de connexion n'existent que pour le Dashboard Express. Un hôte au Dashboard
     // Stripe complet se connecte directement sur dashboard.stripe.com avec ses identifiants.
     const account = await this.stripe.accounts.retrieve(requestedAccountId);
+    this.assertConnectAccountOwner(account, user);
     const dashboardType = account.controller?.stripe_dashboard?.type ?? (account.type === 'express' ? 'express' : 'full');
     if (dashboardType === 'express') {
       const loginLink = await this.stripe.accounts.createLoginLink(requestedAccountId);
@@ -3556,7 +3612,8 @@ export class PaymentsService {
     if (!user) return null;
     user = await this.enforceAdminListingTransferTrialExpiration(user);
 
-    const requestedAccountId = readString(input.accountId) ?? user.stripeConnectAccountId ?? null;
+    // Rattacher un compte demande d'en être le propriétaire (voir resolveOwnedConnectAccountId).
+    const requestedAccountId = this.resolveOwnedConnectAccountId(user, input.accountId);
     if (!requestedAccountId) {
       const next = await this.updateUserStripeState({
         user,
@@ -3605,6 +3662,7 @@ export class PaymentsService {
     }
 
     const account = await this.stripe.accounts.retrieve(requestedAccountId);
+    this.assertConnectAccountOwner(account, user);
     const onboardingStatus = this.resolveConnectOnboardingStatusFromStripeAccount(account);
     const next = await this.updateUserStripeState({
       user,

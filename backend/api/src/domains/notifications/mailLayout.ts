@@ -15,8 +15,13 @@ export const COMPANY_NAME = 'IndieHost SAS';
 /** Adresse de réponse des e-mails aux hôtes : une réponse arrive au support. */
 export const SUPPORT_EMAIL = 'contact@indiehost.fr';
 
-/** Destinataire du message : le pied de page (liens légaux, réponse possible ou non) en dépend. */
-export type MailAudience = 'guest' | 'host';
+/**
+ * Destinataire du message : le pied de page (liens légaux, réponse possible ou non) en dépend.
+ * `internal` : e-mails à l'équipe d'IndieHost (alertes de l'administration), sans liens légaux.
+ */
+export type MailAudience = 'guest' | 'host' | 'internal';
+
+const INTERNAL_FOOTER = 'E-mail automatique de la surveillance d’IndieHost, à ne pas transférer.';
 
 const COLORS = {
   page: '#f3f4f6',
@@ -218,6 +223,11 @@ export type MailDocument = {
 };
 
 function renderFooter(document: MailDocument): string {
+  if (document.audience === 'internal') {
+    return `<p style="margin:0 0 8px;">${escapeHtml(document.legalNote)}</p>
+            <p style="margin:0;">${escapeHtml(INTERNAL_FOOTER)}</p>`;
+  }
+
   if (document.audience === 'host') {
     const unsubscribe = document.unsubscribeUrl
       ? `<p style="margin:8px 0 0;">${renderLink('Ne plus recevoir ces rappels', document.unsubscribeUrl)}</p>`
@@ -279,7 +289,9 @@ export function renderPlainText(
   legalNote: string,
   options?: { audience?: MailAudience; unsubscribeUrl?: string | null },
 ): string {
-  const footer = options?.audience === 'host'
+  const footer = options?.audience === 'internal'
+    ? [INTERNAL_FOOTER]
+    : options?.audience === 'host'
     ? [
         `Une question ? Répondez simplement à cet e-mail. ${COMPANY_NAME} · Conditions générales : ${LEGAL_LINKS.hostTerms}`,
         ...(options.unsubscribeUrl ? [`Ne plus recevoir ces rappels : ${options.unsubscribeUrl}`] : []),

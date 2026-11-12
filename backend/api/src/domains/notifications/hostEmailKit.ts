@@ -34,6 +34,8 @@ export type HostEmailInput = {
   legalNote?: string;
   /** Rappels seulement : les e-mails liés à une réservation ou à un paiement ne se refusent pas. */
   unsubscribeUrl?: string | null;
+  /** `internal` : e-mail à l'équipe d'IndieHost (alertes), sans le pied de page des hôtes. */
+  audience?: 'host' | 'internal';
 };
 
 const DEFAULT_LEGAL_NOTE = 'Vous recevez cet e-mail parce que vous avez un compte hôte IndieHost.';
@@ -73,16 +75,17 @@ function blockToText(block: HostEmailBlock): string {
 
 export function renderHostEmail(input: HostEmailInput): RenderedEmail {
   const legalNote = input.legalNote ?? DEFAULT_LEGAL_NOTE;
+  const audience = input.audience ?? 'host';
   const html = renderDocument({
     title: input.title,
     preheader: input.preheader,
     body: input.blocks.map(blockToHtml),
     legalNote,
-    audience: 'host',
+    audience,
     unsubscribeUrl: input.unsubscribeUrl,
   });
   const text = renderPlainText(input.title, input.blocks.map(blockToText), legalNote, {
-    audience: 'host',
+    audience,
     unsubscribeUrl: input.unsubscribeUrl,
   });
   return { subject: input.subject, html, text };

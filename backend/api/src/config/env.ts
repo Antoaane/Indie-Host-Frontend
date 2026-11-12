@@ -73,6 +73,16 @@ const envSchema = z.object({
     .transform((value) => !['false', '0', 'no', 'off'].includes(value.toLowerCase())),
   // Emails (séparés par des virgules) qui obtiennent le rôle super_admin quelle que soit la métadonnée Clerk.
   SUPER_ADMIN_EMAILS: z.string().trim().optional().default(''),
+  // Alertes de l'administration (`domains/admin/healthAlerts.ts`) : un e-mail quand un service tombe,
+  // puis quand il revient. Destinataires séparés par des virgules ; vide → SUPER_ADMIN_EMAILS.
+  // Envoyées en production seulement ; `false` pour les couper.
+  HEALTH_ALERT_EMAILS: z.string().trim().optional().default(''),
+  HEALTH_ALERTS_ENABLED: z
+    .string()
+    .trim()
+    .optional()
+    .default('true')
+    .transform((value) => !['false', '0', 'no', 'off'].includes(value.toLowerCase())),
   STRIPE_SECRET_KEY: z.string().trim().optional().default(''),
   STRIPE_CONNECT_PLATFORM_FEE_BPS: z.coerce.number().int().min(0).max(10000).default(0),
   STRIPE_CONNECT_DEFAULT_APPLICATION_FEE_BPS: z.coerce.number().int().min(0).max(10000).default(0),

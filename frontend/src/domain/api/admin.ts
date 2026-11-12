@@ -128,16 +128,35 @@ export type ServiceHealth = {
   checkedAtISO: string | null
   everyMs: number
   uptime24h: number | null
+  uptime7d: number | null
+  uptime30d: number | null
+  /** Première demi-heure gardée en base sur 30 jours : les fenêtres de 7 et 30 jours peuvent être incomplètes. */
+  historySinceISO: string | null
   history: HealthBucket[]
 }
 
 export type HealthIncident = {
+  id: string
   atISO: string
   serviceId: ServiceId
   label: string
+  /** `unknown` : service trouvé en panne au démarrage de la surveillance. */
   from: ServiceStatus
   to: ServiceStatus
   summary: string
+  /** Un e-mail (panne ou retour) est parti pour ce changement. */
+  alerted: boolean
+}
+
+export type HealthAlertSettings = {
+  enabled: boolean
+  recipients: string[]
+  /** Pourquoi les alertes ne partent pas, en une phrase (null si elles partent). */
+  reason: string | null
+  /** Règles en vigueur, pour la phrase de la page. */
+  rules: { confirmSeconds: number; recoveryMinutes: number; gapMinutes: number; maxPerDay: number }
+  /** Dernier e-mail d'alerte tenté. */
+  lastDelivery: { ok: boolean; atISO: string; reason: string | null } | null
 }
 
 export type JobHealth = {
@@ -149,6 +168,8 @@ export type JobHealth = {
   lastDurationMs: number | null
   lastStatus: 'ok' | 'error' | null
   lastError: string | null
+  /** Passage terminé, mais une partie du travail a échoué. */
+  lastWarning: string | null
   nextRunAtISO: string | null
   runs: number
   failures: number
@@ -158,10 +179,42 @@ export type SystemHealth = {
   generatedAtISO: string
   monitoringSinceISO: string
   environment: 'production' | 'development' | 'test'
+  /** Faux quand la base ne répond pas : l'historique n'est alors gardé qu'en mémoire. */
+  historyPersisted: boolean
+  alerts: HealthAlertSettings
   overall: { status: ServiceStatus; up: number; degraded: number; down: number; disabled: number }
   services: ServiceHealth[]
   incidents: HealthIncident[]
   jobs: JobHealth[]
+}
+
+const DEFAULT_ALERT_RULES: HealthAlertSettings['rules'] = { confirmSeconds: 30, recoveryMinutes: 5, gapMinutes: 15, maxPerDay: 6 }
+
+/**
+ * Pendant un déploiement, le site peut parler un moment à une API plus ancienne : les champs qu'elle
+ * ne connaît pas encore prennent une valeur neutre plutôt que de faire planter l'onglet.
+ */
+function normalizeSystemHealth(health: SystemHealth): SystemHealth {
+  const alerts: Partial<HealthAlertSettings> = health.alerts ?? {}
+  return {
+    ...health,
+    historyPersisted: health.historyPersisted ?? true,
+    alerts: {
+      enabled: Boolean(alerts.enabled),
+      recipients: alerts.recipients ?? [],
+      reason: alerts.reason ?? null,
+      rules: alerts.rules ?? DEFAULT_ALERT_RULES,
+      lastDelivery: alerts.lastDelivery ?? null,
+    },
+    services: (health.services ?? []).map((service) => ({
+      ...service,
+      uptime7d: service.uptime7d ?? null,
+      uptime30d: service.uptime30d ?? null,
+      historySinceISO: service.historySinceISO ?? null,
+    })),
+    incidents: health.incidents ?? [],
+    jobs: (health.jobs ?? []).map((job) => ({ ...job, lastWarning: job.lastWarning ?? null })),
+  }
 }
 
 export type AdminUserAccess = {
@@ -256,14 +309,16 @@ export function fetchAdminPayments(options?: { refresh?: boolean }): Promise<Adm
   })
 }
 
-export function fetchSystemHealth(): Promise<SystemHealth> {
-  return request<SystemHealth>('GET', '/admin/system/health', { fallback: 'Impossible de lire l’état des services.' })
+export async function fetchSystemHealth(): Promise<SystemHealth> {
+  const health = await request<SystemHealth>('GET', '/admin/system/health', { fallback: 'Impossible de lire l’état des services.' })
+  return normalizeSystemHealth(health)
 }
 
 export async function refreshSystemHealth(): Promise<{ refreshed: boolean; snapshot: SystemHealth }> {
-  return request<{ refreshed: boolean; snapshot: SystemHealth }>('POST', '/admin/system/health/refresh', {
+  const data = await request<{ refreshed: boolean; snapshot: SystemHealth }>('POST', '/admin/system/health/refresh', {
     fallback: 'Impossible de relancer les contrôles.',
   })
+  return { ...data, snapshot: normalizeSystemHealth(data.snapshot) }
 }
 
 export async function setAdminUserRole(clerkUserId: string, role: 'admin' | 'none'): Promise<AdminUserAccess> {

@@ -20,9 +20,14 @@ export function formatCount(value: number): string {
   return new Intl.NumberFormat('fr-FR').format(value)
 }
 
+/**
+ * Disponibilité en pourcentage, arrondie vers le bas au dixième : 99,96 % s'écrit 99,9 %, jamais
+ * 100 % (« 100 % » ne s'affiche que sans aucune panne mesurée).
+ */
 export function formatPercent(ratio: number): string {
-  const percent = ratio * 100
-  return `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: percent >= 99.95 || percent < 10 ? 0 : 1 }).format(percent)} %`
+  if (ratio >= 1) return '100 %'
+  const percent = Math.floor(Math.max(0, ratio) * 1000) / 10
+  return `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(percent)} %`
 }
 
 function toDate(iso: string | null | undefined): Date | null {

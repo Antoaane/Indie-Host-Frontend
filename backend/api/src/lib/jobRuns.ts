@@ -2,7 +2,7 @@
 // page « Services » de l'administration. Rien n'est écrit en base : un redémarrage de l'API repart
 // de zéro, ce qui suffit pour voir si une tâche tourne et si son dernier passage a échoué.
 
-export type JobId = 'retention' | 'host-reminders';
+export type JobId = 'retention' | 'host-reminders' | 'public-sites';
 
 export type JobRunState = {
   id: JobId;
@@ -14,9 +14,17 @@ export type JobRunState = {
   lastDurationMs: number | null;
   lastStatus: 'ok' | 'error' | null;
   lastError: string | null;
+  /** Passage terminé, mais une partie du travail a échoué (ex. un site d'hôte sur cinq). */
+  lastWarning: string | null;
   runs: number;
   failures: number;
 };
+
+/**
+ * Lecture d'un passage terminé sans exception : une tâche qui attrape ses erreurs élément par élément
+ * (un site, un e-mail) dit ici si le passage doit compter comme un échec ou comme un simple avertissement.
+ */
+export type JobRunVerdict = { error?: string | null; warning?: string | null } | null | undefined;
 
 const MAX_ERROR_LENGTH = 300;
 
@@ -35,6 +43,7 @@ function ensureJob(id: JobId): JobRunState {
       lastDurationMs: null,
       lastStatus: null,
       lastError: null,
+      lastWarning: null,
       runs: 0,
       failures: 0,
     };
@@ -43,10 +52,13 @@ function ensureJob(id: JobId): JobRunState {
   return state;
 }
 
-function readErrorMessage(error: unknown): string {
-  const message = error instanceof Error ? error.message : String(error ?? '');
+function trimMessage(message: string): string {
   const trimmed = message.trim() || 'Erreur inconnue.';
   return trimmed.length > MAX_ERROR_LENGTH ? `${trimmed.slice(0, MAX_ERROR_LENGTH - 1)}…` : trimmed;
+}
+
+function readErrorMessage(error: unknown): string {
+  return trimMessage(error instanceof Error ? error.message : String(error ?? ''));
 }
 
 /** Déclare une tâche planifiée et l'heure de son premier passage. */
@@ -56,8 +68,11 @@ export function registerScheduledJob(id: JobId, options: { intervalMs: number; f
   state.nextRunAt = options.firstRunAt;
 }
 
-/** Exécute un passage en notant son début, sa fin et son éventuelle erreur (relancée telle quelle). */
-export async function trackJobRun<T>(id: JobId, run: () => Promise<T>): Promise<T> {
+/**
+ * Exécute un passage en notant son début, sa fin et son éventuelle erreur (relancée telle quelle).
+ * `assess` juge un passage terminé sans exception : échec (compté comme tel) ou avertissement.
+ */
+export async function trackJobRun<T>(id: JobId, run: () => Promise<T>, assess?: (result: T) => JobRunVerdict): Promise<T> {
   const state = ensureJob(id);
   const startedAt = Date.now();
   state.running = true;
@@ -65,12 +80,22 @@ export async function trackJobRun<T>(id: JobId, run: () => Promise<T>): Promise<
 
   try {
     const result = await run();
-    state.lastStatus = 'ok';
-    state.lastError = null;
+    const verdict = assess?.(result) ?? null;
+    if (verdict?.error) {
+      state.lastStatus = 'error';
+      state.lastError = trimMessage(verdict.error);
+      state.lastWarning = null;
+      state.failures += 1;
+    } else {
+      state.lastStatus = 'ok';
+      state.lastError = null;
+      state.lastWarning = verdict?.warning ? trimMessage(verdict.warning) : null;
+    }
     return result;
   } catch (error) {
     state.lastStatus = 'error';
     state.lastError = readErrorMessage(error);
+    state.lastWarning = null;
     state.failures += 1;
     throw error;
   } finally {

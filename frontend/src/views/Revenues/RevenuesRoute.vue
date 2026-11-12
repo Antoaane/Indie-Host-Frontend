@@ -29,7 +29,7 @@ async function handleOpenDashboard() {
   if (isOpeningDashboard.value) return
   isOpeningDashboard.value = true
   try {
-    await openStripeDashboard(overview.value?.account.id)
+    await openStripeDashboard()
   } finally {
     isOpeningDashboard.value = false
   }

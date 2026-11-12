@@ -12,6 +12,7 @@
 import type { PrismaClient } from '@prisma/client';
 
 import { env } from '../config/env.js';
+import { registerScheduledJob, trackJobRun, type JobRunVerdict } from '../lib/jobRuns.js';
 import { ListingsService } from '../domains/listings/listings.service.js';
 import { isIndexNowEnabled, submitIndexNow } from '../domains/publicSite/indexNow.js';
 import { prefillHubPages } from '../domains/publicSite/prefill.js';
@@ -160,6 +161,26 @@ export async function runPublicSites(
   return report;
 }
 
+/**
+ * Bilan d'un passage pour la page Services. Chaque site attrape ses propres erreurs : sans ce bilan,
+ * un passage où tous les appels à Google échouent paraîtrait réussi. Tous les sites traités en échec
+ * (clé Google refusée, API coupée, quota) : échec de la tâche, signalé. Une partie seulement (souvent
+ * le domaine d'un seul hôte) : avertissement affiché, sans alerte.
+ */
+export function assessPublicSitesReport(report: PublicSitesReport): JobRunVerdict {
+  const failed = report.sites.filter((site) => site.error);
+  if (!failed.length) return null;
+  const attempted = report.sites.filter((site) => site.error || site.actions.length).length;
+  const first = failed[0]!;
+  const example = `${first.hostname} : ${first.error}`;
+  if (failed.length >= attempted) {
+    return {
+      error: attempted > 1 ? `Aucun des ${attempted} sites à traiter n’a abouti (${example}).` : `Le site à traiter n’a pas abouti (${example}).`,
+    };
+  }
+  return { warning: `${failed.length} site${failed.length > 1 ? 's' : ''} sur ${attempted} en échec (${example}).` };
+}
+
 export function startPublicSitesScheduler(
   prisma: PrismaClient,
   logger: PublicSitesLogger,
@@ -175,7 +196,7 @@ export function startPublicSitesScheduler(
     if (running) return;
     running = true;
     try {
-      const report = await runPublicSites(prisma, logger);
+      const report = await trackJobRun('public-sites', () => runPublicSites(prisma, logger), assessPublicSitesReport);
       const acted = report.sites.filter((site) => site.actions.length || site.error);
       if (report.prefilled.length || acted.length) {
         logger.info({ prefilled: report.prefilled, sites: acted }, '[public-sites] pass done');
@@ -186,6 +207,8 @@ export function startPublicSitesScheduler(
       running = false;
     }
   };
+
+  registerScheduledJob('public-sites', { intervalMs, firstRunAt: Date.now() + initialDelayMs });
 
   const initial = setTimeout(() => {
     void run();

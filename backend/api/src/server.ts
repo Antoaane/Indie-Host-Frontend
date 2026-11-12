@@ -38,6 +38,28 @@ async function start() {
     }
   }
 
+  // Arrêt demandé (redéploiement : Docker envoie SIGTERM, que `npm` transmet à node ; Ctrl+C en local) :
+  // fermeture propre, qui lance les hooks `onClose` (dernières mesures de santé écrites en base,
+  // planificateurs arrêtés, connexions à la base fermées). Docker coupe au bout de 10 s : on n'en prend
+  // que 8 au plus.
+  let closing = false;
+  for (const signal of ['SIGTERM', 'SIGINT'] as const) {
+    process.once(signal, () => {
+      if (closing) return;
+      closing = true;
+      app.log.info({ signal }, 'Shutdown requested: closing the API');
+      const forced = setTimeout(() => process.exit(0), 8000);
+      forced.unref();
+      app.close().then(
+        () => process.exit(0),
+        (error: unknown) => {
+          app.log.error({ err: error }, 'Shutdown failed');
+          process.exit(1);
+        },
+      );
+    });
+  }
+
   try {
     await app.listen({
       port: env.PORT,
