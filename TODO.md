@@ -217,7 +217,6 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 - [ ] Option : alerte par e-mail (Brevo, vers contact@) quand un service reste en panne plus de quelques minutes ; garder l’historique de santé en base pour qu’il survive aux déploiements (aujourd’hui en mémoire, 24 h).
 - [ ] Option : traiter les webhooks d’abonnement Stripe (`customer.subscription.*`, `invoice.payment_failed`) pour que l’offre affichée dans la liste des comptes soit à jour sans visite de l’hôte. L’aperçu, lui, lit déjà Stripe directement.
 - [ ] Option : carte floorplan, marquer « Not a problem » (avec la raison) les routes signalées « Anyone could change data » qui exigent en réalité une connexion (vérifiée dans le traitement, ce que le scan ne voit pas), pour ne garder que les vrais points du relevé ci-dessous.
-- [ ] Page d’administration complète sur `/dashboard/admin`, ouverte au compte `contact@indiehost.fr` : nombre d’abonnés, utilisateurs et leurs droits, paiements réussis ou refusés, schéma de santé des services en direct, carte floorplan du code. Terminée, à cocher au commit.
 
 ### Relevé du code fait en dessinant la carte floorplan (2026-11-12)
 
@@ -244,6 +243,12 @@ Défauts visibles :
 - [ ] Nettoyage : 25 illustrations affichées nulle part et `components/svgs/svgs-old/`, sections d’accueil retirées (`RoiSection` encore à 39 €, `ReassuranceBandSection`), fonctions de `Editor/utils/listingApi.ts`, `BottomNav.vue`, styles « patch » de la page de don qui ne visent aucune classe.
 
 ## Fait
+
+- [x] 2026-11-12 — Page d’administration complète et carte du code floorplan (commit `c9e23b1`, non déployé).
+  - `/dashboard/admin` en quatre onglets : Aperçu (abonnés lus chez Stripe, revenu mensuel, points à surveiller), Utilisateurs (ancienne fiche client + droits : rôle administrateur et connexion bloquée, avec confirmation), Paiements (90 jours, réussis et refusés avec le motif), Services (santé de 14 services mesurée par l’API, historique de 24 h, schéma relié, derniers changements).
+  - Accès : `SUPER_ADMIN_EMAILS` (contact@ à ajouter sur le serveur, voir « Ce que vous devez faire ») ou rôle Clerk ; contrôlé par l’API sur chaque route.
+  - Floorplan installé comme plugin du projet ; carte d’IndieHost en français (651 fichiers, 97 routes, 4 parcours, visite guidée), exportée dans `backend/api/assets/floorplan/` et affichée dans l’onglet Services.
+  - Vérifié : type-checks, `admin-smoke.ts` (12 contrôles), routes sur l’API locale (401 sans session, 403 pour un hôte, ticket de carte valable, retouché refusé), écrans sur `/dev/admin` dans Chrome (clair, sombre, 390 px, panne simulée, accès refusé), carte ouverte et parcourue dans l’administration. Pas vu : la production, une vraie session Clerk, les vrais chiffres Stripe.
 
 - [x] 2026-11-12 — Sites des hôtes vus par Google comme leur propre site (commit `6cb4384` ; détail dans `CLAUDE.md`, « Sites des hôtes et référencement »). Décisions de Nathan le 2026-11-12 : IndieHost fait la Google Search Console de chaque site, le moins de travail possible pour l’hôte, note Booking gardée, pied de page modifiable sur la page, zones utiles pré-remplies.
   - HTML servi par l’API sur les domaines reliés et sous-domaines (`domains/publicSite/`, nginx `@public_site`) : titre, description, canonique, Open Graph, JSON-LD, contenu ; plus de balises de l’accueil d’IndieHost ; repli sur le site si l’API ne répond pas.
