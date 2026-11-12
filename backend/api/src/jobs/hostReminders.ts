@@ -29,6 +29,7 @@ import {
 import { formatCurrency, readGuestsBreakdown } from '../domains/notifications/mailLayout.js';
 import { readBookingAmounts } from '../domains/notifications/notifications.service.js';
 import { LISTING_LIMIT_COUNTED_STATUSES, PLAN_TEMPLATES, normalizePlanCode } from '../domains/payments/plans.catalog.js';
+import { MISSING_EMAIL_WHERE, backfillMissingUserEmails } from '../domains/users/userEmail.js';
 import { registerScheduledJob, trackJobRun } from '../lib/jobRuns.js';
 import { asObject, toNumber } from '../lib/json.js';
 import { isMailerConfigured } from '../lib/mailer.js';
@@ -74,6 +75,8 @@ export type HostRemindersReport = {
   dryRun: boolean;
   sent: Partial<Record<HostEmailKind, number>>;
   failed: number;
+  /** Aperçu seulement : comptes sans adresse, complétés depuis Clerk avant un vrai passage (et absents de cet aperçu). */
+  missingEmails?: number;
 };
 
 type Context = {
@@ -87,6 +90,7 @@ type Context = {
 
 const HOST_SELECT = {
   id: true,
+  clerkUserId: true,
   email: true,
   firstName: true,
   deletedAt: true,
@@ -599,6 +603,23 @@ export async function runHostReminders(
   if (!options?.ignoreSendWindow && (hour < SEND_WINDOW.fromHour || hour >= SEND_WINDOW.toHour)) {
     report.skipped = 'outside_send_window';
     return report;
+  }
+
+  // Les rappels ne retiennent que les comptes avec une adresse : celles qui manquent (le jeton Clerk
+  // ne les porte pas) sont lues chez Clerk d'abord. Rien n'est écrit en simple aperçu : il dit
+  // seulement combien de comptes seront complétés, puis éventuellement relancés, au vrai passage.
+  try {
+    if (options?.dryRun) {
+      report.missingEmails = await prisma.user.count({ where: MISSING_EMAIL_WHERE });
+      if (report.missingEmails) {
+        logger.info({ missingEmails: report.missingEmails }, '[host-reminders] dry run: accounts without e-mail are filled from Clerk before a real pass, not listed here');
+      }
+    } else {
+      const filled = await backfillMissingUserEmails(prisma, { limit: 200 });
+      if (filled) logger.info({ filled }, '[host-reminders] missing account e-mails filled from Clerk');
+    }
+  } catch (error) {
+    logger.warn({ err: error }, '[host-reminders] missing account e-mails not filled');
   }
 
   const ctx: Context = {

@@ -11,9 +11,18 @@ import { isListingHostname } from '@/domain/listings/publicDomain'
  * - Ouverture de la landing avec une session : garde du routeur (`home`), qui attend Clerk sous
  *   l'écran de chargement quand le cookie de Clerk annonce une session, puis
  *   `useDashboardEntryRedirect` en secours si Clerk a répondu trop tard.
+ * Ces arrivées passent toutes par `SIGNED_IN_ENTRY_PATH` : un compte administrateur
+ * (dev@indiehost.fr) y est envoyé sur l'administration, les autres sur leurs annonces.
  */
 
+/** « Mes annonces » : le logo de la navigation y mène, administrateur compris. */
 export const DASHBOARD_ENTRY_PATH = '/dashboard/editor'
+
+/**
+ * Arrivée d'un compte connecté sans destination précise (route `dashboard-entry` du routeur) :
+ * l'administration pour un administrateur, demande du 2026-11-12, « Mes annonces » sinon.
+ */
+export const SIGNED_IN_ENTRY_PATH = '/dashboard'
 
 // Pages sans intérêt pour qui vient de se connecter : y revenir le laisserait sur une page
 // marketing ou légale. La landing (`/`) en tête.
@@ -21,14 +30,15 @@ const PAGES_WITHOUT_RETURN = /^\/(?:$|sign-in|sign-up|legal|donation)(?:\/|$)/
 
 /**
  * Page ouverte après la connexion ou l'inscription : la page demandée (`redirect_url`) si c'est
- * un chemin interne utile, sinon le tableau de bord. Jamais une autre origine (redirection ouverte).
+ * un chemin interne utile, sinon l'arrivée sur le tableau de bord (administration pour un
+ * administrateur). Jamais une autre origine (redirection ouverte).
  */
 export function resolvePostAuthRedirect(requested: string | null | undefined): string {
   const target = typeof requested === 'string' ? requested.trim() : ''
-  if (!target.startsWith('/') || target.startsWith('//') || target.startsWith('/\\')) return DASHBOARD_ENTRY_PATH
+  if (!target.startsWith('/') || target.startsWith('//') || target.startsWith('/\\')) return SIGNED_IN_ENTRY_PATH
 
   const pathname = target.split(/[?#]/, 1)[0] ?? ''
-  if (PAGES_WITHOUT_RETURN.test(pathname)) return DASHBOARD_ENTRY_PATH
+  if (PAGES_WITHOUT_RETURN.test(pathname)) return SIGNED_IN_ENTRY_PATH
   return target
 }
 
@@ -94,7 +104,7 @@ export function resolveTicketEntryRoute(query: Record<string, unknown>): { name:
   for (const [key, value] of Object.entries(query)) {
     if (typeof value === 'string') forwarded[key] = value
   }
-  forwarded.redirect_url = DASHBOARD_ENTRY_PATH
+  forwarded.redirect_url = SIGNED_IN_ENTRY_PATH
 
   return { name: status === 'sign_up' ? 'sign-up' : 'sign-in', query: forwarded }
 }

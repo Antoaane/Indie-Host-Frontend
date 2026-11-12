@@ -30,7 +30,9 @@ model User {
   displayName            String?
   avatarUrl              String?
   hostProfile            Json?
-  stripeConnectAccountId String?
+  // Un compte d'encaissement Stripe n'appartient qu'à un profil (contrôlé en production le
+  // 2026-11-12 avant d'ajouter la contrainte : `connectAudit.cli.ts`).
+  stripeConnectAccountId String?        @unique
   stripeConnectProfile   Json?
   // Compte clos (suppression RGPD) : ligne anonymisée et conservée pour les écritures comptables.
   deletedAt              DateTime?

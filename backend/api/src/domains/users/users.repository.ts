@@ -2,6 +2,7 @@ import type { PrismaClient, User } from '@prisma/client';
 
 import { toPrismaJson } from '../../lib/prisma.js';
 import type { RequestAuth } from '../../types/auth.js';
+import { ensureUserEmail } from './userEmail.js';
 
 function readString(payload: Record<string, unknown>, key: string): string | null {
   const value = payload[key];
@@ -190,24 +191,28 @@ export async function upsertUserFromAuth(prisma: PrismaClient, auth: RequestAuth
     });
     const mergedHostProfile = mergeHostProfileIdentity(nextGeneratedHostProfile, existingHostProfile);
 
-    return prisma.user.update({
+    const updated = await prisma.user.update({
       where: {
         id: targetUser.id,
       },
       data: {
         ...(byClerkUserId?.id === targetUser.id || !byClerkUserId ? { clerkUserId: auth.userId } : {}),
         ...(byExternalUserId?.id === targetUser.id || !byExternalUserId ? { externalUserId: auth.userId } : {}),
-        email: email ?? targetUser.email,
-        firstName: firstName ?? targetUser.firstName,
-        lastName: lastName ?? targetUser.lastName,
+        // Seulement ce que porte le jeton : réécrire la valeur lue plus haut effacerait une adresse
+        // (ou un prénom) enregistrée entre-temps par `completeEmailInBackground`.
+        ...(email ? { email } : {}),
+        ...(firstName ? { firstName } : {}),
+        ...(lastName ? { lastName } : {}),
         displayName: resolvedDisplayName,
         avatarUrl: persistedAvatarUrl ?? avatarUrl,
         hostProfile: toPrismaJson(mergedHostProfile),
       },
     });
+    completeEmailInBackground(prisma, updated);
+    return updated;
   }
 
-  return prisma.user.create({
+  const created = await prisma.user.create({
     data: {
       clerkUserId: auth.userId,
       externalUserId: auth.userId,
@@ -219,6 +224,17 @@ export async function upsertUserFromAuth(prisma: PrismaClient, auth: RequestAuth
       hostProfile: toPrismaJson(hostProfile),
     },
   });
+  completeEmailInBackground(prisma, created);
+  return created;
+}
+
+/**
+ * Le jeton de session Clerk ne porte pas l'e-mail : l'adresse principale est lue chez Clerk et
+ * enregistrée, sans faire attendre la requête (`userEmail.ts`). Une fois connue, plus aucun appel.
+ */
+function completeEmailInBackground(prisma: PrismaClient, user: User): void {
+  if (readOptionalString(user.email) || user.deletedAt) return;
+  void ensureUserEmail(prisma, user).catch(() => {});
 }
 
 export async function resolveUserByIdentifier(prisma: PrismaClient, userId: string): Promise<User | null> {

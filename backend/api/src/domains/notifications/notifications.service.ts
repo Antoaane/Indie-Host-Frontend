@@ -27,7 +27,6 @@ export type BookingNotificationContext = {
   listingCore: Record<string, unknown>;
   listingBookings: Record<string, unknown>;
   ownerDisplayName: string | null;
-  ownerEmail: string | null;
   confirmation: { guideAccessKey: string; guideUrl: string };
 };
 

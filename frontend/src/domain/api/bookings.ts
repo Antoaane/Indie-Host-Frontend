@@ -303,10 +303,6 @@ function isDeprecatedHostIdentity(value: string): boolean {
   return normalized === 'hote' || normalized === 'host'
 }
 
-function readEmailLocalPart(email: string): string {
-  return email.split('@')[0]?.trim() ?? ''
-}
-
 function toOptionalString(value: unknown): string | null {
   const normalized = toTrimmedString(value)
   return normalized || null
@@ -359,11 +355,10 @@ function normalizeBookingConfirmation(payload: Record<string, unknown> | null | 
           : rawRefundStage === 'non_refundable'
             ? 'non_refundable'
             : 'partial_refund'
-  const hostEmail = toTrimmedString(host.email)
+  // Nom public de l’hôte : jamais tiré d’une adresse e-mail (voir CLAUDE.md).
   const rawHostName = toTrimmedString(host.name)
   const hostName = (rawHostName && !isDeprecatedHostIdentity(rawHostName) ? rawHostName : '')
-    || (hostEmail ? readEmailLocalPart(hostEmail) : '')
-    || 'Proprietaire'
+    || 'Votre hôte'
 
   return {
     reservationId: toTrimmedString(source.reservationId),
@@ -428,11 +423,10 @@ function normalizeGuideAccessPayload(payload: Record<string, unknown> | null | u
   const messaging = (source.messaging && typeof source.messaging === 'object') ? source.messaging as Record<string, unknown> : {}
   const rawStatus = toTrimmedString(source.status)
   const status: ReservationGuideAccessPayload['status'] = rawStatus === 'active' ? 'active' : 'locked'
-  const hostEmail = toTrimmedString(host.email)
+  // Nom public de l’hôte : jamais tiré d’une adresse e-mail (voir CLAUDE.md).
   const rawHostName = toTrimmedString(host.name)
   const hostName = (rawHostName && !isDeprecatedHostIdentity(rawHostName) ? rawHostName : '')
-    || (hostEmail ? readEmailLocalPart(hostEmail) : '')
-    || 'Proprietaire'
+    || 'Votre hôte'
 
   return {
     guideKey: toTrimmedString(source.guideKey),

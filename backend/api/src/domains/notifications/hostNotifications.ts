@@ -28,6 +28,7 @@ import {
   buildHostReviewReceivedEmail,
   type GuestContact,
 } from './hostBookingEmails.js';
+import { resolveEmailForSending } from '../users/userEmail.js';
 import { SUPPORT_EMAIL, parseIsoDate, readGuestsBreakdown } from './mailLayout.js';
 import { readBookingAmounts, type BookingNotificationContext } from './notifications.service.js';
 
@@ -99,10 +100,11 @@ export function buildUnsubscribeUrl(userId: string, baseUrl = resolvePublicBaseU
 
 // --- Destinataire et envoi -------------------------------------------------------------------
 
-export type HostRecipient = Pick<User, 'id' | 'email' | 'firstName' | 'deletedAt' | 'emailRemindersOptOutAt'>;
+export type HostRecipient = Pick<User, 'id' | 'clerkUserId' | 'email' | 'firstName' | 'deletedAt' | 'emailRemindersOptOutAt'>;
 
 const HOST_RECIPIENT_SELECT = {
   id: true,
+  clerkUserId: true,
   email: true,
   firstName: true,
   deletedAt: true,
@@ -167,8 +169,16 @@ async function releaseKeys(prisma: PrismaClient, keys: string[]): Promise<void> 
  * Envoie un e-mail à un hôte s'il ne l'a pas déjà reçu. Renvoie `true` si l'e-mail est parti.
  * Pour un rappel groupé, seules les clés pas encore posées comptent : si toutes l'étaient, rien ne part.
  */
-export async function deliverHostEmail(prisma: PrismaClient, input: DeliverHostEmailInput): Promise<boolean> {
-  if (!isMailerConfigured() || !canEmailHost(input.host, input.kind)) return false;
+export async function deliverHostEmail(prisma: PrismaClient, initialInput: DeliverHostEmailInput): Promise<boolean> {
+  if (!isMailerConfigured()) return false;
+  let input = initialInput;
+  // Adresse lue chez Clerk (au plus une fois par heure) : le jeton de connexion ne la porte pas, et
+  // l'hôte a pu en changer depuis qu'elle a été enregistrée (`users/userEmail.ts`).
+  if (!input.host.deletedAt) {
+    const email = await resolveEmailForSending(prisma, input.host);
+    if (email && email !== input.host.email) input = { ...input, host: { ...input.host, email } };
+  }
+  if (!canEmailHost(input.host, input.kind)) return false;
 
   const claimed = await claimKeys(prisma, input);
   if (claimed.length === 0) return false;

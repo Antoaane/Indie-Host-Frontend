@@ -245,12 +245,9 @@ async function loadFromLocalFallback(params: {
   }
 
   const host = (bundle.host ?? null) as Partial<RawHost> | null
-  const hostEmail = readHostString(host, 'email') ?? ''
   const hostRawName = readHostString(host, 'name')
+  // Nom public de l’hôte : jamais tiré d’une adresse e-mail (voir CLAUDE.md).
   const hostName = hostRawName && !isDeprecatedHostIdentity(hostRawName) ? hostRawName : null
-  const hostFallbackName = hostEmail.trim()
-    ? hostEmail.split('@')[0]?.trim() ?? ''
-    : ''
   const guideUrl =
     reservation.confirmation?.guideUrl
     ?? reservation.contact?.confirmation?.guideUrl
@@ -273,7 +270,7 @@ async function loadFromLocalFallback(params: {
       currency,
     },
     host: {
-      name: hostName ?? (hostFallbackName || 'Proprietaire'),
+      name: hostName ?? 'Votre hôte',
       status: readHostString(host, 'status'),
       avatar: readHostString(host, 'avatar'),
       catalogLink: readHostString(host, 'catalog-link') ?? readHostString(host, 'catalogLink'),

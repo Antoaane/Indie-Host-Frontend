@@ -6,8 +6,9 @@ import { START_LOCATION, createRouter, createWebHistory, type RouteLocationNorma
 import { injectHead, type VueHeadClient } from '@unhead/vue'
 import { isListingHostname } from '@/domain/listings/publicDomain'
 import { normalizeListingSlug } from '@/domain/listings/slug'
+import { fetchMyUser } from '@/domain/api/users'
 import { resolveRuntimeUserId } from '@/router/backOfficeUser'
-import { DASHBOARD_ENTRY_PATH, hasClerkSessionCookie, resolveTicketEntryRoute, waitForClerkUserId } from '@/utils/authEntry'
+import { SIGNED_IN_ENTRY_PATH, hasClerkSessionCookie, resolveTicketEntryRoute, waitForClerkUserId } from '@/utils/authEntry'
 // Import direct : ses styles partent dans le CSS principal et habillent dès le premier rendu
 // la version statique des documents générée au build (lisible sans JavaScript).
 import LegalPage from '@/views/Legal/LegalPage.vue'
@@ -87,6 +88,62 @@ async function resolveBackOfficeAccess(to: RouteLocationNormalized) {
   return {
     name: 'sign-in',
     query: { redirect_url: to.fullPath },
+  }
+}
+
+// Réponse de l'API attendue au plus ce temps : au-delà, « Mes annonces » (l'administration reste
+// dans le menu). À l'ouverture de la page, l'écran de chargement ne couvre que 5 s
+// (`useBootLoader.ts`) : l'attente de Clerk et celle de l'API tiennent ensemble dans 4,5 s.
+const ADMIN_CHECK_TIMEOUT_MS = 2500
+const PAGE_LOAD_ENTRY_BUDGET_MS = 4500
+const MIN_ADMIN_CHECK_MS = 800
+
+function adminCheckTimeout(isPageLoad: boolean): number {
+  if (!isPageLoad || typeof performance === 'undefined') return ADMIN_CHECK_TIMEOUT_MS
+  // `performance.now()` part de l'ouverture de la page.
+  return Math.min(ADMIN_CHECK_TIMEOUT_MS, Math.max(MIN_ADMIN_CHECK_MS, PAGE_LOAD_ENTRY_BUDGET_MS - performance.now()))
+}
+
+async function isAdminAccount(timeoutMs: number): Promise<boolean> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  try {
+    const me = await Promise.race([
+      fetchMyUser(),
+      new Promise<null>((resolve) => {
+        timer = setTimeout(() => resolve(null), timeoutMs)
+      }),
+    ])
+    return Boolean(me?.isAdmin)
+  } catch {
+    return false
+  } finally {
+    clearTimeout(timer)
+  }
+}
+
+/**
+ * Arrivée d'un compte connecté sans destination précise (après la connexion, ou à l'ouverture
+ * d'indiehost.fr avec une session) : l'administration pour un administrateur (dev@indiehost.fr,
+ * demande du 2026-11-12), « Mes annonces » pour tous les autres. Les droits viennent de l'API
+ * (`/users/me`), comme sur la page d'administration elle-même.
+ */
+async function resolveSignedInEntry(to: RouteLocationNormalized, from: RouteLocationNormalized) {
+  const isPageLoad = from === START_LOCATION
+  const userId = await resolveRuntimeUserId({
+    waitMs: 2500,
+    pollIntervalMs: 75,
+  })
+  if (!userId) {
+    return {
+      name: 'sign-in',
+      query: { redirect_url: to.fullPath },
+    }
+  }
+  return {
+    name: (await isAdminAccount(adminCheckTimeout(isPageLoad))) ? 'admin-user' : 'editor-user',
+    params: { userId },
+    query: to.query,
+    hash: to.hash,
   }
 }
 
@@ -229,6 +286,14 @@ const router = createRouter({
       name: 'create-listing-user',
       component: CreateListingRoute,
       meta: { navVariant: 'host', hideNav: true, title: 'Créer une annonce' },
+    },
+    {
+      // Arrivée sur le tableau de bord : jamais affichée, sa garde choisit la page (voir resolveSignedInEntry).
+      path: '/dashboard',
+      name: 'dashboard-entry',
+      component: EditorRoute,
+      meta: { navVariant: 'host', title: 'Tableau de bord' },
+      beforeEnter: resolveSignedInEntry,
     },
     {
       path: '/dashboard/editor',
@@ -471,12 +536,13 @@ router.beforeEach(async (to, from) => {
     // puis ouvre le tableau de bord, sans passer par la landing.
     const ticketRoute = resolveTicketEntryRoute(to.query)
     if (ticketRoute) return ticketRoute
-    // Hôte connecté qui ouvre indiehost.fr : ses annonces, sans voir la landing. On attend Clerk
-    // (sous l'écran de chargement) seulement si son cookie annonce une session, et seulement à
-    // l'ouverture de la page : un lien interne vers la landing l'affiche toujours.
+    // Hôte connecté qui ouvre indiehost.fr : son tableau de bord (l'administration pour un
+    // administrateur), sans voir la landing. On attend Clerk (sous l'écran de chargement) seulement
+    // si son cookie annonce une session, et seulement à l'ouverture de la page : un lien interne
+    // vers la landing l'affiche toujours.
     if (from === START_LOCATION && hasClerkSessionCookie()) {
       const userId = await waitForClerkUserId(LANDING_SESSION_WAIT_MS)
-      if (userId) return DASHBOARD_ENTRY_PATH
+      if (userId) return SIGNED_IN_ENTRY_PATH
     }
     return true
   }

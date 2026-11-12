@@ -67,7 +67,6 @@ type ReservationAccessContext = {
   listingCore: Record<string, unknown>;
   listingBookings: Record<string, unknown>;
   ownerId: string | null;
-  ownerEmail: string | null;
   ownerDisplayName: string | null;
   confirmation: ReservationConfirmation;
 };
@@ -196,14 +195,6 @@ function readString(value: unknown): string | null {
   return trimmed || null;
 }
 
-function readEmailLocalPart(value: string | null | undefined): string | null {
-  if (typeof value !== 'string') return null;
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-  const localPart = trimmed.split('@')[0]?.trim() ?? '';
-  return localPart || null;
-}
-
 function readOwnerUsernameFromProfile(hostProfile: unknown): string | null {
   const record = asObject(hostProfile);
   const candidates = [
@@ -238,7 +229,8 @@ function resolveOwnerDisplayName(owner: Record<string, unknown>): string | null 
   const username = readOwnerUsernameFromProfile(owner.hostProfile);
   if (username) return username;
 
-  return readEmailLocalPart(readString(owner.email));
+  // Jamais tiré de l’adresse e-mail du compte : elle n’est pas publique (voir CLAUDE.md, « Nom public de l’hôte »).
+  return null;
 }
 
 function clampInteger(value: unknown, min: number, max: number, fallback: number): number {
@@ -1189,7 +1181,6 @@ export class BookingsService {
             owner: {
               select: {
                 id: true,
-                email: true,
                 firstName: true,
                 lastName: true,
                 displayName: true,
@@ -1231,7 +1222,6 @@ export class BookingsService {
       listingCore: asObject(reservation.listing.core),
       listingBookings: asObject(reservation.listing.bookings),
       ownerId: readString(reservation.listing.owner?.id),
-      ownerEmail: readString(reservation.listing.owner?.email),
       ownerDisplayName: resolveOwnerDisplayName(asObject(reservation.listing.owner)),
       confirmation,
     };
@@ -1260,7 +1250,7 @@ export class BookingsService {
     const hostNameFromListing = readString(host.name);
     const resolvedHostName = (
       hostNameFromListing && !isDeprecatedHostIdentity(hostNameFromListing) ? hostNameFromListing : null
-    ) ?? access.ownerDisplayName ?? readEmailLocalPart(access.ownerEmail) ?? 'Proprietaire';
+    ) ?? access.ownerDisplayName ?? 'Votre hôte';
 
     return {
       reservationId: access.reservationId,
@@ -1278,7 +1268,7 @@ export class BookingsService {
         avatar: readString(host.avatar),
         catalogLink: readString(host['catalog-link']) ?? readString(host.catalogLink),
         phone: readString(host.phone) ?? readString(hostContact.phone),
-        email: readString(host.email) ?? readString(hostContact.email) ?? access.ownerEmail,
+        email: readString(host.email) ?? readString(hostContact.email),
         assistance: readString(services.assistance),
         contacts: readString(services.contacts),
       },
@@ -1334,7 +1324,7 @@ export class BookingsService {
     const hostNameFromListing = readString(host.name);
     const resolvedHostName = (
       hostNameFromListing && !isDeprecatedHostIdentity(hostNameFromListing) ? hostNameFromListing : null
-    ) ?? access.ownerDisplayName ?? readEmailLocalPart(access.ownerEmail) ?? 'Proprietaire';
+    ) ?? access.ownerDisplayName ?? 'Votre hôte';
 
     return {
       guideKey: access.confirmation.guideAccessKey,
@@ -1359,7 +1349,7 @@ export class BookingsService {
         name: resolvedHostName,
         status: readString(host.status),
         avatar: readString(host.avatar),
-        email: readString(host.email) ?? readString(hostContact.email) ?? access.ownerEmail,
+        email: readString(host.email) ?? readString(hostContact.email),
         phone: readString(host.phone) ?? readString(hostContact.phone),
       },
       guide: {

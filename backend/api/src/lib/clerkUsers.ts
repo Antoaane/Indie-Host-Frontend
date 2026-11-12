@@ -153,7 +153,7 @@ function readUsersCollection(payload: unknown): unknown[] {
   return [];
 }
 
-async function fetchClerkJson(pathname: string, query?: URLSearchParams): Promise<unknown | null> {
+async function fetchClerkJson(pathname: string, query?: URLSearchParams, options?: { timeoutMs?: number }): Promise<unknown | null> {
   const secret = env.CLERK_SECRET_KEY.trim();
   if (!secret) return null;
 
@@ -167,6 +167,8 @@ async function fetchClerkJson(pathname: string, query?: URLSearchParams): Promis
         Authorization: `Bearer ${secret}`,
         'Content-Type': 'application/json',
       },
+      // Délai maximal : la requête est réellement abandonnée, pas seulement plus attendue.
+      ...(options?.timeoutMs ? { signal: AbortSignal.timeout(options.timeoutMs) } : {}),
     });
 
     if (!response.ok) return null;
@@ -300,11 +302,11 @@ export async function countClerkUsers(): Promise<number | null> {
   return typeof total === 'number' && Number.isFinite(total) ? total : null;
 }
 
-export async function fetchClerkUserById(userId: string): Promise<ClerkUserProfile | null> {
+export async function fetchClerkUserById(userId: string, options?: { timeoutMs?: number }): Promise<ClerkUserProfile | null> {
   const normalizedId = readOptionalString(userId);
   if (!normalizedId) return null;
 
-  const payload = await fetchClerkJson(`/users/${encodeURIComponent(normalizedId)}`);
+  const payload = await fetchClerkJson(`/users/${encodeURIComponent(normalizedId)}`, undefined, options);
   return parseClerkUser(payload);
 }
 
