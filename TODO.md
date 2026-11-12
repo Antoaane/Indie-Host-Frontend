@@ -12,7 +12,7 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ### Administration (session du 2026-11-12)
 
-- [ ] Redéployer pour les e-mails aux hôtes, la protection Stripe, l’arrivée sur l’administration (commit `2b90fa4`) et sa nouvelle disposition : `cd /opt/indiehost && git pull && ./deploy-indiehost.sh` (une migration : numéro de compte Stripe unique). Puis se connecter avec dev@indiehost.fr : l’administration doit s’ouvrir d’elle-même, sur toute la largeur de l’écran. La regarder aussi sur l’iPhone et dire ce qui gêne encore.
+- [ ] Redéployer pour les e-mails aux hôtes, la protection Stripe, l’arrivée sur l’administration (commit `2b90fa4`) et sa nouvelle disposition (commit `6b06e2b`) : `cd /opt/indiehost && git pull && ./deploy-indiehost.sh` (une migration : numéro de compte Stripe unique). Puis se connecter avec dev@indiehost.fr : l’administration doit s’ouvrir d’elle-même, sur toute la largeur de l’écran. La regarder aussi sur l’iPhone et dire ce qui gêne encore.
 - [ ] (après ce redéploiement) À la prochaine réservation, vérifier que l’e-mail « nouvelle réservation » arrive bien à l’hôte (Brevo → Emails transactionnels → Logs). Jusqu’ici, aucun e-mail aux hôtes ne partait : leur adresse n’était jamais enregistrée.
 - [ ] (après le déploiement) Ouvrir https://indiehost.fr/dashboard/admin avec dev@indiehost.fr (seul propriétaire de l’administration, déjà dans `SUPER_ADMIN_EMAILS` en production) et vérifier : le nombre d’abonnés et le revenu mensuel contre le Dashboard Stripe, les paiements refusés, l’onglet Services (tout en vert sauf ce qui est réellement en défaut), la carte du code. Sous le schéma, la ligne « Alertes par e-mail » doit nommer dev@indiehost.fr ; si elle dit qu’aucun envoi d’e-mail n’est configuré, la clé Brevo manque sur le serveur. Claude n’a pu voir la page que sur de fausses données (`/dev/admin`) et l’API locale.
 - [ ] Les droits d’administration et le blocage d’un compte agissent sur le Clerk de production dès le clic : n’essayez le blocage que sur un compte de test.
@@ -251,7 +251,7 @@ Défauts visibles :
 
 ## Fait
 
-- [x] 2026-11-12 — Administration réorganisée (demande de Nathan : fenêtre petite au milieu d’un écran plein, bords inutiles, interface moyenne ; détail dans `CLAUDE.md`, « Administration »).
+- [x] 2026-11-12 — Administration réorganisée (commit `6b06e2b`, non déployé ; demande de Nathan : fenêtre petite au milieu d’un écran plein, bords inutiles, interface moyenne ; détail dans `CLAUDE.md`, « Administration »).
   - **Ordinateur** : toute la largeur sous la barre de navigation, comme « Mes annonces ». Les onglets passent dans une colonne à gauche (icône, nom, indicateur : points à traiter, nombre de comptes, état des services), le compte connecté et « Changer de compte » en bas ; la section ouverte défile seule, avec son titre et une phrase qui dit à quoi elle sert. Sur grand écran, Aperçu, Comptes et Services se rangent sur deux colonnes ; la liste des comptes reste visible pendant qu’on lit une fiche.
   - **Comptes** (ancien onglet « Utilisateurs », même adresse) : le formulaire d’invitation est replié derrière un bouton « Inviter » au-dessus de la liste.
   - **Téléphone** : titre et « Changer de compte » sur une ligne, l’adresse dessous, les quatre onglets sur une ligne qui tient à 360 px. L’onglet ouvert affichait une pastille noire vide (libellé noir sur noir) : corrigé.
