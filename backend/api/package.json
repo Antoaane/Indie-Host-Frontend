@@ -23,7 +23,8 @@
     "stripe:billing:setup:dev": "node scripts/ensure-stripe-billing-plans.mjs",
     "purge": "tsx src/jobs/retention.cli.ts",
     "purge:prod": "node dist/jobs/retention.cli.js",
-    "host-reminders": "tsx src/jobs/hostReminders.cli.ts"
+    "host-reminders": "tsx src/jobs/hostReminders.cli.ts",
+    "public-sites": "tsx src/jobs/publicSites.cli.ts"
   },
   "dependencies": {
     "@fastify/cors": "^10.0.2",

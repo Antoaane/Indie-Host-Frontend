@@ -631,6 +631,11 @@ export default function marketingPrerender(): Plugin {
       }
       const template = fs.readFileSync(templatePath, 'utf-8')
       const origin = readOrigin(template)
+
+      // Shell vierge (`#app` vide) avant le pré-rendu de l'accueil : l'API le lit pour servir les sites
+      // des hôtes avec leurs propres balises (`backend/api/src/domains/publicSite`). Jamais servi au
+      // public : nginx le refuse (`nginx/proxy-locations.conf`).
+      fs.writeFileSync(path.join(outDir, '__shell.html'), template)
       const content = readLandingLocale(config.root, warn)
       const catalog = await loadPricingCatalog(config.root)
 

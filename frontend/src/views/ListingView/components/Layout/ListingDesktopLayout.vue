@@ -14,7 +14,7 @@ import Core from '@/views/ListingView/components/Core/Core.vue'
 import Comments from '@/views/ListingView/components/Comments/Comments.vue'
 import Booking from '@/views/ListingView/components/Booking/Booking.vue'
 import Checkout from '@/views/ListingView/components/Checkout/Checkout.vue'
-import LegalLinksCompact from '@/components/layouts/LegalLinksCompact.vue'
+import ListingSiteFooter from '@/components/layouts/ListingSiteFooter.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -131,7 +131,10 @@ function onConfirmCheckout(payload: CheckoutConfirmationPayload) {
       </div>
     </Transition>
 
-    <LegalLinksCompact v-if="!props.previewOnly" />
+    <ListingSiteFooter
+      v-if="!props.previewOnly"
+      :listing-id="props.listingId"
+    />
   </div>
 
   <div class="stay">

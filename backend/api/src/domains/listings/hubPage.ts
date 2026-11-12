@@ -25,7 +25,23 @@ export const PAGE_LIMITS = {
   /** Sections ajoutées par l'hôte, sans compter celle des logements (décision D9). */
   maxSections: 12,
   gallerySize: 3,
+  /** Pied de page : nom du site, ligne de présentation, e-mail et téléphone de contact. */
+  footerName: 80,
+  footerText: 180,
+  footerEmail: 120,
+  footerPhone: 30,
 } as const;
+
+/**
+ * Pied de page du site de l'hôte, modifiable sur la page (mode édition). Il sert aussi aux pages des
+ * logements rattachés. E-mail et téléphone sont facultatifs : rien n'est publié sans l'hôte.
+ */
+export type SiteFooter = {
+  name: string;
+  text: string;
+  email: string;
+  phone: string;
+};
 
 /** Plateforme d'une note : échelle et décimales affichées par la plateforme elle-même. */
 export const RATING_PLATFORMS = {
@@ -54,6 +70,12 @@ export type HubPageSettings = {
   tagline: string;
   location: string;
   sections: PageSection[];
+  footer?: SiteFooter;
+  /**
+   * Date du pré-remplissage par IndieHost (accroche, présentation, pied de page proposés d'office,
+   * `domains/publicSite/prefill.ts`). Posé une seule fois : ce que l'hôte vide ensuite reste vide.
+   */
+  prefilledAt?: string;
 };
 
 // Les textes sont nettoyés et bornés ensuite : la validation limite seulement la taille brute reçue.
@@ -96,6 +118,13 @@ export const updateHubPageSchema = z.object({
     location: looseText,
     // Une de plus que le maximum : la section des logements ne compte pas.
     sections: z.array(sectionSchema).max(PAGE_LIMITS.maxSections + 1),
+    // Absent (site pas encore à jour) : le pied de page enregistré est conservé.
+    footer: z.object({
+      name: looseText,
+      text: looseText,
+      email: looseText,
+      phone: looseText,
+    }).optional(),
   }),
 });
 
@@ -169,6 +198,34 @@ export function cleanRatingScore(value: number | null, platform: RatingPlatform)
   if (value === null || !Number.isFinite(value) || value < 1 || value > scale) return null;
   const factor = 10 ** decimals;
   return Math.round(value * factor) / factor;
+}
+
+/** Adresse e-mail plausible, en minuscules ; sinon chaîne vide (rien n'est publié). */
+export function cleanFooterEmail(value: unknown): string {
+  const email = cleanLine(value, PAGE_LIMITS.footerEmail).toLowerCase();
+  return /^[^\s@<>"(),;:]+@[^\s@<>"(),;:]+\.[a-z]{2,}$/.test(email) ? email : '';
+}
+
+/** Numéro de téléphone : chiffres, espaces, `+ . ( ) -`, au moins six chiffres ; sinon chaîne vide. */
+export function cleanFooterPhone(value: unknown): string {
+  const phone = cleanLine(value, PAGE_LIMITS.footerPhone);
+  if (!/^[+0-9 ().-]+$/.test(phone)) return '';
+  return (phone.match(/\d/g)?.length ?? 0) >= 6 ? phone : '';
+}
+
+export function normalizeSiteFooter(input: { name?: unknown; text?: unknown; email?: unknown; phone?: unknown }): SiteFooter {
+  return {
+    name: cleanLine(input.name, PAGE_LIMITS.footerName),
+    text: cleanLine(input.text, PAGE_LIMITS.footerText),
+    email: cleanFooterEmail(input.email),
+    phone: cleanFooterPhone(input.phone),
+  };
+}
+
+/** Pied de page enregistré dans `core.page`, ou `null` s'il n'y en a pas encore. */
+export function readStoredSiteFooter(page: unknown): SiteFooter | null {
+  if (!isObject(page) || !isObject(page.footer)) return null;
+  return normalizeSiteFooter(page.footer);
 }
 
 /** Nombre de commentaires entier, de 0 à un million ; sinon `null`. */
@@ -252,6 +309,7 @@ export function normalizeHubPage(input: UpdateHubPageInput['page'], knownImages:
     tagline: cleanLine(input.tagline, PAGE_LIMITS.tagline),
     location: cleanLine(input.location, PAGE_LIMITS.location),
     sections,
+    ...(input.footer ? { footer: normalizeSiteFooter(input.footer) } : {}),
   };
 }
 

@@ -469,6 +469,61 @@
     color: var(--page-muted);
     font-size: 0.9375rem;
     @include page-container;
+
+    // Liens légaux (composant commun, aux couleurs d'IndieHost par défaut) : couleurs du thème, sinon
+    // ils disparaissaient sur le fond sombre de Nocturne.
+    .legal-links-compact {
+      --ui-legal-links-text: var(--page-muted);
+      --ui-legal-links-text-strong: var(--page-ink);
+    }
+
+    // Le site de l'hôte : son nom, une ligne, ses coordonnées (modifiables en mode édition).
+    > .footer-site {
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-2xs);
+      min-width: 0;
+
+      > p {
+        margin: 0;
+      }
+
+      > .footer-name {
+        color: var(--page-ink);
+        font-family: var(--page-font-display);
+        font-size: 1.125rem;
+        font-weight: var(--page-heading-weight);
+        line-height: 1.3;
+      }
+
+      > .footer-contact {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--layout-gap-2xs) var(--layout-gap);
+      }
+
+      .footer-contact-item {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--layout-gap-2xs);
+        min-width: 0;
+        overflow-wrap: anywhere;
+        color: inherit;
+      }
+
+      a.footer-contact-item {
+        min-height: var(--tap-target);
+        text-decoration: underline;
+        text-decoration-color: var(--page-line);
+        text-underline-offset: 0.2em;
+        @include animations.transition(animations.$duration-fast, animations.$ease-out, (color, text-decoration-color));
+
+        @include on-hover {
+          color: var(--page-accent);
+          text-decoration-color: currentColor;
+        }
+      }
+    }
   }
 
   // ======================================================================================
@@ -1160,6 +1215,16 @@
   // La barre d'édition est fixée en bas : la fin de page reste atteignable.
   &.is-editing {
     padding-bottom: calc(var(--layout-gap) * 6);
+
+    // Les cadres des champs débordent de `--layout-gap-xs` : deux champs voisins du pied de page
+    // gardent l'écart de deux cadres, sinon les pointillés se chevauchent.
+    > .page-footer > .footer-site {
+      gap: calc(var(--layout-gap-xs) * 2 + 2px);
+
+      > .footer-contact {
+        gap: calc(var(--layout-gap-xs) * 2 + 2px) calc(var(--layout-gap-xs) * 2 + var(--layout-gap));
+      }
+    }
   }
 
   @include animations.reduced-motion {

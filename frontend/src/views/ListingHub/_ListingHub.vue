@@ -9,6 +9,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUser } from '@clerk/vue'
+import { useHead } from '@unhead/vue'
 import { Pencil } from 'lucide-vue-next'
 
 import { getListingsController } from '@/domain/listings/controller'
@@ -22,6 +23,7 @@ import {
   type HubPageListing,
   type PlaceSetting,
 } from '@/domain/listings/pageThemes'
+import { formatPlace, hubSeoDescription, hubSeoTitle, sharedPlace } from '@/domain/listings/seo'
 import type { RawListingBundle } from '@/domain/listings/types'
 import LegalLinksCompact from '@/components/layouts/LegalLinksCompact.vue'
 import ThemedHubPage from '@/views/ListingHub/themed/ThemedHubPage.vue'
@@ -54,6 +56,26 @@ const page = computed(() => buildHubPageContent(props.rawListing, {
 const content = computed(() => page.value.content)
 
 const listings = computed(() => toHubPageListings(children.value))
+
+// Titre et description pour les moteurs de recherche, avec le lieu des logements : mêmes règles
+// que le HTML servi par l'API (`domain/listings/seo.ts`). Pas dans l'aperçu de l'éditeur.
+const childrenPlace = computed(() => sharedPlace(children.value.map((child) => formatPlace(child.city, child.region))))
+useHead(() => {
+  if (props.embedded) return {}
+  const title = hubSeoTitle(props.rawListing.core, childrenPlace.value)
+  const description = hubSeoDescription(props.rawListing.core, childrenPlace.value)
+  return {
+    title,
+    meta: [
+      { name: 'description', content: description },
+      { property: 'og:title', content: title },
+      { property: 'og:description', content: description },
+      { property: 'og:site_name', content: content.value.title },
+      { name: 'twitter:title', content: title },
+      { name: 'twitter:description', content: description },
+    ],
+  }
+})
 
 // Le thème choisi par l'hôte prime ; sinon il suit le lieu des logements rattachés (mer : Rivage,
 // terres : Maison), et le thème par défaut quand aucun logement n'a d'adresse.
@@ -181,7 +203,10 @@ onMounted(() => {
     @open-listing="openListing"
   >
     <template #footer>
-      <LegalLinksCompact />
+      <LegalLinksCompact
+        :owner="content.footer.name"
+        :show-contact="!content.footer.email && !content.footer.phone"
+      />
 
       <Teleport to="body">
         <div

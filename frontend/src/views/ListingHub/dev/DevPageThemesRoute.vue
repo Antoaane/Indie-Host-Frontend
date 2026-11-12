@@ -98,13 +98,17 @@ onBeforeUnmount(() => {
     :editing="editing"
     :listings-message="listings.length ? null : 'Aucun logement en ligne pour le moment. Revenez bientôt !'"
     @update="page.onUpdate"
+    @update-footer="page.onUpdateFooter"
     @update-section="page.onUpdateSection"
     @add-section="page.onAddSection"
     @remove-section="page.onRemoveSection"
     @pick-image="page.onPickImage"
   >
     <template #footer>
-      <LegalLinksCompact />
+      <LegalLinksCompact
+        :owner="content.footer.name"
+        :show-contact="!content.footer.email && !content.footer.phone"
+      />
     </template>
   </ThemedHubPage>
 

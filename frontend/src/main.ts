@@ -59,6 +59,12 @@ void detectOS()
 // iOS Safari n'applique :active (retour de pression) que si un écouteur touchstart existe.
 document.addEventListener('touchstart', () => {}, { passive: true })
 
+// Site d'un hôte servi par l'API (`backend/api/src/domains/publicSite`) : titre, description, canonique
+// et aperçus de partage sont déjà dans le HTML, et la page les repose elle-même avec les mêmes valeurs.
+// On retire ceux du serveur avant le montage pour ne jamais les avoir en double. Restent les données
+// structurées et la consigne `noindex`, que le site ne produit pas.
+document.querySelectorAll('head [data-ih-ssr]:not(script):not([name="robots"])').forEach((element) => element.remove())
+
 const app = createApp(App)
 
 app.use(ui)

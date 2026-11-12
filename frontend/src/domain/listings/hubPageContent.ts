@@ -18,6 +18,7 @@ import {
   type HubPageListing,
   type PageSection,
   type PageThemeId,
+  type SiteFooter,
 } from '@/domain/listings/pageThemes'
 import type { RawListingBundle } from '@/domain/listings/types'
 import { orderByIndex } from '@/utils/medias/order'
@@ -32,6 +33,11 @@ export const PAGE_LIMITS = {
   ratingLabel: 40,
   /** Sections ajoutées par l'hôte, sans compter celle des logements. */
   maxSections: 12,
+  /** Pied de page : nom du site, ligne de présentation, e-mail et téléphone. */
+  footerName: 80,
+  footerText: 180,
+  footerEmail: 120,
+  footerPhone: 30,
 } as const
 
 export type StoredPageSettings = {
@@ -41,6 +47,8 @@ export type StoredPageSettings = {
   location: string
   /** `null` tant que l'hôte n'a jamais modifié sa page : le contenu par défaut s'applique. */
   sections: PageSection[] | null
+  /** `null` tant qu'aucun pied de page n'est enregistré : nom de la page et lieu par défaut. */
+  footer: SiteFooter | null
 }
 
 function readText(value: unknown): string {
@@ -98,12 +106,44 @@ export function readStoredPageSettings(core: unknown): StoredPageSettings {
     })
   }
 
+  const footer = raw.footer && typeof raw.footer === 'object' && !Array.isArray(raw.footer)
+    ? raw.footer as Record<string, unknown>
+    : null
+
   return {
     themeId: readPageThemeId(raw.theme),
     tagline: readText(raw.tagline),
     location: readText(raw.location),
     sections,
+    footer: footer
+      ? {
+        name: readText(footer.name),
+        text: readText(footer.text),
+        email: normalizeFooterEmail(readText(footer.email)) ?? '',
+        phone: normalizeFooterPhone(readText(footer.phone)) ?? '',
+      }
+      : null,
   }
+}
+
+/** E-mail du pied de page : plausible, en minuscules ; vide accepté ; `null` : refusé. Même règle que l'API. */
+export function normalizeFooterEmail(typed: string): string | null {
+  const email = typed.trim().toLowerCase()
+  if (!email) return ''
+  return /^[^\s@<>"(),;:]+@[^\s@<>"(),;:]+\.[a-z]{2,}$/.test(email) && email.length <= PAGE_LIMITS.footerEmail ? email : null
+}
+
+/** Téléphone du pied de page : chiffres, espaces, `+ . ( ) -`, au moins six chiffres ; vide accepté ; `null` : refusé. */
+export function normalizeFooterPhone(typed: string): string | null {
+  const phone = typed.trim()
+  if (!phone) return ''
+  if (phone.length > PAGE_LIMITS.footerPhone || !/^[+0-9 ().-]+$/.test(phone)) return null
+  return (phone.match(/\d/g)?.length ?? 0) >= 6 ? phone : null
+}
+
+/** Pied de page affiché tant que l'hôte n'en a pas enregistré : le nom de la page et son lieu. */
+export function defaultSiteFooter(title: string, location: string): SiteFooter {
+  return { name: title.trim(), text: location.trim(), email: '', phone: '' }
 }
 
 /** Texte simple à partir d'une description écrite dans l'éditeur riche : paragraphes gardés, mise en forme retirée. */
@@ -205,16 +245,22 @@ export function buildHubPageContent(
 ): { content: HubPageContent; settings: StoredPageSettings } {
   const settings = readStoredPageSettings(listing.core)
   const images = readOrderedImageSources(listing)
+  const title = readText(listing.core?.title) || 'Nos logements'
+  const location = settings.location || options.fallbackLocation || ''
+  const coverImage = orderByIndex(Array.isArray(listing.medias?.images) ? listing.medias.images : [])
+    .find((image) => readText(image?.src))
 
   return {
     settings,
     content: {
-      title: readText(listing.core?.title) || 'Nos logements',
+      title,
       tagline: settings.tagline,
-      location: settings.location || options.fallbackLocation || '',
+      location,
       coverSrc: images[0] ?? null,
+      coverAlt: readText(coverImage?.alt) || title,
       hostName: readHubHostName(listing),
       sections: withDefaultListingsTitle(resolvePageSections(listing, settings.sections), options.listingsCount),
+      footer: settings.footer ?? defaultSiteFooter(title, location),
     },
   }
 }

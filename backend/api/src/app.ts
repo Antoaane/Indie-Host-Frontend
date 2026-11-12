@@ -15,6 +15,7 @@ import { messagingPlugin } from './domains/messaging/messaging.plugin.js';
 import { notificationsPlugin } from './domains/notifications/notifications.plugin.js';
 import { paymentsPlugin } from './domains/payments/payments.plugin.js';
 import { privacyPlugin } from './domains/privacy/privacy.plugin.js';
+import { publicSitePlugin } from './domains/publicSite/publicSite.plugin.js';
 import { usersPlugin } from './domains/users/users.plugin.js';
 import { authPlugin } from './plugins/auth.js';
 import { prismaPlugin } from './plugins/prisma.js';
@@ -144,6 +145,7 @@ export async function buildApp() {
     await v1.register(usersPlugin);
     await v1.register(privacyPlugin);
     await v1.register(listingsPlugin);
+    await v1.register(publicSitePlugin);
     await v1.register(bookingsPlugin);
     await v1.register(mediasPlugin);
     await v1.register(arrivalPlugin);

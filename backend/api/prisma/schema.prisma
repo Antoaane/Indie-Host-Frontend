@@ -276,3 +276,24 @@ model HostNotification {
   @@index([kind, refId, createdAt])
   @@index([createdAt])
 }
+
+// Site public d'un hôte (domaine relié ou sous-domaine géré) : son inscription dans la Google Search
+// Console d'IndieHost et ses signalements IndexNow, tenus par la tâche `jobs/publicSites.ts`.
+model PublicSite {
+  hostname             String    @id
+  // Annonce qui répond à la racine du site (page principale ou logement seul).
+  rootListingId        String?
+  // Fichier de validation Google (`google….html`), servi à la racine du site par `domains/publicSite`.
+  googleToken          String?
+  googleVerifiedAt     DateTime?
+  googleOwnersSyncedAt DateTime?
+  googleAddedAt        DateTime?
+  sitemapSubmittedAt   DateTime?
+  // Dernière modification d'une page du site (date du sitemap).
+  contentUpdatedAt     DateTime?
+  indexNowPingedAt     DateTime?
+  lastError            String?
+  lastCheckedAt        DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+}

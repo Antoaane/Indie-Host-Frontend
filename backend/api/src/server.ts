@@ -1,6 +1,7 @@
 import { buildApp } from './app.js';
 import { env } from './config/env.js';
 import { startHostRemindersScheduler } from './jobs/hostReminders.js';
+import { startPublicSitesScheduler } from './jobs/publicSites.js';
 import { startRetentionScheduler } from './jobs/retention.js';
 
 async function start() {
@@ -24,6 +25,15 @@ async function start() {
       const stopHostReminders = startHostRemindersScheduler(app.prisma, app.log);
       app.addHook('onClose', async () => {
         stopHostReminders();
+      });
+    }
+
+    // Référencement des sites d'hôtes : pré-remplissage des pages principales, certificats `www`,
+    // Search Console (avec une clé Google) et IndexNow ; PUBLIC_SITES_JOB_ENABLED=false pour le couper.
+    if (env.PUBLIC_SITES_JOB_ENABLED) {
+      const stopPublicSites = startPublicSitesScheduler(app.prisma, app.log);
+      app.addHook('onClose', async () => {
+        stopPublicSites();
       });
     }
   }

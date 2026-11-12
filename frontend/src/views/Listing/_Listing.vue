@@ -13,6 +13,13 @@ import type { RawListingBundle } from '@/domain/listings/types'
 import { getListingStatusFlags } from '@/domain/listings/status'
 import { isListingHostname } from '@/domain/listings/publicDomain'
 import { buildListingSlug, normalizeListingSlug } from '@/domain/listings/slug'
+import {
+  currentCanonicalUrl,
+  hubSeoDescription,
+  hubSeoTitle,
+  listingSeoDescription,
+  listingSeoTitle,
+} from '@/domain/listings/seo'
 
 const route = useRoute()
 const router = useRouter()
@@ -39,30 +46,21 @@ const pausedMessage = computed(() => pauseMessage.value || 'Cette annonce n’es
 const deletedTitle = computed(() => 'Annonce supprimée')
 const deletedMessage = computed(() => 'Cette annonce n’est plus disponible.')
 
-function stripHtml(value: unknown): string {
-  if (typeof value !== 'string') return ''
-  return value.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
-}
-
-function truncateText(value: string, maxLength: number): string {
-  if (value.length <= maxLength) return value
-  return `${value.slice(0, Math.max(0, maxLength - 1)).trimEnd()}…`
-}
+// Titre et description : mêmes règles que le HTML servi par l'API (`domain/listings/seo.ts`). Une page
+// principale les précise avec le lieu de ses logements (`_ListingHub.vue`). Plus de « | IndieHost » :
+// la page est celle du site de l'hôte.
+const isHub = computed(() => rawListing.value?.core?.kind === 'hub')
 
 const seoTitle = computed(() => {
-  const title = (rawListing.value?.core?.title ?? '').trim()
-  if (!title) return 'Annonce IndieHost'
-  return `${title} | IndieHost`
+  const core = rawListing.value?.core
+  if (!core) return null
+  return isHub.value ? hubSeoTitle(core, '') : listingSeoTitle(core)
 })
 
 const seoDescription = computed(() => {
-  const description = stripHtml(rawListing.value?.core?.description)
-  if (description) return truncateText(description, 160)
-
-  const title = (rawListing.value?.core?.title ?? '').trim()
-  const city = (rawListing.value?.core?.city ?? '').trim()
-  const country = (rawListing.value?.core?.country ?? '').trim()
-  return truncateText([title, city, country].filter(Boolean).join(' · ') || 'Découvrez cette annonce sur IndieHost.', 160)
+  const core = rawListing.value?.core
+  if (!core) return null
+  return isHub.value ? hubSeoDescription(core, '') : listingSeoDescription(core)
 })
 
 const seoImage = computed(() => {
@@ -70,9 +68,11 @@ const seoImage = computed(() => {
   return typeof firstImage?.src === 'string' && firstImage.src.trim() ? firstImage.src.trim() : undefined
 })
 
+// Adresse de la page sans paramètres (`?utm_source=…`, `?proprietaire=1`) : la même que celle servie
+// par l'API, qui redirige déjà toute autre adresse vers celle-ci.
 const canonicalUrl = computed(() => {
-  if (typeof window === 'undefined') return undefined
-  return window.location.href
+  void route.path
+  return currentCanonicalUrl()
 })
 const canonicalSlug = computed(() => buildListingSlug({
   existingSlug: rawListing.value?.core?.slug,
@@ -88,22 +88,26 @@ function resolveFetchErrorMessage(error: unknown): string {
   return 'Cette annonce ne peut pas être affichée pour le moment.'
 }
 
-useHead(() => ({
-  title: seoTitle.value,
-  link: canonicalUrl.value ? [{ rel: 'canonical', href: canonicalUrl.value }] : [],
-  meta: [
-    { name: 'description', content: seoDescription.value },
-    { property: 'og:type', content: 'website' },
-    { property: 'og:title', content: seoTitle.value },
-    { property: 'og:description', content: seoDescription.value },
-    ...(canonicalUrl.value ? [{ property: 'og:url', content: canonicalUrl.value }] : []),
-    ...(seoImage.value ? [{ property: 'og:image', content: seoImage.value }] : []),
-    { name: 'twitter:card', content: seoImage.value ? 'summary_large_image' : 'summary' },
-    { name: 'twitter:title', content: seoTitle.value },
-    { name: 'twitter:description', content: seoDescription.value },
-    ...(seoImage.value ? [{ name: 'twitter:image', content: seoImage.value }] : []),
-  ],
-}))
+useHead(() => {
+  if (!seoTitle.value || !seoDescription.value) return {}
+  return {
+    title: seoTitle.value,
+    link: canonicalUrl.value ? [{ rel: 'canonical', href: canonicalUrl.value }] : [],
+    meta: [
+      { name: 'description', content: seoDescription.value },
+      { property: 'og:type', content: 'website' },
+      { property: 'og:locale', content: 'fr_FR' },
+      { property: 'og:title', content: seoTitle.value },
+      { property: 'og:description', content: seoDescription.value },
+      ...(canonicalUrl.value ? [{ property: 'og:url', content: canonicalUrl.value }] : []),
+      ...(seoImage.value ? [{ property: 'og:image', content: seoImage.value }] : []),
+      { name: 'twitter:card', content: seoImage.value ? 'summary_large_image' : 'summary' },
+      { name: 'twitter:title', content: seoTitle.value },
+      { name: 'twitter:description', content: seoDescription.value },
+      ...(seoImage.value ? [{ name: 'twitter:image', content: seoImage.value }] : []),
+    ],
+  }
+})
 
 async function fetchRawListing() {
   const fetchId = activeFetchId + 1

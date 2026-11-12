@@ -38,6 +38,19 @@ docker compose build "${SERVICES[@]}"
 echo "→ Démarrage (migrations comprises)"
 docker compose up -d --wait
 
+# nginx lit sa configuration par des montages fichier par fichier : après `git pull`, le conteneur
+# garde l'ancienne version (inode remplacé), même avec `nginx -s reload`. On le recrée quand les
+# fichiers qu'il lit diffèrent de ceux du dépôt.
+nginx_config_changed() {
+  docker compose exec -T nginx cat /etc/nginx/snippets/proxy-locations.conf 2>/dev/null | cmp -s - nginx/proxy-locations.conf || return 0
+  docker compose exec -T nginx cat /etc/nginx/templates/default.conf.template 2>/dev/null | cmp -s - nginx/nginx.conf.template || return 0
+  return 1
+}
+if nginx_config_changed; then
+  echo "→ Configuration nginx modifiée : recréation du conteneur nginx"
+  docker compose up -d --force-recreate --wait nginx
+fi
+
 echo "→ Vérification de l'API en ligne"
 DOMAIN="$(read_env_value SSL_DOMAIN)"
 DOMAIN="${DOMAIN:-indiehost.fr}"
@@ -58,6 +71,24 @@ check_route() {
 
 check_route GET /api/v1/payments/stripe/connect/overview
 check_route PUT /api/v1/listings/verification/page
+
+# Sites des hôtes (2026-11-12) : route publique de l'API (404 « Listing not found » ; l'ancienne API
+# répondait 400) et nginx à jour (le shell du site n'est jamais servi au public).
+site_check="$(curl -s -w '\n%{http_code}' "https://$DOMAIN/api/v1/listings/deploy-check/site" || true)"
+if [[ "$(tail -n 1 <<<"$site_check")" == "404" && "$site_check" == *"Listing not found"* ]]; then
+  echo "  ok   GET /api/v1/listings/:id/site"
+else
+  echo "  ÉCHEC GET /api/v1/listings/:id/site (404 « Listing not found » attendu)"
+  failed=1
+fi
+shell_code="$(curl -s -o /dev/null -w '%{http_code}' "https://$DOMAIN/__shell.html" || true)"
+if [[ "$shell_code" == "404" ]]; then
+  echo "  ok   nginx à jour (/__shell.html refusé)"
+else
+  echo "  ÉCHEC nginx pas à jour : /__shell.html → $shell_code (404 attendu)"
+  echo "       docker compose up -d --force-recreate --wait nginx"
+  failed=1
+fi
 
 if [[ "$failed" -ne 0 ]]; then
   echo

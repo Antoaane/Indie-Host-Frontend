@@ -39,7 +39,9 @@ import {
   collectPageImageSources,
   normalizeHubPage,
   PAGE_LIMITS,
+  readStoredSiteFooter,
   replaceCoverImage,
+  type HubPageSettings,
   type UpdateHubPageInput,
 } from './hubPage.js';
 
@@ -191,11 +193,6 @@ type CheckSubdomainAvailabilityInput = {
   auth?: RequestAuth | null;
 };
 
-export type ListingSitemapEntry = {
-  listingId: string;
-  publicUrl: string;
-  updatedAt: string;
-};
 
 type ListingPublicationReadiness = {
   canPublish: boolean;
@@ -244,7 +241,7 @@ function normalizeSlug(value: string): string {
   return value.trim().toLowerCase();
 }
 
-function sanitizeHostname(input: string): string {
+export function sanitizeHostname(input: string): string {
   const trimmed = input.trim().toLowerCase();
   if (!trimmed) return '';
 
@@ -263,7 +260,7 @@ function readString(value: unknown): string | null {
 
 const CUSTOM_DOMAIN_LABEL_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
 
-function normalizeCustomDomain(value: string): string {
+export function normalizeCustomDomain(value: string): string {
   return sanitizeHostname(value).replace(/\.$/, '');
 }
 
@@ -271,7 +268,7 @@ function isIpAddress(value: string): boolean {
   return /^\d{1,3}(?:\.\d{1,3}){3}$/.test(value) || value.includes(':');
 }
 
-function isValidCustomDomain(hostname: string): boolean {
+export function isValidCustomDomain(hostname: string): boolean {
   if (!hostname || hostname.length > 253 || isIpAddress(hostname)) return false;
   const labels = hostname.split('.');
   if (labels.length < 2) return false;
@@ -281,7 +278,7 @@ function isValidCustomDomain(hostname: string): boolean {
 }
 
 // `www.gite.fr` et `gite.fr` désignent le même site : on refuse qu'ils soient rattachés à deux annonces.
-function buildCustomDomainTwin(hostname: string): string {
+export function buildCustomDomainTwin(hostname: string): string {
   return hostname.startsWith('www.') ? hostname.slice(4) : `www.${hostname}`;
 }
 
@@ -445,7 +442,7 @@ function stripAccents(value: string): string {
     .replace(/[\u0300-\u036f]/g, '');
 }
 
-function normalizePublicListingSlug(value: unknown): string {
+export function normalizePublicListingSlug(value: unknown): string {
   const input = typeof value === 'string' ? value.trim() : '';
   if (!input) return '';
 
@@ -466,7 +463,7 @@ function isTransientListingSlug(value: string): boolean {
   return TRANSIENT_LISTING_SLUG_PATTERN.test(value);
 }
 
-function buildListingSlugFromCore(core: Record<string, unknown>, listingId: string): string {
+export function buildListingSlugFromCore(core: Record<string, unknown>, listingId: string): string {
   const fromExisting = normalizePublicListingSlug(core.slug);
   if (fromExisting && !isTransientListingSlug(fromExisting)) return fromExisting;
 
@@ -1533,7 +1530,16 @@ export class ListingsService {
     // Photos déjà sur la page ou dans la galerie : gardées telles quelles, où qu'elles soient hébergées.
     const knownImages = collectPageImageSources(currentCore.page, medias.images);
 
-    const page = normalizeHubPage(args.input.page, knownImages);
+    const page: HubPageSettings = normalizeHubPage(args.input.page, knownImages);
+    // Le site envoie la page entière. Un site resté sur une version sans pied de page ne doit pas
+    // effacer celui qui est enregistré ; la date du pré-remplissage n'appartient qu'à l'API.
+    const storedPage = asObject(currentCore.page);
+    if (!page.footer) {
+      const storedFooter = readStoredSiteFooter(storedPage);
+      if (storedFooter) page.footer = storedFooter;
+    }
+    if (typeof storedPage.prefilledAt === 'string') page.prefilledAt = storedPage.prefilledAt;
+
     const core: Record<string, unknown> = {
       ...currentCore,
       page,
@@ -1904,6 +1910,18 @@ export class ListingsService {
     };
   }
 
+  /** Le nom résout vers l'adresse IPv4 du serveur (`CUSTOM_DOMAIN_TARGET_IPV4`). */
+  private async pointsToServer(hostname: string): Promise<boolean> {
+    const target = env.CUSTOM_DOMAIN_TARGET_IPV4.trim();
+    if (!target) return false;
+    try {
+      const addresses = await dns.resolve4(hostname);
+      return addresses.includes(target);
+    } catch {
+      return false;
+    }
+  }
+
   /**
    * Liste des domaines vérifiés, lue par le conteneur certbot pour émettre les certificats HTTPS.
    * Écriture atomique (tmp + rename) pour que certbot ne lise jamais un fichier partiel.
@@ -1922,9 +1940,19 @@ export class ListingsService {
         orderBy: { customDomain: 'asc' },
       });
 
-      const domains = listings
+      const attached = listings
         .map((listing) => readString(listing.customDomain)?.toLowerCase() ?? '')
         .filter((domain) => isValidCustomDomain(domain));
+
+      // Variante `www` / sans `www` : certificat aussi, pour qu'elle redirige (301) vers l'adresse
+      // rattachée au lieu d'afficher une alerte de sécurité. Seulement si elle pointe déjà vers le
+      // serveur : sinon certbot échouerait toutes les 2 minutes (limite Let's Encrypt par nom).
+      const twins = await Promise.all(attached.map(async (domain) => {
+        const twin = buildCustomDomainTwin(domain);
+        return isValidCustomDomain(twin) && await this.pointsToServer(twin) ? twin : null;
+      }));
+
+      const domains = [...new Set([...attached, ...twins.filter((twin): twin is string => Boolean(twin))])].sort();
       const content = domains.length ? `${domains.join('\n')}\n` : '';
 
       await fs.mkdir(path.dirname(filePath), { recursive: true });
@@ -2077,54 +2105,6 @@ export class ListingsService {
     }
 
     return null;
-  }
-
-  async listSitemapEntries(): Promise<ListingSitemapEntry[]> {
-    const listings = await this.prisma.listing.findMany({
-      where: {
-        status: 'published',
-        NOT: {
-          subdomainSlug: null,
-        },
-      },
-      select: {
-        id: true,
-        ownerId: true,
-        subdomainSlug: true,
-        core: true,
-        updatedAt: true,
-      },
-      orderBy: {
-        updatedAt: 'desc',
-      },
-    });
-
-    const ownerScopedSubdomainCounts = new Map<string, number>();
-
-    for (const listing of listings) {
-      if (!listing.ownerId || !listing.subdomainSlug) continue;
-      const key = `${listing.ownerId}::${listing.subdomainSlug}`;
-      ownerScopedSubdomainCounts.set(key, (ownerScopedSubdomainCounts.get(key) ?? 0) + 1);
-    }
-
-    return listings
-      .filter((listing): listing is typeof listing & { subdomainSlug: string } => Boolean(listing.subdomainSlug))
-      .map((listing) => {
-        const listingCore = asObject(listing.core, buildDefaultResource('core', listing.id));
-        const listingSlug = buildListingSlugFromCore(listingCore, listing.id);
-        const ownerScopedCount = listing.ownerId
-          ? ownerScopedSubdomainCounts.get(`${listing.ownerId}::${listing.subdomainSlug}`) ?? 1
-          : 1;
-        const publicUrl = ownerScopedCount > 1
-          ? this.buildManagedListingPublicUrl(listing.subdomainSlug, listingSlug)
-          : this.buildListingPublicUrl(listing.subdomainSlug);
-
-        return {
-          listingId: listing.id,
-          publicUrl,
-          updatedAt: listing.updatedAt.toISOString(),
-        };
-      });
   }
 
   async patchListingResource(args: {

@@ -10,6 +10,7 @@ const SECRET_FALLBACK_KEYS = [
   'STRIPE_SECRET_KEY',
   'SMTP_PASSWORD',
   'BREVO_API_KEY',
+  'GOOGLE_SERVICE_ACCOUNT_KEY',
 ] as const;
 
 type SecretFallbackKey = (typeof SECRET_FALLBACK_KEYS)[number];
@@ -124,6 +125,30 @@ const envSchema = z.object({
   // à Google Workspace, Brevo demande un domaine d'envoi qu'aucun autre service n'utilise.
   MAIL_FROM: z.string().trim().min(1).default('IndieHost <no-reply@mail.indiehost.fr>'),
   MAIL_REPLY_TO: z.string().trim().optional().default(''),
+  // Sites des hôtes servis par l'API (`domains/publicSite`) : shell du site construit par Vite, lu sur
+  // le conteneur du site. Vide : `http://frontend/__shell.html` en production, le serveur Vite sinon.
+  PUBLIC_SITE_SHELL_URL: z.string().trim().optional().default(''),
+  // Référencement automatique des sites d'hôtes (`jobs/publicSites.ts`) : `false` pour le couper.
+  PUBLIC_SITES_JOB_ENABLED: z
+    .string()
+    .trim()
+    .optional()
+    .default('true')
+    .transform((value) => !['false', '0', 'no', 'off'].includes(value.toLowerCase())),
+  // Clé du compte de service Google (fichier JSON tel quel, ou en base64 ; ou GOOGLE_SERVICE_ACCOUNT_KEY_FILE) :
+  // inscription des sites d'hôtes dans la Search Console d'IndieHost. Vide : rien n'est tenté.
+  GOOGLE_SERVICE_ACCOUNT_KEY: z.string().trim().optional().default(''),
+  // Comptes Google (séparés par des virgules) ajoutés comme propriétaires de chaque site d'hôte.
+  SEARCH_CONSOLE_OWNER_EMAILS: z.string().trim().optional().default(''),
+  // IndexNow (Bing) : pages modifiées signalées en production ; `false` pour le couper. Clé dérivée
+  // d'un secret de l'API si INDEXNOW_KEY est vide.
+  INDEXNOW_ENABLED: z
+    .string()
+    .trim()
+    .optional()
+    .default('true')
+    .transform((value) => !['false', '0', 'no', 'off'].includes(value.toLowerCase())),
+  INDEXNOW_KEY: z.string().trim().optional().default(''),
   // Origine publique du site (liens des e-mails : page de confirmation, guide d'arrivée).
   // Même variable que celle de nginx dans le .env racine ; vide → déduite de PUBLIC_LISTING_ROOT_DOMAIN.
   BASE_URL: z.string().trim().optional().default(''),
@@ -160,10 +185,14 @@ const clerkAudience = raw.CLERK_AUDIENCE
   ? raw.CLERK_AUDIENCE.split(',').map((value) => value.trim()).filter(Boolean)
   : [];
 
+const publicSiteShellUrl = raw.PUBLIC_SITE_SHELL_URL
+  || (raw.NODE_ENV === 'production' ? 'http://frontend/__shell.html' : 'http://frontend:5179/');
+
 export const env = {
   ...raw,
   CORS_ORIGINS: corsOrigins,
   CLERK_AUDIENCE: clerkAudience,
+  PUBLIC_SITE_SHELL_URL: publicSiteShellUrl,
 } as const;
 
 export type AppEnv = typeof env;

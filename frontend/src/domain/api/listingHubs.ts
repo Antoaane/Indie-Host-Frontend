@@ -4,7 +4,8 @@
 
 import { getFreshAuthToken } from '@/utils/authToken'
 import { invalidateListing } from '@/domain/api/listingsCache'
-import type { PageSection, PageThemeId, PlaceSetting } from '@/domain/listings/pageThemes'
+import { sharedRequest } from '@/domain/api/requestCache'
+import type { PageSection, PageThemeId, PlaceSetting, SiteFooter } from '@/domain/listings/pageThemes'
 
 const PLACE_SETTINGS: readonly PlaceSetting[] = ['sea', 'inland']
 
@@ -240,6 +241,7 @@ export type HubPageSave = {
     tagline: string
     location: string
     sections: PageSection[]
+    footer: SiteFooter
   }
 }
 
@@ -294,4 +296,40 @@ export async function saveHubPage(listingId: string, update: HubPageSave): Promi
     // Titre, photo d'en-tête et page figurent dans les sections `core` et `medias` de l'annonce.
     invalidateListing(listingId)
   }
+}
+
+// --- Site de l'hôte (pages des logements) -----------------------------------------------------
+
+export type ListingSiteInfo = {
+  /** Nom du site : celui de la page principale du logement, sinon le titre du logement. */
+  siteName: string
+  footer: SiteFooter
+  hubListingId: string | null
+}
+
+function normalizeSiteFooter(data: unknown): SiteFooter {
+  const payload = (data && typeof data === 'object' ? data : {}) as Record<string, unknown>
+  return {
+    name: toTrimmedString(payload.name),
+    text: toTrimmedString(payload.text),
+    email: toTrimmedString(payload.email),
+    phone: toTrimmedString(payload.phone),
+  }
+}
+
+/** Nom du site et pied de page d'une annonce (page publique, sans authentification). */
+export function fetchListingSite(listingId: string): Promise<ListingSiteInfo> {
+  const id = listingId.trim()
+  return sharedRequest(`listing-site:${id}`, async () => {
+    const axios = await getAxios()
+    const { data } = await axios.get<Record<string, unknown>>(buildUrl(`/listings/${encodeURIComponent(id)}/site`), {
+      withCredentials: false,
+      timeout: API_REQUEST_TIMEOUT_MS,
+    })
+    return {
+      siteName: toTrimmedString(data?.siteName),
+      footer: normalizeSiteFooter(data?.footer),
+      hubListingId: toTrimmedString(data?.hubListingId) || null,
+    }
+  }, { ttlMs: 60_000 })
 }

@@ -6,8 +6,9 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
-import { ImagePlus, MapPin, Star, Trash2, Users } from 'lucide-vue-next'
+import { ImagePlus, Mail, MapPin, Phone, Star, Trash2, Users } from 'lucide-vue-next'
 
+import { PAGE_LIMITS, normalizeFooterEmail, normalizeFooterPhone } from '@/domain/listings/hubPageContent'
 import {
   RATING_PLATFORMS,
   buildPageThemeStyle,
@@ -22,6 +23,8 @@ import {
   type PageSectionPatch,
   type PageTheme,
   type RatingPlatform,
+  type SiteFooter,
+  type SiteFooterField,
 } from '@/domain/listings/pageThemes'
 import AirbnbLogo from '@/components/svgs/icons/AirbnbLogo.vue'
 import BookingLogo from '@/components/svgs/icons/BookingLogo.vue'
@@ -52,6 +55,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (e: 'update', patch: Partial<Pick<HubPageContent, HeaderField>>): void
+  (e: 'update-footer', patch: Partial<SiteFooter>): void
   (e: 'update-section', sectionId: string, patch: PageSectionPatch): void
   (e: 'add-section', index: number, type: AddablePageSectionType): void
   (e: 'remove-section', sectionId: string): void
@@ -142,6 +146,20 @@ watch(() => props.editing, (editing) => {
 function updateHeader(field: HeaderField, value: string) {
   emit('update', { [field]: value })
 }
+
+function updateFooter(field: SiteFooterField, value: string) {
+  emit('update-footer', { [field]: value })
+}
+
+// E-mail et téléphone : une saisie qui n'en est pas un est refusée, le champ reprend l'ancien texte.
+const formatFooterEmail = (typed: string) => normalizeFooterEmail(typed)
+const formatFooterPhone = (typed: string) => normalizeFooterPhone(typed)
+
+function telHref(phone: string): string {
+  return `tel:${phone.replace(/[^+\d]/g, '')}`
+}
+
+const hasFooterContact = computed(() => Boolean(props.content.footer.email || props.content.footer.phone))
 
 function onImagePicked(target: PageImageTarget, event: Event) {
   const input = event.target as HTMLInputElement
@@ -308,7 +326,7 @@ const hasHeroMedia = computed(() => Boolean(props.content.coverSrc) || props.edi
         <img
           v-if="content.coverSrc"
           :src="content.coverSrc"
-          alt=""
+          :alt="content.coverAlt"
         />
         <label
           v-if="editing"
@@ -761,12 +779,99 @@ const hasHeroMedia = computed(() => Boolean(props.content.coverSrc) || props.edi
     />
 
     <footer class="page-footer">
-      <p
-        v-if="content.hostName"
-        class="footer-host"
-      >
-        {{ content.title }}, proposé par {{ content.hostName }}
-      </p>
+      <!-- Pied de page du site : modifiable sur la page, repris par les pages des logements. -->
+      <div class="footer-site">
+        <EditableText
+          tag="p"
+          class="footer-name"
+          label="Nom du site"
+          :model-value="content.footer.name"
+          :editing="editing"
+          :max-length="PAGE_LIMITS.footerName"
+          required
+          @update:model-value="updateFooter('name', $event)"
+        />
+        <EditableText
+          v-if="showText(content.footer.text)"
+          tag="p"
+          class="footer-text"
+          label="Une ligne sur votre site : quartier, adresse…"
+          :model-value="content.footer.text"
+          :editing="editing"
+          :max-length="PAGE_LIMITS.footerText"
+          @update:model-value="updateFooter('text', $event)"
+        />
+        <p
+          v-if="editing"
+          class="footer-contact"
+        >
+          <span class="footer-contact-item">
+            <Mail
+              :size="16"
+              aria-hidden="true"
+            />
+            <EditableText
+              tag="span"
+              label="E-mail de contact (facultatif)"
+              :model-value="content.footer.email"
+              :editing="editing"
+              :max-length="PAGE_LIMITS.footerEmail"
+              inputmode="email"
+              :format="formatFooterEmail"
+              @update:model-value="updateFooter('email', $event)"
+            />
+          </span>
+          <span class="footer-contact-item">
+            <Phone
+              :size="16"
+              aria-hidden="true"
+            />
+            <EditableText
+              tag="span"
+              label="Téléphone (facultatif)"
+              :model-value="content.footer.phone"
+              :editing="editing"
+              :max-length="PAGE_LIMITS.footerPhone"
+              inputmode="tel"
+              :format="formatFooterPhone"
+              @update:model-value="updateFooter('phone', $event)"
+            />
+          </span>
+        </p>
+        <p
+          v-else-if="hasFooterContact"
+          class="footer-contact"
+        >
+          <a
+            v-if="content.footer.email"
+            class="footer-contact-item"
+            :href="`mailto:${content.footer.email}`"
+          >
+            <Mail
+              :size="16"
+              aria-hidden="true"
+            />
+            {{ content.footer.email }}
+          </a>
+          <a
+            v-if="content.footer.phone"
+            class="footer-contact-item"
+            :href="telHref(content.footer.phone)"
+          >
+            <Phone
+              :size="16"
+              aria-hidden="true"
+            />
+            {{ content.footer.phone }}
+          </a>
+        </p>
+        <p
+          v-if="content.hostName"
+          class="footer-host"
+        >
+          Proposé par {{ content.hostName }}
+        </p>
+      </div>
       <slot name="footer" />
     </footer>
   </article>

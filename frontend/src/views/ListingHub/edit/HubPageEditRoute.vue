@@ -55,7 +55,16 @@ const isLoading = ref(true)
 const loadError = ref<string | null>(null)
 const editing = ref(true)
 
-const content = ref<HubPageContent>({ title: '', tagline: '', location: '', coverSrc: null, hostName: '', sections: [] })
+const content = ref<HubPageContent>({
+  title: '',
+  tagline: '',
+  location: '',
+  coverSrc: null,
+  coverAlt: '',
+  hostName: '',
+  sections: [],
+  footer: { name: '', text: '', email: '', phone: '' },
+})
 const themeId = ref<PageThemeId | null>(null)
 const children = ref<ListingHubChildCard[]>([])
 const placeSettings = ref<PlaceSetting[]>([])
@@ -75,6 +84,7 @@ async function save(snapshot: HubPageSnapshot) {
       // Un lieu laissé à la proposition par défaut n'est pas figé : il continue de suivre les logements.
       location: snapshot.location === fallbackLocation.value ? '' : snapshot.location,
       sections: withoutDefaultListingsTitle(snapshot.sections),
+      footer: snapshot.footer,
     },
   })
 
@@ -188,13 +198,17 @@ onBeforeUnmount(() => {
         :editing="editing"
         :listings-message="listings.length ? null : 'Aucun logement en ligne pour le moment. Rattachez vos logements depuis « Mes annonces ».'"
         @update="page.onUpdate"
+        @update-footer="page.onUpdateFooter"
         @update-section="page.onUpdateSection"
         @add-section="page.onAddSection"
         @remove-section="page.onRemoveSection"
         @pick-image="page.onPickImage"
       >
         <template #footer>
-          <LegalLinksCompact />
+          <LegalLinksCompact
+            :owner="content.footer.name"
+            :show-contact="!content.footer.email && !content.footer.phone"
+          />
         </template>
       </ThemedHubPage>
 

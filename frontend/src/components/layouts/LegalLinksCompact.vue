@@ -11,8 +11,12 @@ withDefaults(
   defineProps<{
     /** Fond sur lequel les liens sont posés : `light` (texte sombre) ou `dark` (texte clair). */
     variant?: 'light' | 'dark'
+    /** Nom après le © : celui du site de l'hôte sur ses pages, IndieHost ailleurs. */
+    owner?: string
+    /** Lien « Contact » vers IndieHost : masqué quand l'hôte affiche ses propres coordonnées. */
+    showContact?: boolean
   }>(),
-  { variant: 'light' },
+  { variant: 'light', owner: 'IndieHost', showContact: true },
 )
 
 // Sur le domaine d'un hôte, le voyageur ne doit pas perdre sa page de réservation :
@@ -45,10 +49,10 @@ const currentYear = new Date().getFullYear()
           > (nouvel onglet)</span>
         </RouterLink>
       </li>
-      <li>
+      <li v-if="showContact">
         <a href="mailto:contact@indiehost.fr">Contact</a>
       </li>
-      <li class="copyright">© {{ currentYear }} IndieHost</li>
+      <li class="copyright">© {{ currentYear }} {{ owner || 'IndieHost' }}</li>
     </ul>
   </nav>
 </template>

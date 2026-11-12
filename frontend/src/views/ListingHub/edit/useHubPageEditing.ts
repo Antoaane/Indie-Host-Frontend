@@ -15,6 +15,7 @@ import {
   type PageSection,
   type PageSectionPatch,
   type PageThemeId,
+  type SiteFooter,
 } from '@/domain/listings/pageThemes'
 import type { PageImageTarget } from '@/views/ListingHub/themed/ThemedHubPage.vue'
 
@@ -27,6 +28,7 @@ export type HubPageSnapshot = {
   tagline: string
   location: string
   sections: PageSection[]
+  footer: SiteFooter
 }
 
 type UseHubPageEditingOptions = {
@@ -96,6 +98,7 @@ export function useHubPageEditing(options: UseHubPageEditingOptions) {
       tagline: current.tagline,
       location: current.location,
       sections: current.sections,
+      footer: current.footer,
     }
   }
 
@@ -153,6 +156,13 @@ export function useHubPageEditing(options: UseHubPageEditingOptions) {
     // Une page a toujours un titre : la saisie vide est ignorée (le champ reprend l'ancien texte).
     if (patch.title !== undefined && !patch.title.trim()) return
     content.value = { ...content.value, ...patch }
+    commit()
+  }
+
+  function onUpdateFooter(patch: Partial<SiteFooter>) {
+    // Le site a toujours un nom (il suit le © des pages) : la saisie vide est ignorée.
+    if (patch.name !== undefined && !patch.name.trim()) return
+    content.value = { ...content.value, footer: { ...content.value.footer, ...patch } }
     commit()
   }
 
@@ -255,6 +265,7 @@ export function useHubPageEditing(options: UseHubPageEditingOptions) {
     hasUnsavedChanges: computed(() => isSaving.value || saveFailed.value || uploads.value > 0),
     selectTheme,
     onUpdate,
+    onUpdateFooter,
     onUpdateSection,
     onAddSection,
     onRemoveSection,

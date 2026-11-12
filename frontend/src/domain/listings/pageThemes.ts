@@ -268,14 +268,31 @@ export function createPageSection(type: AddablePageSectionType, id: string): Pag
   return { id, type, title: '', text: '' }
 }
 
+/**
+ * Pied de page du site de l'hôte : nom du site, une ligne de présentation, e-mail et téléphone de
+ * contact (facultatifs : rien n'est publié sans l'hôte). Modifiable sur la page, repris par les pages
+ * des logements rattachés. Mêmes limites et même nettoyage côté API (`hubPage.ts`, `SiteFooter`).
+ */
+export type SiteFooter = {
+  name: string
+  text: string
+  email: string
+  phone: string
+}
+
+export type SiteFooterField = keyof SiteFooter
+
 /** Contenu modifiable de la page (ce que l'hôte édite à la volée). */
 export type HubPageContent = {
   title: string
   tagline: string
   location: string
   coverSrc: string | null
+  /** Description de la photo d'en-tête (lecteurs d'écran, moteurs de recherche). */
+  coverAlt: string
   hostName: string
   sections: PageSection[]
+  footer: SiteFooter
 }
 
 export type HubPageListing = {

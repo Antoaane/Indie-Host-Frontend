@@ -20,7 +20,7 @@ const props = withDefaults(
     /** Le texte ne peut pas être vidé : une saisie vide rend l'ancien texte. */
     required?: boolean
     /** Clavier proposé sur téléphone (`decimal`, `numeric`…). */
-    inputmode?: 'text' | 'decimal' | 'numeric'
+    inputmode?: 'text' | 'decimal' | 'numeric' | 'email' | 'tel'
     /**
      * Met la saisie au propre (une note « 9.6 » devient « 9,6 ») ; `null` la refuse et le champ reprend
      * l'ancien texte.

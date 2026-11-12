@@ -13,7 +13,14 @@ export function buildDevPageContent(): HubPageContent {
     tagline: 'Trois cabanes flottantes pour dormir sur l’eau, au milieu des aulnes.',
     location: 'Lac des Aulnes, Bourgogne',
     coverSrc: `${PHOTOS}/image1.jpg`,
+    coverAlt: 'Les cabanes flottantes au lever du soleil',
     hostName: 'Claire et Julien',
+    footer: {
+      name: 'Les Cabanes du Lac',
+      text: 'Chemin du Ponton, 21000 Lac des Aulnes',
+      email: '',
+      phone: '',
+    },
     sections: [
       {
         id: 'presentation',

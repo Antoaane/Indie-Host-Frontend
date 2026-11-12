@@ -25,6 +25,48 @@ set_real_ip_from 2a06:98c0::/29;
 set_real_ip_from 2c0f:f248::/32;
 real_ip_header CF-Connecting-IP;
 
+# Sites des hôtes (domaines reliés, sous-domaines d'indiehost.fr) : leurs pages passent par l'API,
+# qui sert le HTML déjà rempli (titre, canonique, contenu de l'annonce), les redirections 301,
+# robots.txt, sitemap.xml et les fichiers de validation (backend/api/src/domains/publicSite).
+# Sur indiehost.fr, seules les adresses d'annonce (`/<nom>`) y passent, pour la redirection 301 vers
+# le domaine de l'annonce. Tout le reste va au site comme avant ; voir proxy-locations.conf.
+map $host $ih_main_host {
+    default 0;
+    ${SSL_DOMAIN} 1;
+    www.${SSL_DOMAIN} 1;
+}
+
+map $uri $ih_site_path {
+    default 0;
+    ~^/[^.]*$ 1;
+    /robots.txt 1;
+    /sitemap.xml 1;
+    ~^/google[0-9a-f]+\.html$ 1;
+    "~^/[0-9a-zA-Z-]{8,128}\.txt$" 1;
+}
+
+map $uri $ih_main_listing_path {
+    default 0;
+    ~^/(?:api|assets|booking|create-listing|dashboard|dev|domains|donation|editor|legal|listing|management|messagerie|pricing|sign-in|sign-up)/?$ 0;
+    ~^/[a-z0-9-]+/?$ 1;
+}
+
+map "$ih_main_host:$ih_site_path:$ih_main_listing_path" $ih_public_site {
+    default 0;
+    ~^0:1: 1;
+    ~^1:.:1$ 1;
+}
+
+# Groupes nommés : une `location` nommée ne peut écrire l'adresse de `proxy_pass` qu'avec une
+# variable, et une variable sans groupe nommé exigerait un résolveur DNS.
+upstream ih_api {
+    server api:4000;
+}
+
+upstream ih_frontend {
+    server frontend:80;
+}
+
 # Le nom SNI sert à choisir le certificat d'un domaine personnalisé : on ne l'accepte
 # dans un chemin de fichier que s'il ne contient que des caractères de nom d'hôte.
 map $ssl_server_name $custom_domain_cert_name {

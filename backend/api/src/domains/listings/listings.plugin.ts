@@ -21,15 +21,6 @@ import {
   upsertListingDomainSchema,
 } from './listings.schemas.js';
 
-function escapeXml(value: string): string {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
-}
-
 export const listingsPlugin = fp(async (fastify) => {
   const service = new ListingsService(fastify.prisma);
 
@@ -77,23 +68,6 @@ export const listingsPlugin = fp(async (fastify) => {
     }
 
     reply.send(resolved);
-  });
-
-  fastify.get('/listings/sitemap.xml', async (_request, reply) => {
-    const entries = await service.listSitemapEntries();
-    const body = `<?xml version="1.0" encoding="UTF-8"?>\n`
-      + `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`
-      + entries.map((entry) => [
-        '  <url>',
-        `    <loc>${escapeXml(entry.publicUrl)}</loc>`,
-        `    <lastmod>${escapeXml(entry.updatedAt)}</lastmod>`,
-        '  </url>',
-      ].join('\n')).join('\n')
-      + `\n</urlset>`;
-
-    reply
-      .type('application/xml')
-      .send(body);
   });
 
   fastify.get('/listings/:listingId/domain', {
