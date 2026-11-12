@@ -247,7 +247,7 @@ Défauts visibles :
 
 ## Fait
 
-- [x] 2026-11-12 — Suites de l’administration (commit `COMMIT_SUITES`, non déployé ; détail dans `CLAUDE.md`, « Administration » et « Paiements des réservations »).
+- [x] 2026-11-12 — Suites de l’administration (commit `0b64323`, non déployé ; détail dans `CLAUDE.md`, « Administration » et « Paiements des réservations »).
   - **Faille des comptes Stripe corrigée** (demande de Nathan le 2026-11-12) : le site n’envoie plus de numéro de compte ; synchronisation, lien d’inscription et lien de tableau de bord prennent le compte du profil et refusent tout autre numéro (403). Chaque relecture chez Stripe vérifie que le compte a été créé pour ce profil. Script `connectAudit.cli.js` (lecture seule) pour les comptes rattachés pendant que la faille était ouverte. Le paiement d’un voyageur prenait déjà le compte du propriétaire de l’annonce. Contrôle `connect-ownership-smoke.ts` (7 cas).
   - **Référencement des sites suivi par la page Services** : passages, durée, et bilan (tous les sites en échec = échec signalé, une partie = avertissement affiché sans alerte).
   - **Carte du code prête pour la CSP bloquante** : bloc nginx propre à la carte, et `'self'` dans le `frame-src` global (sans lui, la page d’administration refusait d’afficher la carte dans son cadre). Essayé dans des conteneurs nginx jetables avec la CSP passée en bloquant.
