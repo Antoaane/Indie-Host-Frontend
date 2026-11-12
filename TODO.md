@@ -157,6 +157,7 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 ### Sécurité
 
 - [ ] Dépendances restantes après les passes du 2026-11-10. `backend/api/` : seules les trois alertes de `prisma` 6.19 subsistent (outil de build, non exploitable, voir « Ce que vous devez faire ») et une alerte faible sur `esbuild` (serveur de développement sous Windows, non utilisé). `frontend/` : `@nuxt/ui` 4.1 → 4.8 (modéré, à vérifier visuellement), `vue-tsc` 2 → 3 et `npm-run-all2` 8 → 9 (modérés, outils de build), chaîne `@ai-sdk` (faibles : la version corrigée dépend d’un `undici` vulnérable, donc laissée telle quelle). `pip-audit` du scraping pas encore fait.
+- [ ] GitHub annonçait au push du 2026-11-12 (commit `b610db9`) 18 alertes Dependabot sur `develop`, dont 14 graves : bien plus que le relevé ci-dessus. Les relever (`npm audit` dans `frontend/` et `backend/api/`, `gh` n’étant pas installé sur ce PC) et les traiter paquet par paquet, sans `npm audit fix` tel quel (voir `CLAUDE.md`).
 - [ ] Passer la CSP de `Content-Security-Policy-Report-Only` à `Content-Security-Policy` dans `nginx/proxy-locations.conf` (après votre relevé des violations en prod).
 - [ ] Option : script de reprise `npm run sanitize:backfill` (nettoyage HTML des annonces et messages existants, avec `--dry-run`) ; aujourd'hui seul ce qui est réenregistré est nettoyé.
 - [ ] Option : signer l'URL de l'export `.ics` public. Elle n'expose plus que « Réservé » / « Indisponible », et la signer casserait les synchronisations déjà configurées chez Airbnb et Booking.
