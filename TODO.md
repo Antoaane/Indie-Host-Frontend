@@ -20,6 +20,11 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 - [ ] Option : une surveillance extérieure de `https://indiehost.fr/api/health`, par exemple updown.io (française, payante à l’usage) ou Better Stack (tchèque, offre gratuite). Les alertes de l’administration partent de l’API : si l’API ou tout le serveur s’arrête, personne ne vous prévient.
 - [ ] Décider la règle quand l’administration transfère une annonce à un autre hôte alors qu’elle a des séjours déjà payés : aujourd’hui le nouveau propriétaire peut les annuler, et le remboursement est pris sur le compte Stripe de l’ancien hôte, sans lui demander (relevé de la relecture du 2026-11-12). Deux possibilités : refuser le transfert tant qu’il reste des séjours payés à venir, ou réserver ces annulations à l’administration.
 
+### Routes publiques de l’API (relevé floorplan du 2026-11-12)
+
+- [ ] Déployer l’API **et** le site ensemble (`./deploy-indiehost.sh` fait les deux) : le guide du voyageur prend désormais l’adresse exacte dans sa propre réponse. Une API nouvelle avec l’ancien site afficherait « Adresse complète envoyée 24h avant l’arrivée » à la place de l’adresse.
+- [ ] (après le déploiement) Sur une annonce en ligne, en navigation privée : la carte s’affiche comme avant, et `https://indiehost.fr/api/v1/listings/core/<id de l’annonce>` ne contient plus `precise_address`. Puis ouvrir le guide d’une réservation dont l’arrivée est dans moins de 48 h : l’adresse exacte y figure.
+
 ### À déployer et à vérifier (session du 2026-11-11, jusqu’au commit `424cbe9`)
 
 - [ ] Déployer les corrections de la page d’un logement sur téléphone (commit `0b9a4ea`) : `cd /opt/indiehost && git pull && ./deploy-indiehost.sh` (le site est reconstruit avec son nouveau `nginx.conf`). Puis, sur l’iPhone, `apparts-saintfrancois.fr/appartement-les-raisins-clairs` :
@@ -221,17 +226,15 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 - [ ] (après votre décision sur le transfert d’une annonce à un autre hôte) Appliquer la règle dans `transferListingOwnership` (`listings.service.ts`) ou dans `BookingsService.applyStripeCancellation` (`bookings.service.ts`) : aujourd’hui un remboursement peut être pris sur le compte Stripe de l’ancien propriétaire.
 - [ ] Option : alertes de santé, envoyer aussi par SMTP quand Brevo refuse l’envoi (aujourd’hui `lib/mailer.ts` prend Brevo seul dès que sa clé existe : une panne de Brevo ne peut pas être signalée par e-mail). Utile seulement si un compte SMTP est ajouté en production.
 - [ ] Option : traiter les webhooks d’abonnement Stripe (`customer.subscription.*`, `invoice.payment_failed`) pour que l’offre affichée dans la liste des comptes soit à jour sans visite de l’hôte. L’aperçu, lui, lit déjà Stripe directement.
-- [ ] Option : carte floorplan, marquer « Not a problem » (avec la raison) les routes signalées « Anyone could change data » qui exigent en réalité une connexion (vérifiée dans le traitement, ce que le scan ne voit pas), pour ne garder que les vrais points du relevé ci-dessous.
+- [ ] Option : mettre à jour la carte floorplan (« mets à jour la carte floorplan ») puis la réexporter pour l’administration : elle montre encore les routes retirées le 2026-11-12 (messagerie, guide d’arrivée, médias et réservations par annonce).
 
 ### Relevé du code fait en dessinant la carte floorplan (2026-11-12)
 
 Lu fichier par fichier par six agents, sans rien exécuter. Le point sur les comptes Stripe, revérifié par Claude, est corrigé (voir « Fait ») ; les autres sont à confirmer avant correction.
 
 Sécurité :
-- [ ] Messagerie ouverte sans compte : les routes `/messaging/*` acceptent une clé d’invité choisie par l’appelant ; chaque nouvelle conversation peut déclencher un e-mail à l’hôte, sans limite par IP (`messaging.service.ts`). Le site ne les utilise pas : les supprimer, ou exiger la clé de guide et une limite.
 - [ ] Envoi de photos et vidéos sans annonce par n’importe quel compte connecté, sans limite de débit (`medias.plugin.ts`, `ensureCanUploadToListing`).
 - [ ] Annonce sans propriétaire modifiable par tout compte connecté, et rattacher un domaine en fait son propriétaire (`listings.service.ts` : `findOwnedListing`, `patchListingResource`, `upsertListingDomain`, `upsertListingCustomDomain`), contraire à la règle de `CLAUDE.md`.
-- [ ] Routes que le site n’appelle plus, dont `PATCH /medias/listings/:id` qui enregistre sans nettoyer le texte : `arrival.plugin.ts`, `GET /bookings/listings/:id` et `PATCH /bookings/:reservationId`, `medias.plugin.ts`, `messaging.plugin.ts`. À supprimer.
 - [ ] `backend/api/scripts/ensure-stripe-billing-plans.mjs` crée encore les anciennes offres (16, 39 et 99 €, MegaHost) : lancé sur le compte live, il ajouterait des produits actifs.
 - [ ] Moindres : catalogue public des abonnements relu chez Stripe à chaque appel sans copie ni limite ; `preflight.sh` ne regarde que le SMTP et annonce à tort des e-mails coupés avec Brevo seul ; `backend/api/mcp/clerk-server.js` et `nginx/nginx.conf` ne servent plus.
 
@@ -247,6 +250,12 @@ Défauts visibles :
 - [ ] Nettoyage : 25 illustrations affichées nulle part et `components/svgs/svgs-old/`, sections d’accueil retirées (`RoiSection` encore à 39 €, `ReassuranceBandSection`), fonctions de `Editor/utils/listingApi.ts`, `BottomNav.vue`, styles « patch » de la page de don qui ne visent aucune classe.
 
 ## Fait
+
+- [x] 2026-11-12 — Relevé « Anyone could change data » de floorplan vérifié route par route (commit `69566c0`, non déployé ; détail dans `CLAUDE.md`, « Sécurité »).
+  - 9 alertes : la plupart sont des faux positifs (le scan ne voit pas `preHandler: fastify.authenticate`), les autres des routes publiques voulues (paiement et réservation d’un voyageur sans compte, routes à clé de guide, import et IA de l’assistant sans compte, webhooks signés). Classées « Not a problem » avec leur raison dans `floorplan/health-dismissed.json`.
+  - **Adresse exacte de l’hôte** : l’annonce publique l’envoyait à tout visiteur, avec la position exacte, alors que la carte et le guide public la cachaient. Elle n’est plus donnée qu’au propriétaire, à l’admin et au voyageur muni de sa clé ; la position publique est déplacée de 60 à 150 m.
+  - **Routes retirées** (inutilisées, en partie ouvertes) : `/messaging/*`, `/arrival/listings/:id`, `GET|PATCH /medias/listings/:id`, `GET /bookings/listings/:id`, `PATCH /bookings/:id`.
+  - Vérifié : type-checks de l’API et du site ; `listing-privacy-smoke.ts` (8 cas) et les contrôles existants ; sur la pile locale avec une annonce et une réservation de test (supprimées ensuite), réponses de l’API (visiteur, propriétaire, voyageur, clé fausse 403, vue publique réenregistrée 409, routes retirées 404), guide du voyageur et carte publique dans Chrome. L’API locale ne redémarrait plus à cause de l’index unique de `stripeConnectAccountId` (autre session) : appliqué à la base locale, qui n’avait aucun compte Stripe.
 
 - [x] 2026-11-12 — Suites de l’administration (commit `0b64323`, non déployé ; détail dans `CLAUDE.md`, « Administration » et « Paiements des réservations »).
   - **Faille des comptes Stripe corrigée** (demande de Nathan le 2026-11-12) : le site n’envoie plus de numéro de compte ; synchronisation, lien d’inscription et lien de tableau de bord prennent le compte du profil et refusent tout autre numéro (403). Chaque relecture chez Stripe vérifie que le compte a été créé pour ce profil. Script `connectAudit.cli.js` (lecture seule) pour les comptes rattachés pendant que la faille était ouverte. Le paiement d’un voyageur prenait déjà le compte du propriétaire de l’annonce. Contrôle `connect-ownership-smoke.ts` (7 cas).
