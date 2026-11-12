@@ -12,7 +12,7 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ### Administration (session du 2026-11-12)
 
-- [ ] Redéployer pour les corrections de l’administration (commit `819ada2` : colonne de gauche alignée, et commit de la relecture des styles, voir « Fait ») : `cd /opt/indiehost && git pull && ./deploy-indiehost.sh`. Puis regarder l’administration en plein écran et sur l’iPhone, et dire ce qui gêne encore.
+- [ ] Redéployer pour les corrections de l’administration (commits `819ada2` : colonne de gauche alignée, et `0eb2d29` : relecture des styles) : `cd /opt/indiehost && git pull && ./deploy-indiehost.sh`. Puis regarder l’administration en plein écran et sur l’iPhone, et dire ce qui gêne encore.
 - [ ] Vérifier qu’une connexion avec dev@indiehost.fr ouvre l’administration d’elle-même (déployé le 2026-11-12).
 - [ ] À la prochaine réservation (déployé le 2026-11-12), vérifier que l’e-mail « nouvelle réservation » arrive bien à l’hôte (Brevo → Emails transactionnels → Logs). Jusqu’ici, aucun e-mail aux hôtes ne partait : leur adresse n’était jamais enregistrée.
 - [ ] (après le déploiement) Ouvrir https://indiehost.fr/dashboard/admin avec dev@indiehost.fr (seul propriétaire de l’administration, déjà dans `SUPER_ADMIN_EMAILS` en production) et vérifier : le nombre d’abonnés et le revenu mensuel contre le Dashboard Stripe, les paiements refusés, l’onglet Services (tout en vert sauf ce qui est réellement en défaut), la carte du code. Sous le schéma, la ligne « Alertes par e-mail » doit nommer dev@indiehost.fr ; si elle dit qu’aucun envoi d’e-mail n’est configuré, la clé Brevo manque sur le serveur. Claude n’a pu voir la page que sur de fausses données (`/dev/admin`) et l’API locale.
@@ -256,7 +256,7 @@ Défauts visibles :
 
 - [x] 2026-11-12 — Administration réorganisée (commit `6b06e2b`, déployé le 2026-11-12 ; demande de Nathan : fenêtre petite au milieu d’un écran plein, bords inutiles, interface moyenne ; détail dans `CLAUDE.md`, « Administration »).
   - **Correction après la mise en ligne** (capture de Nathan, commit `819ada2`, non déployé) : sur ordinateur, la colonne de gauche gardait le centrage prévu pour le téléphone (`align-items: center`) ; titre, « IndieHost » et onglets se centraient et ne s’alignaient plus sur le compte connecté. Vérifié à 1 100, 1 280, 1 915 et 1 966 px, en clair et en sombre : tout part du même retrait.
-  - **Relecture des styles** (six agents, trois angles : 18 défauts confirmés, 3 écartés ; commit à suivre, non déployé) :
+  - **Relecture des styles** (six agents, trois angles : 18 défauts confirmés, 3 écartés ; commit `0eb2d29`, non déployé) :
     - Marges : les mixins de titre remettaient une marge basse. « IndieHost » était détaché de « Administration », les titres « Clients », « Abonnement » et ceux des sections remontaient au-dessus de leurs boutons. Le paragraphe de l’adresse gardait la marge du navigateur. La colonne de gauche commence maintenant à la hauteur du titre de la section.
     - Compte connecté : une adresse longue se termine par « … » au lieu de sortir de la colonne ; « Changer de compte » prend toute la largeur.
     - Défilement : le titre de la section reste en haut, le contenu défile dessous et repart en haut à chaque onglet. Dans Comptes, la liste et la fiche défilent chacune : la liste n’est plus coupée par le bord, l’invitation ne l’écrase plus sur un écran bas. La fiche repart en haut au choix d’un compte ; sur téléphone, la page descend jusqu’à elle (y compris par « Voir le compte »).
