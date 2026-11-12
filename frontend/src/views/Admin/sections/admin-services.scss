@@ -23,6 +23,26 @@
   flex-direction: column;
   gap: var(--layout-gap-xl);
 
+  // Grand écran : le schéma garde toute la largeur (ses quatre colonnes), le détail du service et
+  // les derniers changements se partagent la ligne du dessous.
+  @include min-width(xxl) {
+    display: grid;
+    grid-template-columns: minmax(0, 11fr) minmax(0, 9fr);
+    align-items: start;
+
+    > * {
+      grid-column: 1 / -1;
+    }
+
+    > .detail {
+      grid-column: 1;
+    }
+
+    > .incidents {
+      grid-column: 2;
+    }
+  }
+
   > .toolbar {
     display: flex;
     flex-wrap: wrap;

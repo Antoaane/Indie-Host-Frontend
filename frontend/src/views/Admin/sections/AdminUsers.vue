@@ -66,11 +66,12 @@ function matchesAudience(user: AdminUserOverview, value: Audience): boolean {
   }
 }
 
+// Libellés courts : les filtres tiennent sur deux lignes dans la colonne de la liste.
 const AUDIENCES: Array<{ id: Audience; label: string }> = [
   { id: 'all', label: 'Tous' },
   { id: 'subscribed', label: 'Abonnés' },
-  { id: 'free', label: 'Sans abonnement' },
-  { id: 'admins', label: 'Administrateurs' },
+  { id: 'free', label: 'Sans plan' },
+  { id: 'admins', label: 'Admins' },
   { id: 'blocked', label: 'Bloqués' },
 ]
 
@@ -203,6 +204,8 @@ const inviteLastName = ref('')
 const isInviting = ref(false)
 const inviteError = ref<string | null>(null)
 const inviteSuccess = ref<string | null>(null)
+// Invitation repliée par défaut : la liste des clients garde toute la hauteur.
+const isInviteOpen = ref(false)
 
 // --- Abonnement du client sélectionné ---------------------------------------
 const subscriptionState = ref<StripeSubscriptionState | null>(null)
@@ -590,72 +593,30 @@ onMounted(() => {
 <template>
   <section
     class="admin-users"
-    aria-label="Utilisateurs"
+    aria-label="Comptes"
   >
     <div class="admin-layout">
       <aside class="admin-clients">
-        <section class="admin-card admin-invite">
-          <h2>Inviter un client</h2>
-          <p class="hint">Il reçoit un email Clerk pour créer son compte. Vous pourrez ensuite lui transférer des annonces et lui envoyer son lien d’abonnement.</p>
-          <form
-            class="invite-form"
-            @submit.prevent="submitInvitation"
-          >
-            <div class="input">
-              <input
-                v-model="inviteEmail"
-                type="email"
-                placeholder="email@client.fr"
-                autocomplete="off"
-                required
-              />
-            </div>
-            <div class="invite-names">
-              <div class="input">
-                <input
-                  v-model="inviteFirstName"
-                  type="text"
-                  placeholder="Prénom (optionnel)"
-                  autocomplete="off"
-                />
-              </div>
-              <div class="input">
-                <input
-                  v-model="inviteLastName"
-                  type="text"
-                  placeholder="Nom (optionnel)"
-                  autocomplete="off"
-                />
-              </div>
-            </div>
-            <div class="action">
-              <button
-                type="submit"
-                :disabled="isInviting"
-              >
-                <UserPlus :size="16" />
-                {{ isInviting ? 'Envoi...' : 'Envoyer l’invitation' }}
-              </button>
-            </div>
-            <p
-              v-if="inviteSuccess"
-              class="meta is-success"
-            >
-              {{ inviteSuccess }}
-            </p>
-            <p
-              v-if="inviteError"
-              class="meta is-error"
-              role="alert"
-            >
-              {{ inviteError }}
-            </p>
-          </form>
-        </section>
-
         <section class="admin-card admin-list">
           <div class="list-head">
             <h2>Clients <span class="count">{{ filteredUsers.length }}</span></h2>
+            <div
+              class="invite-toggle"
+              :class="{ 'is-open': isInviteOpen }"
+            >
+              <button
+                type="button"
+                :aria-expanded="isInviteOpen"
+                aria-controls="admin-invite"
+                @click="isInviteOpen = !isInviteOpen"
+              >
+                <UserPlus
+                  :size="16"
+                  aria-hidden="true"
+                />
+                Inviter
+              </button>
+            </div>
             <div class="refresh">
               <button
                 type="button"
@@ -668,6 +629,73 @@ onMounted(() => {
               </button>
             </div>
           </div>
+
+          <form
+            v-if="isInviteOpen"
+            id="admin-invite"
+            class="invite-form"
+            aria-label="Inviter un client"
+            @submit.prevent="submitInvitation"
+          >
+            <p class="hint">Le client reçoit un e-mail pour créer son compte. Vous pourrez ensuite lui transférer des annonces et lui envoyer son lien d’abonnement.</p>
+            <div class="input">
+              <input
+                v-model="inviteEmail"
+                type="email"
+                inputmode="email"
+                placeholder="email@client.fr"
+                aria-label="E-mail du client"
+                autocomplete="off"
+                required
+              />
+            </div>
+            <div class="invite-names">
+              <div class="input">
+                <input
+                  v-model="inviteFirstName"
+                  type="text"
+                  placeholder="Prénom (facultatif)"
+                  aria-label="Prénom du client (facultatif)"
+                  autocomplete="off"
+                />
+              </div>
+              <div class="input">
+                <input
+                  v-model="inviteLastName"
+                  type="text"
+                  placeholder="Nom (facultatif)"
+                  aria-label="Nom du client (facultatif)"
+                  autocomplete="off"
+                />
+              </div>
+            </div>
+            <div class="action">
+              <button
+                type="submit"
+                :disabled="isInviting"
+              >
+                <Mail
+                  :size="16"
+                  aria-hidden="true"
+                />
+                {{ isInviting ? 'Envoi…' : 'Envoyer l’invitation' }}
+              </button>
+            </div>
+            <p
+              v-if="inviteSuccess"
+              class="meta is-success"
+              role="status"
+            >
+              {{ inviteSuccess }}
+            </p>
+            <p
+              v-if="inviteError"
+              class="meta is-error"
+              role="alert"
+            >
+              {{ inviteError }}
+            </p>
+          </form>
           <div class="input search">
             <Search
               :size="16"

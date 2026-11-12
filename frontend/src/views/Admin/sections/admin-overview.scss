@@ -12,6 +12,27 @@
   flex-direction: column;
   gap: var(--layout-gap-xl);
 
+  // Grand écran : chiffres sur toute la largeur, puis « À surveiller » et l'état des services côte à côte.
+  @include min-width(xxl) {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    align-items: start;
+
+    > .state,
+    > .lead,
+    > .tiles {
+      grid-column: 1 / -1;
+    }
+
+    > .attention {
+      grid-column: 1;
+    }
+
+    > .health {
+      grid-column: 2;
+    }
+  }
+
   > .state {
     @include kit.state;
   }

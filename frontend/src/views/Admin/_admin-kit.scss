@@ -20,17 +20,8 @@
   @include h4-title($color: $secondary-text, $colorful: false, $bigger: false);
 }
 
-// Pastille d'état : toujours un libellé, la couleur ne fait que le souligner.
-@mixin badge {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--layout-gap-2xs);
-  padding: calc(var(--layout-gap-xs) / 2) var(--layout-gap-xs);
-  border-radius: borders.$rounded;
-  @include little-text($secondary-text, $thin: false);
-  white-space: nowrap;
-  background: rgba($secondary, 0.06);
-
+// Teintes d'une pastille selon son état (aussi pour la rétablir après une surcharge).
+@mixin badge-tones {
   &.is-good {
     background: rgba($good, 0.18);
   }
@@ -46,6 +37,19 @@
   &.is-muted {
     color: rgba($secondary-text, 0.72);
   }
+}
+
+// Pastille d'état : toujours un libellé, la couleur ne fait que le souligner.
+@mixin badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--layout-gap-2xs);
+  padding: calc(var(--layout-gap-xs) / 2) var(--layout-gap-xs);
+  border-radius: borders.$rounded;
+  @include little-text($secondary-text, $thin: false);
+  white-space: nowrap;
+  background: rgba($secondary, 0.06);
+  @include badge-tones;
 }
 
 // Texte coloré par un état (montants, motifs, transitions).

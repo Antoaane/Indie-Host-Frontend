@@ -2,17 +2,21 @@
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
 @use '@/styles/components/buttons' as buttons;
 @use '@/views/Admin/admin-kit' as kit;
 
-// Page ordinaire du tableau de bord : elle défile avec le document.
+// Administration. Téléphone : bord à bord, la page défile, les sections en pastilles en haut.
+// Ordinateur : toute la largeur sous la barre de navigation, comme « Mes annonces » et
+// « Réservations » : une colonne de navigation et la section ouverte, qui défile seule.
 .admin-page#admin-page {
   --admin-dock-height: calc(60px + (var(--layout-gap-sm) * 2));
+  --admin-top-offset: calc(#{$nav-bar-height} + var(--layout-gap) + var(--layout-gap-md));
+  --admin-main-padding: var(--layout-gap-2xl);
+  // Hauteur visible du contenu de la section (ordinateur) : une colonne collante s'y tient.
+  --admin-main-viewport: calc(100dvh - var(--admin-top-offset) - var(--layout-gap) - (var(--admin-main-padding) * 2));
 
-  width: min(80rem, 100%);
   min-height: 100dvh;
-  margin-inline: auto;
-  // Téléphone : bord à bord, la navigation est une barre en bas.
   padding: calc(var(--safe-area-top) + var(--layout-gap)) var(--layout-gap) calc(var(--admin-dock-height) + var(--safe-area-bottom) + var(--layout-gap));
   box-sizing: border-box;
   display: flex;
@@ -20,52 +24,225 @@
   gap: var(--layout-gap-xl);
   background: $accent;
 
-  // Ordinateur : sous l'en-tête fixe, dans un panneau.
   @include min-width(lg) {
+    height: 100dvh;
     min-height: 0;
-    margin-top: calc(#{$nav-height} + var(--layout-gap-sm));
-    margin-bottom: var(--layout-gap-4xl);
-    padding: var(--layout-gap-2xl);
-    @include dashboard-panel-radius;
+    padding: var(--admin-top-offset) var(--layout-gap) var(--layout-gap);
+    display: grid;
+    grid-template-columns: minmax(13.5rem, 15rem) minmax(0, 1fr);
+    gap: var(--layout-gap-md);
+    overflow: hidden;
+    background: $translucent;
   }
 
-  > .head {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    justify-content: space-between;
+  // --- Colonne de navigation ----------------------------------------------------------------
+
+  // Téléphone : titre et « Changer de compte » sur une ligne, l'adresse dessous, puis les onglets.
+  > .rail {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'brand switch'
+      'who who'
+      'sections sections';
+    align-items: center;
     gap: var(--layout-gap-sm) var(--layout-gap);
 
-    > .title {
-      flex: 1 1 18rem;
+    @include min-width(lg) {
+      min-height: 0;
+      padding: var(--layout-gap) var(--layout-gap-sm);
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-xl);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      background: $accent;
+      @include dashboard-panel-radius;
+    }
+
+    > .brand {
+      grid-area: brand;
       min-width: 0;
       display: flex;
       flex-direction: column;
-      gap: var(--layout-gap-xs);
+      gap: var(--layout-gap-2xs);
+
+      @include min-width(lg) {
+        padding-inline: var(--layout-gap-sm);
+      }
 
       > h1 {
         margin: 0;
-        @include h2-title($color: $secondary-text, $colorful: false, $bigger: false);
+        @include h3-title($color: $secondary-text, $colorful: false, $bigger: false);
       }
 
       > p {
-        max-width: 60ch;
-        @include base-text(rgba($secondary-text, 0.72), $thin: false);
+        display: none;
+        @include little-text(rgba($secondary-text, 0.64), $thin: false);
+
+        @include min-width(lg) {
+          display: block;
+        }
       }
     }
 
-    > .account {
-      flex: 0 1 auto;
+    > .sections {
+      grid-area: sections;
       min-width: 0;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: var(--layout-gap-xs) var(--layout-gap-sm);
 
-      > p {
-        min-width: 0;
+      // Téléphone : les quatre onglets tiennent sur une ligne à 360 px, en texte seul, sans le
+      // nombre de comptes (une information, pas une alerte). Ordinateur : icône, libellé, indicateur.
+      > .track {
+        @include kit.segmented;
+
+        > .tab > button {
+          padding-inline: var(--layout-gap-xs);
+
+          > .icon {
+            display: none;
+            flex-shrink: 0;
+          }
+
+          // La règle typographique globale colore chaque élément : le libellé suit son bouton.
+          > .label {
+            min-width: 0;
+            color: inherit;
+          }
+
+          > .hint.is-muted {
+            display: none;
+          }
+
+          @include min-width(lg) {
+            > .icon {
+              display: block;
+            }
+
+            > .hint.is-muted {
+              display: inline-flex;
+            }
+          }
+        }
+
+        // Téléphone : sur la pastille noire de l'onglet ouvert, l'indicateur passe en clair.
+        > .tab.is-active .hint:not(.is-dot) {
+          color: $accent;
+          background: rgba($accent, 0.2);
+        }
+
+        // Ordinateur : une liste verticale, l'onglet ouvert surligné sans aplat noir.
+        @include min-width(lg) {
+          flex-direction: column;
+          gap: var(--layout-gap-2xs);
+          padding: 0;
+          overflow: visible;
+          background: transparent;
+
+          > .tab {
+            flex: 0 0 auto;
+
+            > button {
+              min-height: var(--tap-target);
+              padding: var(--layout-gap-xs) var(--layout-gap-sm);
+              justify-content: flex-start;
+              gap: var(--layout-gap-sm);
+              border-radius: borders.$rounded-md;
+              @include base-text(rgba($secondary-text, 0.8), $thin: false);
+
+              > .label {
+                flex: 1 1 auto;
+                text-align: left;
+              }
+
+              @include on-hover {
+                color: $secondary-text;
+                background: rgba($secondary, 0.05);
+              }
+            }
+
+            &.is-active > button {
+              color: $secondary-text;
+              font-weight: 700;
+              background: rgba($secondary, 0.08);
+            }
+
+            // L'indicateur reprend sa teinte d'état (la surcharge du téléphone ne vaut plus ici).
+            &.is-active .hint:not(.is-dot) {
+              color: $secondary-text;
+              background: rgba($secondary, 0.06);
+              @include kit.badge-tones;
+            }
+          }
+        }
+
+        // Indicateur d'un onglet : nombre, ou pastille d'état pour les services.
+        .hint {
+          @include kit.badge;
+          min-width: 1.15rem;
+          justify-content: center;
+          padding-block: 0;
+          padding-inline: var(--layout-gap-2xs);
+          font-variant-numeric: tabular-nums;
+
+          // Le chiffre suit la couleur de sa pastille (la règle typographique globale le fonçait).
+          > span {
+            color: inherit;
+          }
+
+          @include min-width(lg) {
+            min-width: 1.5rem;
+            padding-inline: var(--layout-gap-xs);
+          }
+
+          &.is-dot {
+            min-width: 0;
+            width: 0.55rem;
+            height: 0.55rem;
+            padding: 0;
+            background: rgba($secondary, 0.25);
+
+            &.is-good {
+              background: $good;
+            }
+
+            &.is-warn {
+              background: $progressing;
+            }
+
+            &.is-bad {
+              background: $bad;
+            }
+          }
+        }
+      }
+    }
+
+    // Téléphone : ses deux parties se rangent dans la grille de la colonne (`display: contents`).
+    // Ordinateur : un bloc en bas de la colonne.
+    > .account {
+      display: contents;
+
+      @include min-width(lg) {
+        margin-top: auto;
+        padding: var(--layout-gap-sm);
         display: flex;
         flex-direction: column;
+        align-items: stretch;
+        gap: var(--layout-gap-xs);
+        border-top: 1px solid rgba($secondary, 0.08);
+      }
+
+      > p {
+        grid-area: who;
+        min-width: 0;
+        display: flex;
+        flex-wrap: wrap;
+        column-gap: var(--layout-gap-xs);
+
+        @include min-width(lg) {
+          flex-direction: column;
+        }
 
         > .label {
           @include little-text(rgba($secondary-text, 0.64), $thin: false);
@@ -73,53 +250,88 @@
 
         > .email {
           @include little-text($secondary-text, $bold: true);
-          overflow-wrap: anywhere;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
       }
 
       > .switch {
+        grid-area: switch;
         @include buttons.primary($theme: white, $little: true);
+
+        @include min-width(lg) {
+          > button {
+            width: 100%;
+            justify-content: center;
+          }
+        }
       }
     }
   }
 
-  > .gate {
-    @include base-text(rgba($secondary-text, 0.72), $thin: false);
+  // --- Section ouverte ----------------------------------------------------------------------
 
-    &.is-denied {
-      padding: var(--layout-gap-md);
+  > .main {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-xl);
+
+    @include min-width(lg) {
+      min-height: 0;
+      padding: var(--admin-main-padding);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      background: $accent;
+      @include dashboard-panel-radius;
+    }
+
+    > .section-head {
       display: flex;
       flex-direction: column;
-      align-items: flex-start;
-      gap: var(--layout-gap-sm);
-      @include kit.surface;
+      gap: var(--layout-gap-2xs);
 
       > h2 {
-        @include kit.section-title;
+        margin: 0;
+        @include h2-title($color: $secondary-text, $colorful: false, $bigger: false);
       }
 
       > p {
-        max-width: 65ch;
-        @include base-text(rgba($secondary-text, 0.8), $thin: false);
-      }
-
-      > .switch {
-        @include buttons.primary($theme: black, $little: true);
+        max-width: 70ch;
+        @include base-text(rgba($secondary-text, 0.72), $thin: false);
       }
     }
-  }
 
-  > .tabs > .track {
-    @include kit.segmented;
+    > .gate {
+      @include base-text(rgba($secondary-text, 0.72), $thin: false);
 
-    // Sur ordinateur, les quatre onglets gardent leur largeur naturelle.
-    @include min-width(md) {
-      width: fit-content;
-      max-width: 100%;
+      &.is-denied {
+        max-width: 48rem;
+        padding: var(--layout-gap-md);
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--layout-gap-sm);
+        @include kit.surface;
+
+        > h2 {
+          @include kit.section-title;
+        }
+
+        > p {
+          max-width: 65ch;
+          @include base-text(rgba($secondary-text, 0.8), $thin: false);
+        }
+
+        > .switch {
+          @include buttons.primary($theme: black, $little: true);
+        }
+      }
     }
-  }
 
-  > .panel {
-    min-width: 0;
+    > .panel {
+      min-width: 0;
+    }
   }
 }

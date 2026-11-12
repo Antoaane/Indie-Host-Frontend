@@ -20,9 +20,9 @@
     gap: var(--layout-gap);
     align-items: start;
 
-    // Deux colonnes dès qu'il y a la place : la liste reste lisible, la fiche garde sa largeur.
+    // Ordinateur : la liste garde une largeur de liste, la fiche prend tout le reste.
     @include min-width(lg) {
-      grid-template-columns: minmax(300px, 2fr) minmax(0, 3fr);
+      grid-template-columns: minmax(18rem, 24rem) minmax(0, 1fr);
     }
   }
 
@@ -32,6 +32,51 @@
     flex-direction: column;
     gap: var(--layout-gap);
     min-width: 0;
+  }
+
+  // Ordinateur : la liste reste à l'écran pendant qu'on parcourt la fiche, et défile seule.
+  // Téléphone : elle suit la page (une zone qui défile à part y retient le doigt).
+  .admin-clients {
+    @include min-width(lg) {
+      position: sticky;
+      top: 0;
+      max-height: var(--admin-main-viewport);
+
+      > .admin-list {
+        flex: 1 1 auto;
+        min-height: 0;
+      }
+    }
+  }
+
+  // Grand écran : la fiche sur deux colonnes, l'abonnement (le plus long) à droite.
+  .admin-detail {
+    @include min-width(xxl) {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-areas:
+        'head head'
+        'rights subscription'
+        'link subscription';
+      align-items: start;
+
+      > .detail-head,
+      > .admin-empty {
+        grid-column: 1 / -1;
+      }
+
+      > .rights {
+        grid-area: rights;
+      }
+
+      > .subscription {
+        grid-area: subscription;
+      }
+
+      > .payment-link {
+        grid-area: link;
+      }
+    }
   }
 
   .admin-card {
@@ -175,11 +220,32 @@
     gap: var(--layout-gap-sm);
   }
 
-  // --- Invitation -----------------------------------------------------------
+  // Titre à gauche, actions (inviter, rafraîchir) serrées à droite.
+  .list-head > h2 {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .invite-toggle {
+    @include buttons.primary($theme: white, $little: true);
+
+    > button {
+      gap: var(--layout-gap-xs);
+    }
+
+    &.is-open > button {
+      background: rgba($secondary, 0.08);
+    }
+  }
+
+  // --- Invitation (dépliée au-dessus de la liste) -----------------------------
   .invite-form {
+    padding: var(--layout-gap-sm);
     display: flex;
     flex-direction: column;
     gap: var(--layout-gap-sm);
+    border-radius: borders.inner(borders.$rounded-lg, var(--layout-gap-md));
+    background: rgba($secondary, 0.04);
 
     > .invite-names {
       display: grid;
@@ -197,10 +263,10 @@
     flex-direction: column;
     gap: var(--layout-gap-xs);
 
-    // Ordinateur : la liste défile à côté de la fiche. Téléphone : elle suit la page (une zone qui
-    // défile à part y retient le doigt).
+    // Ordinateur : la liste prend la hauteur qui reste dans sa colonne et défile seule.
     @include min-width(lg) {
-      max-height: 60vh;
+      flex: 1 1 auto;
+      min-height: 0;
       overflow-y: auto;
       overscroll-behavior: contain;
     }

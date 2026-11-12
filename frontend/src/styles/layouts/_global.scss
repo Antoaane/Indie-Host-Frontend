@@ -148,6 +148,20 @@ html:has(main > :is(#management-page, #messaging-page, #create-listing-page)) {
   }
 }
 
+// Administration : en hauteur fixe sur ordinateur seulement (navigation et section défilent chacune
+// dans leur panneau) ; sur téléphone, elle défile avec le document.
+@include min-width(lg) {
+  html:has(main > #admin-page) {
+    overflow: hidden;
+    overscroll-behavior: none;
+
+    > body {
+      overflow: hidden;
+      overscroll-behavior: none;
+    }
+  }
+}
+
 // Logement sur téléphone : page claire jusque sous les barres de Safari, qui prennent la couleur du
 // fond (une bande noire apparaissait au-dessus de la photo et autour de la barre de réservation).
 html:has(main > #listing-page > .listing-view.is-mobile-layout) {
