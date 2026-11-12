@@ -9,6 +9,7 @@ import {
 } from '../domains/privacy/anonymization.js';
 import { PrivacyService, deleteClerkUser } from '../domains/privacy/privacy.service.js';
 import { asObject } from '../lib/json.js';
+import { registerScheduledJob, trackJobRun } from '../lib/jobRuns.js';
 import { toPrismaJson } from '../lib/prisma.js';
 
 /**
@@ -274,13 +275,15 @@ export function startRetentionScheduler(
     if (running) return;
     running = true;
     try {
-      await runRetentionPurge(prisma, logger);
+      await trackJobRun('retention', () => runRetentionPurge(prisma, logger));
     } catch (error) {
       logger.error({ err: error }, 'Retention purge failed');
     } finally {
       running = false;
     }
   };
+
+  registerScheduledJob('retention', { intervalMs, firstRunAt: Date.now() + initialDelayMs });
 
   const initial = setTimeout(() => {
     void run();

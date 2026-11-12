@@ -1,0 +1,161 @@
+/* File: src/views/Admin/_admin-kit.scss */
+
+// Pièces communes aux écrans de l'administration : surfaces, pastilles d'état, messages, onglets.
+// Toujours à partir des jetons du design system (lisibles en thème clair et sombre).
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
+@use '@/styles/components/buttons' as buttons;
+
+// Bloc posé sur le panneau de la page (fond `$accent`).
+@mixin surface {
+  border-radius: borders.$rounded-lg;
+  border: 1px solid rgba($secondary, 0.08);
+  background: $accent-surface-0;
+}
+
+@mixin section-title {
+  margin: 0;
+  @include h4-title($color: $secondary-text, $colorful: false, $bigger: false);
+}
+
+// Pastille d'état : toujours un libellé, la couleur ne fait que le souligner.
+@mixin badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--layout-gap-2xs);
+  padding: calc(var(--layout-gap-xs) / 2) var(--layout-gap-xs);
+  border-radius: borders.$rounded;
+  @include little-text($secondary-text, $thin: false);
+  white-space: nowrap;
+  background: rgba($secondary, 0.06);
+
+  &.is-good {
+    background: rgba($good, 0.18);
+  }
+
+  &.is-warn {
+    background: rgba($progressing, 0.3);
+  }
+
+  &.is-bad {
+    background: rgba($bad, 0.14);
+  }
+
+  &.is-muted {
+    color: rgba($secondary-text, 0.72);
+  }
+}
+
+// Texte coloré par un état (montants, motifs, transitions).
+@mixin tone-text {
+  &.is-good {
+    color: $good-ink;
+  }
+
+  &.is-warn {
+    color: $warn-ink;
+  }
+
+  &.is-bad {
+    color: $bad-ink;
+  }
+}
+
+// Chargement ou erreur à la place d'un contenu.
+@mixin state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--layout-gap-sm);
+  @include base-text(rgba($secondary-text, 0.72), $thin: false);
+
+  &.is-error > p {
+    @include base-text($bad-ink, $bold: true);
+  }
+
+  > .retry {
+    @include buttons.primary($theme: white, $little: true);
+  }
+}
+
+@mixin notice {
+  max-width: 75ch;
+  @include little-text($warn-ink, $bold: true);
+}
+
+// Onglets en pilule (même dessin que les groupes de l'éditeur).
+@mixin segmented {
+  display: flex;
+  gap: var(--layout-gap-xs);
+  padding: var(--layout-gap-2xs);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  border-radius: borders.$rounded-md;
+  background: rgba($secondary, 0.05);
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  > * {
+    flex: 1 0 auto;
+    min-width: 0;
+
+    > button {
+      width: 100%;
+      min-height: 2.25rem;
+      padding: var(--layout-gap-xs) var(--layout-gap-sm);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--layout-gap-xs);
+      border: none;
+      border-radius: borders.inner(borders.$rounded-md, var(--layout-gap-2xs));
+      background: transparent;
+      @include little-text(rgba($secondary-text, 0.8), $thin: false);
+      white-space: nowrap;
+      cursor: pointer;
+      @include animations.transition(animations.$duration-fast);
+      @include animations.press();
+
+      @include on-hover {
+        color: $secondary-text;
+        background: rgba($secondary, 0.06);
+      }
+
+      &:focus-visible {
+        outline: 2px solid $secondary;
+        outline-offset: 2px;
+      }
+
+      @media (pointer: coarse) {
+        min-height: var(--tap-target);
+      }
+    }
+
+    &.is-active > button {
+      color: $accent;
+      font-weight: 700;
+      background: $secondary;
+    }
+  }
+}
+
+// Liste à lignes séparées par un filet, dans une surface.
+@mixin rows {
+  margin: 0;
+  padding: 0 var(--layout-gap-md);
+  list-style: none;
+  @include surface;
+
+  > li {
+    padding: var(--layout-gap-sm) 0;
+
+    & + li {
+      border-top: 1px solid rgba($secondary, 0.08);
+    }
+  }
+}

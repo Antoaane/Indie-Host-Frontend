@@ -1,6 +1,7 @@
 // File: src/domain/api/users.ts
 
 import clerkToken from '@/utils/clerkToken'
+import type { AdminUserAccess } from '@/domain/api/admin'
 import { invalidateListingLists } from '@/domain/api/listingsCache'
 import { invalidateSharedRequests, sharedRequest } from '@/domain/api/requestCache'
 
@@ -62,6 +63,9 @@ export type AdminUserOverview = {
     total: number
     active: number
   }
+  /** Droits du compte (rôle, blocage) ; `known` faux quand Clerk n'a pas répondu. */
+  access: AdminUserAccess
+  lastSignInAtISO: string | null
 }
 
 export type AdminInvitation = {
@@ -430,6 +434,19 @@ function toNonNegativeInteger(value: unknown): number {
   return Number.isFinite(parsed) && parsed > 0 ? Math.trunc(parsed) : 0
 }
 
+function normalizeAdminUserAccess(value: unknown): AdminUserAccess {
+  const access = asRecord(value)
+  const role = normalizeOptionalText(access.role)
+  const roleSource = normalizeOptionalText(access.roleSource)
+  return {
+    role: role === 'admin' || role === 'super_admin' ? role : null,
+    roleSource: roleSource === 'config' || roleSource === 'clerk' ? roleSource : null,
+    banned: access.banned === true,
+    locked: access.locked === true,
+    known: access.known === true,
+  }
+}
+
 function normalizeAdminUserOverview(data: Record<string, unknown> | null | undefined): AdminUserOverview {
   const payload = data ?? {}
   const billing = (payload.billing && typeof payload.billing === 'object' ? payload.billing : {}) as Record<string, unknown>
@@ -458,6 +475,8 @@ function normalizeAdminUserOverview(data: Record<string, unknown> | null | undef
       total: toNonNegativeInteger(listings.total),
       active: toNonNegativeInteger(listings.active),
     },
+    access: normalizeAdminUserAccess(payload.access),
+    lastSignInAtISO: normalizeOptionalText(payload.lastSignInAtISO),
   }
 }
 

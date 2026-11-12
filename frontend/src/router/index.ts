@@ -434,6 +434,12 @@ const router = createRouter({
           component: () => import('@/views/Revenues/dev/DevRevenuesRoute.vue'),
           meta: { navVariant: 'host', hideNav: true, title: 'Mes revenus (dev)' },
         }, {
+          // Administration sur de fausses données (`?onglet=…`, `?etat=panne`, `?acces=refuse`).
+          path: '/dev/admin',
+          name: 'dev-admin',
+          component: () => import('@/views/Admin/dev/DevAdminRoute.vue'),
+          meta: { navVariant: 'host', hideNav: true, title: 'Administration (dev)' },
+        }, {
           // Page publique d'un logement sur l'annonce en mémoire (rendu téléphone, calendrier de réservation).
           path: '/dev/listing',
           name: 'dev-listing',

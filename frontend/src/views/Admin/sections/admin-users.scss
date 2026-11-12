@@ -1,49 +1,18 @@
-/* File: src/views/Admin/admin.scss */
+/* File: src/views/Admin/sections/admin-users.scss */
 
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
 @use '@/styles/variables/animations' as animations;
 @use '@/styles/components/buttons' as buttons;
 @use '@/styles/components/inputs' as inputs;
+@use '@/views/Admin/admin-kit' as kit;
 
-// Fenêtre d'administration : liste des clients à gauche, fiche du client sélectionné à droite.
-.admin-panel {
-  width: min(1180px, 100%);
-  // La barre de navigation est fixe : la page commence juste en dessous.
-  margin: 0 auto var(--layout-gap-2xl);
-  padding-top: calc(#{$nav-height} + var(--layout-gap));
+// Utilisateurs : liste des comptes à gauche, fiche du compte sélectionné à droite.
+.admin-users {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: var(--layout-gap);
-
-  .admin-header {
-    display: flex;
-    flex-direction: column;
-    gap: var(--layout-gap-xs);
-
-    > h1 {
-      @include h1-title();
-
-      // Surcharge émise après le mixin : conserve l'ordre actuel de Sass
-      & {
-        margin-bottom: 0;
-      }
-    }
-
-    > p {
-      @include base-text($thin: false);
-      color: rgba($secondary, 0.72);
-      max-width: 70ch;
-    }
-  }
-
-  .admin-denied {
-    @include base-text($thin: false);
-    padding: var(--layout-gap);
-    border-radius: borders.$rounded-md;
-    border: 1px solid rgba($bad, 0.35);
-    background: rgba($bad, 0.06);
-  }
 
   .admin-layout {
     display: grid;
@@ -66,13 +35,12 @@
   }
 
   .admin-card {
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: var(--layout-gap-sm);
-    padding: var(--layout-gap-xl) var(--layout-gap);
-    border-radius: borders.$rounded-md;
-    background: $accent;
-    border: 1px solid rgba($secondary, 0.06);
+    padding: var(--layout-gap-md);
+    @include kit.surface;
 
     > h2,
     .card-head > h2,
@@ -141,7 +109,56 @@
       @include buttons.primary($theme: white, $little: true);
     }
 
+    // Action qui retire un accès : libellé et icône en rouge, même forme que les autres.
+    &.ghost.danger > * {
+      color: $bad-ink;
+    }
+
     > * {
+      gap: var(--layout-gap-xs);
+    }
+  }
+
+  // --- Filtres de la liste --------------------------------------------------
+  .audiences {
+    @include kit.segmented;
+
+    // La colonne est étroite : les filtres passent à la ligne plutôt que de défiler cachés.
+    & {
+      flex-wrap: wrap;
+      overflow: visible;
+    }
+
+    > * {
+      flex: 0 0 auto;
+    }
+
+    .count {
+      min-width: 1.25rem;
+      padding: 0 var(--layout-gap-2xs);
+      border-radius: borders.$rounded;
+      background: rgba($secondary, 0.08);
+      @include little-text(inherit, $thin: false);
+      font-variant-numeric: tabular-nums;
+    }
+
+    > .is-active .count {
+      background: rgba($accent, 0.2);
+    }
+  }
+
+  // --- Droits ---------------------------------------------------------------
+  .rights {
+    .facts-grid dd {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--layout-gap-2xs);
+    }
+
+    .rights-actions {
+      display: flex;
+      flex-wrap: wrap;
       gap: var(--layout-gap-xs);
     }
   }
@@ -179,9 +196,14 @@
     display: flex;
     flex-direction: column;
     gap: var(--layout-gap-xs);
-    max-height: 60vh;
-    overflow-y: auto;
-    overscroll-behavior: contain;
+
+    // Ordinateur : la liste défile à côté de la fiche. Téléphone : elle suit la page (une zone qui
+    // défile à part y retient le doigt).
+    @include min-width(lg) {
+      max-height: 60vh;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
 
     .client {
       width: 100%;
@@ -250,6 +272,20 @@
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
+        }
+
+        > .tags {
+          display: flex;
+          gap: var(--layout-gap-2xs);
+          margin-top: var(--layout-gap-2xs);
+
+          > .tag {
+            @include kit.badge;
+
+            & {
+              padding: 0 var(--layout-gap-xs);
+            }
+          }
         }
       }
 

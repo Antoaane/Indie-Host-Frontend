@@ -4,6 +4,7 @@ import Fastify from 'fastify';
 import { ZodError } from 'zod';
 
 import { env } from './config/env.js';
+import { adminPlugin } from './domains/admin/admin.plugin.js';
 import { aiPlugin } from './domains/ai/ai.plugin.js';
 import { arrivalPlugin } from './domains/arrival/arrival.plugin.js';
 import { bookingsPlugin } from './domains/bookings/bookings.plugin.js';
@@ -154,6 +155,7 @@ export async function buildApp() {
     await v1.register(calendarPlugin);
     await v1.register(importsPlugin);
     await v1.register(notificationsPlugin);
+    await v1.register(adminPlugin);
   }, {
     prefix: `/${env.API_PREFIX.replace(/^\/+/, '')}`,
   });

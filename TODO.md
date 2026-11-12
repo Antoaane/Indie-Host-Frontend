@@ -10,6 +10,14 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ## Ce que vous devez faire
 
+### Administration (session du 2026-11-12)
+
+- [ ] Créer le compte `contact@indiehost.fr` chez Clerk en production : il n’existe pas encore (vérifié le 2026-11-12). Sur https://indiehost.fr/sign-up, avec un mot de passe ou « Continuer avec Google » (contact@ est une boîte Google Workspace), puis le code reçu par e-mail.
+- [ ] Ajouter ce compte aux administrateurs du serveur : dans `/opt/indiehost/.env` (et votre `.env.production`), `SUPER_ADMIN_EMAILS=dev@indiehost.fr,contact@indiehost.fr`. `dev@` reste administrateur ; dites-le si vous voulez le retirer.
+- [ ] Déployer l’API et le site : `cd /opt/indiehost && git pull && ./deploy-indiehost.sh`. Contrôle : `curl -s -o /dev/null -w "%{http_code}" https://indiehost.fr/api/v1/admin/overview` doit répondre 401 (404 : l’API n’a pas été reconstruite).
+- [ ] (après le déploiement) Ouvrir https://indiehost.fr/dashboard/admin avec contact@ et vérifier : le nombre d’abonnés et le revenu mensuel contre le Dashboard Stripe, les paiements refusés, l’onglet Services (tout en vert sauf ce qui est réellement en défaut), la carte du code. Claude n’a pu voir la page que sur de fausses données (`/dev/admin`) et l’API locale.
+- [ ] Les droits d’administration et le blocage d’un compte agissent sur le Clerk de production dès le clic : n’essayez le blocage que sur un compte de test.
+
 ### À déployer et à vérifier (session du 2026-11-11, jusqu’au commit `424cbe9`)
 
 - [ ] Déployer les corrections de la page d’un logement sur téléphone (commit `0b9a4ea`) : `cd /opt/indiehost && git pull && ./deploy-indiehost.sh` (le site est reconstruit avec son nouveau `nginx.conf`). Puis, sur l’iPhone, `apparts-saintfrancois.fr/appartement-les-raisins-clairs` :
@@ -201,6 +209,39 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 - [ ] Performances, qui comptent dans le classement (Core Web Vitals) : la page d’un logement charge un fichier JavaScript de 1,2 Mo (285 Ko compressé, `_ListingView`). À découper.
 - [ ] Charge de l’API : chaque page d’un site d’hôte fait 5 à 8 lectures en base (`PublicSiteService.handle`). Ajouter un cache court par hôte si le trafic grandit.
 - [ ] Option : icône d’onglet de l’hôte sur son domaine (aujourd’hui celle d’IndieHost), et mention « Propulsé par IndieHost » à décider avec Nathan.
+
+### Administration (demande du 2026-11-12)
+
+- [ ] Suivre aussi la tâche de référencement des sites d’hôtes (`jobs/publicSites.ts`) dans la page Services : l’envelopper dans `trackJobRun` et l’inscrire dans `JOB_LABELS` (`domains/admin/systemHealth.ts`) et dans le type `JobId` (`lib/jobRuns.ts`). Laissé de côté le 2026-11-12 : fichier d’une autre session, pas encore committé.
+- [ ] Le jour où la CSP passe en mode bloquant (voir « Sécurité ») : ajouter dans `nginx/proxy-locations.conf` un bloc `location = /api/v1/admin/floorplan/view` sans le `script-src` global (la carte autorise ses propres scripts par leur empreinte et l’API pose déjà un `sandbox`), sinon la carte du code reste blanche dans l’administration.
+- [ ] Option : alerte par e-mail (Brevo, vers contact@) quand un service reste en panne plus de quelques minutes ; garder l’historique de santé en base pour qu’il survive aux déploiements (aujourd’hui en mémoire, 24 h).
+- [ ] Option : traiter les webhooks d’abonnement Stripe (`customer.subscription.*`, `invoice.payment_failed`) pour que l’offre affichée dans la liste des comptes soit à jour sans visite de l’hôte. L’aperçu, lui, lit déjà Stripe directement.
+- [ ] Option : carte floorplan, marquer « Not a problem » (avec la raison) les routes signalées « Anyone could change data » qui exigent en réalité une connexion (vérifiée dans le traitement, ce que le scan ne voit pas), pour ne garder que les vrais points du relevé ci-dessous.
+- [ ] Page d’administration complète sur `/dashboard/admin`, ouverte au compte `contact@indiehost.fr` : nombre d’abonnés, utilisateurs et leurs droits, paiements réussis ou refusés, schéma de santé des services en direct, carte floorplan du code. Terminée, à cocher au commit.
+
+### Relevé du code fait en dessinant la carte floorplan (2026-11-12)
+
+Lu fichier par fichier par six agents, sans rien exécuter. Seul le premier point a été revérifié par Claude dans le code ; les autres sont à confirmer avant correction.
+
+Sécurité :
+- [ ] (après votre go, **prioritaire**) Un hôte connecté peut rattacher à son profil le compte Stripe d’un autre hôte : `POST /payments/stripe/connect/sync` (et les liens d’inscription et de tableau de bord) prennent le numéro `acct_…` envoyé par le navigateur sans vérifier à qui il appartient, et ce numéro est public (réponse de `POST /payments/stripe/payment-intents`). Il lit alors le solde et les virements de cet hôte dans « Mes revenus », et passe le contrôle de publication avec un compte qui n’est pas le sien. Corriger : n’accepter que le compte déjà enregistré (ou un admin), vérifier `account.metadata.userId`, rendre `User.stripeConnectAccountId` unique. `payments.service.ts` : `syncMyStripeConnectState`, `createConnectOnboardingLink`, `createConnectDashboardLink`, `ensureStripeConnectAccount`.
+- [ ] Messagerie ouverte sans compte : les routes `/messaging/*` acceptent une clé d’invité choisie par l’appelant ; chaque nouvelle conversation peut déclencher un e-mail à l’hôte, sans limite par IP (`messaging.service.ts`). Le site ne les utilise pas : les supprimer, ou exiger la clé de guide et une limite.
+- [ ] Envoi de photos et vidéos sans annonce par n’importe quel compte connecté, sans limite de débit (`medias.plugin.ts`, `ensureCanUploadToListing`).
+- [ ] Annonce sans propriétaire modifiable par tout compte connecté, et rattacher un domaine en fait son propriétaire (`listings.service.ts` : `findOwnedListing`, `patchListingResource`, `upsertListingDomain`, `upsertListingCustomDomain`), contraire à la règle de `CLAUDE.md`.
+- [ ] Routes que le site n’appelle plus, dont `PATCH /medias/listings/:id` qui enregistre sans nettoyer le texte : `arrival.plugin.ts`, `GET /bookings/listings/:id` et `PATCH /bookings/:reservationId`, `medias.plugin.ts`, `messaging.plugin.ts`. À supprimer.
+- [ ] `backend/api/scripts/ensure-stripe-billing-plans.mjs` crée encore les anciennes offres (16, 39 et 99 €, MegaHost) : lancé sur le compte live, il ajouterait des produits actifs.
+- [ ] Moindres : catalogue public des abonnements relu chez Stripe à chaque appel sans copie ni limite ; `preflight.sh` ne regarde que le SMTP et annonce à tort des e-mails coupés avec Brevo seul ; `backend/api/mcp/clerk-server.js` et `nginx/nginx.conf` ne servent plus.
+
+Défauts visibles :
+- [ ] Règlement intérieur jamais chargé sur la page publique : `_Listing.vue` n’appelle pas `loadArrival`, la section reste cachée et l’étape 4 du paiement affiche « Un petit rappel » (non visible sur `/dev/listing`, qui a toutes les données).
+- [ ] Les réponses de l’hôte dans Messagerie n’arrivent pas au voyageur : `MessagingView.vue` les écrit dans la réservation, le guide lit la table des messages, et le message suivant du voyageur les efface (`ensureReservationConversation`).
+- [ ] Un voyageur peut être débité sans réservation ni remboursement si un contrôle fait après le paiement échoue (`useListingCheckout.ts`, `confirmCheckout`).
+- [ ] « Ouvrir le guide d’accueil » de la page de confirmation ne fait rien au clic (`@click.prevent`, `BookingConfirmationView.vue` vers la ligne 800).
+- [ ] Guide d’arrivée vide au-delà de 1 280 px (`_ListingGuide.vue`, `isDesktop = vp.xl`).
+- [ ] Remises « selon l’anticipation » enregistrées par l’assistant mais appliquées nulle part (`bookingWindowDiscounts`).
+- [ ] Import dans l’éditeur : remplace l’annonce sans demander, efface les vidéos, met le prix à 0 si la source n’en donne pas (`ImportPanel.vue`, `transformAirbnbToRawListingBundle.ts`, `transformBookingToRawListingBundle.ts`).
+- [ ] Accueil : texte illisible passé au séparateur décoratif (`IntroSection.vue`, lignes 197–198) ; fautes dans `locales/landing/fr.json` (`how.body` « ne ferons tout », `introSection.body` « et nous créez ») ; le formulaire « Posez-nous une question » n’a pas de champ question et part chez Formspree (`FormComp.vue`).
+- [ ] Nettoyage : 25 illustrations affichées nulle part et `components/svgs/svgs-old/`, sections d’accueil retirées (`RoiSection` encore à 39 €, `ReassuranceBandSection`), fonctions de `Editor/utils/listingApi.ts`, `BottomNav.vue`, styles « patch » de la page de don qui ne visent aucune classe.
 
 ## Fait
 

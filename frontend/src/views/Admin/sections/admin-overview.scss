@@ -1,0 +1,332 @@
+/* File: src/views/Admin/sections/admin-overview.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
+@use '@/styles/components/buttons' as buttons;
+@use '@/views/Admin/admin-kit' as kit;
+
+.admin-overview {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--layout-gap-xl);
+
+  > .state {
+    @include kit.state;
+  }
+
+  // Le nombre d'abonnés mène la page ; le revenu mensuel l'accompagne.
+  > .lead {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--layout-gap-sm);
+
+    @include min-width(md) {
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    }
+
+    > article {
+      min-width: 0;
+      padding: var(--layout-gap-md);
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-xs);
+      @include kit.surface;
+
+      > h2 {
+        margin: 0;
+        @include little-text(rgba($secondary-text, 0.72), $bold: true);
+      }
+
+      > .notice {
+        @include kit.notice;
+      }
+    }
+
+    > .subscribers {
+      > .figure {
+        @include main-title($color: $secondary-text, $colorful: false);
+
+        // Le mixin des titres d'accueil pose une marge et un retrait latéral : pas dans une carte.
+        & {
+          margin: 0;
+          padding: 0;
+        }
+      }
+
+      > .split {
+        margin: var(--layout-gap-xs) 0 0;
+        padding: 0;
+        list-style: none;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--layout-gap-sm);
+
+        @include min-width(sm) {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        > li {
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: var(--layout-gap-2xs);
+          padding-top: var(--layout-gap-xs);
+          border-top: 1px solid rgba($secondary, 0.1);
+
+          > .part-value {
+            @include base-text($secondary-text, $bold: true, $bigger: true);
+          }
+
+          > .part-label {
+            @include little-text(rgba($secondary-text, 0.72), $thin: false);
+          }
+
+          &.is-bad > .part-value {
+            color: $bad-ink;
+          }
+        }
+      }
+    }
+
+    > .revenue {
+      > .value {
+        @include h2-title($color: $secondary-text, $colorful: false, $bigger: false);
+      }
+
+      > .hint {
+        @include little-text(rgba($secondary-text, 0.64), $thin: false);
+      }
+
+      > .plans {
+        margin: var(--layout-gap-xs) 0 0;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: var(--layout-gap-xs) var(--layout-gap-sm);
+
+        > div {
+          min-width: 0;
+          display: flex;
+          justify-content: space-between;
+          gap: var(--layout-gap-xs);
+          padding-top: var(--layout-gap-xs);
+          border-top: 1px solid rgba($secondary, 0.1);
+
+          > dt {
+            @include little-text(rgba($secondary-text, 0.72), $thin: false);
+          }
+
+          > dd {
+            margin: 0;
+            @include little-text($secondary-text, $bold: true);
+            font-variant-numeric: tabular-nums;
+          }
+        }
+      }
+    }
+  }
+
+  > .tiles {
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--layout-gap-sm);
+
+    @include min-width(lg) {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    > div {
+      min-width: 0;
+      padding: var(--layout-gap-md);
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-2xs);
+      @include kit.surface;
+
+      > dt {
+        @include little-text(rgba($secondary-text, 0.72), $thin: false);
+      }
+
+      > .value {
+        margin: 0;
+        @include base-text($secondary-text, $bold: true, $bigger: true);
+      }
+
+      > .hint {
+        margin: 0;
+        @include little-text(rgba($secondary-text, 0.64), $thin: false);
+      }
+    }
+  }
+
+  > .attention,
+  > .health {
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-sm);
+
+    h2 {
+      @include kit.section-title;
+    }
+  }
+
+  > .attention {
+    > .rows {
+      @include kit.rows;
+
+      > li {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr);
+        grid-template-areas:
+          'icon text'
+          'icon go';
+        align-items: start;
+        gap: var(--layout-gap-xs) var(--layout-gap-sm);
+
+        @include min-width(md) {
+          grid-template-columns: auto minmax(0, 1fr) auto;
+          grid-template-areas: 'icon text go';
+          align-items: center;
+        }
+
+        > .icon {
+          grid-area: icon;
+          margin-top: var(--layout-gap-2xs);
+          color: $warn-ink;
+        }
+
+        &.is-bad > .icon {
+          color: $bad-ink;
+        }
+
+        > .text {
+          grid-area: text;
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: var(--layout-gap-2xs);
+
+          > .title {
+            @include base-text($secondary-text, $bold: true);
+          }
+
+          > .detail {
+            @include little-text(rgba($secondary-text, 0.72), $thin: false);
+            overflow-wrap: anywhere;
+          }
+        }
+
+        > .go {
+          grid-area: go;
+          @include buttons.primary($theme: white, $little: true);
+        }
+      }
+    }
+
+    > .calm {
+      display: flex;
+      align-items: center;
+      gap: var(--layout-gap-xs);
+      @include base-text(rgba($secondary-text, 0.8), $thin: false);
+
+      > svg {
+        flex: 0 0 auto;
+        color: $good-ink;
+      }
+    }
+  }
+
+  > .health {
+    > .health-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--layout-gap-xs) var(--layout-gap);
+
+      > p {
+        flex: 1 1 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: var(--layout-gap-xs);
+        @include base-text($secondary-text, $bold: true);
+
+        > .dot {
+          width: 0.6rem;
+          height: 0.6rem;
+          border-radius: borders.$rounded;
+          background: rgba($secondary, 0.25);
+        }
+
+        &.is-good > .dot {
+          background: $good-ink;
+        }
+
+        &.is-warn > .dot {
+          background: $warn-ink;
+        }
+
+        &.is-bad {
+          color: $bad-ink;
+
+          > .dot {
+            background: $bad-ink;
+          }
+        }
+      }
+
+      > .go {
+        @include buttons.primary($theme: white, $little: true);
+      }
+    }
+
+    > .chips {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--layout-gap-xs);
+
+      > li {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--layout-gap-xs);
+        padding: calc(var(--layout-gap-xs) / 2) var(--layout-gap-sm);
+        border-radius: borders.$rounded;
+        border: 1px solid rgba($secondary, 0.1);
+        background: $accent-surface-0;
+        @include little-text($secondary-text, $thin: false);
+
+        > .dot {
+          width: 0.5rem;
+          height: 0.5rem;
+          border-radius: borders.$rounded;
+          background: rgba($secondary, 0.25);
+        }
+
+        &.is-good > .dot {
+          background: $good-ink;
+        }
+
+        &.is-warn > .dot {
+          background: $warn-ink;
+        }
+
+        &.is-bad {
+          border-color: $bad-ink;
+          color: $bad-ink;
+
+          > .dot {
+            background: $bad-ink;
+          }
+        }
+
+        &.is-muted {
+          color: rgba($secondary-text, 0.64);
+        }
+      }
+    }
+  }
+}

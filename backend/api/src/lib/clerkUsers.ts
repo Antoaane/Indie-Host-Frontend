@@ -18,6 +18,12 @@ export type ClerkUserProfile = {
   privateMetadata: Record<string, unknown>;
   publicMetadata: Record<string, unknown>;
   unsafeMetadata: Record<string, unknown>;
+  /** Compte bloqué depuis l'administration ou le Clerk Dashboard : plus aucune connexion possible. */
+  banned: boolean;
+  /** Compte verrouillé par Clerk après trop d'essais de mot de passe. */
+  locked: boolean;
+  createdAtISO: string | null;
+  lastSignInAtISO: string | null;
 };
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -80,6 +86,13 @@ function toPlainMetadata(value: unknown): Record<string, unknown> {
   return asRecord(value) ?? {};
 }
 
+// Clerk date ses événements en millisecondes depuis 1970.
+function readEpochMsAsISO(value: unknown): string | null {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
 function parseClerkUser(raw: unknown): ClerkUserProfile | null {
   const record = asRecord(raw);
   if (!record) return null;
@@ -115,6 +128,10 @@ function parseClerkUser(raw: unknown): ClerkUserProfile | null {
     privateMetadata: toPlainMetadata(record.private_metadata ?? record.privateMetadata),
     publicMetadata: toPlainMetadata(record.public_metadata ?? record.publicMetadata),
     unsafeMetadata: toPlainMetadata(record.unsafe_metadata ?? record.unsafeMetadata),
+    banned: record.banned === true,
+    locked: record.locked === true,
+    createdAtISO: readEpochMsAsISO(record.created_at ?? record.createdAt),
+    lastSignInAtISO: readEpochMsAsISO(record.last_sign_in_at ?? record.lastSignInAt),
   };
 }
 
@@ -229,6 +246,58 @@ export async function createClerkInvitation(input: CreateClerkInvitationInput): 
     status: readOptionalString(record.status) ?? 'pending',
     url: readOptionalString(record.url),
   };
+}
+
+async function sendClerkWrite(method: 'POST' | 'PATCH', pathname: string, body: unknown, fallback: string): Promise<unknown> {
+  const secret = env.CLERK_SECRET_KEY.trim();
+  if (!secret) {
+    throw new ClerkApiError(503, 'Clerk n’est pas configuré sur ce serveur (CLERK_SECRET_KEY).');
+  }
+
+  const response = await fetch(`${CLERK_API_BASE_URL}${pathname}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${secret}`,
+      'Content-Type': 'application/json',
+    },
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+  });
+
+  const payload: unknown = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new ClerkApiError(response.status, readClerkErrorMessage(payload, fallback));
+  }
+  return payload;
+}
+
+/**
+ * Fusionne des métadonnées dans le compte Clerk (une clé à `null` est supprimée). Seul le serveur
+ * peut écrire `private_metadata` et `public_metadata` : c'est là que vit le rôle administrateur.
+ */
+export async function updateClerkUserMetadata(
+  userId: string,
+  patch: { privateMetadata?: Record<string, unknown>; publicMetadata?: Record<string, unknown> },
+): Promise<ClerkUserProfile | null> {
+  const payload = await sendClerkWrite('PATCH', `/users/${encodeURIComponent(userId)}/metadata`, {
+    ...(patch.privateMetadata ? { private_metadata: patch.privateMetadata } : {}),
+    ...(patch.publicMetadata ? { public_metadata: patch.publicMetadata } : {}),
+  }, 'Clerk a refusé la modification du rôle.');
+  return parseClerkUser(payload);
+}
+
+/** Bloque (toutes ses sessions sont fermées, plus de connexion possible) ou débloque un compte. */
+export async function setClerkUserBanned(userId: string, banned: boolean): Promise<ClerkUserProfile | null> {
+  const action = banned ? 'ban' : 'unban';
+  const payload = await sendClerkWrite('POST', `/users/${encodeURIComponent(userId)}/${action}`, undefined,
+    banned ? 'Clerk a refusé de bloquer ce compte.' : 'Clerk a refusé de débloquer ce compte.');
+  return parseClerkUser(payload);
+}
+
+/** Nombre de comptes Clerk, ou null si Clerk ne répond pas. */
+export async function countClerkUsers(): Promise<number | null> {
+  const payload = asRecord(await fetchClerkJson('/users/count'));
+  const total = payload?.total_count;
+  return typeof total === 'number' && Number.isFinite(total) ? total : null;
 }
 
 export async function fetchClerkUserById(userId: string): Promise<ClerkUserProfile | null> {

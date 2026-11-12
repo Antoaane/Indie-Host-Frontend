@@ -1,11 +1,15 @@
-<!-- File: src/views/Admin/_Admin.vue -->
+<!-- File: src/views/Admin/sections/AdminUsers.vue -->
+
+<!-- Utilisateurs : tous les comptes (Clerk et IndieHost), leurs droits (administrateur, connexion
+     bloquée), leur abonnement, et les gestes de l'administration (inviter, offrir un plan, envoyer
+     un lien de paiement, ajuster les logements supplémentaires). -->
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Check, Copy, Gift, Link2, Mail, Minus, Plus, RefreshCw, Search, UserPlus } from 'lucide-vue-next'
+import { Ban, Check, Copy, Gift, Link2, Mail, Minus, Plus, RefreshCw, Search, ShieldOff, ShieldPlus, UserPlus } from 'lucide-vue-next'
 
-import { useAdminAccess } from '@/composables/useAdminAccess'
+import ConfirmationDialog from '@/components/overlays/ConfirmationDialog.vue'
 import {
   createAdminSubscriptionLink,
   fetchAdminUserSubscriptionState,
@@ -15,17 +19,21 @@ import {
   type StripeSubscriptionState,
   type SubscriptionPlanCode,
 } from '@/domain/api/stripeSubscriptions'
-import { createAdminInvitation, fetchAdminUsersOverview, type AdminUserOverview } from '@/domain/api/users'
+import { createAdminInvitation, type AdminUserOverview } from '@/domain/api/users'
 import { formatExtraListingPrice, getMarketingPricingPlan } from '@/domain/payments/pricingPlanCatalog'
 import { readActiveUserId } from '@/router/backOfficeUser'
+import { useAdminDataSource } from '@/views/Admin/adminDataSource'
+
+const props = defineProps<{
+  /** Compte Clerk de l'administrateur connecté : ses propres droits ne se retirent pas d'ici. */
+  currentClerkUserId: string | null
+}>()
 
 const route = useRoute()
 const router = useRouter()
-const { isAdminUser, apiAdminAccess } = useAdminAccess()
+const source = useAdminDataSource()
 
 const PLAN_CODES: SubscriptionPlanCode[] = ['indiehost', 'superhost']
-
-const isAccessResolved = computed(() => apiAdminAccess.value !== null || isAdminUser.value)
 
 // --- Clients ---------------------------------------------------------------
 const users = ref<AdminUserOverview[]>([])
@@ -34,20 +42,159 @@ const usersError = ref<string | null>(null)
 const query = ref('')
 const selectedKey = ref<string | null>(null)
 
+type Audience = 'all' | 'subscribed' | 'free' | 'admins' | 'blocked'
+const audience = ref<Audience>('all')
+
+function hasCurrentPlan(user: AdminUserOverview): boolean {
+  if (user.billing.complimentary) return true
+  const status = (user.billing.status ?? '').toLowerCase()
+  return ['active', 'trialing', 'past_due', 'unpaid', 'incomplete'].includes(status)
+}
+
+function matchesAudience(user: AdminUserOverview, value: Audience): boolean {
+  switch (value) {
+    case 'subscribed':
+      return hasCurrentPlan(user)
+    case 'free':
+      return !hasCurrentPlan(user)
+    case 'admins':
+      return user.access.role !== null
+    case 'blocked':
+      return user.access.banned
+    default:
+      return true
+  }
+}
+
+const AUDIENCES: Array<{ id: Audience; label: string }> = [
+  { id: 'all', label: 'Tous' },
+  { id: 'subscribed', label: 'Abonnés' },
+  { id: 'free', label: 'Sans abonnement' },
+  { id: 'admins', label: 'Administrateurs' },
+  { id: 'blocked', label: 'Bloqués' },
+]
+
+const audienceCounts = computed(() => Object.fromEntries(
+  AUDIENCES.map((entry) => [entry.id, users.value.filter((user) => matchesAudience(user, entry.id)).length]),
+) as Record<Audience, number>)
+
 const filteredUsers = computed(() => {
   const needle = normalizeSearch(query.value)
-  if (!needle) return users.value
-  return users.value.filter((user) => normalizeSearch([
-    user.firstName ?? '',
-    user.lastName ?? '',
-    user.displayName ?? '',
-    user.email ?? '',
-    user.clerkUserId ?? '',
-  ].join(' ')).includes(needle))
+  return users.value.filter((user) => {
+    if (!matchesAudience(user, audience.value)) return false
+    if (!needle) return true
+    return normalizeSearch([
+      user.firstName ?? '',
+      user.lastName ?? '',
+      user.displayName ?? '',
+      user.email ?? '',
+      user.clerkUserId ?? '',
+    ].join(' ')).includes(needle)
+  })
 })
 
 const selectedUser = computed(() => users.value.find((user) => userKey(user) === selectedKey.value) ?? null)
 const selectedUserId = computed(() => selectedUser.value?.id ?? null)
+
+// --- Droits du compte sélectionné -------------------------------------------
+type RightsAction = 'grant-admin' | 'revoke-admin' | 'block' | 'unblock'
+const pendingRights = ref<RightsAction | null>(null)
+const isSavingRights = ref(false)
+const rightsMessage = ref<string | null>(null)
+const rightsError = ref<string | null>(null)
+
+const selectedAccess = computed(() => selectedUser.value?.access ?? null)
+const isSelectedSelf = computed(() => Boolean(selectedUser.value?.clerkUserId && selectedUser.value.clerkUserId === props.currentClerkUserId))
+const isConfiguredAdmin = computed(() => selectedAccess.value?.roleSource === 'config')
+
+const roleLabel = computed(() => {
+  const access = selectedAccess.value
+  if (!access?.known) return 'Inconnu'
+  if (access.role === 'super_admin') return 'Administrateur principal'
+  if (access.role === 'admin') return 'Administrateur'
+  return 'Hôte'
+})
+
+const canToggleAdmin = computed(() => {
+  const access = selectedAccess.value
+  if (!selectedUser.value?.clerkUserId || !access?.known || isConfiguredAdmin.value) return false
+  // Retirer ses propres droits fermerait cette page : l'API le refuse aussi.
+  if (access.role && isSelectedSelf.value) return false
+  return !(access.banned && !access.role)
+})
+
+const canToggleBlock = computed(() => {
+  const access = selectedAccess.value
+  if (!selectedUser.value?.clerkUserId || !access?.known || isSelectedSelf.value) return false
+  return access.banned || !access.role
+})
+
+const rightsDialog = computed(() => {
+  const name = selectedUser.value ? userLabel(selectedUser.value) : 'Ce compte'
+  switch (pendingRights.value) {
+    case 'grant-admin':
+      return {
+        title: 'Donner les droits d’administration ?',
+        message: `${name} verra tous les comptes, les paiements et la santé des services, pourra modifier les annonces de tous les hôtes et changer les droits des autres comptes.`,
+        confirmLabel: 'Donner les droits',
+        tone: 'default' as const,
+      }
+    case 'revoke-admin':
+      return {
+        title: 'Retirer les droits d’administration ?',
+        message: `${name} redevient un hôte comme les autres, dès sa prochaine action.`,
+        confirmLabel: 'Retirer les droits',
+        tone: 'danger' as const,
+      }
+    case 'block':
+      return {
+        title: 'Bloquer la connexion de ce compte ?',
+        message: `${name} est déconnecté de tous ses appareils et ne peut plus se connecter. Ses annonces restent en ligne et ses réservations continuent : pour retirer une annonce, gelez-la depuis « Ses annonces ».`,
+        confirmLabel: 'Bloquer la connexion',
+        tone: 'danger' as const,
+      }
+    case 'unblock':
+      return {
+        title: 'Débloquer la connexion ?',
+        message: `${name} pourra de nouveau se connecter à son tableau de bord.`,
+        confirmLabel: 'Débloquer',
+        tone: 'default' as const,
+      }
+    default:
+      return null
+  }
+})
+
+function askRights(action: RightsAction) {
+  rightsMessage.value = null
+  rightsError.value = null
+  pendingRights.value = action
+}
+
+async function confirmRights() {
+  const action = pendingRights.value
+  const user = selectedUser.value
+  if (!action || !user?.clerkUserId || isSavingRights.value) return
+  isSavingRights.value = true
+  rightsError.value = null
+  try {
+    const access = action === 'grant-admin' || action === 'revoke-admin'
+      ? await source.setUserRole(user.clerkUserId, action === 'grant-admin' ? 'admin' : 'none')
+      : await source.setUserBlocked(user.clerkUserId, action === 'block')
+    users.value = users.value.map((entry) => (userKey(entry) === userKey(user) ? { ...entry, access } : entry))
+    rightsMessage.value = {
+      'grant-admin': 'Droits d’administration donnés.',
+      'revoke-admin': 'Droits d’administration retirés.',
+      block: 'Connexion bloquée : ses sessions sont fermées.',
+      unblock: 'Connexion débloquée.',
+    }[action]
+  } catch (error) {
+    rightsError.value = resolveErrorMessage(error, 'Impossible de modifier les droits de ce compte.')
+  } finally {
+    isSavingRights.value = false
+    pendingRights.value = null
+  }
+}
 
 // --- Invitation ------------------------------------------------------------
 const inviteEmail = ref('')
@@ -201,7 +348,7 @@ async function loadUsers() {
   isLoadingUsers.value = true
   usersError.value = null
   try {
-    users.value = await fetchAdminUsersOverview()
+    users.value = await source.loadUsers()
     const requested = readActiveUserId(route.params.userId) ?? readQueryValue(route.query.userId)
     if (requested) {
       const match = users.value.find((user) => user.id === requested || user.clerkUserId === requested)
@@ -240,6 +387,8 @@ function selectUser(user: AdminUserOverview) {
   linkError.value = null
   extraMessage.value = null
   extraError.value = null
+  rightsMessage.value = null
+  rightsError.value = null
   hasCopiedLink.value = false
   const nextQuery = { ...route.query }
   if (user.id) nextQuery.userId = user.id
@@ -425,34 +574,25 @@ watch(selectedUserId, (userId) => {
   if (userId) void loadSubscription(userId)
 })
 
-watch(isAdminUser, (allowed) => {
-  if (allowed && !users.value.length && !isLoadingUsers.value) void loadUsers()
+// Lien depuis une autre vue (« Voir le compte ») : sélectionne le compte demandé.
+watch(() => route.query.userId, (value) => {
+  const requested = readQueryValue(value)
+  if (!requested) return
+  const match = users.value.find((user) => user.id === requested || user.clerkUserId === requested)
+  if (match) selectedKey.value = userKey(match)
 })
 
 onMounted(() => {
-  if (isAdminUser.value) void loadUsers()
+  void loadUsers()
 })
 </script>
 
 <template>
-  <section class="admin-panel">
-    <div class="admin-header">
-      <h1>Administration</h1>
-      <p>Comptes clients, abonnements et liens de paiement. Vous agissez ici au nom d’IndieHost.</p>
-    </div>
-
-    <p
-      v-if="isAccessResolved && !isAdminUser"
-      class="admin-denied"
-      role="alert"
-    >
-      Cette page est réservée au compte administrateur d’IndieHost.
-    </p>
-
-    <div
-      v-else
-      class="admin-layout"
-    >
+  <section
+    class="admin-users"
+    aria-label="Utilisateurs"
+  >
+    <div class="admin-layout">
       <aside class="admin-clients">
         <section class="admin-card admin-invite">
           <h2>Inviter un client</h2>
@@ -538,8 +678,30 @@ onMounted(() => {
               type="search"
               enterkeyhint="search"
               placeholder="Rechercher un nom, un email…"
+              aria-label="Rechercher un compte"
               autocomplete="off"
             />
+          </div>
+
+          <div
+            class="audiences"
+            role="group"
+            aria-label="Afficher"
+          >
+            <div
+              v-for="entry in AUDIENCES"
+              :key="entry.id"
+              :class="{ 'is-active': audience === entry.id }"
+            >
+              <button
+                type="button"
+                :aria-pressed="audience === entry.id"
+                @click="audience = entry.id"
+              >
+                {{ entry.label }}
+                <span class="count">{{ audienceCounts[entry.id] }}</span>
+              </button>
+            </div>
           </div>
 
           <p
@@ -590,6 +752,19 @@ onMounted(() => {
                 <span class="identity">
                   <strong>{{ userLabel(user) }}</strong>
                   <small>{{ user.email ?? 'Email inconnu' }}</small>
+                  <span
+                    v-if="user.access.role || user.access.banned"
+                    class="tags"
+                  >
+                    <span
+                      v-if="user.access.role"
+                      class="tag"
+                    >Admin</span>
+                    <span
+                      v-if="user.access.banned"
+                      class="tag is-bad"
+                    >Bloqué</span>
+                  </span>
                 </span>
                 <span class="facts">
                   <span
@@ -653,6 +828,118 @@ onMounted(() => {
               Ce compte Clerk ne s’est jamais connecté au dashboard : l’abonnement et les annonces seront disponibles après sa première connexion.
             </p>
           </section>
+
+          <section
+            v-if="selectedUser.clerkUserId"
+            class="admin-card rights"
+          >
+            <h2>Droits</h2>
+            <dl class="facts-grid">
+              <div>
+                <dt>Rôle</dt>
+                <dd>
+                  <span
+                    class="badge"
+                    :class="selectedAccess?.role ? 'is-good' : 'is-muted'"
+                  >{{ roleLabel }}</span>
+                  <small v-if="isConfiguredAdmin">Défini par la configuration du serveur</small>
+                  <small v-else-if="isSelectedSelf">C’est votre compte</small>
+                </dd>
+              </div>
+              <div>
+                <dt>Connexion</dt>
+                <dd>
+                  <span
+                    class="badge"
+                    :class="selectedAccess?.banned ? 'is-bad' : selectedAccess?.known ? 'is-good' : 'is-muted'"
+                  >{{ !selectedAccess?.known ? 'Inconnue' : selectedAccess.banned ? 'Bloquée' : 'Autorisée' }}</span>
+                  <small v-if="selectedAccess?.locked">Verrouillée par Clerk après trop d’essais</small>
+                </dd>
+              </div>
+              <div>
+                <dt>Dernière connexion</dt>
+                <dd>{{ selectedUser.lastSignInAtISO ? formatDate(selectedUser.lastSignInAtISO) : 'Jamais' }}</dd>
+              </div>
+            </dl>
+
+            <p
+              v-if="!selectedAccess?.known"
+              class="meta"
+            >
+              Clerk n’a pas répondu : rôle et connexion sont inconnus. Rafraîchissez la liste pour réessayer.
+            </p>
+            <div
+              v-else-if="canToggleAdmin || canToggleBlock"
+              class="rights-actions"
+            >
+              <div
+                v-if="canToggleAdmin"
+                class="action ghost"
+              >
+                <button
+                  type="button"
+                  :disabled="isSavingRights"
+                  @click="askRights(selectedAccess?.role ? 'revoke-admin' : 'grant-admin')"
+                >
+                  <ShieldOff
+                    v-if="selectedAccess?.role"
+                    :size="16"
+                    aria-hidden="true"
+                  />
+                  <ShieldPlus
+                    v-else
+                    :size="16"
+                    aria-hidden="true"
+                  />
+                  {{ selectedAccess?.role ? 'Retirer les droits d’administration' : 'Donner les droits d’administration' }}
+                </button>
+              </div>
+              <div
+                v-if="canToggleBlock"
+                class="action ghost"
+                :class="{ danger: !selectedAccess?.banned }"
+              >
+                <button
+                  type="button"
+                  :disabled="isSavingRights"
+                  @click="askRights(selectedAccess?.banned ? 'unblock' : 'block')"
+                >
+                  <Ban
+                    :size="16"
+                    aria-hidden="true"
+                  />
+                  {{ selectedAccess?.banned ? 'Débloquer la connexion' : 'Bloquer la connexion' }}
+                </button>
+              </div>
+            </div>
+            <p
+              v-if="rightsMessage"
+              class="meta is-success"
+              role="status"
+            >
+              {{ rightsMessage }}
+            </p>
+            <p
+              v-if="rightsError"
+              class="meta is-error"
+              role="alert"
+            >
+              {{ rightsError }}
+            </p>
+          </section>
+
+          <ConfirmationDialog
+            :open="rightsDialog !== null"
+            :title="rightsDialog?.title ?? ''"
+            :message="rightsDialog?.message ?? ''"
+            :confirm-label="rightsDialog?.confirmLabel ?? 'Confirmer'"
+            cancel-label="Annuler"
+            :tone="rightsDialog?.tone ?? 'default'"
+            :confirm-disabled="isSavingRights"
+            @confirm="confirmRights"
+            @cancel="pendingRights = null"
+            @close="pendingRights = null"
+          />
 
           <section
             v-if="selectedUser.id"
@@ -1007,5 +1294,5 @@ onMounted(() => {
 </template>
 
 <style lang="scss">
-@use '@/views/Admin/admin.scss';
+@use '@/views/Admin/sections/admin-users.scss';
 </style>

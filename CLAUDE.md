@@ -212,7 +212,7 @@ secrets/cloudflare.ini           → Credentials Cloudflare DNS-01
 | `/dashboard/domains` | DomainsRoute |
 | `/dashboard/page/:listingId` | HubPageEditRoute (mode édition de la page de présentation d'une page principale) |
 | `/dashboard/revenues` | RevenuesRoute (« Mes revenus » : état du compte Stripe de l'hôte, solde, virements, paiements des réservations) |
-| `/dashboard/admin` | AdminRoute (super admin uniquement : clients, invitations Clerk, abonnement/logements supplémentaires d'un client, lien de paiement Stripe à lui envoyer) |
+| `/dashboard/admin` | AdminRoute (super admin uniquement, onglet dans `?onglet=apercu\|utilisateurs\|paiements\|services`) : abonnés et chiffres, comptes et droits (rôle admin, connexion bloquée), invitations, abonnement d'un client, lien de paiement, paiements réussis ou refusés, santé des services en direct, carte floorplan. Voir « Administration » |
 
 **Guards :** Les routes `/dashboard/*` sans `userId` attendent Clerk (2500ms max) puis redirigent vers variante `*-user` avec l'userId, ou vers `sign-in`.
 
@@ -261,7 +261,7 @@ frontend/src/
 │   │   ├── listingDomains.ts, listingCalendar.ts
 │   │   └── bookings.ts, imagekit.ts, users.ts
 │   ├── payments/
-│   │   ├── pricingPlanCatalog.ts     # Plans: IndieHost 29€, SuperHost 39€, MegaHost 99€/mois
+│   │   ├── pricingPlanCatalog.ts     # Plans: IndieHost 19 €, SuperHost 49 €, logement supplémentaire 12 €/mois
 │   │   └── stripeClient.ts, checkoutPayment.ts
 │   ├── user/
 │   │   ├── subscription.ts           # Limites (max 6 annonces actives)
@@ -349,13 +349,13 @@ Le bundle listing est divisé en sections JSON stockées séparément :
 
 ## Plans tarifaires (pricingPlanCatalog.ts)
 
-| Plan | Prix TTC/mois | Stripe Product |
+| Plan | Prix TTC/mois | Logements en ligne inclus |
 |------|-------------|----------------|
-| IndieHost | 29 € | — |
-| SuperHost | 39 € | — |
-| MegaHost | 99 € | — |
+| IndieHost | 19 € | 2 |
+| SuperHost | 49 € | 6 |
+| Logement supplémentaire | 12 € par logement | + 1 |
 
-Limites abonnement : max **6 annonces actives** par défaut.
+Détail (essai, plan offert, source de vérité Stripe) : « Rôles et plans (offre 2026-10) ». MegaHost n'existe plus.
 
 ---
 
@@ -447,6 +447,15 @@ Envoi par l'API HTTP de Brevo (`BREVO_API_KEY`, gratuit jusqu'à 300 e-mails/jou
 - La page publique synchronise le logement **par son identifiant** (`refreshListingAvailability(core.id)`, `fetchListingRaw.ts`) : sur un domaine relié, l'hôte seul désigne la page principale, et la synchronisation partait vers elle (2026-11-11).
 - Flux arrivé **vide** alors que la source fermait encore des dates à venir : il n'est pas appliqué (`domains/calendar/emptyFeedGuard.ts`), la source passe en erreur avec un message pour l'hôte (supprimer puis rajouter le calendrier s'il a vraiment rouvert ses dates). Contrôle : `npx tsx backend/api/scripts/calendar-guard-smoke.ts`. Le 2026-11-11, le flux Booking de « Raisins Clairs » était vide alors que 17 mois restaient fermés.
 - `rebuildListingBookedDaysFromCalendarEvents` tourne à chaque consultation et à chaque synchronisation, même en échec : `booked-days` (lu par le calendrier public **et** par le contrôle du paiement, `isReservationRangeAvailable`) se reconstruit depuis les événements en base.
+
+### Administration (`/dashboard/admin`, 2026-11-12)
+
+- **Accès** : connexion Clerk, puis droits vérifiés par l'API. Administrateur = e-mail listé dans `SUPER_ADMIN_EMAILS` (`dev@indiehost.fr,contact@indiehost.fr` en production ; droits non modifiables depuis la page) ou `role` admin en `private_metadata` / `public_metadata` Clerk. Le site lit `isAdmin` de `/users/me` (`AdminRoute.vue`, bouton « Changer de compte ») ; chaque route `/admin/*` refuse elle-même (`requireAdmin` de `admin.plugin.ts`).
+- **Site** : `views/Admin/_AdminPage.vue` (quatre onglets), `sections/` (Aperçu, Utilisateurs = ancien `_Admin.vue`, Paiements, Services), `components/` (`ServiceDiagram.vue`, `UptimeStrip.vue`, `FloorplanMap.vue`). Données par `adminDataSource.ts` (API, ou fausses données sur `/dev/admin?onglet=…&etat=panne&acces=refuse`). Client `domain/api/admin.ts`.
+- **API** (`domains/admin/`) : `GET /admin/overview` (abonnés **lus chez Stripe**, seule source à jour : aucun webhook d'abonnement n'est traité ; repli sur la base, signalé), `GET /admin/payments` (90 jours : paiements du compte IndieHost chez Stripe + table `Payment` des réservations ; un paiement jamais tenté n'est pas listé), `PUT /admin/users/:clerkUserId/role` et `/blocked` (`private_metadata.role`, bannissement Clerk ; jamais son propre compte ni un compte de `SUPER_ADMIN_EMAILS` ; un admin doit perdre son rôle avant d'être bloqué), `GET /admin/system/health` et `POST …/refresh`, `POST /admin/floorplan/ticket` + `GET /admin/floorplan/view?token=`. Contrôle : `npx tsx backend/api/scripts/admin-smoke.ts`.
+- **Santé des services** (`systemHealth.ts`) : une sonde par service, dans le processus de l'API (démarrée à `onReady`, pas en test), toutes les 30 s pour le serveur (site `http://frontend/`, nginx `http://nginx/`, base, robot d'import), toutes les 5 à 10 min pour Stripe, Clerk, Brevo, ImageKit et les cartes ; accès public par Cloudflare et certificats (TLS sur `nginx:443`) **en production seulement**. Historique de 24 h **en mémoire** : il repart de zéro à chaque redémarrage de l'API. Ajouter un service = une entrée de `SERVICES` (API), le type `ServiceId` des deux côtés et sa place dans `COLUMNS` / `EDGES` de `ServiceDiagram.vue`.
+- **Tâches planifiées** : `lib/jobRuns.ts` (`registerScheduledJob`, `trackJobRun`) note chaque passage pour la page Services ; branché sur la purge et les rappels aux hôtes, pas encore sur `jobs/publicSites.ts`.
+- **Carte du code (floorplan)** : plugin Claude Code installé pour le projet (`.claude/settings.json`, marketplace `haydenschmitty/floorplan`). La carte vit dans `floorplan/` (ignoré par git) : `architecture.json` et `descriptions/` en français, pour le propriétaire. Mise à jour : demander « mets à jour la carte floorplan » (le skill relit seulement ce qui a changé), puis l'exporter pour l'administration : `node floorplan/serve.mjs --export backend/api/assets/floorplan/indiehost-map.html --include flows,notes,health`, committer ce fichier et redéployer l'API (le `Dockerfile` copie `assets/`). Servie par l'API dans un bac à sable (en-tête CSP `sandbox`, `connect-src 'none'`), avec un ticket signé de deux minutes : un cadre n'envoie pas de session. `frontend/tsconfig.json` déclare l'alias `@/` pour que floorplan relie les fichiers du site.
 
 ---
 
@@ -756,6 +765,7 @@ But : qu'un domaine relié (ex. `apparts-saintfrancois.fr`) ou un sous-domaine s
 ### Pièges connus
 
 - `frontend` : `npm run build` lance `vue-tsc --build` en parallèle de `vite build` → **toute erreur TS fait échouer l'image Docker**. Lancer `cd frontend && npm run type-check` avant de déployer.
+- Paramètre d'adresse `?vue=…` : le serveur de développement de Vite le prend pour un morceau de composant Vue et répond une erreur (`ENOENT … '/dev/admin'`) au rechargement de la page. Choisir un autre nom (l'administration utilise `?onglet=`).
 - Le build de l'image `scraping` (Playwright + Chromium, ~2 Go) prend ~15 min sur le VPS ; les autres rebuilds sont rapides grâce au cache.
 - Vérifications post-déploiement : `https://indiehost.fr`, `/api/health`, `docker compose ps scraping` (healthy ; `/scraping/*` n'est plus routé publiquement), un sous-domaine `*.indiehost.fr`, `http://` → 301 ; `docker compose logs migrate` doit afficher « All migrations have been successfully applied ».
 - Ne pas nommer une classe comme un utilitaire Tailwind (`grid`, `flex`, `hidden`, `table`, `container`…) : @nuxt/ui charge Tailwind et la règle s'applique (un tableau `class="grid"` passait en `display: grid`).

@@ -1,4 +1,19 @@
+import { env } from '../config/env.js';
 import type { RequestAuth } from '../types/auth.js';
+
+// Comptes de la plateforme (SUPER_ADMIN_EMAILS, séparés par des virgules) : super admin quelle que
+// soit leur métadonnée Clerk, et leurs droits ne se retirent pas depuis l'administration.
+const CONFIGURED_SUPER_ADMIN_EMAILS = new Set(
+  env.SUPER_ADMIN_EMAILS
+    .split(',')
+    .map((value) => value.trim().toLowerCase())
+    .filter(Boolean),
+);
+
+export function isConfiguredSuperAdminEmail(email: string | null | undefined): boolean {
+  if (!email) return false;
+  return CONFIGURED_SUPER_ADMIN_EMAILS.has(email.trim().toLowerCase());
+}
 
 const ADMIN_ROLE_NAMES = new Set([
   'admin',
@@ -15,7 +30,7 @@ function normalizeRoleName(value: string): string {
   return value.trim().toLowerCase().replace(/\s+/g, '_');
 }
 
-function isAdminRoleName(role: string | null): boolean {
+export function isAdminRoleName(role: string | null): boolean {
   if (!role) return false;
   return ADMIN_ROLE_NAMES.has(role);
 }

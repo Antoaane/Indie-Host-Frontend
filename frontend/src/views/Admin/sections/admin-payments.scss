@@ -1,0 +1,239 @@
+/* File: src/views/Admin/sections/admin-payments.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
+@use '@/styles/components/buttons' as buttons;
+@use '@/views/Admin/admin-kit' as kit;
+
+.admin-payments {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--layout-gap-xl);
+
+  // Une seule rangée de filtres, au-dessus de tout ce qu'ils filtrent.
+  > .filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--layout-gap-sm);
+
+    > .chips {
+      flex: 0 1 auto;
+      max-width: 100%;
+      @include kit.segmented;
+
+      // Sur téléphone, les filtres passent à la ligne plutôt que de défiler cachés.
+      & {
+        flex-wrap: wrap;
+        overflow: visible;
+      }
+
+      > * {
+        flex: 0 0 auto;
+      }
+
+      .count {
+        min-width: 1.25rem;
+        padding: 0 var(--layout-gap-2xs);
+        border-radius: borders.$rounded;
+        background: rgba($secondary, 0.08);
+        @include little-text(inherit, $thin: false);
+        font-variant-numeric: tabular-nums;
+      }
+
+      > .is-active .count {
+        background: rgba($accent, 0.2);
+      }
+    }
+
+    > .refresh {
+      margin-left: auto;
+      @include buttons.primary($theme: white, $icon-only: true, $little: true);
+    }
+  }
+
+  > .state {
+    @include kit.state;
+  }
+
+  > .content {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-xl);
+    @include animations.transition(animations.$duration-base, animations.$ease-out, (opacity));
+
+    // Relecture en cours : l'écran garde ses lignes, un peu estompées.
+    &.is-refreshing {
+      opacity: 0.6;
+    }
+
+    > .notice {
+      @include kit.notice;
+    }
+
+    > .tiles {
+      margin: 0;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--layout-gap-sm);
+
+      @include min-width(md) {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+
+      > div {
+        min-width: 0;
+        padding: var(--layout-gap-md);
+        display: flex;
+        flex-direction: column;
+        gap: var(--layout-gap-2xs);
+        @include kit.surface;
+
+        > dt {
+          @include little-text(rgba($secondary-text, 0.72), $thin: false);
+        }
+
+        > .value {
+          margin: 0;
+          @include base-text($secondary-text, $bold: true, $bigger: true);
+          overflow-wrap: anywhere;
+        }
+
+        > .hint {
+          margin: 0;
+          @include little-text(rgba($secondary-text, 0.64), $thin: false);
+        }
+
+        &.is-bad > .value {
+          color: $bad-ink;
+        }
+      }
+    }
+
+    > .rows {
+      @include kit.rows;
+
+      > li {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-areas:
+          'main amount'
+          'status status';
+        align-items: start;
+        gap: var(--layout-gap-xs) var(--layout-gap);
+
+        @include min-width(md) {
+          grid-template-columns: minmax(0, 1fr) auto minmax(11rem, 15rem);
+          grid-template-areas: 'main amount status';
+        }
+
+        > .main {
+          grid-area: main;
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: var(--layout-gap-2xs);
+
+          > .label {
+            @include base-text($secondary-text, $bold: true);
+            overflow-wrap: anywhere;
+          }
+
+          > .meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0 var(--layout-gap-xs);
+            @include little-text(rgba($secondary-text, 0.72), $thin: false);
+            overflow-wrap: anywhere;
+
+            > span + span::before {
+              content: '·';
+              margin-right: var(--layout-gap-xs);
+            }
+          }
+
+          > .account {
+            @include little-text(rgba($secondary-text, 0.72), $thin: false);
+
+            > .link {
+              padding: 0;
+              border: none;
+              background: none;
+              cursor: pointer;
+              @include little-text($secondary-text, $underline: true, $thin: false);
+
+              &:focus-visible {
+                outline: 2px solid $secondary;
+                outline-offset: 2px;
+              }
+            }
+          }
+        }
+
+        > .amount {
+          grid-area: amount;
+          justify-self: end;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+          @include base-text($secondary-text, $bold: true);
+          font-variant-numeric: tabular-nums;
+          white-space: nowrap;
+
+          > small {
+            @include little-text(rgba($secondary-text, 0.64), $thin: false);
+          }
+        }
+
+        > .status {
+          grid-area: status;
+          min-width: 0;
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: var(--layout-gap-2xs) var(--layout-gap-xs);
+
+          @include min-width(md) {
+            flex-direction: column;
+            align-items: flex-end;
+            text-align: right;
+          }
+
+          > .badge {
+            @include kit.badge;
+          }
+
+          > .reason {
+            @include little-text($bad-ink, $bold: true);
+          }
+
+          > .when {
+            @include little-text(rgba($secondary-text, 0.64), $thin: false);
+            font-variant-numeric: tabular-nums;
+          }
+
+          > .stripe {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--layout-gap-2xs);
+            @include little-text($secondary-text, $underline: true, $thin: false);
+          }
+        }
+
+        // Un refus se repère au premier coup d'œil, aussi par son libellé.
+        &.is-bad > .amount {
+          color: $bad-ink;
+        }
+      }
+    }
+
+    > .empty,
+    > .footnote {
+      max-width: 75ch;
+      @include little-text(rgba($secondary-text, 0.64), $thin: false);
+    }
+  }
+}

@@ -29,6 +29,7 @@ import {
 import { formatCurrency, readGuestsBreakdown } from '../domains/notifications/mailLayout.js';
 import { readBookingAmounts } from '../domains/notifications/notifications.service.js';
 import { LISTING_LIMIT_COUNTED_STATUSES, PLAN_TEMPLATES, normalizePlanCode } from '../domains/payments/plans.catalog.js';
+import { registerScheduledJob, trackJobRun } from '../lib/jobRuns.js';
 import { asObject, toNumber } from '../lib/json.js';
 import { isMailerConfigured } from '../lib/mailer.js';
 
@@ -649,13 +650,15 @@ export function startHostRemindersScheduler(
     if (running) return;
     running = true;
     try {
-      await runHostReminders(prisma, logger);
+      await trackJobRun('host-reminders', () => runHostReminders(prisma, logger));
     } catch (error) {
       logger.error({ err: error }, '[host-reminders] pass failed');
     } finally {
       running = false;
     }
   };
+
+  registerScheduledJob('host-reminders', { intervalMs, firstRunAt: Date.now() + initialDelayMs });
 
   const initial = setTimeout(() => {
     void run();

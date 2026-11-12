@@ -7,5 +7,14 @@
     {
       "path": "./tsconfig.app.json"
     }
-  ]
+  ],
+  // Sans effet sur la compilation (les deux projets référencés ont leurs propres options) : sert aux
+  // outils qui ne lisent que ce fichier pour résoudre l'alias `@/`, comme la carte floorplan.
+  "compilerOptions": {
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ]
+    }
+  }
 }

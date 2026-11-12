@@ -2,8 +2,8 @@ import type { PrismaClient, User } from '@prisma/client';
 
 import { asObject } from '../../lib/json.js';
 import { toPrismaJson } from '../../lib/prisma.js';
-import { hasAdminAccess } from '../../lib/authRole.js';
-import { createClerkInvitation, listClerkUsers, type ClerkInvitation } from '../../lib/clerkUsers.js';
+import { hasAdminAccess, isAdminRoleName, isConfiguredSuperAdminEmail, readRoleFromAuthPayload } from '../../lib/authRole.js';
+import { createClerkInvitation, listClerkUsers, type ClerkInvitation, type ClerkUserProfile } from '../../lib/clerkUsers.js';
 import type { RequestAuth } from '../../types/auth.js';
 import { ListingsService } from '../listings/listings.service.js';
 import {
@@ -61,7 +61,42 @@ export type AdminUserOverviewItem = {
     total: number;
     active: number;
   };
+  /** Droits du compte. `role` vaut null pour un hôte ordinaire ; `null` partout si Clerk n'a pas répondu. */
+  access: AdminUserAccess;
+  lastSignInAtISO: string | null;
 };
+
+export type AdminUserAccess = {
+  role: 'super_admin' | 'admin' | null;
+  /** `config` : e-mail listé dans SUPER_ADMIN_EMAILS (non modifiable ici) ; `clerk` : métadonnée Clerk. */
+  roleSource: 'config' | 'clerk' | null;
+  banned: boolean;
+  locked: boolean;
+  /** Faux quand le profil Clerk n'a pas pu être lu : rôle et blocage sont alors inconnus. */
+  known: boolean;
+};
+
+/** Droits d'un compte d'après son profil Clerk (rôle en métadonnée serveur, e-mail de la plateforme). */
+export function resolveAdminUserAccess(email: string | null, clerkUser: ClerkUserProfile | null): AdminUserAccess {
+  if (isConfiguredSuperAdminEmail(email ?? clerkUser?.email ?? null)) {
+    return { role: 'super_admin', roleSource: 'config', banned: clerkUser?.banned ?? false, locked: clerkUser?.locked ?? false, known: true };
+  }
+  if (!clerkUser) {
+    return { role: null, roleSource: null, banned: false, locked: false, known: false };
+  }
+  const role = readRoleFromAuthPayload({
+    private_metadata: clerkUser.privateMetadata,
+    public_metadata: clerkUser.publicMetadata,
+  });
+  const isAdmin = isAdminRoleName(role);
+  return {
+    role: isAdmin ? (role === 'admin' ? 'admin' : 'super_admin') : null,
+    roleSource: isAdmin ? 'clerk' : null,
+    banned: clerkUser.banned,
+    locked: clerkUser.locked,
+    known: true,
+  };
+}
 
 type CreateInvitationInput = {
   email: string;
@@ -288,6 +323,8 @@ export class UsersService {
           total: totalByOwner.get(user.id) ?? 0,
           active: activeByOwner.get(user.id) ?? 0,
         },
+        access: resolveAdminUserAccess(user.email ?? clerkUser?.email ?? null, clerkUser),
+        lastSignInAtISO: clerkUser?.lastSignInAtISO ?? null,
       };
     });
 
@@ -304,7 +341,7 @@ export class UsersService {
         lastName: clerkUser.lastName,
         displayName: clerkUser.displayName,
         avatarUrl: clerkUser.avatarUrl,
-        createdAtISO: null,
+        createdAtISO: clerkUser.createdAtISO,
         billing: {
           planCode: null,
           status: null,
@@ -315,6 +352,8 @@ export class UsersService {
           complimentary: false,
         },
         listings: { total: 0, active: 0 },
+        access: resolveAdminUserAccess(clerkUser.email, clerkUser),
+        lastSignInAtISO: clerkUser.lastSignInAtISO,
       });
     }
 

@@ -1,0 +1,125 @@
+/* File: src/views/Admin/admin-page.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/components/buttons' as buttons;
+@use '@/views/Admin/admin-kit' as kit;
+
+// Page ordinaire du tableau de bord : elle défile avec le document.
+.admin-page#admin-page {
+  --admin-dock-height: calc(60px + (var(--layout-gap-sm) * 2));
+
+  width: min(80rem, 100%);
+  min-height: 100dvh;
+  margin-inline: auto;
+  // Téléphone : bord à bord, la navigation est une barre en bas.
+  padding: calc(var(--safe-area-top) + var(--layout-gap)) var(--layout-gap) calc(var(--admin-dock-height) + var(--safe-area-bottom) + var(--layout-gap));
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: var(--layout-gap-xl);
+  background: $accent;
+
+  // Ordinateur : sous l'en-tête fixe, dans un panneau.
+  @include min-width(lg) {
+    min-height: 0;
+    margin-top: calc(#{$nav-height} + var(--layout-gap-sm));
+    margin-bottom: var(--layout-gap-4xl);
+    padding: var(--layout-gap-2xl);
+    @include dashboard-panel-radius;
+  }
+
+  > .head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--layout-gap-sm) var(--layout-gap);
+
+    > .title {
+      flex: 1 1 18rem;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-xs);
+
+      > h1 {
+        margin: 0;
+        @include h2-title($color: $secondary-text, $colorful: false, $bigger: false);
+      }
+
+      > p {
+        max-width: 60ch;
+        @include base-text(rgba($secondary-text, 0.72), $thin: false);
+      }
+    }
+
+    > .account {
+      flex: 0 1 auto;
+      min-width: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--layout-gap-xs) var(--layout-gap-sm);
+
+      > p {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+
+        > .label {
+          @include little-text(rgba($secondary-text, 0.64), $thin: false);
+        }
+
+        > .email {
+          @include little-text($secondary-text, $bold: true);
+          overflow-wrap: anywhere;
+        }
+      }
+
+      > .switch {
+        @include buttons.primary($theme: white, $little: true);
+      }
+    }
+  }
+
+  > .gate {
+    @include base-text(rgba($secondary-text, 0.72), $thin: false);
+
+    &.is-denied {
+      padding: var(--layout-gap-md);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--layout-gap-sm);
+      @include kit.surface;
+
+      > h2 {
+        @include kit.section-title;
+      }
+
+      > p {
+        max-width: 65ch;
+        @include base-text(rgba($secondary-text, 0.8), $thin: false);
+      }
+
+      > .switch {
+        @include buttons.primary($theme: black, $little: true);
+      }
+    }
+  }
+
+  > .tabs > .track {
+    @include kit.segmented;
+
+    // Sur ordinateur, les quatre onglets gardent leur largeur naturelle.
+    @include min-width(md) {
+      width: fit-content;
+      max-width: 100%;
+    }
+  }
+
+  > .panel {
+    min-width: 0;
+  }
+}

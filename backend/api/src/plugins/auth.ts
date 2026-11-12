@@ -3,7 +3,7 @@ import type { FastifyReply, FastifyRequest } from 'fastify';
 import { createRemoteJWKSet, jwtVerify } from 'jose';
 
 import { env } from '../config/env.js';
-import { readRoleFromAuthPayload } from '../lib/authRole.js';
+import { isConfiguredSuperAdminEmail, readRoleFromAuthPayload } from '../lib/authRole.js';
 import type { RequestAuth } from '../types/auth.js';
 
 const CLERK_API_BASE_URL = 'https://api.clerk.com/v1';
@@ -79,17 +79,6 @@ function mergeRoleIntoPayload(payload: Record<string, unknown>, role: string | n
   };
 }
 
-const SUPER_ADMIN_EMAILS = new Set(
-  env.SUPER_ADMIN_EMAILS
-    .split(',')
-    .map((value) => value.trim().toLowerCase())
-    .filter(Boolean),
-);
-
-function isSuperAdminEmail(email: string | null): boolean {
-  return Boolean(email) && SUPER_ADMIN_EMAILS.has((email as string).toLowerCase());
-}
-
 function readClerkPrimaryEmail(data: unknown): string | null {
   const record = asRecord(data);
   if (!record) return null;
@@ -123,7 +112,7 @@ async function fetchClerkRole(userId: string): Promise<string | null> {
     if (!response.ok) return null;
     const data = await response.json();
     // Le compte plateforme (SUPER_ADMIN_EMAILS) est super admin même sans métadonnée Clerk.
-    if (isSuperAdminEmail(readClerkPrimaryEmail(data))) return 'super_admin';
+    if (isConfiguredSuperAdminEmail(readClerkPrimaryEmail(data))) return 'super_admin';
     return readRoleFromAuthPayload(data);
   } catch {
     return null;

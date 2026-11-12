@@ -8,6 +8,8 @@ COPY tsconfig*.json ./
 COPY scripts ./scripts
 COPY prisma ./prisma
 COPY src ./src
+# Carte du code (floorplan) servie à l'administration : domains/admin/floorplanMap.ts.
+COPY assets ./assets
 
 RUN npm run build
 
