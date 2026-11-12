@@ -54,6 +54,9 @@
       padding: var(--layout-gap) var(--layout-gap-sm);
       display: flex;
       flex-direction: column;
+      // Le centrage du téléphone ne vaut pas ici : chaque bloc prend toute la largeur de la colonne,
+      // sinon titre et onglets se centrent et ne s'alignent plus sur le compte connecté.
+      align-items: stretch;
       gap: var(--layout-gap-xl);
       overflow-y: auto;
       overscroll-behavior: contain;
