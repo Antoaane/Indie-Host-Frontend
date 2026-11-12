@@ -7,12 +7,18 @@
 @use '@/styles/components/inputs' as inputs;
 @use '@/views/Admin/admin-kit' as kit;
 
-// Utilisateurs : liste des comptes à gauche, fiche du compte sélectionné à droite.
+// Comptes : liste des comptes à gauche, fiche du compte sélectionné à droite.
+// Téléphone : la fiche suit la liste et la page défile. Ordinateur : la section remplit le panneau,
+// la liste et la fiche défilent chacune dans sa colonne (la liste reste toujours entière à l'écran).
 .admin-users {
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: var(--layout-gap);
+
+  @include min-width(lg) {
+    height: 100%;
+  }
 
   .admin-layout {
     display: grid;
@@ -20,9 +26,14 @@
     gap: var(--layout-gap);
     align-items: start;
 
-    // Ordinateur : la liste garde une largeur de liste, la fiche prend tout le reste.
+    // Ordinateur : la liste garde une largeur de liste, la fiche prend tout le reste, et les deux
+    // colonnes prennent toute la hauteur du panneau.
     @include min-width(lg) {
+      flex: 1 1 auto;
+      min-height: 0;
       grid-template-columns: minmax(18rem, 24rem) minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1fr);
+      align-items: stretch;
     }
   }
 
@@ -34,26 +45,48 @@
     min-width: 0;
   }
 
-  // Ordinateur : la liste reste à l'écran pendant qu'on parcourt la fiche, et défile seule.
-  // Téléphone : elle suit la page (une zone qui défile à part y retient le doigt).
   .admin-clients {
     @include min-width(lg) {
-      position: sticky;
-      top: 0;
-      max-height: var(--admin-main-viewport);
+      min-height: 0;
 
       > .admin-list {
         flex: 1 1 auto;
         min-height: 0;
       }
+
+      // Invitation ouverte : toute la carte défile, la liste ne se réduit pas à rien sur un écran bas.
+      > .admin-list:has(> .invite-form) {
+        overflow-y: auto;
+        overscroll-behavior: contain;
+
+        > .client-list {
+          flex: 0 0 auto;
+          overflow: visible;
+        }
+      }
     }
   }
 
-  // Grand écran : la fiche sur deux colonnes, l'abonnement (le plus long) à droite.
+  // La fiche défile seule ; elle revient en haut quand on choisit un autre compte (AdminUsers.vue).
+  .admin-detail {
+    @include min-width(lg) {
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+
+    // Téléphone : la fiche s'affiche sous la liste ; au choix d'un compte, la page y descend.
+    scroll-margin-top: var(--layout-gap);
+  }
+
+  // Grand écran : la fiche sur deux colonnes, l'abonnement (le plus long) à droite. La dernière rangée
+  // est flexible : quand l'abonnement est plus haut que Droits + Lien, le surplus va sous le lien au
+  // lieu de creuser un trou entre les deux cartes.
   .admin-detail {
     @include min-width(xxl) {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-rows: auto auto 1fr;
       grid-template-areas:
         'head head'
         'rights subscription'
@@ -89,9 +122,14 @@
 
     > h2,
     .card-head > h2,
-    .list-head > h2 {
-      margin: 0;
+    .list-head > h2,
+    .who > h2 {
       @include h3-title();
+
+      // Le mixin pose une marge basse : le titre remontait au-dessus du centre de ses boutons.
+      & {
+        margin: 0;
+      }
 
       > .count {
         @include little-text($thin: false);
@@ -101,9 +139,12 @@
     }
 
     h3 {
-      margin: 0;
       font-weight: 600 !important;
       @include h4-title();
+
+      & {
+        margin: 0;
+      }
 
       > small {
         @include little-text($thin: false);
@@ -398,6 +439,14 @@
 
   // --- Fiche client ---------------------------------------------------------
   .detail-head {
+    // Nom, adresse puis identifiants, espacés comme le reste de la carte (le titre a le style des
+    // titres de carte, plus haut).
+    .who {
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-xs);
+    }
+
     .ids {
       margin: 0;
       display: grid;

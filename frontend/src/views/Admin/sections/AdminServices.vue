@@ -9,8 +9,8 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { Mail, RefreshCw } from 'lucide-vue-next'
 
 import type { HealthIncident, ServiceId, SystemHealth } from '@/domain/api/admin'
-import { vp } from '@/utils/viewport'
 import { SERVICE_STATUS, formatAgo, formatDate, formatDateTime, formatEvery, formatPercent, pluralize } from '@/views/Admin/adminFormat'
+import { adminScrollBehavior, isAdminWideLayout } from '@/views/Admin/adminLayout'
 import FloorplanMap from '@/views/Admin/components/FloorplanMap.vue'
 import ServiceDiagram from '@/views/Admin/components/ServiceDiagram.vue'
 import UptimeStrip from '@/views/Admin/components/UptimeStrip.vue'
@@ -119,18 +119,20 @@ const deliveryWarning = computed(() => {
 
 function selectService(id: ServiceId) {
   selectedId.value = id
-  // Téléphone et tablette : le détail est sous le schéma, on l'amène à l'écran.
-  if (typeof window !== 'undefined' && !vp.lg.value) {
-    window.requestAnimationFrame(() => {
-      document.getElementById('admin-service-detail')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    })
-  }
+  if (typeof window === 'undefined') return
+  // Le détail est sous le schéma à toutes les largeurs : on l'amène à l'écran. Téléphone et tablette :
+  // la page descend jusqu'à lui. Ordinateur (zone qui défile seule) : juste assez pour le montrer.
+  const block: ScrollLogicalPosition = isAdminWideLayout() ? 'nearest' : 'start'
+  window.requestAnimationFrame(() => {
+    document.getElementById('admin-service-detail')?.scrollIntoView({ behavior: adminScrollBehavior(), block })
+  })
 }
 </script>
 
 <template>
   <section
     class="admin-services"
+    :class="{ 'is-map': view === 'map' }"
     aria-label="Santé des services"
   >
     <div class="toolbar">

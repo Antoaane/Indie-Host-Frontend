@@ -114,6 +114,11 @@
     > .revenue {
       > .value {
         @include h2-title($color: $secondary-text, $colorful: false, $bigger: false);
+
+        // Le mixin pose une marge basse qui détachait la légende de son montant.
+        & {
+          margin: 0;
+        }
       }
 
       > .hint {

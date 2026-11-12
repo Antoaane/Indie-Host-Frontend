@@ -23,12 +23,14 @@
   flex-direction: column;
   gap: var(--layout-gap-xl);
 
-  // Grand écran : le schéma garde toute la largeur (ses quatre colonnes), le détail du service et
-  // les derniers changements se partagent la ligne du dessous.
+  // Grand écran, vue « En direct » : le schéma garde toute la largeur (ses quatre colonnes), le
+  // détail du service et les derniers changements se partagent la ligne du dessous.
   @include min-width(xxl) {
-    display: grid;
-    grid-template-columns: minmax(0, 11fr) minmax(0, 9fr);
-    align-items: start;
+    &:not(.is-map) {
+      display: grid;
+      grid-template-columns: minmax(0, 11fr) minmax(0, 9fr);
+      align-items: start;
+    }
 
     > * {
       grid-column: 1 / -1;
@@ -40,6 +42,14 @@
 
     > .incidents {
       grid-column: 2;
+    }
+  }
+
+  // Ordinateur, vue « Carte du code » : la section remplit la zone qui défile, et la carte prend la
+  // hauteur qui reste (FloorplanMap.vue) au lieu de passer sous le bord du panneau.
+  &.is-map {
+    @include min-width(lg) {
+      min-height: 100%;
     }
   }
 
@@ -129,8 +139,10 @@
     display: flex;
     flex-direction: column;
     gap: var(--layout-gap-sm);
-    // Le détail s'affiche sous la barre de navigation quand on y défile (téléphone).
+    // Amené à l'écran au choix d'un service : un peu d'air au-dessus (téléphone) et au-dessous
+    // (ordinateur, où il s'arrête juste au-dessus du bord du panneau).
     scroll-margin-top: var(--layout-gap-xl);
+    scroll-margin-bottom: var(--layout-gap-xl);
     @include kit.surface;
 
     > .detail-head {
@@ -257,6 +269,12 @@
           align-items: baseline;
         }
 
+        // Grand écran : la liste est dans la colonne de droite, trop étroite pour trois colonnes
+        // (l'explication tombait à ~115 px). Elle passe sous « ce qui a changé ».
+        @include min-width(xxl) {
+          grid-template-columns: 8rem minmax(0, 1fr);
+        }
+
         > .when {
           @include little-text(rgba($secondary-text, 0.64), $thin: false);
           font-variant-numeric: tabular-nums;
@@ -278,6 +296,10 @@
 
         > .why {
           @include little-text(rgba($secondary-text, 0.72), $thin: false);
+
+          @include min-width(xxl) {
+            grid-column: 2;
+          }
 
           > .alerted {
             // Le mixin de texte pose `margin: 0` : il passe avant la marge.

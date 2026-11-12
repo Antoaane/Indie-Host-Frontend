@@ -16,6 +16,7 @@ import type { AdminOverview, AdminPayments, AdminTab } from '@/domain/api/admin'
 import { vp } from '@/utils/viewport'
 import { SERVICE_STATUS, formatCount } from '@/views/Admin/adminFormat'
 import { useAdminDataSource } from '@/views/Admin/adminDataSource'
+import { isAdminWideLayout } from '@/views/Admin/adminLayout'
 import { useSystemHealth } from '@/views/Admin/composables/useSystemHealth'
 import AdminOverviewSection from '@/views/Admin/sections/AdminOverview.vue'
 import AdminPaymentsSection from '@/views/Admin/sections/AdminPayments.vue'
@@ -64,6 +65,22 @@ function goTo(tab: AdminTab, userId?: string | null) {
 }
 
 const activeMeta = computed(() => TABS.find((tab) => tab.id === activeTab.value) ?? TABS[0]!)
+
+// Changement d'onglet : la section s'ouvre en haut, sinon elle gardait la position de défilement de
+// la précédente (titre et premières cartes cachés). Ordinateur : la zone de la section défile seule.
+// Téléphone : c'est la page ; un lien vers une fiche de compte la montre lui-même (AdminUsers.vue).
+const panelEl = ref<HTMLElement | null>(null)
+watch(activeTab, (tab) => {
+  if (typeof window === 'undefined') return
+  void nextTick(() => {
+    if (isAdminWideLayout()) {
+      panelEl.value?.scrollTo({ top: 0 })
+      return
+    }
+    if (tab === 'users' && route.query.userId) return
+    if (window.scrollY > 0) window.scrollTo({ top: 0 })
+  })
+})
 
 function handleTabKeydown(event: KeyboardEvent, index: number) {
   // Colonne verticale sur ordinateur, pastilles en ligne sur téléphone : les deux sens de flèches marchent.
@@ -287,6 +304,7 @@ watch([activeTab, isAllowed], ([tab, allowed]) => {
 
         <div
           :id="`admin-panel-${activeTab}`"
+          ref="panelEl"
           class="panel"
           role="tabpanel"
           :aria-labelledby="`admin-tab-${activeTab}`"

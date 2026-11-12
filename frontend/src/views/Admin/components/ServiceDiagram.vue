@@ -119,7 +119,7 @@ function setNodeRef(id: ServiceId, el: Element | ComponentPublicInstance | null)
 function measure() {
   frame = 0
   const container = root.value
-  if (!container || !vp.lg.value) {
+  if (!container || !vp.xl.value) {
     paths.value = []
     return
   }
@@ -158,7 +158,7 @@ onBeforeUnmount(() => {
 watch(() => props.services.map((service) => `${service.id}:${service.status}:${service.latencyMs}`).join('|'), () => {
   void nextTick(scheduleMeasure)
 })
-watch(() => vp.lg.value, () => {
+watch(() => vp.xl.value, () => {
   void nextTick(scheduleMeasure)
 })
 </script>
@@ -272,7 +272,7 @@ watch(() => vp.lg.value, () => {
     pointer-events: none;
     display: none;
 
-    @include min-width(lg) {
+    @include min-width(xl) {
       display: block;
     }
 
@@ -297,14 +297,15 @@ watch(() => vp.lg.value, () => {
     }
   }
 
-  // Téléphone et tablette : une couche sous l'autre. Ordinateur : quatre colonnes.
+  // Téléphone, tablette et petit ordinateur : une couche sous l’autre. À partir de xl (1 281 px) :
+  // quatre colonnes (à lg, à côté de la colonne de navigation, les cartes coupaient noms et états).
   > .columns {
     position: relative;
     display: flex;
     flex-direction: column;
     gap: var(--layout-gap-xl);
 
-    @include min-width(lg) {
+    @include min-width(xl) {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 0.85fr)) minmax(0, 1fr);
       column-gap: calc(var(--layout-gap) * 3);
@@ -336,7 +337,7 @@ watch(() => vp.lg.value, () => {
           grid-template-columns: repeat(auto-fill, minmax(min(100%, 10rem), 1fr));
           gap: var(--layout-gap-xs);
 
-          @include min-width(lg) {
+          @include min-width(xl) {
             grid-template-columns: minmax(0, 1fr);
           }
         }

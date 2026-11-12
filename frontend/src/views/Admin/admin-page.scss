@@ -8,13 +8,13 @@
 
 // Administration. Téléphone : bord à bord, la page défile, les sections en pastilles en haut.
 // Ordinateur : toute la largeur sous la barre de navigation, comme « Mes annonces » et
-// « Réservations » : une colonne de navigation et la section ouverte, qui défile seule.
+// « Réservations » : une colonne de navigation et la section ouverte. Le titre de la section reste en
+// haut de son panneau, le contenu défile dessous (zone `.panel`, de hauteur fixe : une section peut
+// la remplir, comme Comptes ou la carte du code).
 .admin-page#admin-page {
   --admin-dock-height: calc(60px + (var(--layout-gap-sm) * 2));
   --admin-top-offset: calc(#{$nav-bar-height} + var(--layout-gap) + var(--layout-gap-md));
   --admin-main-padding: var(--layout-gap-2xl);
-  // Hauteur visible du contenu de la section (ordinateur) : une colonne collante s'y tient.
-  --admin-main-viewport: calc(100dvh - var(--admin-top-offset) - var(--layout-gap) - (var(--admin-main-padding) * 2));
 
   min-height: 100dvh;
   padding: calc(var(--safe-area-top) + var(--layout-gap)) var(--layout-gap) calc(var(--admin-dock-height) + var(--safe-area-bottom) + var(--layout-gap));
@@ -49,9 +49,11 @@
     align-items: center;
     gap: var(--layout-gap-sm) var(--layout-gap);
 
+    // Haut : le même retrait que le panneau de droite, pour que « Administration » et le titre de la
+    // section partent de la même hauteur. Bas : avec le retrait du bloc du compte, autant qu'en haut.
     @include min-width(lg) {
       min-height: 0;
-      padding: var(--layout-gap) var(--layout-gap-sm);
+      padding: var(--admin-main-padding) var(--layout-gap-sm) var(--layout-gap);
       display: flex;
       flex-direction: column;
       // Le centrage du téléphone ne vaut pas ici : chaque bloc prend toute la largeur de la colonne,
@@ -75,9 +77,14 @@
         padding-inline: var(--layout-gap-sm);
       }
 
+      // Le mixin de titre pose une marge basse : retirée après lui, sinon « IndieHost » se détache
+      // du titre (ordinateur) et le titre remonte au-dessus du bouton voisin (téléphone).
       > h1 {
-        margin: 0;
         @include h3-title($color: $secondary-text, $colorful: false, $bigger: false);
+
+        & {
+          margin: 0;
+        }
       }
 
       > p {
@@ -236,15 +243,20 @@
         border-top: 1px solid rgba($secondary, 0.08);
       }
 
+      // Un paragraphe garde la marge du navigateur (le site ne la remet pas à zéro) : retirée.
       > p {
         grid-area: who;
         min-width: 0;
+        margin: 0;
         display: flex;
         flex-wrap: wrap;
         column-gap: var(--layout-gap-xs);
 
+        // Une seule colonne, sans retour à la ligne : une adresse longue se termine par « … » au
+        // lieu d'élargir sa ligne et de sortir de la colonne.
         @include min-width(lg) {
           flex-direction: column;
+          flex-wrap: nowrap;
         }
 
         > .label {
@@ -259,15 +271,14 @@
         }
       }
 
+      // Le mixin donne au bouton la largeur de son libellé (cellule du téléphone). Ordinateur : toute
+      // la largeur du bloc, qui ne change pas quand le libellé passe à « Déconnexion… ».
       > .switch {
         grid-area: switch;
         @include buttons.primary($theme: white, $little: true);
 
         @include min-width(lg) {
-          > button {
-            width: 100%;
-            justify-content: center;
-          }
+          width: 100%;
         }
       }
     }
@@ -275,6 +286,9 @@
 
   // --- Section ouverte ----------------------------------------------------------------------
 
+  // Téléphone : un simple empilement, la page défile. Ordinateur : un panneau de hauteur fixe ; le
+  // titre de la section y reste en haut et seule la zone `.panel` défile (toute la largeur du panneau :
+  // sa barre de défilement longe le bord).
   > .main {
     min-width: 0;
     display: flex;
@@ -283,9 +297,8 @@
 
     @include min-width(lg) {
       min-height: 0;
-      padding: var(--admin-main-padding);
-      overflow-y: auto;
-      overscroll-behavior: contain;
+      gap: 0;
+      overflow: hidden;
       background: $accent;
       @include dashboard-panel-radius;
     }
@@ -295,9 +308,18 @@
       flex-direction: column;
       gap: var(--layout-gap-2xs);
 
+      @include min-width(lg) {
+        flex: 0 0 auto;
+        padding: var(--admin-main-padding) var(--admin-main-padding) 0;
+      }
+
+      // Le mixin de titre pose une marge basse qui éloignait la phrase d'explication.
       > h2 {
-        margin: 0;
         @include h2-title($color: $secondary-text, $colorful: false, $bigger: false);
+
+        & {
+          margin: 0;
+        }
       }
 
       > p {
@@ -308,6 +330,11 @@
 
     > .gate {
       @include base-text(rgba($secondary-text, 0.72), $thin: false);
+
+      // Après le mixin de texte, qui remet la marge à zéro.
+      @include min-width(lg) {
+        margin: var(--admin-main-padding);
+      }
 
       &.is-denied {
         max-width: 48rem;
@@ -333,8 +360,18 @@
       }
     }
 
+    // Ordinateur : hauteur fixe (le reste du panneau), qui défile. Une section peut la remplir
+    // (`height: 100%` ou `min-height: 100%`) : Comptes, carte du code.
     > .panel {
       min-width: 0;
+
+      @include min-width(lg) {
+        flex: 1 1 auto;
+        min-height: 0;
+        padding: var(--layout-gap-xl) var(--admin-main-padding) var(--admin-main-padding);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+      }
     }
   }
 }

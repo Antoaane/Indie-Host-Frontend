@@ -15,9 +15,14 @@
   background: $accent-surface-0;
 }
 
+// Les mixins de titre posent `margin-bottom: 0.5rem` : la marge se retire après eux, sinon le titre
+// remonte dans une ligne centrée et s'écarte de la phrase qui le suit.
 @mixin section-title {
-  margin: 0;
   @include h4-title($color: $secondary-text, $colorful: false, $bigger: false);
+
+  & {
+    margin: 0;
+  }
 }
 
 // Teintes d'une pastille selon son état (aussi pour la rétablir après une surcharge).

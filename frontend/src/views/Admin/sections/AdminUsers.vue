@@ -5,7 +5,7 @@
      un lien de paiement, ajuster les logements supplémentaires). -->
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Ban, Check, Copy, Gift, Link2, Mail, Minus, Plus, RefreshCw, Search, ShieldOff, ShieldPlus, UserPlus } from 'lucide-vue-next'
 
@@ -23,6 +23,7 @@ import { createAdminInvitation, type AdminUserOverview } from '@/domain/api/user
 import { formatExtraListingPrice, getMarketingPricingPlan } from '@/domain/payments/pricingPlanCatalog'
 import { readActiveUserId } from '@/router/backOfficeUser'
 import { useAdminDataSource } from '@/views/Admin/adminDataSource'
+import { adminScrollBehavior, isAdminWideLayout } from '@/views/Admin/adminLayout'
 
 const props = defineProps<{
   /** Compte Clerk de l'administrateur connecté : ses propres droits ne se retirent pas d'ici. */
@@ -355,7 +356,11 @@ async function loadUsers() {
     const requested = readActiveUserId(route.params.userId) ?? readQueryValue(route.query.userId)
     if (requested) {
       const match = users.value.find((user) => user.id === requested || user.clerkUserId === requested)
-      if (match) selectedKey.value = userKey(match)
+      // Premier chargement avec un compte demandé : on montre sa fiche. « Rafraîchir » garde la place.
+      if (match && userKey(match) !== selectedKey.value) {
+        selectedKey.value = userKey(match)
+        revealDetail()
+      }
     }
   } catch (error) {
     usersError.value = resolveErrorMessage(error, 'Impossible de charger les clients.')
@@ -384,8 +389,28 @@ async function loadSubscription(userId: string, options?: { sync?: boolean }) {
   }
 }
 
+// Fiche du compte choisi. Ordinateur (colonne qui défile seule) : elle repart du haut. Téléphone
+// (fiche sous toute la liste) : la page y descend, sinon toucher un compte ne changeait rien à l'écran.
+const detailEl = ref<HTMLElement | null>(null)
+// Compte écrit dans l'adresse par un clic dans la liste : la fiche est déjà montrée.
+let queryWrittenByList: string | null = null
+
+function revealDetail() {
+  if (typeof window === 'undefined') return
+  void nextTick(() => {
+    const el = detailEl.value
+    if (!el) return
+    if (isAdminWideLayout()) {
+      el.scrollTop = 0
+      return
+    }
+    el.scrollIntoView({ behavior: adminScrollBehavior(), block: 'start' })
+  })
+}
+
 function selectUser(user: AdminUserOverview) {
   selectedKey.value = userKey(user)
+  revealDetail()
   generatedLink.value = null
   linkError.value = null
   extraMessage.value = null
@@ -396,6 +421,8 @@ function selectUser(user: AdminUserOverview) {
   const nextQuery = { ...route.query }
   if (user.id) nextQuery.userId = user.id
   else delete nextQuery.userId
+  // Seulement si l'adresse change vraiment : sinon la surveillance ne se déclencherait pas pour l'effacer.
+  queryWrittenByList = user.id && user.id !== readQueryValue(route.query.userId) ? user.id : null
   void router.replace({ query: nextQuery })
 }
 
@@ -581,8 +608,16 @@ watch(selectedUserId, (userId) => {
 watch(() => route.query.userId, (value) => {
   const requested = readQueryValue(value)
   if (!requested) return
+  // Un clic dans la liste a déjà choisi ce compte, puis mis l'adresse à jour : rien à refaire.
+  if (requested === queryWrittenByList) {
+    queryWrittenByList = null
+    return
+  }
   const match = users.value.find((user) => user.id === requested || user.clerkUserId === requested)
-  if (match) selectedKey.value = userKey(match)
+  if (!match) return
+  selectedKey.value = userKey(match)
+  // Lien « Voir le compte » (Aperçu, Paiements) : la fiche s'affiche, même si ce compte était déjà choisi.
+  revealDetail()
 })
 
 onMounted(() => {
@@ -809,7 +844,10 @@ onMounted(() => {
         </section>
       </aside>
 
-      <section class="admin-detail">
+      <section
+        ref="detailEl"
+        class="admin-detail"
+      >
         <div
           v-if="!selectedUser"
           class="admin-card admin-empty"

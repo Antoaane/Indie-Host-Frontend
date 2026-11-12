@@ -164,8 +164,12 @@ onMounted(open)
       gap: var(--layout-gap-2xs);
 
       > h3 {
-        margin: 0;
         @include h4-title($color: $secondary-text, $colorful: false, $bigger: false);
+
+        // Le mixin pose une marge basse : retirée après lui.
+        & {
+          margin: 0;
+        }
       }
 
       > p {
@@ -201,15 +205,32 @@ onMounted(open)
     }
   }
 
+  // Ordinateur : la section (AdminServices, `.is-map`) remplit le panneau, la carte prend la hauteur
+  // qui reste sous son en-tête.
+  @include min-width(lg) {
+    flex: 1 1 auto;
+  }
+
+  // Téléphone : presque toute la hauteur de l’écran, la page défile autour. Ordinateur : plus bas.
+  // (Dans ce bloc, un commentaire `//` ne se place jamais juste avant une déclaration : en
+  // développement, le greffon Vue lit le SCSS brut avec postcss, qui y voit une propriété.)
   > .frame {
     position: relative;
-    // La carte a besoin de place : presque toute la hauteur de l'écran, sans déborder.
     height: min(78dvh, 56rem);
     min-height: 26rem;
     overflow: hidden;
     border-radius: borders.$rounded-lg;
     border: 1px solid rgba($secondary, 0.1);
     background: $accent-surface-0;
+
+    // Ordinateur : jusqu’au bas du panneau, sans passer dessous (la molette sur la carte la zoome et
+    // ne ferait pas défiler le panneau). Plancher plus bas qu’au téléphone : la carte tient encore
+    // dans un portable de 768 px de haut (« Plein écran » reste là pour la parcourir en grand).
+    @include min-width(lg) {
+      flex: 1 1 auto;
+      height: auto;
+      min-height: 18rem;
+    }
 
     > .loading {
       position: absolute;
