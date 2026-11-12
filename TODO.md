@@ -204,7 +204,7 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ## Fait
 
-- [x] 2026-11-12 — Sites des hôtes vus par Google comme leur propre site (détail dans `CLAUDE.md`, « Sites des hôtes et référencement »). Décisions de Nathan le 2026-11-12 : IndieHost fait la Google Search Console de chaque site, le moins de travail possible pour l’hôte, note Booking gardée, pied de page modifiable sur la page, zones utiles pré-remplies.
+- [x] 2026-11-12 — Sites des hôtes vus par Google comme leur propre site (commit `6cb4384` ; détail dans `CLAUDE.md`, « Sites des hôtes et référencement »). Décisions de Nathan le 2026-11-12 : IndieHost fait la Google Search Console de chaque site, le moins de travail possible pour l’hôte, note Booking gardée, pied de page modifiable sur la page, zones utiles pré-remplies.
   - HTML servi par l’API sur les domaines reliés et sous-domaines (`domains/publicSite/`, nginx `@public_site`) : titre, description, canonique, Open Graph, JSON-LD, contenu ; plus de balises de l’accueil d’IndieHost ; repli sur le site si l’API ne répond pas.
   - Une adresse par page, 301 depuis toutes les autres (variante `www`, sous-domaine, `indiehost.fr/<logement>`), canonique sans paramètres, vraie 404, `noindex` en pause ; certificat de la variante `www` dès qu’elle pointe vers le VPS (entrée du 2026-11-10 de « Produit et technique »).
   - `robots.txt` et sitemap par domaine ; sitemap d’indiehost.fr corrigé (il était vide).
