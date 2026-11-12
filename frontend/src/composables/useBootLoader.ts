@@ -3,13 +3,16 @@
 import { readonly, ref } from 'vue'
 import type { Router } from 'vue-router'
 
+import { landingEntryMayBeSignedIn } from '@/utils/authEntry'
+
 // Écran de chargement du tableau de bord. Sans lui, un écran se monte par morceaux : barre
 // publique et pied de page le temps que Clerk réponde, puis la coque vide, les cartes, enfin la
 // colonne de gauche. Il couvre tout cela et se retire une seule fois, quand la route est résolue
 // et que l'API se tait : l'écran apparaît d'un bloc.
 //
-// Deux déclencheurs :
+// Trois déclencheurs :
 // - le chargement de la page sous /dashboard (posé dès le <head> par `index.html`) ;
+// - l'ouverture de la landing par un hôte connecté, envoyé sur ses annonces (`authEntry.ts`) ;
 // - le passage d'un écran du tableau de bord à un autre (clic sur le logo, sur un onglet…), où
 //   les blocs arrivaient aussi l'un après l'autre.
 // En développement, les routes d'essai (/dev/editor, /dev/management…) comptent comme des écrans
@@ -29,7 +32,11 @@ const NAVIGATION_MAX_WAIT_MS = 3000
 // Durée de la classe de révélation, un peu plus longue que la transition du contenu.
 const REVEAL_CLASS_MS = 600
 
-const isActive = ref(typeof window !== 'undefined' && DASHBOARD_PATH.test(window.location.pathname))
+// Landing ouverte avec une session Clerk : la garde du routeur attend Clerk puis part sur le
+// tableau de bord. L'écran couvre cette attente ; si la landing reste, il se retire aussitôt.
+const isActive = ref(
+  typeof window !== 'undefined' && (DASHBOARD_PATH.test(window.location.pathname) || landingEntryMayBeSignedIn),
+)
 
 let started = false
 let pendingRequests = 0

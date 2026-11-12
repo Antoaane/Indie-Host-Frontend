@@ -1,92 +1,89 @@
 // File: src/utils/authEntry.ts
 
+import { isListingHostname } from '@/domain/listings/publicDomain'
+
 /**
- * Arrivée sur le site juste après une connexion faite hors de nos pages : lien à jeton
- * (sign-in token), « Impersonate » du Clerk Dashboard, invitation acceptée sur le portail
- * Clerk. Clerk renvoie alors vers l'URL d'accueil de l'instance (`/`), qui affiche la
- * landing : on ouvre plutôt le tableau de bord.
+ * Un hôte connecté n'a rien à faire sur la landing : elle sert à présenter IndieHost à qui n'a pas
+ * encore de compte. Après une connexion, et à chaque ouverture d'indiehost.fr avec une session,
+ * il arrive sur ses annonces.
  *
- * Importé en tête de `main.ts` : l'URL d'arrivée est lue avant que Clerk ne retire ses
- * paramètres (`__clerk_*`) de la barre d'adresse.
+ * - Destination après la connexion ou l'inscription : `resolvePostAuthRedirect` (pages Clerk).
+ * - Ouverture de la landing avec une session : garde du routeur (`home`), qui attend Clerk sous
+ *   l'écran de chargement quand le cookie de Clerk annonce une session, puis
+ *   `useDashboardEntryRedirect` en secours si Clerk a répondu trop tard.
  */
 
 export const DASHBOARD_ENTRY_PATH = '/dashboard/editor'
 
-// Une session plus ancienne n'est pas une connexion qui vient d'avoir lieu.
-export const FRESH_SESSION_MS = 5 * 60 * 1000
+// Pages sans intérêt pour qui vient de se connecter : y revenir le laisserait sur une page
+// marketing ou légale. La landing (`/`) en tête.
+const PAGES_WITHOUT_RETURN = /^\/(?:$|sign-in|sign-up|legal|donation)(?:\/|$)/
 
-const CLERK_ENTRY_PARAMS = [
-  '__clerk_ticket',
-  '__clerk_status',
-  '__clerk_created_session',
-  '__clerk_handshake',
-  '__clerk_db_jwt',
-  '__clerk_synced',
-] as const
+/**
+ * Page ouverte après la connexion ou l'inscription : la page demandée (`redirect_url`) si c'est
+ * un chemin interne utile, sinon le tableau de bord. Jamais une autre origine (redirection ouverte).
+ */
+export function resolvePostAuthRedirect(requested: string | null | undefined): string {
+  const target = typeof requested === 'string' ? requested.trim() : ''
+  if (!target.startsWith('/') || target.startsWith('//') || target.startsWith('/\\')) return DASHBOARD_ENTRY_PATH
 
-function readInitialSearch(): URLSearchParams {
-  if (typeof window === 'undefined') return new URLSearchParams()
-  try {
-    return new URLSearchParams(window.location.search)
-  } catch {
-    return new URLSearchParams()
-  }
+  const pathname = target.split(/[?#]/, 1)[0] ?? ''
+  if (PAGES_WITHOUT_RETURN.test(pathname)) return DASHBOARD_ENTRY_PATH
+  return target
 }
 
-const initialSearch = readInitialSearch()
-
-/** La page a été ouverte avec des paramètres posés par Clerk (retour de connexion). */
-export const arrivedWithClerkParams = CLERK_ENTRY_PARAMS.some((key) => initialSearch.has(key))
-
-export type EntrySession = {
-  id: string
-  createdAt: Date | number | null | undefined
-  /** Session d'un administrateur qui emprunte le compte (« Impersonate »). */
-  hasActor: boolean
+/**
+ * Clerk pose `__client_uat` (et sa variante suffixée) sur le domaine du site : `0` sans session,
+ * la date de la dernière mise à jour de la session sinon. Lisible avant le chargement de Clerk ;
+ * ce n'est qu'un indice, Clerk confirme ensuite.
+ */
+export function hasClerkSessionCookie(cookie: string = typeof document === 'undefined' ? '' : document.cookie): boolean {
+  return /(?:^|;\s*)__client_uat(?:_[^=;]*)?=[1-9]/.test(cookie)
 }
 
-export type DashboardEntryInput = {
-  /** La landing est la première page de l'onglet (pas une navigation interne). */
-  isDirectEntry: boolean
-  hasClerkParams: boolean
-  session: EntrySession | null
-  alreadyHandled: boolean
-  now: number
-}
+/**
+ * Ouverture de la landing (`/` d'indiehost.fr, pas un domaine d'annonce) par un navigateur qui a
+ * une session Clerk : la page attend Clerk sous l'écran de chargement au lieu de montrer la landing.
+ */
+export const landingEntryMayBeSignedIn =
+  typeof window !== 'undefined' &&
+  window.location.pathname === '/' &&
+  !isListingHostname(window.location.hostname) &&
+  hasClerkSessionCookie()
 
-export function shouldOpenDashboardOnEntry(input: DashboardEntryInput): boolean {
-  const { session } = input
-  if (!session?.id) return false
-  if (input.alreadyHandled || !input.isDirectEntry) return false
-  if (session.hasActor || input.hasClerkParams) return true
-
-  const createdAt = session.createdAt instanceof Date ? session.createdAt.getTime() : Number(session.createdAt)
-  if (!Number.isFinite(createdAt)) return false
-  const age = input.now - createdAt
-  return age >= 0 && age <= FRESH_SESSION_MS
-}
-
-const HANDLED_STORAGE_PREFIX = 'indiehost:dashboard-entry:'
-
-export function wasDashboardEntryHandled(sessionId: string): boolean {
-  try {
-    return window.localStorage.getItem(`${HANDLED_STORAGE_PREFIX}${sessionId}`) === '1'
-  } catch {
-    return false
-  }
-}
-
-export function markDashboardEntryHandled(sessionId: string) {
-  try {
-    window.localStorage.setItem(`${HANDLED_STORAGE_PREFIX}${sessionId}`, '1')
-  } catch {
-    // Stockage indisponible (navigation privée) : la redirection reste limitée à l'arrivée directe.
+type ClerkRuntime = Window & {
+  Clerk?: {
+    loaded?: boolean
+    user?: { id?: string | null } | null
   }
 }
 
 /**
- * Lien à jeton qui pointe sur `/` : la page de connexion (ou d'inscription, pour une
- * invitation) sait consommer `__clerk_ticket`, la landing non.
+ * Identifiant de l'utilisateur connecté dès que Clerk est chargé, `null` sans session.
+ * Rend `null` aussi si Clerk n'a pas répondu dans le délai : la landing s'affiche alors, et
+ * `useDashboardEntryRedirect` prend le relais.
+ */
+export async function waitForClerkUserId(maxWaitMs: number, pollIntervalMs = 50): Promise<string | null> {
+  if (typeof window === 'undefined') return null
+
+  const deadline = Date.now() + maxWaitMs
+  for (;;) {
+    const clerk = (window as ClerkRuntime).Clerk
+    if (clerk?.loaded) {
+      const userId = typeof clerk.user?.id === 'string' ? clerk.user.id.trim() : ''
+      return userId || null
+    }
+    if (Date.now() >= deadline) return null
+    await new Promise((resolve) => {
+      window.setTimeout(resolve, pollIntervalMs)
+    })
+  }
+}
+
+/**
+ * Lien à jeton qui pointe sur `/` (jeton de connexion, « Impersonate » du Clerk Dashboard,
+ * invitation) : la page de connexion (ou d'inscription, pour une invitation) sait consommer
+ * `__clerk_ticket`, la landing non.
  */
 export function resolveTicketEntryRoute(query: Record<string, unknown>): { name: 'sign-in' | 'sign-up'; query: Record<string, string> } | null {
   const ticket = typeof query.__clerk_ticket === 'string' ? query.__clerk_ticket.trim() : ''

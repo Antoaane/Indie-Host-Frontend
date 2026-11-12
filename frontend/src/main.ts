@@ -1,7 +1,5 @@
 // File: src/main.ts
 
-// En premier : lit l'URL d'arrivée avant que Clerk n'en retire ses paramètres.
-import '@/utils/authEntry'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import { clerkPlugin } from '@clerk/vue'

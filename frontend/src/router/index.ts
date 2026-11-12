@@ -2,12 +2,12 @@
 
 import SignInView from '@/views/SignInView.vue'
 import SignUpView from '@/views/SignUpView.vue'
-import { createRouter, createWebHistory, type RouteLocationNormalized } from 'vue-router'
+import { START_LOCATION, createRouter, createWebHistory, type RouteLocationNormalized } from 'vue-router'
 import { injectHead, type VueHeadClient } from '@unhead/vue'
 import { isListingHostname } from '@/domain/listings/publicDomain'
 import { normalizeListingSlug } from '@/domain/listings/slug'
 import { resolveRuntimeUserId } from '@/router/backOfficeUser'
-import { resolveTicketEntryRoute } from '@/utils/authEntry'
+import { DASHBOARD_ENTRY_PATH, hasClerkSessionCookie, resolveTicketEntryRoute, waitForClerkUserId } from '@/utils/authEntry'
 // Import direct : ses styles partent dans le CSS principal et habillent dès le premier rendu
 // la version statique des documents générée au build (lisible sans JavaScript).
 import LegalPage from '@/views/Legal/LegalPage.vue'
@@ -39,6 +39,10 @@ declare module 'vue-router' {
     title?: string
   }
 }
+
+// Attente de Clerk à l'ouverture de la landing avec une session. Au-delà, la landing s'affiche et
+// `useDashboardEntryRedirect` envoie l'hôte sur ses annonces dès que Clerk répond.
+const LANDING_SESSION_WAIT_MS = 4000
 
 const SITE_NAME = 'IndieHost'
 const HOME_TITLE = 'IndieHost — Location saisonnière sans commission'
@@ -453,12 +457,21 @@ const router = createRouter({
   ],
 })
 
-router.beforeEach((to) => {
+router.beforeEach(async (to, from) => {
   if (typeof window === 'undefined') return true
   if (!isListingHostname(window.location.hostname)) {
+    if (to.name !== 'home') return true
     // Lien à jeton Clerk qui pointe sur l'accueil : la page de connexion consomme le jeton
     // puis ouvre le tableau de bord, sans passer par la landing.
-    if (to.name === 'home') return resolveTicketEntryRoute(to.query) ?? true
+    const ticketRoute = resolveTicketEntryRoute(to.query)
+    if (ticketRoute) return ticketRoute
+    // Hôte connecté qui ouvre indiehost.fr : ses annonces, sans voir la landing. On attend Clerk
+    // (sous l'écran de chargement) seulement si son cookie annonce une session, et seulement à
+    // l'ouverture de la page : un lien interne vers la landing l'affiche toujours.
+    if (from === START_LOCATION && hasClerkSessionCookie()) {
+      const userId = await waitForClerkUserId(LANDING_SESSION_WAIT_MS)
+      if (userId) return DASHBOARD_ENTRY_PATH
+    }
     return true
   }
   // Les documents légaux restent accessibles aux voyageurs sur le domaine de l'hôte.

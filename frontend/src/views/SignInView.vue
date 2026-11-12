@@ -6,6 +6,8 @@ import { SignIn, useAuth } from '@clerk/vue'
 import { computed, watchEffect } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import { resolvePostAuthRedirect } from '@/utils/authEntry'
+
 const route = useRoute()
 const router = useRouter()
 const { isLoaded, isSignedIn } = useAuth()
@@ -19,16 +21,14 @@ function readQueryValue(value: unknown): string | null {
   return null
 }
 
-const redirectUrl = computed(() => {
-  return readQueryValue(route.query.redirect_url) ?? '/dashboard/editor'
-})
+// Connexion depuis la landing (ou une page légale) : le tableau de bord, pas un retour à la
+// page marketing. Chemin interne uniquement (pas de redirection ouverte).
+const redirectUrl = computed(() => resolvePostAuthRedirect(readQueryValue(route.query.redirect_url)))
 
-// Déjà connecté : Clerk n'affiche rien ici, la page restait vide. On renvoie vers
-// la destination, uniquement si c'est un chemin interne (pas de redirection ouverte).
+// Déjà connecté : Clerk n'affiche rien ici, la page restait vide. On renvoie vers la destination.
 watchEffect(() => {
   if (!isLoaded.value || !isSignedIn.value) return
-  const target = redirectUrl.value
-  void router.replace(target.startsWith('/') && !target.startsWith('//') ? target : '/dashboard/editor')
+  void router.replace(redirectUrl.value)
 })
 
 const signUpUrl = computed(() => {
