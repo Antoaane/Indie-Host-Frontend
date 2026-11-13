@@ -3,7 +3,8 @@
 <!-- Administration d'IndieHost, réservée aux comptes administrateurs (dev@indiehost.fr) :
      Aperçu (abonnés, chiffres, points d'attention), Comptes (droits, abonnements, invitations),
      Paiements (réussis et refusés) et Services (santé en direct, carte du code floorplan).
-     L'onglet ouvert est gardé dans l'adresse (`?onglet=…` : `?vue=` est pris par Vite en développement).
+     L'onglet ouvert est gardé dans l'adresse (`?onglet=…` : `?vue=` est pris par Vite en développement),
+     comme la liste ouverte dans Paiements (`&liste=reservations`, les abonnements sinon).
      Ordinateur : toute la largeur, une colonne de navigation à gauche et la section à droite, qui
      défile seule. Téléphone : onglets en pastilles en haut, la page défile. -->
 
@@ -12,7 +13,7 @@ import { computed, nextTick, ref, watch, type Component } from 'vue'
 import { useRoute, useRouter, type LocationQueryRaw } from 'vue-router'
 import { Activity, CreditCard, LayoutDashboard, LogOut, Users } from 'lucide-vue-next'
 
-import type { AdminOverview, AdminPayments, AdminTab } from '@/domain/api/admin'
+import type { AdminNavigationTarget, AdminOverview, AdminPaymentList, AdminPayments, AdminTab } from '@/domain/api/admin'
 import { vp } from '@/utils/viewport'
 import { SERVICE_STATUS, formatCount } from '@/views/Admin/adminFormat'
 import { useAdminDataSource } from '@/views/Admin/adminDataSource'
@@ -41,7 +42,7 @@ const source = useAdminDataSource()
 const TABS: Array<{ id: AdminTab; slug: string; label: string; icon: Component; description: string }> = [
   { id: 'overview', slug: 'apercu', label: 'Aperçu', icon: LayoutDashboard, description: 'Abonnés, revenus et points qui demandent une action.' },
   { id: 'users', slug: 'utilisateurs', label: 'Comptes', icon: Users, description: 'Droits, abonnements et invitations des hôtes.' },
-  { id: 'payments', slug: 'paiements', label: 'Paiements', icon: CreditCard, description: 'Abonnements et réservations des 90 derniers jours, réussis ou refusés.' },
+  { id: 'payments', slug: 'paiements', label: 'Paiements', icon: CreditCard, description: 'Abonnements des 90 derniers jours. Réservations des hôtes pour information.' },
   { id: 'services', slug: 'services', label: 'Services', icon: Activity, description: 'Santé de chaque service, mesurée en continu, et carte du code.' },
 ]
 
@@ -56,12 +57,22 @@ const activeTab = computed<AdminTab>(() => {
 
 const isAllowed = computed(() => props.access === 'allowed')
 
-function goTo(tab: AdminTab, userId?: string | null) {
+// Liste ouverte dans Paiements : ce que reçoit IndieHost, ou les réservations des hôtes.
+const paymentList = computed<AdminPaymentList>(() => (route.query.liste === 'reservations' ? 'reservations' : 'platform'))
+
+function goTo(tab: AdminTab, options?: { userId?: string | null; paymentList?: AdminPaymentList }) {
   const slug = TABS.find((entry) => entry.id === tab)?.slug ?? 'apercu'
   const query: LocationQueryRaw = { ...route.query, onglet: slug }
-  if (tab === 'users' && userId) query.userId = userId
+  if (tab === 'users' && options?.userId) query.userId = options.userId
   else if (tab !== 'users') delete query.userId
+  // La liste ne vaut que pour l'onglet Paiements ; sans précision, celle déjà ouverte reste.
+  if (tab !== 'payments' || options?.paymentList === 'platform') delete query.liste
+  else if (options?.paymentList === 'reservations') query.liste = 'reservations'
   void router.replace({ query })
+}
+
+function openTarget(target: AdminNavigationTarget) {
+  goTo(target.tab, { userId: target.userId, paymentList: target.paymentList })
 }
 
 const activeMeta = computed(() => TABS.find((tab) => tab.id === activeTab.value) ?? TABS[0]!)
@@ -316,7 +327,7 @@ watch([activeTab, isAllowed], ([tab, allowed]) => {
               :health="healthState.health.value"
               :is-loading="isLoadingOverview"
               :error="overviewError"
-              @navigate="goTo"
+              @navigate="openTarget"
               @refresh="loadOverview({ refresh: true })"
             />
             <AdminUsersSection
@@ -326,10 +337,12 @@ watch([activeTab, isAllowed], ([tab, allowed]) => {
             <AdminPaymentsSection
               v-else-if="activeTab === 'payments'"
               :payments="payments"
+              :list="paymentList"
               :is-loading="isLoadingPayments"
               :error="paymentsError"
               @refresh="loadPayments({ refresh: true })"
-              @open-user="(userId) => goTo('users', userId)"
+              @update:list="(list) => goTo('payments', { paymentList: list })"
+              @open-user="(userId) => goTo('users', { userId })"
             />
             <AdminServicesSection
               v-else

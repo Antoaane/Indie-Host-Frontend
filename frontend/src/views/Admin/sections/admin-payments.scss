@@ -12,26 +12,44 @@
   flex-direction: column;
   gap: var(--layout-gap-xl);
 
-  // Une seule rangée de filtres, au-dessus de tout ce qu'ils filtrent.
+  // D'abord la liste ouverte (deux listes distinctes, jamais additionnées) et la relecture, puis le
+  // filtre d'état, qui ne vaut que pour la liste ouverte.
   > .filters {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-start;
     gap: var(--layout-gap-sm);
 
-    > .chips {
+    // Les deux listes restent sur une ligne ; s'il manque de la place, la relecture passe dessous.
+    > .line {
+      align-self: stretch;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--layout-gap-sm);
+
+      > .refresh {
+        margin-left: auto;
+        @include buttons.primary($theme: white, $icon-only: true, $little: true);
+      }
+    }
+
+    .chips {
       flex: 0 1 auto;
       max-width: 100%;
       @include kit.segmented;
 
-      // Sur téléphone, les filtres passent à la ligne plutôt que de défiler cachés.
       & {
-        flex-wrap: wrap;
         overflow: visible;
       }
 
       > * {
         flex: 0 0 auto;
+      }
+
+      // Sur téléphone, les filtres d'état passent à la ligne plutôt que de défiler cachés.
+      &.is-status {
+        flex-wrap: wrap;
       }
 
       .count {
@@ -46,11 +64,6 @@
       > .is-active .count {
         background: rgba($accent, 0.2);
       }
-    }
-
-    > .refresh {
-      margin-left: auto;
-      @include buttons.primary($theme: white, $icon-only: true, $little: true);
     }
   }
 
@@ -72,6 +85,30 @@
 
     > .notice {
       @include kit.notice;
+    }
+
+    // Réservations des hôtes : dit d'emblée que cet argent n'est pas celui d'IndieHost.
+    > .aside {
+      max-width: 75ch;
+      display: flex;
+      align-items: flex-start;
+      gap: var(--layout-gap-xs);
+      @include base-text(rgba($secondary-text, 0.8), $thin: false);
+
+      > svg {
+        flex: 0 0 auto;
+        margin-top: var(--layout-gap-2xs);
+      }
+
+      // La règle typographique globale colore chaque élément : le texte suit son paragraphe.
+      > span {
+        min-width: 0;
+        color: inherit;
+
+        > strong {
+          color: $secondary-text;
+        }
+      }
     }
 
     > .tiles {

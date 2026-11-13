@@ -1,7 +1,10 @@
-// Paiements vus par l'administration, réussis comme refusés, sur 90 jours :
-// - abonnements des hôtes à IndieHost : paiements du compte Stripe d'IndieHost (lus chez Stripe) ;
-// - réservations : paiements des voyageurs sur le compte Stripe de chaque hôte (table Payment, tenue
-//   à jour par les webhooks des comptes connectés).
+// Paiements vus par l'administration, réussis comme refusés, sur 90 jours, en deux listes qui ne
+// s'additionnent jamais :
+// - `platform` : paiements reçus par IndieHost sur son compte Stripe (abonnements des hôtes, lus chez
+//   Stripe). Seuls comptés dans les chiffres de la page ;
+// - `reservations` : paiements des voyageurs sur le compte Stripe de chaque hôte (table Payment, tenue
+//   à jour par les webhooks des comptes connectés). IndieHost n'en touche rien : ils sont listés pour
+//   information (aider un hôte : carte refusée, litige, remboursement), sans total encaissé.
 // Un paiement jamais tenté (voyageur parti avant de payer) n'est pas listé.
 
 import type { PrismaClient } from '@prisma/client';
@@ -37,19 +40,31 @@ export type AdminPaymentRow = {
   stripeUrl: string | null;
 };
 
+export type AdminPaymentTotals = {
+  /** Paiements réussis sur 30 jours (remboursés en partie compris). */
+  succeededCount: number;
+  /** Encaissé sur 30 jours, remboursements déduits. */
+  succeededMinor: number;
+  failedCount: number;
+  refundedMinor: number;
+  /** Litiges ouverts parmi les paiements des 90 jours. */
+  disputedCount: number;
+  currency: string;
+};
+
 export type AdminPaymentsResponse = {
   generatedAtISO: string;
-  stripeAvailable: boolean;
   periodDays: number;
-  totals: {
-    succeededCount: number;
-    succeededMinor: number;
+  /** Paiements reçus par IndieHost ; null quand Stripe ne répond pas (pas de « 0 € » trompeur). */
+  platform: { totals: AdminPaymentTotals; rows: AdminPaymentRow[] } | null;
+  /** Réservations encaissées par les hôtes : pour information, jamais dans un total. */
+  reservations: {
+    /** Paiements refusés sur 30 jours. */
     failedCount: number;
-    refundedMinor: number;
+    /** Litiges ouverts parmi les paiements des 90 jours. */
     disputedCount: number;
-    currency: string;
+    rows: AdminPaymentRow[];
   };
-  rows: AdminPaymentRow[];
 };
 
 // Motifs de refus les plus courants (codes Stripe `decline_code` ou `code`).
@@ -261,7 +276,8 @@ async function loadReservationPayments(prisma: PrismaClient, since: number): Pro
       refundedMinor: refunded,
       currency: payment.currency,
       createdAtISO: payment.createdAt.toISOString(),
-      title: `Réservation · ${title}`,
+      // Liste à part : le nom du logement suffit.
+      title,
       detail: [reservation?.guestName, stay].filter(Boolean).join(' · ') || null,
       payer: reservation?.guestName ?? null,
       account: owner ? { userId: owner.id, label: userLabel(owner) } : null,
@@ -271,6 +287,45 @@ async function loadReservationPayments(prisma: PrismaClient, since: number): Pro
     });
   }
   return rows;
+}
+
+const SETTLED_STATUSES = new Set<AdminPaymentStatus>(['succeeded', 'partially_refunded', 'refunded', 'disputed']);
+
+function byNewest(a: AdminPaymentRow, b: AdminPaymentRow): number {
+  return Date.parse(b.createdAtISO) - Date.parse(a.createdAtISO);
+}
+
+/** Chiffres d'IndieHost, sur ses seuls paiements : jamais ceux des réservations, encaissés par les hôtes. */
+export function summarizePlatformPayments(rows: AdminPaymentRow[], now: number): AdminPaymentTotals {
+  const since30 = now - 30 * DAY_MS;
+  const recent = rows.filter((row) => Date.parse(row.createdAtISO) >= since30);
+  return {
+    succeededCount: recent.filter((row) => row.status === 'succeeded' || row.status === 'partially_refunded').length,
+    succeededMinor: recent
+      .filter((row) => SETTLED_STATUSES.has(row.status))
+      .reduce((sum, row) => sum + Math.max(0, row.amountMinor - row.refundedMinor), 0),
+    failedCount: recent.filter((row) => row.status === 'failed').length,
+    refundedMinor: recent.reduce((sum, row) => sum + row.refundedMinor, 0),
+    disputedCount: rows.filter((row) => row.status === 'disputed').length,
+    currency: 'eur',
+  };
+}
+
+/** Assemble la réponse à partir des deux listes (`platform` à null quand Stripe ne répond pas). */
+export function assembleAdminPayments(platformRows: AdminPaymentRow[] | null, reservationRows: AdminPaymentRow[], now: number): AdminPaymentsResponse {
+  const since30 = now - 30 * DAY_MS;
+  const platform = platformRows ? [...platformRows].sort(byNewest) : null;
+  const reservations = [...reservationRows].sort(byNewest);
+  return {
+    generatedAtISO: new Date(now).toISOString(),
+    periodDays: PERIOD_DAYS,
+    platform: platform ? { totals: summarizePlatformPayments(platform, now), rows: platform } : null,
+    reservations: {
+      failedCount: reservations.filter((row) => row.status === 'failed' && Date.parse(row.createdAtISO) >= since30).length,
+      disputedCount: reservations.filter((row) => row.status === 'disputed').length,
+      rows: reservations,
+    },
+  };
 }
 
 export async function buildAdminPayments(prisma: PrismaClient, options?: { refresh?: boolean }): Promise<AdminPaymentsResponse> {
@@ -285,24 +340,5 @@ export async function buildAdminPayments(prisma: PrismaClient, options?: { refre
   }
   const reservations = await loadReservationPayments(prisma, since);
 
-  const rows = [...(platform ?? []), ...reservations].sort((a, b) => Date.parse(b.createdAtISO) - Date.parse(a.createdAtISO));
-
-  const since30 = now - 30 * DAY_MS;
-  const recent = rows.filter((row) => Date.parse(row.createdAtISO) >= since30);
-  const settled = recent.filter((row) => row.status === 'succeeded' || row.status === 'partially_refunded' || row.status === 'refunded' || row.status === 'disputed');
-
-  return {
-    generatedAtISO: new Date(now).toISOString(),
-    stripeAvailable: platform !== null,
-    periodDays: PERIOD_DAYS,
-    totals: {
-      succeededCount: recent.filter((row) => row.status === 'succeeded' || row.status === 'partially_refunded').length,
-      succeededMinor: settled.reduce((sum, row) => sum + Math.max(0, row.amountMinor - row.refundedMinor), 0),
-      failedCount: recent.filter((row) => row.status === 'failed').length,
-      refundedMinor: recent.reduce((sum, row) => sum + row.refundedMinor, 0),
-      disputedCount: rows.filter((row) => row.status === 'disputed').length,
-      currency: 'eur',
-    },
-    rows: rows.slice(0, 300),
-  };
+  return assembleAdminPayments(platform, reservations, now);
 }

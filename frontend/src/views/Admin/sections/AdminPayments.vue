@@ -1,44 +1,46 @@
 <!-- File: src/views/Admin/sections/AdminPayments.vue -->
 
-<!-- Paiements des 90 derniers jours, réussis comme refusés : abonnements des hôtes à IndieHost
-     (compte Stripe d'IndieHost) et réservations des voyageurs (compte Stripe de chaque hôte).
-     Un refus porte son motif ; un paiement d'abonnement s'ouvre dans le tableau de bord Stripe. -->
+<!-- Paiements des 90 derniers jours, réussis comme refusés, en deux listes qui ne s'additionnent jamais :
+     « Abonnements », ce que reçoit IndieHost sur son compte Stripe (seuls ces paiements font les chiffres
+     du haut), et « Réservations des hôtes », payées par les voyageurs sur le compte Stripe de chaque
+     hôte. IndieHost n'en touche rien : elles sont montrées pour information (carte refusée, litige), avec
+     leurs refus et leurs litiges, sans total encaissé. Un refus porte son motif ; un paiement reçu par
+     IndieHost s'ouvre dans son tableau de bord Stripe. -->
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { ArrowUpRight, RefreshCw } from 'lucide-vue-next'
+import { ArrowUpRight, Info, RefreshCw } from 'lucide-vue-next'
 
-import type { AdminPaymentRow, AdminPayments } from '@/domain/api/admin'
+import type { AdminPaymentList, AdminPaymentRow, AdminPayments } from '@/domain/api/admin'
 import { PAYMENT_STATUS, formatCount, formatDateTime, formatMoney, pluralize } from '@/views/Admin/adminFormat'
 
 const props = defineProps<{
   payments: AdminPayments | null
+  list: AdminPaymentList
   isLoading: boolean
   error: string | null
 }>()
 
 const emit = defineEmits<{
   (e: 'refresh'): void
+  (e: 'update:list', list: AdminPaymentList): void
   (e: 'open-user', userId: string): void
 }>()
 
 type StatusFilter = 'all' | 'succeeded' | 'failed' | 'refunds'
-type SourceFilter = 'all' | 'subscription' | 'reservation'
 
 const statusFilter = ref<StatusFilter>('all')
-const sourceFilter = ref<SourceFilter>('all')
+
+const LISTS: Array<{ id: AdminPaymentList; label: string }> = [
+  { id: 'platform', label: 'Abonnements' },
+  { id: 'reservations', label: 'Réservations des hôtes' },
+]
 
 const STATUS_FILTERS: Array<{ id: StatusFilter; label: string }> = [
   { id: 'all', label: 'Tous' },
   { id: 'succeeded', label: 'Réussis' },
   { id: 'failed', label: 'Refusés' },
   { id: 'refunds', label: 'Remboursés et litiges' },
-]
-
-const SOURCE_FILTERS: Array<{ id: SourceFilter; label: string }> = [
-  { id: 'all', label: 'Tout' },
-  { id: 'subscription', label: 'Abonnements' },
-  { id: 'reservation', label: 'Réservations' },
 ]
 
 function matchesStatus(row: AdminPaymentRow, filter: StatusFilter): boolean {
@@ -54,32 +56,52 @@ function matchesStatus(row: AdminPaymentRow, filter: StatusFilter): boolean {
   }
 }
 
-function matchesSource(row: AdminPaymentRow, filter: SourceFilter): boolean {
-  if (filter === 'all') return true
-  if (filter === 'subscription') return row.source === 'subscription' || row.source === 'other'
-  return row.source === 'reservation'
-}
+const isReservations = computed(() => props.list === 'reservations')
 
-const rows = computed(() => (props.payments?.rows ?? []).filter((row) => matchesStatus(row, statusFilter.value) && matchesSource(row, sourceFilter.value)))
+// Lignes de la liste ouverte, avant le filtre d'état.
+const listRows = computed<AdminPaymentRow[]>(() => {
+  const payments = props.payments
+  if (!payments) return []
+  return isReservations.value ? payments.reservations.rows : payments.platform?.rows ?? []
+})
+
+const rows = computed(() => listRows.value.filter((row) => matchesStatus(row, statusFilter.value)))
 
 function countFor(filter: StatusFilter): number {
-  return (props.payments?.rows ?? []).filter((row) => matchesStatus(row, filter) && matchesSource(row, sourceFilter.value)).length
+  return listRows.value.filter((row) => matchesStatus(row, filter)).length
 }
 
+// Chiffres du haut. Abonnements : ce qu'IndieHost a reçu. Réservations : leurs refus et leurs litiges,
+// jamais de montant total (cet argent est aux hôtes).
 const tiles = computed(() => {
-  const totals = props.payments?.totals
+  const payments = props.payments
+  if (!payments) return []
+  if (isReservations.value) {
+    const { failedCount, disputedCount } = payments.reservations
+    return [
+      { label: 'Refusés sur 30 jours', value: formatCount(failedCount), hint: failedCount ? 'le voyageur n’a pas réservé' : 'aucun refus', tone: failedCount ? 'is-bad' : '' },
+      { label: 'Litiges en cours', value: formatCount(disputedCount), hint: disputedCount ? 'l’hôte répond dans son tableau de bord Stripe' : 'aucun litige', tone: disputedCount ? 'is-bad' : '' },
+    ]
+  }
+  const totals = payments.platform?.totals
   if (!totals) return []
   return [
     { label: 'Encaissé sur 30 jours', value: formatMoney(totals.succeededMinor, totals.currency), hint: pluralize(totals.succeededCount, 'paiement réussi', 'paiements réussis'), tone: '' },
     { label: 'Refusés sur 30 jours', value: formatCount(totals.failedCount), hint: totals.failedCount ? 'carte refusée ou 3-D Secure non validé' : 'aucun refus', tone: totals.failedCount ? 'is-bad' : '' },
-    { label: 'Remboursé sur 30 jours', value: formatMoney(totals.refundedMinor, totals.currency), hint: 'aux voyageurs ou aux hôtes', tone: '' },
-    { label: 'Litiges en cours', value: formatCount(totals.disputedCount), hint: totals.disputedCount ? 'à traiter par l’hôte dans Stripe' : 'aucun litige', tone: totals.disputedCount ? 'is-bad' : '' },
+    { label: 'Remboursé sur 30 jours', value: formatMoney(totals.refundedMinor, totals.currency), hint: 'aux hôtes', tone: '' },
+    { label: 'Litiges en cours', value: formatCount(totals.disputedCount), hint: totals.disputedCount ? 'à traiter dans Stripe' : 'aucun litige', tone: totals.disputedCount ? 'is-bad' : '' },
   ]
 })
 
+// Liste des abonnements sans Stripe : un message à la place des chiffres et des lignes.
+const isPlatformUnavailable = computed(() => Boolean(props.payments) && !isReservations.value && !props.payments?.platform)
+
 const emptyText = computed(() => {
-  if (!props.payments?.rows.length) return `Aucun paiement sur les ${props.payments?.periodDays ?? 90} derniers jours.`
-  return 'Aucun paiement ne correspond à ces filtres.'
+  const days = props.payments?.periodDays ?? 90
+  if (listRows.value.length) return 'Aucun paiement ne correspond à ce filtre.'
+  return isReservations.value
+    ? `Aucun paiement de réservation sur les ${days} derniers jours.`
+    : `Aucun paiement reçu par IndieHost sur les ${days} derniers jours.`
 })
 </script>
 
@@ -89,8 +111,44 @@ const emptyText = computed(() => {
     aria-label="Paiements"
   >
     <div class="filters">
+      <div class="line">
+        <div
+          class="chips"
+          role="group"
+          aria-label="Paiements affichés"
+        >
+          <div
+            v-for="entry in LISTS"
+            :key="entry.id"
+            :class="{ 'is-active': list === entry.id }"
+          >
+            <button
+              type="button"
+              :aria-pressed="list === entry.id"
+              @click="emit('update:list', entry.id)"
+            >
+              {{ entry.label }}
+            </button>
+          </div>
+        </div>
+        <div class="refresh">
+          <button
+            type="button"
+            :disabled="isLoading"
+            aria-label="Relire les paiements"
+            title="Relire les paiements"
+            @click="emit('refresh')"
+          >
+            <RefreshCw
+              :size="16"
+              aria-hidden="true"
+            />
+          </button>
+        </div>
+      </div>
       <div
-        class="chips"
+        v-if="!isPlatformUnavailable"
+        class="chips is-status"
         role="group"
         aria-label="État du paiement"
       >
@@ -111,39 +169,6 @@ const emptyText = computed(() => {
             >{{ countFor(filter.id) }}</span>
           </button>
         </div>
-      </div>
-      <div
-        class="chips"
-        role="group"
-        aria-label="Origine du paiement"
-      >
-        <div
-          v-for="filter in SOURCE_FILTERS"
-          :key="filter.id"
-          :class="{ 'is-active': sourceFilter === filter.id }"
-        >
-          <button
-            type="button"
-            :aria-pressed="sourceFilter === filter.id"
-            @click="sourceFilter = filter.id"
-          >
-            {{ filter.label }}
-          </button>
-        </div>
-      </div>
-      <div class="refresh">
-        <button
-          type="button"
-          :disabled="isLoading"
-          aria-label="Relire les paiements chez Stripe"
-          title="Relire les paiements chez Stripe"
-          @click="emit('refresh')"
-        >
-          <RefreshCw
-            :size="16"
-            aria-hidden="true"
-          />
-        </button>
       </div>
     </div>
 
@@ -181,13 +206,27 @@ const emptyText = computed(() => {
       :class="{ 'is-refreshing': isLoading }"
     >
       <p
-        v-if="!payments.stripeAvailable"
-        class="notice"
+        v-if="isReservations"
+        class="aside"
       >
-        Stripe ne répond pas : seuls les paiements des réservations sont affichés, les abonnements reviendront au prochain chargement.
+        <Info
+          :size="16"
+          aria-hidden="true"
+        />
+        <span><strong>Pour information.</strong> Les voyageurs paient sur le compte Stripe de l’hôte : IndieHost n’en touche rien, et ces paiements n’entrent dans aucun de ses chiffres.</span>
       </p>
 
-      <dl class="tiles">
+      <p
+        v-if="isPlatformUnavailable"
+        class="notice"
+      >
+        Stripe ne répond pas : les paiements reçus par IndieHost reviendront au prochain chargement.
+      </p>
+
+      <dl
+        v-if="tiles.length"
+        class="tiles"
+      >
         <div
           v-for="tile in tiles"
           :key="tile.label"
@@ -267,14 +306,19 @@ const emptyText = computed(() => {
         </li>
       </ul>
       <p
-        v-else
+        v-else-if="!isPlatformUnavailable"
         class="empty"
       >
         {{ emptyText }}
       </p>
 
       <p class="footnote">
-        Paiements des {{ payments.periodDays }} derniers jours. Un voyageur parti avant de payer n’apparaît pas. Les réservations sont payées sur le compte Stripe de l’hôte : leur détail est dans son tableau de bord Stripe, pas dans celui d’IndieHost.
+        <template v-if="isReservations">
+          Réservations des {{ payments.periodDays }} derniers jours. Un voyageur parti avant de payer n’apparaît pas. Le détail de chaque paiement est dans le tableau de bord Stripe de l’hôte, pas dans celui d’IndieHost.
+        </template>
+        <template v-else>
+          Paiements reçus par IndieHost sur les {{ payments.periodDays }} derniers jours, lus chez Stripe. Une page de paiement quittée sans payer n’apparaît pas.
+        </template>
       </p>
     </div>
   </section>

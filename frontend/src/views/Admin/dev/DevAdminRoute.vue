@@ -1,7 +1,8 @@
 <!-- File: src/views/Admin/dev/DevAdminRoute.vue -->
 
 <!-- Administration sur de fausses données, sans compte ni API (développement seulement).
-     `?etat=panne` : panne de la base ; `?acces=refuse` : compte sans droits ; `?onglet=…` : onglet. -->
+     `?etat=panne` : panne de la base ; `?etat=sans-stripe` : Stripe ne répond pas ;
+     `?acces=refuse` : compte sans droits ; `?onglet=…` : onglet. -->
 
 <script setup lang="ts">
 import { computed, provide } from 'vue'
@@ -13,7 +14,7 @@ import { createDevAdminDataSource } from '@/views/Admin/dev/devAdminData'
 
 const route = useRoute()
 
-provide(ADMIN_DATA_SOURCE, createDevAdminDataSource({ outage: route.query.etat === 'panne' }))
+provide(ADMIN_DATA_SOURCE, createDevAdminDataSource({ outage: route.query.etat === 'panne', stripeDown: route.query.etat === 'sans-stripe' }))
 
 const access = computed(() => (route.query.acces === 'refuse' ? 'denied' : 'allowed'))
 </script>

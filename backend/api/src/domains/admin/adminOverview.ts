@@ -24,7 +24,8 @@ export type AdminAttentionItem = {
   tone: 'bad' | 'warn';
   title: string;
   detail: string;
-  target: { tab: 'users' | 'payments' | 'services'; userId?: string | null };
+  /** Écran qui traite le point ; `paymentList` : liste ouverte dans Paiements (IndieHost ou réservations des hôtes). */
+  target: { tab: 'users' | 'payments' | 'services'; userId?: string | null; paymentList?: 'platform' | 'reservations' };
 };
 
 export type AdminOverview = {
@@ -322,7 +323,7 @@ export async function buildAdminOverview(
       tone: 'bad',
       title: 'Litige ouvert sur une réservation',
       detail: `${listingTitle(dispute.listing?.core)} · ${euroFormatter.format(dispute.amountMinor / 100)}${dispute.disputeReason ? ` · motif : ${dispute.disputeReason}` : ''}. L’hôte répond dans son tableau de bord Stripe.`,
-      target: { tab: 'payments' },
+      target: { tab: 'payments', paymentList: 'reservations' },
     });
   }
 
@@ -332,7 +333,7 @@ export async function buildAdminOverview(
       tone: 'bad',
       title: 'Remboursement échoué',
       detail: `${listingTitle(refund.listing?.core)}${refund.refundFailureReason ? ` · ${refund.refundFailureReason}` : ''}`,
-      target: { tab: 'payments' },
+      target: { tab: 'payments', paymentList: 'reservations' },
     });
   }
 
@@ -354,7 +355,7 @@ export async function buildAdminOverview(
       tone: 'warn',
       title: recentFailures > 1 ? `${recentFailures} paiements de voyageurs refusés cette semaine` : 'Un paiement de voyageur refusé cette semaine',
       detail: 'Carte refusée ou 3-D Secure non validé : le voyageur n’a pas réservé.',
-      target: { tab: 'payments' },
+      target: { tab: 'payments', paymentList: 'reservations' },
     });
   }
 

@@ -7,7 +7,7 @@
 import { computed } from 'vue'
 import { ArrowRight, CircleCheck, RefreshCw, TriangleAlert } from 'lucide-vue-next'
 
-import type { AdminAttentionItem, AdminOverview, AdminTab, SystemHealth } from '@/domain/api/admin'
+import type { AdminAttentionItem, AdminNavigationTarget, AdminOverview, SystemHealth } from '@/domain/api/admin'
 import { SERVICE_STATUS, formatCount, formatMoney, pluralize } from '@/views/Admin/adminFormat'
 
 const props = defineProps<{
@@ -18,7 +18,7 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'navigate', tab: Exclude<AdminTab, 'overview'>, userId?: string | null): void
+  (e: 'navigate', target: AdminNavigationTarget): void
   (e: 'refresh'): void
 }>()
 
@@ -222,7 +222,7 @@ const ATTENTION_ACTION: Record<AdminAttentionItem['target']['tab'], string> = {
             <div class="go">
               <button
                 type="button"
-                @click="emit('navigate', item.target.tab, item.target.userId ?? null)"
+                @click="emit('navigate', item.target)"
               >
                 {{ ATTENTION_ACTION[item.target.tab] }}
                 <ArrowRight
@@ -261,7 +261,7 @@ const ATTENTION_ACTION: Record<AdminAttentionItem['target']['tab'], string> = {
           <div class="go">
             <button
               type="button"
-              @click="emit('navigate', 'services')"
+              @click="emit('navigate', { tab: 'services' })"
             >
               Voir le schéma
               <ArrowRight

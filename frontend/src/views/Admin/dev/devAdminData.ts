@@ -1,7 +1,8 @@
 // File: src/views/Admin/dev/devAdminData.ts
 
 // Données inventées pour la route de développement `/dev/admin` : aucun compte, aucune API.
-// `?etat=panne` simule une panne de la base et un calendrier en erreur.
+// `?etat=panne` simule une panne de la base et un calendrier en erreur ; `?etat=sans-stripe`, un
+// Stripe qui ne répond pas (paiements reçus par IndieHost indisponibles).
 
 import type {
   AdminOverview,
@@ -227,28 +228,38 @@ export const devOverview: AdminOverview = {
   reservations: { last30Days: 18, upcoming: 11, collectedLast30DaysMinor: 1_284_350, currency: 'eur' },
   attention: [
     { id: 'past-due-1', tone: 'warn', title: 'Abonnement impayé', detail: 'Julien Moreau : Stripe retente le prélèvement ; sans paiement, l’abonnement s’arrête.', target: { tab: 'users', userId: 'usr_julien' } },
-    { id: 'reservation-failures', tone: 'warn', title: '2 paiements de voyageurs refusés cette semaine', detail: 'Carte refusée ou 3-D Secure non validé : le voyageur n’a pas réservé.', target: { tab: 'payments' } },
+    { id: 'reservation-failures', tone: 'warn', title: '2 paiements de voyageurs refusés cette semaine', detail: 'Carte refusée ou 3-D Secure non validé : le voyageur n’a pas réservé.', target: { tab: 'payments', paymentList: 'reservations' } },
     { id: 'service-certificates', tone: 'warn', title: 'Certificats HTTPS : à surveiller', detail: 'Un certificat expire bientôt ou manque.', target: { tab: 'services' } },
   ],
 }
 
 // --- Paiements ----------------------------------------------------------------------------
 
+// Chiffres d'IndieHost tirés de ses seules lignes (comme l'API) : 19 € + 61 € reçus sur 30 jours,
+// deux refus ; le renouvellement de 45 jours est hors de la fenêtre.
 export const devPayments: AdminPayments = {
   generatedAtISO: iso(0),
-  stripeAvailable: true,
   periodDays: 90,
-  totals: { succeededCount: 21, succeededMinor: 1_342_150, failedCount: 3, refundedMinor: 42_000, disputedCount: 1, currency: 'eur' },
-  rows: [
-    { id: 'pi_dev_1', source: 'reservation', status: 'succeeded', amountMinor: 64_800, refundedMinor: 0, currency: 'eur', createdAtISO: iso(-2 * HOUR), title: 'Réservation · Gîte du Moulin', detail: 'Élise Bernard · du 20 déc. au 27 déc.', payer: 'Élise Bernard', account: { userId: 'usr_camille', label: 'Camille Durand' }, failureReason: null, stripeUrl: null },
-    { id: 'pi_dev_2', source: 'subscription', status: 'failed', amountMinor: 4_900, refundedMinor: 0, currency: 'eur', createdAtISO: iso(-9 * HOUR), title: 'Abonnement SuperHost', detail: 'Renouvellement', payer: 'Julien Moreau', account: { userId: 'usr_julien', label: 'Julien Moreau' }, failureReason: 'Fonds insuffisants', stripeUrl: 'https://dashboard.stripe.com/payments/pi_dev_2' },
-    { id: 'pi_dev_3', source: 'reservation', status: 'failed', amountMinor: 38_400, refundedMinor: 0, currency: 'eur', createdAtISO: iso(-26 * HOUR), title: 'Réservation · Appartement Les Voiles', detail: 'Marc Petit · du 3 janv. au 6 janv.', payer: 'Marc Petit', account: { userId: 'usr_sophie', label: 'Sophie Lefèvre' }, failureReason: 'Authentification 3-D Secure échouée', stripeUrl: null },
-    { id: 'pi_dev_4', source: 'subscription', status: 'succeeded', amountMinor: 1_900, refundedMinor: 0, currency: 'eur', createdAtISO: iso(-2 * DAY), title: 'Abonnement IndieHost', detail: 'Premier paiement', payer: 'Thomas Petit', account: { userId: 'usr_thomas', label: 'Thomas Petit' }, failureReason: null, stripeUrl: 'https://dashboard.stripe.com/payments/pi_dev_4' },
-    { id: 'pi_dev_5', source: 'reservation', status: 'refunded', amountMinor: 42_000, refundedMinor: 42_000, currency: 'eur', createdAtISO: iso(-4 * DAY), title: 'Réservation · Gîte du Moulin', detail: 'Laura Simon · du 14 nov. au 18 nov.', payer: 'Laura Simon', account: { userId: 'usr_camille', label: 'Camille Durand' }, failureReason: null, stripeUrl: null },
-    { id: 'pi_dev_6', source: 'reservation', status: 'disputed', amountMinor: 27_500, refundedMinor: 0, currency: 'eur', createdAtISO: iso(-11 * DAY), title: 'Réservation · Studio du Port', detail: 'Kevin Roux · du 1 nov. au 3 nov.', payer: 'Kevin Roux', account: { userId: 'usr_sophie', label: 'Sophie Lefèvre' }, failureReason: null, stripeUrl: null },
-    { id: 'pi_dev_7', source: 'subscription', status: 'succeeded', amountMinor: 6_100, refundedMinor: 0, currency: 'eur', createdAtISO: iso(-15 * DAY), title: 'Abonnement SuperHost', detail: 'Changement d’offre ou de logements', payer: 'Camille Durand', account: { userId: 'usr_camille', label: 'Camille Durand' }, failureReason: null, stripeUrl: 'https://dashboard.stripe.com/payments/pi_dev_7' },
-    { id: 'pi_dev_8', source: 'subscription', status: 'failed', amountMinor: 1_900, refundedMinor: 0, currency: 'eur', createdAtISO: iso(-21 * DAY), title: 'Abonnement IndieHost', detail: 'Renouvellement', payer: 'Nadia Garcia', account: { userId: 'usr_nadia', label: 'Nadia Garcia' }, failureReason: 'Carte expirée', stripeUrl: 'https://dashboard.stripe.com/payments/pi_dev_8' },
-  ],
+  platform: {
+    totals: { succeededCount: 2, succeededMinor: 8_000, failedCount: 2, refundedMinor: 0, disputedCount: 0, currency: 'eur' },
+    rows: [
+      { id: 'pi_dev_2', source: 'subscription', status: 'failed', amountMinor: 4_900, refundedMinor: 0, currency: 'eur', createdAtISO: iso(-9 * HOUR), title: 'Abonnement SuperHost', detail: 'Renouvellement', payer: 'Julien Moreau', account: { userId: 'usr_julien', label: 'Julien Moreau' }, failureReason: 'Fonds insuffisants', stripeUrl: 'https://dashboard.stripe.com/payments/pi_dev_2' },
+      { id: 'pi_dev_4', source: 'subscription', status: 'succeeded', amountMinor: 1_900, refundedMinor: 0, currency: 'eur', createdAtISO: iso(-2 * DAY), title: 'Abonnement IndieHost', detail: 'Premier paiement', payer: 'Thomas Petit', account: { userId: 'usr_thomas', label: 'Thomas Petit' }, failureReason: null, stripeUrl: 'https://dashboard.stripe.com/payments/pi_dev_4' },
+      { id: 'pi_dev_7', source: 'subscription', status: 'succeeded', amountMinor: 6_100, refundedMinor: 0, currency: 'eur', createdAtISO: iso(-15 * DAY), title: 'Abonnement SuperHost', detail: 'Changement d’offre ou de logements', payer: 'Camille Durand', account: { userId: 'usr_camille', label: 'Camille Durand' }, failureReason: null, stripeUrl: 'https://dashboard.stripe.com/payments/pi_dev_7' },
+      { id: 'pi_dev_8', source: 'subscription', status: 'failed', amountMinor: 1_900, refundedMinor: 0, currency: 'eur', createdAtISO: iso(-21 * DAY), title: 'Abonnement IndieHost', detail: 'Renouvellement', payer: 'Nadia Garcia', account: { userId: 'usr_nadia', label: 'Nadia Garcia' }, failureReason: 'Carte expirée', stripeUrl: 'https://dashboard.stripe.com/payments/pi_dev_8' },
+      { id: 'pi_dev_9', source: 'subscription', status: 'succeeded', amountMinor: 4_900, refundedMinor: 0, currency: 'eur', createdAtISO: iso(-45 * DAY), title: 'Abonnement SuperHost', detail: 'Renouvellement', payer: 'Camille Durand', account: { userId: 'usr_camille', label: 'Camille Durand' }, failureReason: null, stripeUrl: 'https://dashboard.stripe.com/payments/pi_dev_9' },
+    ],
+  },
+  reservations: {
+    failedCount: 1,
+    disputedCount: 1,
+    rows: [
+      { id: 'pi_dev_1', source: 'reservation', status: 'succeeded', amountMinor: 64_800, refundedMinor: 0, currency: 'eur', createdAtISO: iso(-2 * HOUR), title: 'Gîte du Moulin', detail: 'Élise Bernard · du 20 déc. au 27 déc.', payer: 'Élise Bernard', account: { userId: 'usr_camille', label: 'Camille Durand' }, failureReason: null, stripeUrl: null },
+      { id: 'pi_dev_3', source: 'reservation', status: 'failed', amountMinor: 38_400, refundedMinor: 0, currency: 'eur', createdAtISO: iso(-26 * HOUR), title: 'Appartement Les Voiles', detail: 'Marc Petit · du 3 janv. au 6 janv.', payer: 'Marc Petit', account: { userId: 'usr_sophie', label: 'Sophie Lefèvre' }, failureReason: 'Authentification 3-D Secure échouée', stripeUrl: null },
+      { id: 'pi_dev_5', source: 'reservation', status: 'refunded', amountMinor: 42_000, refundedMinor: 42_000, currency: 'eur', createdAtISO: iso(-4 * DAY), title: 'Gîte du Moulin', detail: 'Laura Simon · du 14 nov. au 18 nov.', payer: 'Laura Simon', account: { userId: 'usr_camille', label: 'Camille Durand' }, failureReason: null, stripeUrl: null },
+      { id: 'pi_dev_6', source: 'reservation', status: 'disputed', amountMinor: 27_500, refundedMinor: 0, currency: 'eur', createdAtISO: iso(-11 * DAY), title: 'Studio du Port', detail: 'Kevin Roux · du 1 nov. au 3 nov.', payer: 'Kevin Roux', account: { userId: 'usr_sophie', label: 'Sophie Lefèvre' }, failureReason: null, stripeUrl: null },
+    ],
+  },
 }
 
 // --- Utilisateurs -------------------------------------------------------------------------
@@ -323,7 +334,7 @@ async function openLocalFloorplan(): Promise<FloorplanTicket> {
   }
 }
 
-export function createDevAdminDataSource(options: { outage: boolean }): AdminDataSource {
+export function createDevAdminDataSource(options: { outage: boolean; stripeDown?: boolean }): AdminDataSource {
   const users = structuredClone(devUsers)
 
   function updateAccess(clerkUserId: string, patch: Partial<AdminUserAccess>): AdminUserAccess {
@@ -335,7 +346,7 @@ export function createDevAdminDataSource(options: { outage: boolean }): AdminDat
 
   return {
     loadOverview: () => wait(devOverview, 500),
-    loadPayments: () => wait(devPayments, 500),
+    loadPayments: () => wait(options.stripeDown ? { ...devPayments, platform: null } : devPayments, 500),
     loadHealth: () => wait(buildDevHealth(options.outage), 250),
     refreshHealth: async () => ({ refreshed: true, snapshot: await wait(buildDevHealth(options.outage), 900) }),
     loadUsers: () => wait(users, 400),

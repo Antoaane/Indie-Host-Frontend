@@ -12,12 +12,17 @@ const BASE_API_URL = RAW_BASE_API_URL.replace(/\/+$/, '')
 
 export type AdminTab = 'overview' | 'users' | 'payments' | 'services'
 
+/** Listes de l'onglet Paiements : ce que reçoit IndieHost, ou les réservations des hôtes (pour information). */
+export type AdminPaymentList = 'platform' | 'reservations'
+
+export type AdminNavigationTarget = { tab: Exclude<AdminTab, 'overview'>; userId?: string | null; paymentList?: AdminPaymentList }
+
 export type AdminAttentionItem = {
   id: string
   tone: 'bad' | 'warn'
   title: string
   detail: string
-  target: { tab: Exclude<AdminTab, 'overview'>; userId?: string | null }
+  target: AdminNavigationTarget
 }
 
 export type AdminOverview = {
@@ -74,19 +79,34 @@ export type AdminPaymentRow = {
   stripeUrl: string | null
 }
 
+export type AdminPaymentTotals = {
+  /** Paiements réussis sur 30 jours (remboursés en partie compris). */
+  succeededCount: number
+  /** Encaissé sur 30 jours, remboursements déduits. */
+  succeededMinor: number
+  failedCount: number
+  refundedMinor: number
+  /** Litiges ouverts parmi les paiements des 90 jours. */
+  disputedCount: number
+  currency: string
+}
+
+/**
+ * Deux listes qui ne s'additionnent jamais : `platform`, les paiements reçus par IndieHost (seuls comptés
+ * dans ses chiffres ; null quand Stripe ne répond pas), et `reservations`, l'argent des séjours encaissé
+ * par les hôtes sur leur compte Stripe, montré pour information.
+ */
 export type AdminPayments = {
   generatedAtISO: string
-  stripeAvailable: boolean
   periodDays: number
-  totals: {
-    succeededCount: number
-    succeededMinor: number
+  platform: { totals: AdminPaymentTotals; rows: AdminPaymentRow[] } | null
+  reservations: {
+    /** Paiements refusés sur 30 jours. */
     failedCount: number
-    refundedMinor: number
+    /** Litiges ouverts parmi les paiements des 90 jours. */
     disputedCount: number
-    currency: string
+    rows: AdminPaymentRow[]
   }
-  rows: AdminPaymentRow[]
 }
 
 export type ServiceStatus = 'up' | 'degraded' | 'down' | 'disabled' | 'unknown'
@@ -302,11 +322,17 @@ export function fetchAdminOverview(options?: { refresh?: boolean }): Promise<Adm
   })
 }
 
-export function fetchAdminPayments(options?: { refresh?: boolean }): Promise<AdminPayments> {
-  return request<AdminPayments>('GET', '/admin/payments', {
+export async function fetchAdminPayments(options?: { refresh?: boolean }): Promise<AdminPayments> {
+  const data = await request<AdminPayments>('GET', '/admin/payments', {
     params: options?.refresh ? { refresh: '1' } : undefined,
     fallback: 'Impossible de charger les paiements pour le moment.',
   })
+  // API d'avant le 2026-11-13 (une seule liste, chiffres d'IndieHost et des hôtes mêlés), le temps
+  // d'un déploiement : rien plutôt que des chiffres faux.
+  if (!data?.reservations) {
+    throw new AdminApiError('Le serveur est en cours de mise à jour. Réessayez dans une minute.', null, 'ADMIN_API_OUTDATED')
+  }
+  return data
 }
 
 export async function fetchSystemHealth(): Promise<SystemHealth> {
