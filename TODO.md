@@ -12,7 +12,7 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ### Écran de chargement (session du 2026-11-13)
 
-- [ ] Redéployer (`cd /opt/indiehost && git pull && ./deploy-indiehost.sh` : le script recrée nginx, dont la CSP a changé). Puis recharger une page du tableau de bord sur ordinateur et sur l’iPhone, en thème clair et en thème sombre, et dire si l’écran vous plaît. Pour le regarder sans qu’il disparaisse, en local : `http://localhost:5179/dev/editor?chargement`.
+- [ ] Redéployer le commit `4006780` (`cd /opt/indiehost && git pull && ./deploy-indiehost.sh` : le script recrée nginx, dont la CSP a changé). Puis recharger une page du tableau de bord sur ordinateur et sur l’iPhone, en thème clair et en thème sombre, et dire si l’écran vous plaît. Pour le regarder sans qu’il disparaisse, en local : `http://localhost:5179/dev/editor?chargement`.
 
 ### Administration (session du 2026-11-12)
 
@@ -256,7 +256,7 @@ Défauts visibles :
 
 ## Fait
 
-- [x] 2026-11-13 — Écran de chargement du tableau de bord, nouvel aspect (`BootLoader.vue`) : la silhouette du logo respire (la tête se soulève et se repose), une aura de marque tourne lentement derrière elle, la barre de progression a disparu, le logo n’entre qu’après 160 ms (plus de clignotement sur un changement d’écran rapide) et « Chargement de votre espace… » ne s’affiche qu’au-delà de 1,4 s. Thème sombre corrigé au passage : le logo, encre foncée en dur, y était invisible, et l’écran passait du clair au sombre pendant le chargement (`useColorScheme.ts` devine le tableau de bord d’après l’adresse ; le script de `index.html` pose le thème choisi dans « Mon profil » ; hash CSP mis à jour dans `nginx/proxy-locations.conf`). Vérifié par captures dans Chrome sans fenêtre : ordinateur et téléphone (390 px), clair et sombre, animations réduites, premier affichage en sombre (système, puis sombre forcé avec système clair) sombre dès 60 ms. Type-check et build passés, hash CSP du build identique. Route d’essai : `/dev/editor?chargement` fige l’écran.
+- [x] 2026-11-13 — Écran de chargement du tableau de bord, nouvel aspect (`BootLoader.vue`) : la silhouette du logo respire (la tête se soulève et se repose), une aura de marque tourne lentement derrière elle, la barre de progression a disparu, le logo n’entre qu’après 160 ms (plus de clignotement sur un changement d’écran rapide) et « Chargement de votre espace… » ne s’affiche qu’au-delà de 1,4 s. Thème sombre corrigé au passage : le logo, encre foncée en dur, y était invisible, et l’écran passait du clair au sombre pendant le chargement (`useColorScheme.ts` devine le tableau de bord d’après l’adresse ; le script de `index.html` pose le thème choisi dans « Mon profil » ; hash CSP mis à jour dans `nginx/proxy-locations.conf`). Vérifié par captures dans Chrome sans fenêtre : ordinateur et téléphone (390 px), clair et sombre, animations réduites, premier affichage en sombre (système, puis sombre forcé avec système clair) sombre dès 60 ms. Type-check et build passés, hash CSP du build identique. Route d’essai : `/dev/editor?chargement` fige l’écran. Commit `4006780`.
 
 - [x] 2026-11-12 — Redéploiement des e-mails aux hôtes, de la protection Stripe, de l’arrivée sur l’administration et de sa nouvelle disposition (commits jusqu’à `1a0a793`), par Nathan.
 
