@@ -36,7 +36,10 @@ const systemQuery = hasWindow && typeof window.matchMedia === 'function' ? windo
 // État partagé par toute l'application : un seul thème à la fois.
 const preference = ref<ColorSchemePreference>(hasWindow ? readStoredPreference() : 'auto')
 const systemPrefersDark = ref(Boolean(systemQuery?.matches))
-const isDashboard = ref(false)
+// Deviné d'après l'adresse jusqu'à la première résolution de la route (même règle que le script
+// de `index.html`) : sinon l'écran de chargement d'une page du tableau de bord passait au clair
+// au montage, puis au sombre une fois la route connue.
+const isDashboard = ref(hasWindow && /^\/dashboard(\/|$)/.test(window.location.pathname))
 
 systemQuery?.addEventListener('change', (event) => {
   systemPrefersDark.value = event.matches
@@ -85,9 +88,11 @@ export function installColorScheme(route: RouteLocationNormalizedLoaded) {
   const themeStore = useThemeStore()
 
   watch(
-    () => route.meta.navVariant,
-    (navVariant) => {
-      isDashboard.value = navVariant === 'host'
+    // `null` tant que la route n'est pas résolue (`meta` encore vide) : on garde la supposition.
+    () => (route.matched.length ? route.meta.navVariant === 'host' : null),
+    (isHostRoute) => {
+      if (isHostRoute === null) return
+      isDashboard.value = isHostRoute
     },
     { immediate: true },
   )

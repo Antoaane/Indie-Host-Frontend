@@ -31,6 +31,10 @@ const NAVIGATION_FIRST_REQUEST_GRACE_MS = 300
 const NAVIGATION_MAX_WAIT_MS = 3000
 // Durée de la classe de révélation, un peu plus longue que la transition du contenu.
 const REVEAL_CLASS_MS = 600
+// En développement, `?chargement` dans l'adresse d'un écran du tableau de bord (ou d'une route
+// d'essai : `/dev/editor?chargement`) fige l'écran de chargement, pour le regarder à loisir.
+const HOLD_FOR_REVIEW =
+  import.meta.env.DEV && typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('chargement')
 
 // Landing ouverte avec une session Clerk : la garde du routeur attend Clerk puis part sur le
 // tableau de bord. L'écran couvre cette attente ; si la landing reste, il se retire aussitôt.
@@ -82,7 +86,7 @@ function stopWatchingContent() {
 }
 
 function releaseBootLoader() {
-  if (!isActive.value) return
+  if (!isActive.value || HOLD_FOR_REVIEW) return
   isActive.value = false
 
   stopWatchingContent()

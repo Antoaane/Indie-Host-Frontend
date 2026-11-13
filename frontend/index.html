@@ -8,10 +8,20 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
-    <!-- Tableau de bord rechargé : classe posée avant le premier affichage pour que le fond
-         soit déjà celui de l'écran de chargement (BootLoader.vue), sans flash sombre sur mobile. -->
+    <!-- Tableau de bord rechargé : classe et thème posés avant le premier affichage pour que le
+         fond soit déjà celui de l'écran de chargement (BootLoader.vue), sans flash sombre sur
+         mobile ni passage du clair au sombre. Même règle que `useColorScheme.ts`. Après toute
+         modification : recalculer le hash CSP (node scripts/csp-inline-script-hash.js). -->
     <script>
-      if (/^\/dashboard(\/|$)/.test(location.pathname)) document.documentElement.classList.add('is-booting')
+      if (/^\/dashboard(\/|$)/.test(location.pathname)) {
+        const root = document.documentElement
+        let choice = null
+        root.classList.add('is-booting')
+        try { choice = localStorage.getItem('indiehost:color-scheme') } catch (e) {}
+        const dark = choice === 'dark' || (choice !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches)
+        root.setAttribute('data-theme', dark ? 'dark' : 'light')
+        if (dark) root.classList.add('dark')
+      }
     </script>
 
     <!-- Preload ressources critiques : polices + image LCP hero -->
