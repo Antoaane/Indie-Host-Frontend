@@ -1,8 +1,9 @@
 // File: src/locales/clerk/index.ts
 
-import type { LocalizationResource } from '@clerk/shared/types'
+import type { LocalizationResource } from '@clerk/vue/types'
 
 import { clerkFrBase } from '@/locales/clerk/base/fr'
+import { clerkFrCore3 } from '@/locales/clerk/base/fr-core3'
 import localeConfig from '@/locales/clerk/config.json'
 import frOverrides from '@/locales/clerk/fr.json'
 
@@ -19,7 +20,7 @@ type ClerkLocaleConfig = {
 const config: ClerkLocaleConfig = localeConfig as ClerkLocaleConfig
 
 const BUILT_IN_LOCALIZATIONS: Record<ClerkLocale, LocalizationResource> = {
-  fr: clerkFrBase,
+  fr: mergeLocalization(clerkFrBase, clerkFrCore3),
 }
 
 const HTML_LANG_BY_LOCALE: Record<ClerkLocale, string> = {

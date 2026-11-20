@@ -1,7 +1,7 @@
 <!-- File: src/components/navs/Nav/NavShell.vue -->
 
 <script setup lang="ts">
-import { SignedIn, SignedOut, useAuth, useClerk, useUser } from '@clerk/vue'
+import { Show, useAuth, useClerk, useUser } from '@clerk/vue'
 import { UserRound } from '@lucide/vue'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -373,7 +373,7 @@ onBeforeUnmount(() => {
       v-if="showAuth && !vp.lg.value"
       class="auth-item"
     >
-      <SignedOut>
+      <Show when="signed-out">
         <div
           ref="signedOutAnchor"
           class="auth-menu-anchor"
@@ -430,9 +430,9 @@ onBeforeUnmount(() => {
             </div>
           </RelativeOverlay>
         </div>
-      </SignedOut>
+      </Show>
 
-      <SignedIn>
+      <Show when="signed-in">
         <div
           ref="signedInAnchor"
           class="auth-menu-anchor"
@@ -508,7 +508,7 @@ onBeforeUnmount(() => {
             </div>
           </RelativeOverlay>
         </div>
-      </SignedIn>
+      </Show>
     </div>
 
     <div
@@ -575,7 +575,7 @@ onBeforeUnmount(() => {
           v-if="showAuth"
           class="auth-item"
         >
-          <SignedOut>
+          <Show when="signed-out">
             <div
               ref="signedOutAnchor"
               class="auth-menu-anchor"
@@ -632,9 +632,9 @@ onBeforeUnmount(() => {
                 </div>
               </RelativeOverlay>
             </div>
-          </SignedOut>
+          </Show>
 
-          <SignedIn>
+          <Show when="signed-in">
             <div
               ref="signedInAnchor"
               class="auth-menu-anchor"
@@ -710,7 +710,7 @@ onBeforeUnmount(() => {
                 </div>
               </RelativeOverlay>
             </div>
-          </SignedIn>
+          </Show>
         </li>
       </template>
     </ul>

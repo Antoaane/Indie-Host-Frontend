@@ -17,8 +17,7 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
-    "@clerk/localizations": "^3.36.0",
-    "@clerk/vue": "^1.17.0",
+    "@clerk/vue": "^2.5.26",
     "@fancyapps/ui": "^6.0.28",
     "@lucide/vue": "^1.77.0",
     "@nuxt/ui": "^4.1.0",

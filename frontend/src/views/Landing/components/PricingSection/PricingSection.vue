@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { SignUpButton, SignedIn, SignedOut } from '@clerk/vue'
+import { Show, SignUpButton } from '@clerk/vue'
 import { useRouter } from 'vue-router'
 
 import { fetchStripeSubscriptionPlans, type StripeSubscriptionPlan, type SubscriptionPlanCode } from '@/domain/api/stripeSubscriptions'
@@ -179,7 +179,7 @@ onMounted(() => {
                 </li>
               </ul>
               <div class="plan-actions plan-actions-preview">
-                <SignedIn>
+                <Show when="signed-in">
                   <button
                     type="button"
                     class="plan-cta"
@@ -197,8 +197,8 @@ onMounted(() => {
                   >
                     {{ plan.secondaryCta }}
                   </button>
-                </SignedIn>
-                <SignedOut>
+                </Show>
+                <Show when="signed-out">
                   <SignUpButton
                     mode="redirect"
                     :force-redirect-url="buildPricingCallbackAuthUrl(plan.code)"
@@ -224,7 +224,7 @@ onMounted(() => {
                       {{ plan.secondaryCta }}
                     </button>
                   </SignUpButton>
-                </SignedOut>
+                </Show>
                 <p
                   v-if="!plan.available && plan.unavailableReason"
                   class="plan-unavailable"
@@ -284,7 +284,7 @@ onMounted(() => {
             </p>
 
             <div class="plan-actions">
-              <SignedIn>
+              <Show when="signed-in">
                 <button
                   type="button"
                   class="plan-cta"
@@ -302,9 +302,9 @@ onMounted(() => {
                 >
                   {{ plan.secondaryCta }}
                 </button>
-              </SignedIn>
+              </Show>
 
-              <SignedOut>
+              <Show when="signed-out">
                 <SignUpButton
                   mode="redirect"
                   :force-redirect-url="buildPricingCallbackAuthUrl(plan.code)"
@@ -330,7 +330,7 @@ onMounted(() => {
                     {{ plan.secondaryCta }}
                   </button>
                 </SignUpButton>
-              </SignedOut>
+              </Show>
 
               <p class="plan-helper">
                 {{ plan.helper }}

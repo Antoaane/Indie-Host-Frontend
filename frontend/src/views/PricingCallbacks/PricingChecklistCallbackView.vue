@@ -1,7 +1,7 @@
 <!-- File: src/views/PricingCallbacks/PricingChecklistCallbackView.vue -->
 
 <script setup lang="ts">
-import { SignInButton, SignUpButton, SignedIn, SignedOut, useAuth, useUser } from '@clerk/vue'
+import { Show, SignInButton, SignUpButton, useAuth, useUser } from '@clerk/vue'
 import { Loader2 } from '@lucide/vue'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter, type RouteLocationRaw } from 'vue-router'
@@ -1322,7 +1322,7 @@ watch(
         </p>
 
         <!-- Avant l'inscription Stripe : particulier ou professionnel, et ce qui sera demandé. -->
-        <SignedIn>
+        <Show when="signed-in">
           <fieldset
             v-if="primaryAction.id === 'connect'"
             class="host-status"
@@ -1365,7 +1365,7 @@ watch(
               </template>
             </p>
           </fieldset>
-        </SignedIn>
+        </Show>
 
         <!-- Messages d'action : ils n'étaient visibles que dans la console technique (dev),
              un échec (Stripe Connect, publication, changement de plan) semblait ne rien faire. -->
@@ -1385,7 +1385,7 @@ watch(
           {{ infoMessage }}
         </p>
 
-        <SignedOut>
+        <Show when="signed-out">
           <div class="actions-panel">
             <SignUpButton
               mode="redirect"
@@ -1413,9 +1413,9 @@ watch(
               </button>
             </SignInButton>
           </div>
-        </SignedOut>
+        </Show>
 
-        <SignedIn>
+        <Show when="signed-in">
           <div class="actions-panel">
             <button
               type="button"
@@ -1453,7 +1453,7 @@ watch(
               Ouvrir mes annonces
             </button>
           </div>
-        </SignedIn>
+        </Show>
       </section>
 
       <section

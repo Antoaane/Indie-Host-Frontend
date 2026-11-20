@@ -1,7 +1,7 @@
 <!-- File: src/views/PricingView.vue -->
 
 <script setup lang="ts">
-import { SignUpButton, SignedIn, SignedOut, useUser } from '@clerk/vue'
+import { Show, SignUpButton, useUser } from '@clerk/vue'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -333,7 +333,7 @@ onUnmounted(() => {
               </ul>
 
               <div class="plan-actions plan-actions-preview">
-                <SignedIn>
+                <Show when="signed-in">
                   <button
                     type="button"
                     class="plan-cta"
@@ -351,9 +351,9 @@ onUnmounted(() => {
                   >
                     {{ plan.marketing.secondaryCta }}
                   </button>
-                </SignedIn>
+                </Show>
 
-                <SignedOut>
+                <Show when="signed-out">
                   <SignUpButton
                     mode="redirect"
                     :force-redirect-url="buildPostAuthRedirectUrl(plan.code)"
@@ -381,7 +381,7 @@ onUnmounted(() => {
                       {{ plan.marketing.secondaryCta }}
                     </button>
                   </SignUpButton>
-                </SignedOut>
+                </Show>
 
                 <p
                   v-if="!plan.available && plan.unavailableReason"
@@ -442,7 +442,7 @@ onUnmounted(() => {
             </p>
 
             <div class="plan-actions">
-              <SignedIn>
+              <Show when="signed-in">
                 <button
                   type="button"
                   class="plan-cta"
@@ -460,9 +460,9 @@ onUnmounted(() => {
                 >
                   {{ plan.marketing.secondaryCta }}
                 </button>
-              </SignedIn>
+              </Show>
 
-              <SignedOut>
+              <Show when="signed-out">
                 <SignUpButton
                   mode="redirect"
                   :force-redirect-url="buildPostAuthRedirectUrl(plan.code)"
@@ -490,7 +490,7 @@ onUnmounted(() => {
                     {{ plan.marketing.secondaryCta }}
                   </button>
                 </SignUpButton>
-              </SignedOut>
+              </Show>
             </div>
 
             <p class="plan-helper">

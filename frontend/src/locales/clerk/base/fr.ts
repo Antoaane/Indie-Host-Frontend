@@ -1,6 +1,6 @@
 // File: src/locales/clerk/base/fr.ts
 
-import type { LocalizationResource } from '@clerk/shared/types'
+import type { LocalizationResource } from '@clerk/vue/types'
 
 export const clerkFrBase: LocalizationResource =
 {
@@ -132,7 +132,6 @@ export const clerkFrBase: LocalizationResource =
       }
     },
     paymentMethods__label: "M\xE9thodes de paiement",
-    popular: "Populaire",
     pricingTable: {
       billingCycle: "Cycle de facturation",
       included: "Inclus"
