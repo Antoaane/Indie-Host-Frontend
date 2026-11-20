@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { ChevronLeft } from 'lucide-vue-next'
+import { ChevronLeft } from '@lucide/vue'
 
 // Génère un ID unique pour aria-controls
 const id = `faq-collapse-${Math.random().toString(36).substr(2, 9)}`

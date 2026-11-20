@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { useAuth, useClerk, useUser } from '@clerk/vue'
-import { UserRound, X } from 'lucide-vue-next'
+import { UserRound, X } from '@lucide/vue'
 import { computed, reactive, ref, watch } from 'vue'
 
 import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'

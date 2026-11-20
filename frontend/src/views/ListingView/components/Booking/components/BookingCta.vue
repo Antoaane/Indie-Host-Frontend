@@ -1,7 +1,7 @@
 <!-- File: src/views/ListingView/components/Booking/components/BookingCta.vue -->
 
 <script setup lang="ts">
-import { CalendarCheck, UsersRound } from 'lucide-vue-next'
+import { CalendarCheck, UsersRound } from '@lucide/vue'
 
 const props = defineProps<{
   nights: number

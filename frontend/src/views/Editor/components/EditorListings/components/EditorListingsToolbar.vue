@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Search } from 'lucide-vue-next'
+import { Search } from '@lucide/vue'
 
 const props = defineProps<{
   modelValue: string

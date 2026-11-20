@@ -9,7 +9,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { ArrowUpRight, Info, RefreshCw } from 'lucide-vue-next'
+import { ArrowUpRight, Info, RefreshCw } from '@lucide/vue'
 
 import type { AdminPaymentList, AdminPaymentRow, AdminPayments } from '@/domain/api/admin'
 import { PAYMENT_STATUS, formatCount, formatDateTime, formatMoney, pluralize } from '@/views/Admin/adminFormat'

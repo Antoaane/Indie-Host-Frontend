@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { Mail, RefreshCw } from 'lucide-vue-next'
+import { Mail, RefreshCw } from '@lucide/vue'
 
 import type { HealthIncident, ServiceId, SystemHealth } from '@/domain/api/admin'
 import { SERVICE_STATUS, formatAgo, formatDate, formatDateTime, formatEvery, formatPercent, pluralize } from '@/views/Admin/adminFormat'

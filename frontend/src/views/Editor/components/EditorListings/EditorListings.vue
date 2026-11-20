@@ -3,7 +3,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Plus } from 'lucide-vue-next'
+import { Plus } from '@lucide/vue'
 
 import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'
 import ConfirmationDialog from '@/components/overlays/ConfirmationDialog.vue'

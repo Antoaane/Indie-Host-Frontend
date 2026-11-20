@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { SignInButton, SignUpButton, SignedIn, SignedOut, useAuth, useUser } from '@clerk/vue'
-import { Loader2 } from 'lucide-vue-next'
+import { Loader2 } from '@lucide/vue'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter, type RouteLocationRaw } from 'vue-router'
 

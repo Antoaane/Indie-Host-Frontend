@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
-import { Loader2, Maximize2, Sparkles, X } from 'lucide-vue-next'
+import { Loader2, Maximize2, Sparkles, X } from '@lucide/vue'
 import { useAuth } from '@clerk/vue'
 import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'
 import type { RawCore } from '@/domain/listings/types'

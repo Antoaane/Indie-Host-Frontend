@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 // DEPS
-import * as LucideIcons from 'lucide-vue-next'
+import * as LucideIcons from '@lucide/vue'
 // TYPES
 import type { PerkItem } from '@/views/ListingView/types/listing'
 import { sanitizeHtml } from '@/utils/sanitizeHtml'

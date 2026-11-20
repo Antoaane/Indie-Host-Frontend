@@ -4,7 +4,7 @@
      clic l'ajoute à cet endroit. Rendu par `ThemedHubPage`, stylé dans `themed-hub-page.scss`. -->
 
 <script setup lang="ts">
-import { AlignLeft, Columns2, Images, Plus, Star, X } from 'lucide-vue-next'
+import { AlignLeft, Columns2, Images, Plus, Star, X } from '@lucide/vue'
 import type { Component } from 'vue'
 
 import { ADDABLE_PAGE_SECTIONS, type AddablePageSectionType } from '@/domain/listings/pageThemes'

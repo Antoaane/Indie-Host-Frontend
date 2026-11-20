@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { ChevronDown, Minus, Plus } from 'lucide-vue-next'
+import { ChevronDown, Minus, Plus } from '@lucide/vue'
 import RelativeOverlay from '@/components/overlays/RelativeOverlay.vue'
 import { vp } from '@/utils/viewport'
 

@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { X } from 'lucide-vue-next'
+import { X } from '@lucide/vue'
 import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'
 import { formatStayRange } from '@/views/ListingView/components/Booking/utils/labels'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'

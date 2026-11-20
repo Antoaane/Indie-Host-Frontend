@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { computed, ref, useId } from 'vue'
-import { Info } from 'lucide-vue-next'
+import { Info } from '@lucide/vue'
 
 // En-tête de panneau : titre, une ligne de résumé, et l'explication longue repliée derrière ⓘ.
 // L'aide se lit une fois ; elle ne doit pas occuper la colonne à chaque visite.

@@ -5,7 +5,7 @@
 import gsap from 'gsap'
 // ASSETS
 import ShapesBgCroped from '@/components/svgs/images/ShapesBgCroped.vue'
-import { ArrowRight } from 'lucide-vue-next'
+import { ArrowRight } from '@lucide/vue'
 // CONTENT
 import type { HeroContent } from '@/views/Landing/types/content'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'

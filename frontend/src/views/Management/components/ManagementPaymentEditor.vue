@@ -5,7 +5,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import { Plus } from 'lucide-vue-next'
+import { Plus } from '@lucide/vue'
 
 import type { ReservationPaymentManualMethod } from '@/views/Management/utils/managementReservations'
 

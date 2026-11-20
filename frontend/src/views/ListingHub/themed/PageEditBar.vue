@@ -5,7 +5,7 @@
      et « Terminé ». Voir `docs/editeur-de-page.md`. -->
 
 <script setup lang="ts">
-import { ArrowLeft, Check, Pencil, RotateCw, Undo2 } from 'lucide-vue-next'
+import { ArrowLeft, Check, Pencil, RotateCw, Undo2 } from '@lucide/vue'
 
 import { PAGE_THEMES, type PageThemeId } from '@/domain/listings/pageThemes'
 

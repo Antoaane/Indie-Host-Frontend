@@ -5,7 +5,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { ArrowRight, CircleCheck, RefreshCw, TriangleAlert } from 'lucide-vue-next'
+import { ArrowRight, CircleCheck, RefreshCw, TriangleAlert } from '@lucide/vue'
 
 import type { AdminAttentionItem, AdminNavigationTarget, AdminOverview, SystemHealth } from '@/domain/api/admin'
 import { SERVICE_STATUS, formatCount, formatMoney, pluralize } from '@/views/Admin/adminFormat'

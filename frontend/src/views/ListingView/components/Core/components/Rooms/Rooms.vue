@@ -3,7 +3,7 @@
 <script setup lang="ts">
 // DEPS
 import { computed } from 'vue'
-import { BedDouble, BedSingle } from 'lucide-vue-next'
+import { BedDouble, BedSingle } from '@lucide/vue'
 // UTILS
 import { formatICUMessage } from '@/utils/i18n'
 import { sanitizeHtml } from '@/utils/sanitizeHtml'

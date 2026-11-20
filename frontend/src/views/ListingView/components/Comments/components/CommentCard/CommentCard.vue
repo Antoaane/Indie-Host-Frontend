@@ -13,7 +13,7 @@ import { sanitizeHtml } from '@/utils/sanitizeHtml'
 import type { CommentItem } from '@/views/ListingView/types/listing'
 
 // ASSETS
-import { Star } from 'lucide-vue-next'
+import { Star } from '@lucide/vue'
 
 const props = withDefaults(
   defineProps<{

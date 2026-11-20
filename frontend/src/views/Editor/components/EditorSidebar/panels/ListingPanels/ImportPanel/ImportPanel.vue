@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { Download, Loader2 } from 'lucide-vue-next'
+import { Download, Loader2 } from '@lucide/vue'
 
 import ImportLoadingState from '@/components/feedback/ImportLoadingState.vue'
 import { ensurePublishedMediasStoredInImageKit } from '@/domain/api/imagekit'

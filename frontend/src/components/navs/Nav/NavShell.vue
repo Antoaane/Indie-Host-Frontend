@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { SignedIn, SignedOut, useAuth, useClerk, useUser } from '@clerk/vue'
-import { UserRound } from 'lucide-vue-next'
+import { UserRound } from '@lucide/vue'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 

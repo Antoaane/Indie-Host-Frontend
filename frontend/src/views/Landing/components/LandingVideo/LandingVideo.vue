@@ -1,4 +1,5 @@
 <!-- File: src/views/Landing/components/LandingVideo/LandingVideo.vue -->
+
 <!-- Vidéo de démonstration de la landing : lecture automatique silencieuse en boucle, avec un bouton
      lecture / pause posé sur l'angle inférieur droit de la vidéo. Pas de lecture automatique quand
      l'utilisateur préfère moins d'animations. Les attributs (class…) vont sur la balise <video> :
@@ -6,7 +7,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { Pause, Play } from 'lucide-vue-next'
+import { Pause, Play } from '@lucide/vue'
 import { getLandingContent } from '@/views/Landing/composables/useLandingLocale'
 
 defineOptions({ inheritAttrs: false })

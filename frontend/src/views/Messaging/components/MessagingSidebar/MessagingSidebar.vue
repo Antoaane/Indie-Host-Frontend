@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { Search } from 'lucide-vue-next'
+import { Search } from '@lucide/vue'
 
 import BaseSidebar from '@/components/layouts/BaseSidebar.vue'
 import { normalizeSearchText } from '@/utils/search'

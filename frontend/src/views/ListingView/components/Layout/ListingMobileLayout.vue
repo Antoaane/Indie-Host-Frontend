@@ -3,7 +3,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import type { RouteLocationRaw } from 'vue-router'
-import { Check, ChevronLeft, Share } from 'lucide-vue-next'
+import { Check, ChevronLeft, Share } from '@lucide/vue'
 
 import { getListingsController } from '@/domain/listings/controller'
 import { isListingHostname } from '@/domain/listings/publicDomain'

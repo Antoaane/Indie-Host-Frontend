@@ -3,7 +3,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, provide, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { Home, LayoutGrid, Pencil } from 'lucide-vue-next'
+import { Home, LayoutGrid, Pencil } from '@lucide/vue'
 
 import BaseSidebar from '@/components/layouts/BaseSidebar.vue'
 import EditorSidebarNav from '@/views/Editor/components/EditorSidebar/EditorSidebarNav.vue'

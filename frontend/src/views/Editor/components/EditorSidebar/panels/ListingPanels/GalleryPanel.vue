@@ -3,7 +3,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, reactive, ref, useId, watch } from 'vue'
 import { useTouchLongPress } from '@/composables/useTouchLongPress'
-import { Film, Plus, Trash2 } from 'lucide-vue-next'
+import { Film, Plus, Trash2 } from '@lucide/vue'
 import type { RawMediaVideo, RawMedias } from '@/domain/listings/types'
 import { normalizeListingStatus } from '@/domain/listings/status'
 import { isApiImageStorageEnabled, uploadGalleryImageToImageKit, uploadListingVideoToImageKit } from '@/domain/api/imagekit'

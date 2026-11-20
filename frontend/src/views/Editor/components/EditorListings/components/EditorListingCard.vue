@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { computed, ref, shallowRef } from 'vue'
-import { Camera, ChevronDown, ChevronLeft, ChevronRight, EllipsisVertical, Eye, Upload } from 'lucide-vue-next'
+import { Camera, ChevronDown, ChevronLeft, ChevronRight, EllipsisVertical, Eye, Upload } from '@lucide/vue'
 import type { Swiper as SwiperInstance } from 'swiper/types'
 import type { SwiperOptions } from 'swiper/types'
 import { Swiper, SwiperSlide } from 'swiper/vue'

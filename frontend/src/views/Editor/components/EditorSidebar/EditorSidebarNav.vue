@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { nextTick } from 'vue'
-import { ArrowLeft } from 'lucide-vue-next'
+import { ArrowLeft } from '@lucide/vue'
 
 import type { EditorGroupDefinition, EditorGroupId } from '@/views/Editor/components/EditorSidebar/editorSections'
 import { editorStatic } from '@/views/Editor/utils/editorContent'

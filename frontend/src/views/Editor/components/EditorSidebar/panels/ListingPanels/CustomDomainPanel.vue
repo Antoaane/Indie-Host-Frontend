@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, useId, watch, type Component } from 'vue'
-import { Check, CircleAlert, CircleCheck, Copy, Globe, Info, Link2, Settings2, ShieldCheck } from 'lucide-vue-next'
+import { Check, CircleAlert, CircleCheck, Copy, Globe, Info, Link2, Settings2, ShieldCheck } from '@lucide/vue'
 
 import {
   fetchListingDomain,

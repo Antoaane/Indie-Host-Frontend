@@ -8,7 +8,7 @@ import detectOS from '@/utils/detectOs'
 import { vp } from '@/utils/viewport'
 import { useStrengthsAnim } from '@/views/Landing/components/StrengthsSection/utils/useStrengthsAnim'
 // ASSETS
-import { Wallet, ShieldCheck, Users, ChevronDown } from 'lucide-vue-next'
+import { Wallet, ShieldCheck, Users, ChevronDown } from '@lucide/vue'
 import ShapesCircle from '@/components/svgs/images/ShapesCircle.vue'
 // CONTENT
 import type { StrengthsContent } from '@/views/Landing/types/content'

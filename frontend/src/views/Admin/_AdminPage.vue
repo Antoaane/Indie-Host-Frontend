@@ -11,7 +11,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch, type Component } from 'vue'
 import { useRoute, useRouter, type LocationQueryRaw } from 'vue-router'
-import { Activity, CreditCard, LayoutDashboard, LogOut, Users } from 'lucide-vue-next'
+import { Activity, CreditCard, LayoutDashboard, LogOut, Users } from '@lucide/vue'
 
 import type { AdminNavigationTarget, AdminOverview, AdminPaymentList, AdminPayments, AdminTab } from '@/domain/api/admin'
 import { vp } from '@/utils/viewport'

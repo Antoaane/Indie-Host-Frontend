@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import { MapPin } from 'lucide-vue-next'
+import { MapPin } from '@lucide/vue'
 
 import type { RawCore } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'

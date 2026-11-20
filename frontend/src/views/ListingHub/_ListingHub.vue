@@ -10,7 +10,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUser } from '@clerk/vue'
 import { useHead } from '@unhead/vue'
-import { Pencil } from 'lucide-vue-next'
+import { Pencil } from '@lucide/vue'
 
 import { getListingsController } from '@/domain/listings/controller'
 import { getPublicListingRootDomain, isListingHostname } from '@/domain/listings/publicDomain'

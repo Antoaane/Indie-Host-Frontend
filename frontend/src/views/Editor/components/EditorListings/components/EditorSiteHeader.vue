@@ -7,7 +7,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { Eye, LayoutGrid, Pencil } from 'lucide-vue-next'
+import { Eye, LayoutGrid, Pencil } from '@lucide/vue'
 
 import { normalizeListingStatus } from '@/domain/listings/status'
 import { editorStatic } from '@/views/Editor/utils/editorContent'

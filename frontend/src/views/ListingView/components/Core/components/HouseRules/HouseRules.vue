@@ -4,7 +4,7 @@
 // Règlement intérieur de l'hôte sur l'annonce publique : aperçu replié, lecture complète en place.
 // Même source que l'étape 4 du checkout (`arrival.practical.rules`, HTML Quill assaini).
 import { computed, ref } from 'vue'
-import { ChevronDown } from 'lucide-vue-next'
+import { ChevronDown } from '@lucide/vue'
 import type { HouseRulesModel } from '@/views/ListingView/types/listing'
 import { sanitizeHtml } from '@/utils/sanitizeHtml'
 

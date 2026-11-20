@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { Loader2, Sparkles } from 'lucide-vue-next'
+import { Loader2, Sparkles } from '@lucide/vue'
 import { useAuth } from '@clerk/vue'
 import type { RawCore } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'

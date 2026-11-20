@@ -3,7 +3,7 @@
 <script setup lang="ts">
 // DEPS
 import { computed, ref, watch } from 'vue'
-import { ChevronDown, Plus, Trash2 } from 'lucide-vue-next'
+import { ChevronDown, Plus, Trash2 } from '@lucide/vue'
 
 // UTILS
 import { resolveAmenityIconComponent, resolveLucideComponent } from '@/utils/amenitiesIcons'

@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 // ASSETS
-import { X } from 'lucide-vue-next'
+import { X } from '@lucide/vue'
 // VUE
 import { ref } from 'vue'
 import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'

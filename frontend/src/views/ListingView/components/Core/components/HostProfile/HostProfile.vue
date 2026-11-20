@@ -4,7 +4,7 @@
 // TYPES
 import type { HostProfileModel } from '@/views/ListingView/types/listing'
 import { computed } from 'vue'
-import { User } from 'lucide-vue-next'
+import { User } from '@lucide/vue'
 import { formatICUMessage } from '@/utils/i18n'
 import { sanitizeHtml } from '@/utils/sanitizeHtml'
 

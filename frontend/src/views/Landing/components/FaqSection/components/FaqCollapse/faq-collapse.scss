@@ -48,7 +48,7 @@
         @include lp-h4-title($accent);
       }
 
-      .lucide-chevron-left-icon {
+      .lucide-chevron-left {
         min-width: 18px;
         stroke: $accent;
         @include animations.transition(animations.$duration-menu);

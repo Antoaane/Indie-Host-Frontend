@@ -3,7 +3,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onBeforeUnmount, ref, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
-import { ArrowLeft, ExternalLink, Pencil } from 'lucide-vue-next'
+import { ArrowLeft, ExternalLink, Pencil } from '@lucide/vue'
 import { buildPageEditorRoute, readEditorRouteUserId, withOwnerViewMarker } from '@/views/Editor/utils/pageEditorRoute'
 import ListingView from '@/views/ListingView/_ListingView.vue'
 import ListingHubView from '@/views/ListingHub/_ListingHub.vue'

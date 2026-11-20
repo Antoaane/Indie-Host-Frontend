@@ -22,7 +22,7 @@ import { useListingViewport } from '@/views/ListingView/composables/useListingVi
 import type { CommentsModel, NotesModel, ReviewsVisibilityModel } from '@/views/ListingView/types/listing'
 
 // ASSETS
-import { X } from 'lucide-vue-next'
+import { X } from '@lucide/vue'
 import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'
 
 // CONTENT

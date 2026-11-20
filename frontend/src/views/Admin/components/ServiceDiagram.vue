@@ -23,7 +23,7 @@ import {
   Server,
   ShieldCheck,
   Waypoints,
-} from 'lucide-vue-next'
+} from '@lucide/vue'
 
 import type { ServiceHealth, ServiceId, ServiceStatus } from '@/domain/api/admin'
 import { vp } from '@/utils/viewport'

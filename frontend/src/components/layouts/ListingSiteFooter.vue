@@ -5,7 +5,7 @@
 // page principale quand il en a une, puis les liens légaux avec son nom après le ©. L'hôte le modifie
 // sur sa page principale (mode édition) ; sans page principale, nom et lieu du logement.
 import { computed, ref, watch } from 'vue'
-import { Mail, Phone } from 'lucide-vue-next'
+import { Mail, Phone } from '@lucide/vue'
 
 import LegalLinksCompact from '@/components/layouts/LegalLinksCompact.vue'
 import { fetchListingSite, type ListingSiteInfo } from '@/domain/api/listingHubs'

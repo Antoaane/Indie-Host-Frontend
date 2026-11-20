@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { ArrowUpRight, RefreshCw } from 'lucide-vue-next'
+import { ArrowUpRight, RefreshCw } from '@lucide/vue'
 
 import type { StripeConnectOverview } from '@/domain/api/stripeSubscriptions'
 

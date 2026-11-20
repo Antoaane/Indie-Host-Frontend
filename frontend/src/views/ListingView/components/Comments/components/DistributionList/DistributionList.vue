@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { formatICUMessage } from '@/utils/i18n'
-import { Star } from 'lucide-vue-next'
+import { Star } from '@lucide/vue'
 
 const props = defineProps<{
   entries: Array<{ rating: number; count: number; percentage: number }>

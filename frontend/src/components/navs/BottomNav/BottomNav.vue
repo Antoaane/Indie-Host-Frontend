@@ -7,7 +7,7 @@ import { RouterLink, useRoute } from 'vue-router'
 // UTILS
 import { vp } from '@/utils/viewport'
 // ICONS
-import { Search, Plane, UserRound, MessageCircle } from 'lucide-vue-next'
+import { Search, Plane, UserRound, MessageCircle } from '@lucide/vue'
 
 const navItems = [
   { id: 'search', label: 'Rechercher', icon: Search },

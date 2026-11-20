@@ -15,7 +15,7 @@ import {
   RangeCalendarRoot,
 } from 'reka-ui'
 import type { DateRange, DateValue } from 'reka-ui'
-import { X } from 'lucide-vue-next'
+import { X } from '@lucide/vue'
 
 import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'

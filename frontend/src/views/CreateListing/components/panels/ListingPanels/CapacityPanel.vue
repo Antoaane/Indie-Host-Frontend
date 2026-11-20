@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { Minus, Plus } from 'lucide-vue-next'
+import { Minus, Plus } from '@lucide/vue'
 import StepperInput from '@/components/inputs/StepperInput.vue'
 import type { RawCore } from '@/domain/listings/types'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'

@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { Armchair, Baby, Bed, BedDouble, BedSingle, Minus, Plus, Sofa, Trash2, X } from 'lucide-vue-next'
+import { Armchair, Baby, Bed, BedDouble, BedSingle, Minus, Plus, Sofa, Trash2, X } from '@lucide/vue'
 import NumberStepper from '@/components/inputs/NumberStepper.vue'
 import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'
 import type { RawCore } from '@/domain/listings/types'

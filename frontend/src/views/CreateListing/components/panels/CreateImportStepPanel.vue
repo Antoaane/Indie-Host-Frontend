@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
-import { ArrowRight, Download, Loader2, PenLine } from 'lucide-vue-next'
+import { ArrowRight, Download, Loader2, PenLine } from '@lucide/vue'
 import AirbnbLogo from '@/components/svgs/icons/AirbnbLogo.vue'
 import BookingLogo from '@/components/svgs/icons/BookingLogo.vue'
 

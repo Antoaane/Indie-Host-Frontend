@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
-import { ImagePlus, Mail, MapPin, Phone, Star, Trash2, Users } from 'lucide-vue-next'
+import { ImagePlus, Mail, MapPin, Phone, Star, Trash2, Users } from '@lucide/vue'
 
 import { PAGE_LIMITS, normalizeFooterEmail, normalizeFooterPhone } from '@/domain/listings/hubPageContent'
 import {

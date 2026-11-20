@@ -13,7 +13,7 @@
 // - Au doigt, la carte ne bouge pas (elle volerait le défilement de la page) : « Ouvrir dans Plans »
 //   ouvre l'application de cartes du téléphone sur la même zone.
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { MapPin } from 'lucide-vue-next'
+import { MapPin } from '@lucide/vue'
 import type { Map as MapLibreMap } from 'maplibre-gl'
 
 const props = defineProps<{

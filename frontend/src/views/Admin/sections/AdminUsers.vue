@@ -7,7 +7,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Ban, Check, Copy, Gift, Link2, Mail, Minus, Plus, RefreshCw, Search, ShieldOff, ShieldPlus, UserPlus } from 'lucide-vue-next'
+import { Ban, Check, Copy, Gift, Link2, Mail, Minus, Plus, RefreshCw, Search, ShieldOff, ShieldPlus, UserPlus } from '@lucide/vue'
 
 import ConfirmationDialog from '@/components/overlays/ConfirmationDialog.vue'
 import {

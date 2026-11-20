@@ -73,7 +73,7 @@ type NewsletterFormData = {
 const props = defineProps<{ data: NewsletterFormData }>()
 
 // Icône utilisée dans le bouton (inchangée)
-import { SendIcon } from 'lucide-vue-next'
+import { SendIcon } from '@lucide/vue'
 const iconMap: Record<string, any> = { SendIcon }
 
 function normalizedFieldType(field: FieldDef): string {

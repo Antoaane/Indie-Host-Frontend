@@ -9,7 +9,7 @@ import { formatRatingValue } from '@/views/ListingView/utils/formatters'
 import { useListingViewport } from '@/views/ListingView/composables/useListingViewport'
 
 // ASSETS
-import { Star } from 'lucide-vue-next'
+import { Star } from '@lucide/vue'
 import AirbnbLogo from '@/components/svgs/icons/AirbnbLogo.vue'
 import BookingLogo from '@/components/svgs/icons/BookingLogo.vue'
 
@@ -192,7 +192,7 @@ const importedScoreCards = computed(() => (
       }
     }
 
-    .lucide-star-icon {
+    .lucide-star {
       fill: url(#star-gradient);
       stroke: transparent;
     }
@@ -240,7 +240,7 @@ const importedScoreCards = computed(() => (
         color: rgba($secondary, 0.95);
       }
 
-      > .lucide-star-icon {
+      > .lucide-star {
         fill: rgba($secondary, 0.9);
         stroke: transparent;
       }

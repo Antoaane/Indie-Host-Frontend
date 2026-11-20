@@ -6,7 +6,7 @@ import type { SwiperOptions, SwiperModule } from 'swiper/types'
 import type { Swiper as SwiperInstance } from 'swiper/types'
 import { Swiper, SwiperSlide } from 'swiper/vue'
 import { FreeMode, Mousewheel } from 'swiper/modules'
-import { ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { ChevronLeft, ChevronRight } from '@lucide/vue'
 import SliderCorner from '@/components/svgs/images/SliderCorner.vue'
 
 import type { Reservation } from '@/views/Management/utils/managementReservations'

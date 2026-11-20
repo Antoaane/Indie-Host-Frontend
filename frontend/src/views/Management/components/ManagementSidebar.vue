@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { LayoutPanelTop, Search } from 'lucide-vue-next'
+import { LayoutPanelTop, Search } from '@lucide/vue'
 
 import BaseSidebar from '@/components/layouts/BaseSidebar.vue'
 import { normalizeListingStatus } from '@/domain/listings/status'

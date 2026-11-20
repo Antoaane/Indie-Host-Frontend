@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
-import { ArrowLeft, MoreHorizontal, Paperclip, Send } from 'lucide-vue-next'
+import { ArrowLeft, MoreHorizontal, Paperclip, Send } from '@lucide/vue'
 
 import RelativeOverlay from '@/components/overlays/RelativeOverlay.vue'
 import type { MessagingConversation, MessageState } from '@/views/Messaging/types/messaging'

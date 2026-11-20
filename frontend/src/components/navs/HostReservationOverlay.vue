@@ -3,7 +3,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import { Minus, Plus, X } from 'lucide-vue-next'
+import { Minus, Plus, X } from '@lucide/vue'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
 import { makeIsDateDisabled } from '@/components/DatePicker/utils/range'
 import DatePicker from '@/components/DatePicker/DatePicker.vue'

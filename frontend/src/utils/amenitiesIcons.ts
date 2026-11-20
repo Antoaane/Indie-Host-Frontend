@@ -6,7 +6,7 @@
 // - Résolution : getAmenityIconName(id) infère l’icône par règles ; resolveAmenityIconComponent(id) renvoie le composant Lucide.
 // - Utilisation : Amenities.vue (ListingView), AmenitiesPanel (Editor), perks.ts (perks = getAmenityIconName(id) ?? 'star').
 
-import * as LucideIcons from 'lucide-vue-next'
+import * as LucideIcons from '@lucide/vue'
 
 export type AmenityId = string
 export type LucideIconName = string

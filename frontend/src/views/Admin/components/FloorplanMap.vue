@@ -6,7 +6,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { Maximize2, RefreshCw } from 'lucide-vue-next'
+import { Maximize2, RefreshCw } from '@lucide/vue'
 
 import type { FloorplanTicket } from '@/domain/api/admin'
 import { useAdminDataSource } from '@/views/Admin/adminDataSource'

@@ -5,7 +5,7 @@ import { useAuth, useClerk, useUser } from '@clerk/vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { Component } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { CalendarClock, LayoutGrid, MessageSquareMore, MoreHorizontal, Plus } from 'lucide-vue-next'
+import { CalendarClock, LayoutGrid, MessageSquareMore, MoreHorizontal, Plus } from '@lucide/vue'
 
 import HostReservationOverlay from '@/components/navs/HostReservationOverlay.vue'
 import BackOfficeDockNav from '@/components/navs/Nav/BackOfficeDockNav.vue'
