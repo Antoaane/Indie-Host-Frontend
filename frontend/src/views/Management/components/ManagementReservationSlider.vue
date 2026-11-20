@@ -1,7 +1,7 @@
 <!-- File: src/views/Management/components/ManagementReservationSlider.vue -->
 
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, ref, shallowRef, watch } from 'vue'
 import type { SwiperOptions, SwiperModule } from 'swiper/types'
 import type { Swiper as SwiperInstance } from 'swiper/types'
 import { Swiper, SwiperSlide } from 'swiper/vue'
@@ -25,7 +25,7 @@ const displayedReservations = computed(() =>
     ...props.reservations,
   ].reverse(),
 )
-const swiperRef = ref<SwiperInstance | null>(null)
+const swiperRef = shallowRef<SwiperInstance | null>(null)
 const canSlidePrev = ref(false)
 const canSlideNext = ref(false)
 

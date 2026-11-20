@@ -1,7 +1,7 @@
 <!-- File: src/views/CreateListing/components/wizard/CreateListingStepsTabs.vue -->
 
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, ref, shallowRef, watch } from 'vue'
 import type { Swiper as SwiperInstance } from 'swiper/types'
 import type { SwiperModule, SwiperOptions } from 'swiper/types'
 import { FreeMode, Mousewheel } from 'swiper/modules'
@@ -19,7 +19,7 @@ const emit = defineEmits<{
 
 const STEP_SCROLL_TRANSITION_MS = 280
 
-const swiperRef = ref<SwiperInstance | null>(null)
+const swiperRef = shallowRef<SwiperInstance | null>(null)
 
 const activeStepIndex = computed(() => props.items.findIndex((item) => item.isActive))
 

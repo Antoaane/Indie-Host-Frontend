@@ -1,7 +1,7 @@
 <!-- File: src/views/Editor/components/EditorListings/components/EditorListingCard.vue -->
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, shallowRef } from 'vue'
 import { Camera, ChevronDown, ChevronLeft, ChevronRight, EllipsisVertical, Eye, Upload } from 'lucide-vue-next'
 import type { Swiper as SwiperInstance } from 'swiper/types'
 import type { SwiperOptions } from 'swiper/types'
@@ -48,7 +48,7 @@ const emit = defineEmits<{
   (e: 'transfer', listingId: string): void
 }>()
 
-const swiper = ref<SwiperInstance | null>(null)
+const swiper = shallowRef<SwiperInstance | null>(null)
 const activeIndex = ref(0)
 const isDeleteOverlayOpen = ref(false)
 

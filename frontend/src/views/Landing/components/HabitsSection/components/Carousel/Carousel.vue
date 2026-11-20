@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 // DEPS
-import { ref, computed, onMounted } from 'vue'
+import { ref, shallowRef, computed, onMounted } from 'vue'
 import type { SwiperOptions } from 'swiper/types'
 import type { SwiperModule } from 'swiper/types'
 import type { Swiper as SwiperClass } from 'swiper'
@@ -25,7 +25,7 @@ const props = defineProps<{
 
 const slides = computed(() => props.slides ?? [])
 
-const swiperInstance = ref<SwiperClass | null>(null)
+const swiperInstance = shallowRef<SwiperClass | null>(null)
 const swiperWrapper = ref<InstanceType<typeof Swiper> | null>(null)
 const carouselRef = ref<HTMLElement | null>(null)
 const lightRef = ref<HTMLElement | null>(null)
