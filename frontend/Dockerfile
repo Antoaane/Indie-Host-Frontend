@@ -1,4 +1,4 @@
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 
 WORKDIR /app
 
@@ -43,7 +43,8 @@ ENV VITE_PUBLIC_LISTING_ROOT_DOMAIN=$VITE_PUBLIC_LISTING_ROOT_DOMAIN
 
 RUN npm run build
 
-FROM nginx:alpine
+# Même version que le reverse proxy (docker-compose.yml, service nginx) : changer les deux ensemble.
+FROM nginx:1.31.9-alpine
 
 COPY --from=builder /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf

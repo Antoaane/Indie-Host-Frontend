@@ -8,7 +8,7 @@ x-logging: &default-logging
 
 services:
   preflight:
-    image: alpine:3.20
+    image: alpine:3.24
     restart: "no"
     env_file: .env
     environment:
@@ -144,7 +144,9 @@ services:
       start_period: 10s
 
   nginx:
-    image: nginx:alpine
+    # Version épinglée, la même que celle du site (frontend/Dockerfile) : changer les deux ensemble,
+    # après un essai de la configuration avec la nouvelle version (voir CLAUDE.md, « Redéployer »).
+    image: nginx:1.31.9-alpine
     container_name: indiehost-nginx
     restart: unless-stopped
     logging: *default-logging

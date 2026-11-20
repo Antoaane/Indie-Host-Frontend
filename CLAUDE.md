@@ -712,6 +712,12 @@ cd /opt/indiehost && git pull && ./deploy-indiehost.sh
 
 `deploy-indiehost.sh` reconstruit migrations, API et site (pas le scraping, sauf `--with-scraping`), redémarre, recrée nginx si sa configuration a changé, puis vérifie que l'API en ligne est la nouvelle : des routes récentes doivent répondre 401 sans session (404 = ancienne API ; la dernière ajoutée est `GET /api/v1/admin/system/health`). Le 2026-11-11, le site avait été mis à jour sans l'API : « Modifier la page » et « Mes revenus » répondaient « Route … not found ». Garder ces routes de contrôle à jour avec une route récente.
 
+Versions des images (2026-11-20) : le script retélécharge les images à chaque déploiement (`docker compose pull --ignore-buildable`, puis `build --pull`). Avant, le serveur gardait celles du premier déploiement : nginx 1.31.7 et Node 20, sans correctif de sécurité depuis le 2026-04-30.
+- **nginx** est épinglé : `nginx:1.31.9-alpine` dans `docker-compose.yml` (reverse proxy) **et** dans `frontend/Dockerfile` (serveur du site). Changez les deux ensemble, après avoir essayé la configuration de production avec la nouvelle version dans des conteneurs jetables : `nginx -t`, puis quelques `curl` (redirection HTTP, API, pages d'un hôte, domaine relié par SNI, HTTP/2).
+- **Node** : `node:24-alpine` dans les quatre Dockerfiles de l'API et du site. Node 24 est en maintenance LTS jusqu'au 2028-04-30.
+- **PostgreSQL** : la dernière 16.x (`postgres:16-alpine`). Quand une nouvelle 16.x sort, la base redémarre au déploiement, quelques secondes. Un changement de version majeure demande une sauvegarde puis une restauration, jamais un simple changement d'étiquette.
+- **preflight** : `alpine:3.24`. certbot : `latest`.
+
 Après un changement de secret : recopier le fichier concerné, puis la même commande.
 
 Après un changement de `nginx/nginx.conf.template` ou `nginx/proxy-locations.conf` : ces fichiers sont montés **fichier par fichier** (bind mount) et `git pull` remplace l'inode → le conteneur en cours (et `nginx -s reload`) garde l'ancienne version. Il faut recréer le conteneur : `docker compose up -d --force-recreate --wait nginx`, puis vérifier avec `docker compose exec -T nginx grep <directive> /etc/nginx/snippets/proxy-locations.conf`.

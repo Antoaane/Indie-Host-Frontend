@@ -32,8 +32,15 @@ fi
 echo "→ Récupération du code"
 git pull --ff-only
 
+# Images téléchargées telles quelles (nginx, base de données, certbot, preflight) : sans cette étape,
+# le serveur gardait celles du premier déploiement et ne recevait aucun correctif de sécurité.
+echo "→ Mise à jour des images"
+docker compose pull --ignore-buildable --quiet \
+  || echo "  avertissement : images non téléchargées, celles déjà présentes sont gardées"
+
+# --pull : reprend la dernière image de base (Node 24, nginx) au lieu de celle gardée en cache.
 echo "→ Construction : ${SERVICES[*]}"
-docker compose build "${SERVICES[@]}"
+docker compose build --pull "${SERVICES[@]}"
 
 echo "→ Démarrage (migrations comprises)"
 docker compose up -d --wait
