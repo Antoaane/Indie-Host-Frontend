@@ -29,26 +29,26 @@
   },
   "dependencies": {
     "@fastify/cors": "^10.0.2",
-    "@fastify/sensible": "^6.0.3",
-    "@prisma/client": "^6.6.0",
+    "@fastify/sensible": "^6.0.8",
+    "@prisma/client": "^6.19.3",
     "@types/sanitize-html": "^2.16.2",
-    "date-fns": "^4.1.0",
+    "date-fns": "^4.4.0",
     "dotenv": "^16.5.0",
     "fastify": "^5.2.2",
     "fastify-plugin": "^5.0.1",
     "ical-generator": "^9.0.0",
-    "jose": "^6.0.11",
-    "node-ical": "^0.26.0",
-    "nodemailer": "^10.5.0",
-    "sanitize-html": "^2.18.1",
+    "jose": "^6.2.18",
+    "node-ical": "^0.26.1",
+    "nodemailer": "^10.6.1",
+    "sanitize-html": "^2.18.2",
     "stripe": "^17.7.0",
     "world-atlas": "^2.0.2",
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@types/node": "^22.13.13",
+    "@types/node": "^24.19.2",
     "prisma": "^6.6.0",
-    "tsx": "^4.19.3",
+    "tsx": "^4.23.15",
     "typescript": "^5.8.2"
   }
 }

@@ -17,7 +17,7 @@
 // états, des délais et des chiffres agrégés.
 
 import { randomUUID } from 'node:crypto';
-import { monitorEventLoopDelay, performance, type IntervalHistogram } from 'node:perf_hooks';
+import { monitorEventLoopDelay, performance } from 'node:perf_hooks';
 import tls from 'node:tls';
 
 import type { PrismaClient } from '@prisma/client';
@@ -373,7 +373,8 @@ function getStripe(): Stripe | null {
   return stripeClient;
 }
 
-let loopDelay: IntervalHistogram | null = null;
+// Type tiré de la fonction : `IntervalHistogram` n'est plus exporté par @types/node 24 (`ELDHistogram`).
+let loopDelay: ReturnType<typeof monitorEventLoopDelay> | null = null;
 
 async function probePublic(): Promise<ProbeResult> {
   if (!isProduction) return result('disabled', 'Contrôlé seulement en production (passage par Cloudflare).');
