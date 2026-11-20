@@ -45,7 +45,12 @@ $input-sizes: (
 }
 
 @function input-size($compact, $token) {
-  $key: if($compact, compact, default);
+  $key: default;
+
+  @if $compact {
+    $key: compact;
+  }
+
   @return map.get(map.get($input-sizes, $key), $token);
 }
 
@@ -94,7 +99,11 @@ input[type='number'] {
 }
 
 @mixin field($theme: base, $compact: false) {
-  $field-padding-y: if($compact, 0.5rem, 0.65rem);
+  $field-padding-y: 0.65rem;
+
+  @if $compact {
+    $field-padding-y: 0.5rem;
+  }
 
   @extend %input-shell;
   gap: input-size($compact, gap);

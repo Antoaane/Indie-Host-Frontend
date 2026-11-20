@@ -22,10 +22,24 @@
     font-weight: 400;
   }
 
-  text-decoration: if($underline, underline, none);
+  @if $underline {
+    text-decoration: underline;
+  }
+
+  @else {
+    text-decoration: none;
+  }
+
   text-underline-offset: 0.2rem;
   text-decoration-thickness: 0.05rem;
-  font-style: if($italic, italic, normal);
+
+  @if $italic {
+    font-style: italic;
+  }
+
+  @else {
+    font-style: normal;
+  }
 
   font-size: 1rem;
   line-height: 1.25rem;
@@ -69,10 +83,24 @@
     font-weight: 400;
   }
 
-  text-decoration: if($underline, underline, none);
+  @if $underline {
+    text-decoration: underline;
+  }
+
+  @else {
+    text-decoration: none;
+  }
+
   text-underline-offset: 0.2rem;
   text-decoration-thickness: 0.05rem;
-  font-style: if($italic, italic, normal);
+
+  @if $italic {
+    font-style: italic;
+  }
+
+  @else {
+    font-style: normal;
+  }
 
   // font-size: 0.875rem;
   line-height: 1.125rem;

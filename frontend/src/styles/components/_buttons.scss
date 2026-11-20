@@ -72,8 +72,13 @@ $button-themes: (
 // apply to `div > button`
 @mixin primary($cta: false, $theme: black, $padding: true, $fullwidth: false, $deep: false, $icon-only: false, $little: false) {
   $colors: map.get($button-themes, $theme);
-  $primary-padding-y: if($little, 0.5rem, 0.6rem);
-  $primary-padding-x: if($little, 0.8rem, 1rem);
+  $primary-padding-y: 0.6rem;
+  $primary-padding-x: 1rem;
+
+  @if $little {
+    $primary-padding-y: 0.5rem;
+    $primary-padding-x: 0.8rem;
+  }
 
   @if $fullwidth {
     width: 100%;
@@ -344,8 +349,13 @@ $button-themes: (
   $fill: false,
   $stroke: true,
   $borders: false) {
-  $low-padding-y: if($little, 0.5rem, 0.6rem);
-  $low-padding-x: if($little, 0.85rem, 1rem);
+  $low-padding-y: 0.6rem;
+  $low-padding-x: 1rem;
+
+  @if $little {
+    $low-padding-y: 0.5rem;
+    $low-padding-x: 0.85rem;
+  }
 
   @if $fullwidth {
     width: 100%;
