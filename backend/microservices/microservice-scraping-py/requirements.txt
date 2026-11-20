@@ -1,14 +1,57 @@
-gobnb>=0.0.8
-python-dotenv>=1.0.0
-curl_cffi>=0.7.0
-beautifulsoup4>=4.12.0
-fastapi>=0.109.0
-uvicorn[standard]>=0.27.0
-pydantic>=2.0.0
+# Versions exactes : une reconstruction sans cache doit redonner la même image. Le 2026-11-10,
+# des versions en `>=` avaient pris Playwright 1.65, qui a cassé le build en production.
+# Pour mettre à jour : changer la version ici, reconstruire l'image, lancer `pip-audit` dedans,
+# puis un import Airbnb et un import Booking par l'API locale.
+
+gobnb==0.0.12
+python-dotenv==1.2.4
+curl_cffi==0.16.3
+beautifulsoup4==4.15.0
+fastapi==0.161.1
+uvicorn[standard]==0.54.0
+pydantic==2.14.1
 # Booking.com — méthode principale (bypass WAF fiable, free tier : 1000 req/mois)
 # Créer un compte sur https://scrapfly.io et définir SCRAPFLY_KEY dans .env
-scrapfly-sdk>=0.8.0
+scrapfly-sdk==0.12.0
 # Fallback Playwright (si SCRAPFLY_KEY absent)
 # Après pip install, lancer : python -m playwright install chromium
-playwright>=1.40.0
-playwright-stealth>=2.0.0
+# 1.64.1 : la version qui tourne et se construit. Pour passer en 1.65 et plus, libatomic1 est
+# déjà dans le Dockerfile, mais le build complet n'a jamais été essayé.
+playwright==1.64.1
+playwright-stealth==2.0.3
+
+# Dépendances indirectes, épinglées elles aussi.
+# soupsieve (sous beautifulsoup4) : 4.x corrige CVE-2026-126190.
+# opentelemetry-api (sous fastapi) : 1.45.2 corrige CVE-2026-126360.
+soupsieve==4.1.3
+opentelemetry-api==1.45.2
+annotated-doc==0.0.5
+annotated-types==0.8.0
+anyio==4.15.1
+backoff==2.2.1
+bs4==0.0.2
+certifi==2026.10.19
+cffi==2.1.1
+charset-normalizer==3.5.2
+click==8.5.0
+decorator==5.3.1
+greenlet==3.5.6
+h11==0.16.0
+httptools==0.9.0
+idna==3.20
+loguru==0.7.3
+packaging==26.3
+pycparser==3.12
+pydantic_core==2.50.1
+pyee==13.0.1
+python-dateutil==2.9.0.post0
+PyYAML==6.0.3
+requests==2.34.2
+six==1.17.0
+starlette==1.9.0
+typing-inspection==0.4.4
+typing_extensions==4.16.0
+urllib3==2.8.0
+uvloop==0.23.0
+watchfiles==1.3.0
+websockets==17.3

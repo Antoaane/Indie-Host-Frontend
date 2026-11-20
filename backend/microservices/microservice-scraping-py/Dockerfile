@@ -14,7 +14,9 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends libatomic1 \
     && rm -rf /var/lib/apt/lists/*
 
-RUN python -m pip install --upgrade pip \
+# pip et setuptools viennent de l'image python : versions fixées ici (setuptools 79 de l'image a
+# deux failles connues, corrigées en 84.1).
+RUN python -m pip install --no-cache-dir --upgrade pip==26.3 setuptools==84.2.1 \
     && python -m pip install --no-cache-dir -r requirements.txt \
     && python -m playwright install --with-deps chromium
 
