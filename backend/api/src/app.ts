@@ -127,6 +127,9 @@ export async function buildApp() {
     origin: (origin, callback) => {
       callback(null, !origin || isOriginAllowed(origin, env.CORS_ORIGINS));
     },
+    // Depuis @fastify/cors 11, la liste par défaut se limite à GET, HEAD et POST : le site envoie
+    // aussi PUT, PATCH et DELETE. Liste d'avant, posée explicitement.
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],
     credentials: false,
   });
 

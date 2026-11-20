@@ -28,7 +28,7 @@
     "connect-audit": "tsx src/domains/payments/connectAudit.cli.ts"
   },
   "dependencies": {
-    "@fastify/cors": "^10.0.2",
+    "@fastify/cors": "^11.4.3",
     "@fastify/sensible": "^6.0.8",
     "@prisma/client": "^6.19.3",
     "@types/sanitize-html": "^2.16.2",
