@@ -23,7 +23,7 @@
     "@lucide/vue": "^1.77.0",
     "@nuxt/ui": "^4.1.0",
     "@splidejs/vue-splide": "^0.6.12",
-    "@stripe/stripe-js": "^8.8.0",
+    "@stripe/stripe-js": "^10.3.0",
     "@unhead/vue": "^3.4.3",
     "@vueuse/core": "^15.0.0",
     "axios": "^1.13.2",
