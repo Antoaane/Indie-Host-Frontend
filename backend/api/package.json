@@ -5,7 +5,7 @@
   "type": "module",
   "description": "IndieHost Fastify API",
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   },
   "scripts": {
     "dev": "tsx watch src/server.ts",
@@ -38,7 +38,7 @@
     "fastify-plugin": "^6.0.1",
     "ical-generator": "^11.1.4",
     "jose": "^6.2.18",
-    "node-ical": "^0.26.1",
+    "node-ical": "^0.27.6",
     "nodemailer": "^10.6.1",
     "sanitize-html": "^2.18.2",
     "stripe": "^17.7.0",
