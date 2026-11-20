@@ -1,4 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import { env } from '../config/env.js';
+import { createPrismaClient } from '../lib/prismaClient.js';
 
 import { runHostReminders, type HostRemindersLogger } from './hostReminders.js';
 
@@ -24,7 +25,7 @@ function createConsoleLogger(): HostRemindersLogger {
 }
 
 async function main() {
-  const prisma = new PrismaClient();
+  const prisma = createPrismaClient(env.DATABASE_URL);
   try {
     const report = await runHostReminders(prisma, createConsoleLogger(), { dryRun, ignoreSendWindow });
     console.log(JSON.stringify(report, null, 2));

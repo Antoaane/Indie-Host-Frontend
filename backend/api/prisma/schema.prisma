@@ -1,11 +1,12 @@
+// Prisma 7 : plus de moteur natif (binaryTargets retiré), la connexion passe par l'adaptateur `pg`
+// (src/lib/prismaClient.ts). `prisma-client-js` est encore accepté en 7 et sera retiré en 8.
 generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "debian-openssl-3.0.x", "linux-musl-openssl-3.0.x"]
+  provider = "prisma-client-js"
 }
 
+// URL de la base : prisma.config.ts (CLI) et createPrismaClient (application).
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 enum MessageAuthorRole {

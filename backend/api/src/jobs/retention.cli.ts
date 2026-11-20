@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 
-import { PrismaClient } from '@prisma/client';
+import { createPrismaClient } from '../lib/prismaClient.js';
 
 import { runRetentionPurge, type RetentionLogger } from './retention.js';
 
@@ -38,7 +38,8 @@ function createConsoleLogger(): RetentionLogger {
 
 async function main() {
   const databaseUrl = readDatabaseUrl();
-  const prisma = new PrismaClient(databaseUrl ? { datasources: { db: { url: databaseUrl } } } : undefined);
+  if (!databaseUrl) throw new Error('DATABASE_URL (ou DATABASE_URL_FILE) est requis.');
+  const prisma = createPrismaClient(databaseUrl);
   const logger = createConsoleLogger();
 
   try {

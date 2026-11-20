@@ -11,5 +11,7 @@ const LISTING_BOOKING_LOCK_NAMESPACE = 'indiehost.listing_booking';
  * paiement rattaché) doit être lu via `tx` après cet appel.
  */
 export async function acquireListingBookingLock(tx: Prisma.TransactionClient, listingId: string): Promise<void> {
-  await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${LISTING_BOOKING_LOCK_NAMESPACE}::text), hashtext(${listingId}::text))`;
+  // $executeRaw, pas $queryRaw : la fonction renvoie `void`, que l'adaptateur pg de Prisma 7 refuse
+  // de lire (« UnsupportedNativeDataType »). Toute réservation échouait.
+  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${LISTING_BOOKING_LOCK_NAMESPACE}::text), hashtext(${listingId}::text))`;
 }

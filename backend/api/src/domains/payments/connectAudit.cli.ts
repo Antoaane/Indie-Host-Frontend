@@ -10,10 +10,10 @@
 //
 // Code de sortie 2 quand un compte est à examiner (autre propriétaire, compte partagé entre profils).
 
-import { PrismaClient } from '@prisma/client';
 import Stripe from 'stripe';
 
 import { env } from '../../config/env.js';
+import { createPrismaClient } from '../../lib/prismaClient.js';
 
 type Verdict = 'ok' | 'autre propriétaire' | 'sans propriétaire déclaré' | 'introuvable chez Stripe' | 'compte simulé';
 
@@ -41,7 +41,7 @@ async function main() {
   }
 
   const stripe = new Stripe(env.STRIPE_SECRET_KEY, { apiVersion: '2025-02-24.acacia' });
-  const prisma = new PrismaClient({ datasources: { db: { url: env.DATABASE_URL } } });
+  const prisma = createPrismaClient(env.DATABASE_URL);
 
   try {
     const users = await prisma.user.findMany({

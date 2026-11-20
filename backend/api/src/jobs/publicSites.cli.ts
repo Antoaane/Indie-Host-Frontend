@@ -1,4 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import { env } from '../config/env.js';
+import { createPrismaClient } from '../lib/prismaClient.js';
 
 import { runPublicSites, type PublicSitesLogger } from './publicSites.js';
 
@@ -21,7 +22,7 @@ function createConsoleLogger(): PublicSitesLogger {
 }
 
 async function main() {
-  const prisma = new PrismaClient();
+  const prisma = createPrismaClient(env.DATABASE_URL);
   try {
     const report = await runPublicSites(prisma, createConsoleLogger(), { dryRun });
     console.log(JSON.stringify(report, null, 2));

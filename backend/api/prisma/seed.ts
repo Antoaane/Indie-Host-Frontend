@@ -1,6 +1,9 @@
-import { PrismaClient } from '@prisma/client';
+import 'dotenv/config';
 
-const prisma = new PrismaClient();
+import { createPrismaClient } from '../src/lib/prismaClient.js';
+
+if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL est requis.');
+const prisma = createPrismaClient(process.env.DATABASE_URL);
 
 async function main() {
   const demoUser = await prisma.user.upsert({
