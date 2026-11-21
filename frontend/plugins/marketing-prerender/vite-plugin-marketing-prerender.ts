@@ -2,7 +2,7 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
-import { transformWithEsbuild, type Plugin, type ResolvedConfig } from 'vite'
+import { transformWithOxc, type Plugin, type ResolvedConfig } from 'vite'
 
 /*
  * Pré-rendu statique de la page d'accueil (`/`) et de la page des tarifs (`/pricing`), sur le modèle
@@ -510,14 +510,14 @@ function toMarketingPlan(value: unknown): MarketingPlan | null {
 
 /**
  * Charge `pricingPlanCatalog.ts` tel quel (source de vérité des offres côté front). Le module n'a que des
- * imports de types : esbuild les retire, le JavaScript obtenu est importé via une URL `data:`. Si un import
+ * imports de types : Oxc (Vite) les retire, le JavaScript obtenu est importé via une URL `data:`. Si un import
  * d'exécution y apparaît un jour, le build échoue avec un message explicite plutôt que de publier une page
  * de tarifs sans offres.
  */
 async function loadPricingCatalog(root: string): Promise<PricingCatalog> {
   const file = path.resolve(root, PRICING_CATALOG)
   const source = fs.readFileSync(file, 'utf-8')
-  const { code } = await transformWithEsbuild(source, file, { loader: 'ts', format: 'esm', target: 'node18', sourcemap: false })
+  const { code } = await transformWithOxc(source, file, { lang: 'ts', sourceType: 'module' })
   if (/^\s*import\s[^;]*\sfrom\s/m.test(code) || /^\s*import\s*['"]/m.test(code)) {
     throw new Error(
       `${LOG_PREFIX} ${PRICING_CATALOG} contient un import d'exécution : ce plugin ne charge que des modules autonomes. `

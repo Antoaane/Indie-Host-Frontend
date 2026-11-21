@@ -5,7 +5,7 @@ import fs from 'fs';
 
 async function runPythonExtraction() {
   try {
-    const pythonScriptPath = path.resolve(__dirname, 'convert_svg.py');
+    const pythonScriptPath = path.resolve(import.meta.dirname, 'convert_svg.py');
 
     console.log('🚀 [vite-plugin-svg-to-vue] Démarrage de l\'exécution du script Python...');
 

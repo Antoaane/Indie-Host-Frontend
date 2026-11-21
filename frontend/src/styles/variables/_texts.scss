@@ -1,7 +1,28 @@
 /* File: src/styles/variables/_texts.scss */
 
+@use "sass:string";
 @use "@/styles/variables/colors" as *;
 @use "@/styles/variables/layouts" as *;
+
+// Mise en forme des mots en gras ou en italique à l'intérieur du texte. Sous un pseudo-élément
+// (::before, ::after) elle n'a pas de sens : `.x::after b` est un sélecteur invalide, que Lightning
+// CSS (le minifieur de Vite 8) refuse au build. Elle n'est donc émise que hors pseudo-élément.
+@mixin inline-emphasis {
+  @if not string.index("#{&}", "::") {
+    b,
+    i,
+    strong,
+    em,
+    u {
+      color: inherit;
+    }
+
+    b,
+    strong {
+      font-weight: 800;
+    }
+  }
+}
 
 @mixin base-text($color : $secondary-text, $bold: false, $underline: false, $italic: false, $thin: true, $bigger: false) {
   margin: 0;
@@ -51,18 +72,7 @@
     // }
   }
 
-  b,
-  i,
-  strong,
-  em,
-  u {
-    color: inherit;
-  }
-
-  b,
-  strong {
-    font-weight: 800;
-  }
+  @include inline-emphasis;
 }
 
 @mixin little-text($color: $secondary-text, $bold: false, $underline: false, $italic: false, $thin: true) {
@@ -110,18 +120,7 @@
   // line-height: 1.25rem;
   // }
 
-  b,
-  i,
-  strong,
-  em,
-  u {
-    color: inherit;
-  }
-
-  b,
-  strong {
-    font-weight: 800;
-  }
+  @include inline-emphasis;
 }
 
 @mixin base-title($size: 1.5rem, $weight: 700, $color: $secondary-text, $bigger: true, $colorful: true) {

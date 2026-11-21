@@ -1,17 +1,15 @@
 import { fileURLToPath, URL } from 'node:url'
 import { existsSync } from 'node:fs'
-import { resolve } from 'node:path'
-import { defineConfig, loadEnv } from 'vite'
+import { basename, resolve } from 'node:path'
+import { defineConfig, loadEnv, type Plugin } from 'vite'
 import vue from '@vitejs/plugin-vue'
 // Désactivé temporairement : provoque "localStorage.getItem is not a function" au chargement de la config (Node.js)
 // import vueDevTools from 'vite-plugin-vue-devtools'
-import ViteRestart from 'vite-plugin-restart'
 import ui from '@nuxt/ui/vite'
-import svgLoader from 'vite-svg-loader'
-import svgToVuePlugin from './plugins/svg-to-vue/vite-plugin-svg-to-vue';
-import fileCommentInjector from './plugins/file-path-comment/vite-plugin-file-comment'
-import legalPrerender from './plugins/legal-prerender/vite-plugin-legal-prerender'
-import marketingPrerender from './plugins/marketing-prerender/vite-plugin-marketing-prerender'
+import svgToVuePlugin from './plugins/svg-to-vue/vite-plugin-svg-to-vue.ts'
+import fileCommentInjector from './plugins/file-path-comment/vite-plugin-file-comment.ts'
+import legalPrerender from './plugins/legal-prerender/vite-plugin-legal-prerender.ts'
+import marketingPrerender from './plugins/marketing-prerender/vite-plugin-marketing-prerender.ts'
 
 type ParsedEndpoint = {
   origin?: string
@@ -89,6 +87,27 @@ function resolveEnvDir(): string {
   const rootEnv = resolve(process.cwd(), '..', '.env')
   if (existsSync(rootEnv)) return resolve(process.cwd(), '..')
   return process.cwd()
+}
+
+// Redémarre le serveur de développement quand un SVG de src/assets/media change : svgToVuePlugin
+// les convertit en composants au démarrage. Remplace vite-plugin-restart, qui ne suit pas Vite 8.
+function restartOnMediaSvgChange(): Plugin {
+  const mediaDir = fileURLToPath(new URL('./src/assets/media/', import.meta.url)).replace(/\\/g, '/')
+  return {
+    name: 'indiehost:restart-on-media-svg',
+    apply: 'serve',
+    configureServer(server) {
+      const onFileEvent = (file: string) => {
+        const normalized = file.replace(/\\/g, '/')
+        if (!normalized.startsWith(mediaDir) || !normalized.endsWith('.svg')) return
+        server.config.logger.info(`SVG modifié (${basename(file)}) : redémarrage de Vite`, { timestamp: true })
+        void server.restart()
+      }
+      server.watcher.on('add', onFileEvent)
+      server.watcher.on('change', onFileEvent)
+      server.watcher.on('unlink', onFileEvent)
+    },
+  }
 }
 
 // https://vite.dev/config/
@@ -177,16 +196,13 @@ export default defineConfig(({ mode }) => {
     plugins: [
       fileCommentInjector(),
       svgToVuePlugin(),
-      ViteRestart({
-        restart: ['src/assets/media/**/*.svg'], // Restart vite si des SVG changent
-      }),
+      restartOnMediaSvgChange(),
       vue(),
       // Pas de mode de couleur automatique : le site n'a pas de thème sombre. Sinon @nuxt/ui
       // pose `html.dark` d'après le système et passe `body` en `color-scheme: dark`, ce qui
       // affiche les contrôles natifs (radios, cases, listes) en sombre sur fond clair.
       ui({ colorMode: false }),
       // vueDevTools(),
-      svgLoader(),
       legalPrerender(),
       // Après legalPrerender : réécrit dist/index.html (accueil) et génère dist/pricing/index.html.
       marketingPrerender(),
@@ -206,11 +222,10 @@ export default defineConfig(({ mode }) => {
       },
       proxy: Object.keys(proxy).length ? proxy : undefined,
     },
-    esbuild: {
-      drop: ['debugger'],
-    },
+    // Les instructions `debugger` sont retirées du build par le minifieur Oxc de Vite 8 (réglage
+    // par défaut), qui remplace l'ancienne option `esbuild.drop`.
     build: {
-      rollupOptions: {
+      rolldownOptions: {
         output: {
           // Le worker de la carte (MapLibre) est livré en .mjs. nginx ne connaît pas cette extension :
           // servi en application/octet-stream avec nosniff, le navigateur refusait de l'exécuter et la
