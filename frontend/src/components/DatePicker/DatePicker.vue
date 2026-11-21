@@ -155,6 +155,7 @@ const minValue = computed(() => (props.restrictToFuture ? today : undefined))
     :min-value="minValue"
     :number-of-months="numberOfMonths"
     :year-controls="false"
+    :view-control="false"
     :class="{
       'is-readonly': props.readOnly,
       'is-readonly-with-navigation': props.readOnly && props.allowNavigationInReadOnly,
