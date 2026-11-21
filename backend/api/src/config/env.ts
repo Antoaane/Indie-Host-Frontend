@@ -98,6 +98,16 @@ const envSchema = z.object({
   BOOKING_GUIDE_ACCESS_SECRET: z.string().trim().min(1).default(DEFAULT_BOOKING_GUIDE_ACCESS_SECRET),
   ICAL_SYNC_THROTTLE_SECONDS: z.coerce.number().int().min(60).default(300),
   ICAL_SYNC_FETCH_TIMEOUT_MS: z.coerce.number().int().min(1000).default(15000),
+  // Relecture planifiée de tous les calendriers importés (`jobs/calendarSync.ts`) : `false` pour la
+  // couper (ils ne sont alors relus qu'à la consultation de l'annonce ou sur clic de l'hôte).
+  ICAL_SYNC_JOB_ENABLED: z
+    .string()
+    .trim()
+    .optional()
+    .default('true')
+    .transform((value) => !['false', '0', 'no', 'off'].includes(value.toLowerCase())),
+  // Intervalle entre deux passes. Une minute au moins : en dessous, les plateformes peuvent refuser le serveur.
+  ICAL_SYNC_JOB_INTERVAL_SECONDS: z.coerce.number().int().min(60).default(300),
   PUBLIC_LISTING_ROOT_DOMAIN: z.string().trim().min(1).default('indiehost.fr'),
   // Domaines personnalisés des hôtes : cible des enregistrements A / CNAME et fichier lu par certbot.
   CUSTOM_DOMAIN_TARGET_IPV4: z.string().trim().optional().default(''),

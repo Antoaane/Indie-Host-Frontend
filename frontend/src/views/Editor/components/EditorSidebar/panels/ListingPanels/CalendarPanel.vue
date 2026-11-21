@@ -360,6 +360,7 @@ onMounted(() => {
 
       <div class="sources">
         <p class="label">{{ panelContent.sources.title }}</p>
+        <p class="hint">{{ panelContent.sources.autoSyncHint }}</p>
 
         <p
           v-if="isLoadingSources"

@@ -2,7 +2,7 @@
 // page « Services » de l'administration. Rien n'est écrit en base : un redémarrage de l'API repart
 // de zéro, ce qui suffit pour voir si une tâche tourne et si son dernier passage a échoué.
 
-export type JobId = 'retention' | 'host-reminders' | 'public-sites';
+export type JobId = 'retention' | 'host-reminders' | 'public-sites' | 'calendar-sync';
 
 export type JobRunState = {
   id: JobId;
