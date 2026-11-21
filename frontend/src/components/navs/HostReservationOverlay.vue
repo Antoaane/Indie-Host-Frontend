@@ -290,13 +290,17 @@ function mergeReservationsWithBookedDays(
   const reservations = normalizeReservations(bookings?.reservations)
   const ranges = normalizeBookedDays(bookings?.['booked-days'])
   const knownRanges = new Set(reservations.map((reservation) => `${reservation.start}__${reservation.end}`))
+  // Une période posée par un calendrier importé (Airbnb, Booking…) n'est pas une réservation : en
+  // faire une fiche la garderait fermée après sa réouverture sur la plateforme, et la renverrait
+  // à cette plateforme comme une réservation IndieHost.
+  const importedRanges = new Set(normalizeBookedDays(bookings?.['external-booked-days']).map((range) => `${range.start}__${range.end}`))
   const merged = [
     ...reservations,
   ]
 
   for (const range of ranges) {
     const key = `${range.start}__${range.end}`
-    if (knownRanges.has(key)) continue
+    if (knownRanges.has(key) || importedRanges.has(key)) continue
     const legacyReservation = buildLegacyReservationFromRange(listingId, range, bookings, core)
     if (!legacyReservation) continue
     merged.push(legacyReservation)
@@ -401,7 +405,8 @@ async function submit() {
     const currentCore = (editable.core ?? null) as Partial<RawCore> | null
     const currentBookings = (editable.bookings ?? null) as Partial<RawBookings> | null
     const currentReservations = mergeReservationsWithBookedDays(listingId, currentBookings, currentCore)
-    const currentBookedDays = deriveBookedDaysFromReservations(currentReservations)
+    // Tous les jours pris, périodes importées comprises (elles n'ont pas de fiche).
+    const currentBookedDays = getSynchronizedBookedDays(currentBookings)
     const isDateDisabledFresh = makeIsDateDisabled(currentBookedDays)
 
     if (!isSelectedRangeValid(normalizedSelection, nights.value, isDateDisabledFresh)) {
@@ -425,7 +430,10 @@ async function submit() {
     }
 
     await controller.patchListingDraft(listingId, { bookings: bookingsPatch })
-    bookingsByListingId[listingId] = nextBookedDays
+    bookingsByListingId[listingId] = normalizeBookedDays([
+      ...currentBookedDays,
+      ...nextBookedDays,
+    ])
 
     const payload: ReservationDraft = {
       listingId,

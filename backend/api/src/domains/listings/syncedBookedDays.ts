@@ -27,6 +27,16 @@ function rangeKey(range: DayRange): string {
   return `${range.start}__${range.end}`;
 }
 
+// Fiche sans voyageur que le site fabrique pour une période bloquée (`legacy-<annonce>-<début>-<fin>`),
+// posée sur une période importée.
+function isImportedPeriodCard(item: unknown, importedKeys: Set<string>): boolean {
+  if (!item || typeof item !== 'object') return false;
+  const { id, start, end } = item as { id?: unknown; start?: unknown; end?: unknown };
+  if (typeof id !== 'string' || !id.startsWith('legacy-')) return false;
+  if (typeof start !== 'string' || typeof end !== 'string') return false;
+  return importedKeys.has(rangeKey({ start: start.trim(), end: end.trim() }));
+}
+
 /**
  * @param current Section `bookings` enregistrée (avant la mise à jour).
  * @param patch   Mise à jour reçue du site.
@@ -40,15 +50,23 @@ export function preserveSyncedBookedDays(
   const serverExternal = readRanges(current['external-booked-days']);
   const result: Record<string, unknown> = { ...merged, 'external-booked-days': serverExternal };
 
-  // La mise à jour ne touche pas aux jours bloqués : la fusion a gardé ceux du serveur.
-  if (!Array.isArray(patch['booked-days'])) return result;
-
   // Jours importés connus du site (sa copie, peut-être ancienne) ou du serveur : ils ne sont pas
   // des blocages manuels, le serveur seul décide s'ils sont toujours d'actualité.
   const importedKeys = new Set([
     ...readRanges(patch['external-booked-days']).map(rangeKey),
     ...serverExternal.map(rangeKey),
   ]);
+
+  // Une période importée n'est pas non plus une réservation. La fenêtre « Ajouter une réservation »
+  // du site fabriquait une fiche `legacy-…` pour chaque période bloquée sans fiche, périodes
+  // importées comprises : enregistrée, elle aurait gardé ces dates fermées après leur réouverture
+  // chez Booking, et serait repartie vers lui comme une réservation IndieHost.
+  if (Array.isArray(patch.reservations) && Array.isArray(result.reservations)) {
+    result.reservations = result.reservations.filter((item) => !isImportedPeriodCard(item, importedKeys));
+  }
+
+  // La mise à jour ne touche pas aux jours bloqués : la fusion a gardé ceux du serveur.
+  if (!Array.isArray(patch['booked-days'])) return result;
 
   const byKey = new Map<string, DayRange>();
   for (const range of readRanges(patch['booked-days'])) {
