@@ -88,33 +88,35 @@ cd backend/api && npm run prisma:studio  # UI Prisma
 | Couche | Technologie |
 |--------|-------------|
 | Framework | Vue 3.5 (Composition API, `<script setup>`) |
-| Build | Vite 6.2 + TypeScript |
-| UI | @nuxt/ui 4 (composants) + Tailwind CSS |
-| Auth | @clerk/vue 1.17 |
-| State | Pinia 3 |
-| Router | Vue Router 4 (createWebHistory) |
-| Animations | GSAP 3.12 (ScrollTrigger, ScrollSmoother) + Lenis |
-| Paiements | @stripe/stripe-js 8.8 |
+| Build | Vite 8.3 (Rolldown, Oxc, CSS minifié par Lightning CSS) + TypeScript 6.0 / vue-tsc 3 |
+| UI | @nuxt/ui 4.13 (composants) + Tailwind CSS 4.3 |
+| Auth | @clerk/vue 2 (Clerk Core 3) |
+| State | Pinia 4 |
+| Router | Vue Router 5 (createWebHistory) |
+| Animations | GSAP 3.15 (ScrollTrigger, ScrollSmoother) + Lenis |
+| Paiements | @stripe/stripe-js 10 (Stripe.js « endive ») |
 | Médias | ImageKit |
 | Rich text | Quill 2.0 |
-| Carrousels | Swiper 12, Keen Slider, Splide |
-| Icônes | Lucide Vue Next |
-| CSS | Sass 1.87 |
+| Carrousels | Swiper 14, Keen Slider, Splide |
+| Icônes | `@lucide/vue` (ex-`lucide-vue-next`) |
+| CSS | Sass 1.108 |
 | HTTP | Axios |
+| Titres et balises | @unhead/vue 3 (une seule copie, partagée avec @nuxt/ui) |
 
 ### Backend (`backend/api/`)
 
 | Couche | Technologie |
 |--------|-------------|
-| Framework | Fastify 5.2 + TypeScript 5.8 |
-| ORM | Prisma 6.6 + PostgreSQL |
+| Framework | Fastify 5 + TypeScript 7 (compilateur natif) ; Node 24 minimum (`engines`) |
+| ORM | Prisma 7.10 avec `@prisma/adapter-pg` (pas de moteur natif) + PostgreSQL. URL de la ligne de commande dans `backend/api/prisma.config.ts` ; client créé par `createPrismaClient` (`src/lib/prismaClient.ts`), jamais par un `new PrismaClient()` nu |
 | Auth | Clerk JWT via `jose` 6 (JWKS) |
 | Validation | Zod 4.6 (`z.record` prend toujours deux arguments : clé puis valeur) |
+| CORS | `@fastify/cors` 11 : les méthodes sont posées explicitement dans `app.ts` (la v11 n'autorise plus d'office que GET, HEAD et POST) |
 | E-mails (secours SMTP) | nodemailer 10 (types fournis par le paquet) |
-| Paiements | stripe 17.7 |
-| Dates | date-fns 4.1 |
-| Calendrier | ical-generator + node-ical |
-| Dev runtime | tsx 4.19 (watch mode) |
+| Paiements | stripe 17.7 (passage en 23 préparé sur la branche locale `chore/api-stripe-23`, voir `TODO.md`) |
+| Dates | date-fns 4.4 |
+| Calendrier | ical-generator 11 + node-ical 0.27 |
+| Dev runtime | tsx 4.23 (watch mode) |
 
 ### Microservice scraping (`backend/microservices/microservice-scraping-py/`)
 
@@ -123,6 +125,7 @@ FastAPI Python, stateless, **interne** (ni CORS ni documentation Swagger). Endpo
 - Output : données brutes listing (title, photos, équipements, prix, avis)
 - Scrapers : Airbnb (`airbnb_scraper.py`), Booking.com (`booking_scraper.py`)
 - Appelé uniquement par l'API via `POST /api/v1/imports/scrape` (`domains/imports/`) : route publique (import depuis la landing sans compte), URL Airbnb/Booking **reconstruite** côté serveur à partir de l'identifiant (jamais l'URL fournie), `proxy_url` jamais transmis, 6 imports / 10 min / IP, 3 imports simultanés max, erreurs techniques du scraper gardées dans les logs
+- Versions toutes épinglées dans `requirements.txt`, indirectes comprises (2026-11-20 ; Playwright 1.64.1). Pour en changer : reconstruire l'image, `pip-audit` dedans, puis un import Airbnb et un import Booking par l'API locale.
 
 ---
 
@@ -717,6 +720,7 @@ Versions des images (2026-11-20) : le script retélécharge les images à chaque
 - **Node** : `node:24-alpine` dans les quatre Dockerfiles de l'API et du site. Node 24 est en maintenance LTS jusqu'au 2028-04-30.
 - **PostgreSQL** : la dernière 16.x (`postgres:16-alpine`). Quand une nouvelle 16.x sort, la base redémarre au déploiement, quelques secondes. Un changement de version majeure demande une sauvegarde puis une restauration, jamais un simple changement d'étiquette.
 - **preflight** : `alpine:3.24`. certbot : `latest`.
+- **Robot d'import** : `python:3.11-slim`, reconstruit seulement avec `./deploy-indiehost.sh --with-scraping`, environ 15 min. Ses versions sont épinglées depuis le 2026-11-20, il peut donc l'être sans risque.
 
 Après un changement de secret : recopier le fichier concerné, puis la même commande.
 
@@ -780,7 +784,20 @@ But : qu'un domaine relié (ex. `apparts-saintfrancois.fr`) ou un sous-domaine s
 
 - `frontend` : `npm run build` lance `vue-tsc --build` en parallèle de `vite build` → **toute erreur TS fait échouer l'image Docker**. Lancer `cd frontend && npm run type-check` avant de déployer.
 - Paramètre d'adresse `?vue=…` : le serveur de développement de Vite le prend pour un morceau de composant Vue et répond une erreur (`ENOENT … '/dev/admin'`) au rechargement de la page. Choisir un autre nom (l'administration utilise `?onglet=`).
-- Base de développement tenue par `prisma db push` (conteneur `api` de `docker-compose.dev.yml`, `.run/restart-local-dev.sh`) : une contrainte unique ajoutée au schéma fait refuser le push sans terminal (« Use the --accept-data-loss flag »), même sur une colonne vide, et l'API redémarre en boucle. Une fois par base existante : `docker exec indie-host-frontend-api-1 npx prisma db push --skip-generate --accept-data-loss` (cas du 2026-11-12, `User.stripeConnectAccountId` unique ; la base de ce PC est déjà à jour). La production passe par les migrations et n'est pas concernée.
+- Base de développement tenue par `prisma db push` (conteneur `api` de `docker-compose.dev.yml`, `.run/restart-local-dev.sh`) : une contrainte unique ajoutée au schéma fait refuser le push sans terminal (« Use the --accept-data-loss flag »), même sur une colonne vide, et l'API redémarre en boucle. Une fois par base existante : `docker exec indie-host-frontend-api-1 npx prisma db push --accept-data-loss` (Prisma 7 n'a plus `--skip-generate`) (cas du 2026-11-12, `User.stripeConnectAccountId` unique ; la base de ce PC est déjà à jour). La production passe par les migrations et n'est pas concernée.
+- Ne jamais lancer la pile de développement par `docker compose up` sans `--no-deps` sur `api` : le service `migrate` lance `prisma migrate deploy` sur la base locale, tenue par `db push`, et échoue (colonne déjà présente), ce qui bloque l'API (2026-11-20).
+- Prisma 7 avec l'adaptateur pg : une requête SQL directe dont le résultat est `void` (`SELECT pg_advisory_xact_lock(…)`) passe par `$executeRaw`. `$queryRaw` échoue (`UnsupportedNativeDataType`) : toutes les réservations auraient échoué (`lib/advisoryLock.ts`, 2026-11-20).
+- Vite 8 (mises à jour du 2026-11-20) :
+  - le CSS est minifié par Lightning CSS, qui refuse un sélecteur invalide au lieu de le recopier, par exemple `.x::after b`. Les mixins de texte n'émettent donc leur mise en forme des mots en gras que hors pseudo-élément (`inline-emphasis`, `_texts.scss`) ;
+  - plus d'esbuild : `transformWithOxc` remplace `transformWithEsbuild`, et `build.rolldownOptions` remplace `build.rollupOptions` ;
+  - cible par défaut : Safari/iOS 16.4, Chrome 111, Firefox 114. Le site demandait déjà Safari 16.2 pour `color-mix()` ;
+  - le build local embarque le code de développement, car le `.env` racine pose `NODE_ENV=development`. Pour mesurer le poids réel : `NODE_ENV=production npx vite build --outDir <dossier hors du dépôt> --emptyOutDir`.
+- Sass 1.108 : une déclaration écrite après une règle imbriquée (un `@include min-width(…) { … }` puis `padding: …`) reste après elle dans le CSS, au lieu d'être remontée. Si elle règle la même propriété que le `@media`, elle l'emporte partout : écrire les déclarations avant les règles imbriquées. La fonction `if()` est dépréciée, utiliser `@if` / `@else`.
+- Clerk Core 3 (`@clerk/vue` 2) :
+  - `<Show when="signed-in">` / `"signed-out"` remplacent `<SignedIn>` / `<SignedOut>`, et les types viennent de `@clerk/vue/types` ;
+  - les textes ajoutés par Clerk depuis Core 3 sont traduits dans `locales/clerk/base/fr-core3.ts`, car la traduction officielle ne les couvre pas. Après une mise à jour de Clerk, vérifier `/sign-in` et `/sign-up` : l'inscription affichait « Create a password » ;
+  - `getToken()` lève une erreur hors connexion au lieu de rendre `null` : l'appeler dans un `try`.
+- Icônes : paquet `@lucide/vue`, classe `lucide-<nom>` (plus `lucide-<nom>-icon`). Swiper 14 : garder une instance dans un `shallowRef`, car un `ref` profond fait perdre le type de ses méthodes. TypeScript 7 n'est pas utilisable sur le site : vue-tsc vérifie les `.vue` avec TypeScript 6.
 - Le build de l'image `scraping` (Playwright + Chromium, ~2 Go) prend ~15 min sur le VPS ; les autres rebuilds sont rapides grâce au cache.
 - Vérifications post-déploiement : `https://indiehost.fr`, `/api/health`, `docker compose ps scraping` (healthy ; `/scraping/*` n'est plus routé publiquement), un sous-domaine `*.indiehost.fr`, `http://` → 301 ; `docker compose logs migrate` doit afficher « All migrations have been successfully applied ».
 - Ne pas nommer une classe comme un utilitaire Tailwind (`grid`, `flex`, `hidden`, `table`, `container`…) : @nuxt/ui charge Tailwind et la règle s'applique (un tableau `class="grid"` passait en `display: grid`).
