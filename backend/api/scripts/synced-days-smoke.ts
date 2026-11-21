@@ -44,4 +44,34 @@ result = apply({ price: 60 });
 assert.deepEqual(result['booked-days'], [booking1, booking2]);
 assert.deepEqual(result['external-booked-days'], [booking1, booking2]);
 
-console.log('preserveSyncedBookedDays : 4 cas vérifiés');
+// 5. « Ajouter une réservation » d'un site resté sur l'ancienne version : une fiche `legacy-…` par
+//    période bloquée, périodes Booking comprises. Celles-ci ne deviennent pas des réservations ;
+//    la vraie réservation et la fiche d'un blocage manuel restent.
+const realReservation = { id: 'res-1', start: '2026-11-24', end: '2026-11-27', guestName: 'Camille' };
+const legacyBooking = { id: 'legacy-listing-1-2026-12-07-2028-05-11', start: booking2.start, end: booking2.end, guestName: 'Voyageur' };
+const legacyManual = { id: 'legacy-listing-1-2027-01-10-2027-01-12', start: manual.start, end: manual.end, guestName: 'Voyageur' };
+result = apply({
+  reservations: [realReservation, legacyBooking, legacyManual],
+  'booked-days': [
+    { start: realReservation.start, end: realReservation.end },
+    booking2,
+    manual,
+  ],
+  'external-booked-days': [booking1, booking2],
+});
+assert.deepEqual(result.reservations, [realReservation, legacyManual]);
+assert.deepEqual(result['booked-days'], [
+  { start: realReservation.start, end: realReservation.end },
+  manual,
+  booking1,
+  booking2,
+]);
+assert.deepEqual(result['external-booked-days'], [booking1, booking2]);
+
+// 6. Une réservation saisie par l'hôte sur les dates exactes d'une période importée est gardée :
+//    seule une fiche fabriquée (`legacy-…`) est écartée.
+const hostOnImported = { id: 'res-2', start: booking1.start, end: booking1.end, guestName: 'Louis' };
+result = apply({ reservations: [hostOnImported] });
+assert.deepEqual(result.reservations, [hostOnImported]);
+
+console.log('preserveSyncedBookedDays : 6 cas vérifiés');

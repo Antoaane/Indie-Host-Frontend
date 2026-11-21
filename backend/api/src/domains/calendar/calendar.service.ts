@@ -130,17 +130,6 @@ function sortRanges(ranges: DayRange[]): DayRange[] {
   });
 }
 
-// Identifiant d'une période importée (Airbnb, Booking…) dans le flux qu'IndieHost publie. Jamais
-// l'identifiant d'origine : Booking importe ce flux, et y retrouvait ses propres événements sous
-// leur identifiant, comme s'ils venaient d'ailleurs (le 2026-11-11, il avait cessé d'exporter ses
-// fermetures). Stable d'une synchronisation à l'autre, sinon chaque import créerait de nouveaux
-// événements chez les plateformes abonnées.
-function buildExportedImportUid(listingId: string, event: { externalUid: string | null; startDate: Date; endDate: Date }): string {
-  const origin = event.externalUid ?? `${event.startDate.toISOString()}__${event.endDate.toISOString()}`;
-  const digest = createHash('sha256').update(`${listingId}:${origin}`).digest('hex').slice(0, 32);
-  return `import-${digest}@indiehost.fr`;
-}
-
 // Jours fermés à la main par l'hôte (`booked-days` hors réservations et calendriers importés) : publiés
 // eux aussi, sous un identifiant tiré de la période. Avant le 2026-11-11, ils ne sortaient que pour une
 // annonce sans aucune réservation, sous un identifiant qui changeait avec leur rang dans la liste.
@@ -398,20 +387,19 @@ export class CalendarService {
       });
     }
 
+    // Les périodes importées (Airbnb, Booking…) ne sont jamais republiées : ce flux ne porte que ce
+    // qui naît sur IndieHost, comme le font Airbnb et Booking avec le leur. Les renvoyer créait une
+    // boucle avec la plateforme d'origine. Booking, qui importe ce flux, cesse d'exporter ses propres
+    // fermetures dès qu'un calendrier importé les couvre : IndieHost recevait alors seulement le
+    // reste, le renvoyait, et Booking exportait de nouveau la première moitié. Le 2026-11-21, le
+    // calendrier de « Raisins Clairs » alternait ainsi entre deux moitiés d'une même fermeture
+    // (7 décembre → 14 janvier, puis 14 janvier → 1er février…) : la moitié absente était réservable
+    // sur IndieHost, et une date rouverte chez Booking y restait fermée par l'ancien écho.
+    // Elles ne servent plus ici qu'à ne pas prendre leurs jours pour des fermetures manuelles.
     const blockingImportedEvents = importedEvents.filter((event) => isBlockingEventStatus(event.status));
 
-    for (const event of blockingImportedEvents) {
-      calendar.createEvent({
-        id: buildExportedImportUid(listingId, event),
-        start: event.startDate,
-        end: event.endDate,
-        summary: 'Indisponible',
-        status: toIcalStatus(event.status),
-      });
-    }
-
-    // Jours fermés à la main : ceux de `booked-days` qui ne sont ni une réservation ni une période
-    // importée (déjà publiées ci-dessus).
+    // Jours fermés à la main : ceux de `booked-days` qui ne sont ni une réservation (publiée
+    // ci-dessus) ni une période importée.
     const publishedKeys = new Set<string>([
       ...reservationEvents.map((event) => normalizeDayRange(event.start, event.end, true)),
       ...blockingImportedEvents.map((event) => normalizeDayRange(event.startDate, event.endDate, true)),

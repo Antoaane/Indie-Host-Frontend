@@ -186,7 +186,7 @@
           "subtitle": "Ajoutez vos calendriers externes et récupérez le lien iCal de cette annonce.",
           "export": {
             "label": "Lien iCal de cette annonce",
-            "hint": "Copiez ce lien pour l’ajouter sur Airbnb, Booking et vos autres plateformes.",
+            "hint": "Copiez ce lien pour l’ajouter sur Airbnb, Booking et vos autres plateformes : il leur transmet vos réservations IndieHost. Les dates importées d’une plateforme ne sont pas renvoyées aux autres : reliez aussi vos plateformes entre elles.",
             "copyCta": "Copier le lien",
             "openCta": "Ouvrir le lien",
             "copySuccess": "Lien iCal copié.",
