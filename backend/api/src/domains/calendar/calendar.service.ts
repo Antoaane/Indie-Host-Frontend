@@ -8,6 +8,7 @@ import nodeIcal from 'node-ical';
 import type { VEvent } from 'node-ical';
 
 import { env } from '../../config/env.js';
+import { acquireListingCalendarSyncLock } from '../../lib/advisoryLock.js';
 import { asObject } from '../../lib/json.js';
 import { toPrismaJson } from '../../lib/prisma.js';
 import { assertPublicHttpsUrl, fetchPublicText, RemoteFetchError } from '../../lib/safeRemoteFetch.js';
@@ -49,6 +50,20 @@ type ReplaceSyncEventsResult = {
   importedEvents: number;
   blockingEvents: number;
   changed: boolean;
+};
+
+/** Bilan d'une passe planifiée sur tous les calendriers importés (`jobs/calendarSync.ts`). */
+export type ScheduledSyncReport = {
+  /** Calendriers qui ont une adresse à relire. */
+  sources: number;
+  synced: number;
+  /** Parmi les calendriers relus, ceux dont les dates ont changé. */
+  changed: number;
+  /** Relus il y a moins longtemps que le délai minimal (visite de l'annonce, « Forcer une synchro »). */
+  skipped: number;
+  failed: Array<{ syncId: string; listingId: string; name: string | null; error: string; newlyFailed: boolean }>;
+  /** Annonces dont les jours bloqués ont été réécrits. */
+  listingsUpdated: number;
 };
 
 type StoredExternalEvent = {
@@ -228,7 +243,7 @@ export class CalendarService {
 
   constructor(private readonly prisma: PrismaClient) {}
 
-  private resolveFreshness(lastSyncedAt: Date | null) {
+  private resolveFreshness(lastSyncedAt: Date | null, throttleMs: number = this.syncThrottleMs) {
     if (!lastSyncedAt) {
       return {
         isFresh: false,
@@ -236,7 +251,7 @@ export class CalendarService {
       };
     }
 
-    const staleAfter = new Date(lastSyncedAt.getTime() + this.syncThrottleMs);
+    const staleAfter = new Date(lastSyncedAt.getTime() + throttleMs);
 
     return {
       isFresh: staleAfter.getTime() > Date.now(),
@@ -458,28 +473,6 @@ export class CalendarService {
   private async replaceSyncEvents(listingId: string, syncId: string, sourceIcal: string): Promise<ReplaceSyncEventsResult> {
     const parsed = nodeIcal.sync.parseICS(sourceIcal);
 
-    const previousEvents = await this.prisma.calendarEvent.findMany({
-      where: {
-        listingId,
-        calendarSyncId: syncId,
-        source: EXTERNAL_SOURCE,
-      },
-      select: {
-        listingId: true,
-        calendarSyncId: true,
-        externalUid: true,
-        source: true,
-        startDate: true,
-        endDate: true,
-        summary: true,
-        description: true,
-        status: true,
-      },
-      orderBy: {
-        startDate: 'asc',
-      },
-    });
-
     const deduped = new Map<string, StoredExternalEvent>();
 
     for (const value of Object.values(parsed)) {
@@ -519,31 +512,48 @@ export class CalendarService {
     }
 
     const nextEvents = Array.from(deduped.values());
-
-    // Flux vide alors que la source fermait encore des dates : on garde les jours bloqués (voir
-    // `emptyFeedGuard.ts`). L'erreur est enregistrée sur la source et affichée à l'hôte.
-    if (isSuspiciousEmptyFeed(previousEvents, nextEvents.length)) {
-      throw new Error(EMPTY_FEED_ERROR_MESSAGE);
-    }
-
-    const previousSignatures = previousEvents.map((item) => eventSignature(item)).sort();
     const nextSignatures = nextEvents.map((item) => eventSignature(item)).sort();
-    const changed = !areStringListsEqual(previousSignatures, nextSignatures);
+    const sourceEvents = { listingId, calendarSyncId: syncId, source: EXTERNAL_SOURCE };
 
-    await this.prisma.$transaction(async (tx) => {
-      await tx.calendarEvent.deleteMany({
-        where: {
-          listingId,
-          calendarSyncId: syncId,
-          source: EXTERNAL_SOURCE,
+    // Lecture, comparaison et remplacement dans une seule transaction, sous un verrou par annonce :
+    // deux relectures du même calendrier au même moment ne se croisent pas. Un flux identique au
+    // précédent ne réécrit rien (la tâche planifiée relit chaque calendrier toutes les 5 minutes).
+    const changed = await this.prisma.$transaction(async (tx) => {
+      await acquireListingCalendarSyncLock(tx, listingId);
+
+      const previousEvents = await tx.calendarEvent.findMany({
+        where: sourceEvents,
+        select: {
+          listingId: true,
+          calendarSyncId: true,
+          externalUid: true,
+          source: true,
+          startDate: true,
+          endDate: true,
+          summary: true,
+          description: true,
+          status: true,
         },
       });
+
+      // Flux vide alors que la source fermait encore des dates : on garde les jours bloqués (voir
+      // `emptyFeedGuard.ts`). L'erreur est enregistrée sur la source et affichée à l'hôte.
+      if (isSuspiciousEmptyFeed(previousEvents, nextEvents.length)) {
+        throw new Error(EMPTY_FEED_ERROR_MESSAGE);
+      }
+
+      const previousSignatures = previousEvents.map((item) => eventSignature(item)).sort();
+      if (areStringListsEqual(previousSignatures, nextSignatures)) return false;
+
+      await tx.calendarEvent.deleteMany({ where: sourceEvents });
 
       if (nextEvents.length) {
         await tx.calendarEvent.createMany({
           data: nextEvents,
         });
       }
+
+      return true;
     });
 
     return {
@@ -713,7 +723,7 @@ export class CalendarService {
     }
   }
 
-  private async syncExistingSource(sync: CalendarSync, options?: { force?: boolean }): Promise<SourceSyncOutcome> {
+  private async syncExistingSource(sync: CalendarSync, options?: { force?: boolean; throttleMs?: number }): Promise<SourceSyncOutcome> {
     if (!sync.sourceUrl) {
       return this.buildSourceSyncOutcome(sync, {
         status: 'skipped',
@@ -721,9 +731,12 @@ export class CalendarService {
     }
 
     const force = Boolean(options?.force);
+    // Délai minimal entre deux relectures : celui des visites de l'annonce par défaut, plus court
+    // pour la tâche planifiée, qui a son propre rythme.
+    const throttleMs = options?.throttleMs ?? this.syncThrottleMs;
 
     if (!force) {
-      const freshness = this.resolveFreshness(sync.lastSyncedAt);
+      const freshness = this.resolveFreshness(sync.lastSyncedAt, throttleMs);
       if (freshness.isFresh) {
         return this.buildSourceSyncOutcome(sync, {
           status: 'throttled',
@@ -735,7 +748,7 @@ export class CalendarService {
           id: sync.id,
           OR: [
             { lastSyncedAt: null },
-            { lastSyncedAt: { lt: new Date(Date.now() - this.syncThrottleMs) } },
+            { lastSyncedAt: { lt: new Date(Date.now() - throttleMs) } },
           ],
         },
         data: {
@@ -922,6 +935,104 @@ export class CalendarService {
       skippedSources: outcomes.filter((item) => item.status === 'skipped').length,
       sources: outcomes,
     };
+  }
+
+  /**
+   * Passe planifiée (`jobs/calendarSync.ts`) : relit tous les calendriers importés des annonces non
+   * supprimées, sans attendre qu'un visiteur ouvre l'annonce ni que l'hôte clique. Une réservation
+   * prise sur Airbnb ou Booking ferme ainsi les dates sur IndieHost en quelques minutes.
+   *
+   * @param options.minAgeMs Un calendrier relu depuis moins longtemps (visite, « Forcer une synchro »)
+   *   est laissé pour la passe suivante.
+   * @param options.concurrency Annonces traitées en même temps ; les calendriers d'une même annonce
+   *   le sont l'un après l'autre.
+   */
+  async syncAllSources(options: { minAgeMs: number; concurrency?: number }): Promise<ScheduledSyncReport> {
+    const sources = await this.prisma.calendarSync.findMany({
+      where: {
+        sourceUrl: { not: null },
+        listing: { status: { not: 'deleted' } },
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+
+    const report: ScheduledSyncReport = {
+      sources: sources.length,
+      synced: 0,
+      changed: 0,
+      skipped: 0,
+      failed: [],
+      listingsUpdated: 0,
+    };
+
+    const byListing = new Map<string, CalendarSync[]>();
+    for (const source of sources) {
+      const list = byListing.get(source.listingId);
+      if (list) list.push(source);
+      else byListing.set(source.listingId, [source]);
+    }
+
+    const queue = Array.from(byListing.entries());
+
+    const worker = async () => {
+      for (let next = queue.shift(); next; next = queue.shift()) {
+        const [listingId, listingSources] = next;
+        let attempted = false;
+
+        for (const source of listingSources) {
+          const fail = (error: string) => report.failed.push({
+            syncId: source.id,
+            listingId,
+            name: source.name ?? null,
+            error,
+            newlyFailed: source.lastStatus !== SYNC_STATUS_ERROR,
+          });
+
+          try {
+            const outcome = await this.syncExistingSource(source, { force: false, throttleMs: options.minAgeMs });
+            if (outcome.status === 'synced') {
+              attempted = true;
+              report.synced += 1;
+              if (outcome.changed) report.changed += 1;
+            } else if (outcome.status === 'failed') {
+              attempted = true;
+              fail(outcome.lastError ?? 'Unknown iCal sync error.');
+            } else {
+              report.skipped += 1;
+            }
+          } catch (error) {
+            // Erreur hors de la lecture du calendrier (base de données) : les autres annonces continuent.
+            attempted = true;
+            fail(normalizeErrorMessage(error));
+          }
+        }
+
+        if (!attempted) continue;
+
+        try {
+          // Recalculé même après un échec (voir `syncListingSourcesForPublicView`).
+          if (await this.rebuildListingBookedDaysFromCalendarEvents(listingId)) report.listingsUpdated += 1;
+        } catch (error) {
+          const first = listingSources[0]!;
+          if (!report.failed.some((item) => item.listingId === listingId)) {
+            report.failed.push({
+              syncId: first.id,
+              listingId,
+              name: first.name ?? null,
+              error: normalizeErrorMessage(error),
+              newlyFailed: true,
+            });
+          }
+        }
+      }
+    };
+
+    const workers = Math.max(1, Math.min(options.concurrency ?? 4, queue.length));
+    await Promise.all(Array.from({ length: workers }, () => worker()));
+
+    return report;
   }
 
   /**

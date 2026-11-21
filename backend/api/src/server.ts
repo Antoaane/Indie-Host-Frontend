@@ -1,5 +1,6 @@
 import { buildApp } from './app.js';
 import { env } from './config/env.js';
+import { startCalendarSyncScheduler } from './jobs/calendarSync.js';
 import { startHostRemindersScheduler } from './jobs/hostReminders.js';
 import { startPublicSitesScheduler } from './jobs/publicSites.js';
 import { startRetentionScheduler } from './jobs/retention.js';
@@ -34,6 +35,17 @@ async function start() {
       const stopPublicSites = startPublicSitesScheduler(app.prisma, app.log);
       app.addHook('onClose', async () => {
         stopPublicSites();
+      });
+    }
+
+    // Calendriers importés (Airbnb, Booking…) relus sans attendre une visite de l'annonce ni un clic
+    // de l'hôte ; ICAL_SYNC_JOB_ENABLED=false pour couper, ICAL_SYNC_JOB_INTERVAL_SECONDS pour le rythme.
+    if (env.ICAL_SYNC_JOB_ENABLED) {
+      const stopCalendarSync = startCalendarSyncScheduler(app.prisma, app.log, {
+        intervalMs: env.ICAL_SYNC_JOB_INTERVAL_SECONDS * 1000,
+      });
+      app.addHook('onClose', async () => {
+        stopCalendarSync();
       });
     }
   }

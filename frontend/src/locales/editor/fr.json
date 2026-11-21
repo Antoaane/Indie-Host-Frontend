@@ -205,6 +205,7 @@
           },
           "sources": {
             "title": "Sources connectées",
+            "autoSyncHint": "IndieHost relit ces calendriers tout seul, toutes les 5 minutes environ. Une réservation prise sur une autre plateforme ferme les dates ici sans rien faire.",
             "loading": "Chargement des sources iCal...",
             "empty": "Aucune source iCal ajoutée pour cette annonce.",
             "defaultName": "Source sans nom",

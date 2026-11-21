@@ -15,3 +15,15 @@ export async function acquireListingBookingLock(tx: Prisma.TransactionClient, li
   // de lire (« UnsupportedNativeDataType »). Toute réservation échouait.
   await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${LISTING_BOOKING_LOCK_NAMESPACE}::text), hashtext(${listingId}::text))`;
 }
+
+const LISTING_CALENDAR_SYNC_LOCK_NAMESPACE = 'indiehost.listing_calendar_sync';
+
+/**
+ * Même principe pour le remplacement des événements importés d'une annonce : la tâche planifiée, la
+ * consultation de l'annonce et « Forcer une synchro » peuvent relire le même calendrier au même
+ * moment. Sans verrou, les deux remplacements se croisent et le second bute sur la contrainte unique
+ * (annonce, identifiant d'événement), ce qui affiche à tort « calendrier déjà importé ».
+ */
+export async function acquireListingCalendarSyncLock(tx: Prisma.TransactionClient, listingId: string): Promise<void> {
+  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${LISTING_CALENDAR_SYNC_LOCK_NAMESPACE}::text), hashtext(${listingId}::text))`;
+}
