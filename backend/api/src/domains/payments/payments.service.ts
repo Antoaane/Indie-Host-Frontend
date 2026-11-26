@@ -20,7 +20,12 @@ import { toPrismaJson } from '../../lib/prisma.js';
 import { hasAdminAccess } from '../../lib/authRole.js';
 import type { RequestAuth } from '../../types/auth.js';
 import { resolveUserByIdentifier, upsertUserFromAuth } from '../users/users.repository.js';
-import { computeReservationTotal, isReservationRangeAvailable } from './reservationPricing.js';
+import {
+  computeReservationTotal,
+  isReservationRangeAvailable,
+  resolveBookingHorizonMonths,
+  resolveLastBookableDate,
+} from './reservationPricing.js';
 
 type CheckoutPaymentChoice = 'full' | 'split' | 'cash';
 type CheckoutDeferredMode = 'none' | 'online' | 'cash';
@@ -374,6 +379,8 @@ type ListingOccupancyRules = {
 type ListingStayRules = {
   minNights: number;
   maxNights: number | null;
+  // Nombre de mois ouverts à la réservation à partir d'aujourd'hui (1 à 24, réglé par l'hôte).
+  bookingHorizonMonths: number;
 };
 
 type ListingPaymentRules = {
@@ -702,6 +709,7 @@ function resolveStayRules(pricing: Record<string, unknown>): ListingStayRules {
   return {
     minNights,
     maxNights,
+    bookingHorizonMonths: resolveBookingHorizonMonths({ pricing }),
   };
 }
 
@@ -774,6 +782,13 @@ function normalizeReservationInput(
   }
   if (rules.stay.maxNights !== null && nights > rules.stay.maxNights) {
     throw createBadRequestError(`Sejour maximum: ${rules.stay.maxNights} nuit(s).`, 'INVALID_RESERVATION_NIGHTS');
+  }
+  // Le calendrier du site s'arrête à la fenêtre de réservation de l'annonce : le serveur aussi.
+  if (endISO > resolveLastBookableDate(rules.stay.bookingHorizonMonths)) {
+    throw createBadRequestError(
+      'Ces dates sont trop lointaines : cette annonce n’est pas encore ouverte à la réservation à cette période.',
+      'RESERVATION_TOO_FAR_AHEAD',
+    );
   }
 
   const rawOccupants = asObject(reservation.occupants);

@@ -5,6 +5,7 @@ import { computed } from 'vue'
 import DatePicker from '@/components/DatePicker/DatePicker.vue'
 import type { BookingsModel } from '@/views/ListingView/types/listing'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
+import { resolveLastBookableDate } from '@/domain/listings/reservationRules'
 import { useListingViewport } from '@/views/ListingView/composables/useListingViewport'
 
 const props = withDefaults(
@@ -34,6 +35,8 @@ const selection = computed<RangeISO | null>({
 })
 
 const disabledDates = computed<RangeISO[]>(() => (props.data?.bookedDays ?? []).map(({ start, end }) => ({ start, end })))
+// Même limite que le module de réservation : la fenêtre réglée par l'hôte.
+const lastBookableDate = computed(() => (props.data?.rules ? resolveLastBookableDate(props.data.rules.stay.bookingHorizonMonths) : null))
 </script>
 
 <template>
@@ -44,6 +47,7 @@ const disabledDates = computed<RangeISO[]>(() => (props.data?.bookedDays ?? []).
     <DatePicker
       v-model:model-value="selection"
       :disabled-dates="disabledDates"
+      :max-date="lastBookableDate"
       :numberOfMonths="calendarMonthsCount"
     />
   </section>

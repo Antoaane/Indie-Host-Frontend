@@ -57,6 +57,13 @@
         stroke: $secondary-button-reference !important;
       }
 
+      // Premier ou dernier mois proposé (mois en cours, fin de la fenêtre de réservation) : la
+      // flèche restait à l'identique et ne répondait plus.
+      &:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+      }
+
       @include on-hover(':not(:disabled)') {
         color: $accent;
         stroke: $secondary-button-reference;

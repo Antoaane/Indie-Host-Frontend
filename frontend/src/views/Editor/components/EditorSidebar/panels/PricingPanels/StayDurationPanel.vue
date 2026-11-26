@@ -4,6 +4,7 @@
 import { computed } from 'vue'
 import NumberStepper from '@/components/inputs/NumberStepper.vue'
 import type { RawBookings } from '@/domain/listings/types'
+import { BOOKING_HORIZON_MONTHS_CHOICES, resolveBookingHorizonMonths } from '@/domain/listings/reservationRules'
 import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 import { clampInteger, formatValidationMessage, parseOptionalInteger } from '@/utils/inputValidation'
@@ -19,6 +20,7 @@ type PricingStay = {
   weeklyDiscount?: number | null
   monthlyDiscount?: number | null
   durationDiscounts?: PricingDurationDiscountTier[]
+  bookingHorizonMonths?: number | null
 }
 
 type PricingSettings = {
@@ -47,6 +49,27 @@ const minNights = computed(() => clampInteger(stay.value.minNights, pricingLimit
 const maxNights = computed(() => (Number.isFinite(Number(stay.value.maxNights)) ? clampInteger(stay.value.maxNights, pricingLimits.minNights, pricingLimits.maxNights, pricingLimits.minNights) : null))
 
 const durationDiscounts = computed<NormalizedDurationDiscountTier[]>(() => normalizeDurationDiscounts(stay.value.durationDiscounts, stay.value))
+
+// Fenêtre de réservation : nombre de mois ouverts à partir d'aujourd'hui (24 sans réglage). Une
+// valeur hors de la liste (annonce modifiée ailleurs) reste proposée telle quelle.
+const bookingHorizonMonths = computed(() => resolveBookingHorizonMonths(stay.value.bookingHorizonMonths))
+const bookingHorizonChoices = computed(() => {
+  const choices: number[] = [...BOOKING_HORIZON_MONTHS_CHOICES]
+  if (!choices.includes(bookingHorizonMonths.value)) choices.push(bookingHorizonMonths.value)
+  return choices.sort((a, b) => a - b)
+})
+// Booking ne publie ses fermetures que sur 18 mois environ : au-delà, on prévient l'hôte.
+const showBookingHorizonImportHint = computed(() => bookingHorizonMonths.value > 18)
+
+function bookingHorizonOptionLabel(months: number) {
+  return panelContent.bookingHorizonOption.replace('{count}', String(months))
+}
+
+function setBookingHorizonMonths(raw: string) {
+  const next = resolveBookingHorizonMonths(raw)
+  if (next === bookingHorizonMonths.value) return
+  updateStay({ bookingHorizonMonths: next })
+}
 
 const stayHint = computed(() =>
   formatValidationMessage(pricingLimits.messages.stayHint, {
@@ -299,6 +322,34 @@ function stepDurationDiscount(index: number, delta: number) {
         />
       </div>
 
+      <div class="field">
+        <div class="field-label">
+          <p>{{ panelContent.bookingHorizonLabel }}</p>
+        </div>
+        <div class="select">
+          <select
+            :value="bookingHorizonMonths"
+            :aria-label="panelContent.bookingHorizonLabel"
+            @change="setBookingHorizonMonths(($event.target as HTMLSelectElement).value)"
+          >
+            <option
+              v-for="months in bookingHorizonChoices"
+              :key="months"
+              :value="months"
+            >
+              {{ bookingHorizonOptionLabel(months) }}
+            </option>
+          </select>
+        </div>
+        <p class="field-hint">{{ panelContent.bookingHorizonHint }}</p>
+        <p
+          v-if="showBookingHorizonImportHint"
+          class="field-hint"
+        >
+          {{ panelContent.bookingHorizonImportHint }}
+        </p>
+      </div>
+
       <div class="discount-tiers">
         <div class="discount-header">
           <div class="copy">
@@ -390,6 +441,15 @@ function stepDurationDiscount(index: number, delta: number) {
 
     .field-label {
       @extend %panel-field-label;
+    }
+
+    .select {
+      @extend %panel-select;
+    }
+
+    .field-hint {
+      @include little-text(rgba($secondary-text, 0.72), $thin: false);
+      margin-top: var(--layout-gap-xs);
     }
 
     .discount-tiers {

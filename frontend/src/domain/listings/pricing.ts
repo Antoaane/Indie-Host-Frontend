@@ -29,6 +29,19 @@ export type NightlyPriceBreakdown = {
   appliedDurationDiscountTier: DurationDiscountTier | null
   nightlyTotal: number
   averageNightlyPrice: number
+  /** Majoration du prix par nuit selon le nombre de voyageurs, déjà comprise dans les prix (0 = prix de base). */
+  guestSurchargePercent: number
+}
+
+export const GUEST_SURCHARGE_PERCENT_MAX = 200
+
+/**
+ * Prix par nuit majoré selon le nombre de voyageurs, arrondi à l'euro : c'est le prix que le
+ * voyageur lit, et le total en est un multiple exact. Copié dans l'API (`reservationPricing.ts`).
+ */
+export function applyGuestSurcharge(price: number, percent: number): number {
+  if (!(percent > 0)) return price
+  return Math.round((price * (100 + percent)) / 100)
 }
 
 function clampInteger(value: unknown, min: number, max: number, fallback = min): number {
@@ -120,16 +133,23 @@ export function computeNightlyPriceBreakdown({
   basePrice,
   weekendPricing,
   durationDiscountTiers,
+  guestSurchargePercent,
 }: {
   startISO: string
   endISO: string
   basePrice: number
   weekendPricing?: WeekendPricingConfig | null
   durationDiscountTiers?: DurationDiscountTier[] | null
+  /** Majoration selon le nombre de voyageurs : appliquée au prix de semaine et au prix de week-end. */
+  guestSurchargePercent?: number | null
 }): NightlyPriceBreakdown {
   const nights = Math.max(0, nightsBetween(startISO, endISO))
-  const weekdayPrice = toNonNegativeAmount(basePrice)
-  const weekendPrice = weekendPricing?.enabled ? toNonNegativeAmount(weekendPricing.price, weekdayPrice) : weekdayPrice
+  const surchargePercent = clampInteger(guestSurchargePercent, 0, GUEST_SURCHARGE_PERCENT_MAX, 0)
+  const baseWeekdayPrice = toNonNegativeAmount(basePrice)
+  const weekdayPrice = applyGuestSurcharge(baseWeekdayPrice, surchargePercent)
+  const weekendPrice = weekendPricing?.enabled
+    ? applyGuestSurcharge(toNonNegativeAmount(weekendPricing.price, baseWeekdayPrice), surchargePercent)
+    : weekdayPrice
   const weekendNights = weekendPricing?.enabled ? Math.min(nights, countWeekendNights(startISO, endISO)) : 0
   const weekdayNights = Math.max(0, nights - weekendNights)
   const weekdayTotal = weekdayNights * weekdayPrice
@@ -156,5 +176,6 @@ export function computeNightlyPriceBreakdown({
     appliedDurationDiscountTier,
     nightlyTotal,
     averageNightlyPrice,
+    guestSurchargePercent: surchargePercent,
   }
 }

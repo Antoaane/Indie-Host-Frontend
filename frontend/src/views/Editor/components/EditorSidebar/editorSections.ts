@@ -3,6 +3,7 @@
 import type { InjectionKey } from 'vue'
 
 import type { RawListingBundle } from '@/domain/listings/types'
+import { resolveBookingHorizonMonths, resolveListingReservationRules } from '@/domain/listings/reservationRules'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 
 /**
@@ -20,6 +21,7 @@ export type EditorSectionId =
   | 'amenities'
   | 'location'
   | 'pricingBase'
+  | 'guestTiers'
   | 'stay'
   | 'fees'
   | 'taxes'
@@ -85,6 +87,7 @@ export const EDITOR_GROUPS: EditorGroupDefinition[] = [
     listingOnly: true,
     sections: [
       { id: 'pricingBase', label: sectionLabels.pricingBase },
+      { id: 'guestTiers', label: sectionLabels.guestTiers },
       { id: 'stay', label: sectionLabels.stay },
       { id: 'fees', label: sectionLabels.fees },
       { id: 'taxes', label: sectionLabels.taxes },
@@ -304,6 +307,11 @@ export function computeEditorSectionSummaries(
   const stay = record(pricing.stay)
   const minNights = amount(stay.minNights) || 1
   const tiers = list(stay.durationDiscounts).length
+  const bookingHorizon = resolveBookingHorizonMonths(stay.bookingHorizonMonths)
+  // Paliers par nombre de voyageurs, lus comme le calcul du prix ; seules les hausses sont citées.
+  const guestTiers = resolveListingReservationRules({ core: draft.core, bookings: draft.bookings }).guestTiers
+    .filter((tier, index, all) => tier.percent !== (all[index - 1]?.percent ?? 0))
+    .map((tier) => `+${tier.percent} % dès ${tier.guests}`)
   const fees = list(bookings.fees)
     .map((fee) => record(fee))
     .filter((fee) => amount(fee.amount) > 0)
@@ -349,9 +357,13 @@ export function computeEditorSectionSummaries(
     pricingBase: price
       ? [`${euros.format(price)} par nuit`, record(pricing.weekend).enabled ? 'tarif week-end' : ''].filter(Boolean).join(' · ')
       : 'Prix par nuit à indiquer',
+    guestTiers: guestTiers.length
+      ? clip(`${guestTiers.join(' · ')} voyageurs`, 72)
+      : 'Même prix quel que soit le nombre de voyageurs',
     stay: [
       `${count(minNights, 'nuit', 'nuits')} minimum`,
       tiers ? count(tiers, 'palier de réduction', 'paliers de réduction') : '',
+      `calendrier ouvert sur ${bookingHorizon} mois`,
     ].filter(Boolean).join(' · '),
     fees: fees.length ? clip(fees.join(' · '), 72) : 'Aucun frais',
     taxes: record(pricing.taxes).enabled ? 'Taxe de séjour activée' : 'Taxe de séjour non appliquée',

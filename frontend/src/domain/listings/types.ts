@@ -147,6 +147,13 @@ export type RawPricingStay = {
   monthlyDiscount?: number | null
   durationDiscounts?: RawPricingStayDiscountTier[]
   bookingWindowDiscounts?: RawPricingBookingWindowDiscountTier[]
+  /** Nombre de mois ouverts à la réservation à partir d'aujourd'hui (1 à 24, 24 par défaut). */
+  bookingHorizonMonths?: number | null
+}
+/** Palier de prix selon le nombre de voyageurs : majoration du prix par nuit à partir de `guests`. */
+export type RawPricingGuestTier = {
+  guests?: number | null
+  percent?: number | null
 }
 export type RawPricingStayDiscountTier = {
   minNights?: number | null
@@ -208,6 +215,7 @@ export type RawPricingSettings = Record<string, unknown> & {
   cancellation?: RawPricingCancellation
   weekend?: RawPricingWeekend
   extraGuests?: RawPricingExtraGuests
+  guestTiers?: RawPricingGuestTier[]
   taxes?: RawPricingTaxes
   payment?: RawPricingPayment
   occupancy?: RawPricingOccupancy

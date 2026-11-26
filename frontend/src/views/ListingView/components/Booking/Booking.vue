@@ -7,6 +7,7 @@ import { makeIsDateDisabled } from '@/components/DatePicker/utils/range'
 import {
   clampOccupantsToRules,
   computeReservationPricing,
+  resolveLastBookableDate,
   resolveListingReservationRules,
   validateReservationAgainstRules,
   type ListingReservationRules,
@@ -144,7 +145,9 @@ watch(
   { immediate: true, deep: true },
 )
 
-const isDateDisabled = computed(() => makeIsDateDisabled(bookedRanges.value))
+// Fenêtre de réservation réglée par l'hôte : au-delà de ce jour, le calendrier est fermé.
+const lastBookableDate = computed(() => resolveLastBookableDate(stayRules.value.bookingHorizonMonths))
+const isDateDisabled = computed(() => makeIsDateDisabled(bookedRanges.value, { lastDate: lastBookableDate.value }))
 
 const pricingBreakdown = computed(() => computeReservationPricing({
   startISO: selection.value?.start ?? null,
@@ -328,9 +331,13 @@ const extraGuestHint = computed(() =>
     : null,
 )
 
+// Paliers de l'hôte : le prix par nuit du détail suit le nombre de voyageurs choisi.
+const guestTierHint = computed(() => (props.rules.guestTiers.length > 0 ? 'prix selon le nombre de voyageurs' : null))
+
 const bookingRuleHint = computed(() => [
   travelerHint.value,
   stayHint.value,
+  guestTierHint.value,
   extraGuestHint.value,
 ].filter(Boolean).join(' · '))
 
@@ -354,7 +361,7 @@ const priceBreakdown = computed(() => {
       }
     } else {
       list.push({
-        label: `${nights.value} nuit${nights.value > 1 ? 's' : ''} (${currency.format(pricePerNight.value)} par nuit)`,
+        label: `${nights.value} nuit${nights.value > 1 ? 's' : ''} (${currency.format(breakdown.weekdayPrice)} par nuit)`,
         amount: currency.format(breakdown.nightlySubtotal),
       })
     }
@@ -362,7 +369,7 @@ const priceBreakdown = computed(() => {
 
   if (!list.length && nights.value > 0) {
     list.push({
-      label: `${nights.value} nuit${nights.value > 1 ? 's' : ''} (${currency.format(pricePerNight.value)} par nuit)`,
+      label: `${nights.value} nuit${nights.value > 1 ? 's' : ''} (${currency.format(nightlyBreakdown.value.weekdayPrice)} par nuit)`,
       amount: currency.format(nightlyBreakdown.value.nightlySubtotal),
     })
   }
@@ -396,7 +403,7 @@ const priceBreakdown = computed(() => {
 const pricePerNightLabel = computed(() => {
   const breakdown = nightlyBreakdown.value
   if (breakdown.nights <= 0) {
-    return `${currency.format(pricePerNight.value)} / nuit`
+    return `${currency.format(breakdown.weekdayPrice)} / nuit`
   }
 
   if (breakdown.weekendNights > 0 && breakdown.weekdayNights > 0) {
@@ -486,6 +493,7 @@ function reserve() {
             :booked-ranges="bookedRanges"
             :open="calendarOpen"
             :min-nights="minNights"
+            :max-date="lastBookableDate"
             @close="calendarOpen = false"
             @open="openCalendar"
           />

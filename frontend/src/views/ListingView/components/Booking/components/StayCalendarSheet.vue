@@ -5,7 +5,7 @@
 // nom (comme sur Airbnb, Booking ou Abritel), sans flèches à viser. Arrivée puis départ ; la sélection
 // n'est appliquée qu'à « Valider », et « Effacer » repart de zéro. Mêmes jours indisponibles que le
 // calendrier de bureau (`DatePicker.vue`) et que la réservation (`Booking.vue`).
-import { computed, nextTick, ref, shallowRef, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, reactive, ref, shallowRef, watch } from 'vue'
 import {
   RangeCalendarCell,
   RangeCalendarCellTrigger,
@@ -29,13 +29,16 @@ const props = withDefaults(
     modelValue: RangeISO | null
     bookedRanges?: RangeISO[]
     minNights?: number
-    /** Nombre de mois proposés, à partir du mois en cours. */
+    /** Dernier jour réservable (AAAA-MM-JJ) : les mois s'arrêtent à celui de ce jour. */
+    maxDate?: string | null
+    /** Nombre de mois proposés à partir du mois en cours, quand `maxDate` n'est pas donné. */
     months?: number
   }>(),
   {
     bookedRanges: () => [],
     minNights: 1,
-    months: 12,
+    maxDate: null,
+    months: 24,
   },
 )
 
@@ -45,8 +48,26 @@ const emit = defineEmits<{
 }>()
 
 const today = todayCalendarDate()
-const isDateDisabled = computed(() => makeIsDateDisabled(props.bookedRanges))
-const isPastDay = (date: DateValue) => toNum(date) < toNum(today)
+const maxValue = computed(() => {
+  if (!props.maxDate) return undefined
+  try {
+    return parseISO(props.maxDate)
+  } catch {
+    return undefined
+  }
+})
+// Du mois en cours à celui du dernier jour réservable, les deux compris.
+const monthCount = computed(() => {
+  const last = maxValue.value
+  if (!last) return props.months
+  return Math.max(1, (last.year - today.year) * 12 + (last.month - today.month) + 1)
+})
+const isDateDisabled = computed(() => makeIsDateDisabled(props.bookedRanges, { lastDate: props.maxDate }))
+// Jour passé, ou au-delà de la fenêtre de réservation : pâle, sans être barré comme un jour pris.
+const isOutOfWindow = (date: DateValue) => {
+  const day = toNum(date)
+  return day < toNum(today) || (maxValue.value ? day > toNum(maxValue.value) : false)
+}
 
 // Sélection en cours, appliquée seulement à « Valider ».
 const draft = shallowRef<DateRange>({ start: undefined, end: undefined })
@@ -61,15 +82,59 @@ function draftFromModel(value: RangeISO | null): DateRange {
   }
 }
 
+// Deux ans de calendrier, c'est 900 jours : tous montés à l'ouverture, la fenêtre mettait près
+// d'une demi-seconde à apparaître. Un mois n'est donc construit qu'à l'approche de l'écran ; d'ici
+// là il garde sa place (titre et hauteur exacte), pour que le défilement ne saute pas.
+const monthKeyOf = (month: DateValue) => toISO(month).slice(0, 7)
+const builtMonths = reactive(new Set<string>())
+const buildEveryMonth = ref(false)
+let monthObserver: IntersectionObserver | null = null
+
+function watchMonths() {
+  monthObserver?.disconnect()
+  monthObserver = null
+
+  const root = scroller.value
+  if (!root || typeof IntersectionObserver === 'undefined') {
+    buildEveryMonth.value = true
+    return
+  }
+
+  monthObserver = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue
+        const key = (entry.target as HTMLElement).dataset.month
+        if (key) builtMonths.add(key)
+        monthObserver?.unobserve(entry.target)
+      }
+    },
+    // Un écran d'avance au-dessus et en dessous : le mois est prêt avant d'arriver sous le doigt.
+    { root, rootMargin: '100% 0px' },
+  )
+  root.querySelectorAll<HTMLElement>('.month').forEach((month) => monthObserver?.observe(month))
+}
+
+onBeforeUnmount(() => monthObserver?.disconnect())
+
 watch(
   () => props.open,
   async (open) => {
-    if (!open) return
+    if (!open) {
+      monthObserver?.disconnect()
+      monthObserver = null
+      return
+    }
     draft.value = draftFromModel(props.modelValue)
+    builtMonths.clear()
+    buildEveryMonth.value = false
     // Le mois de l'arrivée choisie est amené à l'écran (sinon le mois en cours, déjà en haut).
     await nextTick()
-    const start = scroller.value?.querySelector<HTMLElement>('[data-selection-start]')
-    start?.closest<HTMLElement>('.month')?.scrollIntoView({ block: 'start' })
+    const startKey = draft.value.start ? monthKeyOf(draft.value.start) : null
+    if (startKey) {
+      scroller.value?.querySelector<HTMLElement>(`[data-month="${startKey}"]`)?.scrollIntoView({ block: 'start' })
+    }
+    watchMonths()
   },
   { immediate: true },
 )
@@ -164,7 +229,8 @@ function confirm() {
         class="calendar"
         :placeholder="today"
         :min-value="today"
-        :number-of-months="props.months"
+        :max-value="maxValue"
+        :number-of-months="monthCount"
         :fixed-weeks="false"
         :is-date-disabled="isDateDisabled"
         locale="fr"
@@ -189,10 +255,14 @@ function confirm() {
             v-for="month in grid"
             :key="month.value.toString()"
             class="month"
+            :data-month="monthKeyOf(month.value)"
           >
             <h3 class="month-title">{{ formatMonth(month.value) }}</h3>
             <!-- Pas de classe « grid » : c'est aussi un utilitaire Tailwind (display: grid). -->
-            <RangeCalendarGrid class="month-grid">
+            <RangeCalendarGrid
+              v-if="buildEveryMonth || builtMonths.has(monthKeyOf(month.value))"
+              class="month-grid"
+            >
               <RangeCalendarGridBody>
                 <RangeCalendarGridRow
                   v-for="(weekDates, weekIndex) in month.rows"
@@ -209,12 +279,18 @@ function confirm() {
                       :day="weekDate"
                       :month="month.value"
                       class="day"
-                      :class="{ 'is-past': isPastDay(weekDate) }"
+                      :class="{ 'is-out-of-window': isOutOfWindow(weekDate) }"
                     />
                   </RangeCalendarCell>
                 </RangeCalendarGridRow>
               </RangeCalendarGridBody>
             </RangeCalendarGrid>
+            <div
+              v-else
+              class="month-placeholder"
+              :style="{ '--month-rows': month.rows.length }"
+              aria-hidden="true"
+            />
           </section>
         </div>
       </RangeCalendarRoot>
@@ -249,6 +325,7 @@ function confirm() {
 @use '@/styles/variables/borders' as borders;
 @use '@/styles/variables/animations' as animations;
 @use '@/styles/components/buttons' as buttons;
+@use '@/components/DatePicker/stay-months.scss' as stay-months;
 
 .stay-calendar-sheet {
   // Plein écran : la sheet occupe toute la hauteur, au-dessus de la fenêtre de réservation.
@@ -329,15 +406,7 @@ function confirm() {
 
       >.weekdays {
         flex: 0 0 auto;
-        display: grid;
-        grid-template-columns: repeat(7, minmax(0, 1fr));
-        padding: var(--layout-gap-xs) var(--layout-gap) var(--layout-gap-sm);
-        border-bottom: 1px solid rgba($secondary, 0.1);
-
-        >span {
-          text-align: center;
-          @include little-text(rgba($secondary-text, 0.6), $bold: true);
-        }
+        @include stay-months.weekdays;
       }
 
       >.months {
@@ -346,147 +415,11 @@ function confirm() {
         overflow-y: auto;
         overscroll-behavior: contain;
         padding: 0 var(--layout-gap) var(--layout-gap-xl);
+        @include stay-months.months;
 
-        >.month {
-          padding-top: var(--layout-gap-xl);
-
-          >.month-title {
-            margin: 0 0 var(--layout-gap-sm) var(--layout-gap-xs);
-            text-transform: capitalize;
-            @include base-text($bold: true, $bigger: true);
-          }
-
-          >.month-grid {
-            width: 100%;
-            border-collapse: collapse;
-            table-layout: fixed;
-
-            .row>.cell {
-              position: relative;
-              padding: 1px 0;
-              text-align: center;
-
-              // Bandeau du séjour, derrière les jours, à la hauteur des cercles : il n'apparaît que
-              // pour un séjour complet (règles `.has-range` plus bas).
-              &::before {
-                content: '';
-                position: absolute;
-                top: 1px;
-                bottom: 1px;
-                left: 0;
-                right: 0;
-                background: rgba($secondary, 0.07);
-                opacity: 0;
-                pointer-events: none;
-                @include animations.transition(animations.$duration-fast, animations.$ease-out, opacity);
-              }
-
-              // Jours des mois voisins : chaque mois n'affiche que les siens.
-              &:has(.day[data-outside-view]) {
-                visibility: hidden;
-              }
-
-              >.day {
-                // Le mixin de texte d'abord : il remet la marge à 0 et décentrait le jour dans sa case
-                // (cercles collés à gauche, bandeau qui dépassait à droite du départ, chiffres décalés
-                // sous les lettres des jours).
-                @include base-text($bold: true);
-
-                position: relative;
-                z-index: 1;
-                width: 100%;
-                height: var(--tap-target);
-                max-width: var(--tap-target);
-                margin: 0 auto;
-
-                display: grid;
-                place-items: center;
-
-                border: none;
-                border-radius: borders.$rounded;
-                background-color: transparent;
-                font-variant-numeric: tabular-nums;
-                cursor: pointer;
-                @include animations.transition(animations.$duration-fast, animations.$ease-out, (background-color, color, transform));
-                @include animations.press();
-
-                &:focus-visible {
-                  outline: 2px solid $secondary;
-                  outline-offset: 1px;
-                }
-
-                // Aujourd'hui : un point sous le chiffre (l'anneau gris faisait une ombre de plus).
-                &[data-today]::after {
-                  content: '';
-                  position: absolute;
-                  left: 50%;
-                  bottom: 6px;
-                  width: 4px;
-                  height: 4px;
-                  margin-left: -2px;
-                  border-radius: borders.$rounded;
-                  background-color: currentColor;
-                }
-
-                // Indisponible (déjà réservé ou fermé) : barré. Passé : seulement pâle.
-                &[data-disabled] {
-                  color: rgba($secondary-text, 0.38);
-                  text-decoration: line-through;
-                  text-decoration-thickness: 1.5px;
-                  cursor: not-allowed;
-                }
-
-                &.is-past[data-disabled] {
-                  text-decoration: none;
-                }
-
-                &:is([data-selection-start], [data-selection-end]) {
-                  background-color: $secondary;
-                  color: $accent;
-                  text-decoration: none;
-                }
-              }
-            }
-          }
-        }
-
-        // Séjour complet : bandeau plein entre l'arrivée et le départ et, sous les deux cercles,
-        // seulement du côté du séjour (du centre du cercle au bord de la case). Après les règles des
-        // cases : même spécificité, c'est l'ordre qui tranche.
-        &.has-range .cell {
-          &:has(.day[data-selected])::before {
-            opacity: 1;
-          }
-
-          &:has(.day[data-selection-start])::before {
-            left: 50%;
-          }
-
-          &:has(.day[data-selection-end])::before {
-            right: 50%;
-          }
-
-          // Bord de rangée (semaine) ou de mois : le bandeau s'y arrondit au lieu d'être coupé net.
-          &:first-child::before,
-          &:has(.day[data-outside-view]) + .cell::before {
-            border-top-left-radius: borders.$rounded;
-            border-bottom-left-radius: borders.$rounded;
-          }
-
-          &:last-child::before,
-          &:has(+ .cell .day[data-outside-view])::before {
-            border-top-right-radius: borders.$rounded;
-            border-bottom-right-radius: borders.$rounded;
-          }
-
-          // Arrivée en fin de rangée, départ en début de rangée : le séjour continue sur l'autre
-          // ligne, rien à relier ici (le demi-bandeau dépassait du cercle).
-          &:last-child:has(.day[data-selection-start])::before,
-          &:has(+ .cell .day[data-outside-view]):has(.day[data-selection-start])::before,
-          &:first-child:has(.day[data-selection-end])::before,
-          &:has(.day[data-outside-view]) + .cell:has(.day[data-selection-end])::before {
-            opacity: 0;
-          }
+        // Place réservée à un mois pas encore construit : ses rangées, chacune haute comme un jour.
+        >.month>.month-placeholder {
+          height: calc(var(--month-rows) * (var(--tap-target) + 2px));
         }
       }
     }

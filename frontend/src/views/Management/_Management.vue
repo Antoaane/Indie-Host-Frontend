@@ -3,12 +3,13 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ArrowLeft, ArrowUpRight, CalendarOff, Pen, Trash2 } from '@lucide/vue'
+import { useMediaQuery } from '@vueuse/core'
+import { ArrowLeft, ArrowUpRight, CalendarDays, CalendarOff, Pen, Trash2, X } from '@lucide/vue'
 
-import DatePicker from '@/components/DatePicker/DatePicker.vue'
+import AbsoluteOverlay from '@/components/overlays/AbsoluteOverlay.vue'
 import ConfirmationDialog from '@/components/overlays/ConfirmationDialog.vue'
 import { cancelReservationAsHost } from '@/domain/api/bookings'
-import type { RangeISO } from '@/components/DatePicker/helpers/date'
+import { resolveBookingHorizonMonths, resolveLastBookableDate } from '@/domain/listings/reservationRules'
 import { vp } from '@/utils/viewport'
 import type { EditorMode, EditorSource } from '@/views/Editor/types/editor'
 import type { UserListingCard } from '@/views/Editor/utils/listingApi'
@@ -20,6 +21,7 @@ import type {
   ReservationPaymentManualEntry,
   ReservationPaymentManualMethod,
 } from '@/views/Management/utils/managementReservations'
+import ManagementCalendar from '@/views/Management/components/ManagementCalendar.vue'
 import ManagementPaymentEditor from '@/views/Management/components/ManagementPaymentEditor.vue'
 import ManagementSidebar from '@/views/Management/components/ManagementSidebar.vue'
 import ManagementReservationSlider from '@/views/Management/components/ManagementReservationSlider.vue'
@@ -109,6 +111,8 @@ const internalNoteTextareaRef = ref<HTMLTextAreaElement | null>(null)
 const reservationsByListingId = reactive<Record<string, Reservation[]>>({})
 // Périodes bloquées par un calendrier importé (Airbnb, Booking…), montrées à part des réservations.
 const importedBlocksByListingId = reactive<Record<string, ImportedBlock[]>>({})
+// Fenêtre de réservation de chaque logement, en mois (réglée dans l'éditeur, 24 sans réglage).
+const bookingHorizonByListingId = reactive<Record<string, number>>({})
 const liveSyncState = reactive({
   inFlight: false,
   timerId: null as number | null,
@@ -123,15 +127,11 @@ const reservationsForListing = computed(() => {
   return reservationsByListingId[selectedListingId.value] ?? []
 })
 
-const stayRange = computed<RangeISO | null>(() => {
-  const reservation = selectedReservation.value
-  if (!reservation) return null
-  return { start: reservation.start, end: reservation.end }
-})
-
-const stayMonthsCount = computed(() => {
-  return vp.xxxl.value ? 2 : 1
-})
+// Calendrier du logement : colonne à droite de la fiche à partir de 1 440 px, quand la liste des
+// logements (environ 500 px) et lui laissent encore 530 px à la fiche. En dessous, la fiche montre
+// les mois du séjour et ouvre tout le calendrier dans une fenêtre.
+const isCalendarDocked = useMediaQuery('(min-width: 1440px)')
+const isCalendarSheetOpen = ref(false)
 
 const selectedReservation = computed(() => {
   const items = reservationsForListing.value
@@ -153,34 +153,18 @@ const importedBlocksTitle = computed(() => {
   return count > 1 ? `${count} périodes bloquées par un calendrier importé` : 'Une période bloquée par un calendrier importé'
 })
 
-const blockedRangesForListing = computed<RangeISO[]>(() => {
-  return normalizeBookedDays([
-    ...reservationsForListing.value.map((reservation) => ({
-      start: reservation.start,
-      end: reservation.end,
-    })),
-    ...importedBlocksForListing.value.map((block) => ({
-      start: block.start,
-      end: block.end,
-    })),
-  ])
+// Dernier jour que les voyageurs peuvent réserver : au-delà, le calendrier montre des jours pâles.
+const lastBookableDateForListing = computed(() => {
+  if (!selectedListingId.value) return null
+  return resolveLastBookableDate(bookingHorizonByListingId[selectedListingId.value] ?? resolveBookingHorizonMonths(null))
 })
 
-const disabledStayRanges = computed<RangeISO[]>(() => {
-  const activeReservation = selectedReservation.value
-  if (!activeReservation) return blockedRangesForListing.value
-  return normalizeBookedDays([
-    ...reservationsForListing.value
-      .filter((reservation) => reservation.id !== activeReservation.id)
-      .map((reservation) => ({
-        start: reservation.start,
-        end: reservation.end,
-      })),
-    ...importedBlocksForListing.value.map((block) => ({
-      start: block.start,
-      end: block.end,
-    })),
-  ])
+const calendarHint = computed(() => {
+  const parts: string[] = []
+  if (reservationsForListing.value.length) parts.push('Choisissez une réservation pour l’ouvrir.')
+  else parts.push('Aucune réservation pour le moment.')
+  if (importedBlocksForListing.value.length) parts.push('Les jours barrés sont fermés par un calendrier importé.')
+  return parts.join(' ')
 })
 
 // Séjour mis en avant sur la carte de chaque logement : celui en cours, sinon le plus proche d'aujourd'hui.
@@ -198,6 +182,9 @@ function resetReservationsMap() {
   }
   for (const key of Object.keys(importedBlocksByListingId)) {
     delete importedBlocksByListingId[key]
+  }
+  for (const key of Object.keys(bookingHorizonByListingId)) {
+    delete bookingHorizonByListingId[key]
   }
 }
 
@@ -294,6 +281,7 @@ async function loadReservations(sourceListings: UserListingCard[]) {
       })
       reservationsByListingId[listing.listingId] = reservations
       importedBlocksByListingId[listing.listingId] = buildImportedBlocksForListing(volatile.bookings ?? null)
+      bookingHorizonByListingId[listing.listingId] = resolveBookingHorizonMonths(volatile.bookings?.pricing?.stay?.bookingHorizonMonths)
     }),
   )
 
@@ -358,6 +346,7 @@ async function refreshReservationsInBackground() {
             bookings: volatile.bookings ?? null,
           }),
           importedBlocks: buildImportedBlocksForListing(volatile.bookings ?? null),
+          bookingHorizonMonths: resolveBookingHorizonMonths(volatile.bookings?.pricing?.stay?.bookingHorizonMonths),
         }
       }),
     )
@@ -369,7 +358,9 @@ async function refreshReservationsInBackground() {
         listingId,
         reservations,
         importedBlocks,
+        bookingHorizonMonths,
       } = snapshot.value
+      bookingHorizonByListingId[listingId] = bookingHorizonMonths
       if (!areSameImportedBlocks(importedBlocksByListingId[listingId] ?? [], importedBlocks)) {
         importedBlocksByListingId[listingId] = importedBlocks
       }
@@ -462,7 +453,14 @@ function handleSelectReservation(reservationId: string) {
 function handleBackToListings() {
   isDeleteOverlayOpen.value = false
   isMobileStageOpen.value = false
+  isCalendarSheetOpen.value = false
   stage.value = 'reservations'
+}
+
+// Réservation choisie sur le calendrier : sa fiche s'ouvre, la fenêtre du calendrier se referme.
+function handleSelectReservationFromCalendar(reservationId: string) {
+  isCalendarSheetOpen.value = false
+  handleSelectReservation(reservationId)
 }
 
 
@@ -1035,8 +1033,14 @@ watch(
 )
 
 watch(selectedListingId, (listingId) => {
+  isCalendarSheetOpen.value = false
   if (listingId) return
   isMobileStageOpen.value = false
+})
+
+// Passage à un grand écran : le calendrier est déjà à côté de la fiche, la fenêtre n'a plus lieu d'être.
+watch(isCalendarDocked, (docked) => {
+  if (docked) isCalendarSheetOpen.value = false
 })
 
 onMounted(() => {
@@ -1235,7 +1239,10 @@ const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !nor
 
             </div>
 
-            <div class="reservation-body">
+            <div
+              class="reservation-body"
+              :class="{ 'has-calendar-dock': isCalendarDocked && Boolean(selectedListing) }"
+            >
               <Transition name="editor-stage">
                 <div
                   v-show="stage === 'reservations'"
@@ -1290,18 +1297,31 @@ const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !nor
                             <dd>{{ fact.value }}</dd>
                           </div>
                         </dl>
-                        <div class="stay-calendar">
-                          <DatePicker
-                            :model-value="stayRange"
-                            :disabled-dates="disabledStayRanges"
-                            :number-of-months="stayMonthsCount"
-                            :read-only="true"
-                            :allow-navigation-in-read-only="true"
-                            :allow-disabled-model-value="true"
-                            :exclude-model-value-from-disabled="true"
-                            :restrict-to-future="false"
+                        <!-- Grand écran : le calendrier est dans sa colonne, à droite de la fiche. -->
+                        <div
+                          v-if="!isCalendarDocked"
+                          class="stay-calendar"
+                        >
+                          <ManagementCalendar
+                            scope="stay"
+                            :reservations="reservationsForListing"
+                            :blocks="importedBlocksForListing"
+                            :active-reservation-id="selectedReservation.id"
+                            :last-bookable-date="lastBookableDateForListing"
+                            @select="handleSelectReservation"
                           />
-                          <p class="legend">Les jours barr&eacute;s sont d&eacute;j&agrave; pris ou bloqu&eacute;s.</p>
+                          <div class="open-calendar">
+                            <button
+                              type="button"
+                              @click="isCalendarSheetOpen = true"
+                            >
+                              <CalendarDays
+                                :size="16"
+                                aria-hidden="true"
+                              />
+                              Tout le calendrier
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </section>
@@ -1453,6 +1473,22 @@ const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !nor
                     <template v-else>
                       Aucun logement &agrave; afficher pour le moment.
                     </template>
+
+                    <div
+                      v-if="selectedListing && !isCalendarDocked && !selectedReservation"
+                      class="open-calendar"
+                    >
+                      <button
+                        type="button"
+                        @click="isCalendarSheetOpen = true"
+                      >
+                        <CalendarDays
+                          :size="16"
+                          aria-hidden="true"
+                        />
+                        Voir le calendrier
+                      </button>
+                    </div>
                   </div>
 
                   <!-- Dates venues d'Airbnb ou de Booking : elles bloquent le calendrier, mais ce ne
@@ -1489,12 +1525,67 @@ const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !nor
                 </div>
               </Transition>
 
+              <aside
+                v-if="isCalendarDocked && selectedListing"
+                class="management-calendar-pane calendar-dock"
+                aria-labelledby="management-calendar-title"
+              >
+                <div class="head">
+                  <div class="text">
+                    <h3 id="management-calendar-title">Calendrier</h3>
+                    <p>{{ calendarHint }}</p>
+                  </div>
+                </div>
+                <ManagementCalendar
+                  :reservations="reservationsForListing"
+                  :blocks="importedBlocksForListing"
+                  :active-reservation-id="selectedReservation?.id ?? null"
+                  :last-bookable-date="lastBookableDateForListing"
+                  @select="handleSelectReservation"
+                />
+              </aside>
             </div>
           </div>
         </section>
       </div>
     </div>
   </section>
+
+  <AbsoluteOverlay
+    class="management-calendar-sheet"
+    :open="isCalendarSheetOpen && !isCalendarDocked"
+    :z-index="10003"
+    aria-labelledby="management-calendar-sheet-title"
+    @close="isCalendarSheetOpen = false"
+  >
+    <div class="management-calendar-pane">
+      <div class="head">
+        <div class="text">
+          <h3 id="management-calendar-sheet-title">{{ selectedListing?.title || 'Calendrier' }}</h3>
+          <p>{{ calendarHint }}</p>
+        </div>
+        <button
+          type="button"
+          class="close"
+          aria-label="Fermer le calendrier"
+          title="Fermer"
+          @click="isCalendarSheetOpen = false"
+        >
+          <X
+            :size="20"
+            aria-hidden="true"
+          />
+        </button>
+      </div>
+      <ManagementCalendar
+        :reservations="reservationsForListing"
+        :blocks="importedBlocksForListing"
+        :active-reservation-id="selectedReservation?.id ?? null"
+        :last-bookable-date="lastBookableDateForListing"
+        @select="handleSelectReservationFromCalendar"
+      />
+    </div>
+  </AbsoluteOverlay>
 
   <ConfirmationDialog
     :open="isDeleteOverlayOpen"

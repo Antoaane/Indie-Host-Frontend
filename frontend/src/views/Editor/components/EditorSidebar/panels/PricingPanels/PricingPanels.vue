@@ -6,6 +6,7 @@ import type { DraftPatch } from '@/views/Editor/utils/listingApi'
 import EditorSection from '@/views/Editor/components/EditorSidebar/EditorSection.vue'
 
 import BasePricingPanel from '@/views/Editor/components/EditorSidebar/panels/PricingPanels/BasePricingPanel.vue'
+import GuestTiersPanel from '@/views/Editor/components/EditorSidebar/panels/PricingPanels/GuestTiersPanel.vue'
 import StayDurationPanel from '@/views/Editor/components/EditorSidebar/panels/PricingPanels/StayDurationPanel.vue'
 import FeesPanel from '@/views/Editor/components/EditorSidebar/panels/PricingPanels/FeesPanel.vue'
 import TaxesPanel from '@/views/Editor/components/EditorSidebar/panels/PricingPanels/TaxesPanel.vue'
@@ -27,6 +28,13 @@ const emit = defineEmits<{
   <div class="editor-pricing-panels">
     <EditorSection section="pricingBase">
       <BasePricingPanel
+        :bookings="props.draft.bookings"
+        @patch="emit('patch', $event)"
+      />
+    </EditorSection>
+    <EditorSection section="guestTiers">
+      <GuestTiersPanel
+        :core="props.draft.core"
         :bookings="props.draft.bookings"
         @patch="emit('patch', $event)"
       />

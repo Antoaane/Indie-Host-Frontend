@@ -1,6 +1,7 @@
 /* File: src/views/Management/management.scss */
 
 @use '@/views/Editor/editor.scss';
+@use '@/views/Management/components/management-calendar.scss';
 @use '@/styles/variables/globals' as *;
 @use '@/styles/variables/borders' as borders;
 @use '@/styles/variables/effects' as effects;
@@ -211,6 +212,28 @@
     overflow: hidden;
     background: $accent;
     @include dashboard-panel-radius;
+
+    // Grand écran : la fiche à gauche, le calendrier du logement dans sa colonne à droite. Chacun
+    // défile de son côté.
+    &.has-calendar-dock {
+      display: flex;
+
+      > .reservation-panel {
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+
+      > .calendar-dock {
+        flex: 0 0 22rem;
+        border-left: 1px solid rgba($secondary, 0.08);
+      }
+    }
+  }
+
+  // « Tout le calendrier » / « Voir le calendrier » : sous les mois du séjour, ou seul quand le
+  // logement n'a pas de réservation.
+  .open-calendar {
+    @include buttons.primary($theme: white, $little: true);
   }
 
   .reservation-panel {
@@ -369,23 +392,18 @@
       }
     }
 
+    // Mois du séjour, au dessin du calendrier des voyageurs ; tout le calendrier s'ouvre dessous.
     > .stay-calendar {
-      flex: 0 1 20rem;
+      flex: 1 1 18rem;
+      max-width: 24rem;
       min-width: min(100%, 16rem);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--layout-gap-sm);
 
-      // Deux mois côte à côte sur très grand écran (`stayMonthsCount`).
-      @include min-width(xxxl) {
-        flex-basis: 36rem;
-      }
-
-      > .date-picker {
+      > .management-calendar {
         width: 100%;
-        max-width: none;
-      }
-
-      > .legend {
-        padding-top: var(--layout-gap-xs);
-        @include little-text(rgba($secondary-text, 0.72), $thin: false);
       }
     }
   }
@@ -701,6 +719,12 @@
     padding: var(--layout-gap-md);
     text-align: center;
     color: rgba($secondary-text, 0.72);
+
+    // Centré sous la phrase, à la largeur de son libellé.
+    > .open-calendar {
+      width: fit-content;
+      margin: var(--layout-gap) auto 0;
+    }
   }
 
   // Dates venues d'un calendrier importé : une information, pas une réservation. Bloc discret,

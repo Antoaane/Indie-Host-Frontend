@@ -51,6 +51,7 @@ function buildApartment(): RawListingBundle {
         { start: '2026-10-03', end: '2026-10-10' },
         { start: '2026-11-13', end: '2026-11-22' },
         { start: '2026-11-24', end: '2026-11-28' },
+        { start: '2026-12-01', end: '2026-12-05' },
         { start: '2026-12-07', end: '2028-05-11' },
       ],
       'external-booked-days': [
@@ -89,8 +90,26 @@ function buildApartment(): RawListingBundle {
           },
           createdAt: '2026-09-12T08:30:00.000Z',
         },
+        // Séjour à venir, payé en entier : une troisième période sur le calendrier du logement.
+        {
+          id: 'dev-reservation-3',
+          start: '2026-12-01',
+          end: '2026-12-05',
+          nights: 4,
+          guestName: 'Lucas Martin',
+          message: '',
+          guests: { adults: 2, children: 0, infants: 0, pets: 0, pmr: 0 },
+          payment: { total: 225, deposit: 225, balance: 0, status: 'paid', method: 'Carte' },
+          createdAt: '2026-11-20T18:45:00.000Z',
+        },
       ],
-      pricing: {},
+      // Paliers par nombre de voyageurs : 45 € pour un voyageur, +10 % pour deux, +15 % pour trois.
+      pricing: {
+        guestTiers: [
+          { guests: 2, percent: 10 },
+          { guests: 3, percent: 15 },
+        ],
+      },
     } as RawListingBundle['bookings'],
     arrival: {
       intro: { title: '', subtitle: '', tagline: '' },

@@ -17,8 +17,11 @@ const props = withDefaults(
     restrictToFuture?: boolean
     allowDisabledModelValue?: boolean
     excludeModelValueFromDisabled?: boolean
+    /** Dernier jour sélectionnable (AAAA-MM-JJ) : fin de la fenêtre de réservation. Sans lui, pas de limite. */
+    maxDate?: string | null
   }>(),
   {
+    maxDate: null,
     numberOfMonths: 2,
     disabledDates: () => [],
     modelValue: null,
@@ -48,7 +51,10 @@ const modelValueNumericRange = computed(() => {
 })
 
 const isDateDisabled = computed(() => {
-  const baseDisabled = makeIsDateDisabled(props.disabledDates, { allowPast: !props.restrictToFuture })
+  const baseDisabled = makeIsDateDisabled(props.disabledDates, {
+    allowPast: !props.restrictToFuture,
+    lastDate: props.maxDate,
+  })
   if (!props.excludeModelValueFromDisabled) return baseDisabled
 
   const modelRange = modelValueNumericRange.value
@@ -119,6 +125,7 @@ watch(
     props.disabledDates,
     props.restrictToFuture,
     props.allowDisabledModelValue,
+    props.maxDate,
   ],
   () => {
     syncInternalFromModel(props.modelValue)
@@ -146,6 +153,15 @@ watch(
 /* min-value pour interdire la sélection avant aujourd'hui */
 const today = todayCalendarDate()
 const minValue = computed(() => (props.restrictToFuture ? today : undefined))
+// Au-delà de ce jour, le calendrier ne propose plus de mois (la flèche « suivant » se désactive).
+const maxValue = computed(() => {
+  if (!props.maxDate) return undefined
+  try {
+    return parseISO(props.maxDate)
+  } catch {
+    return undefined
+  }
+})
 </script>
 
 <template>
@@ -153,6 +169,7 @@ const minValue = computed(() => (props.restrictToFuture ? today : undefined))
     v-model="internal"
     :is-date-disabled="isDateDisabled"
     :min-value="minValue"
+    :max-value="maxValue"
     :number-of-months="numberOfMonths"
     :year-controls="false"
     :view-control="false"

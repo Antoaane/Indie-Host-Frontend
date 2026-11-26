@@ -7,7 +7,14 @@ import { Check, ChevronLeft, Share } from '@lucide/vue'
 
 import { getListingsController } from '@/domain/listings/controller'
 import { isListingHostname } from '@/domain/listings/publicDomain'
-import { clampOccupantsToRules, computeReservationPricing } from '@/domain/listings/reservationRules'
+import { applyGuestSurcharge } from '@/domain/listings/pricing'
+import {
+  clampOccupantsToRules,
+  computeReservationPricing,
+  countTravelers,
+  resolveGuestTierPercent,
+  resolveLastBookableDate,
+} from '@/domain/listings/reservationRules'
 import { makeIsDateDisabled } from '@/components/DatePicker/utils/range'
 import { findNextRange, isSelectedRangeValid } from '@/views/ListingView/components/Booking/utils/range'
 import { nightsBetween } from '@/domain/listings/bookings'
@@ -80,7 +87,10 @@ watch(
 
 // Premières dates libres proposées d'office (comme le module de réservation) : la barre affiche
 // alors un vrai total, frais compris, au lieu d'un prix par nuit « indicatif ».
-const isDateDisabled = computed(() => makeIsDateDisabled(props.listingData?.bookings.bookedDays ?? []))
+const isDateDisabled = computed(() => makeIsDateDisabled(props.listingData?.bookings.bookedDays ?? [], {
+  // Pas de dates proposées au-delà de la fenêtre de réservation de l'annonce.
+  lastDate: props.listingData ? resolveLastBookableDate(props.listingData.bookings.rules.stay.bookingHorizonMonths) : null,
+}))
 const minNights = computed(() => Math.max(1, Number(props.listingData?.bookings.rules.stay.minNights) || 1))
 
 watch(
@@ -111,6 +121,15 @@ const stayQuote = computed(() => {
   })
   if (pricing.nightly.nights <= 0) return null
   return { total: pricing.total, nights: pricing.nightly.nights }
+})
+
+// Sans séjour chiffré (aucune date libre), la barre montre le prix par nuit des voyageurs choisis,
+// palier de l’hôte compris : le même que dans la fenêtre de réservation.
+const nightlyPrice = computed(() => {
+  const data = props.listingData
+  if (!data) return 0
+  const percent = resolveGuestTierPercent(data.bookings.rules.guestTiers, countTravelers(occupants))
+  return applyGuestSurcharge(data.bookings.price, percent)
 })
 
 // Barre du haut (retour, partager) fixée à l'écran : transparente sur la photo, elle prend le fond
@@ -350,7 +369,7 @@ async function shareListing() {
     <BookingMin
       v-if="props.listingData"
       v-model:model-value="selection"
-      :price-per-night="props.listingData.bookings.price"
+      :price-per-night="nightlyPrice"
       :quote="stayQuote"
       :disabled="props.isBookingDisabled"
       :disabled-label="props.bookingDisabledLabel"

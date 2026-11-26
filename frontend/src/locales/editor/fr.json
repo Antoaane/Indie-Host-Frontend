@@ -114,6 +114,7 @@
         "amenities": "Équipements",
         "location": "Localisation",
         "pricingBase": "Tarifs",
+        "guestTiers": "Voyageurs",
         "stay": "Séjour",
         "fees": "Frais",
         "taxes": "Taxes",
@@ -553,7 +554,22 @@
           "addDurationDiscount": "Ajouter un palier",
           "thresholdSuffix": "nuits min",
           "discountSuffix": "% de remise",
-          "maxPlaceholder": "—"
+          "maxPlaceholder": "—",
+          "bookingHorizonLabel": "Ouverture du calendrier",
+          "bookingHorizonOption": "{count} mois à l’avance",
+          "bookingHorizonHint": "Les voyageurs peuvent réserver jusqu’à cette échéance. Au-delà, vos dates restent fermées.",
+          "bookingHorizonImportHint": "Booking ne transmet ses fermetures que sur 18 mois environ. Si vous importez son calendrier, les dates au-delà paraîtront libres ici : gardez 18 mois ou moins."
+        },
+        "guestTiers": {
+          "title": "Prix selon le nombre de voyageurs",
+          "subtitle": "Majorez le prix par nuit quand le logement accueille plus de voyageurs.",
+          "baseLabel": "Prix de base",
+          "percentSuffix": "% en plus",
+          "perNight": "{price} par nuit",
+          "increaseAria": "Majoration pour {count} voyageurs, en pourcentage",
+          "note": "Adultes et enfants comptent, pas les bébés. La majoration s’applique aussi au tarif week-end.",
+          "singleGuest": "Votre logement accueille un seul voyageur. Augmentez sa capacité (Essentiel, puis Capacité) pour proposer un prix par nombre de voyageurs.",
+          "noPrice": "Indiquez d’abord votre prix par nuit dans « Tarifs »."
         },
         "fees": {
           "title": "Frais additionnels",

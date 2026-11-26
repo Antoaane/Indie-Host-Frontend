@@ -10,6 +10,10 @@ const MAX_NIGHTS = 365;
 const MAX_MONEY = 50000;
 const DISCOUNT_PERCENT_MAX = 100;
 const STAY_DISCOUNT_TIERS_MAX = 24;
+const GUEST_SURCHARGE_PERCENT_MAX = 200;
+// Fenêtre de réservation (reservationRules.ts) : 24 mois au plus, et par défaut.
+const BOOKING_HORIZON_MONTHS_MAX = 24;
+const BOOKING_HORIZON_MONTHS_DEFAULT = 24;
 
 type DurationDiscountTier = {
   minNights: number;
@@ -145,6 +149,64 @@ function resolveExtraGuests(pricing: Record<string, unknown>, capacity: number) 
   };
 }
 
+// reservationRules.ts (resolveGuestTiers) : paliers selon le nombre de voyageurs, de 2 à la capacité ;
+// deux lignes pour le même nombre, la dernière l'emporte.
+function resolveGuestTiers(pricing: Record<string, unknown>, capacity: number): Array<{ guests: number; percent: number }> {
+  if (!Array.isArray(pricing.guestTiers)) return [];
+
+  const byGuests = new Map<number, number>();
+  pricing.guestTiers.forEach((entry) => {
+    if (!isPlainObject(entry)) return;
+    const guests = Math.trunc(Number(entry.guests));
+    if (!Number.isFinite(guests) || guests < 2 || guests > capacity) return;
+    byGuests.set(guests, clampInteger(entry.percent, 0, GUEST_SURCHARGE_PERCENT_MAX, 0));
+  });
+
+  return Array.from(byGuests, ([guests, percent]) => ({ guests, percent })).sort((a, b) => a.guests - b.guests);
+}
+
+// reservationRules.ts (resolveGuestTierPercent) : majoration du dernier palier atteint.
+function resolveGuestTierPercent(tiers: Array<{ guests: number; percent: number }>, travelers: number): number {
+  let percent = 0;
+  tiers.forEach((tier) => {
+    if (travelers >= tier.guests) percent = tier.percent;
+  });
+  return percent;
+}
+
+// pricing.ts (applyGuestSurcharge) : prix par nuit majoré, arrondi à l'euro.
+function applyGuestSurcharge(price: number, percent: number): number {
+  if (!(percent > 0)) return price;
+  return Math.round((price * (100 + percent)) / 100);
+}
+
+// reservationRules.ts (resolveBookingHorizonMonths) : valeur absente ou invalide, 24 mois.
+export function resolveBookingHorizonMonths(bookings: Record<string, unknown>): number {
+  const pricing = isPlainObject(bookings.pricing) ? bookings.pricing : {};
+  const rawStay = isPlainObject(pricing.stay) ? pricing.stay : {};
+  const value = rawStay.bookingHorizonMonths;
+  if (value === null || value === undefined || value === '') return BOOKING_HORIZON_MONTHS_DEFAULT;
+  const months = Math.trunc(Number(value));
+  if (!Number.isFinite(months) || months < 1) return BOOKING_HORIZON_MONTHS_DEFAULT;
+  return Math.min(BOOKING_HORIZON_MONTHS_MAX, months);
+}
+
+// reservationRules.ts (addMonthsToIsoDate) : même jour N mois plus tard, ramené à la fin du mois.
+function addMonthsToIsoDate(iso: string, months: number): string {
+  const [year = 1970, month = 1, day = 1] = iso.split('-').map(Number);
+  const target = new Date(Date.UTC(year, month - 1 + months, 1));
+  const lastDay = new Date(Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0)).getUTCDate();
+  target.setUTCDate(Math.min(day, lastDay));
+  return target.toISOString().slice(0, 10);
+}
+
+// Dernier jour de départ accepté. Le site compte à partir du jour du voyageur, le serveur du jour
+// UTC : un voyageur à l'est peut être un jour en avance, d'où le jour de marge.
+export function resolveLastBookableDate(bookingHorizonMonths: number, now = new Date()): string {
+  const tomorrowUtc = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()) + DAY_MS);
+  return addMonthsToIsoDate(tomorrowUtc.toISOString().slice(0, 10), bookingHorizonMonths);
+}
+
 function readRanges(value: unknown): Array<{ startUtc: number; endUtc: number }> {
   if (!Array.isArray(value)) return [];
 
@@ -191,9 +253,14 @@ export function computeReservationTotal({
   const rawStay = isPlainObject(pricing.stay) ? pricing.stay : {};
 
   const nights = Math.max(0, nightsBetween(startISO, endISO));
-  const weekdayPrice = toRoundedAmount(bookings.price);
+  const travelers = occupants.adults + occupants.children;
+  const guestSurchargePercent = resolveGuestTierPercent(resolveGuestTiers(pricing, capacity), travelers);
+  const baseWeekdayPrice = toRoundedAmount(bookings.price);
+  const weekdayPrice = applyGuestSurcharge(baseWeekdayPrice, guestSurchargePercent);
   const weekendPricingPrice = resolveWeekendPrice(pricing, Number(bookings.price ?? 0) || 0);
-  const weekendPrice = weekendPricingPrice === null ? weekdayPrice : toAmount(weekendPricingPrice, weekdayPrice);
+  const weekendPrice = weekendPricingPrice === null
+    ? weekdayPrice
+    : applyGuestSurcharge(toAmount(weekendPricingPrice, baseWeekdayPrice), guestSurchargePercent);
   const weekendNights = weekendPricingPrice === null ? 0 : Math.min(nights, countWeekendNights(startISO, endISO));
   const weekdayNights = Math.max(0, nights - weekendNights);
   const nightlySubtotal = weekdayNights * weekdayPrice + weekendNights * weekendPrice;
@@ -206,7 +273,6 @@ export function computeReservationTotal({
     : 0;
 
   const extraGuests = resolveExtraGuests(pricing, capacity);
-  const travelers = occupants.adults + occupants.children;
   const extraGuestsCount = extraGuests.enabled ? Math.max(0, travelers - extraGuests.threshold) : 0;
   const extraGuestsTotal = extraGuestsCount * extraGuests.price * nights;
 

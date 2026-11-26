@@ -1,7 +1,12 @@
 // File: src/domain/listings/reservationRules.ts
 
 import { nightsBetween, toUtcDay } from '@/domain/listings/bookings'
-import { computeNightlyPriceBreakdown, type DurationDiscountTier, type WeekendPricingConfig } from '@/domain/listings/pricing'
+import {
+  GUEST_SURCHARGE_PERCENT_MAX,
+  computeNightlyPriceBreakdown,
+  type DurationDiscountTier,
+  type WeekendPricingConfig,
+} from '@/domain/listings/pricing'
 import {
   resolveCancellationPolicy,
   type CancellationPolicyCode,
@@ -27,6 +32,8 @@ export type ListingStayRules = {
   minNights: number
   maxNights: number | null
   discountTiers: ListingStayDiscountTier[]
+  /** Nombre de mois ouverts à la réservation à partir d'aujourd'hui (1 à 24). */
+  bookingHorizonMonths: number
 }
 
 export type ListingStayDiscountTier = DurationDiscountTier
@@ -35,6 +42,12 @@ export type ListingExtraGuestRules = {
   enabled: boolean
   price: number
   threshold: number
+}
+
+/** Majoration du prix par nuit à partir de `guests` voyageurs (adultes + enfants), jusqu'au palier suivant. */
+export type ListingGuestTier = {
+  guests: number
+  percent: number
 }
 
 export type ListingPaymentRules = {
@@ -64,6 +77,8 @@ export type ListingReservationRules = {
   occupancy: ListingOccupancyRules
   stay: ListingStayRules
   extraGuests: ListingExtraGuestRules
+  /** Paliers de prix selon le nombre de voyageurs, triés ; vide = même prix pour tous. */
+  guestTiers: ListingGuestTier[]
   payment: ListingPaymentRules
   cancellation: ListingCancellationRules
 }
@@ -96,8 +111,16 @@ export type ReservationPricingBreakdown = {
   extraGuestsCount: number
   extraGuestsPrice: number
   extraGuestsTotal: number
+  /** Majoration du prix par nuit pour ce nombre de voyageurs (0 = prix de base). */
+  guestTierPercent: number
   total: number
 }
+
+// Fenêtre de réservation : les voyageurs réservent jusqu'à N mois à l'avance. Mêmes valeurs dans
+// l'API (`reservationPricing.ts`), qui refuse un séjour au-delà.
+export const BOOKING_HORIZON_MONTHS_MAX = 24
+export const BOOKING_HORIZON_MONTHS_DEFAULT = 24
+export const BOOKING_HORIZON_MONTHS_CHOICES = [3, 6, 9, 12, 18, 24] as const
 
 const DEFAULT_CAPACITY = 1
 const MAX_CAPACITY = 50
@@ -236,7 +259,43 @@ function resolveStayRules(pricing: RawPricingSettings): ListingStayRules {
     minNights,
     maxNights,
     discountTiers,
+    bookingHorizonMonths: resolveBookingHorizonMonths(rawStay.bookingHorizonMonths),
   }
+}
+
+/** Valeur absente ou invalide : 24 mois. `null` compte comme absent (`Number(null)` vaut 0). */
+export function resolveBookingHorizonMonths(value: unknown): number {
+  if (value === null || value === undefined || value === '') return BOOKING_HORIZON_MONTHS_DEFAULT
+  const months = Math.trunc(Number(value))
+  if (!Number.isFinite(months) || months < 1) return BOOKING_HORIZON_MONTHS_DEFAULT
+  return Math.min(BOOKING_HORIZON_MONTHS_MAX, months)
+}
+
+export function todayIsoDate(reference = new Date()): string {
+  const month = String(reference.getMonth() + 1).padStart(2, '0')
+  const day = String(reference.getDate()).padStart(2, '0')
+  return `${reference.getFullYear()}-${month}-${day}`
+}
+
+/** Même jour N mois plus tard, ramené au dernier jour du mois quand il n'existe pas (31 → 30). */
+export function addMonthsToIsoDate(iso: string, months: number): string {
+  const [year, month, day] = iso.split('-').map(Number)
+  const target = new Date(Date.UTC(year, month - 1 + months, 1))
+  const lastDay = new Date(Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0)).getUTCDate()
+  target.setUTCDate(Math.min(day, lastDay))
+  return target.toISOString().slice(0, 10)
+}
+
+/** Dernier jour réservable (départ compris) : aujourd'hui + la fenêtre de réservation de l'annonce. */
+export function resolveLastBookableDate(bookingHorizonMonths: number, todayISO = todayIsoDate()): string {
+  return addMonthsToIsoDate(todayISO, resolveBookingHorizonMonths(bookingHorizonMonths))
+}
+
+const longDateFormatter = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
+
+function formatLongDate(iso: string): string {
+  const utc = toUtcDay(iso)
+  return utc === null ? iso : longDateFormatter.format(new Date(utc))
 }
 
 function resolveOccupancyRules(pricing: RawPricingSettings, capacity: number): ListingOccupancyRules {
@@ -286,6 +345,31 @@ function resolveExtraGuestRules(pricing: RawPricingSettings, capacity: number): 
     price,
     threshold,
   }
+}
+
+// Paliers selon le nombre de voyageurs : un voyageur paie le prix de base, un palier commence à 2
+// et ne dépasse pas la capacité. Deux lignes pour le même nombre : la dernière l'emporte.
+function resolveGuestTiers(pricing: RawPricingSettings, capacity: number): ListingGuestTier[] {
+  if (!Array.isArray(pricing.guestTiers)) return []
+
+  const byGuests = new Map<number, number>()
+  pricing.guestTiers.forEach((entry) => {
+    if (!isPlainObject(entry)) return
+    const guests = Math.trunc(Number(entry.guests))
+    if (!Number.isFinite(guests) || guests < 2 || guests > capacity) return
+    byGuests.set(guests, clampInteger(entry.percent, 0, GUEST_SURCHARGE_PERCENT_MAX, 0))
+  })
+
+  return Array.from(byGuests, ([guests, percent]) => ({ guests, percent })).sort((a, b) => a.guests - b.guests)
+}
+
+/** Majoration du dernier palier atteint : un nombre de voyageurs sans ligne reprend le palier d'en dessous. */
+export function resolveGuestTierPercent(tiers: ListingGuestTier[], travelerCount: number): number {
+  let percent = 0
+  tiers.forEach((tier) => {
+    if (travelerCount >= tier.guests) percent = tier.percent
+  })
+  return percent
 }
 
 function resolveLegacyPaymentRules(): ListingPaymentRules {
@@ -412,6 +496,7 @@ export function resolveListingReservationRules({
     occupancy: resolveOccupancyRules(pricing, capacity),
     stay: resolveStayRules(pricing),
     extraGuests: resolveExtraGuestRules(pricing, capacity),
+    guestTiers: resolveGuestTiers(pricing, capacity),
     payment: resolvePricingPaymentRules(pricing),
     cancellation: resolveCancellationRules(pricing),
   }
@@ -554,6 +639,11 @@ export function validateReservationAgainstRules({
     errors.push('Selection de dates invalide.')
   } else {
     errors.push(...getStayValidationErrors(range.nights, rules.stay))
+
+    const lastBookableDate = resolveLastBookableDate(rules.stay.bookingHorizonMonths)
+    if (range.endISO > lastBookableDate) {
+      errors.push(`Les réservations sont ouvertes jusqu’au ${formatLongDate(lastBookableDate)}.`)
+    }
   }
 
   errors.push(...getOccupantValidationErrors(clampedOccupants, rules.occupancy))
@@ -601,6 +691,7 @@ export function computeReservationPricing({
   const range = resolveReservationRange(startISO, endISO)
   const normalizedOccupants = clampOccupantsToRules(occupants, rules.occupancy)
   const travelerCount = countTravelers(normalizedOccupants)
+  const guestTierPercent = resolveGuestTierPercent(rules.guestTiers, travelerCount)
 
   const nightly = computeNightlyPriceBreakdown({
     startISO: range?.startISO ?? '',
@@ -608,6 +699,7 @@ export function computeReservationPricing({
     basePrice: toNonNegativeAmount(basePrice),
     weekendPricing,
     durationDiscountTiers: rules.stay.discountTiers,
+    guestSurchargePercent: guestTierPercent,
   })
 
   const normalizedFees = normalizeFeeItems(fees)
@@ -628,6 +720,7 @@ export function computeReservationPricing({
     extraGuestsCount,
     extraGuestsPrice: rules.extraGuests.price,
     extraGuestsTotal,
+    guestTierPercent,
     total,
   }
 }

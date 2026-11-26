@@ -1,0 +1,175 @@
+/* File: src/components/DatePicker/stay-months.scss */
+
+// Dessin commun des calendriers dont les mois défilent de haut en bas : le choix des dates du
+// voyageur (`StayCalendarSheet.vue`) et le calendrier d'un logement dans Réservations
+// (`ManagementCalendar.vue`). Un seul dessin : un changement ici vaut pour les deux.
+//
+// Structure attendue : `.weekdays > span` pour les lettres des jours, puis une liste de
+// `.month > .month-title + .month-grid`, dont chaque rangée `.row` contient des `.cell > .day`.
+// Les états se lisent sur `.day`, par les attributs que pose reka-ui (repris à la main par le
+// calendrier de l'hôte) : `data-selected`, `data-selection-start`, `data-selection-end`,
+// `data-disabled`, `data-outside-view`, `data-today`.
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
+
+// Lettres des jours, fixes au-dessus des mois.
+@mixin weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  padding: var(--layout-gap-xs) var(--layout-gap) var(--layout-gap-sm);
+  border-bottom: 1px solid rgba($secondary, 0.1);
+
+  >span {
+    text-align: center;
+    @include little-text(rgba($secondary-text, 0.6), $bold: true);
+  }
+}
+
+// Liste des mois. À inclure sur le conteneur des `.month` ; la classe `has-range` sur ce conteneur
+// affiche le bandeau des périodes (le voyageur ne l'a qu'une fois l'arrivée et le départ choisis).
+@mixin months {
+  >.month {
+    padding-top: var(--layout-gap-xl);
+
+    >.month-title {
+      margin: 0 0 var(--layout-gap-sm) var(--layout-gap-xs);
+      text-transform: capitalize;
+      @include base-text($bold: true, $bigger: true);
+    }
+
+    >.month-grid {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+
+      .row>.cell {
+        position: relative;
+        padding: 1px 0;
+        text-align: center;
+
+        // Bandeau de la période, derrière les jours, à la hauteur des cercles : il n'apparaît que
+        // pour une période complète (règles `.has-range` plus bas).
+        &::before {
+          content: '';
+          position: absolute;
+          top: 1px;
+          bottom: 1px;
+          left: 0;
+          right: 0;
+          background: rgba($secondary, 0.07);
+          opacity: 0;
+          pointer-events: none;
+          @include animations.transition(animations.$duration-fast, animations.$ease-out, opacity);
+        }
+
+        // Jours des mois voisins : chaque mois n'affiche que les siens.
+        &:has(.day[data-outside-view]) {
+          visibility: hidden;
+        }
+
+        >.day {
+          // Le mixin de texte d'abord : il remet la marge à 0 et décentrait le jour dans sa case
+          // (cercles collés à gauche, bandeau qui dépassait à droite du départ, chiffres décalés
+          // sous les lettres des jours).
+          @include base-text($bold: true);
+
+          position: relative;
+          z-index: 1;
+          width: 100%;
+          height: var(--tap-target);
+          max-width: var(--tap-target);
+          margin: 0 auto;
+
+          display: grid;
+          place-items: center;
+
+          border: none;
+          border-radius: borders.$rounded;
+          background-color: transparent;
+          font-variant-numeric: tabular-nums;
+          cursor: pointer;
+          @include animations.transition(animations.$duration-fast, animations.$ease-out, (background-color, color, transform));
+          @include animations.press();
+
+          &:focus-visible {
+            outline: 2px solid $secondary;
+            outline-offset: 1px;
+          }
+
+          // Aujourd'hui : un point sous le chiffre (l'anneau gris faisait une ombre de plus).
+          &[data-today]::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: 6px;
+            width: 4px;
+            height: 4px;
+            margin-left: -2px;
+            border-radius: borders.$rounded;
+            background-color: currentColor;
+          }
+
+          // Indisponible (déjà réservé ou fermé) : barré. Hors de la période ouverte (jour passé,
+          // ou au-delà de la fenêtre de réservation) : seulement pâle.
+          &[data-disabled] {
+            color: rgba($secondary-text, 0.38);
+            text-decoration: line-through;
+            text-decoration-thickness: 1.5px;
+            cursor: not-allowed;
+          }
+
+          &.is-out-of-window[data-disabled] {
+            text-decoration: none;
+          }
+
+          &:is([data-selection-start], [data-selection-end]) {
+            background-color: $secondary;
+            color: $accent;
+            text-decoration: none;
+          }
+        }
+      }
+    }
+  }
+
+  // Période complète : bandeau plein entre le premier et le dernier jour et, sous les deux
+  // cercles, seulement du côté de la période (du centre du cercle au bord de la case). Après les
+  // règles des cases : même spécificité, c'est l'ordre qui tranche.
+  &.has-range .cell {
+    &:has(.day[data-selected])::before {
+      opacity: 1;
+    }
+
+    &:has(.day[data-selection-start])::before {
+      left: 50%;
+    }
+
+    &:has(.day[data-selection-end])::before {
+      right: 50%;
+    }
+
+    // Bord de rangée (semaine) ou de mois : le bandeau s'y arrondit au lieu d'être coupé net.
+    &:first-child::before,
+    &:has(.day[data-outside-view]) + .cell::before {
+      border-top-left-radius: borders.$rounded;
+      border-bottom-left-radius: borders.$rounded;
+    }
+
+    &:last-child::before,
+    &:has(+ .cell .day[data-outside-view])::before {
+      border-top-right-radius: borders.$rounded;
+      border-bottom-right-radius: borders.$rounded;
+    }
+
+    // Premier jour en fin de rangée, dernier jour en début de rangée : la période continue sur
+    // l'autre ligne, rien à relier ici (le demi-bandeau dépassait du cercle).
+    &:last-child:has(.day[data-selection-start])::before,
+    &:has(+ .cell .day[data-outside-view]):has(.day[data-selection-start])::before,
+    &:first-child:has(.day[data-selection-end])::before,
+    &:has(.day[data-outside-view]) + .cell:has(.day[data-selection-end])::before {
+      opacity: 0;
+    }
+  }
+}

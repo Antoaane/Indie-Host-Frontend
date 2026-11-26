@@ -16,8 +16,10 @@ const props = withDefaults(
     bookedRanges: RangeISO[]
     modelValue: RangeISO | null
     minNights?: number
+    /** Dernier jour réservable (AAAA-MM-JJ), d'après la fenêtre de réservation de l'annonce. */
+    maxDate?: string | null
   }>(),
-  { minNights: 1 },
+  { minNights: 1, maxDate: null },
 )
 
 const emit = defineEmits<{
@@ -96,6 +98,7 @@ const summary = computed(() => {
       :model-value="modelValue"
       :booked-ranges="bookedRanges"
       :min-nights="props.minNights"
+      :max-date="props.maxDate"
       @update:model-value="selection = $event"
       @close="emit('close')"
     />
@@ -116,6 +119,7 @@ const summary = computed(() => {
         <DatePicker
           v-model:model-value="selection"
           :disabled-dates="bookedRanges"
+          :max-date="props.maxDate"
           :numberOfMonths="2"
         />
 

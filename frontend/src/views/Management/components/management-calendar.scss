@@ -1,0 +1,180 @@
+/* File: src/views/Management/components/management-calendar.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
+@use '@/styles/components/buttons' as buttons;
+@use '@/components/DatePicker/stay-months.scss' as stay-months;
+
+// Calendrier d'un logement : le dessin vient de `stay-months.scss` (celui du voyageur). Seul ce qui
+// est propre à l'hôte est écrit ici : plusieurs réservations à la fois, dont une ouverte.
+.management-calendar {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+
+  >.weekdays {
+    flex: 0 0 auto;
+    @include stay-months.weekdays;
+  }
+
+  >.months {
+    padding: 0 var(--layout-gap) var(--layout-gap-xl);
+    @include stay-months.months;
+
+    // Même chemin que la feuille commune (`.month > .month-grid .row > .cell`) : à sélecteur plus
+    // court, ses règles l'emportaient et toutes les réservations paraissaient ouvertes.
+    >.month>.month-grid .row>.cell {
+      // Bandeau de la réservation ouverte, un peu plus marqué que les autres.
+      &:has(.day[data-active])::before {
+        background: rgba($secondary, 0.12);
+      }
+
+      >.day {
+        // Un jour libre ou fermé ne se touche pas : seules les réservations sont des boutons.
+        &:not(button) {
+          cursor: default;
+          pointer-events: none;
+        }
+
+        // Réservation qui n'est pas ouverte : cercles atténués, pour que celle de la fiche ressorte.
+        // Teinte opaque (mélange avec le fond) : translucide, le bandeau se voyait à travers une
+        // moitié du cercle.
+        &:is([data-selection-start], [data-selection-end]):not([data-active]) {
+          background-color: color-mix(in srgb, $secondary 20%, $accent);
+          color: $secondary-text;
+        }
+      }
+
+      @include can-hover {
+        >button.day:not([data-active]):hover {
+          background-color: rgba($secondary, 0.12);
+        }
+
+        >button.day:is([data-selection-start], [data-selection-end]):not([data-active]):hover {
+          background-color: color-mix(in srgb, $secondary 32%, $accent);
+        }
+      }
+    }
+  }
+
+  // Tous les mois : ils défilent dans le calendrier, qui prend la hauteur qu'on lui donne.
+  &.is-all>.months {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  // Mois du séjour seulement, dans la fiche : pas de marge propre, la section en a déjà.
+  &.is-stay {
+    >.weekdays {
+      padding-inline: 0;
+    }
+
+    >.months {
+      padding: 0;
+
+      >.month:first-child {
+        padding-top: var(--layout-gap-sm);
+      }
+    }
+  }
+}
+
+// Colonne du calendrier, à droite de la fiche sur grand écran, et sa copie dans la fenêtre ouverte
+// depuis la fiche sur les écrans plus étroits : un titre, une ligne d'aide, puis les mois.
+.management-calendar-pane {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+
+  >.head {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--layout-gap-sm);
+    padding: var(--layout-gap) var(--layout-gap-xl) var(--layout-gap-sm);
+
+    >.text {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-2xs);
+
+      >h3 {
+        @include h4-title($color: $secondary-text, $colorful: false, $bigger: false);
+
+        & {
+          margin: 0;
+        }
+      }
+
+      >p {
+        @include little-text(rgba($secondary-text, 0.72), $thin: false);
+      }
+    }
+
+    >.close {
+      flex: 0 0 auto;
+      width: var(--tap-target);
+      height: var(--tap-target);
+      margin-top: calc(var(--layout-gap-xs) * -1);
+      margin-right: calc(var(--layout-gap-xs) * -2);
+
+      display: grid;
+      place-items: center;
+
+      border: none;
+      border-radius: borders.$rounded;
+      background: transparent;
+      color: $secondary-text;
+      cursor: pointer;
+      @include animations.transition(animations.$duration-fast, animations.$ease-out, background-color);
+      @include animations.press();
+
+      @include on-hover {
+        background: rgba($secondary, 0.06);
+      }
+
+      &:focus-visible {
+        outline: 2px solid $secondary;
+        outline-offset: 2px;
+      }
+    }
+  }
+
+  >.management-calendar {
+    flex: 1 1 auto;
+  }
+}
+
+// Fenêtre « Tout le calendrier » : plein écran sur téléphone, comme le calendrier du voyageur ;
+// colonne centrée au-delà.
+.management-calendar-sheet {
+  align-items: stretch;
+  padding: 0 !important;
+
+  >.management-calendar-pane {
+    width: 100%;
+    height: 100%;
+    background: $accent;
+    padding-top: var(--safe-area-top);
+    padding-bottom: var(--safe-area-bottom);
+
+    // Tablette et au-delà : une colonne de la largeur d'un téléphone. Sur toute la largeur, les
+    // sept jours s'étalaient et les bandeaux ne se lisaient plus comme des périodes.
+    @include min-width(md) {
+      width: 26rem;
+      height: auto;
+      margin: var(--layout-gap-4xl) auto;
+      padding-top: 0;
+      padding-bottom: 0;
+      border-radius: borders.$rounded-xl;
+      overflow: hidden;
+    }
+  }
+}

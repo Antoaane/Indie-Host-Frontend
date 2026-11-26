@@ -3,6 +3,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { RawBookings, RawCore } from '@/domain/listings/types'
+import { applyGuestSurcharge } from '@/domain/listings/pricing'
+import { resolveGuestTierPercent, resolveListingReservationRules } from '@/domain/listings/reservationRules'
 import { editorStatic } from '@/views/Editor/utils/editorContent'
 import { formatICUMessage } from '@/utils/i18n'
 
@@ -43,7 +45,12 @@ const guests = computed(() => {
   const capacity = Number(props.core?.guest_capacity ?? 0)
   return capacity > 0 ? capacity : 2
 })
-const pricePerNight = computed(() => Math.max(0, Number(props.bookings?.price ?? 0)))
+const basePricePerNight = computed(() => Math.max(0, Number(props.bookings?.price ?? 0)))
+// Prix par nuit pour le nombre de voyageurs du séjour type, palier de l'hôte compris.
+const pricePerNight = computed(() => {
+  const tiers = resolveListingReservationRules({ core: props.core, bookings: props.bookings }).guestTiers
+  return applyGuestSurcharge(basePricePerNight.value, resolveGuestTierPercent(tiers, guests.value))
+})
 const extraGuestPrice = computed(() => Math.max(0, Number(extraGuests.value.price ?? 0)))
 const extraGuestThreshold = computed(() => (
   Number.isFinite(Number(extraGuests.value.threshold)) ? Number(extraGuests.value.threshold) : guests.value
@@ -95,7 +102,7 @@ const taxLabel = computed(() => {
 })
 
 const pricePerNightLabel = computed(() => (
-  panelContent.pricePerNight.replace('{price}', pricePerNight.value.toFixed(0))
+  panelContent.pricePerNight.replace('{price}', basePricePerNight.value.toFixed(0))
 ))
 
 const totalLabel = computed(() => {

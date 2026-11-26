@@ -327,10 +327,11 @@ Le bundle listing est divisé en sections JSON stockées séparément :
 ### RawPricingSettings — Tarification avancée
 ```typescript
 {
-  stay?: { minNights, maxNights, weeklyDiscount, monthlyDiscount, durationDiscounts, bookingWindowDiscounts },
+  stay?: { minNights, maxNights, weeklyDiscount, monthlyDiscount, durationDiscounts, bookingWindowDiscounts, bookingHorizonMonths },
   weekend?: { enabled, price, percent },
   cancellation?: { policy, custom? },
   extraGuests?: { price, threshold },
+  guestTiers?: [{ guests, percent }],   // paliers selon le nombre de voyageurs
   taxes?: { enabled, mode, amount, display },
   payment?: {
     methods?: { card, sepa, cash },
@@ -418,7 +419,9 @@ Dans Clerk Dashboard → Developers → Paths :
 4. Guest : confirmation + lien guide d'arrivée `/listing/guide/:id`
 
 Le serveur ne fait pas confiance au navigateur :
-- `POST /payments/stripe/payment-intents` recalcule le total (`domains/payments/reservationPricing.ts`) et refuse les dates déjà prises. **Ce calcul est une copie de `frontend/src/domain/listings/pricing.ts` + `reservationRules.ts` (`computeReservationPricing`) : toute évolution de la tarification doit être faite des deux côtés**, sinon les réservations sont refusées (`INVALID_RESERVATION_TOTAL`).
+- `POST /payments/stripe/payment-intents` recalcule le total (`domains/payments/reservationPricing.ts`) et refuse les dates déjà prises. **Ce calcul est une copie de `frontend/src/domain/listings/pricing.ts` + `reservationRules.ts` (`computeReservationPricing`) : toute évolution de la tarification doit être faite des deux côtés**, sinon les réservations sont refusées (`INVALID_RESERVATION_TOTAL`). Contrôle, à relancer après toute évolution : `cd backend/api && npx tsx --tsconfig ../../frontend/tsconfig.json scripts/reservation-pricing-smoke.ts` compare le total du site et celui de l'API sur 660 séjours (`--tsconfig` sert à lire l'alias `@/` du site).
+- **Fenêtre de réservation** (2026-11-26) : `bookings.pricing.stay.bookingHorizonMonths`, de 1 à 24 mois, 24 sans réglage (éditeur → Tarifs → Séjour → « Ouverture du calendrier »). Les voyageurs réservent jusqu'à aujourd'hui + N mois, départ compris (`resolveLastBookableDate`, `reservationRules.ts`). Les calendriers s'arrêtent là (`StayCalendarSheet.vue`, `DatePicker.vue` prop `maxDate`, `makeIsDateDisabled` option `lastDate`) et `POST /payments/stripe/payment-intents` refuse un séjour au-delà (400 `RESERVATION_TOO_FAR_AHEAD`, un jour de marge pour le décalage horaire). Un hôte qui importe un calendrier Booking garde 18 mois ou moins : Booking ne publie pas ses fermetures au-delà (l'éditeur le dit dès que le réglage dépasse 18 mois). Une réservation ajoutée par l'hôte (`HostReservationOverlay.vue`) n'est pas limitée.
+- **Paliers selon le nombre de voyageurs** (2026-11-26) : `bookings.pricing.guestTiers = [{ guests, percent }]`, majoration du prix par nuit à partir de `guests` voyageurs (adultes + enfants, de 2 à la capacité, 0 à 200 %) ; un nombre sans ligne reprend le palier d'en dessous. Le prix par nuit majoré est arrondi à l'euro (`applyGuestSurcharge` : 45 € + 10 % = 50 €) et vaut aussi pour le tarif week-end ; la remise de durée s'applique ensuite. Éditeur : Tarifs → « Voyageurs » (`GuestTiersPanel.vue`, une ligne par nombre de voyageurs, tout le barème réécrit à chaque saisie). Côté voyageur, le prix par nuit du détail et de la barre du téléphone suit le nombre de voyageurs choisi.
 - `POST /bookings` d'un voyageur (ni propriétaire ni admin) exige un PaymentIntent émis par l'API pour cette annonce et ces dates, réglé chez Stripe et jamais rattaché à une autre réservation (`PaymentsService.verifyReservationPayment`) ; montants et statut du paiement sont réécrits depuis la ligne `Payment`, l'id de réservation est choisi par le serveur, `internalNote` / `messaging` sont ignorés.
 - Une annulation ne rembourse qu'un PaymentIntent lié à la réservation dans la table `Payment` (et dont la metadata `listingId` correspond).
 
@@ -817,7 +820,14 @@ But : qu'un domaine relié (ex. `apparts-saintfrancois.fr`) ou un sous-domaine s
 
 ---
 
-## Dernières modifications (mis à jour 2026-11-10)
+## Dernières modifications (mis à jour 2026-11-26)
+
+- **Calendrier sur deux ans, calendrier dans Réservations, paliers par voyageurs (2026-11-26)** :
+  - Calendrier du voyageur : 24 mois au lieu de 12 sur téléphone, et la même limite sur ordinateur (il n'en avait aucune). La limite est la fenêtre de réservation de l'annonce, réglable par l'hôte et vérifiée par l'API : voir « Réservation ».
+  - `StayCalendarSheet.vue` ne construit un mois qu'à l'approche de l'écran (`IntersectionObserver`, un écran d'avance) ; d'ici là le mois garde sa place (`.month-placeholder`, hauteur exacte). 25 mois montés d'un coup, soit 900 jours reka-ui, portaient l'ouverture de la fenêtre de 165 à 441 ms sur ordinateur en développement.
+  - Dessin commun des calendriers « mois qui défilent » : `components/DatePicker/stay-months.scss` (mixins `weekdays` et `months`), utilisé par le calendrier du voyageur et par celui de l'hôte. Les états se lisent sur `.day` par les attributs de reka-ui (`data-selected`, `data-selection-start`, `data-selection-end`, `data-disabled`, `data-outside-view`, `data-today`) ; `.is-out-of-window` = jour passé ou au-delà de la fenêtre, pâle sans être barré. Une règle propre à un des deux calendriers reprend le chemin complet de la feuille commune (`.month > .month-grid .row > .cell`), sinon elle perd face à elle.
+  - Réservations (`views/Management/`) : `components/ManagementCalendar.vue` montre le calendrier du logement à ce dessin, en lecture seule. Chaque réservation est un bandeau entre deux cercles (pleins pour celle de la fiche, atténués pour les autres), les jours fermés par un calendrier importé sont barrés, toucher une réservation ouvre sa fiche. Il reprend à la main les attributs de reka-ui sur un tableau simple (plusieurs périodes à la fois, ce que `RangeCalendar` ne sait pas faire). À partir de 1 440 px : colonne fixe à droite de la fiche (`.calendar-dock`, tous les mois, un an en arrière et deux à trois ans en avant). En dessous : les mois du séjour dans la section « Séjour » (`scope="stay"`) et « Tout le calendrier », qui ouvre une fenêtre (plein écran sous `md`, colonne centrée au-delà). Le calendrier Nuxt UI de la fiche a disparu. Les données en mémoire de `/dev/management` ont une troisième réservation, à venir, et des paliers par voyageurs.
+  - Le champ « Voyageurs supplémentaires » de `BasePricingPanel.vue` n'a jamais été affiché (prop booléenne `showExtraGuests` absente, donc fausse pour Vue) : `extraGuests` reste calculé des deux côtés mais ne se règle nulle part. Les paliers par voyageurs le remplacent dans l'éditeur.
 
 - **Page d'un logement sur téléphone, refonte (2026-11-11)** (étude d'Airbnb, Vrbo, Booking, Baymard et NN/g ; route d'essai `/dev/listing`) :
   - La page défile avec le document (plus de cadre de la hauteur de l'écran) : Safari réduit ses barres au défilement. Barre de réservation `position: fixed` en bas, pleine largeur, opaque (Safari 26 reprend sa couleur sous sa barre d'outils) ; la page lui laisse sa hauteur (`#listing-page > .listing-view.is-mobile-layout`, `listing-view.scss`). Fond clair partout (`html:has(… .is-mobile-layout)` dans `_global.scss`). Aucune zone ne doit défiler à part dans la page : sur iPhone elle prend le doigt et bloque le défilement (le `body` en était une jusqu'au 2026-11-11, voir « Pièges connus »).
