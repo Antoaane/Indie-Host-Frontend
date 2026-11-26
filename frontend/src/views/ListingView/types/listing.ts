@@ -142,6 +142,22 @@ export type HouseRulesModel = {
   text: string;   // version texte brut (aperçu, détection du vide)
 };
 
+// Heures d'arrivée et de départ saisies par l'hôte (`arrival.practical.access`, texte libre :
+// « 16h », « à partir de 15 h »…), laissées dans le bundle public par l'API. '' quand rien n'est saisi.
+export type StayInfoModel = {
+  checkIn: string;
+  checkOut: string;
+};
+
+/** Note affichée par la section des avis, reprise sous le titre du logement sur téléphone. */
+export type ReviewsSummary = {
+  score: number;
+  /** Échelle de la note : 5, ou 10 pour une note importée de Booking. */
+  outOf: 5 | 10;
+  /** « 4 avis », déjà accordé. */
+  countLabel: string;
+};
+
 export type ReviewsVisibilityModel = {
   indiehost: boolean;
   airbnb: boolean;
@@ -175,4 +191,5 @@ export type ListingParsed = {
   commentsPages: CommentsPagesModel;
   reviewsVisibility: ReviewsVisibilityModel;
   houseRules: HouseRulesModel;
+  stayInfo: StayInfoModel;
 };

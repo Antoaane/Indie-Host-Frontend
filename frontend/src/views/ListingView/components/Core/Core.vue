@@ -7,7 +7,7 @@ import { computed } from 'vue'
 // UTILS
 import staticLocale from '@/locales/_static/fr.json'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
-import type { ListingParsed } from '@/views/ListingView/types/listing'
+import type { ListingParsed, ReviewsSummary } from '@/views/ListingView/types/listing'
 import { useListingViewport } from '@/views/ListingView/composables/useListingViewport'
 
 // COMPONENTS
@@ -18,6 +18,7 @@ import Description from '@/views/ListingView/components/Core/components/Descript
 import ListingVideos from '@/views/ListingView/components/Gallery/ListingVideos.vue'
 import Amenities from '@/views/ListingView/components/Core/components/Amenities/Amenities.vue'
 import Rooms from '@/views/ListingView/components/Core/components/Rooms/Rooms.vue'
+import StayInfo from '@/views/ListingView/components/Core/components/StayInfo/StayInfo.vue'
 import HouseRules from '@/views/ListingView/components/Core/components/HouseRules/HouseRules.vue'
 import Availabilities from '@/views/ListingView/components/Core/components/Availabilities/Availabilities.vue'
 
@@ -29,10 +30,13 @@ const props = withDefaults(
     data: ListingParsed
     modelValue?: RangeISO | null
     previewOnly?: boolean
+    /** Note des avis à rappeler sous le titre (téléphone, où les avis sont en bas de page). */
+    rating?: ReviewsSummary | null
   }>(),
   {
     modelValue: null,
     previewOnly: false,
+    rating: null,
   },
 )
 
@@ -107,6 +111,7 @@ const descriptionStatic = {
     <Title
       :data="props.data.title"
       :staticContent="staticContent.listing.title"
+      :rating="props.rating"
     />
     <Perks
       v-if="props.data.perks.length > 0"
@@ -130,6 +135,10 @@ const descriptionStatic = {
     <Rooms
       :data="props.data.rooms"
       :staticContent="staticContent.listing.rooms"
+    />
+    <StayInfo
+      :data="props.data.stayInfo"
+      :cancellation="props.data.bookings.rules.cancellation"
     />
     <HouseRules :data="props.data.houseRules" />
     <Availabilities

@@ -26,64 +26,78 @@ type AmenityIconRule = {
   keywords: string[]
 }
 
+// Ordre : du plus précis au plus général, la première règle qui reconnaît le nom l'emporte. Un
+// mot-clé de trois lettres ou moins doit être un mot entier (« spa », « fan », « the », « key » se
+// retrouvaient dans « espace », « enfants », « bibliothèque », « hockey ») ; les autres se lisent en
+// début de mot (« velo » reconnaît « vélos », « door » ne reconnaît plus « outdoor »).
 const AMENITY_ICON_RULES: AmenityIconRule[] = [
   { icon: 'wifi', keywords: ['wifi', 'internet', 'ethernet', 'routeur'] },
+  { icon: 'laptop', keywords: ['workspace', 'espace de travail', 'bureau'] },
+  { icon: 'plug-zap', keywords: ['electric vehicle', 'vehicules electriques', 'ev charger', 'recharge'] },
   { icon: 'parking-circle', keywords: ['parking', 'stationnement', 'garage'] },
   { icon: 'key-round', keywords: ['arrivee autonome', 'self check', 'smart lock', 'serrure', 'key'] },
-  { icon: 'door-open', keywords: ['entree', 'door', 'luggage', 'bagage'] },
   { icon: 'accessibility', keywords: ['step free', 'sans marche', 'plain pied', 'accessible'] },
+  { icon: 'train-front', keywords: ['metro', 'train', 'gare', 'tram'] },
+  { icon: 'move-vertical', keywords: ['elevator', 'ascenseur', 'lift', 'monte charge'] },
+  // Sécurité avant « flame » (« fire extinguisher ») et « grill » (« grilles de fenêtre »).
+  { icon: 'fire-extinguisher', keywords: ['fire extinguisher', 'extincteur'] },
+  { icon: 'alert-triangle', keywords: ['smoke', 'fumee'] },
+  { icon: 'alert-octagon', keywords: ['monoxide', 'monoxyde'] },
+  { icon: 'heart-pulse', keywords: ['first aid', 'premiers secours', 'kit de secours'] },
+  { icon: 'baby', keywords: ['baby', 'bebe', 'crib', 'chaise haute', 'table a langer'] },
+  { icon: 'shield', keywords: ['safety', 'gate', 'guards', 'grilles de fenetre', 'protection', 'moustiquaire'] },
+  { icon: 'plug', keywords: ['prises', 'outlet'] },
+  { icon: 'lock', keywords: ['safe', 'coffre fort'] },
+  // Jeux avant « waves » (« pool table ») et « mountain-snow » (« piste de bowling »).
+  { icon: 'gamepad-2', keywords: ['arcade', 'console', 'laser', 'play area'] },
+  { icon: 'dice-5', keywords: ['games', 'jeux', 'billard', 'pool table', 'bowling', 'ping pong', 'table tennis', 'minigolf'] },
+  { icon: 'dumbbell', keywords: ['fitness', 'exercise', 'sport', 'gym', 'escalade'] },
+  { icon: 'bike', keywords: ['velo', 'bike', 'bicycle'] },
+  { icon: 'book-open-text', keywords: ['library', 'bibliotheque', 'livres', 'books'] },
+  { icon: 'music', keywords: ['piano', 'audio', 'speaker', 'enceinte', 'tourne disque'] },
+  { icon: 'tv', keywords: ['tv', 'television', 'cable'] },
+  // Extérieur et vues.
   { icon: 'umbrella', keywords: ['plage', 'beach'] },
+  { icon: 'shower-head', keywords: ['shower', 'douche'] },
   { icon: 'waves', keywords: ['pool', 'piscine', 'jacuzzi', 'spa', 'lake', 'lac', 'canal', 'kayak'] },
   { icon: 'mountain-snow', keywords: ['ski', 'piste', 'mont blanc'] },
   { icon: 'mountain', keywords: ['mountain', 'montagne'] },
   { icon: 'anchor', keywords: ['boat', 'bateau', 'dock', 'anchor', 'mise a l eau'] },
   { icon: 'building-2', keywords: ['resort', 'complexe hotelier'] },
-  { icon: 'utensils-crossed', keywords: ['kitchen', 'cuisine', 'table a manger', 'vaisselle', 'blender', 'rice cooker'] },
+  { icon: 'tree-pine', keywords: ['garden', 'jardin'] },
+  { icon: 'moon-star', keywords: ['hammock', 'hamac'] },
+  { icon: 'sun', keywords: ['sun', 'transat', 'chaises longues', 'terrace', 'terrasse', 'balcon', 'patio'] },
+  // Cuisine : les appareils avant la règle générale.
   { icon: 'coffee', keywords: ['coffee', 'cafe', 'nespresso'] },
   { icon: 'cup-soda', keywords: ['kettle', 'bouilloire', 'tea', 'the'] },
   { icon: 'croissant', keywords: ['breakfast', 'petit dejeuner', 'bread'] },
-  { icon: 'refrigerator', keywords: ['refrigerator', 'fridge', 'frigo', 'congelateur', 'freezer'] },
+  { icon: 'refrigerator', keywords: ['refrigerator', 'refrigerateur', 'fridge', 'frigo', 'congelateur', 'freezer'] },
   { icon: 'microwave', keywords: ['microwave', 'micro ondes'] },
-  { icon: 'flame', keywords: ['barbecue', 'grill', 'plancha', 'oven', 'four', 'stove', 'cuisiniere', 'toaster', 'sauna', 'fire'] },
-  { icon: 'bath', keywords: ['baignoire', 'bathtub', 'bidet', 'bath'] },
   { icon: 'droplets', keywords: ['eau chaude', 'hot water', 'dishwasher', 'lave vaisselle'] },
-  { icon: 'shower-head', keywords: ['shower', 'douche'] },
+  { icon: 'flame', keywords: ['barbecue', 'grill', 'plancha', 'oven', 'four', 'stove', 'plaques', 'cuisiniere', 'toaster', 'grille pain', 'sauna', 'fire', 'cheminee'] },
+  { icon: 'utensils-crossed', keywords: ['kitchen', 'cuisine', 'dining', 'espace repas', 'table a manger', 'vaisselle', 'blender', 'rice cooker', 'cuiseur', 'verres'] },
+  // Salle de bain, linge, confort.
+  { icon: 'bath', keywords: ['baignoire', 'bathtub', 'bidet', 'bath'] },
+  // Lave-linge et sèche-linge avant « linge » (linge de lit) et « seche » (sèche-cheveux).
+  { icon: 'washing-machine', keywords: ['washer', 'lave linge', 'seche linge', 'machine a laver', 'laundromat', 'laverie'] },
   { icon: 'wind', keywords: ['dryer', 'seche', 'hair dryer'] },
+  { icon: 'shirt', keywords: ['iron', 'fer a repasser', 'cintres', 'hangers'] },
   { icon: 'thermometer-snowflake', keywords: ['climatisation', 'air conditioning'] },
   { icon: 'radiation', keywords: ['heating', 'chauffage', 'heater', 'radiateur'] },
   { icon: 'fan', keywords: ['fan', 'ventilateur'] },
-  { icon: 'bed-double', keywords: ['linge', 'linens', 'pillows', 'couvertures'] },
-  { icon: 'shirt', keywords: ['washer', 'lave linge', 'iron', 'cintres', 'hangers', 'laundromat'] },
-  { icon: 'baby', keywords: ['baby', 'bebe', 'crib', 'chaise haute', 'table a langer'] },
-  { icon: 'shield', keywords: ['safety', 'gate', 'guards', 'protection', 'moustiquaire'] },
-  { icon: 'gamepad-2', keywords: ['arcade', 'console', 'laser', 'play area'] },
-  { icon: 'dice-5', keywords: ['games', 'jeux', 'billard', 'bowling', 'ping pong', 'minigolf'] },
-  { icon: 'music', keywords: ['piano', 'audio', 'speaker', 'tourne disque'] },
-  { icon: 'tv', keywords: ['tv', 'television', 'cable'] },
-  { icon: 'dumbbell', keywords: ['fitness', 'exercise', 'sport', 'gym', 'escalade'] },
-  { icon: 'tree-pine', keywords: ['garden', 'jardin'] },
-  { icon: 'sun', keywords: ['sun', 'transat', 'chaises longues', 'beach essentials'] },
-  { icon: 'moon-star', keywords: ['hammock', 'hamac'] },
-  { icon: 'briefcase', keywords: ['briefcase', 'bagages'] },
-  { icon: 'lock', keywords: ['safe', 'coffre fort'] },
-  { icon: 'plug-zap', keywords: ['electric vehicle', 'vehicules electriques', 'ev charger'] },
-  { icon: 'plug', keywords: ['prises', 'outlet'] },
+  { icon: 'blinds', keywords: ['curtains', 'rideaux', 'volets', 'stores'] },
+  { icon: 'bed-double', keywords: ['linge', 'linens', 'pillows', 'oreillers', 'couvertures'] },
+  { icon: 'sofa', keywords: ['lounge', 'salon'] },
+  { icon: 'door-open', keywords: ['entree', 'door', 'luggage', 'bagage'] },
+  { icon: 'briefcase', keywords: ['briefcase'] },
+  // Divers.
   { icon: 'calendar-range', keywords: ['long term', 'longue duree'] },
-  { icon: 'heart-pulse', keywords: ['first aid', 'premiers secours'] },
-  { icon: 'alert-triangle', keywords: ['smoke', 'fumee'] },
-  { icon: 'alert-octagon', keywords: ['monoxide', 'monoxyde'] },
-  { icon: 'fire-extinguisher', keywords: ['extincteur'] },
-  { icon: 'spray-can', keywords: ['nettoyage', 'cleaning'] },
-  { icon: 'package-check', keywords: ['essentials', 'produits de base'] },
+  { icon: 'spray-can', keywords: ['nettoyage', 'cleaning', 'menage'] },
+  { icon: 'package-check', keywords: ['essentials', 'produits de base', 'equipements de base'] },
   { icon: 'palette', keywords: ['theme', 'thematique', 'palette'] },
-  { icon: 'book-open-text', keywords: ['library', 'livres', 'books'] },
   { icon: 'map', keywords: ['guide', 'map'] },
   { icon: 'map-pin', keywords: ['nature', 'voisinage'] },
-  { icon: 'trash-2', keywords: ['trash', 'dechets'] },
-  { icon: 'bike', keywords: ['velo', 'bike', 'bicycle'] },
-  { icon: 'circle-dot', keywords: ['table tennis', 'ping pong', 'pool table', 'bowling', 'minigolf'] },
-  { icon: 'sofa', keywords: ['lounge', 'salon'] },
-  { icon: 'move-vertical', keywords: ['elevator', 'ascenseur', 'lift', 'monte charge'] },
+  { icon: 'trash-2', keywords: ['trash', 'dechets'] }
 ]
 
 export function toPascalCase(name: string): string {
@@ -130,14 +144,28 @@ function getAmenityIconContext(input: AmenityIconInput) {
 
 function inferAmenityIconName(input: AmenityIconInput): LucideIconName | null {
   const context = getAmenityIconContext(input)
-  const haystack = normalizeIconText(
-    `${context.id} ${context.name} ${context.description} ${context.category}`,
-  )
 
+  // Le nom d'abord ; la catégorie seulement s'il ne dit rien. Cherchés ensemble, « Cuisine &
+  // boissons » donnait l'icône de la cuisine au réfrigérateur comme au four. La description ne sert
+  // plus : un « four » qui y était cité donnait une flamme à la cuisine équipée.
+  return matchAmenityIconRule(normalizeIconText(`${context.id} ${context.name}`))
+    ?? matchAmenityIconRule(normalizeIconText(context.category))
+}
+
+function keywordMatches(paddedHaystack: string, keyword: string): boolean {
+  const normalized = normalizeIconText(keyword)
+  if (!normalized) return false
+  // Trois lettres ou moins : mot entier. Au-delà : en début de mot.
+  if (normalized.length <= 3) return paddedHaystack.includes(` ${normalized} `)
+  return paddedHaystack.includes(` ${normalized}`)
+}
+
+function matchAmenityIconRule(haystack: string): LucideIconName | null {
   if (!haystack) return null
 
+  const padded = ` ${haystack} `
   for (const rule of AMENITY_ICON_RULES) {
-    if (rule.keywords.some((keyword) => haystack.includes(normalizeIconText(keyword)))) {
+    if (rule.keywords.some((keyword) => keywordMatches(padded, keyword))) {
       return rule.icon
     }
   }

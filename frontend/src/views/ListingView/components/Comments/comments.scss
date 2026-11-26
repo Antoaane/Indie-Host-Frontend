@@ -10,6 +10,9 @@
   height: max-content;
   flex: 1 1 auto;
   padding-bottom: 2rem !important;
+  // Atteinte par le lien « 4,8 · 4 avis » du titre (téléphone) : son intitulé s'arrête sous la
+  // barre fixée en haut de l'écran, pas dessous.
+  scroll-margin-top: calc(var(--safe-area-top) + var(--tap-target) + var(--layout-gap));
 
   display: flex;
   flex-direction: column;

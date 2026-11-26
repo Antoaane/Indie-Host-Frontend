@@ -37,6 +37,7 @@ import type {
   MapModel,
   ReviewsVisibilityModel,
   HouseRulesModel,
+  StayInfoModel,
 } from '@/views/ListingView/types/listing';
 
 export type { RawListingBundle };
@@ -366,6 +367,13 @@ function parseHouseRules(arrival: Maybe<Partial<RawArrival>>): HouseRulesModel {
   return { html, text }
 }
 
+// Heures d'arrivée et de départ : texte court de l'hôte, sans balise (jamais du HTML).
+function parseStayInfo(arrival: Maybe<Partial<RawArrival>>): StayInfoModel {
+  const access = arrival?.practical?.access
+  const clean = (value: unknown) => (typeof value === 'string' ? stripHtmlToText(value).slice(0, 80) : '')
+  return { checkIn: clean(access?.checkIn), checkOut: clean(access?.checkOut) }
+}
+
 function parseComments(raw: Maybe<Partial<RawComments>>): { pages: CommentsPagesModel; flat: CommentsModel } {
   const pages = (raw?.comments || []).map(page =>
     page.map(c => ({
@@ -413,6 +421,7 @@ export function core(raw: RawListingBundle): ListingParsed {
     commentsPages: parsedComments.pages,
     reviewsVisibility: parseReviewsVisibility(raw.core),
     houseRules: parseHouseRules(raw.arrival),
+    stayInfo: parseStayInfo(raw.arrival),
   };
 }
 

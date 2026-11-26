@@ -21,7 +21,7 @@ function buildApartment(): RawListingBundle {
       title: 'Appartement les Raisins Clairs',
       description:
         '<p>Appartement sécurisé au 1er étage se situe dans un immeuble de 2 étages, vous offrira tout le confort de base (cuisine équipée, climatisation, linge de maison, machine à laver).</p>',
-      type: 'apartment',
+      type: 'Appartement',
       city: 'Saint-François',
       region: 'Guadeloupe',
       country: 'France',
@@ -33,12 +33,20 @@ function buildApartment(): RawListingBundle {
         { type: 'bedroom', 'room-name': 'Chambre', beds: [{ type: 'double', capacity: 2, quantity: 1 }] },
         { type: 'livingroom', 'room-name': 'Salon', beds: [{ type: 'sofa-bed', capacity: 2, quantity: 1 }] },
       ],
-      amenities: [],
+      // Assez d'équipements pour remplir l'aperçu (6 sur téléphone, 8 sur ordinateur) et la fenêtre.
+      amenities: [
+        'WIFI', 'REVERSIBLE_AIR_CONDITIONING', 'EQUIPPED_KITCHEN', 'WASHER', 'WALK_TO_BEACH', 'SELF_CHECK_IN',
+        'FREE_PARKING_ON_PREMISES', 'SMART_TV', 'LINENS_PROVIDED', 'HAIR_DRYER', 'NESPRESSO_COFFEE_MACHINE',
+        'REFRIGERATOR', 'MICROWAVE', 'SMOKE_ALARM',
+      ].map((id) => ({ id })),
     } as unknown as RawListingBundle['core'],
     medias: {
       images: [
         { src: SAMPLE_IMAGE, alt: '', position: 0 },
         { src: SAMPLE_IMAGE, alt: 'Salon avec canapé rouge', position: 1 },
+        { src: SAMPLE_IMAGE, alt: 'Cuisine équipée', position: 2 },
+        { src: SAMPLE_IMAGE, alt: 'Chambre', position: 3 },
+        { src: SAMPLE_IMAGE, alt: 'Salle de bain', position: 4 },
       ],
       videos: [],
     } as RawListingBundle['medias'],
@@ -105,6 +113,8 @@ function buildApartment(): RawListingBundle {
       ],
       // Paliers par nombre de voyageurs : 45 € pour un voyageur, +10 % pour deux, +15 % pour trois.
       pricing: {
+        stay: { minNights: 2 },
+        cancellation: { policy: 'moderate', refundsEnabled: true },
         guestTiers: [
           { guests: 2, percent: 10 },
           { guests: 3, percent: 15 },
@@ -113,11 +123,24 @@ function buildApartment(): RawListingBundle {
     } as RawListingBundle['bookings'],
     arrival: {
       intro: { title: '', subtitle: '', tagline: '' },
-      practical: { access: { checkIn: '16h', checkOut: '11h' }, rules: '' },
+      practical: {
+        access: { checkIn: '16h', checkOut: '11h' },
+        rules: '<p>Logement non-fumeur. Pas de fête ni de soirée.</p><p>Merci de respecter le calme de l’immeuble après 22 h.</p><p>Les animaux ne sont pas admis.</p>',
+      },
     } as unknown as RawListingBundle['arrival'],
     host: { name: 'Nathan', legalStatus: 'individual' } as RawListingBundle['host'],
-    notes: null,
-    comments: null,
+    // Une note et quelques avis, dont un long : la section « avis » de la page publique.
+    notes: {
+      note: { note: 4.8, reviewCount: 4, distribution: { 5: 3, 4: 1, 3: 0, 2: 0, 1: 0 } },
+    } as RawListingBundle['notes'],
+    comments: {
+      comments: [[
+        { name: 'Marine', note: 5, comment: 'Appartement très propre et bien placé, à deux pas de la plage. Nathan a répondu à toutes nos questions avant l’arrivée.', 'stay-dates': { start: '2026-08-02', end: '2026-08-09' } },
+        { name: 'Julien', note: 5, comment: 'Séjour parfait. La climatisation et la machine à laver sont un vrai plus en famille. Le quartier est calme le soir et tout se fait à pied : le marché, les restaurants et l’embarcadère. Nous reviendrons sans hésiter l’an prochain, sans doute pour deux semaines cette fois.', 'stay-dates': { start: '2026-07-12', end: '2026-07-19' } },
+        { name: 'Élodie', note: 4, comment: 'Très bon rapport qualité-prix. Seul bémol : le canapé-lit est un peu ferme.', 'stay-dates': { start: '2026-05-20', end: '2026-05-24' } },
+        { name: 'Thomas', note: 5, comment: 'Arrivée autonome très simple, logement conforme aux photos.', 'stay-dates': { start: '2026-04-03', end: '2026-04-06' } },
+      ]],
+    } as RawListingBundle['comments'],
   }
 }
 

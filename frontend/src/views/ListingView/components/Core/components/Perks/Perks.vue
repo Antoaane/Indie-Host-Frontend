@@ -59,52 +59,43 @@ function resolveIcon(name: string) {
 /* File: src/views/ListingView/components/Core/components/Perks/perks.scss */
 
 @use '@/styles/variables/globals' as *;
-@use '@/styles/variables/borders' as borders;
 
 .listing-perks {
+  // Une ligne par point fort : icône, titre, phrase. Encadré, chacun pesait autant qu'une carte
+  // alors que rien ne s'y touche ; en lignes, ils se lisent d'un trait sous le titre.
   > .list {
     display: grid;
     grid-template-columns: repeat(1, 1fr);
-    gap: var(--layout-gap-md);
+    gap: var(--layout-gap);
 
     .listing-view:not(.is-mobile-layout) & {
       grid-template-columns: repeat(2, 1fr);
     }
 
     > .item {
-      padding: var(--layout-gap-md);
-
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: var(--layout-gap-md);
 
-      border: solid 1px $quaternary;
-      border-radius: borders.$rounded-lg;
-
       > .icon {
-        flex-shrink: 0;
-        flex-basis: 2rem;
-        height: 2rem;
-
-        stroke: $secondary;
-
-        * {
-          stroke: $secondary;
-        }
+        flex: 0 0 auto;
+        width: 1.5rem;
+        height: 1.5rem;
+        color: $secondary-text;
       }
 
       > .body {
-        flex-shrink: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: var(--layout-gap-2xs);
 
         > .title {
-          margin-bottom: var(--layout-gap-2xs) !important;
-          font-weight: 500 !important;
-          @include base-text($bigger: true);
+          @include base-text($bold: true);
         }
 
         > .description {
-          opacity: 0.65;
-          @include little-text($thin: false);
+          @include base-text(rgba($secondary-text, 0.72), $thin: false);
         }
       }
     }

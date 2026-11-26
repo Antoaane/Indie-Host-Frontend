@@ -2,8 +2,9 @@
 
 <script setup lang="ts">
 // TYPES
-import type { TitleModel } from '@/views/ListingView/types/listing'
+import type { ReviewsSummary, TitleModel } from '@/views/ListingView/types/listing'
 import { computed } from 'vue'
+import { Star } from '@lucide/vue'
 import { formatICUMessage } from '@/utils/i18n'
 import { sanitizeHtml } from '@/utils/sanitizeHtml'
 
@@ -21,7 +22,25 @@ const FALLBACK_REGISTRATION_LABEL = 'N° d’enregistrement'
 const props = defineProps<{
   data: TitleModel
   staticContent: StaticContent
+  /** Note de la section des avis, quand la page veut la rappeler sous le titre (téléphone). */
+  rating?: ReviewsSummary | null
 }>()
+
+const scoreFormatter = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 })
+const ratingScore = computed(() => {
+  if (!props.rating) return ''
+  const score = scoreFormatter.format(props.rating.score)
+  return props.rating.outOf === 10 ? `${score}/10` : score
+})
+
+// Vers les avis, plus bas dans la page : le lien fait défiler au lieu de changer l'adresse.
+function scrollToReviews(event: MouseEvent) {
+  const target = document.getElementById('comments')
+  if (!target) return
+  event.preventDefault()
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' })
+}
 
 const travelerLabel = computed(() => formatICUMessage(props.staticContent.travelers, { count: props.data.guest_capacity }))
 
@@ -51,6 +70,21 @@ const registrationLabel = computed(() => props.staticContent.registrationNumber 
 
       <li v-html="`<span></span> ${data.bathrooms} ${bathroomsLabel}`" />
     </ul>
+    <a
+      v-if="props.rating"
+      class="rating"
+      href="#comments"
+      @click="scrollToReviews"
+    >
+      <Star
+        v-if="props.rating.outOf === 5"
+        :size="14"
+        class="star"
+        aria-hidden="true"
+      />
+      <span class="score">{{ ratingScore }}</span>
+      <span class="count">· {{ props.rating.countLabel }}</span>
+    </a>
     <p
       v-if="registrationNumber"
       class="registration"
@@ -109,6 +143,42 @@ const registrationLabel = computed(() => props.staticContent.registrationNumber 
         background-color: $secondary;
         border-radius: borders.$rounded;
       }
+    }
+  }
+
+  // Note et nombre d'avis : une ligne discrète qui mène aux avis.
+  > .rating {
+    width: fit-content;
+    min-height: var(--tap-target);
+    margin-bottom: calc(var(--layout-gap-sm) * -1);
+
+    display: inline-flex;
+    align-items: center;
+    gap: var(--layout-gap-xs);
+
+    text-decoration: none;
+
+    > .star {
+      flex: 0 0 auto;
+      fill: currentColor;
+      color: $secondary-text;
+    }
+
+    > .score {
+      @include little-text($secondary-text, $bold: true);
+      font-variant-numeric: tabular-nums;
+    }
+
+    > .count {
+      @include little-text(rgba($secondary-text, 0.72), $thin: false);
+      text-decoration: underline;
+      text-underline-offset: 0.2rem;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $secondary;
+      outline-offset: 2px;
+      border-radius: borders.$rounded-xs;
     }
   }
 

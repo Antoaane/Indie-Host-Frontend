@@ -1,6 +1,7 @@
 // File: src/domain/listings/perks.ts
 
 import { getAmenityIconName } from '@/utils/amenitiesIcons'
+import { describeCancellationPolicy } from '@/domain/listings/cancellationPolicy'
 import type { RawAmenity, RawBookings, RawCore, RawPerkSetting } from '@/domain/listings/types'
 
 export type PerkCandidateSource = 'amenity' | 'setting'
@@ -169,6 +170,9 @@ function resolveCancellationPerkCandidate(bookings: Partial<RawBookings> | null 
   const pricing = bookings?.pricing ?? {}
   const cancellation = pricing.cancellation
   if (!cancellation) return null
+  // Sans remboursement activé par l'hôte, la réservation est non remboursable : annoncer une
+  // « annulation flexible » en tête d'annonce contredisait ce que le paiement applique.
+  if (cancellation.refundsEnabled !== true) return null
 
   const policy = normalizeString(cancellation.policy).toLowerCase() || 'flexible'
   const defaults = CANCELLATION_POLICY_PERK_DEFAULTS[policy] ?? CANCELLATION_POLICY_PERK_DEFAULTS.flexible
@@ -180,7 +184,11 @@ function resolveCancellationPerkCandidate(bookings: Partial<RawBookings> | null 
 
   const priority = toFiniteNumber(cancellation.perkPriority, defaults.priority) ?? 0
   const name = normalizeString(cancellation.perkName) || defaults.name
-  const description = normalizeString(cancellation.perkDescription) || defaults.description
+  // Sans texte de l'hôte, la règle elle-même (« Remboursement intégral jusqu'à 7 jours avant
+  // l'arrivée. ») plutôt qu'une formule (« Conditions équilibrées… ») qui ne dit rien au voyageur.
+  const description = normalizeString(cancellation.perkDescription)
+    || describeCancellationPolicy(cancellation)[0]
+    || defaults.description
   const icon = normalizeString(cancellation.perkIcon) || defaults.icon
 
   return {

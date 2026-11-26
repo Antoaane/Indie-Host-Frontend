@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 // DEPS
-import { computed, nextTick, ref } from 'vue'
+import { computed, nextTick, ref, watchEffect } from 'vue'
 import type { SwiperOptions } from 'swiper/types'
 import type { SwiperModule } from 'swiper/types'
 import { Swiper, SwiperSlide } from 'swiper/vue'
@@ -19,7 +19,7 @@ import { buildDistributionFromComments, computePercentage } from '@/views/Listin
 import { useListingViewport } from '@/views/ListingView/composables/useListingViewport'
 
 // TYPES
-import type { CommentsModel, NotesModel, ReviewsVisibilityModel } from '@/views/ListingView/types/listing'
+import type { CommentsModel, NotesModel, ReviewsSummary, ReviewsVisibilityModel } from '@/views/ListingView/types/listing'
 
 // ASSETS
 import { X } from '@lucide/vue'
@@ -82,6 +82,11 @@ const props = withDefaults(
 )
 // console.log(`${data?.comments?.length ? '✅' : '❌'} [Comments.vue](setup) core:resolved commentsCount=${data.comments?.length ?? 0} fetched`)
 // console.log(`${'ℹ️'} [Comments.vue](setup) contentLoaded=commentsWidget ready for render`)
+
+const emit = defineEmits<{
+  /** Note et nombre d'avis affichés par la section, ou `null` quand elle n'a pas de note. */
+  (e: 'summary', value: ReviewsSummary | null): void
+}>()
 
 const previewLimit = content.preview?.maxItems ?? 10
 
@@ -265,6 +270,23 @@ const hasVisibleContent = computed(() => (
   hasVisibleIndiehostNotes.value || hasImportedReviewData.value
 ))
 const showSummary = computed(() => overallScore.value !== null)
+
+// Une seule source pour la note : la page la reprend telle quelle sous le titre du logement.
+watchEffect(() => {
+  const score = overallScore.value
+  if (!hasVisibleContent.value || score === null) {
+    emit('summary', null)
+    return
+  }
+  // Une note importée de Booking est sur 10, toutes les autres sur 5.
+  const outOf = usesImportedAsPrimaryScore.value && primaryImportedOtaNote.value?.ota === 'booking' ? 10 : 5
+  emit('summary', { score, outOf, countLabel: countLabel.value })
+})
+
+// Le bouton dit combien d'avis il ouvre quand l'aperçu ne les montre pas tous.
+const ctaLabel = computed(() => (
+  commentsCount.value > previewLimit ? `Voir les ${commentsCount.value} avis` : content.ctaLabel
+))
 const headerTitle = computed(() => (
   showSummary.value ? `${content.title} — ${countLabel.value}` : content.title
 ))
@@ -436,10 +458,10 @@ const swiperParams = computed(
           type="button"
           class=""
           :disabled="!commentsCount"
-          :title="content.ctaLabel"
           @click="openOverlay()"
-          v-html="content.ctaLabel"
-        />
+        >
+          {{ ctaLabel }}
+        </button>
       </div>
     </div>
 

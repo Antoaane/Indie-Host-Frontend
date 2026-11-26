@@ -22,7 +22,7 @@ import { useListingStatusBarTint } from '@/views/ListingView/composables/useList
 import { orderByIndex } from '@/views/ListingView/components/Gallery/utils/order'
 import type { OccupantCounts } from '@/views/ListingView/types/reservation'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
-import type { ListingParsed } from '@/views/ListingView/types/listing'
+import type { ListingParsed, ReviewsSummary } from '@/views/ListingView/types/listing'
 import type { ReservationPayload } from '@/views/ListingView/types/reservation'
 import type { CheckoutConfirmationPayload } from '@/views/ListingView/types/checkout'
 
@@ -131,6 +131,9 @@ const nightlyPrice = computed(() => {
   const percent = resolveGuestTierPercent(data.bookings.rules.guestTiers, countTravelers(occupants))
   return applyGuestSurcharge(data.bookings.price, percent)
 })
+
+// Note et nombre d'avis, donnés par la section des avis (en bas de page) et rappelés sous le titre.
+const reviewsSummary = ref<ReviewsSummary | null>(null)
 
 // Barre du haut (retour, partager) fixée à l'écran : transparente sur la photo, elle prend le fond
 // de la page dès que la photo est passée sous elle.
@@ -247,6 +250,14 @@ async function shareListing() {
         aria-hidden="true"
       />
     </a>
+    <!-- Barre pleine : la photo et le titre sont passés, elle redit de quel logement il s'agit. -->
+    <p
+      v-if="props.listingData"
+      class="bar-title"
+      aria-hidden="true"
+    >
+      {{ props.listingData.title.title }}
+    </p>
     <div class="end">
       <RouterLink
         v-if="props.canEditListing && !props.ownershipLoading"
@@ -309,11 +320,13 @@ async function shareListing() {
               v-model:model-value="selection"
               :data="props.listingData"
               :preview-only="props.previewOnly"
+              :rating="reviewsSummary"
             />
             <Comments
               :notes="props.listingData.notes"
               :comments="props.listingData.comments"
               :visibility="props.listingData.reviewsVisibility"
+              @summary="reviewsSummary = $event"
             />
           </div>
           <div

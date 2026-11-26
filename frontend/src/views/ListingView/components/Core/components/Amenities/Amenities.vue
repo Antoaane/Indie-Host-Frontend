@@ -70,8 +70,21 @@ const categorizedAmenities = computed(() => {
   return order.map((category) => ({ name: category, items: categories[category] }))
 })
 
+// Le bouton dit combien il y en a (« Voir les 14 équipements ») et disparaît quand l'aperçu les
+// montre déjà tous, sauf si la fenêtre apporte des précisions.
+const hasMoreToShow = computed(() => (
+  amenities.value.length > previewAmenities.value.length
+  || amenities.value.some((amenity) => Boolean(amenity.description))
+))
+const ctaLabel = computed(() => (
+  amenities.value.length > previewAmenities.value.length
+    ? `Voir les ${amenities.value.length} équipements`
+    : props.staticContent.ctaLabel
+))
+
+// Toujours une icône : sans elle, le nom se décalait à gauche des autres lignes.
 function resolveAmenityIcon(amenity: AmenityWithIndex) {
-  return resolveAmenityIconComponent(amenity) ?? resolveLucideComponent(amenity.id)
+  return resolveAmenityIconComponent(amenity) ?? resolveLucideComponent(amenity.id) ?? resolveLucideComponent('check')
 }
 
 function openOverlay() {
@@ -84,7 +97,11 @@ function closeOverlay() {
 </script>
 
 <template>
-  <section class="listing-amenities">
+  <!-- Aucun équipement renseigné : pas de section (elle se réduisait à un bouton vers une fenêtre vide). -->
+  <section
+    v-if="amenities.length"
+    class="listing-amenities"
+  >
     <div class="header">
       <h2 v-html="staticContent.title"></h2>
     </div>
@@ -111,12 +128,16 @@ function closeOverlay() {
       </li>
     </ul>
 
-    <div class="cta">
+    <div
+      v-if="hasMoreToShow"
+      class="cta"
+    >
       <button
         type="button"
         @click="openOverlay"
-        v-html="staticContent.ctaLabel"
-      ></button>
+      >
+        {{ ctaLabel }}
+      </button>
     </div>
 
     <AbsoluteOverlay

@@ -8,7 +8,7 @@ import { useRoute, useRouter } from 'vue-router'
 import ListingView from '@/views/ListingView/_ListingView.vue'
 import ListingHubView from '@/views/ListingHub/_ListingHub.vue'
 import ListingUnavailable from '@/views/Listing/ListingUnavailable.vue'
-import { loadBookings, loadBookingsById, loadComments, loadCore, loadHost, loadMedias, loadNotes, refreshListingAvailability } from '@/views/Listing/utils/fetchListingRaw'
+import { loadArrival, loadBookings, loadBookingsById, loadComments, loadCore, loadHost, loadMedias, loadNotes, refreshListingAvailability } from '@/views/Listing/utils/fetchListingRaw'
 import type { RawListingBundle } from '@/domain/listings/types'
 import { getListingStatusFlags } from '@/domain/listings/status'
 import { isListingHostname } from '@/domain/listings/publicDomain'
@@ -122,6 +122,7 @@ async function fetchRawListing() {
       medias,
       notes,
       comments,
+      arrival,
     ] = await Promise.all([
       loadCore(listingKey.value),
       loadHost(listingKey.value),
@@ -129,8 +130,10 @@ async function fetchRawListing() {
       loadMedias(listingKey.value),
       loadNotes(listingKey.value),
       loadComments(listingKey.value),
+      // Heures d'arrivée et de départ, règlement intérieur : la part publique du guide d'arrivée.
+      loadArrival(listingKey.value),
     ])
-    rawListing.value = { core, host, bookings, medias, notes, comments }
+    rawListing.value = { core, host, bookings, medias, notes, comments, arrival }
 
     const resolvedListingId = (core?.id ?? listingKey.value ?? '').trim()
     if (resolvedListingId) {

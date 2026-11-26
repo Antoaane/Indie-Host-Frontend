@@ -1,0 +1,108 @@
+/* File: src/views/ListingView/components/Core/components/StayInfo/stay-info.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/animations' as animations;
+@use '@/styles/components/buttons' as buttons;
+
+// Lignes simples : une icône, un titre, une phrase. Pas de carte autour.
+.listing-stay-info {
+  > h2 {
+    margin-bottom: var(--layout-gap-sm) !important;
+    @include h2-title($gradiant: true);
+  }
+
+  > .rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap);
+
+    > .row {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--layout-gap-md);
+
+      > .icon {
+        flex: 0 0 auto;
+        width: 1.5rem;
+        height: 1.5rem;
+        color: $secondary-text;
+      }
+
+      > .body {
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: var(--layout-gap-2xs);
+
+        > h3 {
+          @include base-text($bold: true);
+        }
+
+        > p {
+          max-width: 68ch;
+          @include base-text(rgba($secondary-text, 0.72), $thin: false);
+        }
+
+        // Suite du barème, dépliée sur sa hauteur réelle.
+        > .more {
+          display: grid;
+          grid-template-rows: 0fr;
+          opacity: 0;
+          @include animations.transition(animations.$duration-menu, animations.$ease-out, (grid-template-rows, opacity));
+
+          > .more-inner {
+            min-height: 0;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: var(--layout-gap-2xs);
+
+            > li {
+              max-width: 68ch;
+              @include base-text(rgba($secondary-text, 0.72), $thin: false);
+            }
+          }
+        }
+
+        > .trigger {
+          @include buttons.secondary($padding: false);
+
+          > button {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+
+            > .chevron {
+              flex-shrink: 0;
+              @include animations.transition(animations.$duration-menu, animations.$ease-out, (transform));
+            }
+          }
+        }
+      }
+
+      &.is-expanded > .body {
+        > .more {
+          grid-template-rows: 1fr;
+          opacity: 1;
+        }
+
+        > .trigger > button > .chevron {
+          transform: rotate(180deg);
+        }
+      }
+    }
+  }
+
+  @include animations.reduced-motion {
+    .more,
+    .chevron {
+      transition-duration: 0ms;
+    }
+  }
+}

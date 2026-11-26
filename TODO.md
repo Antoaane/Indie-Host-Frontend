@@ -10,6 +10,20 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ## Ce que vous devez faire
 
+### Page d’un logement, d’après l’analyse d’Airbnb (session du 2026-11-26)
+
+- [ ] Mettre en ligne avec le reste (`git push` depuis ce PC, puis `./deploy-indiehost.sh --with-scraping` sur le serveur), puis regarder `apparts-saintfrancois.fr/appartement-les-raisins-clairs` sur l’iPhone et sur ordinateur :
+  - la section « À savoir » : heures d’arrivée et de départ, conditions d’annulation, puis le règlement intérieur, qui n’arrivait jamais sur la page en ligne (Claude n’a pu le voir que sur `/dev/listing` : à confirmer sur le vrai site) ;
+  - sous le total de la carte de réservation, la phrase d’annulation ;
+  - points forts, hôte et équipements en lignes simples, avec la bonne icône ;
+  - sur téléphone, la note sous le titre (s’il y a des avis) et le nom du logement dans la barre du haut quand on défile.
+- [ ] Faire remplir les heures d’arrivée et de départ par l’hôte (éditeur → Guide d’arrivée → Accès) : la ligne « Arrivée et départ » n’apparaît que si elles sont saisies.
+- [ ] Vérifier l’annulation de « Raisins Clairs » dans l’éditeur (Tarifs → Annulation). Si « Rembourser le voyageur s’il annule » n’est pas coché, la page annonce maintenant « L’hôte n’accepte pas de remboursement » et la mention « Annulation flexible » du haut de page disparaît : elle contredisait ce que le paiement applique.
+- [ ] Dire si vous voulez aller plus loin sur trois points qu’Airbnb fait autrement et que Claude n’a pas touchés, faute de certitude sur votre goût :
+  - les avis juste après la description sur téléphone (ils sont en bas de page chez vous, après la carte) ;
+  - une photo plus haute sur téléphone (presque carrée chez Airbnb, 3:2 chez vous depuis le 2026-11-11) ;
+  - des boutons secondaires gris et plats (« Lire la suite », « Afficher les équipements ») au lieu de vos boutons blancs à contour.
+
 ### Calendrier sur deux ans, calendrier dans Réservations, paliers par voyageurs (session du 2026-11-26)
 
 - [ ] Mettre en ligne, API **et** site ensemble : `git push` depuis ce PC (le commit est local, comme ceux du 2026-11-20), puis sur le serveur `cd /opt/indiehost && git pull && ./deploy-indiehost.sh --with-scraping` (même déploiement que la section « Mises à jour nginx, Node et images » ci-dessous). Un site nouveau devant l’ancienne API refuserait toute réservation d’un logement qui a des paliers par voyageurs (« Le tarif de ce séjour a changé »).
@@ -246,7 +260,10 @@ Réglé le 2026-11-21 (détail dans « Fait ») : le correctif est en ligne depu
 
 - [ ] Panneaux « Localisation » de l’éditeur et de l’assistant de création : ils affichent encore une carte Google en `iframe` (cookies Google déposés sans consentement, sur le tableau de bord). Les passer sur la carte OpenFreeMap / MapLibre de l’annonce (`views/ListingView/components/Core/components/Map/Map.vue`), puis retirer `https://www.google.com` de `frame-src` dans la CSP. Fichiers : `views/Editor/components/EditorSidebar/panels/ListingPanels/LocationPanel.vue`, `views/CreateListing/components/panels/ListingPanels/LocationPanel.vue`.
 - [ ] (après votre décision sur l’emplacement exact) Réglage « Montrer l’adresse exacte sur la carte » dans l’éditeur ; aujourd’hui toujours une zone de 300 m (`Map.vue`).
-- [ ] Page d’un logement, suites de l’étude du 2026-11-11 : rappeler la politique d’annulation dans la fenêtre de réservation (comme Airbnb, sous le total) ; lier chaque avis importé à sa source (Airbnb, Booking), recommandation Baymard ; regarder la page principale (`ListingHub`) et le parcours de paiement (`Checkout`) sur téléphone avec les mêmes règles (filets, barre fixe, tailles).
+- [ ] Option (après votre accord) : sur téléphone, remonter les avis après la description, agrandir la photo, ou passer les boutons secondaires en gris plat (voir « Page d’un logement, d’après l’analyse d’Airbnb » en tête). `ListingMobileLayout.vue`, `gallery.scss`, `_buttons.scss`.
+- [ ] Option : un bouton « Écrire à l’hôte » sur la page d’un logement, avant toute réservation (Airbnb : « Envoyer un message à l’hôte »). Aujourd’hui un voyageur ne peut écrire qu’après avoir réservé, ou par le contact du pied de page s’il existe. À concevoir avec la messagerie (`MessagingView.vue`) et une limite de débit.
+- [ ] Option : fenêtre des dates sur ordinateur au dessin du téléphone (reste de l’entrée « Calendrier de réservation sur ordinateur » ci-dessous), et titre qui suit l’étape comme chez Airbnb (« Sélectionnez la date d’arrivée », puis « de départ », puis « N nuits »).
+- [ ] Page d’un logement, suites de l’étude du 2026-11-11 : lier chaque avis importé à sa source (Airbnb, Booking), recommandation Baymard ; regarder la page principale (`ListingHub`) et le parcours de paiement (`Checkout`) sur téléphone avec les mêmes règles (filets, barre fixe, tailles).
 - [ ] Téléphone, suite (après votre retour sur iPhone) : parcours de réservation (`Checkout`), assistant de création d’annonce, Messagerie, Domaines, Administration et « Mon profil » n’ont pas été repris écran par écran ; ils ont seulement reçu la densité à 15 px et les zones tactiles à 44 px.
 - [ ] Réservations : une réservation sans montant d’acompte enregistré est encore affichée avec 30 % supposés encaissés (`normalizePayment` de `frontend/src/domain/listings/bookings.ts`, valeur de secours). À corriger avec les anciennes données sous les yeux.
 - [ ] Messagerie : elle charge aussi les réservations des pages principales, qui n’en ont pas (`MessagingView.vue`, `fetchListings` non filtré). Une requête inutile par page.
@@ -298,7 +315,6 @@ Sécurité :
 - [ ] Moindres : catalogue public des abonnements relu chez Stripe à chaque appel sans copie ni limite ; `preflight.sh` ne regarde que le SMTP et annonce à tort des e-mails coupés avec Brevo seul ; `backend/api/mcp/clerk-server.js` et `nginx/nginx.conf` ne servent plus.
 
 Défauts visibles :
-- [ ] Règlement intérieur jamais chargé sur la page publique : `_Listing.vue` n’appelle pas `loadArrival`, la section reste cachée et l’étape 4 du paiement affiche « Un petit rappel » (non visible sur `/dev/listing`, qui a toutes les données).
 - [ ] Les réponses de l’hôte dans Messagerie n’arrivent pas au voyageur : `MessagingView.vue` les écrit dans la réservation, le guide lit la table des messages, et le message suivant du voyageur les efface (`ensureReservationConversation`).
 - [ ] Un voyageur peut être débité sans réservation ni remboursement si un contrôle fait après le paiement échoue (`useListingCheckout.ts`, `confirmCheckout`).
 - [ ] « Ouvrir le guide d’accueil » de la page de confirmation ne fait rien au clic (`@click.prevent`, `BookingConfirmationView.vue` vers la ligne 800).
@@ -309,6 +325,12 @@ Défauts visibles :
 - [ ] Nettoyage : 25 illustrations affichées nulle part et `components/svgs/svgs-old/`, sections d’accueil retirées (`RoiSection` encore à 39 €, `ReassuranceBandSection`), fonctions de `Editor/utils/listingApi.ts`, `BottomNav.vue`, styles « patch » de la page de don qui ne visent aucune classe.
 
 ## Fait
+
+- [x] 2026-11-26 — Page d’un logement revue d’après une annonce Airbnb (demande de Nathan : tailles, emplacements, effets, outils ; commit `COMMIT_HASH_2`, local, à pousser et à déployer).
+  - Relevé : Airbnb mesuré sur ordinateur (1 654 px) et sur téléphone (390 px, Chrome sans interface). Sur téléphone il est plus aéré que vous : marges de 24 px contre 15, lignes d’équipement de 48 px contre 28, photo de 372 px de haut contre 253, texte de 16 px contre 15 ; les titres de section sont à la même taille (22 px). Vous avez demandé un téléphone plus compact : rien n’a été agrandi, sauf le bouton « Réserver » de la carte de réservation, passé de 37 à 46 px (48 chez Airbnb).
+  - Repris : section « À savoir » (arrivée et départ, annulation), rappel d’annulation sous le total, note sous le titre et nom du logement dans la barre du haut sur téléphone, lignes simples à la place des cartes (points forts, hôte, équipements), boutons qui disent combien ils ouvrent.
+  - Corrigé en chemin : règlement intérieur et heures jamais chargés sur la page en ligne (`_Listing.vue`), mention « Annulation flexible » affichée même sans remboursement, une vingtaine d’icônes d’équipements fausses, section « équipements » réduite à un bouton quand il n’y en a aucun.
+  - Vérifié dans Chrome sur `/dev/listing` à 360, 390 et 1 654 px ; type-check et build. Non vérifié : la page en ligne d’un hôte (le chargement du guide d’arrivée public n’a pas pu être essayé sans l’API).
 
 - [x] 2026-11-26 — Calendrier sur deux ans, calendrier dans Réservations, paliers de prix par nombre de voyageurs (demande de Nathan ; commit `4074ef9`, local, à pousser et à déployer).
   - Calendrier du voyageur : 24 mois au lieu de 12 sur téléphone, même limite sur ordinateur (il n’en avait aucune). Réglage par annonce dans l’éditeur (Tarifs → Séjour → « Ouverture du calendrier » : 3, 6, 9, 12, 18 ou 24 mois), appliqué aux calendriers et vérifié par l’API au paiement. C’était l’option « refuser une réservation trop lointaine » restée en attente depuis le 2026-11-21.

@@ -310,11 +310,9 @@
       >.btn-primary__full {
         @include buttons.primary($cta: true, $fullwidth: true);
 
+        // Action principale de la page : un peu plus haute que les autres boutons (48 px au doigt).
         >button {
-          // padding-block: 0.85rem;
-          // font-weight: 600;
-          // font-size: 1rem;
-          // gap: var(--layout-gap-xs);
+          min-height: calc(var(--tap-target) + var(--layout-gap-xs));
 
           &:disabled {
             opacity: 0.6;
@@ -349,6 +347,11 @@
           stroke: rgba($secondary-text, 0.65);
         }
       }
+    }
+
+    // Ce que le voyageur récupère s'il annule, juste avant le bouton.
+    >.booking-cancellation {
+      @include little-text(rgba($secondary-text, 0.72), $thin: false);
     }
 
     >.booking-error {

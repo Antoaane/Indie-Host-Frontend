@@ -492,6 +492,19 @@
         gap: var(--layout-gap-2xs);
       }
 
+      // Nom du logement : absent sur la photo, il apparaît avec le fond de la barre.
+      >.bar-title {
+        flex: 1 1 auto;
+        min-width: 0;
+        padding-inline: var(--layout-gap-xs);
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        opacity: 0;
+        @include base-text($secondary-text, $bold: true);
+        @include animations.transition(animations.$duration-base, animations.$ease-out, opacity);
+      }
+
       // Pastilles claires fixes (la photo peut être sombre ou claire) : cible de 44 px, cercle de 34 px.
       .round-action {
         width: var(--tap-target);
@@ -557,6 +570,10 @@
         background-color: $accent;
         border-bottom-color: rgba($secondary, 0.1);
         pointer-events: auto;
+
+        >.bar-title {
+          opacity: 1;
+        }
 
         .round-action {
           background-color: transparent;

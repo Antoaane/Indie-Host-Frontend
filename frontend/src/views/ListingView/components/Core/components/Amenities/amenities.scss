@@ -20,7 +20,7 @@
   >.preview {
     display: grid;
     grid-template-columns: repeat(1, 1fr);
-    gap: var(--layout-gap-sm);
+    gap: var(--layout-gap-xs) var(--layout-gap);
 
     @include min-width(md) {
       .listing-view:not(.is-mobile-layout) & {
@@ -36,42 +36,24 @@
     //   grid-template-columns: repeat(4, 1fr);
     // }
 
+    // Une simple ligne icône + nom, sur téléphone comme sur ordinateur. Encadré, chaque
+    // équipement prenait la hauteur d'une carte ; huit cartes sur deux colonnes ne se lisaient
+    // plus comme une liste.
     >.item {
       display: flex;
       align-items: center;
-      gap: var(--layout-gap-sm);
-
-      padding: var(--layout-gap-md);
-
-      border: solid 1px $quaternary;
-      border-radius: borders.$rounded-lg;
-
-      background-color: rgba($accent, 0.75);
+      gap: var(--layout-gap-md);
+      padding: var(--layout-gap-xs) 0;
 
       >.icon {
-        height: 1.5rem;
-        width: 1.5rem;
+        height: 1.375rem;
+        width: 1.375rem;
         stroke: $secondary-text;
         flex-shrink: 0;
       }
 
       >.name {
         @include base-text($thin: false);
-      }
-
-      // Téléphone : une simple ligne icône + nom. Encadré, chaque équipement prenait la hauteur
-      // d'une carte et six d'entre eux remplissaient l'écran.
-      .listing-view.is-mobile-layout & {
-        gap: var(--layout-gap-md);
-        padding: var(--layout-gap-xs) 0;
-        border: none;
-        border-radius: 0;
-        background: none;
-
-        >.icon {
-          height: 1.375rem;
-          width: 1.375rem;
-        }
       }
     }
   }

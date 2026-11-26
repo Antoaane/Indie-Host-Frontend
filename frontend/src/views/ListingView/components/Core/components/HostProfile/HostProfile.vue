@@ -97,20 +97,14 @@ const seniorityText = computed(() => {
 @use '@/styles/variables/borders' as borders;
 
 .listing-host-profile {
-  padding: var(--layout-gap-sm);
-
   display: flex;
+  align-items: center;
   gap: var(--layout-gap-md);
-
-  border-radius: borders.$rounded-lg;
-  background-color: $accent;
-
-  @include big-shadow();
 
   > .avatar {
     flex: 0 0 auto;
-    width: 3.5rem;
-    height: 3.5rem;
+    width: 3rem;
+    height: 3rem;
     object-fit: cover;
 
     border-radius: borders.$rounded;
@@ -131,20 +125,20 @@ const seniorityText = computed(() => {
     justify-content: center;
 
     > .name {
-      margin-bottom: var(--layout-gap-xs) !important;
-      font-weight: 500 !important;
-      @include base-text($bigger: true);
+      @include base-text($bold: true);
+
+      & {
+        margin-bottom: var(--layout-gap-2xs);
+      }
     }
 
     > .meta {
       display: flex;
       align-items: center;
 
-      opacity: 0.65;
-
       > .item {
         display: inline-flex;
-        @include little-text($thin: false);
+        @include base-text(rgba($secondary-text, 0.72), $thin: false);
       }
     }
   }

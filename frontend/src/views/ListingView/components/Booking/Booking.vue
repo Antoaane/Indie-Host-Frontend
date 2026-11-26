@@ -4,11 +4,14 @@
 import { computed, reactive, ref, watch } from 'vue'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
 import { makeIsDateDisabled } from '@/components/DatePicker/utils/range'
+import { nightsBetween } from '@/domain/listings/bookings'
+import { describeCancellationPolicy, resolveCancellationOutcome } from '@/domain/listings/cancellationPolicy'
 import {
   clampOccupantsToRules,
   computeReservationPricing,
   resolveLastBookableDate,
   resolveListingReservationRules,
+  todayIsoDate,
   validateReservationAgainstRules,
   type ListingReservationRules,
 } from '@/domain/listings/reservationRules'
@@ -400,6 +403,22 @@ const priceBreakdown = computed(() => {
   return list
 })
 
+// Rappel de l'annulation sous le total, avant « Réserver » : ce que le voyageur récupère s'il
+// annule ce séjour. Mêmes règles et mêmes phrases que le paiement (`cancellationPolicy.ts`).
+const cancellationNote = computed(() => {
+  const policy = props.rules.cancellation
+  if (!policy.refundsEnabled) return 'Réservation non remboursable.'
+
+  const start = selection.value?.start
+  if (!start || nights.value <= 0) return null
+
+  const daysBeforeArrival = nightsBetween(todayIsoDate(), start)
+  const outcome = resolveCancellationOutcome(policy, daysBeforeArrival)
+  if (outcome.stage === 'full_refund') return describeCancellationPolicy(policy)[0] ?? null
+  if (outcome.refundPercent > 0) return `Si vous annulez, ${outcome.refundPercent} % des sommes versées vous sont remboursés.`
+  return 'Non remboursable à ces dates.'
+})
+
 const pricePerNightLabel = computed(() => {
   const breakdown = nightlyBreakdown.value
   if (breakdown.nights <= 0) {
@@ -519,6 +538,13 @@ function reserve() {
         :price-breakdown="priceBreakdown"
         :total="total"
       />
+
+      <p
+        v-if="cancellationNote"
+        class="booking-cancellation"
+      >
+        {{ cancellationNote }}
+      </p>
 
       <BookingCta
         :nights="nights"
