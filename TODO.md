@@ -326,7 +326,7 @@ Défauts visibles :
 
 ## Fait
 
-- [x] 2026-11-26 — Page d’un logement revue d’après une annonce Airbnb (demande de Nathan : tailles, emplacements, effets, outils ; commit `COMMIT_HASH_2`, local, à pousser et à déployer).
+- [x] 2026-11-26 — Page d’un logement revue d’après une annonce Airbnb (demande de Nathan : tailles, emplacements, effets, outils ; commit `3a8c045`, local, à pousser et à déployer).
   - Relevé : Airbnb mesuré sur ordinateur (1 654 px) et sur téléphone (390 px, Chrome sans interface). Sur téléphone il est plus aéré que vous : marges de 24 px contre 15, lignes d’équipement de 48 px contre 28, photo de 372 px de haut contre 253, texte de 16 px contre 15 ; les titres de section sont à la même taille (22 px). Vous avez demandé un téléphone plus compact : rien n’a été agrandi, sauf le bouton « Réserver » de la carte de réservation, passé de 37 à 46 px (48 chez Airbnb).
   - Repris : section « À savoir » (arrivée et départ, annulation), rappel d’annulation sous le total, note sous le titre et nom du logement dans la barre du haut sur téléphone, lignes simples à la place des cartes (points forts, hôte, équipements), boutons qui disent combien ils ouvrent.
   - Corrigé en chemin : règlement intérieur et heures jamais chargés sur la page en ligne (`_Listing.vue`), mention « Annulation flexible » affichée même sans remboursement, une vingtaine d’icônes d’équipements fausses, section « équipements » réduite à un bouton quand il n’y en a aucun.
