@@ -310,7 +310,7 @@ Défauts visibles :
 
 ## Fait
 
-- [x] 2026-11-26 — Calendrier sur deux ans, calendrier dans Réservations, paliers de prix par nombre de voyageurs (demande de Nathan ; commit `COMMIT_HASH`, local, à pousser et à déployer).
+- [x] 2026-11-26 — Calendrier sur deux ans, calendrier dans Réservations, paliers de prix par nombre de voyageurs (demande de Nathan ; commit `4074ef9`, local, à pousser et à déployer).
   - Calendrier du voyageur : 24 mois au lieu de 12 sur téléphone, même limite sur ordinateur (il n’en avait aucune). Réglage par annonce dans l’éditeur (Tarifs → Séjour → « Ouverture du calendrier » : 3, 6, 9, 12, 18 ou 24 mois), appliqué aux calendriers et vérifié par l’API au paiement. C’était l’option « refuser une réservation trop lointaine » restée en attente depuis le 2026-11-21.
   - Réservations : le calendrier du logement au dessin du calendrier des voyageurs (mois qui défilent, bandeau entre deux cercles), avec toutes ses réservations et les jours fermés par un calendrier importé. Colonne à droite de la fiche à partir de 1 440 px, mois du séjour et « Tout le calendrier » en dessous.
   - Paliers par voyageurs : nouvelle section « Voyageurs » de l’éditeur, une ligne par nombre de voyageurs jusqu’à la capacité. Calcul du site et de l’API alignés, comparés par `reservation-pricing-smoke.ts`.
