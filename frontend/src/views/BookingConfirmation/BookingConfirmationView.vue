@@ -2,7 +2,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import { fetchBookingConfirmation, buildReservationStayIcalUrl, cancelBookingReservation } from '@/domain/api/bookings'
 import { normalizeReservations } from '@/domain/listings/bookings'
@@ -62,6 +62,7 @@ type ConfirmationViewModel = {
 }
 
 const route = useRoute()
+const router = useRouter()
 const listingsController = getListingsController()
 const isLoading = ref(true)
 const loadError = ref<string | null>(null)
@@ -330,6 +331,13 @@ async function loadConfirmation() {
       reservationId,
       token,
     })
+
+    // Paiement à plusieurs pas encore complet : la réservation n'est pas confirmée, l'organisateur
+    // suit son groupe sur sa page de suivi.
+    if (response.groupPayment?.status === 'pending' && response.groupPayment.path) {
+      await router.replace(response.groupPayment.path)
+      return
+    }
 
     confirmation.value = {
       reservationId: response.reservationId,

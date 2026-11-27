@@ -102,6 +102,19 @@ export type RawReservationPayment = {
   }
   // Posé par l'API à l'annulation (statut, montants remboursés) : conservé tel quel par le site.
   cancellation?: Record<string, unknown>
+  // Paiement à plusieurs : état du groupe, tenu par l'API (le site ne l'écrit jamais).
+  group?: RawReservationGroupPayment
+}
+export type RawReservationGroupPayment = {
+  id: string
+  status: 'pending' | 'completed' | 'expired' | 'canceled'
+  /** Nombre de payeurs, organisateur compris. */
+  payers: number
+  /** Parts réglées (carte autorisée ou débitée). */
+  paidCount: number
+  expiresAtISO: string
+  /** Montant réglé en ligne par le groupe, en centimes. */
+  totalAmountMinor: number
 }
 export type RawReservationMessageState = 'sent' | 'delivered' | 'read'
 export type RawReservationMessageAuthor = 'host' | 'guest'
@@ -191,6 +204,8 @@ export type RawPricingPayment = {
   mode?: RawPricingPaymentMode
   depositPercent?: number | null
   balance?: RawPricingPaymentBalance
+  /** Paiement à plusieurs : les voyageurs se partagent le montant à régler en ligne (désactivé sans réglage). */
+  group?: { enabled?: boolean }
 }
 export type RawPricingOccupancy = {
   adultsMin?: number | null

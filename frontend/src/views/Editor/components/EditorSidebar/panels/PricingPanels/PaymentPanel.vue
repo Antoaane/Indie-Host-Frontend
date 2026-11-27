@@ -26,6 +26,8 @@ type PricingPayment = {
   mode?: PaymentMode
   depositPercent?: number | null
   balance?: PaymentBalance
+  // Paiement à plusieurs entre amis (`domain/payments/groupPayment.ts`).
+  group?: { enabled?: boolean }
 }
 
 type PricingSettings = {
@@ -52,6 +54,14 @@ const methods = computed(() => ({
 }))
 
 const paymentMode = computed<PaymentMode>(() => payment.value.mode ?? 'full')
+// Paiement à plusieurs : chaque part est une autorisation sur une carte, d'où la carte obligatoire.
+const groupEnabled = computed(() => payment.value.group?.enabled === true)
+const groupAvailable = computed(() => methods.value.card)
+
+function toggleGroup() {
+  if (!groupAvailable.value) return
+  updatePayment({ group: { ...payment.value.group, enabled: !groupEnabled.value } })
+}
 const depositPercent = computed(() => {
   const raw = Number(payment.value.depositPercent ?? pricingLimits.depositPercentMin)
   return clampInteger(
@@ -256,6 +266,27 @@ function parseOptionalNumber(raw: string): number | null {
       <p class="hint">
         {{ paymentHint }}
       </p>
+
+      <div class="field group-field">
+        <div class="field-label">
+          <p>{{ panelContent.group.label }}</p>
+        </div>
+        <label
+          class="choice"
+          :class="{ 'is-disabled': !groupAvailable }"
+        >
+          <input
+            type="checkbox"
+            :checked="groupEnabled && groupAvailable"
+            :disabled="!groupAvailable"
+            @change="toggleGroup"
+          />
+          <span>{{ panelContent.group.toggle }}</span>
+        </label>
+        <p class="hint">
+          {{ groupAvailable ? `${panelContent.group.description} ${panelContent.group.conditions}` : panelContent.group.cardRequired }}
+        </p>
+      </div>
     </div>
   </section>
 </template>
@@ -296,6 +327,15 @@ function parseOptionalNumber(raw: string): number | null {
     .choice {
       @include buttons.checkbox-label(white);
       border: 1px solid rgba($secondary, 0.06);
+
+      &.is-disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+
+        input {
+          cursor: not-allowed;
+        }
+      }
 
       input[type='radio'] {
         @include buttons.checkbox(white);

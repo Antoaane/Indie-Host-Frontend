@@ -57,12 +57,14 @@ function isOriginAllowed(origin: string, allowedOrigins: readonly string[]): boo
 }
 
 // Les URL journalisées ne doivent pas révéler les secrets qu'elles transportent : jetons passés en
-// `?token=` et clés de guide d'arrivée `rg.…` (segment de chemin ou paramètre).
+// `?token=`, clés de guide d'arrivée `rg.…` et clés de part d'un paiement à plusieurs `gp_…`
+// (segment de chemin ou paramètre).
 export function maskSensitiveUrl(url: string | undefined): string | undefined {
   if (typeof url !== 'string') return url;
   return url
     .replace(/([?&](?:token|key|guideKey|secret)=)[^&#]*/gi, '$1[masqué]')
-    .replace(/rg\.[A-Za-z0-9._~-]+/g, 'rg.[masqué]');
+    .replace(/rg\.[A-Za-z0-9._~-]+/g, 'rg.[masqué]')
+    .replace(/gp_[a-z0-9]+_[a-f0-9]+/g, 'gp_[masqué]');
 }
 
 export async function buildApp() {

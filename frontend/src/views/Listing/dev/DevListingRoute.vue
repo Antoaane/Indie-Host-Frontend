@@ -13,7 +13,8 @@ import { createDevEditorSource } from '@/views/Editor/dev/devEditorSource'
 // publique sur les annonces en mémoire de `/dev/editor`, sans API ni compte.
 // - sans paramètre : le logement, mis « en ligne » pour que la réservation et son calendrier s'ouvrent ;
 // - `?hub=1` : la page principale (ses logements ne se chargent pas sans API, c'est attendu) ;
-//   avec `&proprietaire=1`, comme lorsqu'elle est ouverte depuis l'éditeur.
+//   avec `&proprietaire=1`, comme lorsqu'elle est ouverte depuis l'éditeur ;
+// - `?groupe=1` : l'hôte propose le paiement à plusieurs (bloc de réservation et étape de paiement).
 const route = useRoute()
 const isHub = computed(() => 'hub' in route.query)
 const rawListing = shallowRef<RawListingBundle | null>(null)
@@ -21,9 +22,13 @@ const rawListing = shallowRef<RawListingBundle | null>(null)
 onMounted(async () => {
   const source = createDevEditorSource()
   const bundle = await source.fetchEditableListingBundle(isHub.value ? 'dev-hub' : 'dev-apartment')
+  const pricing = bundle.bookings?.pricing ?? {}
   rawListing.value = {
     ...bundle,
     core: { ...bundle.core, status: 'published' } as RawListingBundle['core'],
+    bookings: 'groupe' in route.query
+      ? { ...bundle.bookings, pricing: { ...pricing, payment: { methods: { card: true }, mode: 'full', group: { enabled: true } } } }
+      : bundle.bookings,
   }
 })
 </script>

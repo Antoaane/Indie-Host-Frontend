@@ -26,7 +26,15 @@ import {
   resolveBookingHorizonMonths,
   resolveLastBookableDate,
 } from './reservationPricing.js';
+import {
+  isGroupPaymentEnabled,
+  resolveGroupPaymentOffer,
+  splitGroupAmount,
+  type GroupPaymentBlockReason,
+} from '../bookings/groupPaymentRules.js';
 
+// `split` : acompte puis solde (réglage de l'hôte). À ne pas confondre avec le paiement à plusieurs
+// (`group`), où plusieurs personnes se partagent le montant à régler en ligne.
 type CheckoutPaymentChoice = 'full' | 'split' | 'cash';
 type CheckoutDeferredMode = 'none' | 'online' | 'cash';
 
@@ -43,7 +51,17 @@ type CreatePaymentIntentInput = {
     deferredMode?: CheckoutDeferredMode;
     deferredDueDateISO?: string | null;
   };
+  /** Paiement à plusieurs : nombre de payeurs, organisateur compris. */
+  group?: { payers: number };
   metadata?: Record<string, string>;
+};
+
+const GROUP_PAYMENT_BLOCK_MESSAGES: Record<GroupPaymentBlockReason, string> = {
+  disabled: 'Le paiement à plusieurs n’est pas proposé pour ce logement.',
+  card_required: 'Le paiement à plusieurs demande un paiement par carte, que cet hôte n’accepte pas.',
+  too_close: 'L’arrivée est trop proche pour un paiement à plusieurs : le groupe a 72 h pour régler.',
+  not_enough_adults: 'Le paiement à plusieurs demande au moins deux adultes.',
+  amount_too_small: 'Le montant à régler est trop faible pour être partagé.',
 };
 
 type CreateConnectOnboardingLinkInput = {
@@ -319,7 +337,9 @@ export type ConnectOverviewResult = {
 };
 
 // Paiements comptés comme encaissés ou en cours d'encaissement.
-const SETTLED_PAYMENT_STATUSES = ['succeeded', 'processing', 'requires_capture'];
+// « Mes revenus » : paiements encaissés. Une part autorisée d'un paiement à plusieurs
+// (`requires_capture`) n'est pas encaissée tant que le groupe n'est pas complet : elle n'y figure pas.
+const SETTLED_PAYMENT_STATUSES = ['succeeded', 'processing'];
 // Un compte pas encore complet est relu chez Stripe au plus une fois par minute et par hôte.
 const CONNECT_REFRESH_INTERVAL_MS = 60_000;
 
@@ -1022,6 +1042,7 @@ export class PaymentsService {
   }): {
     reservation: NormalizedReservationInput;
     payment: PaymentBreakdownValidation;
+    rules: ListingReservationRules;
   } {
     const rules = resolveListingReservationRules({
       core: listingCore,
@@ -1052,7 +1073,49 @@ export class PaymentsService {
     return {
       reservation: normalizedReservation,
       payment,
+      rules,
     };
+  }
+
+  /**
+   * Paiement à plusieurs demandé : vérifie que l'hôte le propose pour ce séjour et renvoie les parts
+   * en centimes (l'organisateur en premier). Le navigateur ne fixe que le nombre de payeurs.
+   */
+  private resolveGroupShares(input: {
+    payers: number;
+    listingBookings: Record<string, unknown>;
+    rules: ListingReservationRules;
+    reservation: NormalizedReservationInput;
+    chargeNowAmountMinor: number;
+  }): number[] {
+    const offer = resolveGroupPaymentOffer({
+      enabled: isGroupPaymentEnabled(asObject(input.listingBookings.pricing)),
+      cardAccepted: input.rules.payment.methods.card,
+      startISO: input.reservation.startISO,
+      todayISO: new Date().toISOString().slice(0, 10),
+      adults: input.reservation.occupants.adults,
+      chargeNowAmountMinor: input.chargeNowAmountMinor,
+      // Le site compte à partir du jour du voyageur, le serveur du jour UTC : un jour de marge.
+      leadToleranceDays: 1,
+    });
+    if (!offer.available) {
+      throw createBadRequestError(
+        GROUP_PAYMENT_BLOCK_MESSAGES[offer.reason ?? 'disabled'],
+        'GROUP_PAYMENT_UNAVAILABLE',
+        { reason: offer.reason },
+      );
+    }
+
+    const payers = Math.trunc(input.payers);
+    if (payers < offer.minPayers || payers > offer.maxPayers) {
+      throw createBadRequestError(
+        `Le paiement à plusieurs se fait de ${offer.minPayers} à ${offer.maxPayers} personnes pour ce séjour.`,
+        'GROUP_PAYMENT_INVALID_PAYERS',
+        { minPayers: offer.minPayers, maxPayers: offer.maxPayers },
+      );
+    }
+
+    return splitGroupAmount(input.chargeNowAmountMinor, payers);
   }
 
   private readStripeProfile(user: User): Record<string, unknown> {
@@ -3058,7 +3121,18 @@ export class PaymentsService {
 
     const actor = await upsertUserFromAuth(this.prisma, auth);
     const currency = (input.currency || 'eur').toLowerCase();
-    const chargeNowAmountMinor = validation.payment.chargeNowAmountMinor;
+    // Paiement à plusieurs : ce PaymentIntent ne porte que la part de l'organisateur. Les autres
+    // parts sont créées quand chaque ami ouvre son lien (`GroupPaymentLedger`).
+    const groupShares = input.group
+      ? this.resolveGroupShares({
+          payers: input.group.payers,
+          listingBookings: asObject(listing.bookings),
+          rules: validation.rules,
+          reservation: validation.reservation,
+          chargeNowAmountMinor: validation.payment.chargeNowAmountMinor,
+        })
+      : null;
+    const chargeNowAmountMinor = groupShares ? (groupShares[0] ?? 0) : validation.payment.chargeNowAmountMinor;
 
     const metadata: Record<string, string> = {
       ...(input.metadata ?? {}),
@@ -3082,6 +3156,17 @@ export class PaymentsService {
     };
     if (validation.payment.deferredDueDateISO) {
       metadata.paymentDeferredDueDateISO = validation.payment.deferredDueDateISO;
+    }
+    if (groupShares) {
+      // `paymentChargeNowAmountMinor` reste le montant réglé en ligne par tout le groupe.
+      metadata.groupPayers = String(groupShares.length);
+      metadata.groupTotalAmountMinor = String(validation.payment.chargeNowAmountMinor);
+      metadata.groupShareAmountMinor = String(chargeNowAmountMinor);
+    } else {
+      // Clés lues par `verifyReservationPayment` : jamais celles envoyées par le navigateur.
+      delete metadata.groupPayers;
+      delete metadata.groupTotalAmountMinor;
+      delete metadata.groupShareAmountMinor;
     }
 
     let session: {
@@ -3113,14 +3198,25 @@ export class PaymentsService {
       // Paiement direct : créé sur le compte Stripe de l'hôte, qui est le commerçant et paie ses
       // frais. Le voyageur règle l'hôte ; IndieHost ne touche pas les fonds (commission
       // éventuelle via application_fee_amount, nulle par défaut).
-      const createParams: Stripe.PaymentIntentCreateParams = {
-        amount: chargeNowAmountMinor,
-        currency,
-        automatic_payment_methods: {
-          enabled: true,
-        },
-        metadata,
-      };
+      const createParams: Stripe.PaymentIntentCreateParams = groupShares
+        ? {
+            amount: chargeNowAmountMinor,
+            currency,
+            // Empreinte sur la carte : rien n'est débité tant que tout le groupe n'a pas réglé. Seules
+            // les cartes (et les portefeuilles qui en portent une) savent autoriser sans débiter.
+            capture_method: 'manual',
+            payment_method_types: ['card'],
+            description: `Paiement à plusieurs, part 1 sur ${groupShares.length}`,
+            metadata,
+          }
+        : {
+            amount: chargeNowAmountMinor,
+            currency,
+            automatic_payment_methods: {
+              enabled: true,
+            },
+            metadata,
+          };
 
       if (applicationFee > 0) {
         createParams.application_fee_amount = applicationFee;
@@ -3198,6 +3294,16 @@ export class PaymentsService {
       status: session.status,
       currency: session.currency,
       connectedAccountId: session.connectedAccountId,
+      // Montant de ce PaymentIntent, en centimes : la part de l'organisateur pour un paiement à plusieurs.
+      amountMinor: chargeNowAmountMinor,
+      group: groupShares
+        ? {
+            payers: groupShares.length,
+            totalAmountMinor: validation.payment.chargeNowAmountMinor,
+            organizerShareAmountMinor: groupShares[0] ?? 0,
+            shareAmountMinor: groupShares[1] ?? 0,
+          }
+        : null,
     };
   }
 
@@ -3262,17 +3368,33 @@ export class PaymentsService {
     }
 
     const deferredAmountMinor = payment.deferredAmountMinor ?? 0;
+    // Paiement à plusieurs : ce PaymentIntent est la part de l'organisateur (empreinte), le montant
+    // réglé en ligne par le groupe est celui posé dans les métadonnées à sa création.
+    const groupPayers = Math.trunc(toNumber(metadata.groupPayers, 0));
+    const groupTotalAmountMinor = Math.trunc(toNumber(metadata.groupTotalAmountMinor, 0));
+    const group = groupPayers >= 2 && groupTotalAmountMinor > 0
+      ? { payers: groupPayers, totalAmountMinor: groupTotalAmountMinor }
+      : null;
+    if (group && this.stripe && status !== 'requires_capture') {
+      throw createBadRequestError('Le paiement n a pas abouti.', 'RESERVATION_PAYMENT_NOT_COMPLETED');
+    }
+    const reservationChargeNowAmountMinor = group ? group.totalAmountMinor : chargeNowAmountMinor;
+
     return {
       paymentIntentId: input.paymentIntentId,
       status,
       currency: payment.currency,
       connectedAccountId: payment.stripeConnectedAccountId,
       choice: payment.paymentChoice,
-      totalAmountMinor: toNumber(metadata.paymentTotalAmountMinor, chargeNowAmountMinor + deferredAmountMinor),
-      chargeNowAmountMinor,
+      totalAmountMinor: toNumber(metadata.paymentTotalAmountMinor, reservationChargeNowAmountMinor + deferredAmountMinor),
+      // Montant réglé en ligne pour la réservation (par tout le groupe pour un paiement à plusieurs).
+      chargeNowAmountMinor: reservationChargeNowAmountMinor,
+      // Montant de ce PaymentIntent.
+      intentAmountMinor: chargeNowAmountMinor,
       deferredAmountMinor,
       deferredMode: payment.deferredMode,
       deferredDueDateISO: payment.deferredDueDate ? payment.deferredDueDate.toISOString().slice(0, 10) : null,
+      group,
     };
   }
 

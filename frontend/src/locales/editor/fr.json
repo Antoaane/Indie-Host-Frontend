@@ -644,7 +644,14 @@
             "arrival": "À l’arrivée",
             "before": "X jours avant l’arrivée"
           },
-          "daysPlaceholder": "Jours"
+          "daysPlaceholder": "Jours",
+          "group": {
+            "label": "Paiement à plusieurs",
+            "toggle": "Proposer aux voyageurs de payer à plusieurs",
+            "description": "Pour un groupe d’amis : celui qui réserve règle sa part, ses amis ont 72 h pour régler la leur. Rien n’est encaissé tant que le groupe n’est pas complet ; sinon la réservation s’annule d’elle-même, sans frais pour vous. Vos dates restent bloquées pendant ces 72 h.",
+            "conditions": "Proposé pour une arrivée dans 5 jours ou plus, et par carte bancaire uniquement.",
+            "cardRequired": "Activez le paiement par carte bancaire pour proposer le paiement à plusieurs."
+          }
         },
         "deposit": {
           "title": "Caution / dépôt de garantie",

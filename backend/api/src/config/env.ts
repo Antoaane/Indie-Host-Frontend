@@ -108,6 +108,15 @@ const envSchema = z.object({
     .transform((value) => !['false', '0', 'no', 'off'].includes(value.toLowerCase())),
   // Intervalle entre deux passes. Une minute au moins : en dessous, les plateformes peuvent refuser le serveur.
   ICAL_SYNC_JOB_INTERVAL_SECONDS: z.coerce.number().int().min(60).default(300),
+  // Paiements à plusieurs (`jobs/groupPayments.ts`) : échéance de 72 h, rappels, débit des groupes
+  // complets. À ne couper (`false`) que pour un dépannage : plus aucune réservation en attente ne se
+  // clôturerait d'elle-même.
+  GROUP_PAYMENTS_JOB_ENABLED: z
+    .string()
+    .trim()
+    .optional()
+    .default('true')
+    .transform((value) => !['false', '0', 'no', 'off'].includes(value.toLowerCase())),
   PUBLIC_LISTING_ROOT_DOMAIN: z.string().trim().min(1).default('indiehost.fr'),
   // Domaines personnalisés des hôtes : cible des enregistrements A / CNAME et fichier lu par certbot.
   CUSTOM_DOMAIN_TARGET_IPV4: z.string().trim().optional().default(''),

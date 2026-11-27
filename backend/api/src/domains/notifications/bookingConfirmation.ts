@@ -55,6 +55,8 @@ export type BookingConfirmationEmailData = {
   /** Message laissé par le voyageur à la réservation, repris pour mémoire. */
   travellerMessage: string | null;
   bookedAt: Date;
+  /** Réservation réglée à plusieurs : nombre de parts (le montant en ligne a été réglé par le groupe). */
+  groupPayers?: number;
 };
 
 export type RenderedEmail = {
@@ -67,6 +69,11 @@ const LEGAL_NOTE =
   'Cet e-mail constitue la confirmation de votre réservation sur un support durable (article L221-13 du Code de la consommation) : conservez-le, il récapitule le contrat conclu avec votre hôte.';
 
 function describePaymentMethod(data: BookingConfirmationEmailData): string {
+  const base = describeSinglePaymentMethod(data);
+  return data.groupPayers && data.groupPayers > 1 ? `${base}, réglé à plusieurs (${data.groupPayers} parts)` : base;
+}
+
+function describeSinglePaymentMethod(data: BookingConfirmationEmailData): string {
   const choice = data.paymentChoice?.toLowerCase() ?? null;
   if (choice === 'full') return 'Paiement intégral en ligne par carte bancaire (Stripe)';
   if (choice === 'split') return 'Acompte en ligne par carte bancaire (Stripe), solde en ligne avant l’arrivée';
@@ -105,9 +112,10 @@ export function buildBookingConfirmationEmail(data: BookingConfirmationEmailData
     { label: 'Réservé le', value: formatShortDate(data.bookedAt) },
   ];
 
+  const isGroup = Boolean(data.groupPayers && data.groupPayers > 1);
   const amountRows: MailRow[] = [
     { label: 'Total du séjour', value: formatCurrency(data.amounts.total, data.currency), strong: true },
-    { label: 'Réglé aujourd’hui', value: formatCurrency(data.amounts.paidNow, data.currency) },
+    { label: isGroup ? 'Réglé par votre groupe' : 'Réglé aujourd’hui', value: formatCurrency(data.amounts.paidNow, data.currency) },
   ];
   if (balanceLine) {
     amountRows.push({ label: 'Reste à payer', value: balanceLine });
@@ -118,7 +126,9 @@ export function buildBookingConfirmationEmail(data: BookingConfirmationEmailData
 
   const subject = `Réservation confirmée : ${data.listingTitle}, ${stay}`;
   const title = 'Votre réservation est confirmée';
-  const intro = `${greet(data.guestName)} votre paiement a bien été reçu et vos dates sont réservées. Voici le récapitulatif de votre séjour chez ${hostLabel}.`;
+  const intro = isGroup
+    ? `${greet(data.guestName)} les ${data.groupPayers} parts de votre groupe sont réglées et vos dates sont réservées. Voici le récapitulatif de votre séjour chez ${hostLabel}.`
+    : `${greet(data.guestName)} votre paiement a bien été reçu et vos dates sont réservées. Voici le récapitulatif de votre séjour chez ${hostLabel}.`;
 
   const html = renderDocument({
     title,

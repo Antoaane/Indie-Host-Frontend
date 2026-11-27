@@ -13,6 +13,7 @@ import {
   type ResolvedCancellationPolicy,
 } from '@/domain/listings/cancellationPolicy'
 import type { RawBookings, RawCore, RawPricingSettings } from '@/domain/listings/types'
+import { isGroupPaymentEnabled } from '@/domain/payments/groupPayment'
 
 export type CheckoutPaymentChoice = 'full' | 'split' | 'cash'
 export type OccupantKey = 'adults' | 'children' | 'babies' | 'animals' | 'pmr'
@@ -67,6 +68,8 @@ export type ListingPaymentRules = {
   chargeNowRatioByChoice: Record<CheckoutPaymentChoice, number>
   allowedChoices: CheckoutPaymentChoice[]
   blockedReasons: Partial<Record<CheckoutPaymentChoice, string>>
+  /** Paiement à plusieurs proposé par l'hôte (il demande la carte : seule elle sait autoriser sans débiter). */
+  group: { enabled: boolean }
 }
 
 // Barème d'annulation : défini une seule fois dans cancellationPolicy.ts (miroir de l'API).
@@ -398,6 +401,7 @@ function resolveLegacyPaymentRules(): ListingPaymentRules {
       'cash',
     ],
     blockedReasons: {},
+    group: { enabled: false },
   }
 }
 
@@ -479,6 +483,7 @@ function resolvePricingPaymentRules(pricing: RawPricingSettings): ListingPayment
     },
     allowedChoices,
     blockedReasons,
+    group: { enabled: methods.card && isGroupPaymentEnabled(pricing) },
   }
 }
 

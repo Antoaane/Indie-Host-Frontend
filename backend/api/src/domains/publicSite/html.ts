@@ -225,6 +225,7 @@ export function renderRobots(origin: string, siteName: string): string {
     'Disallow: /dashboard/',
     'Disallow: /listing/guide/',
     'Disallow: /booking/confirmation/',
+    'Disallow: /booking/group/',
     '',
     `Sitemap: ${origin}/sitemap.xml`,
     '',

@@ -524,6 +524,17 @@ export function useListingCheckout(options: UseListingCheckoutOptions) {
       )
 
       cancelCheckout()
+      // Paiement à plusieurs : la réservation attend les autres parts. Le voyageur arrive sur la page
+      // de suivi de son groupe, où il invite ses amis ; la confirmation viendra quand tous auront réglé.
+      const groupPath = created.groupPayment?.path?.trim()
+      if (groupPath) {
+        try {
+          await router.push(groupPath)
+        } catch (navigationError) {
+          console.error('[ListingView] group payment navigation failed', navigationError)
+        }
+        return
+      }
       try {
         await redirectToBookingConfirmation({
           reservationId: redirectReservationId,

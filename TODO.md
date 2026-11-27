@@ -10,6 +10,23 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
 
 ## Ce que vous devez faire
 
+### Paiement à plusieurs entre amis (session du 2026-11-27)
+
+- [ ] Mettre en ligne, API **et** site ensemble, avec la migration `20261126000000_group_payments` : `git push` depuis ce PC, puis sur le serveur `cd /opt/indiehost && git pull && ./deploy-indiehost.sh`. Le script contrôle la nouvelle route (`GET /api/v1/bookings/group-payments/…` doit répondre 403). Puis `docker compose logs migrate` : « All migrations have been successfully applied ».
+- [ ] (après le déploiement) Activer l’option sur une annonce : éditeur → Tarifs → Paiement → « Proposer aux voyageurs de payer à plusieurs », puis « Appliquer ». Elle ne s’affiche aux voyageurs que pour une arrivée dans 5 jours ou plus, avec au moins deux adultes.
+- [ ] (après le déploiement) Faire **une vraie réservation de test à deux**, sur un logement à petit prix : vous réservez avec une carte, vous invitez une deuxième adresse à vous, vous réglez la seconde part avec une autre carte. À vérifier : les deux montants apparaissent « autorisés » puis « réussis » dans le Dashboard Stripe de l’hôte, la confirmation arrive, puis annulez pour voir le remboursement réparti. Claude n’a pu essayer qu’avec Stripe simulé (aucune clé de test sur ce PC) : c’est le seul parcours qui n’a pas été fait de bout en bout.
+- [ ] Dire si ces règles vous conviennent (choisies par Claude, toutes réglables) :
+  - 72 h pour compléter, rappels aux amis 48 h, 24 h et 6 h avant l’échéance, et un point à l’organisateur aux mêmes moments ;
+  - proposé seulement pour une arrivée dans 5 jours ou plus (le groupe a 3 jours, l’hôte doit savoir au plus tard l’avant-veille) ;
+  - de 2 à 12 payeurs, pas plus que d’adultes, 5 € au moins par part ; parts égales, l’organisateur paie les centimes d’arrondi ;
+  - carte bancaire uniquement (seule la carte sait « autoriser sans débiter ») ;
+  - avec un acompte, seul l’acompte est partagé : le solde reste à la charge de celui qui a réservé ;
+  - pendant les 72 h, les dates sont bloquées sur IndieHost et dans le calendrier exporté vers Airbnb et Booking ;
+  - une fois confirmée, une annulation suit les conditions de l’hôte, et le remboursement est réparti entre les parts au prorata.
+- [ ] Faire valider par l’avocat (avec les autres textes en attente) l’ajout du paiement à plusieurs aux CGU voyageurs : la réservation n’est conclue qu’au règlement de toutes les parts, chaque payeur ne s’engage que sur sa part, annulation sans frais si le groupe n’est pas complet. Le parcours de paiement le dit déjà en toutes lettres avant le bouton.
+- [ ] Valider l’ajout à `confidentialite.html` : adresses e-mail des amis indiquées par l’organisateur, utilisées pour l’invitation et les rappels de cette réservation seulement, effacées 90 jours après un groupe non abouti, sinon avec la réservation (5 ans). Claude rédige dès votre accord.
+- [ ] À savoir : un groupe de 4 envoie jusqu’à une quinzaine d’e-mails (invitations, rappels, confirmations). L’offre gratuite de Brevo en permet 300 par jour ; à surveiller si l’option prend.
+
 ### Page d’un logement, d’après l’analyse d’Airbnb (session du 2026-11-26)
 
 - [ ] Mettre en ligne avec le reste (`git push` depuis ce PC, puis `./deploy-indiehost.sh --with-scraping` sur le serveur), puis regarder `apparts-saintfrancois.fr/appartement-les-raisins-clairs` sur l’iPhone et sur ordinateur :
@@ -238,6 +255,10 @@ Réglé le 2026-11-21 (détail dans « Fait ») : le correctif est en ligne depu
 
 ### Produit et technique
 
+- [ ] (après la validation de l’avocat) Article « Paiement à plusieurs » dans `cgu-voyageurs.html`.
+- [ ] (après votre accord) Paiement à plusieurs dans `confidentialite.html` : adresses des amis, finalité, durées (90 jours après un groupe non abouti, sinon avec la réservation).
+- [ ] Option, si l’option prend : laisser l’organisateur ajouter ou retirer une personne pendant les 72 h (aujourd’hui le nombre de parts est fixé à la réservation ; pour changer, il annule et réserve de nouveau, sans frais).
+
 - [ ] (après votre décision sur la rotation le même jour) Jours d’arrivée et de départ sur une période bloquée : `makeIsDateDisabled` (`components/DatePicker/utils/range.ts`) compte la date de fin comme occupée. À changer des deux côtés (calendrier, `reservationRules.ts` et `reservationPricing.ts` / disponibilités de l’API, voir la règle de copie de la tarification dans `CLAUDE.md`), puis vérifier les réservations IndieHost et les fermetures iCal.
 - [ ] Option (après votre accord, si un hôte a besoin du relais entre plateformes) : un lien iCal par plateforme, qui porte en plus les dates importées des **autres** plateformes (jamais celles de la plateforme à qui le lien est destiné, sinon la boucle du 2026-11-21 revient). Le lien actuel reste tel quel : réservations IndieHost et jours fermés sur IndieHost. `calendar.service.ts` (`exportListingCalendar`), `CalendarPanel.vue`.
 - [ ] Option : relire les calendriers importés d’une annonce au moment où un voyageur lance le paiement (`POST /payments/stripe/payment-intents`), avec un délai court. Depuis le 2026-11-21 ils sont relus toutes les 5 minutes : une réservation prise sur Booking dans les minutes qui précèdent peut encore passer entre deux relectures. Cette relecture au paiement fermerait presque cette fenêtre, au prix d’un appel à la plateforme dans le parcours de paiement. `payments.service.ts`, `CalendarService`.
@@ -325,6 +346,11 @@ Défauts visibles :
 - [ ] Nettoyage : 25 illustrations affichées nulle part et `components/svgs/svgs-old/`, sections d’accueil retirées (`RoiSection` encore à 39 €, `ReassuranceBandSection`), fonctions de `Editor/utils/listingApi.ts`, `BottomNav.vue`, styles « patch » de la page de don qui ne visent aucune classe.
 
 ## Fait
+
+- [x] 2026-11-27 — Paiement à plusieurs entre amis (demande de Nathan ; commit `COMMIT_HASH`, local, à pousser et à déployer avec la migration).
+  - L’hôte l’active dans l’éditeur. Le voyageur le choisit à l’étape de paiement (expliqué aussi sous « Réserver »), règle sa part, puis invite ses amis par e-mail depuis sa page de suivi ; chacun reçoit un lien pour régler la sienne, avec trois rappels. Personne n’est débité tant que le groupe n’est pas complet : chaque part est une empreinte sur la carte (Stripe, capture manuelle). Groupe complet : tout est débité, la confirmation et l’e-mail de l’hôte partent. Sinon, au bout de 72 h, la réservation s’annule seule, les empreintes sont levées et les dates libérées.
+  - Écrans : option du paiement, page de suivi (organisateur et amis), réglage de l’éditeur, Réservations (rien compté comme encaissé avant la fin, « Annuler la réservation » sans remboursement). Tâche planifiée toutes les 5 min, visible dans l’administration → Services.
+  - Vérifié : règles du site et de l’API comparées (`group-payment-smoke.ts`), parcours complet sur la base locale avec Stripe simulé (`group-payment-flow-smoke.ts` : groupe complet puis annulation répartie, rappels, échéance, annulation par l’organisateur, autorisation perdue au débit), routes HTTP, type-check du site et de l’API ; dans Chrome, les routes d’essai en clair, en sombre pour Réservations et l’éditeur, à 390 px et sur ordinateur ; textes des e-mails relus dans l’aperçu. Non vérifié : un vrai paiement Stripe (pas de clé de test sur ce PC) et l’arrivée réelle des e-mails.
 
 - [x] 2026-11-26 — Page d’un logement revue d’après une annonce Airbnb (demande de Nathan : tailles, emplacements, effets, outils ; commit `3a8c045`, local, à pousser et à déployer).
   - Relevé : Airbnb mesuré sur ordinateur (1 654 px) et sur téléphone (390 px, Chrome sans interface). Sur téléphone il est plus aéré que vous : marges de 24 px contre 15, lignes d’équipement de 48 px contre 28, photo de 372 px de haut contre 253, texte de 16 px contre 15 ; les titres de section sont à la même taille (22 px). Vous avez demandé un téléphone plus compact : rien n’a été agrandi, sauf le bouton « Réserver » de la carte de réservation, passé de 37 à 46 px (48 chez Airbnb).

@@ -32,6 +32,7 @@ import { hostNotifications } from '../notifications/hostNotifications.js';
 import { sanitizeListingSection, sanitizePlainText } from '../../lib/sanitizeHtml.js';
 import { resolvePlaceSetting, type PlaceSetting } from './placeSetting.js';
 import { preserveSyncedBookedDays } from './syncedBookedDays.js';
+import { applyGroupPaymentCopies, loadGroupPaymentCopies } from '../bookings/groupPaymentCopy.js';
 import {
   buildDescriptionFromPage,
   cleanImageSrc,
@@ -2154,8 +2155,13 @@ export class ListingsService {
     const sanitizedMerged = sanitizeListingSection(resource, deepMerge(currentValue, patch));
     // Jours bloqués par les calendriers importés : tenus par la synchronisation iCal, jamais
     // remplacés par la copie envoyée par le site (voir `syncedBookedDays.ts`).
+    // État des paiements à plusieurs (`payment.group`) : tenu par le serveur de la même façon, la copie
+    // du site ne peut ni l'inventer ni le figer (voir `bookings/groupPaymentCopy.ts`).
     const merged = resource === 'bookings'
-      ? preserveSyncedBookedDays(currentValue, asObject(patch, {}), sanitizedMerged)
+      ? applyGroupPaymentCopies(
+          preserveSyncedBookedDays(currentValue, asObject(patch, {}), sanitizedMerged),
+          await loadGroupPaymentCopies(this.prisma, listingId),
+        )
       : sanitizedMerged;
     let normalizedMerged = resource === 'bookings'
       ? await this.normalizeBookingsResourceValue(listingId, merged)

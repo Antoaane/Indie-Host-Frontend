@@ -23,6 +23,22 @@ import {
   type ResolvedCancellationPolicy,
 } from './cancellationPolicy.js';
 import { isDeprecatedHostIdentity, upsertUserFromAuth } from '../users/users.repository.js';
+import {
+  applyGroupCopyToPayment,
+  applyGroupPaymentCopies,
+  loadGroupPaymentCopies,
+  toGroupPaymentCopy,
+  type GroupPaymentCopy,
+} from './groupPaymentCopy.js';
+import { buildGroupShareKey, buildGroupSharePath } from './groupPaymentKey.js';
+import {
+  GroupPaymentLedger,
+  buildGroupPaymentId,
+  type GroupCloseReason,
+  type GroupWithShares,
+} from './groupPaymentLedger.js';
+import { resolveGroupPaymentExpiry } from './groupPaymentRules.js';
+import { groupPaymentNotifications } from '../notifications/groupPaymentNotifications.js';
 
 type RawReservation = Record<string, unknown>;
 
@@ -50,7 +66,7 @@ type PersistedReservation = {
   guideUrl: string | null;
 };
 
-type ReservationAccessContext = {
+export type ReservationAccessContext = {
   reservationId: string;
   listingId: string;
   guestName: string;
@@ -132,6 +148,7 @@ const emptyBookings = (): Record<string, unknown> => ({
 });
 const GUIDE_ACTIVATION_WINDOW_MS = 48 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
+const GROUP_PAYMENT_METHOD_LABEL = 'En ligne, à plusieurs';
 
 function parseDate(value: unknown): Date | null {
   if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
@@ -195,6 +212,22 @@ function readString(value: unknown): string | null {
   return trimmed || null;
 }
 
+/** État du paiement à plusieurs copié dans le JSON « payment » d'une réservation, s'il y en a un. */
+function readGroupPaymentCopy(payment: Record<string, unknown>): GroupPaymentCopy | null {
+  const raw = asObject(payment.group);
+  const id = readString(raw.id);
+  if (!id) return null;
+  const status = raw.status === 'completed' || raw.status === 'expired' || raw.status === 'canceled' ? raw.status : 'pending';
+  return {
+    id,
+    status,
+    payers: Math.max(0, Math.trunc(toNumber(raw.payers, 0))),
+    paidCount: Math.max(0, Math.trunc(toNumber(raw.paidCount, 0))),
+    expiresAtISO: readString(raw.expiresAtISO) ?? '',
+    totalAmountMinor: Math.max(0, Math.trunc(toNumber(raw.totalAmountMinor, 0))),
+  };
+}
+
 function readOwnerUsernameFromProfile(hostProfile: unknown): string | null {
   const record = asObject(hostProfile);
   const candidates = [
@@ -255,9 +288,21 @@ type VerifiedReservationPayment = Awaited<ReturnType<PaymentsService['verifyRese
 function buildVerifiedReservationPayment(
   clientPayment: Record<string, unknown>,
   verified: VerifiedReservationPayment,
+  group: GroupPaymentCopy | null = null,
 ): Record<string, unknown> {
+  const payment = buildVerifiedSinglePayment(clientPayment, verified);
+  // Paiement à plusieurs : rien n'est payé tant que le groupe n'est pas complet.
+  return group ? applyGroupCopyToPayment({ ...payment, method: GROUP_PAYMENT_METHOD_LABEL }, group) : payment;
+}
+
+function buildVerifiedSinglePayment(
+  clientPayment: Record<string, unknown>,
+  verified: VerifiedReservationPayment,
+): Record<string, unknown> {
+  // Le navigateur ne fixe jamais l'état d'un paiement à plusieurs.
+  const { group: _group, ...clientRest } = clientPayment;
   return {
-    ...clientPayment,
+    ...clientRest,
     total: toMajorUnit(verified.totalAmountMinor),
     deposit: toMajorUnit(verified.chargeNowAmountMinor),
     balance: toMajorUnit(verified.deferredAmountMinor),
@@ -412,16 +457,19 @@ function buildAbsoluteUrl(path: string, baseUrl?: string | null): string {
 
 export class BookingsService {
   private readonly stripe: Stripe | null;
+  private readonly groupLedger: GroupPaymentLedger;
 
   constructor(
     private readonly prisma: PrismaClient,
     private readonly paymentsService?: PaymentsService,
+    groupLedger?: GroupPaymentLedger,
   ) {
     this.stripe = env.STRIPE_SECRET_KEY
       ? new Stripe(env.STRIPE_SECRET_KEY, {
           apiVersion: '2025-02-24.acacia',
         })
       : null;
+    this.groupLedger = groupLedger ?? new GroupPaymentLedger(prisma);
   }
 
   private buildGuideUrl(guideAccessKey: string, listingId?: string | null, reservationId?: string | null): string {
@@ -493,11 +541,14 @@ export class BookingsService {
     };
   }
 
-  private resolveGuideActivation(startDate: Date, now = new Date()) {
+  // Le guide (adresse, accès, messagerie) reste fermé tant qu'un paiement à plusieurs n'est pas
+  // complet : l'organisateur a déjà sa clé, mais la réservation n'est pas encore confirmée.
+  private resolveGuideActivation(startDate: Date, payment: Record<string, unknown>, now = new Date()) {
     const activeAfter = new Date(startDate.getTime() - GUIDE_ACTIVATION_WINDOW_MS);
+    const awaitingGroup = readGroupPaymentCopy(payment)?.status === 'pending';
     return {
       activeAfter,
-      isActive: now.getTime() >= activeAfter.getTime(),
+      isActive: !awaitingGroup && now.getTime() >= activeAfter.getTime(),
     };
   }
 
@@ -1241,7 +1292,7 @@ export class BookingsService {
     const hostContact = asObject(host.contact);
     const practical = asObject(access.listingArrival.practical);
     const services = asObject(practical.services);
-    const activation = this.resolveGuideActivation(access.startDate);
+    const activation = this.resolveGuideActivation(access.startDate, access.payment);
     const cancellationDetails = this.buildReservationCancellationDetails(access);
 
     const totalAmount = Math.max(0, Math.round(toNumber(payment.total, 0)));
@@ -1252,9 +1303,27 @@ export class BookingsService {
       hostNameFromListing && !isDeprecatedHostIdentity(hostNameFromListing) ? hostNameFromListing : null
     ) ?? access.ownerDisplayName ?? 'Votre hôte';
 
+    // Paiement à plusieurs : état du groupe et lien de suivi de l'organisateur (cette page est la sienne).
+    const groupCopy = readGroupPaymentCopy(payment);
+    const organizerShare = groupCopy
+      ? await this.prisma.groupPaymentShare.findFirst({
+          where: { groupPaymentId: groupCopy.id, position: 0 },
+          select: { id: true },
+        })
+      : null;
+
     return {
       reservationId: access.reservationId,
       listingId: access.listingId,
+      groupPayment: groupCopy
+        ? {
+            status: groupCopy.status,
+            payers: groupCopy.payers,
+            paidCount: groupCopy.paidCount,
+            expiresAtISO: groupCopy.expiresAtISO,
+            path: organizerShare ? buildGroupSharePath(buildGroupShareKey(organizerShare.id)) : null,
+          }
+        : null,
       stay: {
         startISO: toIsoDay(access.startDate),
         endISO: toIsoDay(access.endDate),
@@ -1316,7 +1385,7 @@ export class BookingsService {
     const access = await this.resolveReservationAccessContext(parsedGuideKey.reservationId, guideKey);
     if (!access || access === 'forbidden') return access;
 
-    const activation = this.resolveGuideActivation(access.startDate);
+    const activation = this.resolveGuideActivation(access.startDate, access.payment);
     const conversation = await this.ensureReservationConversation(access);
     const absoluteGuideUrl = buildAbsoluteUrl(access.confirmation.guideUrl, options?.publicBaseUrl);
     const host = access.listingHost;
@@ -1371,7 +1440,7 @@ export class BookingsService {
     const access = await this.resolveReservationAccessContext(parsedGuideKey.reservationId, guideKey);
     if (!access || access === 'forbidden') return access;
 
-    const activation = this.resolveGuideActivation(access.startDate);
+    const activation = this.resolveGuideActivation(access.startDate, access.payment);
     if (!activation.isActive) return 'locked' as const;
 
     const conversation = await this.ensureReservationConversation(access);
@@ -1390,7 +1459,7 @@ export class BookingsService {
     const access = await this.resolveReservationAccessContext(parsedGuideKey.reservationId, guideKey);
     if (!access || access === 'forbidden') return access;
 
-    const activation = this.resolveGuideActivation(access.startDate);
+    const activation = this.resolveGuideActivation(access.startDate, access.payment);
     if (!activation.isActive) return 'locked' as const;
 
     const messageBody = readString(body);
@@ -1524,6 +1593,28 @@ export class BookingsService {
 
     const canceledBy = options?.canceledBy ?? 'guest';
     const isHostCancellation = canceledBy === 'host';
+
+    // Paiement à plusieurs pas encore complet : personne n'a été débité. Les empreintes sont levées et
+    // la réservation est annulée sans barème ni remboursement.
+    const group = await this.groupLedger.findByReservationId(access.reservationId);
+    if (group && group.status !== 'completed') {
+      const outcome = await this.closePendingGroupReservation(
+        access.reservationId,
+        isHostCancellation ? 'host' : 'organizer',
+      );
+      if (outcome === 'busy') {
+        throw createRequestError(
+          'Le paiement du groupe est en cours de traitement. Réessayez dans une minute.',
+          409,
+          'GROUP_PAYMENT_BUSY',
+          { reservationId: access.reservationId },
+        );
+      }
+      return this.getBookingConfirmation(reservationId, token, {
+        publicBaseUrl: options?.publicBaseUrl,
+      });
+    }
+
     // L'hôte qui annule rembourse tout (CGU voyageurs) ; le voyageur suit la politique de l'annonce.
     const refundableAmountMinor = isHostCancellation
       ? cancellationDetails.quote.chargedAmountMinor
@@ -1544,15 +1635,21 @@ export class BookingsService {
 
     const reason = readString(options?.reason) ?? null;
     const canceledAtISO = new Date().toISOString();
-    const stripeResult = await this.applyStripeCancellation({
-      paymentIntentId: cancellationDetails.paymentIntentId,
-      chargedAmountMinor: cancellationDetails.quote.chargedAmountMinor,
-      refundableAmountMinor,
-      reservationId: access.reservationId,
-      listingId: access.listingId,
-    });
+    // Réservation réglée à plusieurs : le remboursement est réparti sur les parts débitées.
+    const stripeResult = group
+      ? await this.applyGroupCancellation(group, {
+          chargedAmountMinor: cancellationDetails.quote.chargedAmountMinor,
+          refundableAmountMinor,
+        })
+      : await this.applyStripeCancellation({
+          paymentIntentId: cancellationDetails.paymentIntentId,
+          chargedAmountMinor: cancellationDetails.quote.chargedAmountMinor,
+          refundableAmountMinor,
+          reservationId: access.reservationId,
+          listingId: access.listingId,
+        });
 
-    const effectiveRefundMinor = (cancellationDetails.paymentIntentId && this.stripe)
+    const effectiveRefundMinor = group || (cancellationDetails.paymentIntentId && this.stripe)
       ? Math.max(0, Math.min(cancellationDetails.quote.chargedAmountMinor, stripeResult.refundedAmountMinor))
       : refundableAmountMinor;
     const effectiveRetainedMinor = Math.max(0, cancellationDetails.quote.chargedAmountMinor - effectiveRefundMinor);
@@ -1588,62 +1685,7 @@ export class BookingsService {
       },
     });
 
-    const listing = await this.prisma.listing.findUnique({
-      where: { id: access.listingId },
-      select: { bookings: true },
-    });
-
-    if (listing) {
-      const bookings = asObject(listing.bookings, {
-        price: 0,
-        fees: [],
-        'booked-days': [],
-        'external-booked-days': [],
-        reservations: [],
-      });
-      const reservations = extractReservations(bookings);
-      const bookedDays = extractBookedDays(bookings);
-      const reservationIndex = reservations.findIndex((row) => reservationIdFromRow(row) === access.reservationId);
-
-      if (reservationIndex >= 0) {
-        const removedReservation = reservations[reservationIndex];
-        const nextReservations = reservations.filter((_, index) => index !== reservationIndex);
-        const removedStart = normalizeDayValue(removedReservation?.start);
-        const removedEnd = normalizeDayValue(removedReservation?.end);
-        const hasSameRangeRemaining = Boolean(
-          removedStart
-          && removedEnd
-          && nextReservations.some((row) => normalizeDayValue(row.start) === removedStart && normalizeDayValue(row.end) === removedEnd),
-        );
-
-        let removedBookedDay = false;
-        const nextBookedDays = bookedDays.filter((row) => {
-          if (hasSameRangeRemaining || !removedStart || !removedEnd) return true;
-          if (removedBookedDay) return true;
-          const start = normalizeDayValue(row.start);
-          const end = normalizeDayValue(row.end);
-          const isTarget = start === removedStart && end === removedEnd;
-          if (isTarget) {
-            removedBookedDay = true;
-            return false;
-          }
-          return true;
-        });
-
-        await this.prisma.listing.update({
-          where: { id: access.listingId },
-          data: {
-            bookings: toPrismaJson({
-              ...bookings,
-              reservations: nextReservations,
-              'booked-days': nextBookedDays,
-            }),
-          },
-        });
-      }
-    }
-
-    await this.removeInternalReservationEvent(this.prisma, access.listingId, access.reservationId);
+    await this.releaseReservationDates(access.listingId, access.reservationId);
 
     const paymentLookup = [
       {
@@ -1657,7 +1699,8 @@ export class BookingsService {
           }]
         : []),
     ];
-    const linkedPayment = await this.prisma.payment.findFirst({
+    // Paiement à plusieurs : chaque part a sa ligne Payment, déjà mise à jour par le remboursement.
+    const linkedPayment = group ? null : await this.prisma.payment.findFirst({
       where: {
         OR: paymentLookup,
       },
@@ -1727,13 +1770,286 @@ export class BookingsService {
       retainedAmountMinor: effectiveRetainedMinor,
       reason,
     });
+    if (group) {
+      // Les amis qui ont réglé une part apprennent l'annulation et ce qui leur est remboursé.
+      void groupPaymentNotifications.participantsReservationCanceled({
+        access,
+        group,
+        canceledBy,
+        chargedAmountMinor: cancellationDetails.quote.chargedAmountMinor,
+        refundedAmountMinor: effectiveRefundMinor,
+      });
+    }
 
     return this.getBookingConfirmation(access.reservationId, token, {
       publicBaseUrl: options?.publicBaseUrl,
     });
   }
 
-  async createBooking(input: Record<string, unknown>, auth: RequestAuth | null = null) {
+  /** Retire une réservation annulée du JSON de son annonce et du calendrier : ses dates se libèrent. */
+  private async releaseReservationDates(listingId: string, reservationId: string): Promise<void> {
+    await this.prisma.$transaction(async (tx) => {
+      // Même verrou que la création d'une réservation : les deux réécrivent le JSON de l'annonce.
+      await acquireListingBookingLock(tx, listingId);
+
+      const listing = await tx.listing.findUnique({
+        where: { id: listingId },
+        select: { bookings: true },
+      });
+
+      if (listing) {
+        const bookings = asObject(listing.bookings, emptyBookings());
+        const reservations = extractReservations(bookings);
+        const bookedDays = extractBookedDays(bookings);
+        const reservationIndex = reservations.findIndex((row) => reservationIdFromRow(row) === reservationId);
+
+        if (reservationIndex >= 0) {
+          const removedReservation = reservations[reservationIndex];
+          const nextReservations = reservations.filter((_, index) => index !== reservationIndex);
+          const removedStart = normalizeDayValue(removedReservation?.start);
+          const removedEnd = normalizeDayValue(removedReservation?.end);
+          const hasSameRangeRemaining = Boolean(
+            removedStart
+            && removedEnd
+            && nextReservations.some((row) => normalizeDayValue(row.start) === removedStart && normalizeDayValue(row.end) === removedEnd),
+          );
+
+          let removedBookedDay = false;
+          const nextBookedDays = bookedDays.filter((row) => {
+            if (hasSameRangeRemaining || !removedStart || !removedEnd) return true;
+            if (removedBookedDay) return true;
+            const start = normalizeDayValue(row.start);
+            const end = normalizeDayValue(row.end);
+            const isTarget = start === removedStart && end === removedEnd;
+            if (isTarget) {
+              removedBookedDay = true;
+              return false;
+            }
+            return true;
+          });
+
+          await tx.listing.update({
+            where: { id: listingId },
+            data: {
+              bookings: toPrismaJson({
+                ...bookings,
+                reservations: nextReservations,
+                'booked-days': nextBookedDays,
+              }),
+            },
+          });
+        }
+      }
+
+      await this.removeInternalReservationEvent(tx, listingId, reservationId);
+    }, {
+      maxWait: BOOKING_TRANSACTION_MAX_WAIT_MS,
+      timeout: BOOKING_TRANSACTION_TIMEOUT_MS,
+    });
+  }
+
+  // --- Paiement à plusieurs --------------------------------------------------------------------
+
+  /** Remboursement d'une réservation réglée à plusieurs, réparti sur les parts débitées. */
+  private async applyGroupCancellation(
+    group: GroupWithShares,
+    input: { chargedAmountMinor: number; refundableAmountMinor: number },
+  ): Promise<StripeCancellationResult> {
+    const refundableAmountMinor = Math.max(0, Math.round(input.refundableAmountMinor));
+    if (refundableAmountMinor <= 0) {
+      return { action: 'none', stripeStatus: 'succeeded', stripeRefundId: null, refundedAmountMinor: 0 };
+    }
+
+    const outcome = await this.groupLedger.refundCapturedShares(group, refundableAmountMinor);
+    if (outcome.failures.length) {
+      // Rien n'est marqué annulé : un nouvel essai ne rembourse que les parts restantes.
+      throw createRequestError(
+        'Le remboursement d’une des parts a échoué. Réessayez dans quelques minutes.',
+        400,
+        'STRIPE_CANCELLATION_FAILED',
+        { reservationId: group.reservationId, listingId: group.listingId },
+      );
+    }
+
+    return {
+      action: outcome.refundedMinor < input.chargedAmountMinor ? 'partially_refunded' : 'refunded',
+      stripeStatus: 'succeeded',
+      stripeRefundId: outcome.refundIds[0] ?? null,
+      refundedAmountMinor: outcome.refundedMinor,
+    };
+  }
+
+  async getReservationAccess(reservationId: string): Promise<ReservationAccessContext | null> {
+    const reservation = await this.prisma.reservation.findUnique({
+      where: { id: reservationId },
+      select: { id: true, listingId: true, startDate: true },
+    });
+    if (!reservation) return null;
+
+    const token = buildGuideAccessKey(reservation.id, reservation.listingId, reservation.startDate);
+    const access = await this.resolveReservationAccessContext(reservation.id, token);
+    return access && access !== 'forbidden' ? access : null;
+  }
+
+  /**
+   * Recopie l'état du groupe (parts réglées, échéance, issue) dans le JSON `payment` de la réservation
+   * et dans sa copie de l'annonce, lue par l'écran Réservations.
+   */
+  async syncGroupPaymentCopy(reservationId: string): Promise<void> {
+    const group = await this.groupLedger.findByReservationId(reservationId);
+    if (!group) return;
+
+    await this.prisma.$transaction(async (tx) => {
+      await acquireListingBookingLock(tx, group.listingId);
+
+      const copies = await loadGroupPaymentCopies(tx, group.listingId);
+      const copy = copies.get(reservationId) ?? toGroupPaymentCopy(group);
+      const reservation = await tx.reservation.findUnique({
+        where: { id: reservationId },
+        select: { payment: true },
+      });
+      if (reservation) {
+        await tx.reservation.update({
+          where: { id: reservationId },
+          data: { payment: toPrismaJson(applyGroupCopyToPayment(asObject(reservation.payment), copy)) },
+        });
+      }
+
+      const listing = await tx.listing.findUnique({
+        where: { id: group.listingId },
+        select: { bookings: true },
+      });
+      if (!listing) return;
+      const bookings = asObject(listing.bookings, emptyBookings());
+      const nextBookings = applyGroupPaymentCopies(bookings, copies);
+      if (nextBookings !== bookings) {
+        await tx.listing.update({
+          where: { id: group.listingId },
+          data: { bookings: toPrismaJson(nextBookings) },
+        });
+      }
+    }, {
+      maxWait: BOOKING_TRANSACTION_MAX_WAIT_MS,
+      timeout: BOOKING_TRANSACTION_TIMEOUT_MS,
+    });
+  }
+
+  /**
+   * Toutes les parts viennent d'être débitées : la réservation est confirmée. Le voyageur reçoit sa
+   * confirmation (support durable du contrat) et l'hôte l'e-mail « nouvelle réservation », comme pour
+   * un paiement ordinaire.
+   */
+  async confirmGroupReservation(reservationId: string): Promise<void> {
+    await this.syncGroupPaymentCopy(reservationId);
+
+    const [access, reservation, group] = await Promise.all([
+      this.getReservationAccess(reservationId),
+      this.prisma.reservation.findUnique({ where: { id: reservationId }, select: { guests: true } }),
+      this.groupLedger.findByReservationId(reservationId),
+    ]);
+    if (!access || !group) return;
+
+    const guests = asObject(reservation?.guests, {});
+    void notifications.sendBookingConfirmationEmail({
+      access,
+      guestEmail: readString(access.reservationContact.email),
+      guests,
+      publicBaseUrl: group.publicBaseUrl,
+      groupPayers: group.payersCount,
+    });
+    void hostNotifications.bookingReceived(this.prisma, { access, guests, groupPayers: group.payersCount });
+    void groupPaymentNotifications.participantsConfirmed({ access, group });
+  }
+
+  /**
+   * Clôt un paiement à plusieurs qui n'aboutit pas (délai dépassé, annulation par l'organisateur ou
+   * par l'hôte) : empreintes levées, réservation annulée, dates libérées, tout le monde prévenu.
+   * `busy` : un débit est en cours ou une empreinte n'a pas pu être levée ; à retenter.
+   */
+  async closePendingGroupReservation(
+    reservationId: string,
+    reason: GroupCloseReason,
+  ): Promise<'closed' | 'busy' | 'not_pending' | 'not_found'> {
+    const found = await this.groupLedger.findByReservationId(reservationId);
+    if (!found) return 'not_found';
+    if (found.status === 'completed' || found.status === 'expired' || found.status === 'canceled') return 'not_pending';
+    if (found.status === 'capturing') return 'busy';
+
+    const now = new Date();
+    if (found.status === 'pending') {
+      const claimed = await this.groupLedger.claim(found.id, ['pending'], 'releasing', { closeReason: reason, processingAt: now });
+      if (!claimed) return 'busy';
+    } else {
+      // Levée restée en cours (arrêt de l'API, empreinte pas levée) : reprise.
+      await this.groupLedger.touchProcessing(found.id, now);
+    }
+
+    const group = await this.groupLedger.findById(found.id);
+    if (!group) return 'not_found';
+    const closeReason: GroupCloseReason = group.closeReason === 'expired' || group.closeReason === 'host' || group.closeReason === 'organizer'
+      ? group.closeReason
+      : reason;
+
+    const release = await this.groupLedger.releaseShares(group);
+    if (release.failures.length) {
+      console.error('[bookings] group payment release incomplete, will be retried', {
+        reservationId,
+        groupId: group.id,
+        failures: release.failures,
+      });
+      return 'busy';
+    }
+
+    const access = await this.getReservationAccess(reservationId);
+    const finalStatus = closeReason === 'expired' ? 'expired' : 'canceled';
+    const closedGroup = { ...group, status: finalStatus };
+    if (access) {
+      const cancellation = {
+        status: 'canceled',
+        canceledAtISO: now.toISOString(),
+        canceledBy: closeReason === 'host' ? 'host' : closeReason === 'organizer' ? 'guest' : 'system',
+        reason: closeReason === 'expired' ? 'Paiement à plusieurs non complété dans le délai.' : null,
+        stage: 'full_refund',
+        // Personne n'a été débité : rien à rembourser, rien de retenu.
+        chargedAmountMinor: 0,
+        refundableAmountMinor: 0,
+        retainedAmountMinor: 0,
+        retainedPercent: 0,
+        paymentIntentId: readString(asObject(access.payment.stripe).paymentIntentId),
+        stripeAction: 'canceled',
+        stripeStatus: 'canceled',
+        stripeRefundId: null,
+      };
+      await this.prisma.reservation.update({
+        where: { id: reservationId },
+        data: {
+          payment: toPrismaJson({
+            ...applyGroupCopyToPayment(access.payment, toGroupPaymentCopy(closedGroup)),
+            cancellation,
+          }),
+        },
+      });
+      await this.releaseReservationDates(access.listingId, reservationId);
+    }
+
+    const finalized = await this.groupLedger.claim(group.id, ['releasing'], finalStatus, { closedAt: now, processingAt: null });
+    if (finalized && access) {
+      const refreshed = await this.groupLedger.findById(group.id);
+      void groupPaymentNotifications.groupClosed(this.prisma, {
+        access,
+        group: refreshed ?? closedGroup,
+        reason: closeReason,
+        refundedMinor: release.refundedMinor,
+      });
+    }
+    return 'closed';
+  }
+
+  async createBooking(
+    input: Record<string, unknown>,
+    auth: RequestAuth | null = null,
+    options?: { publicBaseUrl?: string | null },
+  ) {
     const listingId = String(input.listingId ?? '').trim();
     if (this.paymentsService) {
       const reservable = await this.paymentsService.ensureListingReservable(listingId);
@@ -1766,6 +2082,16 @@ export class BookingsService {
     // Réservation d'un voyageur : dates libres et PaymentIntent émis par l'API, réglé et propre à
     // ces dates. Les montants et le statut du paiement viennent du serveur, pas du navigateur.
     let verifiedGuestPayment: { paymentIntentId: string; chargedAmountMinor: number } | null = null;
+    // Paiement à plusieurs : le voyageur n'a réglé que sa part (empreinte). La réservation est créée
+    // en attente, ses dates sont bloquées, et le groupe a 72 h pour régler le reste.
+    let groupPlan: {
+      groupId: string;
+      createdAt: Date;
+      payers: number;
+      totalAmountMinor: number;
+      currency: string;
+      connectedAccountId: string | null;
+    } | null = null;
     if (!isHostActor) {
       // Premier filtre, hors transaction : évite l'aller-retour Stripe pour des dates déjà prises.
       // La décision finale est reprise sous verrou dans la transaction ci-dessous.
@@ -1784,8 +2110,29 @@ export class BookingsService {
         startISO,
         endISO,
       });
-      payment = buildVerifiedReservationPayment(payment, verified);
-      verifiedGuestPayment = { paymentIntentId, chargedAmountMinor: verified.chargeNowAmountMinor };
+      if (verified.group) {
+        groupPlan = {
+          groupId: buildGroupPaymentId(),
+          createdAt: new Date(),
+          payers: verified.group.payers,
+          totalAmountMinor: verified.group.totalAmountMinor,
+          currency: verified.currency,
+          connectedAccountId: verified.connectedAccountId,
+        };
+      }
+      payment = buildVerifiedReservationPayment(payment, verified, groupPlan
+        ? {
+            id: groupPlan.groupId,
+            status: 'pending',
+            payers: groupPlan.payers,
+            paidCount: 1,
+            expiresAtISO: resolveGroupPaymentExpiry(groupPlan.createdAt).toISOString(),
+            totalAmountMinor: groupPlan.totalAmountMinor,
+          }
+        : null);
+      // Montant du PaymentIntent vérifié (la part de l'organisateur pour un paiement à plusieurs) :
+      // c'est lui qui est rendu si les dates sont prises entre-temps.
+      verifiedGuestPayment = { paymentIntentId, chargedAmountMinor: verified.intentAmountMinor };
     }
 
     // Un voyageur ne choisit pas l'identifiant : il pourrait viser une réservation existante.
@@ -1930,10 +2277,30 @@ export class BookingsService {
         guideUrl: responseConfirmation.guideUrl,
       });
 
+      const group = groupPlan && verifiedGuestPayment
+        ? await this.groupLedger.createGroup(tx, {
+            groupId: groupPlan.groupId,
+            reservationId: responseReservationId,
+            listingId,
+            organizer: {
+              name: readString(input.guestName),
+              email: readString(rawContact.email)?.toLowerCase() ?? null,
+            },
+            organizerPaymentIntentId: verifiedGuestPayment.paymentIntentId,
+            payersCount: groupPlan.payers,
+            totalAmountMinor: groupPlan.totalAmountMinor,
+            currency: groupPlan.currency,
+            connectedAccountId: groupPlan.connectedAccountId,
+            publicBaseUrl: normalizeBaseUrl(options?.publicBaseUrl),
+            createdAt: groupPlan.createdAt,
+          })
+        : null;
+
       return {
         reservationId: responseReservationId,
         confirmation: responseConfirmation,
         bookings: responseBookings,
+        group,
       };
     }, {
       maxWait: BOOKING_TRANSACTION_MAX_WAIT_MS,
@@ -2005,21 +2372,37 @@ export class BookingsService {
 
     // Support durable du contrat (art. L221-13 C. conso) : confirmation e-mail au voyageur, hors
     // transaction et sans attendre (toute erreur est journalisée, jamais remontée).
+    const groupShareKey = created.group ? buildGroupShareKey(created.group.organizerShareId) : null;
     if (!isHostActor && createAccess && createAccess !== 'forbidden') {
-      void notifications.sendBookingConfirmationEmail({
-        access: createAccess,
-        guestEmail: readString(createAccess.reservationContact.email) ?? readString(actor?.email),
-        guests: asObject(input.guests, {}),
-      });
-      void hostNotifications.bookingReceived(this.prisma, {
-        access: createAccess,
-        guests: asObject(input.guests, {}),
-      });
+      if (created.group && groupShareKey) {
+        // Paiement à plusieurs : la confirmation ne part qu'une fois le groupe complet
+        // (`confirmGroupReservation`). D'ici là, l'organisateur reçoit le lien de suivi du groupe et
+        // l'hôte apprend pourquoi ses dates sont bloquées.
+        const group = await this.groupLedger.findById(created.group.groupId);
+        if (group) {
+          void groupPaymentNotifications.organizerStarted({ access: createAccess, group, guests: asObject(input.guests, {}) });
+          void groupPaymentNotifications.hostPending(this.prisma, { access: createAccess, group, guests: asObject(input.guests, {}) });
+        }
+      } else {
+        void notifications.sendBookingConfirmationEmail({
+          access: createAccess,
+          guestEmail: readString(createAccess.reservationContact.email) ?? readString(actor?.email),
+          guests: asObject(input.guests, {}),
+        });
+        void hostNotifications.bookingReceived(this.prisma, {
+          access: createAccess,
+          guests: asObject(input.guests, {}),
+        });
+      }
     }
 
     return {
       reservationId: responseReservationId,
       listingId,
+      // Paiement à plusieurs : clé de l'organisateur, qui ouvre la page de suivi du groupe.
+      groupPayment: groupShareKey
+        ? { shareKey: groupShareKey, path: buildGroupSharePath(groupShareKey) }
+        : undefined,
       confirmation: {
         guideAccessKey: responseConfirmation.guideAccessKey,
         guideUrl: responseConfirmation.guideUrl,

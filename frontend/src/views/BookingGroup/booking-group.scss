@@ -1,0 +1,539 @@
+/* File: src/views/BookingGroup/booking-group.scss */
+
+@use '@/styles/variables/globals' as *;
+@use '@/styles/variables/borders' as borders;
+@use '@/styles/variables/animations' as animations;
+@use '@/styles/components/buttons' as buttons;
+@use '@/styles/components/inputs' as inputs;
+
+// Page du paiement à plusieurs : une seule carte, lue de haut en bas (qui, combien, avant quand).
+// Sur téléphone la carte occupe toute la largeur ; elle se pose sur le fond à partir de `sm`.
+.booking-group-page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--layout-gap);
+  background: $accent;
+
+  > .legal-links-compact {
+    margin-top: auto;
+    padding-bottom: var(--safe-area-bottom);
+  }
+
+  > .group-card {
+    width: 100%;
+    max-width: 34rem;
+    display: flex;
+    flex-direction: column;
+    gap: var(--layout-gap-xl);
+    padding: var(--layout-gap-xl) var(--layout-gap);
+    background: $accent;
+  }
+
+  @include min-width(sm) {
+    padding: var(--layout-gap-2xl) var(--layout-gap);
+    background: $accent-surface-2;
+
+    > .group-card {
+      padding: var(--layout-gap-2xl);
+      border-radius: borders.$rounded-xl;
+      @include big-shadow($color: rgba($secondary, 0.12));
+    }
+  }
+
+  .group-card {
+    h2 {
+      display: flex;
+      align-items: center;
+      gap: var(--layout-gap-xs);
+      @include h4-title($colorful: false);
+
+      & {
+        margin: 0;
+      }
+    }
+
+    > .state {
+      @include base-text(rgba($secondary-text, 0.75), $thin: false);
+
+      &.is-error {
+        display: flex;
+        flex-direction: column;
+        gap: var(--layout-gap-sm);
+
+        > h1 {
+          @include h2-title($colorful: false);
+
+          & {
+            margin: 0;
+          }
+        }
+
+        > p {
+          @include base-text(rgba($secondary-text, 0.75), $thin: false);
+        }
+      }
+    }
+
+    > .heading {
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-sm);
+
+      > .eyebrow {
+        @include little-text(rgba($secondary-text, 0.7), $bold: true);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      > h1 {
+        @include h2-title($colorful: false);
+
+        & {
+          margin: 0;
+        }
+      }
+
+      > .lead {
+        @include base-text(rgba($secondary-text, 0.8), $thin: false);
+      }
+    }
+
+    > .stay {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: var(--layout-gap-md);
+      align-items: center;
+
+      > .thumb {
+        width: 4.5rem;
+        aspect-ratio: 1;
+        object-fit: cover;
+        border-radius: borders.$rounded-md;
+        background: $accent-surface-2;
+      }
+
+      > .text {
+        display: flex;
+        flex-direction: column;
+        gap: var(--layout-gap-2xs);
+
+        > .title {
+          @include base-text($bold: true, $thin: false);
+        }
+
+        > .line {
+          display: flex;
+          align-items: center;
+          gap: var(--layout-gap-xs);
+          @include little-text(rgba($secondary-text, 0.85), $thin: false);
+
+          > svg {
+            flex: 0 0 auto;
+          }
+
+          &.muted {
+            color: rgba($secondary-text, 0.7);
+          }
+        }
+      }
+    }
+
+    > .progress {
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-sm);
+      padding: var(--layout-gap-md);
+      border-radius: borders.$rounded-lg;
+      background: $accent-surface-1;
+      border: 1px solid rgba($secondary, 0.08);
+
+      > .counts {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: var(--layout-gap-xs) var(--layout-gap-sm);
+
+        > .paid {
+          @include base-text($thin: false);
+          font-variant-numeric: tabular-nums;
+        }
+
+        > .left {
+          display: inline-flex;
+          align-items: center;
+          gap: var(--layout-gap-xs);
+          @include little-text($secondary-text, $bold: true);
+          font-variant-numeric: tabular-nums;
+        }
+      }
+
+      > .track {
+        height: 0.5rem;
+        border-radius: borders.$rounded;
+        background: rgba($secondary, 0.1);
+        overflow: hidden;
+
+        > .fill {
+          display: block;
+          height: 100%;
+          border-radius: inherit;
+          background: $secondary;
+          @include animations.transition(animations.$duration-menu, animations.$ease-out, (width));
+        }
+      }
+
+      > .deadline {
+        @include little-text(rgba($secondary-text, 0.75), $thin: false);
+      }
+
+      &.is-urgent > .counts > .left {
+        color: $bad-ink;
+      }
+    }
+
+    > .pay {
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-md);
+    }
+
+    > .participants {
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-sm);
+
+      > .hint {
+        @include little-text(rgba($secondary-text, 0.75), $thin: false);
+      }
+
+      > form {
+        display: flex;
+        flex-direction: column;
+        gap: var(--layout-gap-sm);
+
+        // Une grille commune aux lignes (subgrid) : montants et états alignés d’une ligne à l’autre.
+        > ul {
+          margin: 0;
+          padding: 0;
+          list-style: none;
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto auto;
+          column-gap: var(--layout-gap-sm);
+
+          > li {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: subgrid;
+            align-items: center;
+            row-gap: var(--layout-gap-xs);
+            min-height: var(--tap-target);
+            padding: var(--layout-gap-xs) 0;
+
+            & + li {
+              border-top: 1px solid rgba($secondary, 0.08);
+            }
+
+            > .name {
+              @include base-text($thin: false);
+              overflow-wrap: anywhere;
+
+              > .you {
+                @include little-text(rgba($secondary-text, 0.65), $thin: false);
+              }
+            }
+
+            > .amount {
+              justify-self: end;
+              @include little-text(rgba($secondary-text, 0.8), $thin: false);
+              font-variant-numeric: tabular-nums;
+            }
+
+            > .status {
+              display: inline-flex;
+              align-items: center;
+              gap: var(--layout-gap-2xs);
+              padding: 0.15rem 0.55rem;
+              border-radius: borders.$rounded;
+              @include little-text($secondary-text, $bold: true);
+              background: rgba($secondary, 0.06);
+              white-space: nowrap;
+            }
+
+            &.is-paid > .status {
+              color: $good-ink;
+              background: rgba($good, 0.16);
+            }
+
+            &.is-pending > .status {
+              color: $warn-ink;
+              background: rgba($progressing, 0.22);
+            }
+
+            &.is-released > .status {
+              color: rgba($secondary-text, 0.65);
+            }
+
+            &.has-invite {
+              padding: var(--layout-gap-sm) 0;
+            }
+
+            // Adresse de l’ami, lien à copier et renvoi de l’invitation, sous la ligne.
+            > .invite-row {
+              grid-column: 1 / -1;
+              display: grid;
+              grid-template-columns: minmax(0, 1fr) auto;
+              gap: var(--layout-gap-xs);
+              align-items: stretch;
+
+              > .field {
+                @include inputs.field($theme: base);
+              }
+
+              > .icon-action {
+                @include buttons.low-btn($color: $tertiary, $hover: $secondary, $text-color: $secondary, $text-hover-color: $accent, $icon-only: true);
+                width: var(--tap-target);
+                min-height: var(--tap-target);
+                justify-content: center;
+              }
+
+              > .resend {
+                grid-column: 1 / -1;
+                justify-self: start;
+                min-height: var(--tap-target);
+                padding: 0;
+                border: none;
+                background: none;
+                cursor: pointer;
+                @include little-text($secondary-text, $underline: true, $thin: false);
+
+                &:disabled {
+                  cursor: not-allowed;
+                  opacity: 0.6;
+                }
+
+                &:focus-visible {
+                  outline: 2px solid $secondary;
+                  outline-offset: 2px;
+                  border-radius: borders.$rounded-xs;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    .feedback {
+      min-height: 1.125rem;
+      @include little-text(rgba($secondary-text, 0.75), $thin: false);
+
+      &.is-error {
+        color: $bad-ink;
+      }
+    }
+
+    > .details {
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-md);
+      padding-top: var(--layout-gap-md);
+      border-top: 1px solid rgba($secondary, 0.08);
+
+      > .amounts {
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: var(--layout-gap-xs);
+
+        > div {
+          display: flex;
+          justify-content: space-between;
+          gap: var(--layout-gap-sm);
+
+          > dt {
+            @include little-text(rgba($secondary-text, 0.75), $thin: false);
+          }
+
+          > dd {
+            margin: 0;
+            text-align: right;
+            @include little-text($secondary-text, $thin: false);
+            font-variant-numeric: tabular-nums;
+          }
+
+          &.is-strong > dd {
+            @include little-text($secondary-text, $bold: true);
+          }
+        }
+      }
+
+      > .policy {
+        > summary {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: var(--layout-gap-sm);
+          min-height: var(--tap-target);
+          list-style: none;
+          cursor: pointer;
+          @include little-text($secondary-text, $bold: true);
+
+          &::-webkit-details-marker {
+            display: none;
+          }
+
+          > span {
+            color: inherit;
+          }
+
+          > svg {
+            flex: 0 0 auto;
+            @include animations.transition(animations.$duration-fast);
+          }
+
+          &:focus-visible {
+            outline: 2px solid $secondary;
+            outline-offset: 2px;
+            border-radius: borders.$rounded-xs;
+          }
+        }
+
+        &[open] > summary > svg {
+          transform: rotate(180deg);
+        }
+
+        > ul {
+          margin: 0 0 var(--layout-gap-xs);
+          padding-left: 1.15rem;
+          display: grid;
+          gap: var(--layout-gap-2xs);
+
+          > li {
+            @include little-text(rgba($secondary-text, 0.8), $thin: false);
+          }
+        }
+
+        > p {
+          @include little-text(rgba($secondary-text, 0.7), $thin: false);
+        }
+      }
+    }
+
+    > .cancel {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--layout-gap-xs);
+
+      > button {
+        display: inline-flex;
+        align-items: center;
+        min-height: var(--tap-target);
+        padding: 0;
+        border: none;
+        background: none;
+        cursor: pointer;
+        @include little-text($bad-ink, $underline: true, $bold: true);
+        @include animations.transition(animations.$duration-fast);
+
+        @include on-hover {
+          opacity: 0.8;
+        }
+
+        &:disabled {
+          cursor: not-allowed;
+          opacity: 0.6;
+        }
+
+        &:focus-visible {
+          outline: 2px solid $secondary;
+          outline-offset: 2px;
+          border-radius: borders.$rounded-xs;
+        }
+      }
+    }
+  }
+}
+
+// Formulaire de règlement d'une part (`components/GroupSharePayment.vue`).
+.group-share-payment {
+  display: flex;
+  flex-direction: column;
+  gap: var(--layout-gap-sm);
+
+  > .names {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--layout-gap-sm);
+
+    > .field {
+      display: flex;
+      flex-direction: column;
+      gap: var(--layout-gap-xs);
+      min-width: 0;
+
+      > span {
+        @include little-text($secondary-text, $bold: true);
+      }
+
+      > input {
+        width: 100%;
+        min-height: var(--tap-target);
+        padding: 0.55rem 0.9rem;
+        border-radius: borders.$rounded-md;
+        border: 1px solid rgba($secondary, 0.12);
+        background: $tertiary;
+        @include base-text($thin: false);
+        @include animations.transition(animations.$duration-fast);
+
+        &::placeholder {
+          color: rgba($secondary-text, 0.45);
+        }
+
+        &:focus-visible {
+          outline: none;
+          border-color: rgba($secondary, 0.4);
+          @include halo(xs, $color: $secondary, $opacity: 0.25);
+        }
+
+        @media (pointer: coarse) {
+          font-size: max(1rem, 16px);
+        }
+      }
+    }
+  }
+
+  > .placeholder {
+    padding: var(--layout-gap-sm) var(--layout-gap-md);
+    border-radius: borders.$rounded-md;
+    border: 1px dashed rgba($secondary, 0.18);
+    @include little-text(rgba($secondary-text, 0.75), $thin: false);
+  }
+
+  > .element-shell {
+    padding: var(--layout-gap-sm);
+    border-radius: borders.$rounded-md;
+    border: 1px solid rgba($secondary, 0.1);
+    background: $accent;
+  }
+
+  > .error {
+    min-height: 1.125rem;
+    @include little-text($bad-ink, $thin: false);
+  }
+
+  > .reassurance {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--layout-gap-xs);
+    @include little-text(rgba($secondary-text, 0.75), $thin: false);
+
+    > svg {
+      flex: 0 0 auto;
+      margin-top: 0.15rem;
+    }
+  }
+}

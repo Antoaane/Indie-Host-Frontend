@@ -35,6 +35,8 @@ import { readBookingAmounts, type BookingNotificationContext } from './notificat
 export type HostEmailKind =
   | 'booking_received'
   | 'booking_canceled'
+  | 'group_booking_pending'
+  | 'group_booking_closed'
   | 'arrival_tomorrow'
   | 'guest_message'
   | 'review_received'
@@ -115,7 +117,7 @@ export function hostFirstName(host: HostRecipient): string | null {
   return readString(host.firstName);
 }
 
-async function loadListingHost(prisma: PrismaClient, listingId: string) {
+export async function loadListingHost(prisma: PrismaClient, listingId: string) {
   const listing = await prisma.listing.findUnique({
     where: { id: listingId },
     select: { id: true, core: true, owner: { select: HOST_RECIPIENT_SELECT } },
@@ -216,7 +218,12 @@ function readGuestContact(contact: Record<string, unknown>): GuestContact {
 
 export async function notifyHostBookingReceived(
   prisma: PrismaClient,
-  input: { access: BookingNotificationContext; guests?: Record<string, unknown> },
+  input: {
+    access: BookingNotificationContext;
+    guests?: Record<string, unknown>;
+    /** Réservation réglée à plusieurs : nombre de parts, toutes débitées. */
+    groupPayers?: number;
+  },
 ): Promise<void> {
   const { access } = input;
   const context = { reservationId: access.reservationId, listingId: access.listingId };
@@ -242,6 +249,7 @@ export async function notifyHostBookingReceived(
       balanceDueDate: parseIsoDate(amounts.balanceDueDateISO),
       travellerMessage: readString(access.message),
       managementUrl: buildHostLinks().management,
+      groupPayers: input.groupPayers,
     });
 
     await deliverHostEmail(prisma, {

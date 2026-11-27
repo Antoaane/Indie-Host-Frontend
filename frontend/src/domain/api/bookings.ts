@@ -22,6 +22,11 @@ export type BookingReservationConfirmation = {
 export type CreateBookingReservationResponse = {
   reservationId: string
   listingId: string
+  /** Paiement à plusieurs : lien de suivi du groupe pour l'organisateur. */
+  groupPayment?: {
+    shareKey: string
+    path: string
+  }
   confirmation?: BookingReservationConfirmation
   messaging?: {
     conversationId: string
@@ -31,6 +36,14 @@ export type CreateBookingReservationResponse = {
 export type BookingConfirmationPayload = {
   reservationId: string
   listingId: string
+  /** Réservation réglée à plusieurs : état du groupe et lien de suivi de l'organisateur. */
+  groupPayment: {
+    status: 'pending' | 'completed' | 'expired' | 'canceled'
+    payers: number
+    paidCount: number
+    expiresAtISO: string
+    path: string | null
+  } | null
   stay: {
     startISO: string
     endISO: string
@@ -206,6 +219,12 @@ function encodePathSegment(value: string): string {
   return encodeURIComponent(value.trim())
 }
 
+/** Adresse d'une ressource sous `/bookings` (même base que les autres appels de ce fichier). */
+export function buildBookingsApiUrl(suffix: string): string {
+  const base = buildBookingsUrl().replace(/\/+$/, '')
+  return resolveUrl(`${base}${suffix.startsWith('/') ? suffix : `/${suffix}`}`)
+}
+
 function buildBookingResourceUrl(reservationId: string, suffix: string): string {
   const base = buildBookingsUrl().replace(/\/+$/, '')
   const normalizedSuffix = suffix.startsWith('/') ? suffix : `/${suffix}`
@@ -360,9 +379,25 @@ function normalizeBookingConfirmation(payload: Record<string, unknown> | null | 
   const hostName = (rawHostName && !isDeprecatedHostIdentity(rawHostName) ? rawHostName : '')
     || 'Votre hôte'
 
+  const rawGroup = (source.groupPayment && typeof source.groupPayment === 'object')
+    ? source.groupPayment as Record<string, unknown>
+    : null
+  const rawGroupStatus = toTrimmedString(rawGroup?.status)
+
   return {
     reservationId: toTrimmedString(source.reservationId),
     listingId: toTrimmedString(source.listingId),
+    groupPayment: rawGroup
+      ? {
+          status: rawGroupStatus === 'completed' || rawGroupStatus === 'expired' || rawGroupStatus === 'canceled'
+            ? rawGroupStatus
+            : 'pending',
+          payers: toNonNegativeInt(rawGroup.payers),
+          paidCount: toNonNegativeInt(rawGroup.paidCount),
+          expiresAtISO: toTrimmedString(rawGroup.expiresAtISO),
+          path: toOptionalString(rawGroup.path),
+        }
+      : null,
     stay: {
       startISO: toTrimmedString(stay.startISO),
       endISO: toTrimmedString(stay.endISO),

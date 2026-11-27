@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   Star,
   UserRound,
+  Users,
   Wallet,
 } from '@lucide/vue'
 import type {
@@ -32,8 +33,16 @@ import {
 } from '@/domain/payments/checkoutPayment'
 import {
   resolveCheckoutPaymentChoice,
+  todayIsoDate,
   validateReservationAgainstRules,
 } from '@/domain/listings/reservationRules'
+import {
+  GROUP_PAYMENT_WINDOW_HOURS,
+  describeGroupPaymentBlock,
+  resolveGroupPaymentOffer,
+  splitGroupAmount,
+} from '@/domain/payments/groupPayment'
+import NumberStepper from '@/components/inputs/NumberStepper.vue'
 import { describeCancellationPolicy, summarizeCancellationPolicy } from '@/domain/listings/cancellationPolicy'
 import {
   getStripePublishableKey,
@@ -117,6 +126,10 @@ const offlineCardExpiry = ref('')
 const offlineCardCvc = ref('')
 const hasAcknowledgedReminder = ref(false)
 const isStripeOfflineMode = isStripeCheckoutOfflineModeEnabled()
+// Développement sans clé Stripe : l'API renvoie un paiement simulé (`…_secret_mock`). Le formulaire
+// de carte factice du mode hors ligne sert alors à dérouler toute la réservation avec l'API locale.
+const isMockPayment = ref(false)
+const usesOfflineForm = computed(() => isStripeOfflineMode || isMockPayment.value)
 const stripeCardInputError = ref<string | null>(null)
 const stripePaymentElementComplete = ref(false)
 const isPaymentElementMounted = ref(false)
@@ -219,6 +232,68 @@ const selectedBreakdown = computed(() => resolveCheckoutPaymentBreakdown({
   paymentRules: paymentRules.value,
 }))
 
+// --- Paiement à plusieurs ---------------------------------------------------------------------
+// L'hôte l'a activé : le voyageur peut ne régler que sa part, ses amis règlent la leur ensuite. Les
+// règles (délai avant l'arrivée, nombre de payeurs, part minimale) sont celles que l'API vérifie.
+const isGroupPayment = ref(false)
+const groupPayers = ref(2)
+// Le nombre de payeurs change le montant, donc le paiement à préparer : on attend la fin des clics.
+const settledGroupPayers = ref(2)
+let groupPayersTimer: ReturnType<typeof setTimeout> | null = null
+
+const currencyWithCents = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' })
+
+function formatMinor(amountMinor: number): string {
+  return amountMinor % 100 === 0 ? currency.format(amountMinor / 100) : currencyWithCents.format(amountMinor / 100)
+}
+
+const groupOffer = computed(() => resolveGroupPaymentOffer({
+  enabled: paymentRules.value.group.enabled,
+  cardAccepted: paymentRules.value.methods.card,
+  startISO: props.reservation.startISO ?? '',
+  todayISO: todayIsoDate(),
+  adults: props.reservation.occupants.adults,
+  chargeNowAmountMinor: selectedBreakdown.value.chargeNowAmount * 100,
+}))
+const groupBlockMessage = computed(() => describeGroupPaymentBlock(groupOffer.value.reason))
+const activeGroup = computed(() => (
+  isGroupPayment.value && groupOffer.value.available ? { payers: groupPayers.value } : null
+))
+const groupShares = computed(() => (
+  activeGroup.value ? splitGroupAmount(selectedBreakdown.value.chargeNowAmount * 100, activeGroup.value.payers) : null
+))
+const groupOwnShareLabel = computed(() => formatMinor(groupShares.value?.[0] ?? 0))
+const groupFriendShareLabel = computed(() => formatMinor(groupShares.value?.[1] ?? 0))
+const groupSharesDiffer = computed(() => Boolean(groupShares.value && groupShares.value[0] !== groupShares.value[1]))
+
+function setGroupPayers(next: number) {
+  const { minPayers, maxPayers } = groupOffer.value
+  if (!Number.isFinite(next)) return
+  groupPayers.value = Math.min(maxPayers, Math.max(minPayers, Math.trunc(next)))
+}
+
+watch(
+  groupOffer,
+  (offer, previous) => {
+    if (!offer.available) {
+      isGroupPayment.value = false
+      return
+    }
+    // Par défaut, un payeur par adulte ; ensuite le choix du voyageur est gardé dans les bornes.
+    const next = previous?.available ? groupPayers.value : props.reservation.occupants.adults
+    groupPayers.value = Math.min(offer.maxPayers, Math.max(offer.minPayers, next))
+    settledGroupPayers.value = groupPayers.value
+  },
+  { immediate: true },
+)
+
+watch(groupPayers, (next) => {
+  if (groupPayersTimer) clearTimeout(groupPayersTimer)
+  groupPayersTimer = setTimeout(() => {
+    settledGroupPayers.value = next
+  }, 450)
+})
+
 const splitNowLabel = computed(() => currency.format(splitBreakdown.value.chargeNowAmount))
 const splitLaterLabel = computed(() => currency.format(splitBreakdown.value.deferredAmount))
 const cashNowLabel = computed(() => currency.format(cashBreakdown.value.chargeNowAmount))
@@ -230,6 +305,8 @@ const splitDueDateLabel = computed(() => formatDateLabel(splitBreakdown.value.de
 const cashDueDateLabel = computed(() => formatDateLabel(cashBreakdown.value.deferredDueDateISO ?? props.reservation.startISO))
 const selectedDueDateLabel = computed(() => formatDateLabel(selectedBreakdown.value.deferredDueDateISO ?? props.reservation.startISO))
 const paymentBrands = computed(() => {
+  // À plusieurs, chaque part est une autorisation sur une carte : pas de virement ni d'espèces.
+  if (activeGroup.value) return ['Carte', 'Apple Pay']
   const list: string[] = []
   if (paymentRules.value.methods.card) {
     list.push('Carte')
@@ -277,7 +354,7 @@ const paymentSectionTitle = 'Paiement sécurisé Stripe'
 const cardholderFullName = computed(() => `${cardholderFirstName.value.trim()} ${cardholderLastName.value.trim()}`.trim())
 const isCardholderNameComplete = computed(() => Boolean(cardholderFirstName.value.trim() && cardholderLastName.value.trim()))
 const isPaymentReady = computed(() => (
-  isStripeOfflineMode
+  usesOfflineForm.value
     ? Boolean(paymentIntentId.value)
     : Boolean(
       isPaymentElementMounted.value &&
@@ -286,7 +363,7 @@ const isPaymentReady = computed(() => (
     )
 ))
 const stripeCardFormValidationError = computed(() => {
-  if (isStripeOfflineMode) return null
+  if (usesOfflineForm.value) return null
   if (!isCardholderNameComplete.value) return 'Saisissez le prénom et le nom du titulaire de la carte.'
   if (stripeCardInputError.value) return stripeCardInputError.value
   if (!stripePaymentElementComplete.value) {
@@ -295,7 +372,7 @@ const stripeCardFormValidationError = computed(() => {
   return null
 })
 const offlineCardFormValidationError = computed(() => {
-  if (!isStripeOfflineMode) return null
+  if (!usesOfflineForm.value) return null
   if (!isCardholderNameComplete.value) return 'Saisissez le prénom et le nom du titulaire de la carte.'
 
   const cardNumberDigits = offlineCardNumber.value.replace(/\D/g, '')
@@ -329,7 +406,7 @@ const offlineCardFormValidationError = computed(() => {
   return null
 })
 const cardFormValidationError = computed(() => (
-  isStripeOfflineMode
+  usesOfflineForm.value
     ? offlineCardFormValidationError.value
     : stripeCardFormValidationError.value
 ))
@@ -342,7 +419,7 @@ const isCardFormReady = computed(() => !cardFormValidationError.value)
 const isPaymentElementFieldsComplete = computed(() => {
   if (!isPaymentReady.value) return false
 
-  if (isStripeOfflineMode) {
+  if (usesOfflineForm.value) {
     return Boolean(
       offlineCardNumber.value.trim() &&
       offlineCardExpiry.value.trim() &&
@@ -404,7 +481,9 @@ const canSubmit = computed(() =>
   isPaymentReady.value &&
   isCardFormReady.value &&
   canAccessFinalStep.value &&
-  !paymentIntentError.value,
+  !paymentIntentError.value &&
+  // Nombre de payeurs changé à l'instant : le paiement de la nouvelle part est en préparation.
+  (!activeGroup.value || groupPayers.value === settledGroupPayers.value),
 )
 
 // Information précontractuelle : le barème appliqué par l'API à l'annulation, annoncé avant le paiement
@@ -441,6 +520,7 @@ const submitLabel = computed(() => {
   if (props.isSubmitting) return 'Validation de la réservation...'
   if (isConfirmingPayment.value) return 'Confirmation du paiement...'
   if (isPreparingPayment.value) return 'Préparation du paiement...'
+  if (activeGroup.value) return `Confirmer et régler ma part (${groupOwnShareLabel.value})`
   return `Confirmer et payer ${selectedChargeNowLabel.value}`
 })
 
@@ -582,6 +662,7 @@ async function preparePaymentIntent() {
   const sequence = ++intentRequestSequence
   paymentIntentError.value = null
   paymentIntentId.value = null
+  isMockPayment.value = false
   resetPaymentElement()
 
   if (reservationError.value) {
@@ -635,6 +716,8 @@ async function preparePaymentIntent() {
         breakdown,
         paymentRules: paymentRules.value,
       }),
+      // À plusieurs : ce paiement ne porte que la part de ce voyageur (l'API calcule les parts).
+      group: activeGroup.value,
     })
 
     if (sequence !== intentRequestSequence) return
@@ -643,6 +726,11 @@ async function preparePaymentIntent() {
     paymentIntentCurrency.value = session.currency
     paymentIntentConnectedAccountId.value = session.connectedAccountId || resolveConnectedAccountId()
     isPreparingPayment.value = false
+    if (import.meta.env.DEV && session.clientSecret.endsWith('_secret_mock')) {
+      // API locale sans clé Stripe : rien à monter, le formulaire de carte factice prend le relais.
+      isMockPayment.value = true
+      return
+    }
     await nextTick()
     await mountPaymentElement(session.clientSecret, paymentIntentConnectedAccountId.value || null)
   } catch (error) {
@@ -666,7 +754,7 @@ async function confirmCheckout() {
   paymentIntentError.value = null
 
   try {
-    if (isStripeOfflineMode) {
+    if (usesOfflineForm.value) {
       await new Promise((resolve) => setTimeout(resolve, 260))
 
       emit('confirm', {
@@ -811,6 +899,8 @@ watch(
     allowedPaymentChoices.value.join('|'),
     reservationError.value,
     paymentOptionError.value,
+    // À plusieurs, le montant du paiement est la part du voyageur : il dépend du nombre de payeurs.
+    activeGroup.value ? settledGroupPayers.value : 0,
   ],
   () => {
     void preparePaymentIntent()
@@ -820,6 +910,7 @@ watch(
 
 onBeforeUnmount(() => {
   intentRequestSequence += 1
+  if (groupPayersTimer) clearTimeout(groupPayersTimer)
   resetPaymentElement()
 })
 </script>
@@ -970,6 +1061,76 @@ onBeforeUnmount(() => {
           <span class="indicator" />
         </label>
       </div>
+
+      <!-- Paiement à plusieurs : proposé seulement quand l'hôte l'a activé. -->
+      <div
+        v-if="paymentRules.group.enabled"
+        class="group-payment"
+        :class="{ 'is-active': Boolean(activeGroup), 'is-unavailable': !groupOffer.available }"
+      >
+        <label class="group-toggle">
+          <input
+            v-model="isGroupPayment"
+            type="checkbox"
+            :disabled="!groupOffer.available"
+          />
+          <span class="text">
+            <span class="title">
+              <Users
+                :size="16"
+                aria-hidden="true"
+              />
+              Payer à plusieurs
+            </span>
+            <span class="subtitle">
+              <template v-if="groupOffer.available">
+                Chacun règle sa part par carte. Personne n’est débité tant que le groupe n’est pas complet.
+              </template>
+              <template v-else>{{ groupBlockMessage }}</template>
+            </span>
+          </span>
+        </label>
+
+        <div
+          v-if="activeGroup"
+          class="group-details"
+        >
+          <div class="payers">
+            <p id="checkout-group-payers">Personnes qui paient, vous compris</p>
+            <NumberStepper
+              compact
+              theme="accent"
+              :value="groupPayers"
+              :min="groupOffer.minPayers"
+              :max="groupOffer.maxPayers"
+              :decrement-disabled="groupPayers <= groupOffer.minPayers"
+              :increment-disabled="groupPayers >= groupOffer.maxPayers"
+              decrement-aria-label="Une personne de moins"
+              increment-aria-label="Une personne de plus"
+              aria-labelledby="checkout-group-payers"
+              @decrement="setGroupPayers(groupPayers - 1)"
+              @input="setGroupPayers($event.number)"
+              @increment="setGroupPayers(groupPayers + 1)"
+            />
+          </div>
+          <p
+            class="share"
+            aria-live="polite"
+          >
+            <template v-if="groupSharesDiffer">
+              Votre part : <strong>{{ groupOwnShareLabel }}</strong>, puis {{ groupFriendShareLabel }} par ami.
+            </template>
+            <template v-else>
+              <strong>{{ groupOwnShareLabel }}</strong> par personne.
+            </template>
+          </p>
+          <ol class="steps">
+            <li>Vous réglez votre part maintenant : votre carte est autorisée, pas débitée.</li>
+            <li>Vous indiquez l’e-mail de vos amis. Ils ont {{ GROUP_PAYMENT_WINDOW_HOURS }} h pour régler leur part, avec des rappels.</li>
+            <li>Groupe complet : tout le monde est débité et la réservation est confirmée. Sinon elle est annulée, sans aucun débit.</li>
+          </ol>
+        </div>
+      </div>
       <p
         v-if="paymentOptionError || reservationError"
         class="payment-rule-error"
@@ -994,7 +1155,7 @@ onBeforeUnmount(() => {
         <span class="section-title-label">{{ paymentSectionTitle }}</span>
       </h3>
       <div
-        v-if="!isStripeOfflineMode"
+        v-if="!usesOfflineForm"
         class="payment-brands"
       >
         <span
@@ -1007,7 +1168,22 @@ onBeforeUnmount(() => {
       </div>
 
       <div class="payment-fields">
-        <p class="payment-summary">
+        <p
+          v-if="activeGroup"
+          class="payment-summary"
+        >
+          <Lock :size="14" />
+          <span>Votre part : {{ groupOwnShareLabel }}, autorisée sur votre carte et débitée quand le groupe est complet</span>
+          <span v-if="selectedBreakdown.deferredAmount > 0">
+            · solde de {{ selectedDeferredLabel }}
+            <template v-if="selectedBreakdown.deferredMode === 'cash'"> en espèces à l’arrivée</template>
+            <template v-else> à payer le {{ selectedDueDateLabel }}</template>
+          </span>
+        </p>
+        <p
+          v-else
+          class="payment-summary"
+        >
           <Lock :size="14" />
           <span>{{ selectedChargeNowLabel }} débité maintenant</span>
           <span v-if="selectedBreakdown.deferredAmount > 0">
@@ -1030,7 +1206,7 @@ onBeforeUnmount(() => {
           Initialisation sécurisée du module Stripe...
         </div>
         <div
-          v-else-if="isStripeOfflineMode"
+          v-else-if="usesOfflineForm"
           class="payment-offline"
         >
           <div class="payment-brands">
@@ -1450,6 +1626,12 @@ onBeforeUnmount(() => {
               </li>
             </ul>
           </div>
+          <p
+            v-if="activeGroup"
+            class="section-text"
+          >
+            <strong>Paiement à plusieurs :</strong> la réservation n’est confirmée que lorsque les {{ activeGroup.payers }} parts sont réglées. Votre groupe a {{ GROUP_PAYMENT_WINDOW_HOURS }} h ; passé ce délai, elle est annulée et personne n’est débité. En réglant votre part, vous acceptez que {{ groupOwnShareLabel }} soient débités de votre carte dès que le groupe est complet.
+          </p>
           <p class="section-text">
             Vous concluez le contrat de location directement avec l'hôte, qui reste responsable du logement et du séjour. IndieHost fournit la page de réservation et le paiement en ligne. Une réservation pour des dates déterminées n'ouvre pas droit à rétractation.
           </p>

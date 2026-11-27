@@ -48,13 +48,21 @@ export type HostBookingReceivedEmailData = HostStay & {
   balanceDueDate: Date | null;
   travellerMessage: string | null;
   managementUrl: string;
+  /** Réservation réglée à plusieurs : nombre de parts, toutes débitées. */
+  groupPayers?: number;
 };
 
 export function buildHostBookingReceivedEmail(data: HostBookingReceivedEmailData): RenderedEmail {
   const range = formatShortRange(data.startDate, data.endDate);
+  const groupPayers = data.groupPayers && data.groupPayers > 1 ? data.groupPayers : 0;
   const paid = data.paidNow > 0
-    ? `${formatCurrency(data.paidNow, data.currency)} ont été encaissés sur votre compte Stripe.`
+    ? groupPayers
+      ? `${formatCurrency(data.paidNow, data.currency)} ont été encaissés sur votre compte Stripe, en ${groupPayers} parts.`
+      : `${formatCurrency(data.paidNow, data.currency)} ont été encaissés sur votre compte Stripe.`
     : 'Le paiement se fera à l’arrivée.';
+  const intro = groupPayers
+    ? `${greet(data.hostFirstName)} le groupe de ${data.guestName} est complet : la réservation est confirmée. ${paid}`
+    : `${greet(data.hostFirstName)} ${data.guestName} vient de réserver. ${paid}`;
   const balance = describeBalance(
     data.balance,
     data.balanceMode,
@@ -72,7 +80,7 @@ export function buildHostBookingReceivedEmail(data: HostBookingReceivedEmailData
   ];
 
   const blocks: HostEmailBlock[] = [
-    { kind: 'paragraph', text: `${greet(data.hostFirstName)} ${data.guestName} vient de réserver. ${paid}` },
+    { kind: 'paragraph', text: intro },
     { kind: 'rows', rows },
   ];
   if (data.travellerMessage) {
@@ -85,8 +93,10 @@ export function buildHostBookingReceivedEmail(data: HostBookingReceivedEmailData
   );
 
   return renderHostEmail({
-    subject: `Nouvelle réservation : ${data.guestName}, ${range}`,
-    title: 'Nouvelle réservation',
+    subject: groupPayers
+      ? `Réservation confirmée : ${data.guestName}, ${range}`
+      : `Nouvelle réservation : ${data.guestName}, ${range}`,
+    title: groupPayers ? 'Réservation confirmée' : 'Nouvelle réservation',
     preheader: `${data.guestName} · ${data.listingTitle} · ${range}`,
     blocks,
   });

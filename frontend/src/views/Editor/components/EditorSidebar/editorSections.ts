@@ -370,6 +370,7 @@ export function computeEditorSectionSummaries(
     payment: [
       methodLabels.join(', '),
       payment.mode === 'deposit' ? `acompte${depositPercent ? ` de ${depositPercent} %` : ''}` : 'paiement intégral',
+      methods.card !== false && record(payment.group).enabled === true ? 'à plusieurs' : '',
     ].filter(Boolean).join(' · '),
     deposit: deposit ? `Caution de ${euros.format(deposit)}` : 'Aucune caution',
     cancellation: record(pricing.cancellation).refundsEnabled ? 'Remboursement selon vos conditions' : 'Non remboursable',

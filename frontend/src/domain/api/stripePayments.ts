@@ -16,6 +16,16 @@ export type CreateStripePaymentIntentInput = {
   breakdown: CheckoutPaymentBreakdown
   currency?: string
   metadata?: Record<string, string>
+  /** Paiement à plusieurs : nombre de payeurs, organisateur compris. Le paiement ne porte alors que sa part. */
+  group?: { payers: number } | null
+}
+
+export type StripePaymentIntentGroup = {
+  payers: number
+  /** Montant réglé en ligne par tout le groupe, en centimes. */
+  totalAmountMinor: number
+  organizerShareAmountMinor: number
+  shareAmountMinor: number
 }
 
 export type StripePaymentIntentSession = {
@@ -24,6 +34,9 @@ export type StripePaymentIntentSession = {
   status: string
   currency: string
   connectedAccountId: string
+  /** Montant de ce paiement, en centimes (la part de l'organisateur pour un paiement à plusieurs). */
+  amountMinor: number | null
+  group: StripePaymentIntentGroup | null
 }
 
 const RAW_STRIPE_API_BASE_URL = (import.meta.env.VITE_STRIPE_API_BASE_URL ?? import.meta.env.VITE_API_BASE_URL ?? '').trim()
@@ -153,6 +166,22 @@ function normalizeSessionResponse(
       toStringValue(payload.connectedAccountId) ||
       toStringValue(payload.connected_account_id) ||
       fallback.connectedAccountId,
+    amountMinor: Number.isFinite(Number(payload.amountMinor)) ? Math.max(0, Math.trunc(Number(payload.amountMinor))) : null,
+    group: normalizeGroup(payload.group),
+  }
+}
+
+function normalizeGroup(value: unknown): StripePaymentIntentGroup | null {
+  if (!value || typeof value !== 'object') return null
+  const raw = value as Record<string, unknown>
+  const payers = Math.trunc(Number(raw.payers))
+  if (!Number.isFinite(payers) || payers < 2) return null
+  const read = (key: string) => Math.max(0, Math.trunc(Number(raw[key]) || 0))
+  return {
+    payers,
+    totalAmountMinor: read('totalAmountMinor'),
+    organizerShareAmountMinor: read('organizerShareAmountMinor'),
+    shareAmountMinor: read('shareAmountMinor'),
   }
 }
 
@@ -183,6 +212,7 @@ export async function createStripePaymentIntent(input: CreateStripePaymentIntent
       deferredMode: input.breakdown.deferredMode,
       deferredDueDateISO: input.breakdown.deferredDueDateISO,
     },
+    ...(input.group ? { group: { payers: input.group.payers } } : {}),
     metadata: input.metadata ?? {},
   }
 

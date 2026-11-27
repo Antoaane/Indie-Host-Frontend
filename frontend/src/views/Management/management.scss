@@ -409,6 +409,13 @@
   }
 
   .schedule-section {
+    > .group-notice {
+      padding: var(--layout-gap-sm) var(--layout-gap-md);
+      border-radius: borders.$rounded-md;
+      background: rgba($progressing, 0.18);
+      @include little-text($secondary-text, $thin: false);
+    }
+
     > .schedule-overview {
       display: flex;
       flex-direction: column;

@@ -2,6 +2,7 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
+import { ChevronDown, Users } from '@lucide/vue'
 import type { RangeISO } from '@/components/DatePicker/helpers/date'
 import { makeIsDateDisabled } from '@/components/DatePicker/utils/range'
 import { nightsBetween } from '@/domain/listings/bookings'
@@ -15,6 +16,8 @@ import {
   validateReservationAgainstRules,
   type ListingReservationRules,
 } from '@/domain/listings/reservationRules'
+
+import { GROUP_PAYMENT_WINDOW_HOURS } from '@/domain/payments/groupPayment'
 
 import BookingCta from '@/views/ListingView/components/Booking/components/BookingCta.vue'
 import BookingDates from '@/views/ListingView/components/Booking/components/BookingDates.vue'
@@ -560,6 +563,30 @@ function reserve() {
       >
         {{ reservationError }}
       </p>
+
+      <!-- Paiement à plusieurs, quand l'hôte l'a activé : expliqué ici, choisi à l'étape de paiement. -->
+      <details
+        v-if="props.rules.payment.group.enabled"
+        class="group-hint"
+      >
+        <summary>
+          <Users
+            :size="16"
+            aria-hidden="true"
+          />
+          <span>Entre amis ? Payez à plusieurs</span>
+          <ChevronDown
+            :size="16"
+            class="chevron"
+            aria-hidden="true"
+          />
+        </summary>
+        <ol>
+          <li>Vous réservez et réglez votre part par carte.</li>
+          <li>Vous indiquez l’e-mail de vos amis : ils ont {{ GROUP_PAYMENT_WINDOW_HOURS }} h pour régler la leur.</li>
+          <li>Personne n’est débité tant que le groupe n’est pas complet. S’il ne l’est pas à temps, la réservation est annulée, sans frais.</li>
+        </ol>
+      </details>
     </div>
   </section>
 </template>

@@ -34,8 +34,11 @@ export type HostEmailInput = {
   legalNote?: string;
   /** Rappels seulement : les e-mails liés à une réservation ou à un paiement ne se refusent pas. */
   unsubscribeUrl?: string | null;
-  /** `internal` : e-mail à l'équipe d'IndieHost (alertes), sans le pied de page des hôtes. */
-  audience?: 'host' | 'internal';
+  /**
+   * `internal` : e-mail à l'équipe d'IndieHost (alertes), sans le pied de page des hôtes.
+   * `guest` : e-mail à un voyageur (paiement à plusieurs), avec le pied de page des voyageurs.
+   */
+  audience?: 'host' | 'internal' | 'guest';
 };
 
 const DEFAULT_LEGAL_NOTE = 'Vous recevez cet e-mail parce que vous avez un compte hôte IndieHost.';

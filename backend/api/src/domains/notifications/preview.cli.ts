@@ -32,6 +32,17 @@ import {
   buildHostRefundFailedEmail,
   buildHostReviewReceivedEmail,
 } from './hostBookingEmails.js';
+import {
+  buildGroupClosedEmail,
+  buildGroupInvitationEmail,
+  buildGroupOrganizerReminderEmail,
+  buildGroupOrganizerStartedEmail,
+  buildGroupParticipantCanceledEmail,
+  buildGroupParticipantConfirmedEmail,
+  buildGroupReminderEmail,
+  buildHostGroupClosedEmail,
+  buildHostGroupPendingEmail,
+} from './groupPaymentEmails.js';
 
 const args = process.argv.slice(2);
 const toStdout = args.includes('--stdout');
@@ -295,6 +306,36 @@ Object.assign(samples, {
     calendarName: 'Airbnb',
     editorUrl: `${site}/dashboard/editor`,
   }),
+});
+
+// Paiement à plusieurs : quatre amis, 486 € à régler en ligne, deux parts déjà réglées.
+const group = {
+  listingTitle: base.listingTitle,
+  listingCity: base.listingCity,
+  startDate: start,
+  endDate: end,
+  nights: 3,
+  organizerName: 'Julien Bernard',
+  payers: 4,
+  paidCount: 2,
+  currency: 'EUR',
+  totalAmountMinor: 48_600,
+  expiresAt: new Date('2026-02-23T13:42:00.000Z'),
+};
+const groupUrl = `${site}/booking/group/gp_cm0example0000000000000_0123456789abcdef01234567`;
+
+Object.assign(samples, {
+  'groupe-organisateur-invitez': buildGroupOrganizerStartedEmail({ ...group, paidCount: 1, shareAmountMinor: 12_150, groupUrl }),
+  'groupe-invitation': buildGroupInvitationEmail({ ...group, shareAmountMinor: 12_150, payUrl: groupUrl }),
+  'groupe-rappel-48h': buildGroupReminderEmail({ ...group, shareAmountMinor: 12_150, payUrl: groupUrl, stage: 1, timeLeft: '48 h' }),
+  'groupe-dernier-rappel': buildGroupReminderEmail({ ...group, paidCount: 3, shareAmountMinor: 12_150, payUrl: groupUrl, stage: 3, timeLeft: '6 h' }),
+  'groupe-organisateur-rappel': buildGroupOrganizerReminderEmail({ ...group, timeLeft: '24 h', pending: ['sarah@exemple.fr', null], groupUrl }),
+  'groupe-complet-ami': buildGroupParticipantConfirmedEmail({ ...group, paidCount: 4, participantName: 'Sarah', shareAmountMinor: 12_150, shareUrl: groupUrl }),
+  'groupe-echu-ami-leve': buildGroupClosedEmail({ ...group, recipientName: 'Sarah', isOrganizer: false, reason: 'expired', shareOutcome: 'released', shareAmountMinor: 12_150 }),
+  'groupe-annule-organisateur': buildGroupClosedEmail({ ...group, recipientName: 'Julien', isOrganizer: true, reason: 'organizer', shareOutcome: 'released', shareAmountMinor: 12_150 }),
+  'groupe-annulation-ami-rembourse': buildGroupParticipantCanceledEmail({ ...group, paidCount: 4, participantName: 'Sarah', canceledBy: 'guest', shareAmountMinor: 12_150, refundedAmountMinor: 6_075 }),
+  'hote-groupe-en-attente': buildHostGroupPendingEmail({ ...group, paidCount: 1, hostFirstName: 'Camille', guests: base.guests, managementUrl: `${site}/dashboard/management` }),
+  'hote-groupe-non-abouti': buildHostGroupClosedEmail({ ...group, hostFirstName: 'Camille', reason: 'expired', managementUrl: `${site}/dashboard/management` }),
 });
 
 if (toStdout) {

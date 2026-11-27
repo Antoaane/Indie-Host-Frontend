@@ -20,7 +20,9 @@ import { toPrismaJson } from '../lib/prisma.js';
  * - échanges bruts Stripe (`Payment.rawRequest` / `rawResponse`, qui contiennent le client_secret) :
  *   90 jours, durée technique non listée par la politique ;
  * - copie brute des flux iCal (`CalendarSync.rawIcs`) : 7 jours, re-téléchargée à chaque synchronisation ;
- * - journal des e-mails aux hôtes (`HostNotification`, identifiants seulement) : 400 jours.
+ * - journal des e-mails aux hôtes (`HostNotification`, identifiants seulement) : 400 jours ;
+ * - paiement à plusieurs : adresses et noms des amis invités effacés 90 jours après un groupe non
+ *   abouti, sinon avec la réservation.
  * Idempotent : chaque passe ne touche que les lignes pas encore purgées.
  */
 
@@ -32,6 +34,8 @@ export const RETENTION_RULES = {
   calendarIcsDays: 7,
   // Journal des e-mails aux hôtes (`HostNotification`) : sert à ne pas renvoyer un même e-mail.
   hostNotificationDays: 400,
+  // Paiement à plusieurs non abouti : adresses et noms des amis invités, effacés après ce délai.
+  closedGroupPaymentDays: 90,
 } as const;
 
 const BATCH_SIZE = 200;
@@ -49,6 +53,7 @@ export type RetentionPurgeReport = {
   paymentsRawCleared: number;
   calendarIcsCleared: number;
   hostNotificationsDeleted: number;
+  groupSharesCleared: number;
   accountsAnonymized: number;
   accountsSkipped: number;
 };
@@ -172,6 +177,34 @@ async function purgeCalendarRawIcs(prisma: PrismaClient, cutoff: Date): Promise<
 }
 
 /**
+ * Paiements à plusieurs : adresses et noms des amis invités. Groupe non abouti (délai dépassé,
+ * annulation) : effacés 90 jours après la clôture. Groupe complet : effacés avec la réservation, quand
+ * elle est anonymisée (5 ans après le séjour).
+ */
+async function purgeGroupPaymentParticipants(prisma: PrismaClient, closedCutoff: Date): Promise<number> {
+  const identified = { OR: [{ email: { not: null } }, { name: { not: null } }] };
+  const closed = await prisma.groupPaymentShare.updateMany({
+    where: {
+      ...identified,
+      groupPayment: { status: { in: ['expired', 'canceled'] }, closedAt: { lt: closedCutoff } },
+    },
+    data: { email: null, name: null },
+  });
+
+  const anonymized = await prisma.$executeRaw`
+    UPDATE "GroupPaymentShare" AS share
+    SET "email" = NULL, "name" = NULL
+    FROM "GroupPayment" AS grp
+    JOIN "Reservation" AS reservation ON reservation."id" = grp."reservationId"
+    WHERE share."groupPaymentId" = grp."id"
+      AND (share."email" IS NOT NULL OR share."name" IS NOT NULL)
+      AND (reservation."contact" ? 'anonymizedAt')
+  `;
+
+  return closed.count + anonymized;
+}
+
+/**
  * Comptes inactifs : `User.updatedAt` est rafraîchi à chaque ouverture du tableau de bord
  * (`upsertUserFromAuth`), c'est la meilleure trace de dernière connexion disponible.
  */
@@ -234,6 +267,8 @@ export async function runRetentionPurge(
   const hostNotificationsDeleted = (await prisma.hostNotification.deleteMany({
     where: { createdAt: { lt: subtractDays(now, RETENTION_RULES.hostNotificationDays) } },
   })).count;
+  // Après l'anonymisation des réservations : les parts de celles qui viennent de l'être suivent.
+  const groupSharesCleared = await purgeGroupPaymentParticipants(prisma, subtractDays(now, RETENTION_RULES.closedGroupPaymentDays));
   const accounts = await purgeInactiveAccounts(prisma, service, logger, subtractYears(now, RETENTION_RULES.inactiveAccountYears), now);
 
   const report: RetentionPurgeReport = {
@@ -245,6 +280,7 @@ export async function runRetentionPurge(
     paymentsRawCleared,
     calendarIcsCleared,
     hostNotificationsDeleted,
+    groupSharesCleared,
     accountsAnonymized: accounts.anonymized,
     accountsSkipped: accounts.skipped,
   };

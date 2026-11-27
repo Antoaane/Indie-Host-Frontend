@@ -1,7 +1,7 @@
 // File: src/views/Management/utils/managementReservations.ts
 
 import { getSynchronizedBookedDays, normalizeBookedDays, normalizeReservations, nightsBetween } from '@/domain/listings/bookings'
-import type { RawBookingReservation, RawBookings, RawReservationMessaging, RawReservationPayment, UserListingCard } from '@/domain/listings/types'
+import type { RawBookingReservation, RawBookings, RawReservationGroupPayment, RawReservationMessaging, RawReservationPayment, UserListingCard } from '@/domain/listings/types'
 
 const STRIPE_SETTLED_STATUSES = new Set([
   'succeeded',
@@ -59,6 +59,8 @@ export type ReservationPayment = {
   onlinePaid: number
   manualPaid: number
   paidTotal: number
+  /** Paiement à plusieurs : état du groupe, tenu par l'API. */
+  group?: RawReservationGroupPayment
 }
 
 export type ReservationPaymentOverrides = {
@@ -398,7 +400,10 @@ export function resolveReservationPayment(input: Partial<RawReservationPayment> 
   const baseDeposit = isStripeBacked ? baseDepositLocked : baseDepositUnlocked
 
   const stripeStatus = (stripe?.status ?? '').trim().toLowerCase()
-  const stripeSettled = stripeStatus ? STRIPE_SETTLED_STATUSES.has(stripeStatus) : false
+  // Paiement à plusieurs pas encore complet : les parts sont autorisées, rien n'est encaissé.
+  const group = input?.group
+  const awaitingGroup = Boolean(group && group.status !== 'completed')
+  const stripeSettled = !awaitingGroup && (stripeStatus ? STRIPE_SETTLED_STATUSES.has(stripeStatus) : false)
 
   const onlinePaid = isStripeBacked ? (stripeSettled ? baseDeposit : 0) : baseDeposit
 
@@ -439,6 +444,7 @@ export function resolveReservationPayment(input: Partial<RawReservationPayment> 
     onlinePaid,
     manualPaid,
     paidTotal,
+    ...(group ? { group } : {}),
   }
 }
 
@@ -486,6 +492,12 @@ const STRIPE_STATUS_LABELS: Record<string, string> = {
   canceled: 'paiement annulé',
 }
 
+function resolveGroupPaymentLabel(group: RawReservationGroupPayment): string {
+  if (group.status === 'completed') return `réglé en ${group.payers} parts, encaissé`
+  if (group.status === 'pending') return `${group.paidCount} parts sur ${group.payers} réglées, rien d’encaissé avant que le groupe soit complet`
+  return 'groupe non complété, rien n’a été encaissé'
+}
+
 function resolveStripeStatusLabel(status: string): string {
   if (!status) return 'état du paiement en ligne inconnu'
   return STRIPE_STATUS_LABELS[status] ?? `état Stripe : ${status}`
@@ -507,10 +519,14 @@ export function resolveReservationPaymentSchedule(
 
   const onlineTargetAmount = Math.max(payment.baseDeposit, payment.onlinePaid)
   const onlineStatus: ReservationPaymentScheduleEntryStatus = onlineTargetAmount <= 0 ? 'paid' : payment.onlinePaid >= onlineTargetAmount ? 'paid' : 'pending'
-  const onlineLabel = payment.isStripeBacked
+  const onlineLabel = payment.group
+    ? 'Paiement à plusieurs'
+    : payment.isStripeBacked
     ? (checkoutChoice === 'full' ? 'Paiement en ligne' : 'Acompte en ligne')
     : (payment.balance <= 0 && !payment.manual.entries.length ? 'Paiement reçu' : 'Acompte reçu')
-  const onlineDetail = payment.isStripeBacked ? resolveStripeStatusLabel(payment.stripeStatus) : 'Montant encaissé'
+  const onlineDetail = payment.group
+    ? resolveGroupPaymentLabel(payment.group)
+    : payment.isStripeBacked ? resolveStripeStatusLabel(payment.stripeStatus) : 'Montant encaissé'
 
   if (onlineTargetAmount > 0 || payment.isStripeBacked) {
     entries.push({
@@ -538,7 +554,10 @@ export function resolveReservationPaymentSchedule(
     })
   })
 
-  if (payment.deferredMode !== 'none' || payment.balance > 0) {
+  // Paiement à plusieurs en cours sans solde différé : ce qui reste dû est la part du groupe, déjà
+  // portée par la ligne « Paiement à plusieurs », pas un solde.
+  const awaitingGroupOnly = payment.group?.status === 'pending' && payment.deferredMode === 'none'
+  if (!awaitingGroupOnly && (payment.deferredMode !== 'none' || payment.balance > 0)) {
     entries.push({
       id: 'deferred',
       source: 'deferred',

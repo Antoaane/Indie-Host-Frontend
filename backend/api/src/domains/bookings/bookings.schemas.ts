@@ -59,3 +59,20 @@ export const bookingGuideParamsSchema = z.object({
 export const bookingGuideMessageSchema = z.object({
   body: z.string().trim().min(1),
 });
+
+// Paiement à plusieurs : clé personnelle d'une part (`gp_<part>_<signature>`).
+export const groupShareParamsSchema = z.object({
+  shareKey: z.string().trim().min(8).max(120),
+});
+
+export const groupShareIntentSchema = z.object({
+  name: z.string().trim().max(120).optional(),
+});
+
+export const groupInvitationsSchema = z.object({
+  invitations: z.array(z.object({
+    shareId: z.string().trim().min(1).max(60),
+    email: z.string().trim().min(3).max(254),
+    resend: z.boolean().optional(),
+  })).min(1).max(12),
+});

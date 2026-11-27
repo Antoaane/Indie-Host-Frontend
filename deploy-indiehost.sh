@@ -89,6 +89,15 @@ else
   echo "  ÉCHEC GET /api/v1/listings/:id/site (404 « Listing not found » attendu)"
   failed=1
 fi
+# Paiement à plusieurs (2026-11-27) : route publique, un lien mal signé répond 403 ; l'ancienne API
+# répondait 404 (route inconnue).
+group_code="$(curl -s -o /dev/null -w '%{http_code}' "https://$DOMAIN/api/v1/bookings/group-payments/gp_deploycheck_000000000000000000000000" || true)"
+if [[ "$group_code" == "403" ]]; then
+  echo "  ok   GET /api/v1/bookings/group-payments/:clé"
+else
+  echo "  ÉCHEC GET /api/v1/bookings/group-payments/:clé → $group_code (403 attendu)"
+  failed=1
+fi
 shell_code="$(curl -s -o /dev/null -w '%{http_code}' "https://$DOMAIN/__shell.html" || true)"
 if [[ "$shell_code" == "404" ]]; then
   echo "  ok   nginx à jour (/__shell.html refusé)"

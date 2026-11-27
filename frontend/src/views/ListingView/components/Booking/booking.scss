@@ -358,6 +358,60 @@
       margin: 0;
       @include little-text($bad-ink, $thin: false);
     }
+
+    // Paiement à plusieurs : une ligne repliée sous le bouton, dépliée à la demande.
+    >.group-hint {
+      border-top: 1px solid rgba($secondary, 0.08);
+
+      >summary {
+        display: flex;
+        align-items: center;
+        gap: var(--layout-gap-xs);
+        min-height: var(--tap-target);
+        list-style: none;
+        cursor: pointer;
+        @include little-text($secondary-text, $bold: true);
+
+        &::-webkit-details-marker {
+          display: none;
+        }
+
+        >span {
+          flex: 1 1 auto;
+          color: inherit;
+        }
+
+        >svg {
+          flex: 0 0 auto;
+        }
+
+        >.chevron {
+          @include animations.transition(animations.$duration-fast);
+        }
+
+        &:focus-visible {
+          outline: 2px solid $secondary;
+          outline-offset: 2px;
+          border-radius: borders.$rounded-xs;
+        }
+      }
+
+      &[open] >summary >.chevron {
+        transform: rotate(180deg);
+      }
+
+      >ol {
+        margin: 0;
+        padding: 0 0 var(--layout-gap-xs) 1.15rem;
+        display: grid;
+        gap: 0.35rem;
+
+        >li {
+          @include little-text(rgba($secondary-text, 0.78), $thin: false);
+          line-height: 1.35;
+        }
+      }
+    }
   }
 
   @include min-width(md) {

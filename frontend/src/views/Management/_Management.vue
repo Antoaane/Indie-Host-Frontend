@@ -854,11 +854,29 @@ async function savePaymentChanges() {
 // Réservation payée en ligne : l'hôte ne la supprime pas, il l'annule et le voyageur est remboursé
 // intégralement par l'API (le montant est repris sur son compte Stripe).
 const isSelectedReservationPaidOnline = computed(() => Boolean(selectedReservation.value?.payment.isStripeBacked))
+// Paiement à plusieurs pas encore complet : rien n'est encaissé, l'annulation ne rembourse rien.
+const selectedGroupPayment = computed(() => selectedReservation.value?.payment.group ?? null)
+const isSelectedGroupPending = computed(() => selectedGroupPayment.value?.status === 'pending')
+const groupDeadlineFormat = new Intl.DateTimeFormat('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
+const groupNotice = computed(() => {
+  const group = selectedGroupPayment.value
+  if (!group || group.status !== 'pending') return null
+  const deadline = Date.parse(group.expiresAtISO)
+  const until = Number.isNaN(deadline) ? 'Le groupe a 72 h' : `Le groupe a jusqu’au ${groupDeadlineFormat.format(new Date(deadline))}`
+  return `Paiement à plusieurs en cours : ${group.paidCount} parts sur ${group.payers} réglées. ${until} ; s’il n’est pas complet, la réservation s’annule d’elle-même et vos dates se libèrent, sans frais.`
+})
 const selectedReservationRefundLabel = computed(() => new Intl.NumberFormat('fr-FR', {
   style: 'currency',
   currency: 'EUR',
 }).format(selectedReservation.value?.payment.onlinePaid ?? 0))
-const deleteDialogContent = computed(() => (isSelectedReservationPaidOnline.value
+const deleteDialogContent = computed(() => (isSelectedGroupPending.value
+  ? {
+      subject: 'Annulation de réservation',
+      title: 'Annuler cette réservation ?',
+      message: 'Le groupe n’a pas fini de payer : rien n’a été encaissé. Les cartes des voyageurs ne seront pas débitées, chacun est prévenu par e-mail et les dates redeviennent disponibles.',
+      confirmLabel: deleteStatus.isDeleting ? 'Annulation…' : 'Oui, annuler',
+    }
+  : isSelectedReservationPaidOnline.value
   ? {
       subject: 'Annulation de réservation',
       title: 'Annuler et rembourser le voyageur ?',
@@ -1329,6 +1347,12 @@ const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !nor
                     <section class="detail-section schedule-section">
                       <h3>Paiements</h3>
                       <template v-if="paymentPreview && paymentSchedule">
+                        <p
+                          v-if="groupNotice"
+                          class="group-notice"
+                        >
+                          {{ groupNotice }}
+                        </p>
                         <div class="schedule-overview">
                           <div class="amounts">
                             <p class="paid">
@@ -1447,7 +1471,7 @@ const shouldShowInternalNoteEditor = computed(() => noteEditor.isEditing || !nor
                             :size="16"
                             aria-hidden="true"
                           />
-                          {{ isSelectedReservationPaidOnline ? 'Annuler et rembourser' : 'Supprimer la réservation' }}
+                          {{ isSelectedGroupPending ? 'Annuler la réservation' : isSelectedReservationPaidOnline ? 'Annuler et rembourser' : 'Supprimer la réservation' }}
                         </button>
                       </div>
                       <p

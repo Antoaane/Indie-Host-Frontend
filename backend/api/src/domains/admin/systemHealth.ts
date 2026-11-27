@@ -209,6 +209,7 @@ const JOB_LABELS: Record<JobId, { label: string; schedule: string }> = {
   retention: { label: 'Purge des données anciennes', schedule: 'une fois par jour' },
   'host-reminders': { label: 'Rappels par e-mail aux hôtes', schedule: 'chaque heure, envois de 9 h à 20 h' },
   'public-sites': { label: 'Référencement des sites d’hôtes', schedule: 'chaque heure' },
+  'group-payments': { label: 'Paiements à plusieurs (échéance, rappels)', schedule: 'toutes les 5 min' },
   'calendar-sync': {
     label: 'Synchronisation des calendriers importés',
     schedule: env.ICAL_SYNC_JOB_INTERVAL_SECONDS % 60 === 0

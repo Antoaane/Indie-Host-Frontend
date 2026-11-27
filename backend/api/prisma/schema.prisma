@@ -80,6 +80,7 @@ model Listing {
   conversations     Conversation[]
   messages          Message[]
   payments          Payment[]
+  groupPayments     GroupPayment[]
   calendarSyncs     CalendarSync[]
   calendarEvents    CalendarEvent[]
 
@@ -110,8 +111,10 @@ model Reservation {
 
   conversation Conversation?
   messages     Message[]
-  // Ligne Payment rattachée (le JSON `payment` ci-dessus est la copie exposée au front).
-  paymentRecord Payment?
+  // Lignes Payment rattachées (le JSON `payment` ci-dessus est la copie exposée au front). Une seule,
+  // sauf pour un paiement à plusieurs : une par part réglée.
+  payments      Payment[]
+  groupPayment  GroupPayment?
   calendarEvents CalendarEvent[]
 
   @@index([listingId])
@@ -170,8 +173,9 @@ model Payment {
   id                     String       @id @default(cuid())
   listingId              String
   listing                Listing      @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  // Un paiement n'est rattaché qu'à une seule réservation (rattachement conditionnel, atomique).
-  reservationId          String?      @unique
+  // Un paiement n'est rattaché qu'à une seule réservation (rattachement conditionnel, atomique). Une
+  // réservation réglée à plusieurs porte un paiement par part (`GroupPaymentShare`).
+  reservationId          String?
   reservation            Reservation? @relation(fields: [reservationId], references: [id], onDelete: SetNull)
   userId                 String?
   user                   User?        @relation("UserPayments", fields: [userId], references: [id], onDelete: SetNull)
@@ -201,9 +205,77 @@ model Payment {
   createdAt              DateTime     @default(now())
   updatedAt              DateTime     @updatedAt
 
+  groupShare             GroupPaymentShare?
+
   @@index([listingId])
+  @@index([reservationId])
   @@index([userId])
   @@index([disputeStatus])
+}
+
+// Paiement à plusieurs d'une réservation (`domains/bookings/groupPaymentLedger.ts`) : l'organisateur
+// règle sa part à la réservation, ses amis ont jusqu'à `expiresAt` pour régler la leur. Chaque part est
+// une empreinte sur la carte (autorisation Stripe sans débit) ; toutes sont débitées ensemble quand le
+// groupe est complet, sinon elles sont levées et la réservation est annulée.
+model GroupPayment {
+  id                       String       @id @default(cuid())
+  reservationId            String       @unique
+  reservation              Reservation  @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  listingId                String
+  listing                  Listing      @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  // pending (parts en cours de règlement), capturing (débit des parts en cours), completed,
+  // releasing (levée des empreintes en cours), expired (délai dépassé), canceled (organisateur ou hôte).
+  status                   String       @default("pending")
+  currency                 String       @default("eur")
+  // Montant réglé en ligne par le groupe (acompte ou total du séjour), en centimes.
+  totalAmountMinor         Int
+  payersCount              Int
+  stripeConnectedAccountId String?
+  expiresAt                DateTime
+  // Dernier rappel envoyé aux amis qui n'ont pas réglé (0 à 3, voir `groupPaymentRules.ts`).
+  remindersSent            Int          @default(0)
+  // Adresse du site où la réservation a été faite (domaine de l'hôte) : origine des liens des e-mails.
+  publicBaseUrl            String?
+  // Début d'un débit ou d'une levée des parts : un traitement interrompu est repris par la tâche planifiée.
+  processingAt             DateTime?
+  completedAt              DateTime?
+  closedAt                 DateTime?
+  closeReason              String?
+  createdAt                DateTime     @default(now())
+  updatedAt                DateTime     @updatedAt
+
+  shares                   GroupPaymentShare[]
+
+  @@index([listingId])
+  @@index([status, expiresAt])
+}
+
+// Part d'un paiement à plusieurs. `position` 0 : l'organisateur, qui a réservé.
+model GroupPaymentShare {
+  id                    String       @id @default(cuid())
+  groupPaymentId        String
+  groupPayment          GroupPayment @relation(fields: [groupPaymentId], references: [id], onDelete: Cascade)
+  position              Int
+  // Adresse saisie par l'organisateur pour l'invitation et les rappels ; effacée par la purge.
+  email                 String?
+  name                  String?
+  amountMinor           Int
+  // pending (à régler), authorized (empreinte posée), captured (débitée), released (empreinte levée),
+  // refunded (débitée puis remboursée parce que le groupe n'a pas abouti).
+  status                String       @default("pending")
+  paymentId             String?      @unique
+  payment               Payment?     @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+  stripePaymentIntentId String?      @unique
+  // Nombre d'invitations envoyées à cette adresse (plafonné : la route est ouverte sans compte).
+  invitationsSent       Int          @default(0)
+  invitedAt             DateTime?
+  authorizedAt          DateTime?
+  capturedAt            DateTime?
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+
+  @@unique([groupPaymentId, position])
+  @@index([status])
 }
 
 // Événements webhook Stripe déjà traités (idempotence : Stripe réémet les événements non acquittés).

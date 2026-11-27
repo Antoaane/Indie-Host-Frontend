@@ -1,6 +1,7 @@
 import { buildApp } from './app.js';
 import { env } from './config/env.js';
 import { startCalendarSyncScheduler } from './jobs/calendarSync.js';
+import { startGroupPaymentsScheduler } from './jobs/groupPayments.js';
 import { startHostRemindersScheduler } from './jobs/hostReminders.js';
 import { startPublicSitesScheduler } from './jobs/publicSites.js';
 import { startRetentionScheduler } from './jobs/retention.js';
@@ -47,6 +48,17 @@ async function start() {
       app.addHook('onClose', async () => {
         stopCalendarSync();
       });
+    }
+
+    // Paiements à plusieurs : échéance de 72 h, rappels aux amis, débit des groupes complets ;
+    // GROUP_PAYMENTS_JOB_ENABLED=false pour couper (les réservations en attente ne se clôturent plus).
+    if (env.GROUP_PAYMENTS_JOB_ENABLED) {
+      const stopGroupPayments = startGroupPaymentsScheduler(app.prisma, app.log);
+      app.addHook('onClose', async () => {
+        stopGroupPayments();
+      });
+    } else {
+      app.log.warn('Group payments job disabled (GROUP_PAYMENTS_JOB_ENABLED=false): run `npm run group-payments` manually.');
     }
   }
 

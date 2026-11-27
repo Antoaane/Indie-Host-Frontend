@@ -113,6 +113,8 @@ export type SendBookingConfirmationInput = {
   /** `guests` de la requête de création (la ligne Reservation n'est pas relue). */
   guests?: Record<string, unknown>;
   publicBaseUrl?: string | null;
+  /** Réservation réglée à plusieurs : nombre de parts. */
+  groupPayers?: number;
 };
 
 export async function sendBookingConfirmationEmail(input: SendBookingConfirmationInput): Promise<void> {
@@ -156,6 +158,7 @@ export async function sendBookingConfirmationEmail(input: SendBookingConfirmatio
       confirmationUrl: buildConfirmationUrl(access, baseUrl),
       travellerMessage: readString(access.message),
       bookedAt: parseIsoDate(access.createdAt) ?? new Date(),
+      groupPayers: input.groupPayers,
     });
 
     await sendMail({ to, ...email, context: logContext });

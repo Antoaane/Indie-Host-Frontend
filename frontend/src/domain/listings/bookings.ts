@@ -10,6 +10,7 @@ import type {
   RawReservationMessaging,
   RawReservationMessageState,
   RawReservationGuests,
+  RawReservationGroupPayment,
   RawReservationPayment,
 } from '@/domain/listings/types'
 
@@ -183,6 +184,8 @@ function normalizePayment(input: Partial<RawReservationPayment> | null | undefin
   // saisis à la main et l'état d'annulation posé par l'API.
   const manualEntries = normalizeManualPaymentEntries(input?.manual?.entries)
   const cancellation = input?.cancellation && typeof input.cancellation === 'object' ? input.cancellation : undefined
+  // Paiement à plusieurs : état tenu par l'API, repris tel quel (l'écran Réservations l'affiche).
+  const group = normalizeGroupPayment(input?.group)
 
   return {
     total: Math.round(total),
@@ -193,6 +196,22 @@ function normalizePayment(input: Partial<RawReservationPayment> | null | undefin
     ...(manualEntries.length ? { manual: { entries: manualEntries } } : {}),
     ...(stripe ? { stripe } : {}),
     ...(cancellation ? { cancellation } : {}),
+    ...(group ? { group } : {}),
+  }
+}
+
+function normalizeGroupPayment(input: unknown): RawReservationGroupPayment | undefined {
+  if (!input || typeof input !== 'object') return undefined
+  const raw = input as Record<string, unknown>
+  if (!isNonEmptyString(raw.id)) return undefined
+  const status = raw.status === 'completed' || raw.status === 'expired' || raw.status === 'canceled' ? raw.status : 'pending'
+  return {
+    id: raw.id.trim(),
+    status,
+    payers: toNonNegativeInt(raw.payers),
+    paidCount: toNonNegativeInt(raw.paidCount),
+    expiresAtISO: isNonEmptyString(raw.expiresAtISO) ? raw.expiresAtISO.trim() : '',
+    totalAmountMinor: toNonNegativeInt(raw.totalAmountMinor),
   }
 }
 

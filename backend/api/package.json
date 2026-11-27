@@ -26,6 +26,7 @@
     "host-reminders": "tsx src/jobs/hostReminders.cli.ts",
     "public-sites": "tsx src/jobs/publicSites.cli.ts",
     "calendar-sync": "tsx src/jobs/calendarSync.cli.ts",
+    "group-payments": "tsx src/jobs/groupPayments.cli.ts",
     "connect-audit": "tsx src/domains/payments/connectAudit.cli.ts"
   },
   "dependencies": {

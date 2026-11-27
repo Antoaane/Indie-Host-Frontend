@@ -252,6 +252,13 @@ const router = createRouter({
       meta: { navVariant: 'public', hideNav: true, title: 'Confirmation de réservation' },
     },
     {
+      // Paiement à plusieurs : lien personnel d'une part (organisateur ou ami), sans compte.
+      path: '/booking/group/:shareKey',
+      name: 'booking-group',
+      component: () => import('@/views/BookingGroup/BookingGroupView.vue'),
+      meta: { navVariant: 'public', hideNav: true, title: 'Paiement à plusieurs' },
+    },
+    {
       path: '/donation',
       name: 'Donation',
       component: () => import('@/views/Donation/_DonationPage.vue'),
@@ -511,6 +518,12 @@ const router = createRouter({
           component: () => import('@/views/Listing/dev/DevListingRoute.vue'),
           meta: { hideNav: true, title: 'Annonce (dev)' },
         }, {
+          // Paiement à plusieurs sur un groupe en mémoire (`?role=organizer|participant`, `&etat=pending|paid|complet|expire|annule`).
+          path: '/dev/group-payment',
+          name: 'dev-group-payment',
+          component: () => import('@/views/BookingGroup/dev/DevBookingGroupRoute.vue'),
+          meta: { navVariant: 'public', hideNav: true, title: 'Paiement à plusieurs (dev)' },
+        }, {
           // Thèmes de la page de présentation et mode édition, sur du faux contenu (docs/editeur-de-page.md).
           path: '/dev/page-themes',
           name: 'dev-page-themes',
@@ -547,7 +560,7 @@ router.beforeEach(async (to, from) => {
     return true
   }
   // Les documents légaux restent accessibles aux voyageurs sur le domaine de l'hôte.
-  if (to.name === 'home' || to.name === 'listing' || to.name === 'listing-guide' || to.name === 'booking-confirmation' || to.name === 'legal') return true
+  if (to.name === 'home' || to.name === 'listing' || to.name === 'listing-guide' || to.name === 'booking-confirmation' || to.name === 'booking-group' || to.name === 'legal') return true
   return { name: 'home' }
 })
 

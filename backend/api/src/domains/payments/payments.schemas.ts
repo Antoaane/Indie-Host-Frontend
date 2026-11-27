@@ -43,6 +43,10 @@ export const createPaymentIntentSchema = z.object({
   currency: z.string().trim().default('eur'),
   reservation: reservationSchema,
   payment: paymentSchema,
+  // Paiement à plusieurs : le voyageur ne règle que sa part, ses amis règlent la leur ensuite.
+  group: z.object({
+    payers: z.coerce.number().int().min(2).max(12),
+  }).optional(),
   metadata: z.record(z.string(), z.string()).optional(),
 });
 
