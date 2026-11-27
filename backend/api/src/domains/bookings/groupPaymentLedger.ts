@@ -15,7 +15,7 @@ import Stripe from 'stripe';
 
 import { env } from '../../config/env.js';
 import { toPrismaJson } from '../../lib/prisma.js';
-import { allocateGroupRefund, resolveGroupPaymentExpiry, splitGroupAmount } from './groupPaymentRules.js';
+import { GROUP_PAYMENT_MIN_PAYERS, allocateGroupRefund, resolveGroupPaymentExpiry, splitGroupAmount } from './groupPaymentRules.js';
 
 type DbClient = Prisma.TransactionClient;
 
@@ -288,6 +288,11 @@ export class GroupPaymentLedger {
       }
     }
 
+    // Paiement précédent à un autre montant (le nombre de personnes a changé) : remplacé.
+    if (share.stripePaymentIntentId) {
+      await this.cancelOrphanIntent(group, share.stripePaymentIntentId, share.paymentId);
+    }
+
     const applicationFee = this.computeApplicationFee(share.amountMinor);
     const intent = await this.stripe.paymentIntents.create({
       amount: share.amountMinor,
@@ -368,15 +373,39 @@ export class GroupPaymentLedger {
     });
   }
 
-  private async markShareAuthorized(share: GroupPaymentShare, now: Date): Promise<boolean> {
+  /**
+   * Note la part comme réglée, seulement si elle porte toujours ce paiement et que le montant autorisé
+   * la couvre : le nombre de personnes a pu changer entre-temps (`resizeGroup`), et la part avec lui.
+   */
+  private async markShareAuthorized(share: GroupPaymentShare, now: Date, authorizedAmountMinor?: number): Promise<boolean> {
     const updated = await this.prisma.groupPaymentShare.updateMany({
-      where: { id: share.id, status: 'pending' },
+      where: {
+        id: share.id,
+        status: 'pending',
+        stripePaymentIntentId: share.stripePaymentIntentId,
+        ...(authorizedAmountMinor !== undefined ? { amountMinor: { lte: authorizedAmountMinor } } : {}),
+      },
       data: { status: 'authorized', authorizedAt: now },
     });
-    if (share.paymentId) {
+    if (updated.count === 1 && share.paymentId) {
       await this.prisma.payment.update({ where: { id: share.paymentId }, data: { status: 'requires_capture' } });
     }
     return updated.count === 1;
+  }
+
+  /** Empreinte qui ne sert plus (part retirée, montant changé, paiement remplacé) : levée chez Stripe. */
+  private async cancelOrphanIntent(group: Pick<GroupPayment, 'id' | 'stripeConnectedAccountId'>, intentId: string, paymentId: string | null): Promise<void> {
+    if (this.stripe) {
+      try {
+        await this.stripe.paymentIntents.cancel(intentId, { cancellation_reason: 'abandoned' }, this.stripeOptions(group));
+      } catch (error) {
+        // Déjà levée, ou débitée par erreur : rien d'autre à tenter ici, l'empreinte expire d'elle-même.
+        console.warn('[group-payments] orphan payment intent not canceled', { groupId: group.id, intentId, error: readErrorMessage(error) });
+      }
+    }
+    if (paymentId) {
+      await this.prisma.payment.updateMany({ where: { id: paymentId, status: { notIn: ['succeeded', 'refunded', 'partially_refunded'] } }, data: { status: 'canceled' } });
+    }
   }
 
   private async markShareReleased(share: GroupPaymentShare, paymentStatus = 'canceled'): Promise<void> {
@@ -402,13 +431,30 @@ export class GroupPaymentLedger {
     }
 
     const intent = await this.stripe.paymentIntents.retrieve(share.stripePaymentIntentId, {}, this.stripeOptions(group));
-    if (intent.amount !== share.amountMinor || intent.currency !== group.currency) {
+    if (intent.currency !== group.currency) {
       console.error('[group-payments] payment intent does not match its share', { groupId: group.id, shareId: share.id });
       return false;
     }
 
+    // Autorisé pour moins que la part (le nombre de personnes a baissé entre-temps) : l'empreinte est
+    // levée et la part reste à régler. Autorisé pour plus : le débit se fera au montant de la part.
+    if (intent.status === 'requires_capture' && intent.amount < share.amountMinor) {
+      await this.cancelOrphanIntent(group, intent.id, share.paymentId);
+      await this.prisma.groupPaymentShare.updateMany({
+        where: { id: share.id, status: 'pending', stripePaymentIntentId: intent.id },
+        data: { stripePaymentIntentId: null, paymentId: null },
+      });
+      return false;
+    }
+
     if (intent.status === 'requires_capture') {
-      if (open) return this.markShareAuthorized(share, now);
+      if (open) {
+        if (await this.markShareAuthorized(share, now, intent.amount)) return true;
+        // La part ne porte plus ce paiement (remplacé ou part retirée) : l'empreinte ne sert à rien.
+        const current = await this.prisma.groupPaymentShare.findUnique({ where: { id: share.id }, select: { stripePaymentIntentId: true } });
+        if (current?.stripePaymentIntentId !== intent.id) await this.cancelOrphanIntent(group, intent.id, share.paymentId);
+        return false;
+      }
       // Groupe déjà clos quand la banque a validé : l'empreinte est levée tout de suite.
       await this.stripe.paymentIntents.cancel(share.stripePaymentIntentId, { cancellation_reason: 'abandoned' }, this.stripeOptions(group));
       await this.markShareReleased(share);
@@ -435,6 +481,118 @@ export class GroupPaymentLedger {
     return result.count === 1;
   }
 
+  /**
+   * Ajoute une personne au groupe, ou retire un ami qui n'a pas réglé : les parts sont recalculées à
+   * parts égales. Une autorisation ne peut pas être débitée de plus que son montant, d'où les règles :
+   * - ajout : toutes les parts baissent, celles déjà réglées seront débitées à leur nouveau montant ;
+   * - retrait : refusé dès qu'un ami a réglé ; sinon la part de l'organisateur monte, son autorisation
+   *   est levée et il la règle de nouveau.
+   * Les paiements commencés et pas encore validés des parts qui changent sont remplacés.
+   */
+  async resizeGroup(input: {
+    groupId: string;
+    change: { kind: 'add' } | { kind: 'remove'; shareId: string };
+    maxPayers: number;
+    now?: Date;
+  }): Promise<{ removed: GroupPaymentShare | null; organizerReopened: boolean }> {
+    const now = input.now ?? new Date();
+    const orphans: Array<{ intentId: string; paymentId: string | null }> = [];
+    let removed: GroupPaymentShare | null = null;
+    let organizerReopened = false;
+
+    const group = await this.prisma.$transaction(async (tx) => {
+      // Verrou sur le groupe : deux changements, ou un changement et un règlement, ne se croisent pas.
+      await tx.$queryRaw`SELECT "id" FROM "GroupPayment" WHERE "id" = ${input.groupId} FOR UPDATE`;
+      const current = await tx.groupPayment.findUnique({
+        where: { id: input.groupId },
+        include: { shares: { orderBy: { position: 'asc' } } },
+      });
+      if (!current) throw groupPaymentError('Paiement à plusieurs introuvable.', 404, 'GROUP_PAYMENT_NOT_FOUND');
+      if (current.status !== 'pending' || now.getTime() >= current.expiresAt.getTime()) {
+        throw groupPaymentError('Ce paiement à plusieurs est clos : le groupe ne peut plus changer.', 409, 'GROUP_PAYMENT_CLOSED');
+      }
+
+      let shares = current.shares;
+      let payers = current.payersCount;
+
+      if (input.change.kind === 'add') {
+        if (payers + 1 > input.maxPayers) {
+          throw groupPaymentError(`Le paiement à plusieurs se fait à ${input.maxPayers} personnes au plus pour ce séjour.`, 409, 'GROUP_PAYERS_LIMIT', { maxPayers: input.maxPayers });
+        }
+        payers += 1;
+      } else {
+        const targetId = input.change.shareId;
+        const target = shares.find((share) => share.id === targetId);
+        if (!target || target.position === 0) {
+          throw groupPaymentError('Cette part n’appartient pas à votre groupe.', 400, 'GROUP_SHARE_UNKNOWN');
+        }
+        if (target.status !== 'pending') {
+          throw groupPaymentError('Cette personne a déjà réglé sa part : elle ne peut plus être retirée.', 409, 'GROUP_SHARE_ALREADY_PAID');
+        }
+        if (shares.some((share) => share.position > 0 && PAID_SHARE_STATUSES.has(share.status))) {
+          throw groupPaymentError(
+            'Un ami a déjà réglé sa part : les parts ne peuvent plus augmenter. Réglez cette part vous-même avec son lien, ou annulez la réservation.',
+            409,
+            'GROUP_PAYERS_LOCKED',
+          );
+        }
+        if (payers - 1 < GROUP_PAYMENT_MIN_PAYERS) {
+          throw groupPaymentError('Le paiement à plusieurs demande au moins deux personnes. Pour payer seul, annulez puis réservez de nouveau.', 409, 'GROUP_PAYERS_MIN');
+        }
+
+        await tx.groupPaymentShare.delete({ where: { id: target.id } });
+        if (target.stripePaymentIntentId) orphans.push({ intentId: target.stripePaymentIntentId, paymentId: target.paymentId });
+        removed = target;
+        // Positions recalées dans l'ordre croissant : chaque place visée vient d'être libérée.
+        for (const share of shares.filter((item) => item.position > target.position)) {
+          await tx.groupPaymentShare.update({ where: { id: share.id }, data: { position: share.position - 1 } });
+        }
+        shares = shares
+          .filter((share) => share.id !== target.id)
+          .map((share) => (share.position > target.position ? { ...share, position: share.position - 1 } : share));
+        payers -= 1;
+      }
+
+      const amounts = splitGroupAmount(current.totalAmountMinor, payers);
+      for (const share of shares) {
+        const amountMinor = amounts[share.position] ?? 0;
+        if (amountMinor === share.amountMinor) continue;
+        const paid = PAID_SHARE_STATUSES.has(share.status);
+        if (paid && amountMinor < share.amountMinor) {
+          // Réglée : débitée plus tard au nouveau montant, plus petit.
+          await tx.groupPaymentShare.update({ where: { id: share.id }, data: { amountMinor } });
+          continue;
+        }
+        if (paid) {
+          // Seule la part de l'organisateur peut monter (aucun ami n'a réglé) : à régler de nouveau.
+          if (share.stripePaymentIntentId) orphans.push({ intentId: share.stripePaymentIntentId, paymentId: share.paymentId });
+          await tx.groupPaymentShare.update({
+            where: { id: share.id },
+            data: { amountMinor, status: 'pending', stripePaymentIntentId: null, paymentId: null, authorizedAt: null },
+          });
+          if (share.position === 0) organizerReopened = true;
+          continue;
+        }
+        if (share.stripePaymentIntentId) orphans.push({ intentId: share.stripePaymentIntentId, paymentId: share.paymentId });
+        await tx.groupPaymentShare.update({
+          where: { id: share.id },
+          data: { amountMinor, stripePaymentIntentId: null, paymentId: null },
+        });
+      }
+
+      if (input.change.kind === 'add') {
+        await tx.groupPaymentShare.create({
+          data: { groupPaymentId: current.id, position: payers - 1, amountMinor: amounts[payers - 1] ?? 0, status: 'pending' },
+        });
+      }
+      await tx.groupPayment.update({ where: { id: current.id }, data: { payersCount: payers } });
+      return current;
+    });
+
+    for (const orphan of orphans) await this.cancelOrphanIntent(group, orphan.intentId, orphan.paymentId);
+    return { removed, organizerReopened };
+  }
+
   /** Reprise d'un traitement resté en cours (arrêt de l'API pendant un débit ou une levée). */
   async touchProcessing(groupId: string, now = new Date()): Promise<void> {
     await this.prisma.groupPayment.update({ where: { id: groupId }, data: { processingAt: now } });
@@ -456,13 +614,22 @@ export class GroupPaymentLedger {
       let intentStatus = 'succeeded';
       if (this.stripe) {
         const intentId = share.stripePaymentIntentId;
+        // Débit au montant de la part : une personne ajoutée au groupe a fait baisser les parts, le reste
+        // de l'autorisation est alors levé par Stripe.
+        const applicationFee = this.computeApplicationFee(share.amountMinor);
         try {
-          const captured = await this.stripe.paymentIntents.capture(intentId, {}, this.stripeOptions(group, `gp-capture-${share.id}-${intentId}`));
+          const captured = await this.stripe.paymentIntents.capture(intentId, {
+            amount_to_capture: share.amountMinor,
+            ...(applicationFee > 0 ? { application_fee_amount: applicationFee } : {}),
+          }, this.stripeOptions(group, `gp-capture-${share.id}-${intentId}-${share.amountMinor}`));
           intentStatus = captured.status;
         } catch (error) {
           // Débit refusé : l'état réel du paiement décide (déjà débité, encore autorisé, ou perdu).
           try {
-            intentStatus = (await this.stripe.paymentIntents.retrieve(intentId, {}, this.stripeOptions(group))).status;
+            const current = await this.stripe.paymentIntents.retrieve(intentId, {}, this.stripeOptions(group));
+            intentStatus = current.status === 'requires_capture' && current.amount_capturable < share.amountMinor
+              ? 'canceled'
+              : current.status;
           } catch {
             intentStatus = 'requires_capture';
           }
@@ -473,7 +640,10 @@ export class GroupPaymentLedger {
       if (intentStatus === 'succeeded') {
         await this.prisma.groupPaymentShare.update({ where: { id: share.id }, data: { status: 'captured', capturedAt: now } });
         if (share.paymentId) {
-          await this.prisma.payment.update({ where: { id: share.paymentId }, data: { status: 'succeeded' } });
+          await this.prisma.payment.update({
+            where: { id: share.paymentId },
+            data: { status: 'succeeded', amountMinor: share.amountMinor, chargeNowAmountMinor: share.amountMinor },
+          });
         }
         outcome.captured += 1;
       } else if (intentStatus === 'requires_capture' || intentStatus === 'processing') {

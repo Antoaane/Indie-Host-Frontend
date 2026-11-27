@@ -61,7 +61,16 @@ export type GroupPaymentPage = {
     name: string | null
   }
   participants: GroupParticipant[]
-  actions: { canPay: boolean; canInvite: boolean; canCancel: boolean }
+  actions: {
+    canPay: boolean
+    canInvite: boolean
+    canCancel: boolean
+    /** Organisateur : ajouter une personne (les parts baissent). */
+    canAddPayer: boolean
+    /** Organisateur : retirer un ami qui n'a pas réglé (tant qu'aucun ami n'a réglé). */
+    canRemovePayer: boolean
+  }
+  limits: { minPayers: number; maxPayers: number }
   cancellation: { summary: string; lines: string[] }
   confirmationPath: string | null
 }
@@ -75,6 +84,8 @@ export type GroupShareIntent = {
   mock: boolean
 }
 
+export type GroupPayersChange = { action: 'add' } | { action: 'remove'; shareId: string }
+
 export type GroupInvitationInput = {
   shareId: string
   email: string
@@ -87,6 +98,7 @@ export type GroupPaymentSource = {
   createShareIntent: (shareKey: string, input: { name: string }) => Promise<GroupShareIntent>
   confirmShare: (shareKey: string) => Promise<GroupPaymentPage>
   invite: (shareKey: string, invitations: GroupInvitationInput[]) => Promise<GroupPaymentPage>
+  changePayers: (shareKey: string, change: GroupPayersChange) => Promise<GroupPaymentPage>
   cancel: (shareKey: string) => Promise<GroupPaymentPage>
 }
 
@@ -138,6 +150,9 @@ export const groupPaymentApi: GroupPaymentSource = {
   },
   invite(shareKey, invitations) {
     return post<GroupPaymentPage>(resourceUrl(shareKey, '/invitations'), { invitations }, 'Impossible d’envoyer les invitations.')
+  },
+  changePayers(shareKey, change) {
+    return post<GroupPaymentPage>(resourceUrl(shareKey, '/payers'), change, 'Impossible de modifier le groupe.')
   },
   cancel(shareKey) {
     return post<GroupPaymentPage>(resourceUrl(shareKey, '/cancel'), {}, 'Impossible d’annuler la réservation.')

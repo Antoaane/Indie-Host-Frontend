@@ -63,6 +63,16 @@ export function splitGroupAmount(totalMinor: number, payers: number): number[] {
   return shares
 }
 
+/**
+ * Nombre de payeurs au plus : douze, pas plus que d'adultes, et 5 € au moins par part. Vaut aussi
+ * quand l'organisateur ajoute une personne pendant les 72 h.
+ */
+export function resolveGroupMaxPayers(input: { adults: number; chargeNowAmountMinor: number }): number {
+  const maxByAdults = Math.min(GROUP_PAYMENT_MAX_PAYERS, Math.max(0, Math.trunc(input.adults)))
+  const maxByAmount = Math.floor(Math.max(0, input.chargeNowAmountMinor) / GROUP_PAYMENT_MIN_SHARE_MINOR)
+  return Math.max(0, Math.min(maxByAdults, maxByAmount))
+}
+
 /** Jours pleins entre aujourd'hui et l'arrivée (dates « AAAA-MM-JJ »). */
 export function daysUntilArrival(startISO: string, todayISO: string): number | null {
   const start = toUtcDay(startISO)

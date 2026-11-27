@@ -6,7 +6,7 @@
 // Règles et délais : `domain/payments/groupPayment.ts` (copie de l'API).
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { CalendarDays, Check, ChevronDown, Clock, Copy, Send, Users } from '@lucide/vue'
+import { CalendarDays, Check, ChevronDown, Clock, Copy, Send, UserPlus, Users } from '@lucide/vue'
 
 import ConfirmationDialog from '@/components/overlays/ConfirmationDialog.vue'
 import LegalLinksCompact from '@/components/layouts/LegalLinksCompact.vue'
@@ -17,7 +17,7 @@ import {
   type GroupPaymentPage,
   type GroupPaymentSource,
 } from '@/domain/api/groupPayments'
-import { formatGroupTimeLeft, normalizeParticipantEmail } from '@/domain/payments/groupPayment'
+import { formatGroupTimeLeft, normalizeParticipantEmail, splitGroupAmount } from '@/domain/payments/groupPayment'
 import GroupSharePayment from '@/views/BookingGroup/components/GroupSharePayment.vue'
 
 const props = withDefaults(
@@ -202,6 +202,13 @@ const heading = computed(() => {
         : `${isOrganizer.value ? 'Vous avez' : `${organizer} a`} annulé la réservation avant que le groupe ait fini de payer. Personne n’a été débité.`,
     }
   }
+  if (isOrganizer.value && current.share.status === 'pending') {
+    return {
+      eyebrow: 'Paiement à plusieurs',
+      title: 'Réglez de nouveau votre part',
+      text: `Le groupe a changé : votre part est maintenant de ${share}. L’autorisation précédente sur votre carte a été levée.`,
+    }
+  }
   if (isOrganizer.value) {
     return {
       eyebrow: 'Paiement à plusieurs',
@@ -363,6 +370,77 @@ async function copyLink(participant: GroupParticipant) {
 function onPaid(next: GroupPaymentPage) {
   page.value = next
   scheduleRefresh()
+}
+
+// --- Nombre de personnes (organisateur) --------------------------------------------------------
+// Ajouter : les parts baissent. Retirer un ami qui n'a pas réglé : les parts montent, possible tant
+// qu'aucun ami n'a réglé ; l'organisateur règle alors de nouveau sa part (règles : API, `resizeGroup`).
+type PayersDialog = { kind: 'add' } | { kind: 'remove'; participant: GroupParticipant }
+
+const payersDialog = ref<PayersDialog | null>(null)
+const payersState = reactive({ isChanging: false, error: null as string | null })
+const someFriendPaid = computed(() => friends.value.some((participant) => participant.status === 'paid'))
+const showRemoveLockedHint = computed(() => (
+  canManageInvitations.value && !page.value?.actions.canRemovePayer && someFriendPaid.value && (page.value?.group.payers ?? 0) > 2
+))
+
+function previewShares(payers: number): number[] {
+  return page.value ? splitGroupAmount(page.value.amounts.onlineTotalMinor, payers) : []
+}
+
+const payersDialogContent = computed(() => {
+  const current = page.value
+  const dialog = payersDialog.value
+  if (!current || !dialog) return { title: '', message: '', confirmLabel: '' }
+  const friendNow = formatMinor(friends.value[0]?.amountMinor ?? current.share.amountMinor)
+  if (dialog.kind === 'add') {
+    const next = previewShares(current.group.payers + 1)
+    return {
+      title: 'Ajouter une personne ?',
+      message: `Les parts passent de ${friendNow} à ${formatMinor(next[1] ?? 0)} par personne${next[0] !== next[1] ? ` (la vôtre : ${formatMinor(next[0] ?? 0)})` : ''}. Ceux qui ont déjà réglé ne seront débités que de leur nouvelle part. Vous indiquerez ensuite l’adresse de la nouvelle personne.`,
+      confirmLabel: payersState.isChanging ? 'Ajout…' : 'Oui, ajouter',
+    }
+  }
+  const next = previewShares(current.group.payers - 1)
+  const invited = dialog.participant.invitedAtISO ? ' Votre ami est prévenu par e-mail qu’il n’a plus rien à régler.' : ''
+  return {
+    title: `Retirer l’ami n° ${dialog.participant.position} ?`,
+    message: `Les parts passent de ${friendNow} à ${formatMinor(next[1] ?? 0)} par personne. Votre carte n’est autorisée que pour ${formatMinor(current.share.amountMinor)} : cette autorisation est levée et vous réglerez de nouveau votre part, de ${formatMinor(next[0] ?? 0)}.${invited}`,
+    confirmLabel: payersState.isChanging ? 'Retrait…' : 'Oui, retirer',
+  }
+})
+
+function openAddPayer() {
+  payersState.error = null
+  payersDialog.value = { kind: 'add' }
+}
+
+function openRemovePayer(participant: GroupParticipant) {
+  payersState.error = null
+  payersDialog.value = { kind: 'remove', participant }
+}
+
+function closePayersDialog() {
+  if (!payersState.isChanging) payersDialog.value = null
+}
+
+async function confirmPayersChange() {
+  const dialog = payersDialog.value
+  if (!dialog || payersState.isChanging) return
+  payersState.isChanging = true
+  payersState.error = null
+  try {
+    page.value = await props.source.changePayers(
+      shareKey.value,
+      dialog.kind === 'add' ? { action: 'add' } : { action: 'remove', shareId: dialog.participant.shareId as string },
+    )
+    if (dialog.kind === 'remove' && dialog.participant.shareId) delete drafts[dialog.participant.shareId]
+  } catch (error) {
+    payersState.error = error instanceof Error ? error.message : 'Impossible de modifier le groupe.'
+  } finally {
+    payersState.isChanging = false
+    payersDialog.value = null
+  }
 }
 
 const isCancelDialogOpen = ref(false)
@@ -575,18 +653,64 @@ async function confirmCancel() {
                       aria-hidden="true"
                     />
                   </button>
-                  <button
-                    v-if="participant.canResend && !draftChanged(participant)"
-                    type="button"
-                    class="resend"
-                    :disabled="inviteState.isSending"
-                    @click="resend(participant)"
+                  <div
+                    v-if="(participant.canResend && !draftChanged(participant)) || page.actions.canRemovePayer"
+                    class="row-actions"
                   >
-                    Renvoyer l’invitation
-                  </button>
+                    <button
+                      v-if="participant.canResend && !draftChanged(participant)"
+                      type="button"
+                      class="text-action"
+                      :disabled="inviteState.isSending"
+                      @click="resend(participant)"
+                    >
+                      Renvoyer l’invitation
+                    </button>
+                    <button
+                      v-if="page.actions.canRemovePayer"
+                      type="button"
+                      class="text-action is-quiet"
+                      :disabled="payersState.isChanging"
+                      @click="openRemovePayer(participant)"
+                    >
+                      Retirer du groupe
+                    </button>
+                  </div>
                 </div>
               </li>
             </ul>
+
+            <div
+              v-if="isOrganizer && isOpen && (page.actions.canAddPayer || showRemoveLockedHint || payersState.error)"
+              class="group-tools"
+            >
+              <button
+                v-if="page.actions.canAddPayer"
+                type="button"
+                class="add-payer"
+                :disabled="payersState.isChanging"
+                @click="openAddPayer"
+              >
+                <UserPlus
+                  :size="16"
+                  aria-hidden="true"
+                />
+                Ajouter une personne
+              </button>
+              <p
+                v-if="showRemoveLockedHint"
+                class="hint"
+              >
+                Un ami a déjà réglé : les parts ne peuvent plus augmenter. Pour retirer quelqu’un, réglez sa part vous-même avec son lien, ou annulez la réservation.
+              </p>
+              <p
+                v-if="payersState.error"
+                class="feedback is-error"
+                role="alert"
+              >
+                {{ payersState.error }}
+              </p>
+            </div>
 
             <template v-if="canManageInvitations">
               <div class="btn-primary__full send">
@@ -682,6 +806,21 @@ async function confirmCancel() {
     </section>
 
     <LegalLinksCompact />
+
+    <ConfirmationDialog
+      :open="Boolean(payersDialog)"
+      subject="Paiement à plusieurs"
+      :title="payersDialogContent.title"
+      :message="payersDialogContent.message"
+      :confirm-label="payersDialogContent.confirmLabel"
+      cancel-label="Annuler"
+      :tone="payersDialog?.kind === 'add' ? 'default' : 'danger'"
+      :confirm-disabled="payersState.isChanging"
+      :cancel-disabled="payersState.isChanging"
+      @close="closePayersDialog"
+      @cancel="closePayersDialog"
+      @confirm="confirmPayersChange"
+    />
 
     <ConfirmationDialog
       :open="isCancelDialogOpen"

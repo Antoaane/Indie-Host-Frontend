@@ -22,9 +22,10 @@ Une tâche terminée est cochée, puis déplacée dans « Fait » avec sa date e
   - carte bancaire uniquement (seule la carte sait « autoriser sans débiter ») ;
   - avec un acompte, seul l’acompte est partagé : le solde reste à la charge de celui qui a réservé ;
   - pendant les 72 h, les dates sont bloquées sur IndieHost et dans le calendrier exporté vers Airbnb et Booking ;
-  - une fois confirmée, une annulation suit les conditions de l’hôte, et le remboursement est réparti entre les parts au prorata.
-- [ ] Faire valider par l’avocat (avec les autres textes en attente) l’ajout du paiement à plusieurs aux CGU voyageurs : la réservation n’est conclue qu’au règlement de toutes les parts, chaque payeur ne s’engage que sur sa part, annulation sans frais si le groupe n’est pas complet. Le parcours de paiement le dit déjà en toutes lettres avant le bouton.
-- [ ] Valider l’ajout à `confidentialite.html` : adresses e-mail des amis indiquées par l’organisateur, utilisées pour l’invitation et les rappels de cette réservation seulement, effacées 90 jours après un groupe non abouti, sinon avec la réservation (5 ans). Claude rédige dès votre accord.
+  - une fois confirmée, une annulation suit les conditions de l’hôte, et le remboursement est réparti entre les parts au prorata ;
+  - pendant les 72 h, l’organisateur peut ajouter une personne (les parts baissent) ; il ne peut en retirer une que tant qu’aucun ami n’a réglé, et règle alors de nouveau sa part, plus élevée (une carte autorisée ne peut pas être débitée de plus que le montant autorisé).
+- [ ] Faire valider par l’avocat (avec les autres textes en attente) les textes du paiement à plusieurs, rédigés le 2026-11-27 et en ligne au prochain déploiement : article 5 des CGU voyageurs (les articles suivants sont renumérotés), paragraphe « Paiement à plusieurs » de la page Annulation et remboursement, phrase ajoutée à l’article 10 des CGV hôtes. Points à faire confirmer : la réservation est au nom de l’organisateur et chaque participant ne s’engage que sur sa part.
+- [ ] Relire l’ajout à la politique de confidentialité : une ligne du tableau des traitements (adresses des amis, nom du titulaire de la carte, durées) et un paragraphe pour la personne invitée (d’où vient son adresse, à quoi elle sert, comment la faire effacer).
 - [ ] À savoir : un groupe de 4 envoie jusqu’à une quinzaine d’e-mails (invitations, rappels, confirmations). L’offre gratuite de Brevo en permet 300 par jour ; à surveiller si l’option prend.
 
 ### Page d’un logement, d’après l’analyse d’Airbnb (session du 2026-11-26)
@@ -255,9 +256,7 @@ Réglé le 2026-11-21 (détail dans « Fait ») : le correctif est en ligne depu
 
 ### Produit et technique
 
-- [ ] (après la validation de l’avocat) Article « Paiement à plusieurs » dans `cgu-voyageurs.html`.
-- [ ] (après votre accord) Paiement à plusieurs dans `confidentialite.html` : adresses des amis, finalité, durées (90 jours après un groupe non abouti, sinon avec la réservation).
-- [ ] Option, si l’option prend : laisser l’organisateur ajouter ou retirer une personne pendant les 72 h (aujourd’hui le nombre de parts est fixé à la réservation ; pour changer, il annule et réserve de nouveau, sans frais).
+- [ ] (après l’avis de l’avocat) Reprendre les textes du paiement à plusieurs s’il demande des changements (`cgu-voyageurs.html` article 5, `annulation-remboursement.html`, `cgv.html` article 10, `confidentialite.html`).
 
 - [ ] (après votre décision sur la rotation le même jour) Jours d’arrivée et de départ sur une période bloquée : `makeIsDateDisabled` (`components/DatePicker/utils/range.ts`) compte la date de fin comme occupée. À changer des deux côtés (calendrier, `reservationRules.ts` et `reservationPricing.ts` / disponibilités de l’API, voir la règle de copie de la tarification dans `CLAUDE.md`), puis vérifier les réservations IndieHost et les fermetures iCal.
 - [ ] Option (après votre accord, si un hôte a besoin du relais entre plateformes) : un lien iCal par plateforme, qui porte en plus les dates importées des **autres** plateformes (jamais celles de la plateforme à qui le lien est destiné, sinon la boucle du 2026-11-21 revient). Le lien actuel reste tel quel : réservations IndieHost et jours fermés sur IndieHost. `calendar.service.ts` (`exportListingCalendar`), `CalendarPanel.vue`.
@@ -346,6 +345,11 @@ Défauts visibles :
 - [ ] Nettoyage : 25 illustrations affichées nulle part et `components/svgs/svgs-old/`, sections d’accueil retirées (`RoiSection` encore à 39 €, `ReassuranceBandSection`), fonctions de `Editor/utils/listingApi.ts`, `BottomNav.vue`, styles « patch » de la page de don qui ne visent aucune classe.
 
 ## Fait
+
+- [x] 2026-11-27 — Suites du paiement à plusieurs (demande de Nathan : « fais ça » ; commit `COMMIT_HASH`, local, à pousser et à déployer avec le reste).
+  - Textes : nouvel article 5 des CGU voyageurs (renumérotation des suivants), paragraphe sur la page Annulation et remboursement, ligne et paragraphe dans la politique de confidentialité, phrase dans l’article 10 des CGV hôtes ; date des pages légales au 27 novembre 2026.
+  - L’organisateur peut ajouter une personne pendant les 72 h (parts en baisse, celles déjà réglées débitées à leur nouveau montant) ou retirer un ami qui n’a pas réglé tant qu’aucun ami n’a réglé (parts en hausse, il règle de nouveau sa part). E-mail à l’ami retiré s’il avait été invité.
+  - Vérifié : `group-payment-flow-smoke.ts` passe de 10 à 13 étapes (ajout après un règlement, retrait, paiement validé à l’ancien montant après un changement), `group-payment-smoke.ts` (11 contrôles), type-check du site et de l’API, build de production ; dans Chrome, `/dev/group-payment` (`etat=seul` pour le retrait) à 360 px et sur ordinateur, et la page CGU voyageurs.
 
 - [x] 2026-11-27 — Paiement à plusieurs entre amis (demande de Nathan ; commit `2c7ece8`, local, à pousser et à déployer avec la migration).
   - L’hôte l’active dans l’éditeur. Le voyageur le choisit à l’étape de paiement (expliqué aussi sous « Réserver »), règle sa part, puis invite ses amis par e-mail depuis sa page de suivi ; chacun reçoit un lien pour régler la sienne, avec trois rappels. Personne n’est débité tant que le groupe n’est pas complet : chaque part est une empreinte sur la carte (Stripe, capture manuelle). Groupe complet : tout est débité, la confirmation et l’e-mail de l’hôte partent. Sinon, au bout de 72 h, la réservation s’annule seule, les empreintes sont levées et les dates libérées.

@@ -11,6 +11,7 @@ import {
   bookingConfirmationParamsSchema,
   createBookingSchema,
   groupInvitationsSchema,
+  groupPayersChangeSchema,
   groupShareIntentSchema,
   groupShareParamsSchema,
   hostCancelBookingSchema,
@@ -91,6 +92,17 @@ export const bookingsPlugin = fp(async (fastify) => {
     const { shareKey } = groupShareParamsSchema.parse(request.params);
     const payload = groupInvitationsSchema.parse(asObject(request.body));
     sendGroupResult(reply, await groupBookings.invite(shareKey, payload.invitations));
+  });
+
+  fastify.post('/bookings/group-payments/:shareKey/payers', {
+    preHandler: groupRateLimit(20),
+  }, async (request, reply) => {
+    const { shareKey } = groupShareParamsSchema.parse(request.params);
+    const payload = groupPayersChangeSchema.parse(asObject(request.body));
+    sendGroupResult(reply, await groupBookings.changePayers(
+      shareKey,
+      payload.action === 'add' ? { kind: 'add' } : { kind: 'remove', shareId: payload.shareId },
+    ));
   });
 
   fastify.post('/bookings/group-payments/:shareKey/cancel', {

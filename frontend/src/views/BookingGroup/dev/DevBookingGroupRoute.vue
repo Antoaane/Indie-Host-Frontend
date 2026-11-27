@@ -4,7 +4,8 @@
 // Route de développement (`/dev/group-payment`, enregistrée seulement en `import.meta.env.DEV`) : la
 // page du paiement à plusieurs sur un groupe en mémoire, sans API ni Stripe.
 // - `?role=organizer` (défaut) ou `?role=participant` ;
-// - `&etat=pending` (défaut), `paid` (la part de l'amie est réglée), `complet`, `expire`, `annule`.
+// - `&etat=pending` (défaut), `paid` (la part de l'amie est réglée), `seul` (seule l'organisatrice a
+//   réglé : une personne peut être retirée), `complet`, `expire`, `annule`.
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -18,6 +19,8 @@ const scenario = computed<DevGroupScenario>(() => {
   const raw = typeof route.query.etat === 'string' ? route.query.etat : ''
   const state: DevGroupScenario['state'] = raw === 'paid'
     ? 'paid'
+    : raw === 'seul'
+      ? 'alone'
     : raw === 'complet'
       ? 'completed'
       : raw === 'expire'

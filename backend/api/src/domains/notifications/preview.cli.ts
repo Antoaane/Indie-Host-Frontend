@@ -39,6 +39,7 @@ import {
   buildGroupOrganizerStartedEmail,
   buildGroupParticipantCanceledEmail,
   buildGroupParticipantConfirmedEmail,
+  buildGroupParticipantRemovedEmail,
   buildGroupReminderEmail,
   buildHostGroupClosedEmail,
   buildHostGroupPendingEmail,
@@ -334,6 +335,7 @@ Object.assign(samples, {
   'groupe-echu-ami-leve': buildGroupClosedEmail({ ...group, recipientName: 'Sarah', isOrganizer: false, reason: 'expired', shareOutcome: 'released', shareAmountMinor: 12_150 }),
   'groupe-annule-organisateur': buildGroupClosedEmail({ ...group, recipientName: 'Julien', isOrganizer: true, reason: 'organizer', shareOutcome: 'released', shareAmountMinor: 12_150 }),
   'groupe-annulation-ami-rembourse': buildGroupParticipantCanceledEmail({ ...group, paidCount: 4, participantName: 'Sarah', canceledBy: 'guest', shareAmountMinor: 12_150, refundedAmountMinor: 6_075 }),
+  'groupe-ami-retire': buildGroupParticipantRemovedEmail({ ...group, participantName: 'Sarah Lemoine' }),
   'hote-groupe-en-attente': buildHostGroupPendingEmail({ ...group, paidCount: 1, hostFirstName: 'Camille', guests: base.guests, managementUrl: `${site}/dashboard/management` }),
   'hote-groupe-non-abouti': buildHostGroupClosedEmail({ ...group, hostFirstName: 'Camille', reason: 'expired', managementUrl: `${site}/dashboard/management` }),
 });

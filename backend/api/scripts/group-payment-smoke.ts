@@ -94,6 +94,18 @@ check('conditions : cas lus', () => {
   assert.equal(api.resolveGroupPaymentOffer({ ...base, adults: 30 }).maxPayers, 12, 'douze payeurs au plus');
 });
 
+check('nombre de payeurs au plus', () => {
+  for (let adults = 0; adults <= 15; adults += 1) {
+    for (const amount of [0, 999, 1_000, 2_499, 6_000, 60_000]) {
+      const input = { adults, chargeNowAmountMinor: amount };
+      assert.equal(site.resolveGroupMaxPayers(input), api.resolveGroupMaxPayers(input), JSON.stringify(input));
+    }
+  }
+  assert.equal(api.resolveGroupMaxPayers({ adults: 4, chargeNowAmountMinor: 60_000 }), 4);
+  assert.equal(api.resolveGroupMaxPayers({ adults: 20, chargeNowAmountMinor: 600_000 }), 12);
+  assert.equal(api.resolveGroupMaxPayers({ adults: 6, chargeNowAmountMinor: 1_500 }), 3);
+});
+
 check('réglage de l’hôte', () => {
   for (const pricing of [null, {}, { payment: {} }, { payment: { group: {} } }, { payment: { group: { enabled: 'true' } } }, { payment: { group: { enabled: true } } }]) {
     assert.equal(site.isGroupPaymentEnabled(pricing), api.isGroupPaymentEnabled(pricing), JSON.stringify(pricing));

@@ -87,18 +87,21 @@ async function cleanup() {
   await prisma.user.deleteMany({ where: { id: OWNER_ID } });
 }
 
+// Numérotation commune à tous les faux Stripe : les identifiants de paiement sont uniques en base.
+let sequence = 0;
+
 /** Faux Stripe : PaymentIntents en mémoire, débit et levée d'une empreinte, remboursements. */
 function createFakeStripe() {
-  const intents = new Map<string, { id: string; amount: number; currency: string; status: string; client_secret: string }>();
+  const intents = new Map<string, { id: string; amount: number; amount_capturable: number; currency: string; status: string; client_secret: string }>();
   const refunds: Array<{ payment_intent: string; amount: number }> = [];
-  let sequence = 0;
+  const captures: Array<{ id: string; amount: number }> = [];
   const failures = { captureLost: new Set<string>(), cancelAlreadyCaptured: new Set<string>() };
 
   const client = {
     paymentIntents: {
       async create(params: { amount: number; currency: string }) {
         sequence += 1;
-        const intent = { id: `pi_fake_${sequence}`, amount: params.amount, currency: params.currency, status: 'requires_payment_method', client_secret: `pi_fake_${sequence}_secret` };
+        const intent = { id: `pi_fake_${sequence}`, amount: params.amount, amount_capturable: 0, currency: params.currency, status: 'requires_payment_method', client_secret: `pi_fake_${sequence}_secret` };
         intents.set(intent.id, intent);
         return { ...intent };
       },
@@ -107,15 +110,18 @@ function createFakeStripe() {
         if (!intent) throw new Error(`unknown intent ${id}`);
         return { ...intent };
       },
-      async capture(id: string) {
+      async capture(id: string, params?: { amount_to_capture?: number }) {
         const intent = intents.get(id);
         if (!intent) throw new Error(`unknown intent ${id}`);
+        const amount = params?.amount_to_capture ?? intent.amount;
+        if (amount > intent.amount_capturable && !failures.captureLost.has(id)) throw new Error('amount_to_capture too large');
         if (failures.captureLost.has(id)) {
           intent.status = 'canceled';
           throw new Error('This PaymentIntent could not be captured because it has expired.');
         }
         if (intent.status !== 'requires_capture') throw new Error('unexpected state');
         intent.status = 'succeeded';
+        captures.push({ id, amount });
         return { ...intent };
       },
       async cancel(id: string) {
@@ -141,12 +147,17 @@ function createFakeStripe() {
     client: client as unknown as GroupStripeClient,
     intents,
     refunds,
+    captures,
     failures,
     /** La banque a validé le paiement de l'ami : l'empreinte est posée. */
     authorize(id: string, amount?: number) {
       const existing = intents.get(id);
-      if (existing) existing.status = 'requires_capture';
-      else intents.set(id, { id, amount: amount ?? 0, currency: 'eur', status: 'requires_capture', client_secret: `${id}_secret` });
+      if (existing) {
+        existing.status = 'requires_capture';
+        existing.amount_capturable = existing.amount;
+      } else {
+        intents.set(id, { id, amount: amount ?? 0, amount_capturable: amount ?? 0, currency: 'eur', status: 'requires_capture', client_secret: `${id}_secret` });
+      }
     },
   };
 }
@@ -402,6 +413,118 @@ async function main() {
     assert.equal(group?.status, 'expired');
     assert.equal(group?.shares[1]?.status, 'refunded');
     assert.deepEqual(fake.refunds.map((refund) => refund.amount), [d.group.shares[1]!.amountMinor]);
+  });
+
+  // --- E. Une personne de plus, après qu'un ami a réglé : les parts baissent -----------------------
+  const resize = createFakeStripe();
+  const r = buildServices(resize.client);
+  const e = await book(r, { startOffset: 60, nights: 2, payers: 3, adults: 4 });
+  resize.authorize(e.group.shares[0]!.stripePaymentIntentId!, e.group.shares[0]!.amountMinor);
+  const eOrganizerKey = buildGroupShareKey(e.group.shares[0]!.id);
+
+  await step('ajout d’une personne : parts recalculées, débit au nouveau montant', async () => {
+    const friendKey = buildGroupShareKey(e.group.shares[1]!.id);
+    const intent = await r.groups.createShareIntent(friendKey, { name: 'Julien' });
+    assert.ok(intent && intent !== 'forbidden');
+    resize.authorize(intent.paymentIntentId);
+    await r.groups.confirmShare(friendKey);
+
+    let page = await r.groups.getPage(eOrganizerKey);
+    assert.ok(page && page !== 'forbidden');
+    assert.equal(page.actions.canAddPayer, true, '4 adultes : une quatrième part possible');
+    assert.equal(page.actions.canRemovePayer, false, 'retrait fermé : un ami a réglé');
+    assert.equal(await r.groups.changePayers(friendKey, { kind: 'add' }), 'forbidden', 'un ami ne change pas le groupe');
+
+    page = await r.groups.changePayers(eOrganizerKey, { kind: 'add' });
+    assert.ok(page && page !== 'forbidden');
+    assert.equal(page.group.payers, 4);
+    const total = e.total * 100;
+    const quarter = Math.floor(total / 4);
+    let group = await r.ledger.findById(e.group.id);
+    assert.deepEqual(group?.shares.map((share) => share.amountMinor), [total - 3 * quarter, quarter, quarter, quarter]);
+    assert.deepEqual(group?.shares.map((share) => share.status), ['authorized', 'authorized', 'pending', 'pending']);
+    await assert.rejects(() => r.groups.changePayers(eOrganizerKey, { kind: 'add' }), /4 personnes au plus/);
+    await assert.rejects(
+      () => r.groups.changePayers(eOrganizerKey, { kind: 'remove', shareId: group!.shares[2]!.id }),
+      /déjà réglé sa part/,
+      'retrait refusé dès qu’un ami a réglé',
+    );
+
+    for (const share of group!.shares.slice(2)) {
+      const key = buildGroupShareKey(share.id);
+      const intent = await r.groups.createShareIntent(key, { name: 'Léa' });
+      assert.ok(intent && intent !== 'forbidden');
+      assert.equal(intent.amountMinor, quarter);
+      resize.authorize(intent.paymentIntentId);
+      await r.groups.confirmShare(key);
+    }
+
+    group = await r.ledger.findById(e.group.id);
+    assert.equal(group?.status, 'completed');
+    const captured = resize.captures.map((capture) => capture.amount).sort((a, b) => a - b);
+    assert.deepEqual(captured, group!.shares.map((share) => share.amountMinor).sort((a, b) => a - b), 'chaque part débitée à son nouveau montant');
+    assert.equal(captured.reduce((sum, amount) => sum + amount, 0), total);
+  });
+
+  // --- F. Un ami de moins, personne d'autre n'a réglé : l'organisateur règle de nouveau sa part ----
+  const shrink = createFakeStripe();
+  const s = buildServices(shrink.client);
+  const f = await book(s, { startOffset: 70, nights: 3, payers: 3, adults: 3 });
+  const fOrganizerIntent = f.group.shares[0]!.stripePaymentIntentId!;
+  shrink.authorize(fOrganizerIntent, f.group.shares[0]!.amountMinor);
+  const fOrganizerKey = buildGroupShareKey(f.group.shares[0]!.id);
+  const fFriendKey = buildGroupShareKey(f.group.shares[1]!.id);
+  const fLeavingKey = buildGroupShareKey(f.group.shares[2]!.id);
+
+  await step('retrait d’un ami : parts en hausse, l’organisateur règle de nouveau', async () => {
+    // L'ami restant a ouvert sa page (paiement commencé, pas validé) avant le changement.
+    const early = await s.groups.createShareIntent(fFriendKey, {});
+    assert.ok(early && early !== 'forbidden');
+
+    const page = await s.groups.changePayers(fOrganizerKey, { kind: 'remove', shareId: f.group.shares[2]!.id });
+    assert.ok(page && page !== 'forbidden');
+    assert.equal(page.group.payers, 2);
+    assert.equal(page.share.status, 'pending', 'part de l’organisateur à régler de nouveau');
+    assert.equal(page.actions.canPay, true);
+    assert.equal(shrink.intents.get(fOrganizerIntent)?.status, 'canceled', 'ancienne autorisation levée');
+    assert.equal(shrink.intents.get(early.paymentIntentId)?.status, 'canceled', 'paiement commencé à l’ancien montant annulé');
+    assert.equal(await s.groups.getPage(fLeavingKey), null, 'le lien de l’ami retiré ne mène plus à rien');
+    await assert.rejects(() => s.groups.changePayers(fOrganizerKey, { kind: 'remove', shareId: page.participants[1]!.shareId! }), /au moins deux personnes/);
+
+    let group = await s.ledger.findById(f.group.id);
+    assert.equal(group?.shares[1]?.stripePaymentIntentId, null);
+
+    const total = f.total * 100;
+    for (const key of [fOrganizerKey, fFriendKey]) {
+      const intent = await s.groups.createShareIntent(key, {});
+      assert.ok(intent && intent !== 'forbidden');
+      assert.equal(intent.amountMinor, total / 2);
+      shrink.authorize(intent.paymentIntentId);
+      await s.groups.confirmShare(key);
+    }
+    group = await s.ledger.findById(f.group.id);
+    assert.equal(group?.status, 'completed');
+    assert.deepEqual(shrink.captures.map((capture) => capture.amount), [total / 2, total / 2]);
+  });
+
+  await step('ami qui valide un paiement à l’ancien montant après un changement', async () => {
+    const g = await book(s, { startOffset: 80, nights: 2, payers: 3, adults: 3 });
+    shrink.authorize(g.group.shares[0]!.stripePaymentIntentId!, g.group.shares[0]!.amountMinor);
+    const friendKey = buildGroupShareKey(g.group.shares[1]!.id);
+    const old = await s.groups.createShareIntent(friendKey, {});
+    assert.ok(old && old !== 'forbidden');
+    // Le groupe passe à deux : le paiement commencé par l'ami est annulé et retiré de sa part.
+    await s.groups.changePayers(buildGroupShareKey(g.group.shares[0]!.id), { kind: 'remove', shareId: g.group.shares[2]!.id });
+    const share = (await s.ledger.findById(g.group.id))!.shares[1]!;
+    assert.equal(share.stripePaymentIntentId, null);
+    // Ancienne page restée ouverte : la banque valide quand même l'ancien paiement, plus petit.
+    shrink.authorize(old.paymentIntentId);
+    await s.groups.confirmShare(friendKey);
+    const after = await s.ledger.findById(g.group.id);
+    assert.equal(after?.shares[1]?.status, 'pending', 'part toujours à régler');
+    // Le passage planifié ne la compte pas non plus.
+    await s.groups.runScheduledPass();
+    assert.equal((await s.ledger.findById(g.group.id))?.shares[1]?.status, 'pending');
   });
 
   console.log(`group-payment-flow-smoke : ${checks} étapes réussies.`);

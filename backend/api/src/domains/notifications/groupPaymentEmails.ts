@@ -311,6 +311,26 @@ export function buildGroupParticipantCanceledEmail(data: GroupParticipantCancele
   });
 }
 
+/// --- Ami retiré du groupe ------------------------------------------------------------------------
+
+export type GroupParticipantRemovedEmailData = GroupStay & GroupSummary & {
+  participantName: string | null;
+};
+
+export function buildGroupParticipantRemovedEmail(data: GroupParticipantRemovedEmailData): RenderedEmail {
+  return renderHostEmail({
+    audience: 'guest',
+    legalNote: participantNote(data.organizerName),
+    subject: `Vous n’avez plus rien à régler : ${data.listingTitle}`,
+    title: 'Vous n’avez plus de part à régler',
+    preheader: `${data.listingTitle} · ${formatShortRange(data.startDate, data.endDate)}`,
+    blocks: [
+      { kind: 'paragraph', text: `${hello(data.participantName)} ${data.organizerName} a modifié le groupe qui partage le paiement de ${where(data)}, ${formatStayRange(data.startDate, data.endDate, data.nights)} : vous n’en faites plus partie.` },
+      { kind: 'notice', text: 'Vous n’avez rien à régler, et le lien reçu précédemment ne fonctionne plus. Si vous aviez commencé un paiement, il est annulé et votre carte n’est pas débitée.' },
+    ],
+  });
+}
+
 // --- Hôte ----------------------------------------------------------------------------------------
 
 export type HostGroupPendingEmailData = GroupStay & GroupSummary & {

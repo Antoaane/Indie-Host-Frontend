@@ -24,8 +24,10 @@ import {
 } from './groupPaymentLedger.js';
 import {
   formatGroupTimeLeft,
+  GROUP_PAYMENT_MIN_PAYERS,
   normalizeParticipantEmail,
   resolveDueGroupReminder,
+  resolveGroupMaxPayers,
 } from './groupPaymentRules.js';
 
 type Share = GroupWithShares['shares'][number];
@@ -92,7 +94,17 @@ export type GroupPaymentPage = {
     name: string | null;
   };
   participants: GroupParticipantView[];
-  actions: { canPay: boolean; canInvite: boolean; canCancel: boolean };
+  actions: {
+    canPay: boolean;
+    canInvite: boolean;
+    canCancel: boolean;
+    /** Organisateur : ajouter une personne (les parts baissent). */
+    canAddPayer: boolean;
+    /** Organisateur : retirer un ami qui n'a pas réglé (possible tant qu'aucun ami n'a réglé). */
+    canRemovePayer: boolean;
+  };
+  /** Nombre de payeurs possible pour ce séjour. */
+  limits: { minPayers: number; maxPayers: number };
   cancellation: { summary: string; lines: string[] };
   /** Organisateur, groupe complet : sa page de confirmation (guide d'arrivée, annulation). */
   confirmationPath: string | null;
@@ -188,6 +200,10 @@ export class GroupBookingsService {
     const stripe = asObject(payment.stripe);
     const deferredModeRaw = readString(stripe.deferredMode);
     const guests = asObject(reservation?.guests);
+    const maxPayers = resolveGroupMaxPayers({
+      adults: Math.trunc(toNumber(guests.adults, 0)),
+      chargeNowAmountMinor: group.totalAmountMinor,
+    });
     const hostName = readString(access.listingHost.name);
     const organizerName = readString(access.guestName) ?? 'L’organisateur';
     const cancellationSettings = asObject(asObject(access.listingBookings.pricing).cancellation);
@@ -276,7 +292,12 @@ export class GroupBookingsService {
         canPay: open && share.status === 'pending',
         canInvite: open && isOrganizer,
         canCancel: isOrganizer && group.status === 'pending',
+        canAddPayer: open && isOrganizer && group.payersCount < maxPayers,
+        canRemovePayer: open && isOrganizer
+          && group.payersCount > GROUP_PAYMENT_MIN_PAYERS
+          && !group.shares.some((item) => item.position > 0 && PAID_SHARE_STATUSES.has(item.status)),
       },
+      limits: { minPayers: GROUP_PAYMENT_MIN_PAYERS, maxPayers },
       cancellation: {
         summary: summarizeCancellationPolicy(cancellationSettings),
         lines: describeCancellationPolicy(cancellationSettings),
@@ -402,6 +423,37 @@ export class GroupBookingsService {
       if (send) void groupPaymentNotifications.invitation({ access, group, share: updated });
     }
 
+    return this.reload(shareKey);
+  }
+
+  /**
+   * L'organisateur ajoute une personne au groupe, ou retire un ami qui n'a pas réglé
+   * (`GroupPaymentLedger.resizeGroup` : règles et parts recalculées).
+   */
+  async changePayers(
+    shareKey: string,
+    change: { kind: 'add' } | { kind: 'remove'; shareId: string },
+  ): Promise<GroupPaymentPage | 'forbidden' | null> {
+    const context = await this.resolve(shareKey);
+    if (!context || context === 'forbidden') return context;
+    const { group, share, access } = context;
+    if (share.position !== 0) return 'forbidden';
+
+    const reservation = await this.prisma.reservation.findUnique({ where: { id: group.reservationId }, select: { guests: true } });
+    const maxPayers = resolveGroupMaxPayers({
+      adults: Math.trunc(toNumber(asObject(reservation?.guests).adults, 0)),
+      chargeNowAmountMinor: group.totalAmountMinor,
+    });
+
+    const result = await this.ledger.resizeGroup({ groupId: group.id, change, maxPayers });
+    await this.bookings.syncGroupPaymentCopy(group.reservationId);
+
+    // Un ami retiré qui avait reçu une invitation apprend qu'il n'a plus rien à régler.
+    const removed: Share | null = result.removed;
+    if (removed && readString(removed.email) && removed.invitedAt) {
+      const refreshed = await this.ledger.findById(group.id);
+      if (refreshed) void groupPaymentNotifications.participantRemoved({ access, group: refreshed, share: removed });
+    }
     return this.reload(shareKey);
   }
 

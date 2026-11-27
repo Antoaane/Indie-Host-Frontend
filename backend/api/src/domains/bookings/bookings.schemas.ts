@@ -69,6 +69,12 @@ export const groupShareIntentSchema = z.object({
   name: z.string().trim().max(120).optional(),
 });
 
+// L'organisateur ajoute une personne, ou retire un ami qui n'a pas réglé.
+export const groupPayersChangeSchema = z.discriminatedUnion('action', [
+  z.object({ action: z.literal('add') }),
+  z.object({ action: z.literal('remove'), shareId: z.string().trim().min(1).max(60) }),
+]);
+
 export const groupInvitationsSchema = z.object({
   invitations: z.array(z.object({
     shareId: z.string().trim().min(1).max(60),

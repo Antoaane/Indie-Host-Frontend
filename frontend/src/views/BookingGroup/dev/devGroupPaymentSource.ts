@@ -13,11 +13,16 @@ import { splitGroupAmount } from '@/domain/payments/groupPayment'
 
 export type DevGroupScenario = {
   role: 'organizer' | 'participant'
-  /** `pending` : en cours ; `paid` : la part de l'ami est réglée ; puis les issues. */
-  state: 'pending' | 'paid' | 'completed' | 'expired' | 'canceled'
+  /**
+   * `pending` : en cours ; `paid` : la part de l'amie est réglée ; `alone` : seule l'organisatrice a
+   * réglé (une personne peut être retirée) ; puis les issues.
+   */
+  state: 'pending' | 'paid' | 'alone' | 'completed' | 'expired' | 'canceled'
 }
 
 const PAYERS = 4
+// Six adultes : de quoi ajouter des personnes au groupe.
+const ADULTS = 6
 const TOTAL_MINOR = 35_000
 // Même photo que les annonces en mémoire de `/dev/editor`.
 const SAMPLE_IMAGE = '/assets/media/images/webp/hero-image.webp'
@@ -52,11 +57,16 @@ export function createDevGroupPaymentSource(scenario: DevGroupScenario): GroupPa
   // La personne qui ouvre la page : l'organisatrice, ou l'amie n° 2 (invitée, pas encore réglée).
   const viewerId = scenario.role === 'organizer' ? 'share-0' : 'share-2'
   let status: GroupPaymentPage['status'] = 'pending'
+  let shareSequence = shares.length
   let closeReason: GroupPaymentPage['closeReason'] = null
 
   if (scenario.state === 'paid') {
     const viewer = shares.find((share) => share.shareId === viewerId)
     if (viewer) viewer.status = 'paid'
+  }
+  if (scenario.state === 'alone') {
+    const julien = shares.find((share) => share.shareId === 'share-1')
+    if (julien) julien.status = 'pending'
   }
   if (scenario.state === 'completed') {
     shares.forEach((share) => {
@@ -112,7 +122,7 @@ export function createDevGroupPaymentSource(scenario: DevGroupScenario): GroupPa
         startISO: '2027-02-12',
         endISO: '2027-02-19',
         nights: 7,
-        guests: { adults: 4, children: 0, infants: 0, pets: 0 },
+        guests: { adults: ADULTS, children: 0, infants: 0, pets: 0 },
       },
       amounts: {
         currency: 'eur',
@@ -123,7 +133,7 @@ export function createDevGroupPaymentSource(scenario: DevGroupScenario): GroupPa
         deferredDueDateISO: null,
       },
       group: {
-        payers: PAYERS,
+        payers: shares.length,
         paidCount: shares.filter((share) => share.status === 'paid').length,
         expiresAtISO: expiresAt.toISOString(),
         createdAtISO: createdAt.toISOString(),
@@ -140,7 +150,10 @@ export function createDevGroupPaymentSource(scenario: DevGroupScenario): GroupPa
         canPay: open && viewer.status === 'pending',
         canInvite: open && isOrganizer,
         canCancel: isOrganizer && open,
+        canAddPayer: open && isOrganizer && shares.length < ADULTS,
+        canRemovePayer: open && isOrganizer && shares.length > 2 && !shares.some((share) => share.position > 0 && share.status === 'paid'),
       },
+      limits: { minPayers: 2, maxPayers: ADULTS },
       cancellation: {
         summary: 'modérée',
         lines: [
@@ -150,6 +163,17 @@ export function createDevGroupPaymentSource(scenario: DevGroupScenario): GroupPa
       },
       confirmationPath: isOrganizer && status === 'completed' ? '/booking/confirmation/dev?token=dev' : null,
     }
+  }
+
+  // Mêmes règles que l'API (`GroupPaymentLedger.resizeGroup`) : parts égales recalculées.
+  function resplit() {
+    const next = splitGroupAmount(TOTAL_MINOR, shares.length)
+    shares.forEach((share, index) => {
+      share.position = index
+      const amountMinor = next[index] ?? 0
+      if (share.status === 'paid' && amountMinor > share.amountMinor) share.status = 'pending'
+      share.amountMinor = amountMinor
+    })
   }
 
   function completeIfFull() {
@@ -192,6 +216,22 @@ export function createDevGroupPaymentSource(scenario: DevGroupScenario): GroupPa
         share.email = invitation.email
         share.invitedAtISO = new Date().toISOString()
       }
+      return build()
+    },
+    async changePayers(_key, change) {
+      await wait(300)
+      if (change.action === 'add') {
+        if (shares.length >= ADULTS) throw new Error(`Le paiement à plusieurs se fait à ${ADULTS} personnes au plus pour ce séjour.`)
+        shareSequence += 1
+        shares.push({ shareId: `share-${shareSequence}`, position: shares.length, name: null, email: null, invitedAtISO: null, status: 'pending', amountMinor: 0 })
+      } else {
+        if (shares.some((share) => share.position > 0 && share.status === 'paid')) {
+          throw new Error('Un ami a déjà réglé sa part : les parts ne peuvent plus augmenter.')
+        }
+        const index = shares.findIndex((share) => share.shareId === change.shareId)
+        if (index > 0) shares.splice(index, 1)
+      }
+      resplit()
       return build()
     },
     async cancel() {

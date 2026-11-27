@@ -16,6 +16,7 @@ import {
   buildGroupOrganizerStartedEmail,
   buildGroupParticipantCanceledEmail,
   buildGroupParticipantConfirmedEmail,
+  buildGroupParticipantRemovedEmail,
   buildGroupReminderEmail,
   buildHostGroupClosedEmail,
   buildHostGroupPendingEmail,
@@ -189,6 +190,18 @@ async function reminders(input: { access: BookingNotificationContext; group: Gro
   return delivered ? sent + 1 : sent;
 }
 
+//** Ami retiré du groupe par l'organisateur : il n'a plus rien à régler. */
+async function participantRemoved(input: { access: BookingNotificationContext; group: GroupWithShares; share: Share }): Promise<boolean> {
+  const { access, group, share } = input;
+  return safely('group_participant_removed', { ...logContext(access, group), shareId: share.id }, false, async () =>
+    deliver(
+      readString(share.email),
+      buildGroupParticipantRemovedEmail({ ...describe(access, group), participantName: readString(share.name) }),
+      'group_participant_removed',
+      { ...logContext(access, group), shareId: share.id },
+    ));
+}
+
 // --- Issue ---------------------------------------------------------------------------------------
 
 /** Groupe complet : chaque ami apprend que sa part est débitée (l'organisateur reçoit la confirmation). */
@@ -301,6 +314,7 @@ export const groupPaymentNotifications = {
   organizerStarted,
   hostPending,
   invitation,
+  participantRemoved,
   reminders,
   participantsConfirmed,
   groupClosed,
