@@ -347,7 +347,7 @@ Défauts visibles :
 
 ## Fait
 
-- [x] 2026-11-27 — Paiement à plusieurs entre amis (demande de Nathan ; commit `COMMIT_HASH`, local, à pousser et à déployer avec la migration).
+- [x] 2026-11-27 — Paiement à plusieurs entre amis (demande de Nathan ; commit `2c7ece8`, local, à pousser et à déployer avec la migration).
   - L’hôte l’active dans l’éditeur. Le voyageur le choisit à l’étape de paiement (expliqué aussi sous « Réserver »), règle sa part, puis invite ses amis par e-mail depuis sa page de suivi ; chacun reçoit un lien pour régler la sienne, avec trois rappels. Personne n’est débité tant que le groupe n’est pas complet : chaque part est une empreinte sur la carte (Stripe, capture manuelle). Groupe complet : tout est débité, la confirmation et l’e-mail de l’hôte partent. Sinon, au bout de 72 h, la réservation s’annule seule, les empreintes sont levées et les dates libérées.
   - Écrans : option du paiement, page de suivi (organisateur et amis), réglage de l’éditeur, Réservations (rien compté comme encaissé avant la fin, « Annuler la réservation » sans remboursement). Tâche planifiée toutes les 5 min, visible dans l’administration → Services.
   - Vérifié : règles du site et de l’API comparées (`group-payment-smoke.ts`), parcours complet sur la base locale avec Stripe simulé (`group-payment-flow-smoke.ts` : groupe complet puis annulation répartie, rappels, échéance, annulation par l’organisateur, autorisation perdue au débit), routes HTTP, type-check du site et de l’API ; dans Chrome, les routes d’essai en clair, en sombre pour Réservations et l’éditeur, à 390 px et sur ordinateur ; textes des e-mails relus dans l’aperçu. Non vérifié : un vrai paiement Stripe (pas de clé de test sur ce PC) et l’arrivée réelle des e-mails.
