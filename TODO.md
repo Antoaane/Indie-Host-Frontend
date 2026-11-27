@@ -346,7 +346,7 @@ Défauts visibles :
 
 ## Fait
 
-- [x] 2026-11-27 — Suites du paiement à plusieurs (demande de Nathan : « fais ça » ; commit `COMMIT_HASH`, local, à pousser et à déployer avec le reste).
+- [x] 2026-11-27 — Suites du paiement à plusieurs (demande de Nathan : « fais ça » ; commit `df8b1af`, local, à pousser et à déployer avec le reste).
   - Textes : nouvel article 5 des CGU voyageurs (renumérotation des suivants), paragraphe sur la page Annulation et remboursement, ligne et paragraphe dans la politique de confidentialité, phrase dans l’article 10 des CGV hôtes ; date des pages légales au 27 novembre 2026.
   - L’organisateur peut ajouter une personne pendant les 72 h (parts en baisse, celles déjà réglées débitées à leur nouveau montant) ou retirer un ami qui n’a pas réglé tant qu’aucun ami n’a réglé (parts en hausse, il règle de nouveau sa part). E-mail à l’ami retiré s’il avait été invité.
   - Vérifié : `group-payment-flow-smoke.ts` passe de 10 à 13 étapes (ajout après un règlement, retrait, paiement validé à l’ancien montant après un changement), `group-payment-smoke.ts` (11 contrôles), type-check du site et de l’API, build de production ; dans Chrome, `/dev/group-payment` (`etat=seul` pour le retrait) à 360 px et sur ordinateur, et la page CGU voyageurs.
